@@ -5,7 +5,7 @@
 ## Стек
 
 - **apps/web** — фронтенд: Vite + React + TypeScript, react-three-fiber (3D-карта), Mantine (UI)
-- **apps/src** — бэкенд: NestJS + TypeScript, Socket.IO (реалтайм), Drizzle + Postgres, pino (логирование)
+- **apps/server** — бэкенд: NestJS + TypeScript, Socket.IO (реалтайм), Drizzle + Postgres, pino (логирование)
 - **packages/shared** — общие типы (события сокетов, игровые сущности), используются и фронтом, и бэком
 
 Пакетный менеджер — pnpm workspaces.

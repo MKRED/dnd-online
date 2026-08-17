@@ -8,7 +8,7 @@ importers:
 
   .: {}
 
-  apps/src:
+  apps/server:
     dependencies:
       '@nestjs/common':
         specifier: ^11.0.1

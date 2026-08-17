@@ -7,10 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Online DnD platform for playing with friends: 3D map, real-time updates, persistent state. pnpm workspaces monorepo, TypeScript everywhere.
 
 - `apps/web` — frontend: Vite + React 19 + TypeScript. Planned: react-three-fiber (3D map), Mantine (UI). Currently still close to the Vite scaffold.
-- `apps/server` — backend: NestJS + TypeScript. Planned: Socket.IO (realtime), Drizzle + Postgres, pino for logging (**pino is already wired up**, see below). Currently still close to the Nest CLI scaffold.
+- `apps/server` — backend: NestJS + TypeScript. Planned: Socket.IO (realtime), Mantine (UI, actually `apps/web`). **Already wired up:** pino logging (see below), Drizzle + Postgres (see below). Currently still close to the Nest CLI scaffold otherwise.
 - `packages/shared` — shared types (socket events, game entities) meant to be consumed by both web and server. Currently just an empty placeholder (`export {}`).
 
-None of the "planned" pieces above (Three.js, Socket.IO, Drizzle, Mantine) exist yet — don't assume they're wired up just because the README/stack description mentions them.
+None of the still-"planned" pieces above (Three.js, Socket.IO) exist yet — don't assume they're wired up just because the README/stack description mentions them.
 
 ## Commands
 
@@ -36,6 +36,10 @@ pnpm test:watch
 pnpm test:cov
 pnpm test:e2e          # jest against apps/server/test/*.e2e-spec.ts
 pnpm build             # nest build
+
+pnpm db:generate       # drizzle-kit: diff src/database/schema.ts against apps/server/drizzle/ and write a new migration
+pnpm db:migrate        # drizzle-kit: apply pending migrations to DATABASE_URL
+pnpm db:studio         # drizzle-kit studio, browse the DB
 ```
 
 To run a single server test: `pnpm --filter api exec jest path/to/file.spec.ts` (or `-t "test name"`).
@@ -51,10 +55,13 @@ To run a single server test: `pnpm --filter api exec jest path/to/file.spec.ts` 
 **`@typescript-eslint/no-explicit-any`** is `warn` in `apps/server` (relaxed from the Nest scaffold's `off`, so `any` usage is visible but not blocking) and default `error` in `apps/web` (inherited from `recommendedTypeChecked`). This asymmetry is intentional-for-now, not an oversight.
 
 **Logging (`apps/server`).** Uses `nestjs-pino`, configured in `apps/server/src/app.module.ts` and attached in `apps/server/src/main.ts` via `app.useLogger(app.get(Logger))` with `bufferLogs: true`. Two output targets:
+
 - console: pretty-printed in dev, raw JSON in production (`NODE_ENV=production`) for log aggregators
 - always also written to `apps/server/logs/app.log` as plain human-readable text (no ANSI codes), so past runs/errors can be inspected without re-running the server. That directory is gitignored (`logs/` in root `.gitignore`).
 
 `LOG_LEVEL` env var controls level (default `info`).
+
+**Database (`apps/server`).** Drizzle ORM (`drizzle-orm/node-postgres`, i.e. the `pg` driver) against Postgres. `DatabaseModule` (`apps/server/src/database/`) is `@Global()` and exports `DatabaseService`, which owns the `pg.Pool` and the drizzle instance (`databaseService.db`), verifies connectivity with a `select 1` in `onModuleInit`, and closes the pool in `onModuleDestroy`. Schema lives in `apps/server/src/database/schema.ts` — currently empty (`export {}`), same placeholder state as `packages/shared`; add tables there as real entities show up. `apps/server/drizzle.config.ts` is `drizzle-kit`'s config (used by the `db:generate`/`db:migrate`/`db:studio` scripts) — it runs outside Nest's DI, so it loads `DATABASE_URL` itself via `import 'dotenv/config'` rather than through `ConfigService`. Connection string comes from `DATABASE_URL` in `apps/server/.env` (gitignored; see `apps/server/.env.example` for the shape), read at runtime via `@nestjs/config`'s `ConfigModule.forRoot({ isGlobal: true })`. Migrations are **not** run automatically on app boot — `db:migrate` is a deliberate, CLI-driven step.
 
 **TypeScript configs differ by app** and should not be unified: `apps/server` uses `nodenext`/CommonJS-era Nest defaults (`emitDecoratorMetadata`, `experimentalDecorators` for Nest's DI), `apps/web` uses a bundler-mode project-references setup (`tsconfig.app.json` + `tsconfig.node.json`) typical of the Vite React-TS template, with `verbatimModuleSyntax` and no emit (Vite handles bundling).
 
@@ -85,7 +92,9 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class SomeService {
-  constructor(@InjectPinoLogger(SomeService.name) private readonly logger: PinoLogger) {}
+  constructor(
+    @InjectPinoLogger(SomeService.name) private readonly logger: PinoLogger,
+  ) {}
 
   async doWork() {
     const t0 = Date.now();

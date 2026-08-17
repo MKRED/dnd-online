@@ -1,14 +1,18 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { DatabaseModule } from './database/database.module';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const level = process.env.LOG_LEVEL ?? 'info';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    DatabaseModule,
     LoggerModule.forRoot({
       pinoHttp: {
         level,

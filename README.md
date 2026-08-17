@@ -18,13 +18,19 @@ pnpm install
 
 ## Запуск в разработке
 
-Фронтенд (http://localhost:5173):
+Фронтенд и бэкенд вместе:
+
+```bash
+pnpm dev
+```
+
+Только фронтенд (http://localhost:5173):
 
 ```bash
 pnpm dev:web
 ```
 
-Бэкенд (http://localhost:3000):
+Только бэкенд (http://localhost:3000):
 
 ```bash
 pnpm dev:api

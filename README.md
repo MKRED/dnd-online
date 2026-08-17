@@ -35,3 +35,13 @@ pnpm dev:web
 ```bash
 pnpm dev:api
 ```
+
+## Линтинг и форматирование
+
+```bash
+pnpm lint          # ESLint (apps/web, apps/server)
+pnpm format        # Prettier --write по всему репо
+pnpm format:check  # Prettier --check, без изменений
+```
+
+Правила форматирования (`.prettierrc`) общие на весь репозиторий. У каждого приложения свой `eslint.config.mjs` — типизированный линтинг (`typescript-eslint` c `projectService`) требует, чтобы конфиг лежал в том же приложении, что и его `tsconfig.json`; расшаренный конфиг ломает резолвинг типов для файлов вроде тестов (Jest-глобалы `describe`/`it`/`expect` резолвятся как `any`).

@@ -68,3 +68,35 @@ To run a single server test: `pnpm --filter api exec jest path/to/file.spec.ts` 
 - **Ориентир ~100–150 строк.** Файл за ~150 строк — сигнал, что в нём несколько обязанностей; разбей, если они отделимы. Это эвристика читаемости, **не** жёсткий лимит: когезивные single-responsibility файлы дробить ради цифры не нужно.
 - **Папка-сущность, когда сущность обрастает файлами.** Как только у одной сущности (React-компонент, Nest-модуль/сервис и т.п.) появляется ≥2 файла-реализации сверх основного — стили, `.types.ts`, второй `.ts`/`.tsx` с логикой и т.д. — сущность переезжает в свою подпапку по имени: `EntityName/EntityName.tsx`, `EntityName.types.ts`, `EntityName.module.css`, … + `index.ts`-барrel, реэкспортирующий публичную поверхность. Один сопутствующий `*.spec.ts`/`*.test.ts` рядом с исходником подпапку не триггерит — это норма.
 - **Со-локация констант/типов.** Фичевые константы/типы лежат рядом с использованием, а не в общем barrel-файле на всё приложение.
+
+## Логирование (apps/server) — mandatory
+
+Каждый новый провайдер/сервис, выполняющий внешний I/O (запросы к внешним API, обращения к БД, сокет-события), **обязан** логировать через pino, а не молчать или использовать `console.*`:
+
+1. Внедрить логгер в конструктор: `@InjectPinoLogger(ClassName.name) private readonly logger: PinoLogger` (из `nestjs-pino`) — так лог автоматически получает контекст (`context: "ClassName"`).
+2. Залогировать начало операции / ключевые параметры на уровне `debug` или `info`.
+3. Замерить длительность: `const t0 = Date.now()` перед вызовом, `durationMs: Date.now() - t0` в логе после.
+4. Залогировать завершение с длительностью и релевантными метаданными (число строк для операций с БД, ключевые поля для внешних вызовов).
+5. Логировать ошибки через `logger.error({ err }, "описание")` — никогда не глотать молча (пустой `catch {}` недопустим).
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+
+@Injectable()
+export class SomeService {
+  constructor(@InjectPinoLogger(SomeService.name) private readonly logger: PinoLogger) {}
+
+  async doWork() {
+    const t0 = Date.now();
+    try {
+      const result = await externalCall();
+      this.logger.info({ durationMs: Date.now() - t0 }, 'Operation completed');
+      return result;
+    } catch (err) {
+      this.logger.error({ err }, 'Operation failed');
+      throw err;
+    }
+  }
+}
+```

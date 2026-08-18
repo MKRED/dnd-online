@@ -1,17 +1,17 @@
-import { Anchor, Group } from '@mantine/core';
-import { Link } from 'react-router-dom';
+import { Button, Group, Text } from '@mantine/core';
+import { useAuth } from '../features/auth';
 
 function HomePage() {
+  const { user, logout } = useAuth();
+
   return (
     <>
       <h1>Hello world</h1>
       <Group>
-        <Anchor component={Link} to="/login">
-          Войти
-        </Anchor>
-        <Anchor component={Link} to="/register">
-          Зарегистрироваться
-        </Anchor>
+        <Text>Привет, {user?.nickname}!</Text>
+        <Button variant="light" onClick={() => void logout()}>
+          Выйти
+        </Button>
       </Group>
     </>
   );

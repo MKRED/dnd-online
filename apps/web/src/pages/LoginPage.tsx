@@ -13,11 +13,13 @@ import {
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthApiError, loginUser } from '../features/auth/authApi';
 import {
+  AuthApiError,
+  loginUser,
+  useAuth,
   validateLogin,
   validatePassword,
-} from '../features/auth/authValidation';
+} from '../features/auth';
 
 interface LoginFormValues {
   login: string;
@@ -26,6 +28,7 @@ interface LoginFormValues {
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { setUser } = useAuth();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -41,7 +44,10 @@ function LoginPage() {
     setSubmitError(null);
     setSubmitting(true);
     loginUser(values)
-      .then(() => navigate('/'))
+      .then(({ user }) => {
+        setUser(user);
+        void navigate('/');
+      })
       .catch((err: unknown) => {
         console.error('Login failed', err);
         const message =

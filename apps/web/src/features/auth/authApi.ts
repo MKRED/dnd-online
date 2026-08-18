@@ -21,6 +21,15 @@ interface ErrorBody {
   message?: string | string[];
 }
 
+async function throwIfNotOk(res: Response): Promise<void> {
+  if (res.ok) return;
+  const data = (await res.json().catch(() => null)) as ErrorBody | null;
+  const message = Array.isArray(data?.message)
+    ? data.message.join(', ')
+    : (data?.message ?? 'Request failed');
+  throw new AuthApiError(res.status, message);
+}
+
 async function post<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method: 'POST',
@@ -28,16 +37,25 @@ async function post<T>(path: string, body: unknown): Promise<T> {
     credentials: 'include',
     body: JSON.stringify(body),
   });
-
-  if (!res.ok) {
-    const data = (await res.json().catch(() => null)) as ErrorBody | null;
-    const message = Array.isArray(data?.message)
-      ? data.message.join(', ')
-      : (data?.message ?? 'Request failed');
-    throw new AuthApiError(res.status, message);
-  }
-
+  await throwIfNotOk(res);
   return res.json() as Promise<T>;
+}
+
+async function get<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    credentials: 'include',
+  });
+  await throwIfNotOk(res);
+  return res.json() as Promise<T>;
+}
+
+// POST /auth/logout отвечает 204 без тела — res.json() на пустом теле упал бы с SyntaxError.
+async function postNoContent(path: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  await throwIfNotOk(res);
 }
 
 export function registerUser(input: {
@@ -53,4 +71,16 @@ export function loginUser(input: {
   password: string;
 }): Promise<{ user: AuthUser }> {
   return post('/auth/login', input);
+}
+
+export function getMe(): Promise<{ user: AuthUser }> {
+  return get('/auth/me');
+}
+
+export function refreshTokens(): Promise<{ ok: true }> {
+  return post('/auth/refresh', undefined);
+}
+
+export function logoutUser(): Promise<void> {
+  return postNoContent('/auth/logout');
 }

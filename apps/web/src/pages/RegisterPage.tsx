@@ -13,12 +13,14 @@ import {
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthApiError, registerUser } from '../features/auth/authApi';
 import {
+  AuthApiError,
+  registerUser,
+  useAuth,
   validateLogin,
   validateNickname,
   validatePassword,
-} from '../features/auth/authValidation';
+} from '../features/auth';
 
 interface RegisterFormValues {
   login: string;
@@ -29,6 +31,7 @@ interface RegisterFormValues {
 
 function RegisterPage() {
   const navigate = useNavigate();
+  const { setUser } = useAuth();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -56,7 +59,10 @@ function RegisterPage() {
       nickname: values.nickname,
       password: values.password,
     })
-      .then(() => navigate('/'))
+      .then(({ user }) => {
+        setUser(user);
+        void navigate('/');
+      })
       .catch((err: unknown) => {
         console.error('Registration failed', err);
         const message =

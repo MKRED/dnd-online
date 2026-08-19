@@ -13,7 +13,8 @@ pnpm-debug.log*
 
 .vscode/
 .idea/
-.claude/
+.claude/*
+!.claude/agents/
 .playwright-mcp/
 
 .DS_Store

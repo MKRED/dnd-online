@@ -50,10 +50,11 @@ export const theme = createTheme({
       '#100c19',
     ],
   },
-  fontFamily: 'system-ui, "Segoe UI", Roboto, sans-serif',
+  // Golos Text и Unbounded подключены через Google Fonts (index.html) —
+  // поддерживают кириллицу "из коробки", в отличие от большинства фэнтези-шрифтов.
+  fontFamily: '"Golos Text", system-ui, "Segoe UI", Roboto, sans-serif',
   headings: {
-    fontFamily:
-      'Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif',
-    fontWeight: '600',
+    fontFamily: '"Unbounded", "Segoe UI", sans-serif',
+    fontWeight: '700',
   },
 });

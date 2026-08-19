@@ -76,7 +76,9 @@ function RegisterPage() {
 
   return (
     <Container size={420} my={40}>
-      <Title ta="center">Создать аккаунт</Title>
+      <Title order={2} ta="center">
+        Создать аккаунт
+      </Title>
       <Text c="dimmed" size="sm" ta="center" mt={5}>
         Уже есть аккаунт?{' '}
         <Anchor component={Link} to="/login" size="sm">

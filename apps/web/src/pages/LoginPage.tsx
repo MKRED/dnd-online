@@ -59,7 +59,9 @@ function LoginPage() {
 
   return (
     <Container size={420} my={40}>
-      <Title ta="center">С возвращением!</Title>
+      <Title order={2} ta="center">
+        С возвращением!
+      </Title>
       <Text c="dimmed" size="sm" ta="center" mt={5}>
         Ещё нет аккаунта?{' '}
         <Anchor component={Link} to="/register" size="sm">

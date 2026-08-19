@@ -1,19 +1,16 @@
-import { Button, Group, Text } from '@mantine/core';
+import { Container, Text, Title } from '@mantine/core';
 import { useAuth } from '../features/auth';
 
 function HomePage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   return (
-    <>
-      <h1>Hello world</h1>
-      <Group>
-        <Text>Привет, {user?.nickname}!</Text>
-        <Button variant="light" onClick={() => void logout()}>
-          Выйти
-        </Button>
-      </Group>
-    </>
+    <Container size="sm" py="xl">
+      <Title order={1}>Добро пожаловать, {user?.nickname}!</Title>
+      <Text c="dimmed" mt="sm">
+        Здесь скоро появится список ваших партий и приглашений.
+      </Text>
+    </Container>
   );
 }
 

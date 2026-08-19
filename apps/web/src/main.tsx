@@ -6,10 +6,11 @@ import { MantineProvider } from '@mantine/core';
 import { RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './features/auth';
 import { router } from './router.tsx';
+import { theme } from './theme';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MantineProvider>
+    <MantineProvider theme={theme} defaultColorScheme="dark">
       <AuthProvider>
         <RouterProvider router={router} />
       </AuthProvider>

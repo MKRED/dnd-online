@@ -7,7 +7,7 @@ function RequireGuest() {
 
   if (loading) {
     return (
-      <Center h="100vh">
+      <Center mih="60vh">
         <Loader />
       </Center>
     );

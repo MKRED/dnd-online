@@ -26,6 +26,14 @@ function AppLayout() {
             <Loader size="sm" />
           ) : user ? (
             <Group gap="sm">
+              <Button
+                component={Link}
+                to="/characters"
+                variant="subtle"
+                size="sm"
+              >
+                Персонажи
+              </Button>
               <Text fw={500}>{user.nickname}</Text>
               <Button variant="subtle" size="sm" onClick={() => void logout()}>
                 Выйти

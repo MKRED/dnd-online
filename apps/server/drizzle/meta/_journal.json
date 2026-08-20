@@ -15,6 +15,13 @@
       "when": 1786952431382,
       "tag": "0001_salty_scarlet_spider",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787127126082,
+      "tag": "0002_busy_jetstream",
+      "breakpoints": true
     }
   ]
 }

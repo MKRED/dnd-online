@@ -5,6 +5,7 @@ import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { CharactersModule } from './characters/characters.module';
 import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 
@@ -17,6 +18,7 @@ const level = process.env.LOG_LEVEL ?? 'info';
     DatabaseModule,
     UsersModule,
     AuthModule,
+    CharactersModule,
     LoggerModule.forRoot({
       pinoHttp: {
         level,

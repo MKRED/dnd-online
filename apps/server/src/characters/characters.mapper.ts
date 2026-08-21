@@ -22,6 +22,7 @@ export function toCharacter(row: CharacterRow): Character {
     alignment: row.alignment,
     experiencePoints: row.experiencePoints,
     classes: row.classes,
+    proficiencyBonus: row.proficiencyBonus,
     abilityScores: {
       strength: row.strength,
       dexterity: row.dexterity,
@@ -65,6 +66,7 @@ export function toInsertValues(
     alignment: dto.alignment ?? null,
     experiencePoints: dto.experiencePoints,
     classes: dto.classes,
+    proficiencyBonus: dto.proficiencyBonus,
     strength: dto.abilityScores.strength,
     dexterity: dto.abilityScores.dexterity,
     constitution: dto.abilityScores.constitution,

@@ -127,6 +127,7 @@ export interface Character {
   alignment: string | null;
   experiencePoints: number;
   classes: CharacterClassLevel[];
+  proficiencyBonus: number;
   abilityScores: Record<AbilityScore, number>;
   savingThrowProficiencies: AbilityScore[];
   skillProficiencies: SkillProficiency[];

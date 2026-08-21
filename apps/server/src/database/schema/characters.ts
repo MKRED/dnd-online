@@ -41,6 +41,7 @@ export const characters = pgTable('characters', {
   experiencePoints: integer('experience_points').notNull().default(0),
 
   classes: jsonb('classes').notNull().$type<CharacterClassLevel[]>(),
+  proficiencyBonus: integer('proficiency_bonus').notNull().default(2),
 
   strength: integer('strength').notNull(),
   dexterity: integer('dexterity').notNull(),

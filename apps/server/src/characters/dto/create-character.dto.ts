@@ -88,6 +88,12 @@ export class CreateCharacterDto {
   @Type(() => ClassLevelDto)
   classes: ClassLevelDto[];
 
+  // 2..6 — весь диапазон бонуса мастерства по правилам 5e (уровни 1..20).
+  @IsInt()
+  @Min(2)
+  @Max(6)
+  proficiencyBonus: number;
+
   @ValidateNested()
   @Type(() => AbilityScoresDto)
   abilityScores: AbilityScoresDto;

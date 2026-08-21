@@ -58,6 +58,7 @@ export interface CreateCharacterPayload {
   alignment?: string;
   experiencePoints?: number;
   classes: CharacterClassLevel[];
+  proficiencyBonus: number;
   abilityScores: Record<AbilityScore, number>;
   savingThrowProficiencies: AbilityScore[];
   skillProficiencies: SkillProficiency[];

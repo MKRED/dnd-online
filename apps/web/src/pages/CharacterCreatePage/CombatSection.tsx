@@ -14,6 +14,14 @@ function CombatSection({ form }: CombatSectionProps) {
       <Grid align="flex-end">
         <Grid.Col span={{ base: 6, sm: 3 }}>
           <NumberInput
+            label="Бонус мастерства"
+            min={2}
+            max={6}
+            {...form.getInputProps('proficiencyBonus')}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 6, sm: 3 }}>
+          <NumberInput
             label="Класс доспеха"
             min={0}
             {...form.getInputProps('armorClass')}

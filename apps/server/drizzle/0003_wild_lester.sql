@@ -1,0 +1,1 @@
+ALTER TABLE "characters" ADD COLUMN "proficiency_bonus" integer DEFAULT 2 NOT NULL;

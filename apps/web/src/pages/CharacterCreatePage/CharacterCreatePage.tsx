@@ -54,6 +54,8 @@ function CharacterCreatePage() {
           (value: number) => (value >= 1 && value <= 30 ? null : 'От 1 до 30'),
         ]),
       ),
+      proficiencyBonus: (value: number) =>
+        value >= 2 && value <= 6 ? null : 'От 2 до 6',
       armorClass: (value: number) =>
         value >= 0 ? null : 'Не может быть отрицательным',
       speed: (value: number) =>

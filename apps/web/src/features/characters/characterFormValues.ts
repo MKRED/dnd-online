@@ -27,6 +27,7 @@ export interface CharacterFormValues {
   alignment: string;
   experiencePoints: number;
   classes: CharacterFormClassEntry[];
+  proficiencyBonus: number;
   abilityScores: Record<AbilityScore, number>;
   savingThrows: Record<AbilityScore, boolean>;
   skills: Record<Skill, { proficient: boolean; expertise: boolean }>;
@@ -58,6 +59,7 @@ export function createInitialFormValues(): CharacterFormValues {
     alignment: '',
     experiencePoints: 0,
     classes: [{ id: crypto.randomUUID(), class: '', level: 1, subclass: '' }],
+    proficiencyBonus: 2,
     abilityScores: emptyAbilityRecord(10),
     savingThrows: emptyAbilityRecord(false),
     skills: Object.fromEntries(
@@ -101,6 +103,7 @@ export function toCreatePayload(
       level: entry.level,
       subclass: blankToUndefined(entry.subclass),
     })),
+    proficiencyBonus: values.proficiencyBonus,
     abilityScores: values.abilityScores,
     savingThrowProficiencies: ABILITY_SCORES.filter(
       (ability) => values.savingThrows[ability],

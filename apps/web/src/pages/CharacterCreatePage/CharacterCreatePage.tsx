@@ -23,7 +23,6 @@ import CombatSection from './CombatSection';
 import CurrencyPersonalitySection from './CurrencyPersonalitySection';
 import IdentitySection from './IdentitySection';
 import ProficienciesSection from './ProficienciesSection';
-import SkillsSection from './SkillsSection';
 
 const required = (value: string) =>
   value.trim().length > 0 ? null : 'Обязательное поле';
@@ -105,7 +104,6 @@ function CharacterCreatePage() {
           )}
           <IdentitySection form={form} />
           <AbilityScoresSection form={form} />
-          <SkillsSection form={form} />
           <CombatSection form={form} />
           <ProficienciesSection form={form} />
           <CurrencyPersonalitySection form={form} />

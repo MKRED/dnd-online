@@ -9,6 +9,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import type { AuthenticatedRequest } from './auth.guard.js';
 import { AuthGuard } from './auth.guard.js';
@@ -18,6 +19,9 @@ import { RegisterDto } from './dto/register.dto.js';
 import { TokenService } from './token.service.js';
 import { UsersService } from '../users/users.service.js';
 
+// Защита от перебора паролей и спама регистрациями. Лимит считается по IP клиента —
+// за edge-nginx это работает только благодаря `trust proxy` в main.ts.
+@UseGuards(ThrottlerGuard)
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -27,6 +31,7 @@ export class AuthController {
   ) {}
 
   @Post('register')
+  @Throttle({ default: { limit: 5, ttl: 60 * 60_000 } })
   async register(
     @Body() dto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
@@ -37,6 +42,8 @@ export class AuthController {
   }
 
   @Post('login')
+  // 10/мин, а не меньше: друзья могут сидеть за одним NAT и делить IP.
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @HttpCode(200)
   async login(
     @Body() dto: LoginDto,

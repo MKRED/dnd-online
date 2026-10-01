@@ -6,6 +6,7 @@
     "dev": "pnpm -r --parallel --if-present dev",
     "dev:web": "pnpm --filter web dev",
     "dev:api": "pnpm --filter api start:dev",
+    "test": "pnpm -r --if-present test",
     "lint": "pnpm -r --if-present lint",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

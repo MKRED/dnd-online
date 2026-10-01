@@ -1,0 +1,37 @@
+# Что НЕ попадает в build-контекст Docker.
+# ВАЖНО: .dockerignore — это НЕ .gitignore. Паттерн без `**` матчит только корень,
+# поэтому секреты исключаем именно через `**/.env`, иначе apps/server/.env утечёт в слой образа.
+
+# Зависимости и сборки — ставятся/собираются внутри образа
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+
+# Секреты окружения (реальные токены/пароли/ключи) — никогда в образ
+**/.env
+**/.env.*
+!**/.env.example
+
+# Логи
+**/logs
+**/*.log
+
+# Git, редакторы, инструменты Claude/Playwright, локальные картинки
+.git
+.gitignore
+.idea
+.vscode
+.claude
+.playwright-mcp
+.mcp.json
+img
+
+# Тесты и покрытие — в рантайме не нужны
+**/coverage
+apps/server/test
+
+# Docker-инструментарий не нужен внутри контекста
+.dockerignore
+Dockerfile
+docker-compose*.yml
+.github

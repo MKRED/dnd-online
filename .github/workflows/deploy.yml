@@ -1,0 +1,70 @@
+name: Deploy
+
+# Пуш в ветку deploy → автодеплой. Сборка идёт на ДЕМОНЕ СЕРВЕРА через docker context
+# (SSH), реестр (GHCR) не используется. Тот же паттерн, что у tg-rp-bot на этом сервере.
+on:
+  push:
+    branches: [deploy]
+  workflow_dispatch: {} # можно запустить вручную из вкладки Actions
+
+# Два пуша подряд не должны деплоиться параллельно — второй ждёт первого.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  SSH_HOST: home.aoshiloli.ru
+  SSH_PORT: 2222
+  APP_DIR: /mnt/ssd/docker/dnd_online
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Код репозитория — на раннер (отсюда берётся build-контекст).
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. SSH-ключ деплоя в ssh-agent (секрет DEPLOY_CICD в настройках ЭТОГО репозитория).
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_CICD }}
+
+      # 3. Доверяем хосту сервера.
+      - name: Add known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      # 4. docker context → демон сервера по SSH. Дальше docker build идёт НА СЕРВЕРЕ.
+      - name: Create Docker context
+        run: |
+          docker context create remote-server --docker "host=ssh://root@$SSH_HOST:$SSH_PORT"
+          docker context use remote-server
+
+      # 5. Сборка образа на сервере. Монорепо: Dockerfile в корне, контекст — тоже корень.
+      - name: Build Docker image
+        run: |
+          DOCKER_BUILDKIT=1 docker build -f Dockerfile -t dnd_online .
+
+      # 6. Актуальный docker-compose.yml из репозитория — в папку проекта на сервере
+      #    (.env там заводится вручную один раз и из CI не трогается).
+      - name: Upload docker-compose.yml
+        run: |
+          scp -P "$SSH_PORT" docker-compose.yml "root@$SSH_HOST:$APP_DIR/docker-compose.yml"
+
+      # 7. Миграции БД, затем перезапуск контейнера из нового образа + чистка dangling-образов.
+      #    set -e: если миграция упала — старый контейнер продолжает работать, рестарта нет.
+      - name: Migrate and restart
+        run: |
+          ssh -T -p "$SSH_PORT" "root@$SSH_HOST" APP_DIR="$APP_DIR" bash -s << 'EOF'
+            set -e
+            cd "$APP_DIR" || { echo 'Папка не найдена'; exit 1; }
+            [ -f .env ] || { echo '.env не найден!'; exit 1; }
+            # -T и </dev/null обязательны: скрипт приходит в bash через stdin, и без них
+            # `compose run` скормил бы остаток скрипта (up, prune) в stdin контейнера.
+            docker compose run --rm -T api node_modules/.bin/drizzle-kit migrate </dev/null
+            docker compose up -d --force-recreate api
+            docker image prune -f --filter "dangling=true"
+          EOF

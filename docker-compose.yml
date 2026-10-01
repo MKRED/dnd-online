@@ -1,0 +1,37 @@
+# ============================================================================
+# docker-compose для dnd-online. На сервере лежит в /mnt/ssd/docker/dnd_online/
+# рядом с файлом .env (секреты). CI копирует этот файл туда при каждом деплое,
+# а образ dnd_online собирает на демоне сервера (docker context) — поэтому здесь
+# НЕТ секции build, compose только запускает готовый образ.
+#
+# Ручной деплой (без CI), из корня репозитория с docker context сервера:
+#   docker build -f Dockerfile -t dnd_online .
+#   docker compose run --rm -T api node_modules/.bin/drizzle-kit migrate </dev/null
+#   docker compose up -d --force-recreate api
+#
+# Один сервис: Nest отдаёт и API (/api/*), и статику фронтенда (вшита в образ).
+# Порт на хост НЕ публикуем — edge-nginx достаёт приложение по имени контейнера
+# в общей сети nginx-network (proxy_pass http://dnd_online:3000).
+# ============================================================================
+
+services:
+  api:
+    container_name: dnd_online
+    image: dnd_online:latest
+    restart: unless-stopped
+    env_file:
+      # .env лежит в этой же папке на сервере (НЕ из репозитория, см. apps/server/.env.example).
+      - .env
+    volumes:
+      # logs/app.log переживает пересоздание контейнера.
+      - ./logs:/app/apps/server/logs
+    networks:
+      - postgres-network # доступ к контейнеру postgres (DATABASE_URL)
+      - nginx-network # edge-nginx проксирует сюда домен приложения
+
+# Обе сети уже существуют на сервере (созданы другими compose-проектами).
+networks:
+  postgres-network:
+    external: true
+  nginx-network:
+    external: true

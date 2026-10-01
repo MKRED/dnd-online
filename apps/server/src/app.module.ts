@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { CharactersModule } from './characters/characters.module';
 import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
+import { webAppModules } from './web-app.module';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const level = process.env.LOG_LEVEL ?? 'info';
@@ -19,6 +20,7 @@ const level = process.env.LOG_LEVEL ?? 'info';
     UsersModule,
     AuthModule,
     CharactersModule,
+    ...webAppModules(),
     LoggerModule.forRoot({
       pinoHttp: {
         level,

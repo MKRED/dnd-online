@@ -12,7 +12,7 @@ import { useCallback, useState } from 'react';
 import type {
   CharacterFormClassEntry,
   CharacterFormValues,
-} from '../../../features/characters';
+} from '../../characterFormValues';
 
 interface ClassesListProps {
   form: UseFormReturnType<CharacterFormValues>;

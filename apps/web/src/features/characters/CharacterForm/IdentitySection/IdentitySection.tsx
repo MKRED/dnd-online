@@ -8,7 +8,7 @@ import {
 } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import { memo } from 'react';
-import type { CharacterFormValues } from '../../../features/characters';
+import type { CharacterFormValues } from '../../characterFormValues';
 import { formErrorsEqual } from '../formSectionMemo';
 import ClassesList from './ClassesList';
 

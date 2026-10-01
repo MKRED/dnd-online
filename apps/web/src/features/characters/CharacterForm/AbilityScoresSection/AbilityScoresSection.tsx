@@ -2,7 +2,7 @@ import { Fieldset, Text } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import { memo, useCallback, useState } from 'react';
 import { ABILITY_SCORES } from 'shared';
-import type { CharacterFormValues } from '../../../features/characters';
+import type { CharacterFormValues } from '../../characterFormValues';
 import { formErrorsEqual } from '../formSectionMemo';
 import AbilityCard from './AbilityCard';
 import classes from './AbilityScoresSection.module.css';

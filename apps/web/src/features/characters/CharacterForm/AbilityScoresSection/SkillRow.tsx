@@ -2,10 +2,8 @@ import { Group, SegmentedControl, Text } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import { useCallback, useState } from 'react';
 import type { Skill } from 'shared';
-import {
-  SKILL_LABELS,
-  type CharacterFormValues,
-} from '../../../features/characters';
+import { SKILL_LABELS } from '../../characterLabels';
+import type { CharacterFormValues } from '../../characterFormValues';
 import { formatModifier, getSkillBonus } from './abilityMath';
 
 interface SkillRowProps {

@@ -14,3 +14,4 @@ export type {
   CharacterFormClassEntry,
   CharacterFormValues,
 } from './characterFormValues';
+export { default as CharacterForm } from './CharacterForm';

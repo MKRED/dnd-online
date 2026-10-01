@@ -14,10 +14,8 @@ import {
   type AbilityScore,
   type Skill,
 } from 'shared';
-import {
-  ABILITY_LABELS,
-  type CharacterFormValues,
-} from '../../../features/characters';
+import { ABILITY_LABELS } from '../../characterLabels';
+import type { CharacterFormValues } from '../../characterFormValues';
 import {
   formatModifier,
   getAbilityModifier,

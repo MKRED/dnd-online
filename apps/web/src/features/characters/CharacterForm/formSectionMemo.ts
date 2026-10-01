@@ -1,9 +1,9 @@
 import type { UseFormReturnType } from '@mantine/form';
 
 // Поля секций читают/пишут значение напрямую в DOM (mode: 'uncontrolled' в
-// CharacterCreatePage) — им не нужно перерисовываться на изменение form.values.
+// CharacterForm) — им не нужно перерисовываться на изменение form.values.
 // Но сам объект `form`, который возвращает useForm, создаётся заново на каждый
-// рендер, и Mantine форсирует один настоящий React-рендер CharacterCreatePage при
+// рендер, и Mantine форсирует один настоящий React-рендер CharacterForm при
 // первом же изменении ЛЮБОГО поля (переход dirty false→true, см. setCalculatedFieldDirty
 // в @mantine/form) — без этого сравнения он бы каскадом перерисовывал все секции.
 // Единственное, что реально должно перерисовывать секцию, — ошибки валидации.

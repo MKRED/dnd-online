@@ -31,6 +31,14 @@ export class MapsController {
     return this.mapsService.findAllForOwner(req.user.sub);
   }
 
+  @Get(':id')
+  findOne(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.mapsService.findOneForOwner(req.user.sub, id);
+  }
+
   @Patch(':id')
   rename(
     @Req() req: AuthenticatedRequest,

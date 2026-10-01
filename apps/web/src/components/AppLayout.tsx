@@ -34,6 +34,9 @@ function AppLayout() {
               >
                 Персонажи
               </Button>
+              <Button component={Link} to="/maps" variant="subtle" size="sm">
+                Карты
+              </Button>
               <Text fw={500}>{user.nickname}</Text>
               <Button variant="subtle" size="sm" onClick={() => void logout()}>
                 Выйти

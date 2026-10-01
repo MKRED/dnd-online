@@ -8,17 +8,18 @@
 
 - регистрация и вход (JWT в httpOnly-cookie, refresh-токены, rate limit на вход);
 - персонажи по листу DnD 5e: список (свежеизменённые сверху), создание, редактирование, удаление;
+- 3D-карты из блоков: список карт, просмотр в 3D со срезом по высоте, API операций с undo/redo, ASCII-срезы для нейросети (план и решения — [docs/map.md](docs/map.md));
 - деплой в Docker на домашний сервер через ветку `deploy`.
 
-В планах: 3D-карта (react-three-fiber) и реалтайм (Socket.IO).
+В планах: редактор карты, MCP-сервер карты для нейросети, игровой процесс на карте и реалтайм (Socket.IO).
 
 ## Стек
 
-- **apps/web** — фронтенд: Vite + React 19 + TypeScript, Mantine (UI), react-router
+- **apps/web** — фронтенд: Vite + React 19 + TypeScript, Mantine (UI), react-router, three.js + react-three-fiber (3D-карта)
 - **apps/server** — бэкенд: NestJS 12 (нативный ESM) + TypeScript, Drizzle + Postgres, pino (логирование)
-- **packages/shared** — общие типы (сейчас — лист персонажа DnD 5e), используются и фронтом, и бэком
+- **packages/shared** — общий код фронта и бэка: типы листа персонажа DnD 5e и модель воксельной карты (чанки, палитра, операции)
 
-Пакетный менеджер — pnpm workspaces. Тесты — Vitest в обоих приложениях.
+Пакетный менеджер — pnpm workspaces. Тесты — Vitest во всех трёх пакетах.
 
 ## Установка
 

@@ -52,6 +52,27 @@ export class MapsService {
     }
   }
 
+  async findOneForOwner(ownerId: string, mapId: string) {
+    const t0 = Date.now();
+    try {
+      const [row] = await this.databaseService.db
+        .select()
+        .from(maps)
+        .where(and(eq(maps.id, mapId), eq(maps.ownerId, ownerId)))
+        .limit(1);
+      this.logger.debug(
+        { durationMs: Date.now() - t0, ownerId, mapId, found: Boolean(row) },
+        'Map lookup',
+      );
+      if (!row) throw new NotFoundException(MAP_NOT_FOUND);
+      return toMapInfo(row);
+    } catch (err: unknown) {
+      if (err instanceof NotFoundException) throw err;
+      this.logger.error({ err, ownerId, mapId }, 'Map lookup failed');
+      throw err;
+    }
+  }
+
   async rename(ownerId: string, mapId: string, name: string) {
     const t0 = Date.now();
     try {

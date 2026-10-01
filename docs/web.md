@@ -1,14 +1,17 @@
 # Web (`apps/web`)
 
-Vite + React 19 + TypeScript, Mantine 9 (UI, dark color scheme by default), react-router 7. react-three-fiber (3D map) is planned, not installed yet.
+Vite + React 19 + TypeScript, Mantine 9 (UI, dark color scheme by default), react-router 7, three.js + react-three-fiber 9 + drei for the 3D map.
 
 ## Layout
 
 - `src/main.tsx` — providers: `MantineProvider(theme)` → `AuthProvider` → `RouterProvider`.
 - `src/router.tsx` — routes. Everything except `/login` and `/register` sits behind `RequireAuth`; those two behind `RequireGuest`.
-- `src/features/<feature>/` — non-page logic and feature UI (API client, context, validation, labels, shared forms), public surface via `index.ts`. Currently `auth`, `characters`.
+- `src/features/<feature>/` — non-page logic and feature UI (API client, context, validation, labels, shared forms), public surface via `index.ts`. Currently `auth`, `characters`, `maps`.
   - `characters/CharacterForm/` — the character-sheet form (uncontrolled `useForm`, sections memoized via `formSectionMemo.ts`), used by both the create and edit pages. `initialValues` are read once on mount, so the edit page mounts it only after the character has loaded. `characterFormValues.ts` maps form values ↔ API payload (`toCreatePayload`, `fromCharacter`).
-- `src/pages/` — route components, kept thin; a page that grows several files becomes a folder. Character routes: `/characters`, `/characters/new`, `/characters/:id/edit`.
+  - `maps/` — map API client, `mapStateFromChunks` (API response → shared `MapState`), the temporary demo-village ops. 3D view (see [map.md](map.md)):
+    - `render/buildChunkMesh.ts` — pure mesher: one geometry per chunk from the faces that are actually visible, box shapes included. It reads neighbours through the whole store so chunk borders cull correctly, splits transparent blocks into their own geometry, and takes the height cut as a parameter (rebuild, not a clipping plane, so cut walls get tops). Vertex colours go through `THREE.Color`, which converts sRGB to linear. Covered by unit tests, including face winding.
+    - `MapScene/` — the R3F `Canvas`. **Not re-exported from the barrel**: `MapViewPage` loads it with `React.lazy`, so three.js stays in its own chunk. `ChunkMesh` disposes replaced geometry, which R3F doesn't do for a swapped prop. Page tests `vi.mock` the scene because jsdom has no WebGL.
+- `src/pages/` — route components, kept thin; a page that grows several files becomes a folder. Character routes: `/characters`, `/characters/new`, `/characters/:id/edit`. Map routes: `/maps`, `/maps/:id`.
 - `src/components/` — shared UI (`AppLayout`).
 - `src/theme.ts` — Mantine theme.
 

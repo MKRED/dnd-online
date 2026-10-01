@@ -4,103 +4,97 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Online DnD platform for playing with friends: 3D map, real-time updates, persistent state. pnpm workspaces monorepo, TypeScript everywhere.
+Online DnD platform for playing with friends: 3D map, real-time updates, persistent state. pnpm workspaces monorepo, TypeScript everywhere. Production: https://dnd.aoshi.ru.
 
-- `apps/web` — frontend: Vite + React 19 + TypeScript. Planned: react-three-fiber (3D map), Mantine (UI). Currently still close to the Vite scaffold.
-- `apps/server` — backend: NestJS 12 + TypeScript 6, **native ESM** (`"type": "module"`). Planned: Socket.IO (realtime), Mantine (UI, actually `apps/web`). **Already wired up:** pino logging (see below), Drizzle + Postgres (see below). Currently still close to the Nest CLI scaffold otherwise.
-- `packages/shared` — shared types (socket events, game entities) consumed by both web and server via a `workspace:*` dependency in each app's `package.json`. Currently holds DnD 5e character-sheet types (`src/character.ts`, e.g. `Character`, `AbilityScore`, `Skill`) re-exported from `src/index.ts`; socket-event types are still to come. Note: internal relative exports need an explicit `.js` extension (e.g. `export * from './character.js'`) even though the source is `.ts` — required by `apps/server`'s `moduleResolution: nodenext` since this package's own `package.json` declares `"type": "module"`. **Must be built before consumers can run** — `package.json`'s `main`/`types` point at `dist/index.js`/`dist/index.d.ts` (run `pnpm --filter shared build`, or `pnpm --filter shared dev` to watch). This isn't optional polish: Node has no built-in remapping from a `.js` import specifier to a sibling `.ts` file, so without a real compiled `dist/character.js` on disk, any code that actually imports a _value_ from `shared` at runtime (not just types) crashes on boot with `ERR_MODULE_NOT_FOUND` the moment it's reached — `nest build`/`tsc` type-check fine regardless, since tsc's `nodenext` resolution treats the `.js` specifier as "the future compiled file," not literally. `pnpm dev` (root) already builds+watches it automatically since it's a `dev` script picked up by `-r --parallel --if-present dev`; `pnpm dev:api`/`pnpm dev:web` alone do not, so build `shared` manually first if running those in isolation after changing `packages/shared/src`.
+- `apps/web` — Vite + React 19 + Mantine + react-router. Has auth (login/register) and character list/creation.
+- `apps/server` — NestJS 12, **native ESM**, Drizzle + Postgres, pino. Modules: `auth`, `users`, `characters`, `database`.
+- `packages/shared` — types shared by web and server (currently the DnD 5e character sheet).
 
-None of the still-"planned" pieces above (Three.js, Socket.IO) exist yet — don't assume they're wired up just because the README/stack description mentions them.
+**Not built yet:** the 3D map (react-three-fiber) and realtime (Socket.IO). Don't assume they exist because the README mentions them.
 
 ## Commands
 
-Run from the repo root unless noted.
+From the repo root:
 
 ```bash
-pnpm install          # install everything (workspace-wide)
-
-pnpm dev               # run web + server together
+pnpm install
+pnpm dev               # web + server + shared watcher
 pnpm dev:web           # web only, http://localhost:5173
 pnpm dev:api           # server only, http://localhost:3000 (API under /api)
-
-pnpm test              # unit tests of web + server
-pnpm lint              # lint web + server (each app's own eslint.config.mjs)
-pnpm format            # prettier --write, whole repo
-pnpm format:check      # prettier --check, whole repo
+pnpm test              # unit tests, web + server
+pnpm lint              # each app's own eslint.config.mjs
+pnpm format            # prettier --write (format:check to verify)
 ```
 
-Per-app, from `apps/server`:
+From `apps/server`: `pnpm test:e2e` (needs a reachable `DATABASE_URL`), `pnpm build`, `pnpm db:generate` / `pnpm db:migrate` / `pnpm db:studio`.
 
-```bash
-pnpm test              # vitest, unit tests (*.spec.ts next to source)
-pnpm test:watch
-pnpm test:cov
-pnpm test:e2e          # vitest against apps/server/test/*.e2e-spec.ts
-pnpm build             # nest build
+Single test: `pnpm --filter api exec vitest run path/to/file.spec.ts` or `pnpm --filter web exec vitest run path/to/file.test.tsx` (add `-t "name"` to filter).
 
-pnpm db:generate       # drizzle-kit: diff src/database/schema.ts against apps/server/drizzle/ and write a new migration
-pnpm db:migrate        # drizzle-kit: apply pending migrations to DATABASE_URL
-pnpm db:studio         # drizzle-kit studio, browse the DB
-```
+## Gotchas
 
-Tests run on Vitest (`vitest.config.ts`, `vitest.config.e2e.ts`) with `unplugin-swc` — Vitest's default esbuild transform can't emit decorator metadata, without which Nest DI can't resolve constructor params. Vitest globals are off: import `describe`/`it`/`expect`/`vi` from `vitest` explicitly. `test:e2e` boots the full `AppModule`, so it needs a reachable `DATABASE_URL`.
+- **Build `packages/shared` before running an app in isolation** (`pnpm --filter shared build`). Without its `dist/`, the server crashes with `ERR_MODULE_NOT_FOUND` even though type-checking passes. `pnpm dev` handles it.
+- **Server relative imports need `.js` extensions** (`./dir/index.js` for directories); use `import.meta.dirname`, not `__dirname`.
+- **Migrations never run on boot.** A schema change needs `pnpm db:generate` and a committed migration in `apps/server/drizzle/`.
+- **API routes live under `/api`.** In production the SPA is served from the same origin.
+- **ESLint configs are per app on purpose.** Don't merge them into a shared root config; the reason is in [docs/monorepo.md](docs/monorepo.md).
+- **Tests run on Vitest with globals off.** Import `describe`/`it`/`expect`/`vi` from `vitest`.
+- **Windows.** LF→CRLF warnings in `git status` are noise. In Git Bash prefix builds with `MSYS_NO_PATHCONV=1`, or `VITE_API_URL=/api` gets mangled.
 
-To run a single server test: `pnpm --filter api exec vitest run path/to/file.spec.ts` (or `-t "test name"`).
+## Docs
 
-`apps/web` tests: Vitest + Testing Library on jsdom, configured in the `test` section of `vite.config.ts` (`defineConfig` comes from `vitest/config`). Files are `*.test.ts(x)` next to the source; globals are off here too. `src/test/setup.ts` wires jest-dom matchers, `cleanup` and jsdom stubs Mantine needs (`matchMedia`, `ResizeObserver`); render components via `renderWithProviders` from `src/test/render.tsx` (Mantine + `MemoryRouter` + a stub `AuthContext`, so nothing hits `/auth/me`). Mock the network with `vi.stubGlobal('fetch', …)` — globals/mocks are auto-restored between tests. Run with `pnpm --filter web test` (or `test:watch`). Its `build` is `tsc -b && vite build`.
+Read the relevant file before working in that area:
 
-## Architecture notes
+- [docs/server.md](docs/server.md) covers the server:
+  - TS/ESM config
+  - logging setup
+  - database and schema conventions
+  - HTTP surface
+  - auth (cookies, refresh tokens)
+  - security middleware (helmet, throttler, trust proxy)
+  - tests
+- [docs/web.md](docs/web.md) covers the web app:
+  - layout
+  - API access and auth bootstrap
+  - styling (CSS Modules)
+  - TS config
+  - tests (`renderWithProviders`, fetch mocking)
+- [docs/monorepo.md](docs/monorepo.md) covers the monorepo:
+  - workspace layout
+  - the `shared` package
+  - linting rationale
+  - Prettier
+- [docs/deploy.md](docs/deploy.md) covers deployment:
+  - CI pipeline via the `deploy` branch
+  - Docker image
+  - server layout
+  - checking production
 
-**Workspace layout.** `pnpm-workspace.yaml` includes `apps/*` and `packages/*`. Root `package.json` has no build tooling of its own beyond Prettier — TypeScript/ESLint tooling lives inside each app.
+Keep these docs current: when a change makes something in them wrong, update them in the same commit.
 
-**Linting is intentionally NOT shared across packages.** Each app (`apps/web`, `apps/server`) has its own fully self-contained `eslint.config.mjs` and its own local `eslint`/`typescript-eslint` devDependencies, even though the two configs duplicate a fair amount of boilerplate. This is a deliberate workaround: a shared/base ESLint flat config imported from a root-level file broke `typescript-eslint`'s `projectService` type resolution for ambient globals (e.g. Jest's `describe`/`it`/`expect` resolved to an unresolved `error` type, tripping `no-unsafe-call`/`no-unsafe-member-access` on every test file), while explicitly imported symbols were unaffected. Inlining the exact same config directly into the app's own `eslint.config.mjs` fixed it. **Do not reintroduce a shared ESLint config across packages** unless this is confirmed fixed upstream in typescript-eslint. Prettier config (`.prettierrc`, `.prettierignore`) IS safely shared at the repo root — Prettier isn't type-aware, so it didn't hit this issue.
+## Conventions (mandatory)
 
-**`@typescript-eslint/no-explicit-any`** is `warn` in `apps/server` (relaxed from the Nest scaffold's `off`, so `any` usage is visible but not blocking) and default `error` in `apps/web` (inherited from `recommendedTypeChecked`). This asymmetry is intentional-for-now, not an oversight.
+### File structure and size
 
-**Logging (`apps/server`).** Uses `nestjs-pino`, configured in `apps/server/src/app.module.ts` and attached in `apps/server/src/main.ts` via `app.useLogger(app.get(Logger))` with `bufferLogs: true`. Two output targets:
+- **One file, one responsibility.** Keep entry points and aggregating modules thin; move the implementation into neighbouring files.
+- **Aim for about 100–150 lines.** Past that, a file probably does several things, so split it if they separate cleanly. This is a readability heuristic, not a hard limit. Don't split a cohesive file just to hit the number.
+- **Folder per entity.** When an entity (React component, Nest module or service, …) gains two or more implementation files besides its main one, move it into its own folder:
+  - layout: `EntityName/EntityName.tsx`, `EntityName.types.ts`, `EntityName.module.css`, …;
+  - an `index.ts` barrel re-exports the public surface;
+  - files that count: styles, `.types.ts`, a second logic file;
+  - a single colocated `*.spec.ts`/`*.test.ts` doesn't count.
+- **Colocate feature constants and types** with their usage, not in an app-wide barrel.
 
-- console: pretty-printed in dev, raw JSON in production (`NODE_ENV=production`) for log aggregators
-- always also written to `apps/server/logs/app.log` as plain human-readable text (no ANSI codes), so past runs/errors can be inspected without re-running the server. That directory is gitignored (`logs/` in root `.gitignore`).
+### Logging (`apps/server`)
 
-`LOG_LEVEL` env var controls level (default `info`).
+Every provider that does external I/O (DB, external APIs, socket events) logs through pino. Never stay silent and never use `console.*`:
 
-**Database (`apps/server`).** Drizzle ORM (`drizzle-orm/node-postgres`, i.e. the `pg` driver) against Postgres. `DatabaseModule` (`apps/server/src/database/`) is `@Global()` and exports `DatabaseService`, which owns the `pg.Pool` and the drizzle instance (`databaseService.db`), verifies connectivity with a `select 1` in `onModuleInit`, and closes the pool in `onModuleDestroy`. Schema lives in `apps/server/src/database/schema/` — one file per table (`users.ts`, `refresh-tokens.ts`, `characters.ts`) plus an `index.ts` barrel that re-exports all of them (this is what `import * as schema from './schema'` in `database.service.ts` resolves to); add new tables as their own file in that folder rather than growing one of the existing ones. `apps/server/drizzle.config.ts`'s `schema` option lists the individual table files explicitly (not the barrel), so drizzle-kit doesn't see re-exported table objects twice. `characters` is a **hybrid** schema, deliberately not fully-columnar or fully-JSONB: frequently point-updated scalars (HP, AC, ability scores, death saves, etc.) are real columns; variable-length nested data (spells, inventory, features, proficiencies, etc.) is `jsonb` typed via `.$type<T>()` against the shared types in `packages/shared/src/character.ts` — follow this same split for future entity tables with a similar "fixed core + variable nested lists" shape rather than defaulting to one extreme. `apps/server/drizzle.config.ts` runs outside Nest's DI, so it loads `DATABASE_URL` itself via `import 'dotenv/config'` rather than through `ConfigService`. Connection string comes from `DATABASE_URL` in `apps/server/.env` (gitignored; see `apps/server/.env.example` for the shape), read at runtime via `@nestjs/config`'s `ConfigModule.forRoot({ isGlobal: true })`. Migrations are **not** run automatically on app boot — `db:migrate` is a deliberate, CLI-driven step.
-
-**API prefix + static serving (`apps/server`).** All API routes live under `/api` (`app.setGlobalPrefix('api')` in `main.ts`) — required because in production the SPA is served from the same origin and its client routes (e.g. `/characters`) would otherwise collide with API routes. The web client's `API_BASE_URL` defaults to `http://localhost:3000/api` in dev; the Docker build bakes in `VITE_API_URL=/api`. `src/web-app.module.ts` registers `@nestjs/serve-static` only when `apps/server/public` exists (the Docker image copies `apps/web/dist` there), with `/api/{*path}` excluded so unknown API routes stay JSON 404s; in dev/tests it's a no-op. `tsconfig.build.json` pins `rootDir: ./src` (and excludes `drizzle.config.ts`, `vitest.config*.ts`) so `nest build` emits into `dist/`, not `dist/src/`; `tsBuildInfoFile` is pinned into `dist/` too, otherwise TS 6 drops it next to the config.
-
-**Security middleware (`apps/server`).** `main.ts` sets `trust proxy = 1` (exactly one proxy, edge-nginx, which appends the client IP to `X-Forwarded-For`) and `helmet()` with its default CSP — fine for the SPA as long as scripts stay same-origin; Google Fonts and Mantine's runtime `<style>` tags are covered by the defaults (`https:`/`'unsafe-inline'` in `style-src`/`font-src`). Adding a third-party script/connect origin means extending the CSP directives there. `upgrade-insecure-requests` is production-only. `AuthController` is guarded by `@nestjs/throttler` (registered in `AuthModule`, in-memory storage): 60/min default, `login` 10/min, `register` 5/hour per IP; the 429 message is in Russian because the web UI shows the server's `message` as-is.
-
-**Deploy.** Push to the `deploy` branch → `.github/workflows/deploy.yml` (same pattern as the author's `tg-rp-bot`): a `docker context` over SSH builds the root `Dockerfile` **on the server's daemon** (no registry), uploads `docker-compose.yml` to `/mnt/ssd/docker/dnd_online/`, runs `drizzle-kit migrate` via `docker compose run --rm api`, then `up -d --force-recreate`. Needs the `DEPLOY_CICD` secret (SSH private key) in the GitHub repo. The server-side `.env` (next to the compose file) is created by hand and never touched by CI. The runtime image keeps dev dependencies on purpose: `drizzle-kit` for migrations, `pino-pretty` for the `logs/app.log` transport. The container joins the external `postgres-network` and `nginx-network`; edge-nginx proxies the domain to `dnd_online:3000`.
-
-**Styling (`apps/web`).** CSS Modules (`Component.module.css`), not plain global CSS — Vite supports them natively and `tsconfig.app.json`'s `types: ["vite/client"]` already provides the import types, so no extra setup is needed. `src/index.css` (imported once in `main.tsx`) stays global on purpose: CSS custom properties (`:root` theme tokens) and element resets (`body`, `h1`/`h2`, `#root`) apply app-wide, not to one component. Colocate `Component.module.css` next to the component that uses it, per the file-structure convention above.
-
-**TypeScript configs differ by app** and should not be unified: `apps/server` uses `nodenext` emitting native ESM (relative imports **must** carry a `.js` extension, directory imports point at `./dir/index.js`; use `import.meta.dirname` instead of `__dirname`) plus `emitDecoratorMetadata`/`experimentalDecorators` for Nest's DI. TS 6 turns `strict` on by default — it's left on, except `strictPropertyInitialization: false` (DTO fields are filled by class-transformer, not constructors); `types` must be listed explicitly (TS 6 default is `[]`), `apps/web` uses a bundler-mode project-references setup (`tsconfig.app.json` + `tsconfig.node.json`) typical of the Vite React-TS template, with `verbatimModuleSyntax` and no emit (Vite handles bundling).
-
-**Windows/Git note:** this repo is developed on Windows; `git status`/`diff` routinely show LF→CRLF warnings on otherwise-unmodified files — that's line-ending normalization noise, not real changes.
-
-## Структура и размер файлов — mandatory
-
-Чтобы файлы не разрастались и проект оставался читаемым/масштабируемым:
-
-- **Один файл — одна обязанность.** «Главный» файл (entry-point, модуль-агрегатор) держим тонким, вынося реализацию в соседние файлы той же папки.
-- **Ориентир ~100–150 строк.** Файл за ~150 строк — сигнал, что в нём несколько обязанностей; разбей, если они отделимы. Это эвристика читаемости, **не** жёсткий лимит: когезивные single-responsibility файлы дробить ради цифры не нужно.
-- **Папка-сущность, когда сущность обрастает файлами.** Как только у одной сущности (React-компонент, Nest-модуль/сервис и т.п.) появляется ≥2 файла-реализации сверх основного — стили, `.types.ts`, второй `.ts`/`.tsx` с логикой и т.д. — сущность переезжает в свою подпапку по имени: `EntityName/EntityName.tsx`, `EntityName.types.ts`, `EntityName.module.css`, … + `index.ts`-барrel, реэкспортирующий публичную поверхность. Один сопутствующий `*.spec.ts`/`*.test.ts` рядом с исходником подпапку не триггерит — это норма.
-- **Со-локация констант/типов.** Фичевые константы/типы лежат рядом с использованием, а не в общем barrel-файле на всё приложение.
-
-## Логирование (apps/server) — mandatory
-
-Каждый новый провайдер/сервис, выполняющий внешний I/O (запросы к внешним API, обращения к БД, сокет-события), **обязан** логировать через pino, а не молчать или использовать `console.*`:
-
-1. Внедрить логгер в конструктор: `@InjectPinoLogger(ClassName.name) private readonly logger: PinoLogger` (из `nestjs-pino`) — так лог автоматически получает контекст (`context: "ClassName"`).
-2. Залогировать начало операции / ключевые параметры на уровне `debug` или `info`.
-3. Замерить длительность: `const t0 = Date.now()` перед вызовом, `durationMs: Date.now() - t0` в логе после.
-4. Залогировать завершение с длительностью и релевантными метаданными (число строк для операций с БД, ключевые поля для внешних вызовов).
-5. Логировать ошибки через `logger.error({ err }, "описание")` — никогда не глотать молча (пустой `catch {}` недопустим).
+1. Inject the logger: `@InjectPinoLogger(ClassName.name) private readonly logger: PinoLogger`. This adds `context: "ClassName"` to every line.
+2. Log the start of the operation and its key parameters at `debug`/`info`.
+3. Measure the duration: `const t0 = Date.now()` before the call, `durationMs: Date.now() - t0` after it.
+4. Log completion with the duration and relevant metadata: row counts for DB work, key fields for external calls.
+5. Log errors with `logger.error({ err }, 'description')`.
 
 ```typescript
-import { Injectable } from '@nestjs/common';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-
 @Injectable()
 export class SomeService {
   constructor(
@@ -121,26 +115,21 @@ export class SomeService {
 }
 ```
 
-## Обработка ошибок — mandatory
+### Error handling
 
-- Каждая новая `async`-функция обязана либо пробрасывать ошибку вызывающему коду, либо явно ловить и логировать её — никогда не глотать молча.
-- Fire-and-forget вызовы (async-функция без `await`, цепочка `.then()`) обязаны заканчиваться `.catch(...)`, логирующим ошибку.
-- Пустой `catch {}` недопустим — минимум залогировать.
-- На бэкенде (`apps/server`) — через `PinoLogger` (см. «Логирование» выше). На фронтенде (`apps/web`), пока нет своего логгера, — как минимум `console.error` с контекстом.
+- Every `async` function either propagates errors to its caller or catches and logs them. Never swallow one silently, and an empty `catch {}` is not allowed.
+- A fire-and-forget call (an un-awaited promise, a `.then()` chain) must end with a `.catch(...)` that logs the error.
+- Where to log:
+  - **Server:** `PinoLogger`.
+  - **Web:** there's no logger yet, so at least `console.error` with context.
 
-```typescript
-someAsyncWork()
-  .then((result) => logger.info({ result }, 'Background work done'))
-  .catch((err) => logger.warn({ err }, 'Background work failed'));
-```
+### Comments
 
-## Комментарии
-
-Комментарии в коде — приветствуются, особенно там, где логика неочевидна. Предпочтительные места:
-
-- сложные условия или многошаговые процессы — объяснить намерение;
-- неочевидные ограничения/инварианты;
-- обходы багов или особенностей используемых библиотек;
-- любое место, где читающий спросит «почему это сделано именно так?».
-
-Все комментарии — **на русском языке**. При этом не нужно пересказывать то, что и так очевидно из кода (`// increment counter` над `counter++`) — фокус на «почему», а не «что».
+- **Write code comments in Russian.**
+- **Comments are welcome where the code isn't self-explanatory:**
+  - complex conditions and multi-step flows;
+  - invariants and constraints;
+  - library workarounds;
+  - anywhere a reader would ask "why is it done this way?".
+- **Explain why, not what.** Don't restate the code (`// increment counter` over `counter++`).
+- **User-facing strings are in Russian too.** That includes server error messages, which the UI shows as-is.

@@ -21,10 +21,11 @@ model: sonnet
 - **Error handling:** каждая новая `async`-функция либо пробрасывает ошибку, либо явно ловит и логирует. Fire-and-forget (`.then()` без `await`) обязаны заканчиваться `.catch(...)`, логирующим ошибку. На фронтенде (`apps/web`, своего логгера пока нет) — как минимум `console.error` с контекстом.
 - **Комментарии — на русском языке**, объясняют «почему», а не «что» (неочевидные условия, инварианты, обходы багов библиотек). Не пересказывать очевидное из кода.
 - **Линтинг:** `@typescript-eslint/no-explicit-any` — `warn` в `apps/server`, `error` в `apps/web` (асимметрия намеренная, не баг). Конфиги ESLint у каждого app свои, не шаренные — не предлагать вынести в общий root-конфиг.
-- **TypeScript-конфиги разные по дизайну:** `apps/server` — `nodenext`/CommonJS-era Nest (`emitDecoratorMetadata`, `experimentalDecorators`), `apps/web` — bundler-mode (`verbatimModuleSyntax`, без эмита). Не предлагать унификацию.
+- **TypeScript-конфиги разные по дизайну:** `apps/server` — `nodenext`, нативный ESM (относительные импорты обязаны иметь `.js`; `emitDecoratorMetadata`, `experimentalDecorators`), `apps/web` — bundler-mode (`verbatimModuleSyntax`, без эмита). Не предлагать унификацию.
 - **Стили (`apps/web`):** CSS Modules (`Component.module.css`) рядом с компонентом; `src/index.css` остаётся глобальным намеренно (токены темы, ресеты) — не переносить его содержимое в модули.
-- **БД (`apps/server`):** миграции через `drizzle-kit` (`pnpm db:generate`/`db:migrate`), не применяются автоматически при старте приложения — если правка трогает `schema.ts`, должна быть сопутствующая миграция в `drizzle/`. Строка подключения — только через `DATABASE_URL`/`ConfigService`, не хардкодить.
-- **Тесты (`apps/server`):** co-located `*.spec.ts` рядом с исходником (jest); `apps/web` тестового раннера пока нет — не требовать тестов для фронтенд-кода, но не хвалить их отсутствие как норму навсегда.
+- **БД (`apps/server`):** миграции через `drizzle-kit` (`pnpm db:generate`/`db:migrate`), не применяются автоматически при старте приложения — если правка трогает `src/database/schema/`, должна быть сопутствующая миграция в `drizzle/`. Строка подключения — только через `DATABASE_URL`/`ConfigService`, не хардкодить.
+- **Тесты:** Vitest, глобалы выключены (импорт из `vitest`). `apps/server` — `*.spec.ts` рядом с исходником; `apps/web` — `*.test.ts(x)` рядом с исходником, компоненты рендерятся через `renderWithProviders` (`src/test/render.tsx`), сеть мокается через `vi.stubGlobal('fetch', …)`. Новая нетривиальная логика без тестов — Warning.
+- **Документация:** подробности по областям — в `docs/` (server, web, monorepo, deploy). Если правка делает что-то в них неверным, docs должны обновиться в том же изменении.
 
 ## Чек-лист корректности
 - Логические ошибки, граничные случаи, гонки.

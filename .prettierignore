@@ -3,3 +3,5 @@ build
 coverage
 pnpm-lock.yaml
 .claude
+# Генерирует drizzle-kit — руками не форматируем, иначе дифф при каждой миграции
+apps/server/drizzle/meta

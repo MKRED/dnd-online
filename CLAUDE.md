@@ -42,6 +42,8 @@ pnpm db:migrate        # drizzle-kit: apply pending migrations to DATABASE_URL
 pnpm db:studio         # drizzle-kit studio, browse the DB
 ```
 
+Jest (both unit and e2e configs) maps `shared` to its TS source and forces ts-jest to emit CommonJS — `shared` is ESM (`"type": "module"`), which Jest's CJS runtime can't load from `dist`. `test:e2e` boots the full `AppModule`, so it needs a reachable `DATABASE_URL`.
+
 To run a single server test: `pnpm --filter api exec jest path/to/file.spec.ts` (or `-t "test name"`).
 
 `apps/web` has no test runner configured yet. Its `build` is `tsc -b && vite build`.

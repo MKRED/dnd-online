@@ -4,7 +4,14 @@ pnpm workspaces: `pnpm-workspace.yaml` includes `apps/*` and `packages/*`. The r
 
 ## `packages/shared`
 
-Shared types consumed by web and server through a `workspace:*` dependency. Currently DnD 5e character-sheet types (`src/character.ts`: `Character`, `AbilityScore`, `Skill`, …) re-exported from `src/index.ts`; socket-event types will go here too.
+Code consumed by web and server through a `workspace:*` dependency, re-exported from `src/index.ts`:
+
+- `src/character.ts` — DnD 5e character-sheet types (`Character`, `AbilityScore`, `Skill`, …).
+- `src/map/` — the voxel map model: coordinates and chunks, cell encoding, block shapes and catalog, palette, map operations (`parseMapOp`, `applyOp` → changeset), map summary and ASCII slices. Pure logic without I/O, so the server applies operations and the client previews them with the same code. Design and plan: [map.md](map.md).
+
+Socket-event types will go here too.
+
+- **Tests:** vitest, `*.test.ts` next to the code. `pnpm --filter shared test` type-checks the tests first (`tsconfig.test.json`), because `tsconfig.json` excludes them from the build so they never land in `dist/`.
 
 - Internal relative exports need an explicit `.js` extension (`export * from './character.js'`) even though the source is `.ts` — the package is `"type": "module"` and the server resolves it with `nodenext`.
 - **It must be built before consumers run.** `main`/`types` point at `dist/index.js`/`dist/index.d.ts`. Node can't map a `.js` specifier to a sibling `.ts`, so without a compiled `dist/` any code importing a _value_ (not just a type) from `shared` crashes on boot with `ERR_MODULE_NOT_FOUND`. `tsc`/`nest build` type-check fine regardless, which hides the problem.

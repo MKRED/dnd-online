@@ -8,7 +8,7 @@ Online DnD platform for playing with friends: 3D map, real-time updates, persist
 
 - `apps/web` — Vite + React 19 + Mantine + react-router. Has auth (login/register) and characters (list, create, edit, delete).
 - `apps/server` — NestJS 12, **native ESM**, Drizzle + Postgres, pino. Modules: `auth`, `users`, `characters`, `database`.
-- `packages/shared` — types shared by web and server (currently the DnD 5e character sheet).
+- `packages/shared` — code shared by web and server: the DnD 5e character-sheet types and the voxel map model (`src/map/`: chunks, palette, operations, ASCII slices), with its own vitest tests.
 
 **Not built yet:** the 3D map (react-three-fiber, plan in [docs/map.md](docs/map.md)) and realtime (Socket.IO). Don't assume they exist because the README mentions them.
 
@@ -21,14 +21,14 @@ pnpm install
 pnpm dev               # web + server + shared watcher
 pnpm dev:web           # web only, http://localhost:5173
 pnpm dev:api           # server only, http://localhost:3000 (API under /api)
-pnpm test              # unit tests, web + server
+pnpm test              # unit tests: shared, web, server
 pnpm lint              # each app's own eslint.config.mjs
 pnpm format            # prettier --write (format:check to verify)
 ```
 
 From `apps/server`: `pnpm test:e2e` (needs a reachable `DATABASE_URL`), `pnpm build`, `pnpm db:generate` / `pnpm db:migrate` / `pnpm db:studio`.
 
-Single test: `pnpm --filter api exec vitest run path/to/file.spec.ts` or `pnpm --filter web exec vitest run path/to/file.test.tsx` (add `-t "name"` to filter).
+Single test: `pnpm --filter api exec vitest run path/to/file.spec.ts`, `pnpm --filter web exec vitest run path/to/file.test.tsx` or `pnpm --filter shared exec vitest run src/map/x.test.ts` (add `-t "name"` to filter).
 
 ## Gotchas
 

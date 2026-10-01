@@ -11,7 +11,7 @@ import {
   Title,
 } from '@mantine/core';
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { Character } from 'shared';
 import {
   CharactersApiError,
@@ -26,10 +26,23 @@ function CharactersPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   // Подсветка только что созданного или изменённого персонажа — id передан через
   // navigate state со страницы создания/редактирования, чтобы было видно, какая карточка.
+  // Запоминаем его в state компонента, а из истории сразу стираем (эффект ниже):
+  // браузер хранит history state между перезагрузками, и бейдж иначе не пропадал бы.
   const location = useLocation();
-  const { createdId, updatedId } =
-    (location.state as { createdId?: string; updatedId?: string } | null) ?? {};
+  const navigate = useNavigate();
+  const [highlight] = useState(
+    () =>
+      (location.state as { createdId?: string; updatedId?: string } | null) ??
+      {},
+  );
+  const { createdId, updatedId } = highlight;
   const highlightedId = createdId ?? updatedId;
+
+  useEffect(() => {
+    if (location.state) {
+      void navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   useEffect(() => {
     listCharacters()

@@ -10,8 +10,8 @@ import {
 import { theme } from '../theme';
 
 export interface RenderOptions {
-  /** Стартовый URL для MemoryRouter. */
-  route?: string;
+  /** Стартовый URL для MemoryRouter (объект — если нужен navigate state). */
+  route?: string | { pathname: string; state?: unknown };
   /** Переопределения AuthContext; по умолчанию — гость, загрузка завершена. */
   auth?: Partial<AuthContextValue>;
 }

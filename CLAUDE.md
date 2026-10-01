@@ -10,7 +10,7 @@ Online DnD platform for playing with friends: 3D map, real-time updates, persist
 - `apps/server` — NestJS 12, **native ESM**, Drizzle + Postgres, pino. Modules: `auth`, `users`, `characters`, `database`.
 - `packages/shared` — types shared by web and server (currently the DnD 5e character sheet).
 
-**Not built yet:** the 3D map (react-three-fiber) and realtime (Socket.IO). Don't assume they exist because the README mentions them.
+**Not built yet:** the 3D map (react-three-fiber, plan in [docs/map.md](docs/map.md)) and realtime (Socket.IO). Don't assume they exist because the README mentions them.
 
 ## Commands
 
@@ -63,6 +63,10 @@ Read the relevant file before working in that area:
   - the `shared` package
   - linting rationale
   - Prettier
+- [docs/map.md](docs/map.md) covers the 3D map (in Russian, a living plan):
+  - decisions (voxel blocks, 1 block = 5 ft, operations, AI/MCP access, server-authoritative rules on the map)
+  - open questions
+  - stage checklist — tick items off as they land
 - [docs/deploy.md](docs/deploy.md) covers deployment:
   - CI pipeline via the `deploy` branch
   - Docker image

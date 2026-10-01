@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import { RequireAuth, RequireGuest } from './features/auth';
 import CharacterCreatePage from './pages/CharacterCreatePage';
+import CharacterEditPage from './pages/CharacterEditPage';
 import CharactersPage from './pages/CharactersPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -18,6 +19,7 @@ export const router = createBrowserRouter([
           { path: '/', element: <HomePage /> },
           { path: '/characters', element: <CharactersPage /> },
           { path: '/characters/new', element: <CharacterCreatePage /> },
+          { path: '/characters/:id/edit', element: <CharacterEditPage /> },
           { path: '*', element: <NotFoundPage /> },
         ],
       },

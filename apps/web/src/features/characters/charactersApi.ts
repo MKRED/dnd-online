@@ -86,6 +86,21 @@ export function listCharacters(): Promise<Character[]> {
   return request('/characters');
 }
 
+export function getCharacter(id: string): Promise<Character> {
+  return request(`/characters/${id}`);
+}
+
+// Полное редактирование чарника формой — тот же payload, что и при создании.
+export function updateCharacter(
+  id: string,
+  payload: CreateCharacterPayload,
+): Promise<Character> {
+  return request(`/characters/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
 export function deleteCharacter(id: string): Promise<void> {
   return request(`/characters/${id}`, { method: 'DELETE' });
 }

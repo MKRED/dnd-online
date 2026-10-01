@@ -13,7 +13,7 @@ import { CurrencyDto, InventoryItemDto } from './nested/equipment.dto.js';
 // Узкий DTO точечных апдейтов "в процессе игры" — ради этого схема и сделана
 // гибридной (см. characters.ts): ХП, спасброски от смерти, вдохновение, опыт,
 // деньги, инвентарь. Полное редактирование чарника (класс, характеристики и т.д.)
-// сюда не входит — это отдельная будущая форма, а не PATCH одним полем.
+// идёт через PUT с CreateCharacterDto, а не через этот DTO.
 export class UpdateCharacterDto {
   @IsOptional()
   @IsInt()

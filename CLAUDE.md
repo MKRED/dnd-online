@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Online DnD platform for playing with friends: 3D map, real-time updates, persistent state. pnpm workspaces monorepo, TypeScript everywhere. Production: https://dnd.aoshi.ru.
 
-- `apps/web` — Vite + React 19 + Mantine + react-router. Has auth (login/register) and character list/creation.
+- `apps/web` — Vite + React 19 + Mantine + react-router. Has auth (login/register) and characters (list, create, edit, delete).
 - `apps/server` — NestJS 12, **native ESM**, Drizzle + Postgres, pino. Modules: `auth`, `users`, `characters`, `database`.
 - `packages/shared` — types shared by web and server (currently the DnD 5e character sheet).
 

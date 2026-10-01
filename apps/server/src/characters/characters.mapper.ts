@@ -51,6 +51,7 @@ export function toCharacter(row: CharacterRow): Character {
     features: row.features,
     personality: row.personality,
     createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   };
 }
 
@@ -58,8 +59,18 @@ export function toInsertValues(
   userId: string,
   dto: CreateCharacterDto,
 ): NewCharacterRow {
+  return { userId, ...toSheetValues(dto) };
+}
+
+// Поля чарника из DTO — общая часть создания и полного редактирования (PUT).
+// Необязательные поля, которых нет в DTO, остаются undefined: drizzle пропускает
+// такие ключи в .set(), поэтому при редактировании они не затираются (то, что меняется
+// по ходу игры через PATCH — инвентарь, спасброски от смерти и т.п. — форма не шлёт).
+// В DTO не должно быть инициализаторов по умолчанию (`= []`), иначе это сломается.
+export function toSheetValues(
+  dto: CreateCharacterDto,
+): Omit<NewCharacterRow, 'userId'> {
   return {
-    userId,
     name: dto.name,
     species: dto.species,
     background: dto.background,

@@ -24,11 +24,12 @@ function CharactersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  // Подсветка только что созданного персонажа — id передан через navigate state
-  // со страницы создания (CharacterCreatePage), чтобы было видно, какая карточка новая.
+  // Подсветка только что созданного или изменённого персонажа — id передан через
+  // navigate state со страницы создания/редактирования, чтобы было видно, какая карточка.
   const location = useLocation();
-  const createdId = (location.state as { createdId?: string } | null)
-    ?.createdId;
+  const { createdId, updatedId } =
+    (location.state as { createdId?: string; updatedId?: string } | null) ?? {};
+  const highlightedId = createdId ?? updatedId;
 
   useEffect(() => {
     listCharacters()
@@ -92,7 +93,7 @@ function CharactersPage() {
               radius="md"
               p="md"
               style={
-                character.id === createdId
+                character.id === highlightedId
                   ? { borderColor: 'var(--mantine-color-green-6)' }
                   : undefined
               }
@@ -101,9 +102,9 @@ function CharactersPage() {
                 <div>
                   <Group gap="xs" align="center">
                     <Text fw={600}>{character.name}</Text>
-                    {character.id === createdId && (
+                    {character.id === highlightedId && (
                       <Badge color="green" size="sm">
-                        Новый
+                        {createdId ? 'Новый' : 'Изменён'}
                       </Badge>
                     )}
                   </Group>
@@ -126,6 +127,14 @@ function CharactersPage() {
                     ХП {character.hitPointsCurrent}/{character.hitPointsMax}
                   </Text>
                   <Text size="sm">КД {character.armorClass}</Text>
+                  <Button
+                    component={Link}
+                    to={`/characters/${character.id}/edit`}
+                    variant="subtle"
+                    size="xs"
+                  >
+                    Редактировать
+                  </Button>
                   <Button
                     color="red"
                     variant="subtle"

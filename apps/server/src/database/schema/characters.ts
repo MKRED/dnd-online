@@ -90,4 +90,10 @@ export const characters = pgTable('characters', {
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
+  // Обновляется самим drizzle ($onUpdate) при любом UPDATE через ORM — и полном
+  // редактировании, и точечном PATCH. По нему сортируется список персонажей.
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });

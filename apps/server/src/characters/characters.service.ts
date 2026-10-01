@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { DatabaseService } from '../database/database.service.js';
 import { characters } from '../database/schema/index.js';
-import { toCharacter, toInsertValues } from './characters.mapper.js';
+import {
+  toCharacter,
+  toInsertValues,
+  toSheetValues,
+} from './characters.mapper.js';
 import { CreateCharacterDto } from './dto/create-character.dto.js';
 import { UpdateCharacterDto } from './dto/update-character.dto.js';
 
@@ -42,7 +46,10 @@ export class CharactersService {
       const rows = await this.databaseService.db
         .select()
         .from(characters)
-        .where(eq(characters.userId, userId));
+        .where(eq(characters.userId, userId))
+        // createdAt — тай-брейкер для записей с одинаковым updatedAt (например,
+        // проставленным миграцией), чтобы порядок не прыгал между запросами.
+        .orderBy(desc(characters.updatedAt), desc(characters.createdAt));
       this.logger.debug(
         { durationMs: Date.now() - t0, userId, count: rows.length },
         'Characters listed',
@@ -75,7 +82,7 @@ export class CharactersService {
         'Character lookup',
       );
       if (!row) {
-        throw new NotFoundException('Character not found');
+        throw new NotFoundException('Персонаж не найден');
       }
       return toCharacter(row);
     } catch (err: unknown) {
@@ -97,19 +104,33 @@ export class CharactersService {
     if (Object.keys(dto).length === 0) {
       return this.findOneForUser(userId, id);
     }
+    return this.applyUpdate(userId, id, dto, 'patch');
+  }
 
+  // Полное редактирование чарника формой: тот же DTO, что и при создании.
+  // Перезаписываются только присланные поля (см. toSheetValues).
+  replace(userId: string, id: string, dto: CreateCharacterDto) {
+    return this.applyUpdate(userId, id, toSheetValues(dto), 'replace');
+  }
+
+  private async applyUpdate(
+    userId: string,
+    id: string,
+    values: Partial<typeof characters.$inferInsert>,
+    kind: 'patch' | 'replace',
+  ) {
     const t0 = Date.now();
     try {
       const [row] = await this.databaseService.db
         .update(characters)
-        .set(dto)
+        .set(values)
         .where(and(eq(characters.id, id), eq(characters.userId, userId)))
         .returning();
       if (!row) {
-        throw new NotFoundException('Character not found');
+        throw new NotFoundException('Персонаж не найден');
       }
       this.logger.info(
-        { durationMs: Date.now() - t0, userId, characterId: id },
+        { durationMs: Date.now() - t0, userId, characterId: id, kind },
         'Character updated',
       );
       return toCharacter(row);
@@ -118,7 +139,7 @@ export class CharactersService {
         throw err;
       }
       this.logger.error(
-        { err, durationMs: Date.now() - t0, userId, characterId: id },
+        { err, durationMs: Date.now() - t0, userId, characterId: id, kind },
         'Character update failed',
       );
       throw err;
@@ -133,7 +154,7 @@ export class CharactersService {
         .where(and(eq(characters.id, id), eq(characters.userId, userId)))
         .returning({ id: characters.id });
       if (!row) {
-        throw new NotFoundException('Character not found');
+        throw new NotFoundException('Персонаж не найден');
       }
       this.logger.info(
         { durationMs: Date.now() - t0, userId, characterId: id },

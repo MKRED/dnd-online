@@ -28,3 +28,8 @@ class ResizeObserverStub {
   disconnect() {}
 }
 window.ResizeObserver = ResizeObserverStub;
+
+// Нет в jsdom и document.fonts — на него подписывается Textarea autosize (форма персонажа).
+Object.defineProperty(document, 'fonts', {
+  value: { addEventListener: vi.fn(), removeEventListener: vi.fn() },
+});

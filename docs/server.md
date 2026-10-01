@@ -36,6 +36,7 @@ Drizzle ORM (`drizzle-orm/node-postgres`, `pg` driver) against Postgres.
 - All routes live under `/api` (`app.setGlobalPrefix('api')`) — in production the SPA is served from the same origin, and its client routes (`/characters`) would otherwise collide with API routes.
 - `src/web-app.module.ts` registers `@nestjs/serve-static` only when `apps/server/public` exists (the Docker image copies `apps/web/dist` there), excluding `/api/{*path}` so unknown API routes stay JSON 404s. In dev/tests it's a no-op.
 - Global `ValidationPipe({ whitelist: true, transform: true })` — DTOs in `*/dto/` use class-validator.
+- Characters (`/characters`, all behind `AuthGuard`, scoped to the owner): `GET` lists them by `updatedAt` desc (`$onUpdate` bumps it on every ORM update), `POST` creates, `PUT /:id` is the full-sheet edit with `CreateCharacterDto` (keys absent from the payload stay untouched, so in-game fields like inventory survive; keep the DTO free of default initializers), `PATCH /:id` is the narrow in-game update (`UpdateCharacterDto`), `DELETE /:id`.
 - CORS with `credentials: true` for `FRONTEND_URL` (default `http://localhost:5173`) — needed only in dev, where web and API run on different ports.
 
 ## Auth

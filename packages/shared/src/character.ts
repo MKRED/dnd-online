@@ -149,4 +149,5 @@ export interface Character {
   features: CharacterFeature[];
   personality: CharacterPersonality;
   createdAt: string;
+  updatedAt: string;
 }

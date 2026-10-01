@@ -6,8 +6,9 @@ Vite + React 19 + TypeScript, Mantine 9 (UI, dark color scheme by default), reac
 
 - `src/main.tsx` — providers: `MantineProvider(theme)` → `AuthProvider` → `RouterProvider`.
 - `src/router.tsx` — routes. Everything except `/login` and `/register` sits behind `RequireAuth`; those two behind `RequireGuest`.
-- `src/features/<feature>/` — non-page logic per feature (API client, context, validation, labels), public surface via `index.ts`. Currently `auth`, `characters`.
-- `src/pages/` — route components; a page that grows several files becomes a folder (`CharacterCreatePage/`).
+- `src/features/<feature>/` — non-page logic and feature UI (API client, context, validation, labels, shared forms), public surface via `index.ts`. Currently `auth`, `characters`.
+  - `characters/CharacterForm/` — the character-sheet form (uncontrolled `useForm`, sections memoized via `formSectionMemo.ts`), used by both the create and edit pages. `initialValues` are read once on mount, so the edit page mounts it only after the character has loaded. `characterFormValues.ts` maps form values ↔ API payload (`toCreatePayload`, `fromCharacter`).
+- `src/pages/` — route components, kept thin; a page that grows several files becomes a folder. Character routes: `/characters`, `/characters/new`, `/characters/:id/edit`.
 - `src/components/` — shared UI (`AppLayout`).
 - `src/theme.ts` — Mantine theme.
 
@@ -31,7 +32,8 @@ Bundler-mode project-references setup from the Vite React-TS template (`tsconfig
 Vitest + Testing Library on jsdom, configured in the `test` section of `vite.config.ts` (`defineConfig` comes from `vitest/config`).
 
 - Files: `*.test.ts(x)` next to the source. Globals are off — import from `vitest`.
-- `src/test/setup.ts` wires jest-dom matchers, `cleanup`, and the jsdom stubs Mantine needs (`matchMedia`, `ResizeObserver`).
+- `src/test/setup.ts` wires jest-dom matchers, `cleanup`, and the jsdom stubs Mantine needs (`matchMedia`, `ResizeObserver`, `document.fonts`).
+- `src/test/characterFixture.ts` — a fully populated `Character` for form/page tests.
 - Render components via `renderWithProviders` from `src/test/render.tsx`: Mantine + `MemoryRouter` + a stub `AuthContext` (so nothing hits `/auth/me`). Options: `route`, `auth` overrides; returns `authValue` to assert on `setUser` etc.
 - Mock the network with `vi.stubGlobal('fetch', …)` — globals and mocks are auto-restored between tests.
 - Run: `pnpm --filter web test` (or `test:watch`).

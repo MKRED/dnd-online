@@ -2,6 +2,7 @@ import {
   ABILITY_SCORES,
   SKILL_ABILITIES,
   type AbilityScore,
+  type Character,
   type CharacterCurrency,
   type CharacterPersonality,
   type Skill,
@@ -80,6 +81,45 @@ export function createInitialFormValues(): CharacterFormValues {
     weaponMasteries: [],
     currency: { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 },
     personality: {},
+  };
+}
+
+// Обратное к toCreatePayload: заполняет форму редактирования данными персонажа.
+export function fromCharacter(character: Character): CharacterFormValues {
+  const base = createInitialFormValues();
+  for (const ability of character.savingThrowProficiencies) {
+    base.savingThrows[ability] = true;
+  }
+  for (const { skill, expertise } of character.skillProficiencies) {
+    base.skills[skill] = { proficient: true, expertise };
+  }
+  return {
+    ...base,
+    name: character.name,
+    species: character.species,
+    background: character.background,
+    alignment: character.alignment ?? '',
+    experiencePoints: character.experiencePoints,
+    classes: character.classes.map((entry) => ({
+      id: crypto.randomUUID(),
+      class: entry.class,
+      level: entry.level,
+      subclass: entry.subclass ?? '',
+    })),
+    proficiencyBonus: character.proficiencyBonus,
+    abilityScores: { ...character.abilityScores },
+    armorClass: character.armorClass,
+    speed: character.speed,
+    hitPointsMax: character.hitPointsMax,
+    hitPointsCurrent: character.hitPointsCurrent,
+    heroicInspiration: character.heroicInspiration,
+    armorProficiencies: [...character.proficiencies.armor],
+    weaponProficiencies: [...character.proficiencies.weapons],
+    toolProficiencies: [...character.proficiencies.tools],
+    languages: [...character.proficiencies.languages],
+    weaponMasteries: [...character.weaponMasteries],
+    currency: { ...character.currency },
+    personality: { ...character.personality },
   };
 }
 

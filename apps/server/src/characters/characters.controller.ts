@@ -8,6 +8,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -38,6 +39,15 @@ export class CharactersController {
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.charactersService.findOneForUser(req.user.sub, id);
+  }
+
+  @Put(':id')
+  replace(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateCharacterDto,
+  ) {
+    return this.charactersService.replace(req.user.sub, id, dto);
   }
 
   @Patch(':id')

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MapOpError, parseMapOp } from './ops.js';
 
-const limits = { maxOpVolume: 1000 };
+const limits = { maxOpVolume: 1000, maxCoordinate: 1000 };
 
 describe('parseMapOp', () => {
   it('принимает корректную операцию', () => {
@@ -41,6 +41,11 @@ describe('parseMapOp', () => {
       block: 'stone',
     };
     expect(() => parseMapOp(input, limits)).toThrow('1100 клеток');
+  });
+
+  it('отклоняет координаты за пределом', () => {
+    const input = { op: 'setBlock', at: [0, -1001, 0], block: 'stone' };
+    expect(() => parseMapOp(input, limits)).toThrow('±1000');
   });
 
   it('принимает воздух как блок', () => {

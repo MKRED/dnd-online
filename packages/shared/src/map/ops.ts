@@ -31,6 +31,9 @@ export type MapOpKind = MapOp['op'];
 export interface MapLimits {
   // Сколько клеток может затронуть одна операция.
   maxOpVolume: number;
+  // Предел |x|, |y|, |z|. Карта растущая, но координаты чанков лежат в integer-колонках
+  // БД — без предела x = 1e12 закончился бы ошибкой базы вместо понятного отказа.
+  maxCoordinate: number;
 }
 
 // Ошибка во входных данных операции. Сообщение на русском — его видит пользователь
@@ -45,7 +48,7 @@ export function opRegion(op: MapOp): Box3 {
 
 type Fields = Record<string, unknown>;
 
-function parseCell(fields: Fields, key: string): Vec3 {
+function parseCell(fields: Fields, key: string, limits: MapLimits): Vec3 {
   const value = fields[key];
   if (
     !Array.isArray(value) ||
@@ -53,6 +56,11 @@ function parseCell(fields: Fields, key: string): Vec3 {
     !value.every((n) => Number.isSafeInteger(n))
   ) {
     throw new MapOpError(`«${key}» должно быть тремя целыми числами [x, y, z]`);
+  }
+  if (value.some((n: number) => Math.abs(n) > limits.maxCoordinate)) {
+    throw new MapOpError(
+      `Координаты «${key}» выходят за пределы ±${limits.maxCoordinate}`,
+    );
   }
   return [value[0], value[1], value[2]] as Vec3;
 }
@@ -86,7 +94,7 @@ export function parseMapOp(input: unknown, limits: MapLimits): MapOp {
     case 'setBlock':
       op = {
         op: 'setBlock',
-        at: parseCell(fields, 'at'),
+        at: parseCell(fields, 'at', limits),
         block: parseBlock(fields, 'block'),
         rotation,
       };
@@ -95,8 +103,8 @@ export function parseMapOp(input: unknown, limits: MapLimits): MapOp {
     case 'hollowBox':
       op = {
         op: fields.op,
-        from: parseCell(fields, 'from'),
-        to: parseCell(fields, 'to'),
+        from: parseCell(fields, 'from', limits),
+        to: parseCell(fields, 'to', limits),
         block: parseBlock(fields, 'block'),
         rotation,
       };
@@ -104,8 +112,8 @@ export function parseMapOp(input: unknown, limits: MapLimits): MapOp {
     case 'replace':
       op = {
         op: 'replace',
-        from: parseCell(fields, 'from'),
-        to: parseCell(fields, 'to'),
+        from: parseCell(fields, 'from', limits),
+        to: parseCell(fields, 'to', limits),
         match: parseBlock(fields, 'match'),
         block: parseBlock(fields, 'block'),
         rotation,

@@ -94,9 +94,12 @@ describe('applyChangeset', () => {
     // Пока мастер не откатил стену, нейросеть заменила в ней один блок на дерево.
     applyOp(map, { op: 'setBlock', at: [1, 0, 0], block: 'wood' });
 
-    const { conflicts } = applyChangeset(map, wall, 'backward');
+    const { conflicts, applied } = applyChangeset(map, wall, 'backward');
 
     expect(conflicts).toEqual([[1, 0, 0]]);
+    expect(applied.cells).toHaveLength(3);
+    // applied — в прямом виде: камень → воздух.
+    expect(applied.cells[0]).toMatchObject({ before: 4, after: 0 });
     expect(
       renderAsciiSlice(map, 0, { minX: 0, maxX: 3, minZ: 0, maxZ: 0 }),
     ).toContain('0 .A..');

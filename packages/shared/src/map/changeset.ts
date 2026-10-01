@@ -43,26 +43,35 @@ function syncPalette(state: MapState, added: PaletteAddition[]) {
 // Карту правят несколько участников (мастер, нейросеть, способности), поэтому клетка
 // могла измениться после этой операции. Такие клетки не перезаписываются, а
 // возвращаются как конфликты — чужие правки не затираются.
+// applied — что реально изменилось, всегда в прямом виде (для undo «до» и «после»
+// переставлены): это и пишется в журнал, и рассылается клиентам.
 export function applyChangeset(
   state: MapState,
   changeset: Changeset,
   direction: ChangesetDirection,
-): { conflicts: Vec3[] } {
-  if (direction === 'forward') syncPalette(state, changeset.paletteAdded);
-  const ordered =
-    direction === 'forward' ? changeset.cells : [...changeset.cells].reverse();
+): { conflicts: Vec3[]; applied: Changeset } {
+  const forward = direction === 'forward';
+  if (forward) syncPalette(state, changeset.paletteAdded);
+  const ordered = forward ? changeset.cells : [...changeset.cells].reverse();
   const conflicts: Vec3[] = [];
+  const appliedCells: CellChange[] = [];
   const touched = new Set<string>();
   for (const { at, before, after } of ordered) {
-    const [expected, target] =
-      direction === 'forward' ? [before, after] : [after, before];
+    const [expected, target] = forward ? [before, after] : [after, before];
     if (readCell(state.store, at) !== expected) {
       conflicts.push(at);
       continue;
     }
     writeCell(state.store, at, target);
+    appliedCells.push({ at, before: expected, after: target });
     for (const key of chunkKeysInBox({ min: at, max: at })) touched.add(key);
   }
   pruneEmptyChunks(state.store, touched);
-  return { conflicts };
+  return {
+    conflicts,
+    applied: {
+      cells: appliedCells,
+      paletteAdded: forward ? changeset.paletteAdded : [],
+    },
+  };
 }

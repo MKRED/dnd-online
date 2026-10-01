@@ -10,3 +10,6 @@ export * from './applyOp.js';
 export * from './changeset.js';
 export * from './summary.js';
 export * from './asciiSlice.js';
+export * from './opsBatch.js';
+export * from './chunkCodec.js';
+export * from './api.js';

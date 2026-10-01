@@ -7,6 +7,7 @@ import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CharactersModule } from './characters/characters.module.js';
 import { DatabaseModule } from './database/database.module.js';
+import { MapsModule } from './maps/maps.module.js';
 import { UsersModule } from './users/users.module.js';
 import { webAppModules } from './web-app.module.js';
 
@@ -20,6 +21,7 @@ const level = process.env.LOG_LEVEL ?? 'info';
     UsersModule,
     AuthModule,
     CharactersModule,
+    MapsModule,
     ...webAppModules(),
     LoggerModule.forRoot({
       pinoHttp: {

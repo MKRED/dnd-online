@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Online DnD platform for playing with friends: 3D map, real-time updates, persistent state. pnpm workspaces monorepo, TypeScript everywhere. Production: https://dnd.aoshi.ru.
 
 - `apps/web` — Vite + React 19 + Mantine + react-router. Has auth (login/register) and characters (list, create, edit, delete).
-- `apps/server` — NestJS 12, **native ESM**, Drizzle + Postgres, pino. Modules: `auth`, `users`, `characters`, `database`.
+- `apps/server` — NestJS 12, **native ESM**, Drizzle + Postgres, pino. Modules: `auth`, `users`, `characters`, `maps`, `database`.
 - `packages/shared` — code shared by web and server: the DnD 5e character-sheet types and the voxel map model (`src/map/`: chunks, palette, operations, ASCII slices), with its own vitest tests.
 
 **Not built yet:** the 3D map (react-three-fiber, plan in [docs/map.md](docs/map.md)) and realtime (Socket.IO). Don't assume they exist because the README mentions them.

@@ -6,10 +6,17 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Pool } from 'pg';
 import * as schema from './schema/index.js';
 
+type Database = NodePgDatabase<typeof schema>;
+
+// Транзакция drizzle: Database['transaction'] передаёт её первым аргументом колбэка.
+export type DbTransaction = Parameters<
+  Parameters<Database['transaction']>[0]
+>[0];
+
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private readonly pool: Pool;
-  readonly db: NodePgDatabase<typeof schema>;
+  readonly db: Database;
 
   constructor(
     configService: ConfigService,

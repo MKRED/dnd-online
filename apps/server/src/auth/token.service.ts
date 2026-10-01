@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { randomUUID } from 'crypto';
 import type { CookieOptions, Response } from 'express';
 
 export interface AccessTokenPayload {
@@ -66,6 +67,9 @@ export class TokenService {
     return this.jwtService.signAsync(payload, {
       secret: this.refreshSecret,
       expiresIn: this.refreshExpiresInSec,
+      // Без jti два логина одного юзера в одну секунду (iat — в секундах) дают
+      // побайтно одинаковый токен → нарушение unique-индекса refresh_tokens.token_hash.
+      jwtid: randomUUID(),
     });
   }
 

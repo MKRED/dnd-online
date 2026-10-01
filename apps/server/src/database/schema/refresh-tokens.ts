@@ -1,5 +1,5 @@
 import { pgTable, uuid, varchar, timestamp } from 'drizzle-orm/pg-core';
-import { users } from './users';
+import { users } from './users.js';
 
 // Храним не сам refresh-токен, а его хэш — чтобы утечка БД не давала готовый токен для использования.
 export const refreshTokens = pgTable('refresh_tokens', {

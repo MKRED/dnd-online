@@ -21,7 +21,7 @@ import type {
   SpellSlots,
   WeaponMasteries,
 } from 'shared';
-import { users } from './users';
+import { users } from './users.js';
 
 // Гибридная схема: часто меняющиеся точечно скаляры (ХП, КД, спасброски от смерти) —
 // обычные колонки, чтобы их можно было апдейтить по одному полю без перезаписи всего чарника.

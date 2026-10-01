@@ -1,6 +1,7 @@
+import { describe, it, expect } from 'vitest';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { TokenService } from './token.service';
+import { TokenService } from './token.service.js';
 
 function makeConfig(overrides: Record<string, string> = {}): ConfigService {
   const values: Record<string, string> = {

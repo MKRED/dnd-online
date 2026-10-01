@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { and, eq, gt } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { DatabaseService } from '../database/database.service';
-import { refreshTokens } from '../database/schema';
+import { DatabaseService } from '../database/database.service.js';
+import { refreshTokens } from '../database/schema/index.js';
 
 // Храним только sha256-хэш refresh-токена — сам JWT нигде в БД не лежит.
 function hashToken(token: string): string {

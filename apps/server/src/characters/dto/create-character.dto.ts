@@ -20,15 +20,15 @@ import {
   AbilityScoresDto,
   ClassLevelDto,
   SkillProficiencyDto,
-} from './nested/basics.dto';
+} from './nested/basics.dto.js';
 import {
   AttackDto,
   CurrencyDto,
   InventoryItemDto,
   ProficienciesDto,
-} from './nested/equipment.dto';
-import { FeatureDto, PersonalityDto } from './nested/narrative.dto';
-import { IsSpellSlots, KnownSpellDto } from './nested/spells.dto';
+} from './nested/equipment.dto.js';
+import { FeatureDto, PersonalityDto } from './nested/narrative.dto.js';
+import { IsSpellSlots, KnownSpellDto } from './nested/spells.dto.js';
 
 // Кросс-полевая проверка: текущее ХП не может превышать максимальное при создании.
 function MaxOf(property: string, validationOptions?: ValidationOptions) {

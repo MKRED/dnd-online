@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { DatabaseService } from '../database/database.service';
-import { characters } from '../database/schema';
-import { toCharacter, toInsertValues } from './characters.mapper';
-import { CreateCharacterDto } from './dto/create-character.dto';
-import { UpdateCharacterDto } from './dto/update-character.dto';
+import { DatabaseService } from '../database/database.service.js';
+import { characters } from '../database/schema/index.js';
+import { toCharacter, toInsertValues } from './characters.mapper.js';
+import { CreateCharacterDto } from './dto/create-character.dto.js';
+import { UpdateCharacterDto } from './dto/update-character.dto.js';
 
 @Injectable()
 export class CharactersService {

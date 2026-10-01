@@ -4,7 +4,7 @@ import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { sql } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Pool } from 'pg';
-import * as schema from './schema';
+import * as schema from './schema/index.js';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {

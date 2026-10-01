@@ -8,7 +8,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { CurrencyDto, InventoryItemDto } from './nested/equipment.dto';
+import { CurrencyDto, InventoryItemDto } from './nested/equipment.dto.js';
 
 // Узкий DTO точечных апдейтов "в процессе игры" — ради этого схема и сделана
 // гибридной (см. characters.ts): ХП, спасброски от смерти, вдохновение, опыт,

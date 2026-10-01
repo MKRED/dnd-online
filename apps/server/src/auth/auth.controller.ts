@@ -10,13 +10,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import type { AuthenticatedRequest } from './auth.guard';
-import { AuthGuard } from './auth.guard';
-import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
-import { TokenService } from './token.service';
-import { UsersService } from '../users/users.service';
+import type { AuthenticatedRequest } from './auth.guard.js';
+import { AuthGuard } from './auth.guard.js';
+import { AuthService } from './auth.service.js';
+import { LoginDto } from './dto/login.dto.js';
+import { RegisterDto } from './dto/register.dto.js';
+import { TokenService } from './token.service.js';
+import { UsersService } from '../users/users.service.js';
 
 @Controller('auth')
 export class AuthController {

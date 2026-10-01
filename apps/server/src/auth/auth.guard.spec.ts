@@ -1,7 +1,8 @@
+import { describe, it, expect, vi } from 'vitest';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import type { PinoLogger } from 'nestjs-pino';
-import { AuthGuard } from './auth.guard';
-import { AccessTokenPayload, TokenService } from './token.service';
+import { AuthGuard } from './auth.guard.js';
+import { AccessTokenPayload, TokenService } from './token.service.js';
 
 function makeContext(cookies: Record<string, string> | undefined) {
   const request: { cookies?: Record<string, string>; user?: unknown } = {
@@ -14,14 +15,14 @@ function makeContext(cookies: Record<string, string> | undefined) {
 }
 
 function makeLogger() {
-  const debug = jest.fn();
+  const debug = vi.fn();
   return { logger: { debug } as unknown as PinoLogger, debug };
 }
 
 describe('AuthGuard', () => {
   it('throws when the access token cookie is missing', async () => {
     const tokenService = {
-      verifyAccessToken: jest.fn(),
+      verifyAccessToken: vi.fn(),
     } as unknown as TokenService;
     const guard = new AuthGuard(tokenService, makeLogger().logger);
     const { context } = makeContext(undefined);
@@ -34,7 +35,7 @@ describe('AuthGuard', () => {
   it('attaches the payload to the request and allows access on a valid token', async () => {
     const payload: AccessTokenPayload = { sub: 'u1', login: 'bob' };
     const tokenService = {
-      verifyAccessToken: jest.fn().mockResolvedValue(payload),
+      verifyAccessToken: vi.fn().mockResolvedValue(payload),
     } as unknown as TokenService;
     const guard = new AuthGuard(tokenService, makeLogger().logger);
     const { context, request } = makeContext({ access_token: 'valid' });
@@ -45,7 +46,7 @@ describe('AuthGuard', () => {
 
   it('throws and logs when token verification fails', async () => {
     const tokenService = {
-      verifyAccessToken: jest.fn().mockRejectedValue(new Error('bad token')),
+      verifyAccessToken: vi.fn().mockRejectedValue(new Error('bad token')),
     } as unknown as TokenService;
     const { logger, debug } = makeLogger();
     const guard = new AuthGuard(tokenService, logger);

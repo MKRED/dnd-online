@@ -11,11 +11,11 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import type { AuthenticatedRequest } from '../auth/auth.guard';
-import { AuthGuard } from '../auth/auth.guard';
-import { CharactersService } from './characters.service';
-import { CreateCharacterDto } from './dto/create-character.dto';
-import { UpdateCharacterDto } from './dto/update-character.dto';
+import type { AuthenticatedRequest } from '../auth/auth.guard.js';
+import { AuthGuard } from '../auth/auth.guard.js';
+import { CharactersService } from './characters.service.js';
+import { CreateCharacterDto } from './dto/create-character.dto.js';
+import { UpdateCharacterDto } from './dto/update-character.dto.js';
 
 @Controller('characters')
 @UseGuards(AuthGuard)

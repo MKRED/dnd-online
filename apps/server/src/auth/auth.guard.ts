@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { AccessTokenPayload, TokenService } from './token.service';
+import { AccessTokenPayload, TokenService } from './token.service.js';
 
 export interface AuthenticatedRequest extends Request {
   user: AccessTokenPayload;

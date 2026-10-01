@@ -1,10 +1,19 @@
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  vi,
+  type Mocked,
+  type Mock,
+} from 'vitest';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import type { PinoLogger } from 'nestjs-pino';
-import { UsersService } from '../users/users.service';
-import { AuthService } from './auth.service';
-import { RefreshTokenService } from './refresh-token.service';
-import { TokenService } from './token.service';
+import { UsersService } from '../users/users.service.js';
+import { AuthService } from './auth.service.js';
+import { RefreshTokenService } from './refresh-token.service.js';
+import { TokenService } from './token.service.js';
 
 const BCRYPT_ROUNDS_FOR_TESTS = 4;
 
@@ -16,20 +25,20 @@ describe('AuthService', () => {
     passwordHash: '',
   };
 
-  let usersService: jest.Mocked<
+  let usersService: Mocked<
     Pick<UsersService, 'findByLogin' | 'createUser' | 'findById'>
   >;
-  let tokenService: jest.Mocked<
+  let tokenService: Mocked<
     Pick<
       TokenService,
       'signAccessToken' | 'signRefreshToken' | 'verifyRefreshToken'
     >
   > & { refreshExpiresInMs: number };
-  let refreshTokenService: jest.Mocked<
+  let refreshTokenService: Mocked<
     Pick<RefreshTokenService, 'store' | 'isValid' | 'revoke'>
   >;
   let logger: PinoLogger;
-  let loggerWarn: jest.Mock;
+  let loggerWarn: Mock;
   let service: AuthService;
 
   beforeEach(async () => {
@@ -39,27 +48,27 @@ describe('AuthService', () => {
     );
 
     usersService = {
-      findByLogin: jest.fn(),
-      createUser: jest.fn(),
-      findById: jest.fn(),
+      findByLogin: vi.fn(),
+      createUser: vi.fn(),
+      findById: vi.fn(),
     };
     tokenService = {
-      signAccessToken: jest.fn().mockResolvedValue('access-jwt'),
-      signRefreshToken: jest.fn().mockResolvedValue('refresh-jwt'),
-      verifyRefreshToken: jest.fn(),
+      signAccessToken: vi.fn().mockResolvedValue('access-jwt'),
+      signRefreshToken: vi.fn().mockResolvedValue('refresh-jwt'),
+      verifyRefreshToken: vi.fn(),
       refreshExpiresInMs: 1000,
     };
     refreshTokenService = {
-      store: jest.fn(),
-      isValid: jest.fn(),
-      revoke: jest.fn(),
+      store: vi.fn(),
+      isValid: vi.fn(),
+      revoke: vi.fn(),
     };
-    loggerWarn = jest.fn();
+    loggerWarn = vi.fn();
     logger = {
       warn: loggerWarn,
-      info: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      info: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     } as unknown as PinoLogger;
 
     service = new AuthService(

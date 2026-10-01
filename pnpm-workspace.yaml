@@ -2,5 +2,8 @@ packages:
   - 'apps/*'
   - 'packages/*'
 allowBuilds:
+  # postinstall @swc/core лишь ставит wasm-фоллбэк — нативный бинарник и так
+  # приходит optional-зависимостью, скрипт не нужен.
+  '@swc/core': false
   esbuild: true
   unrs-resolver: true

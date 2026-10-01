@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { DatabaseService } from '../database/database.service';
-import { users } from '../database/schema';
+import { DatabaseService } from '../database/database.service.js';
+import { users } from '../database/schema/index.js';
 
 export interface CreateUserInput {
   login: string;

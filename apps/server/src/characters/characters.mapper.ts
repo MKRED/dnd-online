@@ -4,8 +4,8 @@ import type {
   CharacterFeature,
   SkillProficiency,
 } from 'shared';
-import type { characters } from '../database/schema';
-import type { CreateCharacterDto } from './dto/create-character.dto';
+import type { characters } from '../database/schema/index.js';
+import type { CreateCharacterDto } from './dto/create-character.dto.js';
 
 type CharacterRow = typeof characters.$inferSelect;
 type NewCharacterRow = typeof characters.$inferInsert;

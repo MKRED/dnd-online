@@ -5,11 +5,11 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { UsersService } from '../users/users.service';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
-import { RefreshTokenService } from './refresh-token.service';
-import { TokenService } from './token.service';
+import { UsersService } from '../users/users.service.js';
+import { LoginDto } from './dto/login.dto.js';
+import { RegisterDto } from './dto/register.dto.js';
+import { RefreshTokenService } from './refresh-token.service.js';
+import { TokenService } from './token.service.js';
 
 const PASSWORD_SALT_ROUNDS = 10;
 

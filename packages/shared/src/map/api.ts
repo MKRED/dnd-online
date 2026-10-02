@@ -1,3 +1,4 @@
+import type { SectionAxis } from './asciiSection.js';
 import type { Box3 } from './coords.js';
 import type { Palette } from './palette.js';
 
@@ -47,4 +48,11 @@ export interface MapSummaryResponse {
   blockCounts: Record<string, number>;
   chunkCount: number;
   palette: Palette;
+}
+
+export interface MapSectionResponse {
+  seq: number;
+  axis: SectionAxis;
+  at: number;
+  text: string;
 }

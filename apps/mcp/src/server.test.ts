@@ -45,6 +45,7 @@ describe('dnd-map MCP server', () => {
       'block_guide',
       'create_map',
       'list_maps',
+      'map_section',
       'map_slice',
       'map_summary',
       'redo',
@@ -67,6 +68,26 @@ describe('dnd-map MCP server', () => {
       method: 'POST',
       body: { ops },
     });
+  });
+
+  it('map_section передаёт серверу только заданные параметры', async () => {
+    const api = vi
+      .fn()
+      .mockResolvedValue({ seq: 4, axis: 'x', at: 3, text: 'Разрез x=3' });
+    const client = await connect(api as unknown as ApiCall);
+
+    const result = await call(client, 'map_section', {
+      mapId: MAP_ID,
+      axis: 'x',
+      at: 3,
+      minY: 0,
+      maxY: 8,
+    });
+
+    expect(result).toEqual({ isError: false, text: 'seq 4\nРазрез x=3' });
+    expect(api).toHaveBeenCalledWith(
+      `/maps/${MAP_ID}/section?axis=x&at=3&minY=0&maxY=8`,
+    );
   });
 
   it('ошибку API возвращает модели как результат с isError', async () => {

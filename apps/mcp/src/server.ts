@@ -1,53 +1,32 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import type {
-  MapEditResult,
-  MapInfo,
-  MapSliceResponse,
-  MapSummaryResponse,
+import {
+  SECTION_AXES,
+  type MapEditResult,
+  type MapInfo,
+  type MapSectionResponse,
+  type MapSliceResponse,
+  type MapSummaryResponse,
 } from 'shared';
 import { z } from 'zod';
 import { MapApiError, type ApiCall } from './apiClient.js';
 import { buildBlockGuide } from './blockGuide.js';
+import { mapId, mapOp, point } from './schemas.js';
 import { buildViewUrl, VIEWS } from './viewUrl.js';
-
-const cell = z
-  .tuple([z.number().int(), z.number().int(), z.number().int()])
-  .describe('[x, y, z]');
-const point = z.tuple([z.number(), z.number(), z.number()]);
-const rotation = z
-  .union([z.literal(0), z.literal(90), z.literal(180), z.literal(270)])
-  .optional();
-const block = z.string().describe('Имя блока, например stone или wood_stairs');
-
-// Схема операций — для подсказки модели; окончательно их проверяет сервер
-// (parseMapOpBatch из shared) по тем же правилам.
-const mapOp = z.discriminatedUnion('op', [
-  z.object({ op: z.literal('setBlock'), at: cell, block, rotation }),
-  z.object({ op: z.literal('fillBox'), from: cell, to: cell, block, rotation }),
-  z.object({
-    op: z.literal('hollowBox'),
-    from: cell,
-    to: cell,
-    block,
-    rotation,
-  }),
-  z.object({
-    op: z.literal('replace'),
-    from: cell,
-    to: cell,
-    match: z.string(),
-    block,
-    rotation,
-  }),
-]);
-
-const mapId = z.string().uuid().describe('id карты из list_maps');
 
 const text = (value: string): CallToolResult => ({
   content: [{ type: 'text', text: value }],
 });
 const json = (value: unknown) => text(JSON.stringify(value, null, 2));
+
+// Параметры среза в строку запроса; незаданные не передаём — сервер возьмёт границы карты.
+function queryString(query: Record<string, string | number | undefined>) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined) params.set(key, String(value));
+  }
+  return params.toString();
+}
 
 // Ошибки API возвращаются модели как результат с isError, а не исключением:
 // так она видит сообщение сервера («Операция №2: Неизвестный блок…») и может исправиться.
@@ -125,14 +104,34 @@ export function createMapMcpServer(api: ApiCall, webUrl: string): McpServer {
     },
     ({ mapId: id, ...query }) =>
       guarded(async () => {
-        const params = new URLSearchParams();
-        for (const [key, value] of Object.entries(query)) {
-          if (value !== undefined) params.set(key, String(value));
-        }
         const slice = await api<MapSliceResponse>(
-          `/maps/${id}/slice?${params.toString()}`,
+          `/maps/${id}/slice?${queryString(query)}`,
         );
         return text(`seq ${slice.seq}\n${slice.text}`);
+      }),
+  );
+
+  server.registerTool(
+    'map_section',
+    {
+      description:
+        'ASCII-разрез карты вертикальной плоскостью x = at или z = at: строки — высота y (верх сверху), столбцы — вторая горизонтальная ось, с легендой. Нужен там, где горизонтальный срез не помогает: крыши, высота этажей, лестницы и проёмы над ними. axis "z" — вид с юга (столбцы — x, слева запад), axis "x" — вид с запада (столбцы — z, слева север). min/max (вдоль столбцов) и minY/maxY задаются парами или не задаются (тогда — границы карты). Не больше 100 000 клеток.',
+      inputSchema: {
+        mapId,
+        axis: z.enum(SECTION_AXES),
+        at: z.number().int(),
+        min: z.number().int().optional(),
+        max: z.number().int().optional(),
+        minY: z.number().int().optional(),
+        maxY: z.number().int().optional(),
+      },
+    },
+    ({ mapId: id, ...query }) =>
+      guarded(async () => {
+        const section = await api<MapSectionResponse>(
+          `/maps/${id}/section?${queryString(query)}`,
+        );
+        return text(`seq ${section.seq}\n${section.text}`);
       }),
   );
 

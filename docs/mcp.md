@@ -4,21 +4,22 @@ A local stdio MCP server that lets an AI agent (Claude Code) read and build maps
 
 ## Tools
 
-| Tool                      | What it does                                                                                                                                                                                         |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `list_maps`, `create_map` | Map records of the token owner.                                                                                                                                                                      |
-| `block_guide`             | Coordinates and compass directions, block names, materials, shapes, rotation, operation formats. Built from `shared`, so it can't drift from what the server accepts. Read it before the first edit. |
-| `map_summary`             | Bounds, block counts, palette.                                                                                                                                                                       |
-| `map_slice`               | ASCII slice at height `y` (rows = z with north up, columns = x, legend). Optional rectangle, max 100 000 cells.                                                                                      |
-| `apply_ops`               | A batch of up to 100 operations: all-or-nothing, one undo unit.                                                                                                                                      |
-| `undo`, `redo`            | The map's journal stack.                                                                                                                                                                             |
-| `view_url`                | A link to the 3D view with a camera (`view=top\|north\|south\|west\|east`, or exact `cam`/`target`) and a height cut `y`.                                                                            |
+| Tool                      | What it does                                                                                                                                                                                                                                                                               |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `list_maps`, `create_map` | Map records of the token owner.                                                                                                                                                                                                                                                            |
+| `block_guide`             | Coordinates and compass directions, block names, materials, shapes, rotation, operation formats. Built from `shared`, so it can't drift from what the server accepts. Read it before the first edit.                                                                                       |
+| `map_summary`             | Bounds, block counts, palette.                                                                                                                                                                                                                                                             |
+| `map_slice`               | ASCII slice at height `y` (rows = z with north up, columns = x, legend). Optional rectangle, max 100 000 cells.                                                                                                                                                                            |
+| `map_section`             | ASCII vertical section through the plane `x = at` or `z = at` (rows = height, top up; `axis: z` looks from the south, `axis: x` from the west). Checks roofs, storey heights, stairs and the openings above them, which a horizontal slice can't show. Optional ranges, max 100 000 cells. |
+| `apply_ops`               | A batch of up to 100 operations: all-or-nothing, one undo unit.                                                                                                                                                                                                                            |
+| `undo`, `redo`            | The map's journal stack.                                                                                                                                                                                                                                                                   |
+| `view_url`                | A link to the 3D view with a camera (`view=top\|north\|south\|west\|east`, or exact `cam`/`target`) and a height cut `y`.                                                                                                                                                                  |
 
 API errors come back as tool results with `isError` and the server's Russian message, not as protocol errors, so the model sees what to fix ("Операция №2: Неизвестный блок…").
 
 ## The build → look → fix loop
 
-1. Edit with `apply_ops`, check with `map_slice` / `map_summary`.
+1. Edit with `apply_ops`, check with `map_slice` (plan), `map_section` (heights) and `map_summary`.
 2. `view_url` → open it with the browser MCP → **wait for the text «Сцена готова»** (the page shows it after the first rendered frame; before that the canvas may still be empty) → screenshot. Make these three calls one after another, not in parallel: a parallel screenshot is taken before the wait finishes and shows the loader.
 3. Same URL, same picture: the camera comes from the URL, not from mouse drags.
 

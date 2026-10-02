@@ -13,6 +13,7 @@ import {
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import { SessionOrApiTokenGuard } from '../api-tokens/session-or-api-token.guard.js';
 import { ApplyOpsDto } from './dto/apply-ops.dto.js';
+import { SectionQueryDto } from './dto/section-query.dto.js';
 import { SliceQueryDto } from './dto/slice-query.dto.js';
 import { MapEditService } from './map-edit.service.js';
 import { MapReadService } from './map-read.service.js';
@@ -49,6 +50,15 @@ export class MapContentController {
     @Query() query: SliceQueryDto,
   ) {
     return this.readService.getSlice(req.user.sub, id, query);
+  }
+
+  @Get('section')
+  section(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query() query: SectionQueryDto,
+  ) {
+    return this.readService.getSection(req.user.sub, id, query);
   }
 
   @Post('ops')

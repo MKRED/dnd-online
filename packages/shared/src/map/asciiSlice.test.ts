@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { applyOp } from './applyOp.js';
 import type { MapState } from './mapState.js';
 import { MapOpError } from './ops.js';
-import { MAX_SLICE_CELLS, renderAsciiSlice } from './asciiSlice.js';
+import { renderAsciiSection } from './asciiSection.js';
+import { renderAsciiSlice } from './asciiSlice.js';
+import { MAX_SLICE_CELLS } from './asciiSymbols.js';
 import { MemoryChunkStore } from './chunkStore.js';
 import { createPalette } from './palette.js';
 import { mapBounds, summarizeMap } from './summary.js';
@@ -58,6 +60,49 @@ describe('renderAsciiSlice', () => {
     const inverted = { minX: 5, maxX: 0, minZ: 5, maxZ: 0 };
     expect(() => renderAsciiSlice(map, 0, huge)).toThrow(MapOpError);
     expect(() => renderAsciiSlice(map, 0, inverted)).toThrow(MapOpError);
+  });
+});
+
+describe('renderAsciiSection', () => {
+  it('разрез по z — вид с юга, верх строкой выше', () => {
+    const section = renderAsciiSection(sampleRoom(), 'z', 3, {
+      min: -1,
+      max: 3,
+      minY: 0,
+      maxY: 2,
+    });
+
+    expect(section).toBe(
+      [
+        'Разрез z=3, вид с юга: x=-1..3 (столбцы, слева направо — с запада на восток), y=2..0 (строки, сверху вниз).',
+        '. = воздух',
+        'A = stone (0°)',
+        'B = wood_stairs (90°)',
+        '',
+        '  10123',
+        '2 AAAAA',
+        '1 AABAA',
+        '0 AAAAA',
+      ].join('\n'),
+    );
+  });
+
+  it('разрез по x — столбцы идут по z, с севера на юг', () => {
+    const section = renderAsciiSection(sampleRoom(), 'x', 1, {
+      min: 0,
+      max: 3,
+      minY: 1,
+      maxY: 1,
+    });
+
+    expect(section.split('\n').slice(-2)).toEqual(['  0123', '1 A..B']);
+  });
+
+  it('отказывается рисовать слишком большой разрез', () => {
+    const huge = { min: 0, max: MAX_SLICE_CELLS, minY: 0, maxY: 0 };
+    expect(() => renderAsciiSection(sampleRoom(), 'x', 0, huge)).toThrow(
+      MapOpError,
+    );
   });
 });
 

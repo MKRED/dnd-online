@@ -7,27 +7,37 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   chunkKeysInBox,
   encodeChunk,
-  MAX_SLICE_CELLS,
+  mapBounds,
   parseChunkKey,
+  renderAsciiSection,
   renderAsciiSlice,
   summarizeMap,
+  type Box3,
   type MapChunksResponse,
+  type MapSectionResponse,
   type MapSliceResponse,
   type MapSummaryResponse,
-  type SliceRegion,
 } from 'shared';
 import {
   DatabaseService,
   type DbTransaction,
 } from '../database/database.service.js';
 import type { maps } from '../database/schema/index.js';
+import { SectionQueryDto } from './dto/section-query.dto.js';
 import { SliceQueryDto } from './dto/slice-query.dto.js';
 import { findOwnedMap } from './map-access.js';
 import { loadChunks } from './map-storage.js';
+import {
+  sectionBox,
+  sectionRanges,
+  sectionRegion,
+  sliceRanges,
+  sliceRegion,
+} from './slice-region.js';
 
 type MapRow = typeof maps.$inferSelect;
 
-// Чтение блоков карты: для рендера (чанки), для нейросети (срез, сводка).
+// Чтение блоков карты: для рендера (чанки), для нейросети (срез, разрез, сводка).
 @Injectable()
 export class MapReadService {
   constructor(
@@ -67,23 +77,13 @@ export class MapReadService {
   ): Promise<MapSliceResponse> {
     return this.read(ownerId, mapId, 'slice', async (tx, map) => {
       const { y } = query;
-      let region = sliceRegionFromQuery(query);
-      if (!region) {
-        // Прямоугольник не задан — берём горизонтальные границы всей карты.
-        const all = await loadChunks(tx, mapId, 'all');
-        const bounds = summarizeMap({
-          store: all,
-          palette: map.palette,
-        }).bounds;
+      const ranges = sliceRanges(query);
+      let bounds: Box3 | null = null;
+      if (!ranges.x) {
+        bounds = await this.loadBounds(tx, map);
         if (!bounds) return { seq: map.seq, y, text: 'Карта пустая' };
-        region = {
-          minX: bounds.min[0],
-          maxX: bounds.max[0],
-          minZ: bounds.min[2],
-          maxZ: bounds.max[2],
-        };
       }
-      assertSliceSize(region);
+      const region = sliceRegion(ranges, bounds);
       const store = await loadChunks(
         tx,
         mapId,
@@ -95,6 +95,41 @@ export class MapReadService {
       const text = renderAsciiSlice({ store, palette: map.palette }, y, region);
       return { seq: map.seq, y, text };
     });
+  }
+
+  getSection(
+    ownerId: string,
+    mapId: string,
+    query: SectionQueryDto,
+  ): Promise<MapSectionResponse> {
+    return this.read(ownerId, mapId, 'section', async (tx, map) => {
+      const { axis, at } = query;
+      const ranges = sectionRanges(query);
+      let bounds: Box3 | null = null;
+      if (!ranges.across || !ranges.height) {
+        bounds = await this.loadBounds(tx, map);
+        if (!bounds) return { seq: map.seq, axis, at, text: 'Карта пустая' };
+      }
+      const region = sectionRegion(query, ranges, bounds);
+      const store = await loadChunks(
+        tx,
+        mapId,
+        chunkKeysInBox(sectionBox(query, region)),
+      );
+      const text = renderAsciiSection(
+        { store, palette: map.palette },
+        axis,
+        at,
+        region,
+      );
+      return { seq: map.seq, axis, at, text };
+    });
+  }
+
+  // Границы всей карты — для срезов, у которых прямоугольник не задан.
+  private async loadBounds(tx: DbTransaction, map: MapRow) {
+    const store = await loadChunks(tx, map.id, 'all');
+    return mapBounds(store);
   }
 
   // Строка карты и чанки читаются одним снимком (REPEATABLE READ): иначе правка,
@@ -131,28 +166,5 @@ export class MapReadService {
       this.logger.error({ err, ownerId, mapId, what }, 'Map read failed');
       throw err;
     }
-  }
-}
-
-function sliceRegionFromQuery(query: SliceQueryDto): SliceRegion | null {
-  const { minX, maxX, minZ, maxZ } = query;
-  const given = [minX, maxX, minZ, maxZ].filter((v) => v !== undefined);
-  if (given.length === 0) return null;
-  if (given.length !== 4) {
-    throw new BadRequestException(
-      'Прямоугольник среза задаётся целиком: minX, maxX, minZ, maxZ',
-    );
-  }
-  return { minX: minX!, maxX: maxX!, minZ: minZ!, maxZ: maxZ! };
-}
-
-// Проверяем до загрузки чанков: огромный прямоугольник не должен тянуть пол-карты из БД.
-function assertSliceSize({ minX, maxX, minZ, maxZ }: SliceRegion) {
-  const width = maxX - minX + 1;
-  const depth = maxZ - minZ + 1;
-  if (width < 1 || depth < 1 || width * depth > MAX_SLICE_CELLS) {
-    throw new BadRequestException(
-      `Срез ${width}×${depth} — нужна область от 1 до ${MAX_SLICE_CELLS} клеток. Уточните minX, maxX, minZ, maxZ.`,
-    );
   }
 }

@@ -37,7 +37,7 @@ Drizzle ORM (`drizzle-orm/node-postgres`, `pg` driver) against Postgres.
 - `src/web-app.module.ts` registers `@nestjs/serve-static` only when `apps/server/public` exists (the Docker image copies `apps/web/dist` there), excluding `/api/{*path}` so unknown API routes stay JSON 404s. In dev/tests it's a no-op.
 - Global `ValidationPipe({ whitelist: true, transform: true })` — DTOs in `*/dto/` use class-validator.
 - Characters (`/characters`, all behind `AuthGuard`, scoped to the owner): `GET` lists them by `updatedAt` desc (`$onUpdate` bumps it on every ORM update), `POST` creates, `PUT /:id` is the full-sheet edit with `CreateCharacterDto` (keys absent from the payload stay untouched, so in-game fields like inventory survive; keep the DTO free of default initializers), `PATCH /:id` is the narrow in-game update (`UpdateCharacterDto`), `DELETE /:id`.
-- Maps (`/maps`, all behind `AuthGuard`, owner-only — another user's map is a 404 «Карта не найдена»). Design and plan: [map.md](map.md); the model itself lives in `packages/shared/src/map/`.
+- Maps (`/maps`, all behind `SessionOrApiTokenGuard`, owner-only — another user's map is a 404 «Карта не найдена»). Design and plan: [map.md](map.md); the model itself lives in `packages/shared/src/map/`.
   - `GET/POST /maps`, `GET/PATCH/DELETE /maps/:id` — map records (`MapsService`).
   - `POST /maps/:id/ops` `{ ops: [...] }` — a batch of map operations, parsed by `parseMapOpBatch` from `shared` (same rules for REST and the future MCP), applied as one undo unit. `POST /maps/:id/undo`, `/redo` — journal stack; a new op clears redo. All writes run in one transaction holding `SELECT … FOR UPDATE` on the map row, so concurrent writers (GM, AI) are serialized (`MapEditService`).
   - `GET /maps/:id/chunks` (whole map, base64 chunks + palette + `seq`), `/summary`, `/slice?y=&minX=&maxX=&minZ=&maxZ=` (ASCII slice for the AI; region defaults to map bounds). Reads run in one `REPEATABLE READ` read-only transaction so the palette and chunks come from the same snapshot (`MapReadService`).
@@ -48,6 +48,7 @@ Drizzle ORM (`drizzle-orm/node-postgres`, `pg` driver) against Postgres.
 ## Auth
 
 - JWT access + refresh tokens in `httpOnly`, `sameSite: lax` cookies (`access_token`, `refresh_token`; `secure` in production). Secrets/TTLs from `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACCESS_EXPIRES_SEC` (default 15 min), `JWT_REFRESH_EXPIRES_SEC` (default 30 days).
+- **API tokens** (`api-tokens` module) are for external clients — the map MCP server. Format `dnd_<random>`, only the sha256 hash and a display prefix are stored. `SessionOrApiTokenGuard` (used by the maps controllers) accepts either the cookie session or `Authorization: Bearer dnd_…`; `/api-tokens` itself is cookie-only (`AuthGuard`), so a leaked token can't mint new ones. A token's reach is exactly the routes that use that guard — today only maps.
 - Refresh tokens carry a random `jti` and are stored in the DB only as a sha256 hash (`RefreshTokenService`); refresh rotates the token.
 - `AuthGuard` reads the access cookie and puts the payload on `request.user`.
 

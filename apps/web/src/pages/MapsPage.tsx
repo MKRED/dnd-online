@@ -1,5 +1,6 @@
 import {
   Alert,
+  Anchor,
   Button,
   Card,
   Container,
@@ -13,10 +14,8 @@ import {
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { MapInfo } from 'shared';
-import { createMap, deleteMap, listMaps, MapsApiError } from '../features/maps';
-
-const errorMessage = (err: unknown, fallback: string) =>
-  err instanceof MapsApiError ? err.message : fallback;
+import { createMap, deleteMap, listMaps } from '../features/maps';
+import { errorMessage } from '../lib/apiRequest';
 
 function MapsPage() {
   const navigate = useNavigate();
@@ -65,9 +64,12 @@ function MapsPage() {
 
   return (
     <Container size="md" py="xl">
-      <Title order={1} mb="lg">
-        Мои карты
-      </Title>
+      <Group justify="space-between" align="center" mb="lg">
+        <Title order={1}>Мои карты</Title>
+        <Anchor component={Link} to="/tokens" size="sm">
+          Токены для нейросети
+        </Anchor>
+      </Group>
 
       <form onSubmit={handleCreate}>
         <Group align="flex-end" mb="lg">

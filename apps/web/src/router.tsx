@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import { RequireAuth, RequireGuest } from './features/auth';
+import ApiTokensPage from './pages/ApiTokensPage';
 import CharacterCreatePage from './pages/CharacterCreatePage';
 import CharacterEditPage from './pages/CharacterEditPage';
 import CharactersPage from './pages/CharactersPage';
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
           { path: '/characters/:id/edit', element: <CharacterEditPage /> },
           { path: '/maps', element: <MapsPage /> },
           { path: '/maps/:id', element: <MapViewPage /> },
+          { path: '/tokens', element: <ApiTokensPage /> },
           { path: '*', element: <NotFoundPage /> },
         ],
       },

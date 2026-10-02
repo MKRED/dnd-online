@@ -26,8 +26,8 @@ import {
   getMap,
   getMapChunks,
   mapStateFromChunks,
-  MapsApiError,
 } from '../features/maps';
+import { ApiError, errorMessage } from '../lib/apiRequest';
 
 // three.js тяжёлый — сцена грузится отдельным чанком только на этой странице.
 const MapScene = lazy(() => import('../features/maps/MapScene'));
@@ -36,9 +36,6 @@ interface LoadedMap {
   info: MapInfo;
   state: MapState;
 }
-
-const errorMessage = (err: unknown, fallback: string) =>
-  err instanceof MapsApiError ? err.message : fallback;
 
 function MapViewPage() {
   const { id = '' } = useParams();
@@ -59,7 +56,7 @@ function MapViewPage() {
           console.error('Failed to load map', err);
           // Не-UUID в адресе сервер отклоняет с 400 — для пользователя это та же «не найдена».
           const notFound =
-            err instanceof MapsApiError &&
+            err instanceof ApiError &&
             (err.status === 404 || err.status === 400);
           setError(
             notFound

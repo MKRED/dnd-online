@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { join } from 'path';
 import { AppController } from './app.controller.js';
+import { ApiTokensModule } from './api-tokens/api-tokens.module.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CharactersModule } from './characters/characters.module.js';
@@ -22,6 +23,7 @@ const level = process.env.LOG_LEVEL ?? 'info';
     AuthModule,
     CharactersModule,
     MapsModule,
+    ApiTokensModule,
     ...webAppModules(),
     LoggerModule.forRoot({
       pinoHttp: {

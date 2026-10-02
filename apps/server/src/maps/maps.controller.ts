@@ -12,12 +12,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
-import { AuthGuard } from '../auth/auth.guard.js';
+import { SessionOrApiTokenGuard } from '../api-tokens/session-or-api-token.guard.js';
 import { MapNameDto } from './dto/map-name.dto.js';
 import { MapsService } from './maps.service.js';
 
 @Controller('maps')
-@UseGuards(AuthGuard)
+@UseGuards(SessionOrApiTokenGuard)
 export class MapsController {
   constructor(private readonly mapsService: MapsService) {}
 

@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
-import { AuthGuard } from '../auth/auth.guard.js';
+import { SessionOrApiTokenGuard } from '../api-tokens/session-or-api-token.guard.js';
 import { ApplyOpsDto } from './dto/apply-ops.dto.js';
 import { SliceQueryDto } from './dto/slice-query.dto.js';
 import { MapEditService } from './map-edit.service.js';
@@ -19,7 +19,7 @@ import { MapReadService } from './map-read.service.js';
 
 // Блоки карты: чтение (рендер, нейросеть) и правки через операции.
 @Controller('maps/:id')
-@UseGuards(AuthGuard)
+@UseGuards(SessionOrApiTokenGuard)
 export class MapContentController {
   constructor(
     private readonly editService: MapEditService,

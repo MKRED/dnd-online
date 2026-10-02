@@ -7,7 +7,6 @@ export {
   getMap,
   getMapChunks,
   listMaps,
-  MapsApiError,
 } from './mapsApi';
 export { mapStateFromChunks } from './mapStateFromChunks';
 export { DEMO_VILLAGE_OPS } from './demoVillage';

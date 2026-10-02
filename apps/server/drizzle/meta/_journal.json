@@ -43,6 +43,13 @@
       "when": 1790841328488,
       "tag": "0005_outgoing_yellowjacket",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790844809107,
+      "tag": "0006_naive_the_spike",
+      "breakpoints": true
     }
   ]
 }

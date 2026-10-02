@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from '../auth/auth.module.js';
+import { ApiTokensModule } from '../api-tokens/api-tokens.module.js';
 import { MapContentController } from './map-content.controller.js';
 import { MapEditService } from './map-edit.service.js';
 import { MapLimitsConfig } from './map-limits.js';
@@ -8,7 +8,7 @@ import { MapsController } from './maps.controller.js';
 import { MapsService } from './maps.service.js';
 
 @Module({
-  imports: [AuthModule],
+  imports: [ApiTokensModule],
   controllers: [MapsController, MapContentController],
   providers: [MapsService, MapEditService, MapReadService, MapLimitsConfig],
 })

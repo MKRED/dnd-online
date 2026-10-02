@@ -19,8 +19,10 @@ API errors come back as tool results with `isError` and the server's Russian mes
 ## The build → look → fix loop
 
 1. Edit with `apply_ops`, check with `map_slice` / `map_summary`.
-2. `view_url` → open it with the browser MCP → **wait for the text «Сцена готова»** (the page shows it after the first rendered frame; before that the canvas may still be empty) → screenshot.
+2. `view_url` → open it with the browser MCP → **wait for the text «Сцена готова»** (the page shows it after the first rendered frame; before that the canvas may still be empty) → screenshot. Make these three calls one after another, not in parallel: a parallel screenshot is taken before the wait finishes and shows the loader.
 3. Same URL, same picture: the camera comes from the URL, not from mouse drags.
+
+Building proportions (a storey is 3 blocks, a door 2, creature heights) are decided in [map.md](map.md), «Два масштаба: правила и пропорции»; `block_guide` repeats them for the model.
 
 **The browser must be logged in as the token's owner.** The map page uses the browser's cookie session, not the API token. If the browser MCP profile is logged in as someone else, `view_url` shows «Карта не найдена» — log in as the right user in that browser window. Putting the token in the URL is deliberately not an option: it would leak into history and logs.
 

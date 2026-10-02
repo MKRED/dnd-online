@@ -64,4 +64,6 @@ Vitest (`vitest.config.ts`, `vitest.config.e2e.ts`) with `unplugin-swc` — Vite
 
 - Unit tests: `*.spec.ts` next to the source. E2E: `test/*.e2e-spec.ts`; boots the full `AppModule`, so it needs a reachable `DATABASE_URL`.
 - Globals are off: import `describe`/`it`/`expect`/`vi` from `vitest`.
+- `pnpm test` type-checks first (`tsc -p tsconfig.json --noEmit`, which covers the specs). Vitest strips types without checking them, and `nest build` excludes the specs, so without this step broken test types went unnoticed.
+- Drizzle's `const [row] = await …select()` is typed as the row, not `row | undefined` (`noUncheckedIndexedAccess` is off). A function that returns such a lookup gets an explicit `Promise<Row | undefined>` return type, so callers have to handle "not found".
 - Single test: `pnpm --filter api exec vitest run path/to/file.spec.ts` (or `-t "test name"`).

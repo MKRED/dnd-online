@@ -23,6 +23,7 @@ describe('AuthService', () => {
     login: 'bob',
     nickname: 'Bob',
     passwordHash: '',
+    createdAt: new Date(),
   };
 
   let usersService: Mocked<

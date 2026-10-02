@@ -4,6 +4,8 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { DatabaseService } from '../database/database.service.js';
 import { users } from '../database/schema/index.js';
 
+type User = typeof users.$inferSelect;
+
 export interface CreateUserInput {
   login: string;
   nickname: string;
@@ -17,7 +19,8 @@ export class UsersService {
     @InjectPinoLogger(UsersService.name) private readonly logger: PinoLogger,
   ) {}
 
-  async findByLogin(login: string) {
+  // Без явного типа TypeScript выводит User, хотя `[user]` из пустой выборки — undefined.
+  async findByLogin(login: string): Promise<User | undefined> {
     const t0 = Date.now();
     const [user] = await this.databaseService.db
       .select()
@@ -31,7 +34,7 @@ export class UsersService {
     return user;
   }
 
-  async findById(id: string) {
+  async findById(id: string): Promise<User | undefined> {
     const t0 = Date.now();
     const [user] = await this.databaseService.db
       .select()

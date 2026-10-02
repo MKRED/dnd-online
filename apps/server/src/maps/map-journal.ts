@@ -13,6 +13,8 @@ import { mapOps, maps, type MapJournalKind } from '../database/schema/index.js';
 import { packChangeset } from './changeset-codec.js';
 import { countChunks, saveChunks } from './map-storage.js';
 
+type MapOpRow = typeof mapOps.$inferSelect;
+
 export function chunkKeysOfChangeset(changeset: Changeset): Set<string> {
   return new Set(changeset.cells.map(({ at }) => cellLocation(at).key));
 }
@@ -86,8 +88,12 @@ export async function commitEdit(
   };
 }
 
-// Последняя действующая (не отменённая) операция — её снимает undo.
-export async function findUndoTarget(tx: DbTransaction, mapId: string) {
+// Последняя действующая (не отменённая) операция — её снимает undo. undefined —
+// отменять нечего; тип указан явно, иначе `[row]` из пустой выборки выводится как MapOpRow.
+export async function findUndoTarget(
+  tx: DbTransaction,
+  mapId: string,
+): Promise<MapOpRow | undefined> {
   const [row] = await tx
     .select()
     .from(mapOps)

@@ -8,9 +8,10 @@ Online DnD platform for playing with friends: 3D map, real-time updates, persist
 
 - `apps/web` — Vite + React 19 + Mantine + react-router. Has auth (login/register), characters (list, create, edit, delete) and maps (list, create, delete, 3D view via react-three-fiber).
 - `apps/server` — NestJS 12, **native ESM**, Drizzle + Postgres, pino. Modules: `auth`, `users`, `characters`, `maps`, `api-tokens`, `database`.
+- `apps/mcp` — local stdio MCP server for the map (an AI builds and inspects maps through the REST API with an API token). Wired up in `.mcp.json`; setup in [docs/mcp.md](docs/mcp.md).
 - `packages/shared` — code shared by web and server: the DnD 5e character-sheet types and the voxel map model (`src/map/`: chunks, palette, operations, ASCII slices), with its own vitest tests.
 
-**Not built yet:** map editing in the UI, the MCP server, gameplay on the map (plan in [docs/map.md](docs/map.md)) and realtime (Socket.IO). Don't assume they exist because the README mentions them.
+**Not built yet:** map editing in the UI, gameplay on the map (plan in [docs/map.md](docs/map.md)) and realtime (Socket.IO). Don't assume they exist because the README mentions them.
 
 ## Commands
 
@@ -28,7 +29,7 @@ pnpm format            # prettier --write (format:check to verify)
 
 From `apps/server`: `pnpm test:e2e` (needs a reachable `DATABASE_URL`), `pnpm build`, `pnpm db:generate` / `pnpm db:migrate` / `pnpm db:studio`.
 
-Single test: `pnpm --filter api exec vitest run path/to/file.spec.ts`, `pnpm --filter web exec vitest run path/to/file.test.tsx` or `pnpm --filter shared exec vitest run src/map/x.test.ts` (add `-t "name"` to filter).
+Single test: `pnpm --filter api exec vitest run path/to/file.spec.ts`, `pnpm --filter web exec vitest run path/to/file.test.tsx`, `pnpm --filter shared exec vitest run src/map/x.test.ts` or `pnpm --filter map-mcp exec vitest run src/server.test.ts` (add `-t "name"` to filter).
 
 ## Gotchas
 
@@ -67,6 +68,7 @@ Read the relevant file before working in that area:
   - decisions (voxel blocks, 1 block = 5 ft, operations, AI/MCP access, server-authoritative rules on the map)
   - open questions
   - stage checklist — tick items off as they land
+- [docs/mcp.md](docs/mcp.md) covers the map MCP server: tools, connecting it, the build → look → fix loop
 - [docs/deploy.md](docs/deploy.md) covers deployment:
   - CI pipeline via the `deploy` branch
   - Docker image

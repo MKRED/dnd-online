@@ -15,9 +15,21 @@ import { renderWithProviders } from '../test/render';
 import MapViewPage from './MapViewPage';
 
 // В jsdom нет WebGL — вместо настоящей сцены заглушка, показывающая, что ей передали.
-vi.mock('../features/maps/MapScene', () => ({
-  default: ({ cutY }: { cutY: number }) => <p>Сцена, срез {String(cutY)}</p>,
-}));
+vi.mock('../features/maps/MapScene', async () => {
+  const { useEffect } = await import('react');
+  return {
+    default: function MapSceneStub({
+      cutY,
+      onReady,
+    }: {
+      cutY: number;
+      onReady: () => void;
+    }) {
+      useEffect(onReady, [onReady]);
+      return <p>Сцена, срез {String(cutY)}</p>;
+    },
+  };
+});
 
 const MAP_ID = '11111111-1111-4111-8111-111111111111';
 const info = {
@@ -87,6 +99,22 @@ describe('MapViewPage', () => {
 
     expect(await screen.findByText('Сцена, срез 4')).toBeInTheDocument();
     expect(screen.getByText('Подземелье')).toBeInTheDocument();
+    expect(await screen.findByText(/^Сцена готова/)).toBeInTheDocument();
+  });
+
+  it('берёт срез из адреса страницы и прижимает его к границам', async () => {
+    stubFetch([
+      { status: 200, body: info },
+      { status: 200, body: towerChunks() },
+    ]);
+    renderWithProviders(
+      <Routes>
+        <Route path="/maps/:id" element={<MapViewPage />} />
+      </Routes>,
+      { route: `/maps/${MAP_ID}?y=2` },
+    );
+
+    expect(await screen.findByText('Сцена, срез 2')).toBeInTheDocument();
   });
 
   it('на пустой карте строит демо-деревню и перезагружает карту', async () => {

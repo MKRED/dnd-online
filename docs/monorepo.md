@@ -2,6 +2,10 @@
 
 pnpm workspaces: `pnpm-workspace.yaml` includes `apps/*` and `packages/*`. The root `package.json` only has Prettier and scripts fanning out to the apps (`pnpm -r …`); TypeScript/ESLint tooling lives inside each app.
 
+## `apps/mcp`
+
+Local stdio MCP server for maps (`map-mcp` package), a thin client over the REST API — see [mcp.md](mcp.md). Built with plain `tsc`, tested with vitest (`pnpm --filter map-mcp test`). Not part of the Docker image; the Dockerfile only copies its `package.json` so `pnpm install --frozen-lockfile` sees every workspace from the lockfile. No ESLint config yet (like `shared`).
+
 ## `packages/shared`
 
 Code consumed by web and server through a `workspace:*` dependency, re-exported from `src/index.ts`:

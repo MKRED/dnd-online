@@ -19,6 +19,9 @@ RUN npm install -g pnpm@11.22.0
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/server/package.json apps/server/package.json
 COPY apps/web/package.json apps/web/package.json
+# apps/mcp в образ не собирается (это локальный MCP-сервер), но он есть в lockfile —
+# без манифеста --frozen-lockfile мог бы счесть lockfile устаревшим.
+COPY apps/mcp/package.json apps/mcp/package.json
 COPY packages/shared/package.json packages/shared/package.json
 
 # Полный install (с dev-зависимостями): нужны nest/tsc/vite для сборки, drizzle-kit

@@ -5,6 +5,11 @@
       "command": "npx",
       "args": ["-y", "@playwright/mcp@latest"],
       "env": {}
+    },
+    "dnd-map": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["apps/mcp/dist/index.js"]
     }
   }
 }

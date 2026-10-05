@@ -20,12 +20,14 @@ import {
   revokeApiToken,
 } from '../features/apiTokens';
 import { errorMessage } from '../lib/apiRequest';
+import { usePageTitle } from '../lib/usePageTitle';
 
 const formatDate = (iso: string) => new Date(iso).toLocaleString('ru-RU');
 
 // Токены для внешних клиентов — MCP-сервера карты, через который нейросеть
 // читает и строит карты. Токен даёт доступ только к картам.
 function ApiTokensPage() {
+  usePageTitle('Токены');
   const [tokens, setTokens] = useState<ApiTokenInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

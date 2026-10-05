@@ -11,6 +11,7 @@ import {
   updateCharacter,
   type CharacterFormValues,
 } from '../features/characters';
+import { usePageTitle } from '../lib/usePageTitle';
 
 function toLoadErrorMessage(err: unknown): string {
   // 400 — id не UUID (ParseUUIDPipe), 404 — нет такого или чужой: для пользователя одно и то же.
@@ -29,6 +30,7 @@ function CharacterEditPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const [character, setCharacter] = useState<Character | null>(null);
+  usePageTitle(character?.name ?? 'Персонаж');
   const [initialValues, setInitialValues] =
     useState<CharacterFormValues | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);

@@ -1,10 +1,10 @@
 # Web (`apps/web`)
 
-Vite + React 19 + TypeScript, Mantine 9 (UI, dark color scheme by default), react-router 7, three.js + react-three-fiber 9 + drei for the 3D map.
+Vite + React 19 + TypeScript, Mantine 9 (UI, light «parchment» scheme by default, dark «charcoal + brass» via the header toggle), react-router 7, three.js + react-three-fiber 9 + drei for the 3D map.
 
 ## Layout
 
-- `src/main.tsx` — providers: `MantineProvider(theme)` → `AuthProvider` → `RouterProvider`.
+- `src/main.tsx` — providers: `MantineProvider(theme, cssVariablesResolver)` → `AuthProvider` → `RouterProvider`.
 - `src/router.tsx` — routes. Everything except `/login` and `/register` sits behind `RequireAuth`; those two behind `RequireGuest`.
 - `src/features/<feature>/` — non-page logic and feature UI (API client, context, validation, labels, shared forms), public surface via `index.ts`. Currently `auth`, `characters`, `maps`, `apiTokens`.
   - `characters/CharacterForm/` — the character-sheet form (uncontrolled `useForm`, sections memoized via `formSectionMemo.ts`), used by both the create and edit pages. `initialValues` are read once on mount, so the edit page mounts it only after the character has loaded. `characterFormValues.ts` maps form values ↔ API payload (`toCreatePayload`, `fromCharacter`).
@@ -20,7 +20,8 @@ Vite + React 19 + TypeScript, Mantine 9 (UI, dark color scheme by default), reac
   - `MapViewPage/` (`/maps/:id`) — full-height page without scrolling: the scene fills the left side, all controls live in the right panel (`MapSidebar`), which moves under the scene on narrow screens. The page height is `100dvh` minus the AppShell header (`--app-shell-header-offset`); the scene container needs `min-height: 0`, otherwise the R3F canvas keeps its previous size and the page starts scrolling. New map UI (editor tools, tokens, initiative) goes into the panel.
 - `src/components/` — shared UI (`AppLayout`).
 - `src/lib/apiRequest.ts` — `apiRequest` + `ApiError` + `errorMessage` for new API clients (maps, API tokens). `characters`/`auth` still have their own older copies.
-- `src/theme.ts` — Mantine theme.
+- `src/lib/usePageTitle.ts` — tab title `«<page> · DnD Online»`; every page calls it (no argument → just `DnD Online`). The favicon is `public/favicon.png`.
+- `src/theme/` — Mantine theme: `palettes.ts` (leather/parchment for light, brass/charcoal for dark; red is left to errors, delete buttons and the logo), `cssVariables.ts` (parchment body background), `theme.ts` (`primary` is a virtual color: leather in light, brass in dark). The header toggle is `src/components/ColorSchemeToggle.tsx`; the 3D scene background follows the scheme too (`MapScene`).
 
 ## API access
 

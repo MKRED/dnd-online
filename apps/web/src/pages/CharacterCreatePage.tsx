@@ -9,8 +9,10 @@ import {
   toCreatePayload,
   type CharacterFormValues,
 } from '../features/characters';
+import { usePageTitle } from '../lib/usePageTitle';
 
 function CharacterCreatePage() {
+  usePageTitle('Новый персонаж');
   const navigate = useNavigate();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);

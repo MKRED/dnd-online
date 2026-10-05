@@ -18,8 +18,10 @@ import {
   deleteCharacter,
   listCharacters,
 } from '../features/characters';
+import { usePageTitle } from '../lib/usePageTitle';
 
 function CharactersPage() {
+  usePageTitle('Персонажи');
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

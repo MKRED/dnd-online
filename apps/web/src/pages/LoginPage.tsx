@@ -20,6 +20,7 @@ import {
   validateLogin,
   validatePassword,
 } from '../features/auth';
+import { usePageTitle } from '../lib/usePageTitle';
 
 interface LoginFormValues {
   login: string;
@@ -27,6 +28,7 @@ interface LoginFormValues {
 }
 
 function LoginPage() {
+  usePageTitle('Вход');
   const navigate = useNavigate();
   const { setUser } = useAuth();
   const [submitError, setSubmitError] = useState<string | null>(null);

@@ -16,8 +16,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { MapInfo } from 'shared';
 import { createMap, deleteMap, listMaps } from '../features/maps';
 import { errorMessage } from '../lib/apiRequest';
+import { usePageTitle } from '../lib/usePageTitle';
 
 function MapsPage() {
+  usePageTitle('Карты');
   const navigate = useNavigate();
   const [maps, setMaps] = useState<MapInfo[]>([]);
   const [loading, setLoading] = useState(true);

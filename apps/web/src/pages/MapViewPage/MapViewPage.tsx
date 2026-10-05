@@ -11,6 +11,7 @@ import {
 import { EditorPanel, useMapEditor } from '../../features/maps/editor';
 import MapSidebar from './MapSidebar';
 import classes from './MapViewPage.module.css';
+import { usePageTitle } from '../../lib/usePageTitle';
 
 // three.js тяжёлый — сцена грузится отдельным чанком только на этой странице.
 const MapScene = lazy(() => import('../../features/maps/MapScene'));
@@ -19,6 +20,7 @@ function MapViewPage() {
   const { id = '' } = useParams();
   const { map, loadError, editError, busy, applyOps, undo, redo } =
     useMapData(id);
+  usePageTitle(map?.info.name ?? 'Карта');
   const editor = useMapEditor({
     state: map?.state ?? null,
     applyOps,

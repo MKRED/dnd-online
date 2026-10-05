@@ -21,6 +21,7 @@ import {
   validateNickname,
   validatePassword,
 } from '../features/auth';
+import { usePageTitle } from '../lib/usePageTitle';
 
 interface RegisterFormValues {
   login: string;
@@ -30,6 +31,7 @@ interface RegisterFormValues {
 }
 
 function RegisterPage() {
+  usePageTitle('Регистрация');
   const navigate = useNavigate();
   const { setUser } = useAuth();
   const [submitError, setSubmitError] = useState<string | null>(null);

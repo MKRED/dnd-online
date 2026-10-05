@@ -1,7 +1,9 @@
 import { Container, Text, Title } from '@mantine/core';
 import { useAuth } from '../features/auth';
+import { usePageTitle } from '../lib/usePageTitle';
 
 function HomePage() {
+  usePageTitle();
   const { user } = useAuth();
 
   return (

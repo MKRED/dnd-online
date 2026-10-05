@@ -16,3 +16,4 @@ export * from './asciiSection.js';
 export * from './opsBatch.js';
 export * from './chunkCodec.js';
 export * from './api.js';
+export * from './rules/index.js';

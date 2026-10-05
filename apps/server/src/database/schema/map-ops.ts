@@ -8,16 +8,12 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
-import type { MapOp } from 'shared';
+import type { MapOp, PackedChangeset } from 'shared';
 import { maps } from './maps.js';
 import { users } from './users.js';
 
-// Changeset в компактном виде: клетки — плоский массив по 5 чисел [x, y, z, до, после],
-// иначе пачка на десятки тысяч клеток раздувала бы jsonb объектами с именами полей.
-export interface StoredChangeset {
-  cells: number[];
-  paletteAdded: { id: number; name: string }[];
-}
+// Changeset журнала хранится в компактном виде (см. PackedChangeset в shared).
+export type StoredChangeset = PackedChangeset;
 
 export type MapJournalKind = 'op' | 'undo' | 'redo';
 

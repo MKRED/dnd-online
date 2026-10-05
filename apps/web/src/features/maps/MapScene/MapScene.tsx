@@ -1,15 +1,13 @@
 import { MapControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { useMemo } from 'react';
 import type { Box3, MapState } from 'shared';
 import type { CameraPlacement } from '../cameraView';
 import type { SceneEditor } from '../editor/editorTools';
-import { createBlockLookup } from '../render/blockLookup';
-import { buildChunkMesh } from '../render/buildChunkMesh';
 import CameraRig from './CameraRig';
 import EditLayer from './EditLayer';
 import FirstFrame from './FirstFrame';
 import ChunkMesh from './ChunkMesh';
+import { useChunkMeshes } from './useChunkMeshes';
 import classes from './MapScene.module.css';
 
 interface MapSceneProps {
@@ -34,13 +32,7 @@ function MapScene({
   editor,
   onReady,
 }: MapSceneProps) {
-  const chunks = useMemo(() => {
-    const lookup = createBlockLookup(map.palette);
-    return [...map.store.keys()].map((key) => ({
-      key,
-      ...buildChunkMesh(map.store, key, lookup, { cutY }),
-    }));
-  }, [map, cutY]);
+  const chunks = useChunkMeshes(map, cutY);
 
   return (
     <div className={classes.canvas}>
@@ -52,10 +44,14 @@ function MapScene({
         <hemisphereLight args={['#ffffff', '#3a3530', 0.9]} />
         <directionalLight position={[40, 80, 30]} intensity={1.6} />
         <EditLayer editor={editor} frame={frame}>
-          {chunks.map(({ key, opaque, transparent }) => (
+          {[...chunks].map(([key, { meshes }]) => (
             <group key={key}>
-              {opaque && <ChunkMesh buffers={opaque} transparent={false} />}
-              {transparent && <ChunkMesh buffers={transparent} transparent />}
+              {meshes.opaque && (
+                <ChunkMesh buffers={meshes.opaque} transparent={false} />
+              )}
+              {meshes.transparent && (
+                <ChunkMesh buffers={meshes.transparent} transparent />
+              )}
             </group>
           ))}
         </EditLayer>

@@ -133,11 +133,56 @@ describe('MapViewPage', () => {
     expect(await screen.findByText('Сцена, срез 2')).toBeInTheDocument();
   });
 
-  it('блок ставится кликом по земле, затем карта перечитывается', async () => {
+  it('блок ставится кликом по земле, изменения применяются без перечитывания', async () => {
     const fetchMock = stubFetch([
       { status: 200, body: info },
       { status: 200, body: emptyChunks },
-      { status: 200, body: { seq: 1, changedCells: 1, conflicts: 0 } },
+      {
+        status: 200,
+        body: {
+          seq: 1,
+          changedCells: 1,
+          conflicts: 0,
+          paletteAdded: ['stone'],
+          // Клетка (1, 0, 1): воздух → stone (id 1, поворот 0 → значение 4).
+          changes: {
+            cells: [1, 0, 1, 0, 4],
+            paletteAdded: [{ id: 1, name: 'stone' }],
+          },
+        },
+      },
+    ]);
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Блок' }));
+    await user.click(screen.getByRole('button', { name: 'Клик по земле' }));
+
+    expect(await screen.findByText('Срез по высоте: 0')).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    const [url, init] = fetchMock.mock.calls[2];
+    expect(url).toMatch(new RegExp(`/maps/${MAP_ID}/ops$`));
+    expect(JSON.parse(init?.body as string)).toEqual({
+      ops: [{ op: 'setBlock', at: [1, 0, 1], block: 'stone', rotation: 0 }],
+    });
+    // Сцена не перемонтировалась — «Сцена готова» остаётся.
+    expect(screen.getByText('Сцена готова.')).toBeInTheDocument();
+  });
+
+  it('перечитывает карту, если между правками были чужие', async () => {
+    const fetchMock = stubFetch([
+      { status: 200, body: info },
+      { status: 200, body: emptyChunks },
+      {
+        status: 200,
+        body: {
+          seq: 5,
+          changedCells: 1,
+          conflicts: 0,
+          paletteAdded: [],
+          changes: { cells: [1, 0, 1, 0, 4], paletteAdded: [] },
+        },
+      },
       { status: 200, body: towerChunks() },
     ]);
     renderPage();
@@ -147,13 +192,7 @@ describe('MapViewPage', () => {
     await user.click(screen.getByRole('button', { name: 'Клик по земле' }));
 
     expect(await screen.findByText('Срез по высоте: 4')).toBeInTheDocument();
-    const [url, init] = fetchMock.mock.calls[2];
-    expect(url).toMatch(new RegExp(`/maps/${MAP_ID}/ops$`));
-    expect(JSON.parse(init?.body as string)).toEqual({
-      ops: [{ op: 'setBlock', at: [1, 0, 1], block: 'stone', rotation: 0 }],
-    });
-    // Сцена не перемонтировалась — «Сцена готова» остаётся.
-    expect(screen.getByText('Сцена готова.')).toBeInTheDocument();
+    expect(fetchMock.mock.calls[3][0]).toMatch(/\/chunks$/);
   });
 
   it('показывает ошибку отмены, не пряча сцену', async () => {

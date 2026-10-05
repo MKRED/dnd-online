@@ -1,4 +1,5 @@
 import type { SectionAxis } from './asciiSection.js';
+import type { PackedChangeset } from './changesetPacking.js';
 import type { Box3 } from './coords.js';
 import type { Palette } from './palette.js';
 
@@ -34,6 +35,10 @@ export interface MapEditResult {
   // Клетки, которые undo/redo не тронул, потому что их уже изменил кто-то другой.
   conflicts: number;
   paletteAdded: string[];
+  // Что реально изменилось, в прямом виде (для undo «до» и «после» уже переставлены):
+  // клиент применяет это к своей копии карты через applyChangeset(..., 'forward'),
+  // а не перечитывает её целиком.
+  changes: PackedChangeset;
 }
 
 export interface MapSliceResponse {

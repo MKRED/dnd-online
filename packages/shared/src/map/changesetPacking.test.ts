@@ -1,6 +1,6 @@
-import type { Changeset } from 'shared';
 import { describe, expect, it } from 'vitest';
-import { packChangeset, unpackChangeset } from './changeset-codec.js';
+import type { Changeset } from './changeset.js';
+import { packChangeset, unpackChangeset } from './changesetPacking.js';
 
 describe('changeset codec', () => {
   it('восстанавливает changeset после упаковки', () => {

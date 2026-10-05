@@ -2,6 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 import { aliasedTable, and, desc, eq, gt, max } from 'drizzle-orm';
 import {
   cellLocation,
+  packChangeset,
   type Changeset,
   type ChunkStore,
   type MapEditResult,
@@ -10,7 +11,6 @@ import {
 } from 'shared';
 import type { DbTransaction } from '../database/database.service.js';
 import { mapOps, maps, type MapJournalKind } from '../database/schema/index.js';
-import { packChangeset } from './changeset-codec.js';
 import { countChunks, saveChunks } from './map-storage.js';
 
 type MapOpRow = typeof mapOps.$inferSelect;
@@ -66,13 +66,14 @@ export async function commitEdit(
   await saveChunks(tx, mapId, store, dirtyKeys);
 
   const seq = input.currentSeq + 1;
+  const changes = packChangeset(applied);
   await tx.insert(mapOps).values({
     mapId,
     seq,
     kind: input.entry.kind,
     targetSeq: input.entry.targetSeq,
     ops: input.entry.ops,
-    changeset: packChangeset(applied),
+    changeset: changes,
     authorId: input.authorId,
   });
   await tx
@@ -85,6 +86,7 @@ export async function commitEdit(
     changedCells: applied.cells.length,
     conflicts: 0,
     paletteAdded: applied.paletteAdded.map((p) => p.name),
+    changes,
   };
 }
 

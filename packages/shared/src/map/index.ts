@@ -8,6 +8,7 @@ export * from './mapState.js';
 export * from './ops.js';
 export * from './applyOp.js';
 export * from './changeset.js';
+export * from './changesetPacking.js';
 export * from './summary.js';
 export * from './asciiSymbols.js';
 export * from './asciiSlice.js';

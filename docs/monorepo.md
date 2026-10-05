@@ -11,7 +11,7 @@ Local stdio MCP server for maps (`map-mcp` package), a thin client over the REST
 Code consumed by web and server through a `workspace:*` dependency, re-exported from `src/index.ts`:
 
 - `src/character.ts` — DnD 5e character-sheet types (`Character`, `AbilityScore`, `Skill`, …).
-- `src/map/` — the voxel map model: coordinates and chunks, cell encoding, block shapes and catalog, palette, map operations (`parseMapOp`, `applyOp` → changeset), map summary and ASCII slices. Pure logic without I/O, so the server applies operations and the client previews them with the same code. Design and plan: [map.md](map.md).
+- `src/map/` — the voxel map model: coordinates and chunks, cell encoding, block shapes and catalog, palette, map operations (`parseMapOp`, `applyOp` → changeset, `packChangeset` for the journal and edit responses), map summary and ASCII slices. Pure logic without I/O, so the server applies operations and the client previews them with the same code. Design and plan: [map.md](map.md).
 
 Socket-event types will go here too.
 

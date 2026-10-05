@@ -11,6 +11,7 @@ import {
   MapOpError,
   opRegion,
   parseMapOpBatch,
+  unpackChangeset,
   type Changeset,
   type MapEditResult,
   type MapOp,
@@ -20,7 +21,6 @@ import {
   type DbTransaction,
 } from '../database/database.service.js';
 import type { maps } from '../database/schema/index.js';
-import { unpackChangeset } from './changeset-codec.js';
 import { findOwnedMap } from './map-access.js';
 import {
   chunkKeysOfChangeset,
@@ -60,6 +60,7 @@ export class MapEditService {
           changedCells: 0,
           conflicts: 0,
           paletteAdded: [],
+          changes: { cells: [], paletteAdded: [] },
         };
       }
       return commitEdit(tx, {

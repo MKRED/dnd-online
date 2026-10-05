@@ -54,8 +54,12 @@ describe('dnd-map MCP server', () => {
     ]);
   });
 
-  it('apply_ops отправляет пачку на сервер', async () => {
-    const api = vi.fn().mockResolvedValue({ seq: 1, changedCells: 2 });
+  it('apply_ops отправляет пачку на сервер и не показывает модели клетки', async () => {
+    const api = vi.fn().mockResolvedValue({
+      seq: 1,
+      changedCells: 2,
+      changes: { cells: [0, 0, 0, 0, 4, 1, 0, 0, 0, 4], paletteAdded: [] },
+    });
     const client = await connect(api as unknown as ApiCall);
     const ops = [
       { op: 'fillBox', from: [0, 0, 0], to: [1, 0, 0], block: 'stone' },
@@ -64,6 +68,7 @@ describe('dnd-map MCP server', () => {
     const result = await call(client, 'apply_ops', { mapId: MAP_ID, ops });
 
     expect(result.isError).toBe(false);
+    expect(JSON.parse(result.text)).toEqual({ seq: 1, changedCells: 2 });
     expect(api).toHaveBeenCalledWith(`/maps/${MAP_ID}/ops`, {
       method: 'POST',
       body: { ops },

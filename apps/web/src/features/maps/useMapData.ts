@@ -15,6 +15,7 @@ import {
   redoMapEdit,
   undoMapEdit,
 } from './mapsApi';
+import { applyMapChanges } from './applyMapChanges';
 import { mapStateFromChunks } from './mapStateFromChunks';
 
 // Кадр камеры для пустой карты: участок 16×16 у начала координат.
@@ -29,7 +30,7 @@ export interface LoadedMap {
 }
 
 // Карта страницы /maps/:id: загрузка и правки (операции, undo, redo). После правки
-// чанки перечитываются целиком — изменения других участников (нейросети) приходят заодно.
+// сервер возвращает changeset, и он применяется к локальной копии карты.
 export function useMapData(id: string) {
   const [map, setMap] = useState<LoadedMap | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -78,6 +79,28 @@ export function useMapData(id: string) {
     [id],
   );
 
+  // Правка следует сразу за нашей копией (seq + 1) — применяем её изменения
+  // локально. Если между ними вклинились чужие правки (нейросеть) или изменения
+  // не легли на копию, перечитываем карту целиком.
+  const syncAfterEdit = useCallback(
+    (result: MapEditResult): Promise<void> | undefined => {
+      // Пачка ничего не изменила — seq не сдвинулся.
+      if (result.seq === seqRef.current) return;
+      if (map && result.seq === seqRef.current + 1) {
+        try {
+          const state = applyMapChanges(map.state, result.changes);
+          seqRef.current = result.seq;
+          setMap({ ...map, state });
+          return;
+        } catch (err) {
+          console.error('Map changes did not apply locally, refetching', err);
+        }
+      }
+      return refresh();
+    },
+    [map, refresh],
+  );
+
   // Правки идут по одной: пока запрос в пути, новые не принимаются (busy),
   // иначе быстрые клики могли бы применяться и перечитываться вперемешку.
   const run = useCallback(
@@ -92,7 +115,7 @@ export function useMapData(id: string) {
               `Не тронуто клеток: ${result.conflicts} — их уже изменил кто-то другой`,
             );
           }
-          return refresh();
+          return syncAfterEdit(result);
         })
         .catch((err: unknown) => {
           console.error(failure, err);
@@ -100,7 +123,7 @@ export function useMapData(id: string) {
         })
         .finally(() => setBusy(false));
     },
-    [busy, refresh],
+    [busy, syncAfterEdit],
   );
 
   const applyOps = useCallback(

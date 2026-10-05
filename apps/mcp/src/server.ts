@@ -18,6 +18,10 @@ const text = (value: string): CallToolResult => ({
   content: [{ type: 'text', text: value }],
 });
 const json = (value: unknown) => text(JSON.stringify(value, null, 2));
+// Итог правки без списка изменённых клеток: он нужен вебу для обновления сцены,
+// а нейросети раздул бы контекст (заливка — десятки тысяч чисел).
+const editSummary = ({ changes: _changes, ...summary }: MapEditResult) =>
+  json(summary);
 
 // Параметры среза в строку запроса; незаданные не передаём — сервер возьмёт границы карты.
 function queryString(query: Record<string, string | number | undefined>) {
@@ -144,7 +148,7 @@ export function createMapMcpServer(api: ApiCall, webUrl: string): McpServer {
     },
     ({ mapId: id, ops }) =>
       guarded(async () =>
-        json(
+        editSummary(
           await api<MapEditResult>(`/maps/${id}/ops`, {
             method: 'POST',
             body: { ops },
@@ -161,7 +165,9 @@ export function createMapMcpServer(api: ApiCall, webUrl: string): McpServer {
     },
     ({ mapId: id }) =>
       guarded(async () =>
-        json(await api<MapEditResult>(`/maps/${id}/undo`, { method: 'POST' })),
+        editSummary(
+          await api<MapEditResult>(`/maps/${id}/undo`, { method: 'POST' }),
+        ),
       ),
   );
 
@@ -174,7 +180,9 @@ export function createMapMcpServer(api: ApiCall, webUrl: string): McpServer {
     },
     ({ mapId: id }) =>
       guarded(async () =>
-        json(await api<MapEditResult>(`/maps/${id}/redo`, { method: 'POST' })),
+        editSummary(
+          await api<MapEditResult>(`/maps/${id}/redo`, { method: 'POST' }),
+        ),
       ),
   );
 

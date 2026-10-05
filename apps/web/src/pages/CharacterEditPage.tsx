@@ -4,24 +4,21 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { Character } from 'shared';
 import {
   CharacterForm,
-  CharactersApiError,
   fromCharacter,
   getCharacter,
   toCreatePayload,
   updateCharacter,
   type CharacterFormValues,
 } from '../features/characters';
+import { ApiError } from '../lib/apiRequest';
 import { usePageTitle } from '../lib/usePageTitle';
 
 function toLoadErrorMessage(err: unknown): string {
   // 400 — id не UUID (ParseUUIDPipe), 404 — нет такого или чужой: для пользователя одно и то же.
-  if (
-    err instanceof CharactersApiError &&
-    (err.status === 400 || err.status === 404)
-  ) {
+  if (err instanceof ApiError && (err.status === 400 || err.status === 404)) {
     return 'Персонаж не найден';
   }
-  return err instanceof CharactersApiError
+  return err instanceof ApiError
     ? err.message
     : 'Не удалось загрузить персонажа';
 }
@@ -59,7 +56,7 @@ function CharacterEditPage() {
       .catch((err: unknown) => {
         console.error('Character update failed', err);
         const message =
-          err instanceof CharactersApiError
+          err instanceof ApiError
             ? err.message
             : 'Не удалось сохранить персонажа';
         setSubmitError(message);

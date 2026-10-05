@@ -3,12 +3,12 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   CharacterForm,
-  CharactersApiError,
   createCharacter,
   createInitialFormValues,
   toCreatePayload,
   type CharacterFormValues,
 } from '../features/characters';
+import { ApiError } from '../lib/apiRequest';
 import { usePageTitle } from '../lib/usePageTitle';
 
 function CharacterCreatePage() {
@@ -29,7 +29,7 @@ function CharacterCreatePage() {
       .catch((err: unknown) => {
         console.error('Character creation failed', err);
         const message =
-          err instanceof CharactersApiError
+          err instanceof ApiError
             ? err.message
             : 'Не удалось создать персонажа';
         setSubmitError(message);

@@ -19,7 +19,8 @@ Vite + React 19 + TypeScript, Mantine 9 (UI, light «parchment» scheme by defau
 - `src/pages/` — route components, kept thin; a page that grows several files becomes a folder. Character routes: `/characters`, `/characters/new`, `/characters/:id/edit`. Map routes: `/maps`, `/maps/:id`; API tokens: `/tokens`.
   - `MapViewPage/` (`/maps/:id`) — full-height page without scrolling: the scene fills the left side, all controls live in the right panel (`MapSidebar`), which moves under the scene on narrow screens. The page height is `100dvh` minus the AppShell header (`--app-shell-header-offset`); the scene container needs `min-height: 0`, otherwise the R3F canvas keeps its previous size and the page starts scrolling. New map UI (editor tools, tokens, initiative) goes into the panel.
 - `src/components/` — shared UI (`AppLayout`).
-- `src/lib/apiRequest.ts` — `apiRequest` + `ApiError` + `errorMessage` for new API clients (maps, API tokens). `characters`/`auth` still have their own older copies.
+- `src/lib/apiRequest.ts` — `apiRequest` + `ApiError` + `errorMessage`, the client for every API module except `auth` (which has its own: a 401 on login is a wrong password, not an expired session). On a 401 it refreshes the session once and retries the request.
+- `src/lib/session.ts` — `refreshSession` (one shared in-flight `POST /auth/refresh`: the server rotates the refresh token, so parallel refreshes would log the user out) and `onSessionExpired` listeners.
 - `src/lib/usePageTitle.ts` — tab title `«<page> · DnD Online»`; every page calls it (no argument → just `DnD Online`). The favicon is `public/favicon.png`.
 - `src/theme/` — Mantine theme: `palettes.ts` (leather/parchment for light, brass/charcoal for dark; red is left to errors, delete buttons and the logo), `cssVariables.ts` (parchment body background), `theme.ts` (`primary` is a virtual color: leather in light, brass in dark). The header toggle is `src/components/ColorSchemeToggle.tsx`; the 3D scene background follows the scheme too (`MapScene`).
 
@@ -28,7 +29,7 @@ Vite + React 19 + TypeScript, Mantine 9 (UI, light «parchment» scheme by defau
 - Base URL: `VITE_API_URL`, default `http://localhost:3000/api` in dev; the Docker build bakes in `/api` (same origin).
 - Every request uses `credentials: 'include'` — auth lives in httpOnly cookies (see [server auth](server.md#auth)).
 - Errors become `AuthApiError(status, message)`; the server's `message` is shown to the user as-is, so server-side user-facing messages are in Russian.
-- `AuthProvider` bootstraps the session: `GET /auth/me`, on 401 one `POST /auth/refresh` and retry. The bootstrap promise is module-level on purpose — StrictMode mounts effects twice, and a duplicate refresh would be rejected because the first one rotated the token.
+- `AuthProvider` bootstraps the session: `GET /auth/me`, on 401 `refreshSession()` and retry. It also subscribes to `onSessionExpired` and drops the user when a refresh is rejected, so `RequireAuth` sends them to the login page. The access cookie lives 15 minutes, so without the refresh in `apiRequest` client-side navigation would start failing with «Access token missing». The bootstrap promise is module-level on purpose — StrictMode mounts effects twice, and a duplicate refresh would be rejected because the first one rotated the token.
 
 ## Styling
 

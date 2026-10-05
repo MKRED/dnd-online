@@ -13,11 +13,8 @@ import {
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { Character } from 'shared';
-import {
-  CharactersApiError,
-  deleteCharacter,
-  listCharacters,
-} from '../features/characters';
+import { deleteCharacter, listCharacters } from '../features/characters';
+import { ApiError } from '../lib/apiRequest';
 import { usePageTitle } from '../lib/usePageTitle';
 
 function CharactersPage() {
@@ -52,7 +49,7 @@ function CharactersPage() {
       .catch((err: unknown) => {
         console.error('Failed to load characters', err);
         const message =
-          err instanceof CharactersApiError
+          err instanceof ApiError
             ? err.message
             : 'Не удалось загрузить персонажей';
         setError(message);
@@ -70,7 +67,7 @@ function CharactersPage() {
       .catch((err: unknown) => {
         console.error('Failed to delete character', err);
         const message =
-          err instanceof CharactersApiError
+          err instanceof ApiError
             ? err.message
             : 'Не удалось удалить персонажа';
         setError(message);

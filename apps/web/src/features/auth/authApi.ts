@@ -1,6 +1,4 @@
-const API_BASE_URL =
-  (import.meta.env.VITE_API_URL as string | undefined) ??
-  'http://localhost:3000/api';
+import { API_BASE_URL } from '../../lib/apiBaseUrl';
 
 export interface AuthUser {
   id: string;
@@ -75,10 +73,6 @@ export function loginUser(input: {
 
 export function getMe(): Promise<{ user: AuthUser }> {
   return get('/auth/me');
-}
-
-export function refreshTokens(): Promise<{ ok: true }> {
-  return post('/auth/refresh', undefined);
 }
 
 export function logoutUser(): Promise<void> {

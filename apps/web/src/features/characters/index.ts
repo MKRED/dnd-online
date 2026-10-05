@@ -1,5 +1,4 @@
 export {
-  CharactersApiError,
   createCharacter,
   deleteCharacter,
   getCharacter,

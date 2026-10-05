@@ -1,11 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import {
-  AuthApiError,
-  getMe,
-  logoutUser,
-  refreshTokens,
-  type AuthUser,
-} from './authApi';
+import { onSessionExpired, refreshSession } from '../../lib/session';
+import { AuthApiError, getMe, logoutUser, type AuthUser } from './authApi';
 import { AuthContext, type AuthContextValue } from './AuthContext';
 
 // Module-level, а не useRef: React.StrictMode в dev дважды монтирует эффект,
@@ -27,16 +22,14 @@ async function bootstrapUser(): Promise<AuthUser | null> {
     }
   }
 
+  // 'expired' ожидаем (refresh-токен истёк/отсутствует — пользователь просто не
+  // залогинен), сбои refreshSession логирует сам.
+  if ((await refreshSession()) !== 'ok') return null;
   try {
-    await refreshTokens();
     const { user } = await getMe();
     return user;
   } catch (err: unknown) {
-    // 401 здесь ожидаем (refresh-токен истёк/отсутствует — пользователь просто не залогинен),
-    // остальное (сеть, 5xx) — реальный сбой, который не должен пройти молча.
-    if (!(err instanceof AuthApiError) || err.status !== 401) {
-      console.error('Token refresh failed', err);
-    }
+    console.error('Failed to fetch current user after refresh', err);
     return null;
   }
 }
@@ -57,6 +50,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, []);
+
+  // Сессия истекла окончательно (refresh не помог) — сбрасываем пользователя,
+  // RequireAuth отправит на страницу входа.
+  useEffect(() => onSessionExpired(() => setUser(null)), []);
 
   const logout = async () => {
     try {

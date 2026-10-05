@@ -11,11 +11,11 @@ import {
   type MapState,
 } from 'shared';
 import { describe, expect, it, vi } from 'vitest';
-import { renderWithProviders } from '../test/render';
+import { renderWithProviders } from '../../test/render';
 import MapViewPage from './MapViewPage';
 
 // В jsdom нет WebGL — вместо настоящей сцены заглушка, показывающая, что ей передали.
-vi.mock('../features/maps/MapScene', async () => {
+vi.mock('../../features/maps/MapScene', async () => {
   const { useEffect } = await import('react');
   return {
     default: function MapSceneStub({

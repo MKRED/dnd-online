@@ -1,7 +1,5 @@
+/* Сцена занимает весь контейнер; размер задаёт страница. */
 .canvas {
   width: 100%;
-  height: calc(100dvh - 60px - 7rem);
-  min-height: 20rem;
-  border-radius: var(--mantine-radius-md);
-  overflow: hidden;
+  height: 100%;
 }

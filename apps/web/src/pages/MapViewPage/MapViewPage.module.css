@@ -1,0 +1,44 @@
+/* Страница ровно на высоту окна под шапкой: прокрутки нет, сцена слева, панель справа. */
+.page {
+  display: flex;
+  height: calc(100dvh - var(--app-shell-header-offset, 0rem));
+}
+
+.scene {
+  position: relative;
+  flex: 1;
+  /* Без нулевых минимумов flex-элемент не сжимается меньше холста,
+     а холст R3F держит размер с прошлого измерения — появляется прокрутка. */
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Загрузчик и подсказки поверх пустой области сцены. */
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.sidebar {
+  flex: 0 0 20rem;
+  padding: var(--mantine-spacing-md);
+  border-left: 1px solid var(--mantine-color-default-border);
+  overflow-y: auto;
+}
+
+/* На узком экране панель уходит под сцену и прокручивается сама, страница — нет. */
+@media (max-width: 48em) {
+  .page {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    flex: 0 0 auto;
+    max-height: 40%;
+    border-left: none;
+    border-top: 1px solid var(--mantine-color-default-border);
+  }
+}

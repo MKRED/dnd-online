@@ -1,15 +1,4 @@
-import {
-  Alert,
-  Anchor,
-  Button,
-  Container,
-  Group,
-  Loader,
-  Slider,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Loader, Text } from '@mantine/core';
 import {
   lazy,
   Suspense,
@@ -18,24 +7,26 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { mapBounds, type MapInfo, type MapState } from 'shared';
-import { ApiError, errorMessage } from '../lib/apiRequest';
+import { ApiError, errorMessage } from '../../lib/apiRequest';
 import {
   applyMapOps,
   DEMO_VILLAGE_OPS,
   getMap,
   getMapChunks,
   mapStateFromChunks,
-} from '../features/maps';
+} from '../../features/maps';
 import {
   parseCameraParams,
   parseCutY,
   placeCamera,
-} from '../features/maps/cameraView';
+} from '../../features/maps/cameraView';
+import MapSidebar from './MapSidebar';
+import classes from './MapViewPage.module.css';
 
 // three.js тяжёлый — сцена грузится отдельным чанком только на этой странице.
-const MapScene = lazy(() => import('../features/maps/MapScene'));
+const MapScene = lazy(() => import('../../features/maps/MapScene'));
 
 interface LoadedMap {
   info: MapInfo;
@@ -128,48 +119,23 @@ function MapViewPage() {
       .finally(() => setBuilding(false));
   };
 
-  return (
-    <Container size="xl" py="md">
-      <Group justify="space-between" align="center" mb="sm">
-        <Title order={2}>{map?.info.name ?? 'Карта'}</Title>
-        <Anchor component={Link} to="/maps" size="sm">
-          Все карты
-        </Anchor>
-      </Group>
+  const loader = (
+    <div className={classes.placeholder}>
+      <Loader />
+    </div>
+  );
 
-      {error ? (
-        <Alert color="red" title="Ошибка">
-          {error}
-        </Alert>
-      ) : !map ? (
-        <Loader />
-      ) : !bounds ? (
-        <Stack align="flex-start">
-          <Text c="dimmed">
-            Карта пустая. Редактор блоков появится позже — пока можно построить
-            демо-деревню и посмотреть на неё.
-          </Text>
-          <Button loading={building} onClick={handleBuildDemo}>
-            Построить демо-деревню
-          </Button>
-        </Stack>
-      ) : (
-        <Stack gap="xs">
-          <Group gap="md" align="center">
-            <Text size="sm" w="10rem">
-              Срез по высоте: {cutY}
-            </Text>
-            <Slider
-              style={{ flex: 1 }}
-              min={bounds.min[1]}
-              max={bounds.max[1]}
-              value={cutY}
-              onChange={handleCutChange}
-              label={null}
-              thumbLabel="Срез по высоте"
-            />
-          </Group>
-          <Suspense fallback={<Loader />}>
+  return (
+    <div className={classes.page}>
+      <div className={classes.scene}>
+        {error ? null : !map ? (
+          loader
+        ) : !bounds ? (
+          <div className={classes.placeholder}>
+            <Text c="dimmed">Здесь появится карта</Text>
+          </div>
+        ) : (
+          <Suspense fallback={loader}>
             {camera && (
               <MapScene
                 map={map.state}
@@ -179,15 +145,24 @@ function MapViewPage() {
               />
             )}
           </Suspense>
-          {/* «Сцена готова» — сигнал для агента в браузере, что снимок можно делать. */}
-          <Text size="xs" c="dimmed">
-            {sceneReady
-              ? 'Сцена готова. Левая кнопка мыши — перемещение, правая — поворот, колесо — масштаб.'
-              : 'Загрузка сцены…'}
-          </Text>
-        </Stack>
-      )}
-    </Container>
+        )}
+      </div>
+
+      <MapSidebar
+        name={map?.info.name ?? 'Карта'}
+        error={error}
+        cut={
+          bounds
+            ? { min: bounds.min[1], max: bounds.max[1], value: cutY }
+            : null
+        }
+        onCutChange={handleCutChange}
+        empty={map !== null && bounds === null}
+        building={building}
+        onBuildDemo={handleBuildDemo}
+        sceneReady={sceneReady}
+      />
+    </div>
   );
 }
 

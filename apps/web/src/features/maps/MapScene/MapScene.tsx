@@ -1,11 +1,13 @@
 import { MapControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { useMemo } from 'react';
-import type { MapState } from 'shared';
+import type { Box3, MapState } from 'shared';
 import type { CameraPlacement } from '../cameraView';
+import type { SceneEditor } from '../editor/editorTools';
 import { createBlockLookup } from '../render/blockLookup';
 import { buildChunkMesh } from '../render/buildChunkMesh';
 import CameraRig from './CameraRig';
+import EditLayer from './EditLayer';
 import FirstFrame from './FirstFrame';
 import ChunkMesh from './ChunkMesh';
 import classes from './MapScene.module.css';
@@ -16,11 +18,22 @@ interface MapSceneProps {
   cutY: number;
   // Начальная камера (из адреса страницы); дальше ей управляет пользователь.
   camera: CameraPlacement;
+  // Границы карты на момент открытия: вокруг них сетка земли в редакторе.
+  frame: Box3;
+  // Инструмент редактора; null — только просмотр.
+  editor: SceneEditor | null;
   // Первый кадр отрисован (см. FirstFrame).
   onReady: () => void;
 }
 
-function MapScene({ map, cutY, camera, onReady }: MapSceneProps) {
+function MapScene({
+  map,
+  cutY,
+  camera,
+  frame,
+  editor,
+  onReady,
+}: MapSceneProps) {
   const chunks = useMemo(() => {
     const lookup = createBlockLookup(map.palette);
     return [...map.store.keys()].map((key) => ({
@@ -38,12 +51,14 @@ function MapScene({ map, cutY, camera, onReady }: MapSceneProps) {
         <color attach="background" args={['#15161a']} />
         <hemisphereLight args={['#ffffff', '#3a3530', 0.9]} />
         <directionalLight position={[40, 80, 30]} intensity={1.6} />
-        {chunks.map(({ key, opaque, transparent }) => (
-          <group key={key}>
-            {opaque && <ChunkMesh buffers={opaque} transparent={false} />}
-            {transparent && <ChunkMesh buffers={transparent} transparent />}
-          </group>
-        ))}
+        <EditLayer editor={editor} frame={frame}>
+          {chunks.map(({ key, opaque, transparent }) => (
+            <group key={key}>
+              {opaque && <ChunkMesh buffers={opaque} transparent={false} />}
+              {transparent && <ChunkMesh buffers={transparent} transparent />}
+            </group>
+          ))}
+        </EditLayer>
         <MapControls makeDefault />
         <CameraRig placement={camera} />
         <FirstFrame onReady={onReady} />

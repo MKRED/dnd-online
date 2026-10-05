@@ -7,6 +7,8 @@ export {
   getMap,
   getMapChunks,
   listMaps,
+  redoMapEdit,
+  undoMapEdit,
 } from './mapsApi';
 export { mapStateFromChunks } from './mapStateFromChunks';
-export { DEMO_VILLAGE_OPS } from './demoVillage';
+export { useMapData, type LoadedMap } from './useMapData';

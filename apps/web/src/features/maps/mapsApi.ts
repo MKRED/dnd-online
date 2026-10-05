@@ -27,3 +27,11 @@ export function applyMapOps(id: string, ops: MapOp[]): Promise<MapEditResult> {
     body: JSON.stringify({ ops }),
   });
 }
+
+export function undoMapEdit(id: string): Promise<MapEditResult> {
+  return request(`/maps/${id}/undo`, { method: 'POST' });
+}
+
+export function redoMapEdit(id: string): Promise<MapEditResult> {
+  return request(`/maps/${id}/redo`, { method: 'POST' });
+}

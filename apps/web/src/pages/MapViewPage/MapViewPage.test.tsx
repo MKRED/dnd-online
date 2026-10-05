@@ -11,6 +11,7 @@ import {
   type MapState,
 } from 'shared';
 import { describe, expect, it, vi } from 'vitest';
+import type { SceneEditor } from '../../features/maps/editor';
 import { renderWithProviders } from '../../test/render';
 import MapViewPage from './MapViewPage';
 
@@ -20,13 +21,27 @@ vi.mock('../../features/maps/MapScene', async () => {
   return {
     default: function MapSceneStub({
       cutY,
+      editor,
       onReady,
     }: {
       cutY: number;
+      editor: SceneEditor | null;
       onReady: () => void;
     }) {
       useEffect(onReady, [onReady]);
-      return <p>Сцена, срез {String(cutY)}</p>;
+      return (
+        <>
+          <p>Сцена, срез {String(cutY)}</p>
+          {/* Клик по земле в клетке (1, 0, 1) — вместо луча по настоящей сцене. */}
+          {editor && (
+            <button
+              onClick={() => editor.onPick({ hit: null, place: [1, 0, 1] })}
+            >
+              Клик по земле
+            </button>
+          )}
+        </>
+      );
     },
   };
 });
@@ -90,14 +105,15 @@ function renderPage(id = MAP_ID) {
 }
 
 describe('MapViewPage', () => {
-  it('показывает сцену со срезом по верхнему уровню карты', async () => {
+  it('без среза в адресе показывает всю карту', async () => {
     stubFetch([
       { status: 200, body: info },
       { status: 200, body: towerChunks() },
     ]);
     renderPage();
 
-    expect(await screen.findByText('Сцена, срез 4')).toBeInTheDocument();
+    expect(await screen.findByText('Сцена, срез Infinity')).toBeInTheDocument();
+    expect(screen.getByText('Срез по высоте: 4')).toBeInTheDocument();
     expect(screen.getByText('Подземелье')).toBeInTheDocument();
     expect(await screen.findByText(/^Сцена готова/)).toBeInTheDocument();
   });
@@ -117,25 +133,42 @@ describe('MapViewPage', () => {
     expect(await screen.findByText('Сцена, срез 2')).toBeInTheDocument();
   });
 
-  it('на пустой карте строит демо-деревню и перезагружает карту', async () => {
+  it('блок ставится кликом по земле, затем карта перечитывается', async () => {
     const fetchMock = stubFetch([
       { status: 200, body: info },
       { status: 200, body: emptyChunks },
-      { status: 200, body: { seq: 1, changedCells: 10, conflicts: 0 } },
-      { status: 200, body: info },
+      { status: 200, body: { seq: 1, changedCells: 1, conflicts: 0 } },
       { status: 200, body: towerChunks() },
     ]);
     renderPage();
     const user = userEvent.setup();
 
-    await user.click(
-      await screen.findByRole('button', { name: 'Построить демо-деревню' }),
-    );
+    await user.click(await screen.findByRole('button', { name: 'Блок' }));
+    await user.click(screen.getByRole('button', { name: 'Клик по земле' }));
 
-    expect(await screen.findByText(/Сцена, срез/)).toBeInTheDocument();
+    expect(await screen.findByText('Срез по высоте: 4')).toBeInTheDocument();
     const [url, init] = fetchMock.mock.calls[2];
     expect(url).toMatch(new RegExp(`/maps/${MAP_ID}/ops$`));
-    expect(init?.method).toBe('POST');
+    expect(JSON.parse(init?.body as string)).toEqual({
+      ops: [{ op: 'setBlock', at: [1, 0, 1], block: 'stone', rotation: 0 }],
+    });
+    // Сцена не перемонтировалась — «Сцена готова» остаётся.
+    expect(screen.getByText('Сцена готова.')).toBeInTheDocument();
+  });
+
+  it('показывает ошибку отмены, не пряча сцену', async () => {
+    stubFetch([
+      { status: 200, body: info },
+      { status: 200, body: towerChunks() },
+      { status: 400, body: { message: 'Нечего отменять' } },
+    ]);
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Отменить' }));
+
+    expect(await screen.findByText('Нечего отменять')).toBeInTheDocument();
+    expect(screen.getByText('Сцена, срез Infinity')).toBeInTheDocument();
   });
 
   it('показывает «Карта не найдена» на 404', async () => {

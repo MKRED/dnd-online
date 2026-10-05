@@ -1,39 +1,45 @@
 import {
   Alert,
   Anchor,
-  Button,
+  Divider,
   Group,
   Slider,
   Stack,
   Text,
   Title,
 } from '@mantine/core';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import classes from './MapViewPage.module.css';
 
 interface MapSidebarProps {
   name: string;
-  error: string | null;
+  // Карта не загрузилась — сцены нет.
+  loadError: string | null;
+  // Правка не прошла; сцена остаётся на месте.
+  editError: string | null;
   // Пределы и текущее значение среза; null — карта ещё не загружена или пустая.
   cut: { min: number; max: number; value: number } | null;
   onCutChange: (y: number) => void;
+  loaded: boolean;
   // Карта загружена, но в ней нет ни одного блока.
   empty: boolean;
-  building: boolean;
-  onBuildDemo: () => void;
   sceneReady: boolean;
+  // Инструменты редактора.
+  children: ReactNode;
 }
 
 // Правая панель страницы карты: всё управление, чтобы сцена занимала остальной экран.
 function MapSidebar({
   name,
-  error,
+  loadError,
+  editError,
   cut,
   onCutChange,
+  loaded,
   empty,
-  building,
-  onBuildDemo,
   sceneReady,
+  children,
 }: MapSidebarProps) {
   return (
     <aside className={classes.sidebar}>
@@ -45,22 +51,23 @@ function MapSidebar({
           </Anchor>
         </Group>
 
-        {error && (
+        {loadError && (
           <Alert color="red" title="Ошибка">
-            {error}
+            {loadError}
           </Alert>
         )}
 
+        {/* «Сцена готова» — сигнал для агента в браузере, что снимок можно делать. */}
+        {loaded && (
+          <Text size="xs" c="dimmed">
+            {sceneReady ? 'Сцена готова.' : 'Загрузка сцены…'}
+          </Text>
+        )}
+
         {empty && (
-          <Stack align="flex-start" gap="sm">
-            <Text c="dimmed" size="sm">
-              Карта пустая. Редактор блоков появится позже — пока можно
-              построить демо-деревню и посмотреть на неё.
-            </Text>
-            <Button loading={building} onClick={onBuildDemo}>
-              Построить демо-деревню
-            </Button>
-          </Stack>
+          <Text c="dimmed" size="sm">
+            Карта пустая. Выберите инструмент «Блок» и кликните по сетке.
+          </Text>
         )}
 
         {cut && (
@@ -77,13 +84,12 @@ function MapSidebar({
           </Stack>
         )}
 
-        {/* «Сцена готова» — сигнал для агента в браузере, что снимок можно делать. */}
-        {cut && (
-          <Text size="xs" c="dimmed">
-            {sceneReady
-              ? 'Сцена готова. Левая кнопка мыши — перемещение, правая — поворот, колесо — масштаб.'
-              : 'Загрузка сцены…'}
-          </Text>
+        {loaded && (
+          <>
+            <Divider label="Редактор" labelPosition="left" />
+            {editError && <Alert color="red">{editError}</Alert>}
+            {children}
+          </>
         )}
       </Stack>
     </aside>

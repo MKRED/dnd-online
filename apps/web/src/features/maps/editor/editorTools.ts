@@ -6,7 +6,7 @@ import {
   type Rotation,
   type Vec3,
 } from 'shared';
-import type { WalkToken } from '../walkTest';
+import type { WalkHover } from '../walkTest';
 
 // walk — проверка хода: карту не меняет, водит фигурку по правилам пути.
 export const EDITOR_TOOLS = [
@@ -128,7 +128,7 @@ export interface SceneEditor {
   anchor: Vec3 | null;
   height: number;
   onPick: (cells: PickedCells) => void;
-  // Подсветка тела вместо клеток (проверка хода): где встанет фигурка и годится
-  // ли место — сцена красит его зелёным или красным.
-  preview?: (cells: PickedCells) => WalkToken | null;
+  // Подсветка проверки хода вместо клеток: тело там, где встанет фигурка, путь
+  // до него и цена.
+  preview?: (cells: PickedCells) => WalkHover | null;
 }

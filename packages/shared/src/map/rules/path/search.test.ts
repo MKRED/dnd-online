@@ -120,6 +120,23 @@ describe('findPath', () => {
     expect(result?.path.at(-1)).toEqual([4, 0, 0]);
   });
 
+  it('из путей одной цены — самый короткий: по прямой, без зигзага', () => {
+    const open = floorWith();
+    const straight = [0, 1, 2, 3, 4, 5].map((x) => [x, 0, 0]);
+    expect(findPath(open, [0, 0, 0], [5, 0, 0], 'medium')?.path).toEqual(
+      straight,
+    );
+    const reach = reachable(open, [0, 0, 0], 'medium', 30);
+    expect(pathFromReach(reach, [5, 0, 0])?.path).toEqual(straight);
+    // Со смещением вбок диагоналей ровно столько, сколько нужно: одна.
+    const shifted = findPath(open, [0, 0, 0], [5, 0, 1], 'medium');
+    expect(shifted?.cost).toBe(25);
+    const diagonals = shifted!.path
+      .slice(1)
+      .filter((at, i) => at[2] !== shifted!.path[i][2]);
+    expect(diagonals).toHaveLength(1);
+  });
+
   it('дороже предела или в замкнутую комнату — null', () => {
     expect(findPath(wall, [0, 0, 0], [4, 0, 0], 'medium', 45)).toBeNull();
     const room = floorWith({

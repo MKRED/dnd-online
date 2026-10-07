@@ -1,6 +1,6 @@
 import type { ThreeEvent } from '@react-three/fiber';
 import { useState, type ReactNode } from 'react';
-import type { Box3, Point3, Vec3 } from 'shared';
+import type { Box3, Vec3 } from 'shared';
 import {
   cellsFromHit,
   regionBox,
@@ -9,6 +9,7 @@ import {
   type SceneEditor,
 } from '../editor/editorTools';
 import FrameBox from './FrameBox';
+import WalkHoverMesh from './WalkHoverMesh';
 
 interface EditLayerProps {
   editor: SceneEditor | null;
@@ -42,33 +43,26 @@ const samePick = (a: PickedCells | null, b: PickedCells | null) =>
   a === b ||
   (!!a && !!b && sameCell(a.hit, b.hit) && sameCell(a.place, b.place));
 
-const HIGHLIGHT = { edit: '#ffd43b', erase: '#ff6b6b', ok: '#51cf66' };
-
-// Что подсветить под курсором: тело фигурки (проверка хода), область от первого
-// угла или одну клетку инструмента.
-function hoverBox(
-  editor: SceneEditor,
-  pick: PickedCells,
-): { min: Point3; max: Point3; color: string } | null {
-  if (editor.preview) {
-    const token = editor.preview(pick);
-    return (
-      token && {
-        ...token.body,
-        color: token.ok ? HIGHLIGHT.ok : HIGHLIGHT.erase,
-      }
-    );
-  }
+// Подсветка клеток инструмента: область от первого угла или одна клетка.
+function CellHighlight({
+  editor,
+  pick,
+}: {
+  editor: SceneEditor;
+  pick: PickedCells;
+}) {
   const cell = toolCell(editor.tool, pick);
   if (!cell) return null;
   const box: Box3 = editor.anchor
     ? regionBox(editor.anchor, cell, editor.height)
     : { min: cell, max: cell };
-  return {
-    min: box.min,
-    max: [box.max[0] + 1, box.max[1] + 1, box.max[2] + 1],
-    color: editor.tool === 'erase' ? HIGHLIGHT.erase : HIGHLIGHT.edit,
-  };
+  return (
+    <FrameBox
+      min={box.min}
+      max={[box.max[0] + 1, box.max[1] + 1, box.max[2] + 1]}
+      color={editor.tool === 'erase' ? '#ff6b6b' : '#ffd43b'}
+    />
+  );
 }
 
 // Слой редактора: клики по блокам и земле превращаются в выбор клеток.
@@ -86,8 +80,6 @@ function EditLayer({ editor, frame, children }: EditLayerProps) {
   );
   const cx = Math.round((frame.min[0] + frame.max[0] + 1) / 2);
   const cz = Math.round((frame.min[2] + frame.max[2] + 1) / 2);
-
-  const box = editor && hover && hoverBox(editor, hover);
 
   return (
     <>
@@ -131,7 +123,13 @@ function EditLayer({ editor, frame, children }: EditLayerProps) {
           raycast={() => null}
         />
       )}
-      {box && <FrameBox min={box.min} max={box.max} color={box.color} />}
+      {editor &&
+        hover &&
+        (editor.preview ? (
+          <WalkHoverMesh hover={editor.preview(hover)} />
+        ) : (
+          <CellHighlight editor={editor} pick={hover} />
+        ))}
     </>
   );
 }

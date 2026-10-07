@@ -10,7 +10,8 @@ import {
 } from 'shared';
 import type { PickedCells } from '../editor/editorTools';
 import { reachTiles, type ReachTile } from './reachTiles';
-import { walkBody, walkTarget } from './walkTarget';
+import { walkHover, type WalkHover } from './walkHover';
+import { walkBody } from './walkTarget';
 
 // Фигурка в сцене: тело и можно ли ему тут стоять (после правки карты или смены
 // размера место может стать негодным — тогда фигурка красная, но не пропадает).
@@ -66,24 +67,23 @@ export function useWalkTest(state: MapState | null) {
 
   // Подсветка под курсором: где встанет фигурка и можно ли там стоять.
   const preview = useCallback(
-    (cells: PickedCells): WalkToken | null => {
-      if (!state) return null;
-      const target = walkTarget(state, cells, size);
-      return { body: walkBody(state, target.anchor, size), ok: target.ok };
-    },
-    [state, size],
+    (cells: PickedCells): WalkHover | null =>
+      state && walkHover(state, reach, cells, size),
+    [state, reach, size],
   );
 
-  // Клик ставит фигурку туда, где можно стоять, и начинает новый ход.
+  // Клик по достижимой позиции — ход: фигурка идёт туда, футы списываются.
+  // По любой другой, где можно стоять, — фигурка переставляется, ход начинается заново.
   const pick = useCallback(
     (cells: PickedCells) => {
       if (!state) return;
-      const target = walkTarget(state, cells, size);
-      if (!target.ok) return;
-      setAnchor(target.anchor);
-      setSpent(0);
+      const hover = walkHover(state, reach, cells, size);
+      if (hover.kind === 'blocked') return;
+      setAnchor(hover.anchor);
+      if (hover.kind === 'move') setSpent((prev) => prev + hover.cost);
+      else setSpent(0);
     },
-    [state, size],
+    [state, reach, size],
   );
 
   return {

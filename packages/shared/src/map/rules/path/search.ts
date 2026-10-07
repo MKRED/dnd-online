@@ -36,8 +36,16 @@ const MAX_EXPANDED = 50_000;
 interface Node {
   at: Vec3;
   cost: number;
+  // Геометрическая длина пути в клетках (диагональ — √2): второй ключ после цены.
+  len: number;
   prev: string | null;
 }
+
+// Диагональ по правилам стоит как прямой шаг, поэтому путей одной цены много:
+// зигзаг вбок и обратно стоит столько же, сколько прямая. Из равных по цене берём
+// самый короткий на самом деле — он и выглядит естественно. На цену и на то, куда
+// можно дойти, это не влияет.
+const stepLength = (d: Vec3) => Math.hypot(d[0], d[1], d[2]);
 
 const keyOf = (at: Vec3) => at.join(',');
 
@@ -61,8 +69,8 @@ function explore(
   const estimate = (at: Vec3) =>
     goal ? cellDistance(at, goal) * FEET_PER_CELL : 0;
   const heap = new MinHeap<string>();
-  nodes.set(keyOf(start), { at: start, cost: 0, prev: null });
-  heap.push(keyOf(start), estimate(start));
+  nodes.set(keyOf(start), { at: start, cost: 0, len: 0, prev: null });
+  heap.push(keyOf(start), estimate(start), 0);
 
   while (heap.size > 0 && closed.size < MAX_EXPANDED) {
     const key = heap.pop() as string;
@@ -80,11 +88,17 @@ function explore(
       if (cost === null) continue;
       const total = node.cost + cost;
       if (total > maxCost) continue;
+      const len = node.len + stepLength(d);
       const nextKey = keyOf(next);
       const known = nodes.get(nextKey);
-      if (known && known.cost <= total) continue;
-      nodes.set(nextKey, { at: next, cost: total, prev: key });
-      heap.push(nextKey, total + estimate(next));
+      if (
+        known &&
+        (known.cost < total || (known.cost === total && known.len <= len))
+      ) {
+        continue;
+      }
+      nodes.set(nextKey, { at: next, cost: total, len, prev: key });
+      heap.push(nextKey, total + estimate(next), len);
     }
   }
   return { nodes, closed, reached: false };

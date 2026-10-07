@@ -17,6 +17,7 @@ import {
   type PickedCells,
   type SceneEditor,
 } from './editorTools';
+import type { WalkTest } from '../walkTest';
 
 interface Anchor {
   cell: Vec3;
@@ -29,6 +30,8 @@ interface MapEditorOptions {
   applyOps: (ops: MapOp[]) => void;
   undo: () => void;
   redo: () => void;
+  // Проверка хода: клики инструмента «Ход» уходят ей, а не в операции карты.
+  walk: Pick<WalkTest, 'pick' | 'preview'>;
 }
 
 // Состояние инструментов редактора мастера и превращение кликов по сцене в операции.
@@ -37,6 +40,7 @@ export function useMapEditor({
   applyOps,
   undo,
   redo,
+  walk,
 }: MapEditorOptions) {
   const [tool, setToolState] = useState<EditorTool>('view');
   const [block, setBlock] = useState('stone');
@@ -58,8 +62,18 @@ export function useMapEditor({
     ['Escape', () => setAnchor(null)],
   ]);
 
+  const { pick: walkPick, preview: walkPreview } = walk;
   const sceneEditor = useMemo<SceneEditor | null>(() => {
     if (tool === 'view' || !state) return null;
+    if (tool === 'walk') {
+      return {
+        tool,
+        anchor: null,
+        height,
+        onPick: walkPick,
+        preview: walkPreview,
+      };
+    }
     const settings = { block, rotation, height };
     const onPick = (cells: PickedCells) => {
       const cell = toolCell(tool, cells);
@@ -81,7 +95,17 @@ export function useMapEditor({
       setAnchor(null);
     };
     return { tool, anchor: anchor?.cell ?? null, height, onPick };
-  }, [tool, state, block, rotation, height, anchor, applyOps]);
+  }, [
+    tool,
+    state,
+    block,
+    rotation,
+    height,
+    anchor,
+    applyOps,
+    walkPick,
+    walkPreview,
+  ]);
 
   return {
     tool,

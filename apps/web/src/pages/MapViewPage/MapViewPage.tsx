@@ -9,6 +9,7 @@ import {
   placeCamera,
 } from '../../features/maps/cameraView';
 import { EditorPanel, useMapEditor } from '../../features/maps/editor';
+import { useWalkTest, WalkTestPanel } from '../../features/maps/walkTest';
 import MapSidebar from './MapSidebar';
 import classes from './MapViewPage.module.css';
 import { usePageTitle } from '../../lib/usePageTitle';
@@ -21,11 +22,13 @@ function MapViewPage() {
   const { map, loadError, editError, busy, applyOps, undo, redo } =
     useMapData(id);
   usePageTitle(map?.info.name ?? 'Карта');
+  const walk = useWalkTest(map?.state ?? null);
   const editor = useMapEditor({
     state: map?.state ?? null,
     applyOps,
     undo,
     redo,
+    walk,
   });
   // Сцена монтируется заново только при смене карты, и первый кадр (FirstFrame)
   // приходит один раз на монтирование — поэтому готовность помним по id карты.
@@ -98,6 +101,7 @@ function MapViewPage() {
               camera={camera}
               frame={map.frame}
               editor={editor.sceneEditor}
+              walkToken={walk.token}
               onReady={handleSceneReady}
             />
           </Suspense>
@@ -118,7 +122,13 @@ function MapViewPage() {
         empty={map !== null && bounds === null}
         sceneReady={readyMapId === id}
       >
-        <EditorPanel editor={editor} busy={busy} onUndo={undo} onRedo={redo} />
+        <EditorPanel
+          editor={editor}
+          busy={busy}
+          onUndo={undo}
+          onRedo={redo}
+          walkPanel={<WalkTestPanel walk={walk} />}
+        />
       </MapSidebar>
     </div>
   );

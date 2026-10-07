@@ -1,7 +1,6 @@
-import { Edges } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
 import { useState, type ReactNode } from 'react';
-import type { Box3, Vec3 } from 'shared';
+import type { Box3, Point3, Vec3 } from 'shared';
 import {
   cellsFromHit,
   regionBox,
@@ -9,6 +8,7 @@ import {
   type PickedCells,
   type SceneEditor,
 } from '../editor/editorTools';
+import FrameBox from './FrameBox';
 
 interface EditLayerProps {
   editor: SceneEditor | null;
@@ -38,43 +38,47 @@ function pickFrom(event: ThreeEvent<PointerEvent | MouseEvent>): PickedCells {
   );
 }
 
-// Подсветка клеток для редактора: под курсором и область от первого угла.
-function Highlight({ box, color }: { box: Box3; color: string }) {
-  const { min, max } = box;
-  const size: Vec3 = [
-    max[0] - min[0] + 1,
-    max[1] - min[1] + 1,
-    max[2] - min[2] + 1,
-  ];
-  // Чуть больше клеток, чтобы рамка не мерцала, совпадая с гранями блоков.
-  const scale: Vec3 = [size[0] + 0.02, size[1] + 0.02, size[2] + 0.02];
-  const center: Vec3 = [
-    min[0] + size[0] / 2,
-    min[1] + size[1] / 2,
-    min[2] + size[2] / 2,
-  ];
-  return (
-    <mesh position={center} scale={scale} raycast={() => null}>
-      <boxGeometry />
-      <meshBasicMaterial
-        color={color}
-        transparent
-        opacity={0.15}
-        depthWrite={false}
-      />
-      <Edges color={color} />
-    </mesh>
-  );
+const samePick = (a: PickedCells | null, b: PickedCells | null) =>
+  a === b ||
+  (!!a && !!b && sameCell(a.hit, b.hit) && sameCell(a.place, b.place));
+
+const HIGHLIGHT = { edit: '#ffd43b', erase: '#ff6b6b', ok: '#51cf66' };
+
+// Что подсветить под курсором: тело фигурки (проверка хода), область от первого
+// угла или одну клетку инструмента.
+function hoverBox(
+  editor: SceneEditor,
+  pick: PickedCells,
+): { min: Point3; max: Point3; color: string } | null {
+  if (editor.preview) {
+    const token = editor.preview(pick);
+    return (
+      token && {
+        ...token.body,
+        color: token.ok ? HIGHLIGHT.ok : HIGHLIGHT.erase,
+      }
+    );
+  }
+  const cell = toolCell(editor.tool, pick);
+  if (!cell) return null;
+  const box: Box3 = editor.anchor
+    ? regionBox(editor.anchor, cell, editor.height)
+    : { min: cell, max: cell };
+  return {
+    min: box.min,
+    max: [box.max[0] + 1, box.max[1] + 1, box.max[2] + 1],
+    color: editor.tool === 'erase' ? HIGHLIGHT.erase : HIGHLIGHT.edit,
+  };
 }
 
 // Слой редактора: клики по блокам и земле превращаются в выбор клеток.
 // Наведение живёт здесь, а не на странице: иначе каждое движение мыши
 // перерисовывало бы всю страницу с панелью.
 function EditLayer({ editor, frame, children }: EditLayerProps) {
-  const [hover, setHover] = useState<Vec3 | null>(null);
+  const [hover, setHover] = useState<PickedCells | null>(null);
 
-  const updateHover = (cell: Vec3 | null) =>
-    setHover((prev) => (sameCell(prev, cell) ? prev : cell));
+  const updateHover = (pick: PickedCells | null) =>
+    setHover((prev) => (samePick(prev, pick) ? prev : pick));
 
   // Сетка земли: чётный размер и целый центр — линии лягут по границам клеток.
   const half = Math.ceil(
@@ -83,12 +87,7 @@ function EditLayer({ editor, frame, children }: EditLayerProps) {
   const cx = Math.round((frame.min[0] + frame.max[0] + 1) / 2);
   const cz = Math.round((frame.min[2] + frame.max[2] + 1) / 2);
 
-  const box =
-    editor &&
-    hover &&
-    (editor.anchor
-      ? regionBox(editor.anchor, hover, editor.height)
-      : { min: hover, max: hover });
+  const box = editor && hover && hoverBox(editor, hover);
 
   return (
     <>
@@ -98,7 +97,7 @@ function EditLayer({ editor, frame, children }: EditLayerProps) {
           editor
             ? (event) => {
                 event.stopPropagation();
-                updateHover(toolCell(editor.tool, pickFrom(event)));
+                updateHover(pickFrom(event));
               }
             : undefined
         }
@@ -132,12 +131,7 @@ function EditLayer({ editor, frame, children }: EditLayerProps) {
           raycast={() => null}
         />
       )}
-      {box && (
-        <Highlight
-          box={box}
-          color={editor.tool === 'erase' ? '#ff6b6b' : '#ffd43b'}
-        />
-      )}
+      {box && <FrameBox min={box.min} max={box.max} color={box.color} />}
     </>
   );
 }

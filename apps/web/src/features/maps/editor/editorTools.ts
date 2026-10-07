@@ -6,7 +6,9 @@ import {
   type Rotation,
   type Vec3,
 } from 'shared';
+import type { WalkToken } from '../walkTest';
 
+// walk — проверка хода: карту не меняет, водит фигурку по правилам пути.
 export const EDITOR_TOOLS = [
   'view',
   'place',
@@ -14,6 +16,7 @@ export const EDITOR_TOOLS = [
   'fill',
   'hollow',
   'replace',
+  'walk',
 ] as const;
 export type EditorTool = (typeof EDITOR_TOOLS)[number];
 
@@ -24,6 +27,7 @@ export const TOOL_LABELS: Record<EditorTool, string> = {
   fill: 'Заливка',
   hollow: 'Коробка',
   replace: 'Замена',
+  walk: 'Ход',
 };
 
 // Инструменты, которым нужны два угла области.
@@ -124,4 +128,7 @@ export interface SceneEditor {
   anchor: Vec3 | null;
   height: number;
   onPick: (cells: PickedCells) => void;
+  // Подсветка тела вместо клеток (проверка хода): где встанет фигурка и годится
+  // ли место — сцена красит его зелёным или красным.
+  preview?: (cells: PickedCells) => WalkToken | null;
 }

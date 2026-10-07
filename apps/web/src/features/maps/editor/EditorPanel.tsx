@@ -8,6 +8,7 @@ import {
   Stack,
   Text,
 } from '@mantine/core';
+import type { ReactNode } from 'react';
 import {
   BLOCK_CATALOG,
   getBlock,
@@ -40,6 +41,7 @@ const HINTS: Record<EditorTool, string> = {
     'Два клика задают углы: стены, пол и потолок из блока, внутри — воздух.',
   replace:
     'Два клика по блокам задают углы; блоки как в первом углу заменяются выбранным.',
+  walk: 'Клик ставит фигурку. Карту инструмент не меняет, фигурка нигде не сохраняется.',
 };
 
 interface EditorPanelProps {
@@ -47,12 +49,20 @@ interface EditorPanelProps {
   busy: boolean;
   onUndo: () => void;
   onRedo: () => void;
+  // Настройки проверки хода — показываются при инструменте «Ход».
+  walkPanel: ReactNode;
 }
 
 // Инструменты редактора мастера в правой панели страницы карты.
-function EditorPanel({ editor, busy, onUndo, onRedo }: EditorPanelProps) {
+function EditorPanel({
+  editor,
+  busy,
+  onUndo,
+  onRedo,
+  walkPanel,
+}: EditorPanelProps) {
   const { tool, anchor } = editor;
-  const builds = tool !== 'view' && tool !== 'erase';
+  const builds = tool !== 'view' && tool !== 'erase' && tool !== 'walk';
 
   return (
     <Stack gap="sm">
@@ -109,6 +119,8 @@ function EditorPanel({ editor, busy, onUndo, onRedo }: EditorPanelProps) {
           }
         />
       )}
+
+      {tool === 'walk' && walkPanel}
 
       <Text size="xs" c="dimmed">
         {HINTS[tool]}

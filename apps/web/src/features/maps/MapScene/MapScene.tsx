@@ -4,6 +4,8 @@ import { Canvas } from '@react-three/fiber';
 import type { Box3, MapState } from 'shared';
 import type { CameraPlacement } from '../cameraView';
 import type { SceneEditor } from '../editor/editorTools';
+import type { WalkToken } from '../walkTest';
+import WalkTokenMesh from './WalkTokenMesh';
 import CameraRig from './CameraRig';
 import EditLayer from './EditLayer';
 import FirstFrame from './FirstFrame';
@@ -25,6 +27,9 @@ interface MapSceneProps {
   frame: Box3;
   // Инструмент редактора; null — только просмотр.
   editor: SceneEditor | null;
+  // Фигурка проверки хода: видна при любом инструменте, чтобы правки карты
+  // сразу сказывались на ней.
+  walkToken: WalkToken | null;
   // Первый кадр отрисован (см. FirstFrame).
   onReady: () => void;
 }
@@ -35,6 +40,7 @@ function MapScene({
   camera,
   frame,
   editor,
+  walkToken,
   onReady,
 }: MapSceneProps) {
   const chunks = useChunkMeshes(map, cutY);
@@ -61,6 +67,7 @@ function MapScene({
             </group>
           ))}
         </EditLayer>
+        {walkToken && <WalkTokenMesh token={walkToken} />}
         <MapControls makeDefault />
         <CameraRig placement={camera} />
         <FirstFrame onReady={onReady} />

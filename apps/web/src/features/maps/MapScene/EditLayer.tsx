@@ -39,9 +39,21 @@ function pickFrom(event: ThreeEvent<PointerEvent | MouseEvent>): PickedCells {
   );
 }
 
+// Половина клетки по x и z, в которой лежит точка попадания: «Ход» смещает тело
+// крупного существа в ту сторону, куда наведён курсор, так что наведение должно
+// обновляться и при переходе в другую половину той же клетки.
+const sameHalf = (a: PickedCells, b: PickedCells) =>
+  [0, 2].every(
+    (axis) => Math.floor(a.point[axis] * 2) === Math.floor(b.point[axis] * 2),
+  );
+
 const samePick = (a: PickedCells | null, b: PickedCells | null) =>
   a === b ||
-  (!!a && !!b && sameCell(a.hit, b.hit) && sameCell(a.place, b.place));
+  (!!a &&
+    !!b &&
+    sameCell(a.hit, b.hit) &&
+    sameCell(a.place, b.place) &&
+    sameHalf(a, b));
 
 // Подсветка клеток инструмента: область от первого угла или одна клетка.
 function CellHighlight({

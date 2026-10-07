@@ -29,13 +29,19 @@ describe('walkHover', () => {
     expect(hover.line.at(-1)).toEqual([1.5, 0.12, 2.5]);
   });
 
-  it('стоять можно, но не дойти — переставить; в стене — нельзя', () => {
+  it('стоять можно, но не дойти — переставить; без опоры — нельзя', () => {
     expect(walkHover(map, reach, floorAt(4, 0), 'medium').kind).toBe('place');
     const wallTop = cellsFromHit([2.5, 2, 0.5], UP, false);
     // На верх стены высотой 2 стать можно (места над ней хватает), но не дойти.
     expect(walkHover(map, reach, wallTop, 'medium').kind).toBe('place');
+    // У бока стены Большой прижат к ней и стоит.
     const wallSide = cellsFromHit([2, 0.5, 0.5], [-1, 0, 0], false);
-    expect(walkHover(map, [], wallSide, 'large').kind).toBe('blocked');
+    expect(walkHover(map, [], wallSide, 'large')).toMatchObject({
+      kind: 'place',
+      anchor: [0, 0, 0],
+    });
+    const void_ = cellsFromHit([20.5, 0, 20.5], UP, true);
+    expect(walkHover(map, [], void_, 'large').kind).toBe('blocked');
   });
 
   it('без фигурки (пустой reach) — только постановка', () => {

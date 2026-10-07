@@ -35,7 +35,14 @@ vi.mock('../../features/maps/MapScene', async () => {
           {/* Клик по земле в клетке (1, 0, 1) — вместо луча по настоящей сцене. */}
           {editor && (
             <button
-              onClick={() => editor.onPick({ hit: null, place: [1, 0, 1] })}
+              onClick={() =>
+                editor.onPick({
+                  hit: null,
+                  place: [1, 0, 1],
+                  point: [1.5, 0, 1.5],
+                  normal: [0, 1, 0],
+                })
+              }
             >
               Клик по земле
             </button>

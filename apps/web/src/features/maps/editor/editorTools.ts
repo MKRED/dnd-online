@@ -3,6 +3,7 @@ import {
   boxFromCorners,
   type Box3,
   type MapOp,
+  type Point3,
   type Rotation,
   type Vec3,
 } from 'shared';
@@ -38,10 +39,14 @@ export function isRegionTool(tool: EditorTool): tool is RegionTool {
 }
 
 // Клетки под курсором: hit — блок, в который попал луч (null для земли),
-// place — соседняя клетка со стороны грани, куда встанет новый блок.
+// place — соседняя клетка со стороны грани, куда встанет новый блок. point и
+// normal — сама точка попадания и целая нормаль грани: по ним проверка хода
+// решает, куда сместить тело крупного существа.
 export interface PickedCells {
   hit: Vec3 | null;
   place: Vec3;
+  point: Point3;
+  normal: Vec3;
 }
 
 // Луч попал в точку point на грани с нормалью normal (мировые координаты).
@@ -58,7 +63,7 @@ export function cellsFromHit(
     Math.floor(value - n[axis] * 1e-3),
   ) as unknown as Vec3;
   const place: Vec3 = [hit[0] + n[0], hit[1] + n[1], hit[2] + n[2]];
-  return { hit: ground ? null : hit, place };
+  return { hit: ground ? null : hit, place, point: [...point], normal: n };
 }
 
 // С какой клеткой работает инструмент: новые блоки и области строятся в соседней

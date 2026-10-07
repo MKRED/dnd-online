@@ -82,11 +82,51 @@ describe('walkTarget', () => {
     );
   });
 
-  it('курсор держит середину основания крупных существ', () => {
+  it('центр тела — ближе всего к курсору', () => {
     const map = floorWith();
-    const cells = cellsFromHit([0.5, 0, 0.5], UP, false);
-    expect(walkTarget(map, cells, 'large').anchor).toEqual([0, 0, 0]);
-    expect(walkTarget(map, cells, 'huge').anchor).toEqual([-1, 0, -1]);
-    expect(walkTarget(map, cells, 'gargantuan').anchor).toEqual([-1, 0, -1]);
+    const at = (x: number, z: number) => cellsFromHit([x, 0, z], UP, false);
+    // Нечётные размеры: середина основания — в середине клетки под курсором.
+    expect(walkTarget(map, at(0.2, 0.8), 'medium').anchor).toEqual([0, 0, 0]);
+    expect(walkTarget(map, at(0.2, 0.8), 'huge').anchor).toEqual([-1, 0, -1]);
+    // Чётные: тело смещается в ту четверть клетки, куда наведён курсор.
+    expect(walkTarget(map, at(0.2, 0.2), 'large').anchor).toEqual([-1, 0, -1]);
+    expect(walkTarget(map, at(0.8, 0.2), 'large').anchor).toEqual([0, 0, -1]);
+    expect(walkTarget(map, at(0.8, 0.8), 'large').anchor).toEqual([0, 0, 0]);
+    expect(walkTarget(map, at(0.2, 0.8), 'gargantuan').anchor).toEqual([
+      -2, 0, -1,
+    ]);
+  });
+
+  it('Большой встаёт на узкий уступ у стены, свесившись от неё', () => {
+    // Уступ высотой 1 шириной в клетку (x = 0) и стена за ним (x = 1).
+    const map = floorWith(
+      { op: 'fillBox', from: [0, 0, -2], to: [0, 0, 2], block: 'stone' },
+      { op: 'fillBox', from: [1, 0, -2], to: [1, 4, 2], block: 'stone' },
+    );
+    const top = (x: number) => cellsFromHit([x, 1, 0.8], UP, false);
+    // Курсор в западной половине клетки уступа — тело свисает на запад, над
+    // клеткой x = −1, на которую курсором не навести: там пусто.
+    expect(walkTarget(map, top(0.2), 'large')).toEqual({
+      anchor: [-1, 1, 0],
+      ok: true,
+    });
+    // В восточной половине — тело в стене.
+    expect(walkTarget(map, top(0.8), 'large').ok).toBe(false);
+  });
+
+  it('у бока стены тело крупного существа уходит от стены', () => {
+    const map = floorWith({ op: 'setBlock', at: [0, 0, 0], block: 'stone' });
+    // Западная грань: тело 2×2 целиком западнее стены, по z — к курсору.
+    const west = cellsFromHit([0, 0.5, 0.3], [-1, 0, 0], false);
+    expect(walkTarget(map, west, 'large')).toEqual({
+      anchor: [-2, 0, -1],
+      ok: true,
+    });
+    // Восточная грань: тело начинается сразу за стеной.
+    const east = cellsFromHit([1, 0.5, 0.7], [1, 0, 0], false);
+    expect(walkTarget(map, east, 'large')).toEqual({
+      anchor: [1, 0, 0],
+      ok: true,
+    });
   });
 });

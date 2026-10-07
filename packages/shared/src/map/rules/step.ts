@@ -66,15 +66,20 @@ function climbsStairs(
   });
 }
 
+// Высота ног по позиции (standHeight) — поиск пути вызывает её для одной позиции
+// много раз, поэтому её можно подменить кэшем.
+type StandFn = (anchor: Vec3) => number | null;
+
 // Шаг без проверки углов: обе позиции допустимы, перепад высоты проходим.
 function canMove(
   map: MapState,
+  stand: StandFn,
   from: Vec3,
   to: Vec3,
   size: CreatureSize,
 ): boolean {
-  const hFrom = standHeight(map, from, size);
-  const hTo = standHeight(map, to, size);
+  const hFrom = stand(from);
+  const hTo = stand(to);
   if (hFrom === null || hTo === null) return false;
   const rise = hTo - hFrom;
   if (Math.abs(rise) <= MAX_STEP) return true;
@@ -90,6 +95,7 @@ function canMove(
 // двух соседних прямых клеток (на уровне начала или конца шага).
 function cornerClear(
   map: MapState,
+  stand: StandFn,
   from: Vec3,
   to: Vec3,
   size: CreatureSize,
@@ -102,7 +108,10 @@ function cornerClear(
   return sides.every(([x, z]) =>
     levels.some((y) => {
       const mid: Vec3 = [x, y, z];
-      return canMove(map, from, mid, size) && canMove(map, mid, to, size);
+      return (
+        canMove(map, stand, from, mid, size) &&
+        canMove(map, stand, mid, to, size)
+      );
     }),
   );
 }
@@ -121,6 +130,33 @@ function terrainCost(map: MapState, anchor: Vec3, size: CreatureSize): number {
   return cost;
 }
 
+export type Stepper = (from: Vec3, to: Vec3) => number | null;
+
+// Функция шага для одного существа на неизменной карте: высоты позиций кэшируются.
+// Для поиска пути — там одна позиция проверяется для каждого из соседей.
+export function createStepper(map: MapState, size: CreatureSize): Stepper {
+  const heights = new Map<string, number | null>();
+  const stand: StandFn = (anchor) => {
+    const key = anchor.join(',');
+    let h = heights.get(key);
+    if (h === undefined) {
+      h = standHeight(map, anchor, size);
+      heights.set(key, h);
+    }
+    return h;
+  };
+  return (from, to) => {
+    const d = [0, 1, 2].map((a) => to[a] - from[a]);
+    if (d.some((v) => Math.abs(v) > 1)) return null;
+    if (d[0] === 0 && d[2] === 0) return null;
+    if (!canMove(map, stand, from, to, size)) return null;
+    if (d[0] !== 0 && d[2] !== 0 && !cornerClear(map, stand, from, to, size)) {
+      return null;
+    }
+    return FEET_PER_CELL * terrainCost(map, to, size);
+  };
+}
+
 // Стоимость шага в футах в соседнюю позицию (клетка привязки сдвигается на 1 по x и/или z,
 // уровень — на −1…1), или null, если так не пройти. Диагональ стоит как прямой шаг.
 export function stepCost(
@@ -129,12 +165,5 @@ export function stepCost(
   to: Vec3,
   size: CreatureSize,
 ): number | null {
-  const d = [0, 1, 2].map((a) => to[a] - from[a]);
-  if (d.some((v) => Math.abs(v) > 1)) return null;
-  if (d[0] === 0 && d[2] === 0) return null;
-  if (!canMove(map, from, to, size)) return null;
-  if (d[0] !== 0 && d[2] !== 0 && !cornerClear(map, from, to, size)) {
-    return null;
-  }
-  return FEET_PER_CELL * terrainCost(map, to, size);
+  return createStepper(map, size)(from, to);
 }

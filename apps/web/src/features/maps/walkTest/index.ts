@@ -1,2 +1,8 @@
 export { default as WalkTestPanel } from './WalkTestPanel';
-export { useWalkTest, type WalkTest, type WalkToken } from './useWalkTest';
+export type { ReachTile } from './reachTiles';
+export {
+  useWalkTest,
+  type WalkScene,
+  type WalkTest,
+  type WalkToken,
+} from './useWalkTest';

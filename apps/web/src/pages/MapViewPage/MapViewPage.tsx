@@ -101,7 +101,7 @@ function MapViewPage() {
               camera={camera}
               frame={map.frame}
               editor={editor.sceneEditor}
-              walkToken={walk.token}
+              walk={walk.scene}
               onReady={handleSceneReady}
             />
           </Suspense>

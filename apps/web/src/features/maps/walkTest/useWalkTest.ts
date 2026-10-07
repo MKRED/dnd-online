@@ -1,12 +1,15 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
+  reachable,
   standHeight,
   type BodyBox,
   type CreatureSize,
   type MapState,
+  type Reach,
   type Vec3,
 } from 'shared';
 import type { PickedCells } from '../editor/editorTools';
+import { reachTiles, type ReachTile } from './reachTiles';
 import { walkBody, walkTarget } from './walkTarget';
 
 // Фигурка в сцене: тело и можно ли ему тут стоять (после правки карты или смены
@@ -14,6 +17,13 @@ import { walkBody, walkTarget } from './walkTarget';
 export interface WalkToken {
   body: BodyBox;
   ok: boolean;
+}
+
+export interface WalkScene {
+  token: WalkToken;
+  // Достижимые позиции; budget — сколько футов осталось (для цвета плиток).
+  tiles: ReachTile[];
+  budget: number;
 }
 
 export const DEFAULT_SPEED = 30;
@@ -35,6 +45,24 @@ export function useWalkTest(state: MapState | null) {
       ok: standHeight(state, anchor, size) !== null,
     };
   }, [state, anchor, size]);
+
+  // Куда фигурка дойдёт на оставшиеся футы. Пересчёт — на постановку, ход, правку
+  // карты и смену настроек, а не на движение мыши.
+  const left = Math.max(0, speed - spent);
+  const reach = useMemo<Reach[]>(
+    () =>
+      state && anchor && token?.ok ? reachable(state, anchor, size, left) : [],
+    [state, anchor, size, left, token?.ok],
+  );
+
+  // Всё, что сцена рисует от проверки хода.
+  const scene = useMemo<WalkScene | null>(
+    () =>
+      state && token
+        ? { token, tiles: reachTiles(state, reach, size), budget: left }
+        : null,
+    [state, token, reach, size, left],
+  );
 
   // Подсветка под курсором: где встанет фигурка и можно ли там стоять.
   const preview = useCallback(
@@ -65,6 +93,8 @@ export function useWalkTest(state: MapState | null) {
     setSpeed,
     anchor,
     token,
+    reach,
+    scene,
     spent,
     newTurn: () => setSpent(0),
     remove: () => {

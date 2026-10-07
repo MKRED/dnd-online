@@ -23,10 +23,11 @@ function WalkTestPanel({ walk }: { walk: WalkTest }) {
           onChange={(value) => value && isSize(value) && walk.setSize(value)}
           allowDeselect={false}
         />
+        {/* Выше 120 футов поиск досягаемости на открытом поле уже дольше 100 мс. */}
         <NumberInput
           label="Скорость, футов"
           min={5}
-          max={300}
+          max={120}
           step={5}
           value={walk.speed}
           onChange={(value) => walk.setSpeed(Math.max(5, Number(value) || 5))}

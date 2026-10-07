@@ -19,7 +19,7 @@ export interface WalkTarget {
 
 // Сдвиг привязки от клетки под курсором: курсор держит середину основания
 // (у Большого — его угол с наименьшими x и z, у Огромного — центр).
-function anchorOffset(size: CreatureSize): number {
+export function anchorOffset(size: CreatureSize): number {
   const cells = Math.ceil(CREATURE_SIZES[size].footprint);
   return Math.floor((cells - 1) / 2);
 }

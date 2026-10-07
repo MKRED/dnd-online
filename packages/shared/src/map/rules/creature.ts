@@ -33,7 +33,7 @@ export const CREATURE_SIZES: Record<
 
 // Опора внутри клетки (0…1): верх коробки во всю площадь клетки. Тонкая стена и
 // столб опорой не считаются — существо стоит рядом с ними, а не на них.
-function surfaceInCell(map: MapState, cell: Vec3): number {
+export function surfaceInCell(map: MapState, cell: Vec3): number {
   const value = readCell(map.store, cell);
   const block = getBlock(map.palette[cellTypeId(value)] ?? '');
   if (!block) return 0;

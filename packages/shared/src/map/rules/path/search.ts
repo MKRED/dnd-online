@@ -6,10 +6,12 @@ import { standHeight } from '../standing.js';
 import { createStepper } from '../step.js';
 import { MinHeap } from './heap.js';
 
-// Позиция, до которой можно дойти, и цена пути до неё в футах.
+// Позиция, до которой можно дойти, цена пути до неё в футах и предыдущая позиция
+// на этом пути (null у начальной) — по ним путь собирается без нового поиска.
 export interface Reach {
   at: Vec3;
   cost: number;
+  from: Vec3 | null;
 }
 
 export interface PathResult {
@@ -99,9 +101,41 @@ export function reachable(
 ): Reach[] {
   const { nodes, closed } = explore(map, start, size, maxCost);
   return [...closed].map((key) => {
-    const { at, cost } = nodes.get(key) as Node;
-    return { at, cost };
+    const { at, cost, prev } = nodes.get(key) as Node;
+    return {
+      at,
+      cost,
+      from: prev === null ? null : (nodes.get(prev) as Node).at,
+    };
   });
+}
+
+// Путь по цепочке предыдущих позиций от goal назад к началу.
+function trace<T extends { at: Vec3 }>(
+  goal: T,
+  prevOf: (node: T) => T | undefined,
+): Vec3[] {
+  const path: Vec3[] = [];
+  for (let node: T | undefined = goal; node; node = prevOf(node)) {
+    path.push(node.at);
+  }
+  return path.reverse();
+}
+
+// Путь до goal по результату reachable — для подсветки пути под курсором без
+// нового поиска. null, если goal среди них нет. Предыдущая позиция любой из них
+// тоже среди них: Дейкстра закрывает её раньше.
+export function pathFromReach(
+  reach: readonly Reach[],
+  goal: Vec3,
+): PathResult | null {
+  const byKey = new Map(reach.map((r) => [keyOf(r.at), r]));
+  const end = byKey.get(keyOf(goal));
+  if (!end) return null;
+  const path = trace(end, (r) =>
+    r.from ? byKey.get(keyOf(r.from)) : undefined,
+  );
+  return { path, cost: end.cost };
 }
 
 // Самый дешёвый путь от start до goal (позиции привязки) или null: дойти нельзя,
@@ -115,12 +149,9 @@ export function findPath(
 ): PathResult | null {
   const { nodes, reached } = explore(map, start, size, maxCost, goal);
   if (!reached) return null;
-  const path: Vec3[] = [];
-  let node = nodes.get(keyOf(goal));
-  const cost = node?.cost ?? 0;
-  while (node) {
-    path.push(node.at);
-    node = node.prev === null ? undefined : nodes.get(node.prev);
-  }
-  return { path: path.reverse(), cost };
+  const end = nodes.get(keyOf(goal)) as Node;
+  const path = trace(end, (n) =>
+    n.prev === null ? undefined : nodes.get(n.prev),
+  );
+  return { path, cost: end.cost };
 }

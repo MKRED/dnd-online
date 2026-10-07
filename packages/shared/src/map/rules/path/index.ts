@@ -1,1 +1,7 @@
-export { findPath, reachable, type PathResult, type Reach } from './search.js';
+export {
+  findPath,
+  pathFromReach,
+  reachable,
+  type PathResult,
+  type Reach,
+} from './search.js';

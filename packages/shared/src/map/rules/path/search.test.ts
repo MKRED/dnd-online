@@ -7,7 +7,12 @@ import type { MapOp } from '../../ops.js';
 import { createPalette } from '../../palette.js';
 import type { CreatureSize } from '../creature.js';
 import { stepCost } from '../step.js';
-import { findPath, reachable, type PathResult } from './search.js';
+import {
+  findPath,
+  pathFromReach,
+  reachable,
+  type PathResult,
+} from './search.js';
 
 // Пол из земли под y = 0 (x и z от −6 до 6) и операции поверх него.
 function floorWith(...ops: MapOp[]): MapState {
@@ -59,6 +64,42 @@ describe('reachable', () => {
 
   it('если в начальной позиции стоять нельзя — пусто', () => {
     expect(reachable(floorWith(), [0, 3, 0], 'medium', 30)).toEqual([]);
+  });
+});
+
+describe('pathFromReach', () => {
+  // Та же стена, что в findPath: обход нужен.
+  const wall = floorWith({
+    op: 'fillBox',
+    from: [2, 0, -3],
+    to: [2, 1, 3],
+    block: 'stone',
+  });
+  const reach = reachable(wall, [0, 0, 0], 'medium', 60);
+
+  it('у начала нет предыдущей позиции, у остальных есть', () => {
+    for (const r of reach) {
+      expect(r.from === null).toBe(r.cost === 0);
+    }
+  });
+
+  it('путь до каждой позиции законен и стоит столько же, сколько в reachable', () => {
+    for (const r of reach) {
+      const result = pathFromReach(reach, r.at);
+      expectValid(wall, result);
+      expect(result?.cost).toBe(r.cost);
+      expect(result?.path[0]).toEqual([0, 0, 0]);
+    }
+  });
+
+  it('совпадает по цене с findPath и даёт null вне досягаемости', () => {
+    expect(pathFromReach(reach, [4, 0, 0])?.cost).toBe(
+      findPath(wall, [0, 0, 0], [4, 0, 0], 'medium')?.cost,
+    );
+    expect(pathFromReach(reach, [2, 0, 0])).toBeNull();
+    expect(
+      pathFromReach(reachable(wall, [0, 0, 0], 'medium', 45), [4, 0, 0]),
+    ).toBeNull();
   });
 });
 

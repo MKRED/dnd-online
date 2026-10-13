@@ -11,7 +11,7 @@ Online DnD platform for playing with friends: 3D map, real-time updates, persist
 - `apps/mcp` — local stdio MCP server for the map (an AI builds and inspects maps through the REST API with an API token). Wired up in `.mcp.json`; setup in [docs/mcp.md](docs/mcp.md).
 - `packages/shared` — code shared by web and server: the DnD 5e character-sheet types and the voxel map model (`src/map/`: chunks, palette, operations, ASCII slices) and the rules geometry on top of it (`src/map/rules/`: distance, creature bodies, line of sight and cover, areas of effect, walking paths), with its own vitest tests.
 
-**Not built yet:** gameplay on the map (plan in [docs/map.md](docs/map.md)) and realtime (Socket.IO). Don't assume they exist because the README mentions them.
+**Not built yet:** gameplay on the map (plan in [docs/plan/map.md](docs/plan/map.md)) and realtime (Socket.IO). Don't assume they exist because the README mentions them.
 
 ## Commands
 
@@ -65,7 +65,7 @@ Read the relevant file before working in that area:
   - the `shared` package
   - linting rationale
   - Prettier
-- [docs/map.md](docs/map.md) covers the 3D map (in Russian, a living plan):
+- [docs/plan/map.md](docs/plan/map.md) covers the 3D map (in Russian, a living plan):
   - decisions (voxel blocks, 1 block = 5 ft, operations, AI/MCP access, server-authoritative rules on the map)
   - open questions
   - stage checklist — tick items off as they land
@@ -77,6 +77,8 @@ Read the relevant file before working in that area:
   - checking production
 
 Keep these docs current: when a change makes something in them wrong, update them in the same commit.
+
+**Plans live in `docs/plan/`**, apart from the reference docs above, which describe what is already built. When a new piece of work is big enough to need a plan (decisions, open questions, a stage checklist), put it there as `docs/plan/<topic>.md` and add it to the list above. Write it in Russian, like `map.md`, and tick stages off as they land.
 
 ## Conventions (mandatory)
 

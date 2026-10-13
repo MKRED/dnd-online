@@ -18,7 +18,7 @@ export type CreatureSize =
   'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargantuan';
 
 // Основание — по правилам D&D, рост — визуальный и одновременно нужный просвет
-// (таблица «Рост существ» в docs/map.md).
+// (таблица «Рост существ» в docs/plan/map.md).
 export const CREATURE_SIZES: Record<
   CreatureSize,
   { label: string; footprint: number; height: number }

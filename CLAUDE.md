@@ -59,6 +59,7 @@ Read the relevant file before working in that area:
   - styling (CSS Modules)
   - TS config
   - tests (`renderWithProviders`, fetch mocking)
+  - UI changes: the UX checklist and the browser check
 - [docs/monorepo.md](docs/monorepo.md) covers the monorepo:
   - workspace layout
   - the `shared` package
@@ -89,6 +90,22 @@ Keep these docs current: when a change makes something in them wrong, update the
   - files that count: styles, `.types.ts`, a second logic file;
   - a single colocated `*.spec.ts`/`*.test.ts` doesn't count.
 - **Colocate feature constants and types** with their usage, not in an app-wide barrel.
+
+### UI changes (`apps/web`)
+
+Any change the user sees or touches goes through two steps besides the code itself. The details and the checklist are in [docs/web.md](docs/web.md#ui-changes-ux-and-the-browser-check).
+
+- **Design the UX before coding.** Don't take the path of least resistance ("there's a free spot in this panel"). Think first about how the person will actually use it:
+  - where it belongs among the existing controls, and how it's found;
+  - what it says, in Russian, and whether it needs a tooltip or a hotkey;
+  - its states: busy, disabled, empty, error, confirmation for destructive actions;
+  - how many clicks a frequent action takes;
+  - both colour schemes and a narrow screen.
+- **Decide alone when one option is clearly best**, and say in a line why. **When several options have real tradeoffs, ask the user before writing code**: show the options (ASCII mockups help) and recommend one.
+- **Check it in a real browser before calling it done.** Unit tests don't replace this. Run the dev stack, open the page through the Playwright MCP under the local test account, and check both:
+  - _function_: walk the new flow end to end, including an error or edge case, and read the browser console;
+  - _looks_: take screenshots and actually look at them, in the light and dark schemes, and at a narrow width if the layout changes there.
+- **If the check couldn't run** (no database, no browser MCP), say so plainly instead of reporting the work as verified.
 
 ### Logging (`apps/server`)
 

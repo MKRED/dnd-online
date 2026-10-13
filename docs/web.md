@@ -51,6 +51,32 @@ Vitest + Testing Library on jsdom, configured in the `test` section of `vite.con
 - Mock the network with `vi.stubGlobal('fetch', …)` — globals and mocks are auto-restored between tests.
 - Run: `pnpm --filter web test` (or `test:watch`).
 
+## UI changes: UX and the browser check
+
+The rule itself is in [CLAUDE.md](../CLAUDE.md#ui-changes-appsweb); this is the how-to.
+
+### UX before coding
+
+Questions to answer before writing the component:
+
+- **Place.** Which existing group does it belong to? Look at how the neighbouring pages already do it and follow that: map controls go into `MapSidebar`, red is kept for errors and delete buttons. A new control next to related ones beats a new control where there happened to be room.
+- **Discoverability.** Can the person find it without being told? A text label beats a bare icon; an icon-only button needs a tooltip. Add a hotkey only for frequent actions and only if it fits the existing ones (`useMapEditor`: Ctrl+Z, Ctrl+Shift+Z / Ctrl+Y, Esc).
+- **Feedback.** What does the person see while it's working, when it fails, when there's nothing to show, and when the action is unavailable (and why)? Anything that destroys data asks for confirmation.
+- **Effort.** Count the clicks and the mouse travel for an action done often; keep sensible defaults so the common case needs no setup.
+- **Consistency.** Mantine components and theme colours (`src/theme/`), not one-off styles; wording in the same tone as the neighbouring strings.
+- **Narrow screen and both schemes.** On `/maps/:id` the panel moves under the scene; light is parchment, dark is charcoal + brass.
+
+If that leaves one clear answer, build it and mention the reasoning in the summary. If it leaves two or more with real tradeoffs (e.g. a toolbar button vs. a context menu item), ask the user first, with the options sketched and one recommended.
+
+### Browser check
+
+1. Start the stack: `pnpm dev` (web on `:5173`, API on `:3000`; needs the local Postgres).
+2. Open the page with the Playwright MCP (wired up in `.mcp.json`) and log in under the local test account. Its credentials are deliberately not in the repo: they live in the Claude Code session memory of this project. If there is none, register a throwaway account on the local stack and tell the user.
+3. Function: go through the new flow the way a person would, from the entry point to the result, plus at least one error or edge case (empty input, cancelled action, server error). Then read the browser console and the failed network requests.
+4. Looks: take screenshots and look at them. Check alignment, spacing, overflow and clipped text, in both colour schemes (header toggle), and at a narrow width (`browser_resize`) when the layout responds to it.
+5. Map pages: set the camera through the URL (`view` or `cam`/`target`, plus `y`), wait for «Сцена готова», then take the screenshot, one call after another (see [mcp.md](mcp.md)). Don't move the camera with the mouse.
+6. Fix what the check finds and repeat it. If it couldn't run, say so in the summary.
+
 ## Gotcha: Git Bash on Windows
 
 Git Bash rewrites `VITE_API_URL=/api` into a Windows path (`C:/Program Files/Git/api`). For a local production-like build prefix the command with `MSYS_NO_PATHCONV=1`. Docker builds on Linux are unaffected.

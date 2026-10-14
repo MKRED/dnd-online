@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { CharacterImagesModule } from './character-images/character-images.module.js';
 import { CharactersModule } from './characters/characters.module.js';
 import { DatabaseModule } from './database/database.module.js';
+import { ItemsModule } from './items/items.module.js';
 import { MapsModule } from './maps/maps.module.js';
 import { UsersModule } from './users/users.module.js';
 import { webAppModules } from './web-app.module.js';
@@ -25,6 +26,7 @@ const level = process.env.LOG_LEVEL ?? 'info';
     CharactersModule,
     CharacterImagesModule,
     MapsModule,
+    ItemsModule,
     ApiTokensModule,
     ...webAppModules(),
     LoggerModule.forRoot({

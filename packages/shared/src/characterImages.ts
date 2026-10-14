@@ -1,5 +1,6 @@
 // Картинки персонажа (docs/plan/character-images.md): галерея, основная картинка и её
 // миниатюра. Сами байты клиент получает отдельным запросом, здесь только метаданные.
+import { IMAGE_MAX_BYTES, IMAGE_MIME_TYPES, type ThumbCrop } from './images.js';
 
 // Каждая картинка хранится в трёх вариантах, все в WebP:
 // full — для просмотра, preview — для сетки галереи, thumb — квадратный вырез-миниатюра.
@@ -7,20 +8,10 @@ export const CHARACTER_IMAGE_VARIANTS = ['full', 'preview', 'thumb'] as const;
 export type CharacterImageVariant = (typeof CHARACTER_IMAGE_VARIANTS)[number];
 
 // Лимиты общие для формы и сервера: форма отсекает лишнее до отправки, сервер проверяет сам.
-export const CHARACTER_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+// Размер и форматы — общие для всех картинок (images.ts).
+export const CHARACTER_IMAGE_MAX_BYTES = IMAGE_MAX_BYTES;
 export const CHARACTER_IMAGE_MAX_COUNT = 20;
-export const CHARACTER_IMAGE_MIME_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-] as const;
-
-// Квадрат миниатюры в пикселях варианта full (он не меняется после загрузки).
-export interface ThumbCrop {
-  x: number;
-  y: number;
-  size: number;
-}
+export const CHARACTER_IMAGE_MIME_TYPES = IMAGE_MIME_TYPES;
 
 export interface CharacterImage {
   id: string;

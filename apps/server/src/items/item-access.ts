@@ -1,7 +1,12 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { and, eq, or } from 'drizzle-orm';
-import type { DatabaseService } from '../database/database.service.js';
+import type {
+  DatabaseService,
+  DbTransaction,
+} from '../database/database.service.js';
 import { items } from '../database/schema/index.js';
+
+type Db = DatabaseService['db'] | DbTransaction;
 
 export const ITEM_NOT_FOUND = 'Предмет не найден';
 export const ITEM_AUTHOR_ONLY = 'Менять предмет может только его автор';
@@ -23,7 +28,7 @@ export function authoredItem(userId: string, itemId: string) {
 // Правка не нашла предмет автора — объясняем почему: чужой опубликованный — 403
 // (его видно в каталоге, «не найден» сбивал бы с толку), иначе 404.
 export async function rejectEdit(
-  db: DatabaseService['db'],
+  db: Db,
   userId: string,
   itemId: string,
 ): Promise<never> {

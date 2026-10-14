@@ -1,12 +1,16 @@
 import type { Item } from 'shared';
-import type { items } from '../database/schema/index.js';
+import type { itemImages, items } from '../database/schema/index.js';
 import type { ItemDto } from './dto/item.dto.js';
 
 type ItemRow = typeof items.$inferSelect;
 type NewItemRow = typeof items.$inferInsert;
 
 // Стоимость в базе — две колонки (check-ограничение держит их в паре), в API — объект.
-export function toItem(row: ItemRow, authorNickname: string): Item {
+export function toItem(
+  row: ItemRow,
+  authorNickname: string,
+  image: typeof itemImages.$inferSelect | null = null,
+): Item {
   return {
     id: row.id,
     authorId: row.authorId,
@@ -22,6 +26,14 @@ export function toItem(row: ItemRow, authorNickname: string): Item {
         ? { amount: row.costAmount, coin: row.costCoin }
         : null,
     description: row.description,
+    image: image
+      ? {
+          version: image.version,
+          width: image.width,
+          height: image.height,
+          thumbCrop: image.thumbCrop,
+        }
+      : null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

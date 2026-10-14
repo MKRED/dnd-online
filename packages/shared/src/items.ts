@@ -1,3 +1,5 @@
+import type { ThumbCrop } from './images.js';
+
 // Предметы (docs/plan/items.md): общий каталог. Общие поля у всех предметов одинаковые,
 // поля категории лежат в details — у каждой категории свои. Справка по весу, стоимости
 // и монетам с источниками — docs/dnd/items.md.
@@ -45,6 +47,22 @@ export const ITEM_DESCRIPTION_MAX_LENGTH = 5000;
 export const ITEM_MAX_WEIGHT = 10_000;
 export const ITEM_COST_MAX_AMOUNT = 1_000_000;
 
+// Картинка предмета — одна, в двух вариантах WebP: full — для просмотра, thumb —
+// квадрат 256×256 для карточки. Вырез миниатюры (ThumbCrop, в пикселях full) может
+// выходить за края картинки: поля прозрачные, так длинный меч вписывается целиком.
+export const ITEM_IMAGE_VARIANTS = ['full', 'thumb'] as const;
+export type ItemImageVariant = (typeof ITEM_IMAGE_VARIANTS)[number];
+
+export interface ItemImage {
+  // Растёт при замене картинки и смене выреза: идёт в адрес обоих вариантов, чтобы
+  // браузер не показал старую из кеша.
+  version: number;
+  // Размеры варианта full.
+  width: number;
+  height: number;
+  thumbCrop: ThumbCrop;
+}
+
 export type Item = ItemVariant & {
   id: string;
   authorId: string;
@@ -57,6 +75,7 @@ export type Item = ItemVariant & {
   weight: number;
   cost: ItemCost | null;
   description: string;
+  image: ItemImage | null;
   createdAt: string;
   updatedAt: string;
 };

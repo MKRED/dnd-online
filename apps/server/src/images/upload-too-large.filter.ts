@@ -5,9 +5,9 @@ import {
   type ExceptionFilter,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { CHARACTER_IMAGE_MAX_BYTES } from 'shared';
+import { IMAGE_MAX_BYTES } from 'shared';
 
-const MAX_MEGABYTES = CHARACTER_IMAGE_MAX_BYTES / (1024 * 1024);
+const MAX_MEGABYTES = IMAGE_MAX_BYTES / (1024 * 1024);
 
 // multer обрывает слишком большой файл сам, и Nest отвечает английским «File too large».
 // Интерфейс показывает message сервера как есть, поэтому подменяем текст на русский.

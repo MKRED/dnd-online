@@ -3,7 +3,7 @@ import { desc, eq, type SQL } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { Item, ItemListScope } from 'shared';
 import { DatabaseService } from '../database/database.service.js';
-import { items, users } from '../database/schema/index.js';
+import { itemImages, items, users } from '../database/schema/index.js';
 import { ItemDto } from './dto/item.dto.js';
 import {
   ITEM_NOT_FOUND,
@@ -57,8 +57,8 @@ export class ItemsService {
         { durationMs: Date.now() - t0, userId, scope, count: rows.length },
         'Items listed',
       );
-      return rows.map(({ item, authorNickname }) =>
-        toItem(item, authorNickname),
+      return rows.map(({ item, authorNickname, image }) =>
+        toItem(item, authorNickname, image),
       );
     } catch (err: unknown) {
       this.logger.error(
@@ -80,7 +80,7 @@ export class ItemsService {
         'Item lookup',
       );
       if (!row) throw new NotFoundException(ITEM_NOT_FOUND);
-      return toItem(row.item, row.authorNickname);
+      return toItem(row.item, row.authorNickname, row.image);
     } catch (err: unknown) {
       if (err instanceof HttpException) throw err;
       this.logger.error(
@@ -139,12 +139,20 @@ export class ItemsService {
     }
   }
 
-  // Ник автора нужен и в каталоге, и в карточке, поэтому предмет всегда читаем с ним.
+  // Ник автора и картинка нужны и в каталоге, и в карточке, поэтому предмет всегда читаем с ними.
   private selectWithAuthor(where: SQL | undefined) {
-    return this.databaseService.db
-      .select({ item: items, authorNickname: users.nickname })
-      .from(items)
-      .innerJoin(users, eq(users.id, items.authorId))
-      .where(where);
+    return (
+      this.databaseService.db
+        .select({
+          item: items,
+          authorNickname: users.nickname,
+          image: itemImages,
+        })
+        .from(items)
+        .innerJoin(users, eq(users.id, items.authorId))
+        // Метаданные картинки (без байтов): карточке нужно знать, есть ли миниатюра и её версию.
+        .leftJoin(itemImages, eq(itemImages.itemId, items.id))
+        .where(where)
+    );
   }
 }

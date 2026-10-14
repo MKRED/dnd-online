@@ -32,6 +32,25 @@ describe('items.mapper', () => {
     ).toBeNull();
   });
 
+  it('отдаёт метаданные картинки или null', () => {
+    expect(toItem(row, 'Арвен').image).toBeNull();
+    const image = {
+      itemId: 'i1',
+      width: 800,
+      height: 200,
+      thumbCrop: { x: 0, y: -300, size: 800 },
+      version: 3,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    expect(toItem(row, 'Арвен', image).image).toEqual({
+      version: 3,
+      width: 800,
+      height: 200,
+      thumbCrop: { x: 0, y: -300, size: 800 },
+    });
+  });
+
   it('снятая цена и описание пишутся как null и пустая строка', () => {
     const dto = {
       name: 'Сюжетный ключ',

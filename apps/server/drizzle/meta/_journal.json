@@ -120,6 +120,13 @@
       "when": 1791963990414,
       "tag": "0016_item_rarity",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791964905696,
+      "tag": "0017_item_images",
+      "breakpoints": true
     }
   ]
 }

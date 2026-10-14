@@ -27,7 +27,7 @@ import { CharacterImageEditService } from './character-image-edit.service.js';
 import { CharacterImagesService } from './character-images.service.js';
 import { ImageFileQueryDto } from './dto/image-file-query.dto.js';
 import { UpdateCharacterImageDto } from './dto/update-character-image.dto.js';
-import { UploadTooLargeFilter } from './upload-too-large.filter.js';
+import { UploadTooLargeFilter } from '../images/upload-too-large.filter.js';
 
 // Из того, что multer кладёт в файл, нужны только байты (хранилище — память).
 interface UploadedImage {

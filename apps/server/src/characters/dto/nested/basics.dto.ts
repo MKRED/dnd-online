@@ -8,7 +8,12 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { SKILL_ABILITIES } from 'shared';
+import {
+  CHARACTER_CLASSES,
+  SKILL_ABILITIES,
+  type CharacterClass,
+} from 'shared';
+import { SubclassFromLevel } from './subclass-from-level.validator.js';
 
 const SKILLS = Object.keys(SKILL_ABILITIES);
 
@@ -45,9 +50,8 @@ export class AbilityScoresDto {
 }
 
 export class ClassLevelDto {
-  @IsString()
-  @Length(1, 50)
-  class: string;
+  @IsIn(CHARACTER_CLASSES, { message: 'Неизвестный класс персонажа' })
+  class: CharacterClass;
 
   @IsInt()
   @Min(1)
@@ -57,6 +61,7 @@ export class ClassLevelDto {
   @IsOptional()
   @IsString()
   @Length(1, 50)
+  @SubclassFromLevel()
   subclass?: string;
 }
 

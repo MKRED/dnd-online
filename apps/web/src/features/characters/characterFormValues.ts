@@ -1,8 +1,10 @@
 import {
   ABILITY_SCORES,
   SKILL_ABILITIES,
+  SUBCLASS_MIN_LEVEL,
   type AbilityScore,
   type Character,
+  type CharacterClass,
   type CharacterCurrency,
   type CharacterPersonality,
   type Skill,
@@ -16,7 +18,8 @@ export interface CharacterFormClassEntry {
   // переиспользует DOM-узлы по ключу, а defaultValue у уже смонтированного input не
   // обновляется — с ключом по индексу это показывало бы "залипшие" старые значения.
   id: string;
-  class: string;
+  // '' — класс ещё не выбран; форма не даёт отправить такую строку.
+  class: CharacterClass | '';
   level: number;
   subclass: string;
 }
@@ -139,9 +142,12 @@ export function toCreatePayload(
     alignment: blankToUndefined(values.alignment),
     experiencePoints: values.experiencePoints,
     classes: values.classes.map((entry) => ({
-      class: entry.class.trim(),
+      class: entry.class as CharacterClass,
       level: entry.level,
-      subclass: blankToUndefined(entry.subclass),
+      subclass:
+        entry.level >= SUBCLASS_MIN_LEVEL
+          ? blankToUndefined(entry.subclass)
+          : undefined,
     })),
     proficiencyBonus: values.proficiencyBonus,
     abilityScores: values.abilityScores,

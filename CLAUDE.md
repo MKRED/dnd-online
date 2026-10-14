@@ -70,6 +70,7 @@ Read the relevant file before working in that area:
   - open questions
   - stage checklist — tick items off as they land
 - [docs/mcp.md](docs/mcp.md) covers the map MCP server: tools, connecting it, the build → look → fix loop
+- [docs/classes.md](docs/classes.md) covers the character classes: the 13 classes and their 2024 subclasses (Russian and English names, source book), where that data lives in code, and what in it is unverified
 - [docs/deploy.md](docs/deploy.md) covers deployment:
   - CI pipeline via the `deploy` branch
   - Docker image

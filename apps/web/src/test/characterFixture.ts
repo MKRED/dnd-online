@@ -10,8 +10,8 @@ export const sampleCharacter: Character = {
   alignment: null,
   experiencePoints: 900,
   classes: [
-    { class: 'Следопыт', level: 3, subclass: 'Охотник' },
-    { class: 'Воин', level: 1 },
+    { class: 'ranger', level: 3, subclass: 'Охотник' },
+    { class: 'fighter', level: 1 },
   ],
   proficiencyBonus: 2,
   abilityScores: {

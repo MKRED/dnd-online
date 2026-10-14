@@ -13,8 +13,8 @@ describe('fromCharacter', () => {
       alignment: undefined,
       experiencePoints: c.experiencePoints,
       classes: [
-        { class: 'Следопыт', level: 3, subclass: 'Охотник' },
-        { class: 'Воин', level: 1, subclass: undefined },
+        { class: 'ranger', level: 3, subclass: 'Охотник' },
+        { class: 'fighter', level: 1, subclass: undefined },
       ],
       proficiencyBonus: c.proficiencyBonus,
       abilityScores: c.abilityScores,
@@ -55,5 +55,19 @@ describe('fromCharacter', () => {
     values.languages.push('Дварфийский');
     expect(sampleCharacter.currency.gp).toBe(30);
     expect(sampleCharacter.proficiencies.languages).toHaveLength(2);
+  });
+});
+
+describe('toCreatePayload', () => {
+  it('не отправляет подкласс, пока уровень класса ниже 3-го', () => {
+    const values = fromCharacter(sampleCharacter);
+    values.classes = [
+      { id: 'a', class: 'wizard', level: 2, subclass: 'Прорицатель' },
+      { id: 'b', class: 'rogue', level: 3, subclass: 'Вор' },
+    ];
+    expect(toCreatePayload(values).classes).toEqual([
+      { class: 'wizard', level: 2, subclass: undefined },
+      { class: 'rogue', level: 3, subclass: 'Вор' },
+    ]);
   });
 });

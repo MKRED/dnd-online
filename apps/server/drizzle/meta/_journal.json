@@ -50,6 +50,13 @@
       "when": 1790844809107,
       "tag": "0006_naive_the_spike",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791936359244,
+      "tag": "0007_reset_character_classes",
+      "breakpoints": true
     }
   ]
 }

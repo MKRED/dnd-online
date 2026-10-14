@@ -38,10 +38,33 @@ export interface SkillProficiency {
   expertise: boolean;
 }
 
+// Классы редакции 2024: 12 из Player's Handbook и артефактор из Eberron: Forge of the
+// Artificer. Это ключи для хранения; русские названия живут в web (characterClasses.ts).
+export const CHARACTER_CLASSES = [
+  'artificer',
+  'barbarian',
+  'bard',
+  'cleric',
+  'druid',
+  'fighter',
+  'monk',
+  'paladin',
+  'ranger',
+  'rogue',
+  'sorcerer',
+  'warlock',
+  'wizard',
+] as const;
+export type CharacterClass = (typeof CHARACTER_CLASSES)[number];
+
+// В редакции 2024 подкласс у всех классов выбирается на 3-м уровне этого класса.
+export const SUBCLASS_MIN_LEVEL = 3;
+
 // Мультикласс — это список: у персонажа может быть больше одного класса+уровня+подкласса одновременно.
 export interface CharacterClassLevel {
-  class: string;
+  class: CharacterClass;
   level: number;
+  // Свободный текст: форма подсказывает официальные подклассы, но хоумбрю и UA не запрещает.
   subclass?: string;
 }
 

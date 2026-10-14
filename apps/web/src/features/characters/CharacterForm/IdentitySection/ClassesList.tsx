@@ -1,18 +1,11 @@
-import {
-  ActionIcon,
-  Button,
-  Grid,
-  Group,
-  NumberInput,
-  Stack,
-  TextInput,
-} from '@mantine/core';
+import { Button, Group, Stack } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import { useCallback, useState } from 'react';
 import type {
   CharacterFormClassEntry,
   CharacterFormValues,
 } from '../../characterFormValues';
+import ClassRow from './ClassRow';
 
 interface ClassesListProps {
   form: UseFormReturnType<CharacterFormValues>;
@@ -48,42 +41,12 @@ function ClassesList({ form }: ClassesListProps) {
   return (
     <Stack gap="xs">
       {classIds.map((id, index) => (
-        <Grid key={id} align="flex-end">
-          <Grid.Col span={{ base: 12, sm: 5 }}>
-            <TextInput
-              label="Класс"
-              placeholder="Например, воин"
-              required
-              {...form.getInputProps(`classes.${index}.class`)}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, sm: 3 }}>
-            <NumberInput
-              label="Уровень"
-              min={1}
-              max={20}
-              {...form.getInputProps(`classes.${index}.level`)}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, sm: 3 }}>
-            <TextInput
-              label="Подкласс"
-              placeholder="Необязательно"
-              {...form.getInputProps(`classes.${index}.subclass`)}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 1 }}>
-            <ActionIcon
-              color="red"
-              variant="subtle"
-              disabled={classIds.length <= 1}
-              onClick={() => form.removeListItem('classes', index)}
-              aria-label="Удалить класс"
-            >
-              ✕
-            </ActionIcon>
-          </Grid.Col>
-        </Grid>
+        <ClassRow
+          key={id}
+          form={form}
+          index={index}
+          removable={classIds.length > 1}
+        />
       ))}
       <Group justify="flex-start">
         <Button

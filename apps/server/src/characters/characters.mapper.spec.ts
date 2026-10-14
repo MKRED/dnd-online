@@ -7,7 +7,7 @@ const dto = {
   name: 'Арагорн',
   species: 'Человек',
   background: 'Солдат',
-  classes: [{ class: 'Следопыт', level: 3 }],
+  classes: [{ class: 'ranger', level: 3 }],
   proficiencyBonus: 2,
   abilityScores: {
     strength: 15,

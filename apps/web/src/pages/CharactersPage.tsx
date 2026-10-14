@@ -13,7 +13,11 @@ import {
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { Character } from 'shared';
-import { deleteCharacter, listCharacters } from '../features/characters';
+import {
+  CLASS_LABELS,
+  deleteCharacter,
+  listCharacters,
+} from '../features/characters';
 import { ApiError } from '../lib/apiRequest';
 import { usePageTitle } from '../lib/usePageTitle';
 
@@ -129,7 +133,7 @@ function CharactersPage() {
                         key={`${entry.class}-${entry.level}`}
                         variant="light"
                       >
-                        {entry.class} {entry.level}
+                        {CLASS_LABELS[entry.class]} {entry.level}
                       </Badge>
                     ))}
                   </Group>

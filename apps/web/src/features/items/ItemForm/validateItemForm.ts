@@ -45,6 +45,10 @@ export const validateItemForm = {
       ? null
       : `Насыщение — целое число от 0 до ${ITEM_SATIETY_MAX}`;
   },
+  treasureKind: (value: string | null, values: { category: ItemCategory }) =>
+    values.category === 'treasure' && value === null
+      ? 'Выберите вид сокровища'
+      : null,
   description: (value: string) =>
     value.trim().length > ITEM_DESCRIPTION_MAX_LENGTH
       ? `Описание — не длиннее ${ITEM_DESCRIPTION_MAX_LENGTH} символов`

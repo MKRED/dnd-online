@@ -1,5 +1,11 @@
 import { ValidationArguments, registerDecorator } from 'class-validator';
-import { ITEM_CATEGORIES, ITEM_SATIETY_MAX, type ItemCategory } from 'shared';
+import {
+  ITEM_CATEGORIES,
+  ITEM_SATIETY_MAX,
+  TREASURE_KINDS,
+  type ItemCategory,
+  type TreasureKind,
+} from 'shared';
 
 // Проверка details для каждой категории. У категорий без своих полей — только пустой
 // объект. Поля у категорий пока простые, поэтому хватает функции; категория с
@@ -19,16 +25,28 @@ function isFood(details: object): boolean {
   );
 }
 
+function isTreasure(details: object): boolean {
+  const keys = Object.keys(details);
+  const { kind } = details as { kind?: unknown };
+  return (
+    keys.length === 1 &&
+    keys[0] === 'kind' &&
+    TREASURE_KINDS.includes(kind as TreasureKind)
+  );
+}
+
 const DETAILS_CHECKS: Record<ItemCategory, (details: object) => boolean> = {
   basic: isEmpty,
   food: isFood,
   material: isEmpty,
   quest: isEmpty,
+  treasure: isTreasure,
 };
 
 // Текст ошибки — для поля, которое правит человек; лишние поля шлёт только чужой клиент.
 const MESSAGES: Partial<Record<ItemCategory, string>> = {
   food: `Насыщение — целое число от 0 до ${ITEM_SATIETY_MAX}`,
+  treasure: 'Выберите вид сокровища',
 };
 const DEFAULT_MESSAGE = 'Поля предмета не подходят к его категории';
 

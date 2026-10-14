@@ -5,6 +5,7 @@ import type {
   ItemInput,
   ItemRarity,
   ItemVariant,
+  TreasureKind,
 } from 'shared';
 
 // Значения формы. Числа — number | string: NumberInput отдаёт '' для пустого поля.
@@ -21,6 +22,8 @@ export interface ItemFormValues {
   // Поля категорий лежат в форме все сразу: при смене категории туда и обратно
   // введённое не теряется, а в запрос уходят только поля выбранной.
   satiety: number | string;
+  // null — вид не выбран: Select отдаёт null, вид обязателен.
+  treasureKind: TreasureKind | null;
 }
 
 export function toFormValues(item: Item | null): ItemFormValues {
@@ -36,13 +39,23 @@ export function toFormValues(item: Item | null): ItemFormValues {
     isPublic: item?.isPublic ?? false,
     // Пусто, а не 0: насыщение у еды обязательно, пусть его укажут явно.
     satiety: item?.category === 'food' ? item.details.satiety : '',
+    treasureKind: item?.category === 'treasure' ? item.details.kind : null,
   };
 }
 
+// Форма проверена до отправки, поэтому у сокровища вид уже выбран.
 function toVariant(values: ItemFormValues): ItemVariant {
-  return values.category === 'food'
-    ? { category: 'food', details: { satiety: Number(values.satiety) } }
-    : { category: values.category, details: {} };
+  switch (values.category) {
+    case 'food':
+      return { category: 'food', details: { satiety: Number(values.satiety) } };
+    case 'treasure':
+      return {
+        category: 'treasure',
+        details: { kind: values.treasureKind ?? 'trade_good' },
+      };
+    default:
+      return { category: values.category, details: {} };
+  }
 }
 
 export function toItemInput(values: ItemFormValues): ItemInput {

@@ -94,6 +94,18 @@ describe('ItemDto', () => {
     expect(await food({ satiety: 20, water: 1 })).toEqual(error);
   });
 
+  it('у сокровища вид обязателен: камень, искусство или товар', async () => {
+    const treasure = (details: unknown) =>
+      errorsOf({ category: 'treasure', details });
+    const error = { details: ['Выберите вид сокровища'] };
+    expect(await treasure({ kind: 'gem' })).toEqual({});
+    expect(await treasure({ kind: 'art' })).toEqual({});
+    expect(await treasure({ kind: 'trade_good' })).toEqual({});
+    expect(await treasure({})).toEqual(error);
+    expect(await treasure({ kind: 'coin' })).toEqual(error);
+    expect(await treasure({ kind: 'gem', size: 1 })).toEqual(error);
+  });
+
   it('не пускает чужие поля в details базового предмета', async () => {
     expect(await errorsOf({ details: { damage: '1d6' } })).toEqual({
       details: ['Поля предмета не подходят к его категории'],

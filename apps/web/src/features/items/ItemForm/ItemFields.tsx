@@ -14,18 +14,24 @@ import {
   ITEM_CATEGORIES,
   ITEM_RARITIES,
   ITEM_SATIETY_MAX,
+  TREASURE_KINDS,
 } from 'shared';
 import {
   CATEGORY_HINTS,
   CATEGORY_LABELS,
   COIN_LABELS,
   RARITY_LABELS,
+  TREASURE_KIND_LABELS,
 } from '../itemLabels';
 import type { ItemFormValues } from './itemFormValues';
 
 const CATEGORY_OPTIONS = ITEM_CATEGORIES.map((value) => ({
   value,
   label: CATEGORY_LABELS[value],
+}));
+const TREASURE_KIND_OPTIONS = TREASURE_KINDS.map((value) => ({
+  value,
+  label: TREASURE_KIND_LABELS[value],
 }));
 const RARITY_OPTIONS = ITEM_RARITIES.map((value) => ({
   value,
@@ -76,6 +82,19 @@ function ItemFields({ form }: { form: UseFormReturnType<ItemFormValues> }) {
             rightSection="очк."
             rightSectionWidth={44}
             {...form.getInputProps('satiety')}
+          />
+        </SimpleGrid>
+      )}
+      {form.values.category === 'treasure' && (
+        <SimpleGrid cols={{ base: 1, xs: 2 }}>
+          <Select
+            label="Вид"
+            description="Цену укажите в «Стоимости»"
+            placeholder="Выберите вид"
+            required
+            data={TREASURE_KIND_OPTIONS}
+            allowDeselect={false}
+            {...form.getInputProps('treasureKind')}
           />
         </SimpleGrid>
       )}

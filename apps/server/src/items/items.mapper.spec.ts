@@ -61,6 +61,16 @@ describe('items.mapper', () => {
     });
   });
 
+  it('отдаёт вид сокровища; неизвестный вид читается как товар', () => {
+    const treasure = { ...row, category: 'treasure' as const };
+    expect(
+      toItem({ ...treasure, details: { kind: 'gem' } }, 'Арвен'),
+    ).toMatchObject({ category: 'treasure', details: { kind: 'gem' } });
+    expect(toItem({ ...treasure, details: {} }, 'Арвен').details).toEqual({
+      kind: 'trade_good',
+    });
+  });
+
   it('снятая цена и описание пишутся как null и пустая строка', () => {
     const dto = {
       name: 'Сюжетный ключ',

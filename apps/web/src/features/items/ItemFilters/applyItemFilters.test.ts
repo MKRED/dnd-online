@@ -99,6 +99,7 @@ describe('countByCategory', () => {
       food: 1,
       material: 1,
       quest: 1,
+      treasure: 0,
     });
   });
 });

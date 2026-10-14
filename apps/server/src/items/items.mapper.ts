@@ -1,4 +1,11 @@
-import type { Item, ItemCategory, ItemDetails, ItemVariant } from 'shared';
+import {
+  TREASURE_KINDS,
+  type Item,
+  type ItemCategory,
+  type ItemDetails,
+  type ItemVariant,
+  type TreasureKind,
+} from 'shared';
 import type { itemImages, items } from '../database/schema/index.js';
 import type { ItemDto } from './dto/item.dto.js';
 
@@ -16,6 +23,18 @@ export function toItemVariant(
     return {
       category,
       details: { satiety: typeof satiety === 'number' ? satiety : 0 },
+    };
+  }
+  if (category === 'treasure') {
+    const { kind } = details as { kind?: unknown };
+    // Сервер пишет только проверенный вид; запасной — на случай ручной правки базы.
+    return {
+      category,
+      details: {
+        kind: TREASURE_KINDS.includes(kind as TreasureKind)
+          ? (kind as TreasureKind)
+          : 'trade_good',
+      },
     };
   }
   return { category, details: {} };

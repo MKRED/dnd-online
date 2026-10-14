@@ -37,6 +37,17 @@ describe('itemFormValues', () => {
     expect(toFormValues(null).satiety).toBe('');
   });
 
+  it('у сокровища в запрос уходит вид; без сокровища вида в форме нет', () => {
+    const gem = { category: 'treasure', details: { kind: 'gem' } } as Item;
+    const values = { ...toFormValues(gem), name: 'Рубин' };
+    expect(values.treasureKind).toBe('gem');
+    expect(toItemInput(values)).toMatchObject({
+      category: 'treasure',
+      details: { kind: 'gem' },
+    });
+    expect(toFormValues(null).treasureKind).toBeNull();
+  });
+
   it('переносит предмет в форму и обратно без потерь', () => {
     const item = {
       name: 'Зеркало',

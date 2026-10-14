@@ -6,7 +6,13 @@ import type { ThumbCrop } from './images.js';
 
 // Ключи категорий для хранения; русские названия живут в web. «Базовый» — всё, что не
 // подходит под другие. Остальные добавляем по одной (план, раздел «Категории»).
-export const ITEM_CATEGORIES = ['basic', 'food', 'material', 'quest'] as const;
+export const ITEM_CATEGORIES = [
+  'basic',
+  'food',
+  'material',
+  'quest',
+  'treasure',
+] as const;
 export type ItemCategory = (typeof ITEM_CATEGORIES)[number];
 
 // Категории без своих полей: details у них пустой объект (docs/plan/items-filters.md).
@@ -26,10 +32,20 @@ export interface FoodItemDetails {
 }
 export const ITEM_SATIETY_MAX = 1000;
 
+// Сокровище: вид по Руководству мастера 2024 (гл. 7, docs/dnd/items.md). Торговые
+// слитки — тоже товар (решено с пользователем). Цена — общее поле «Стоимость»:
+// ступени цены камней и произведений искусства отдельно не храним.
+export const TREASURE_KINDS = ['gem', 'art', 'trade_good'] as const;
+export type TreasureKind = (typeof TREASURE_KINDS)[number];
+export interface TreasureItemDetails {
+  kind: TreasureKind;
+}
+
 // Размеченное объединение: по category понятно, какие поля лежат в details.
 export type ItemVariant =
   | { category: PlainItemCategory; details: PlainItemDetails }
-  | { category: 'food'; details: FoodItemDetails };
+  | { category: 'food'; details: FoodItemDetails }
+  | { category: 'treasure'; details: TreasureItemDetails };
 export type ItemDetails = ItemVariant['details'];
 
 // Монеты — те же ключи, что у кошелька персонажа (CharacterCurrency).

@@ -1,4 +1,10 @@
-import type { Coin, ItemCategory, ItemCost, ItemRarity } from 'shared';
+import type {
+  Coin,
+  ItemCategory,
+  ItemCost,
+  ItemRarity,
+  TreasureKind,
+} from 'shared';
 
 // Русские названия и форматы для предметов. Источники и даты — docs/dnd/items.md.
 
@@ -7,6 +13,7 @@ export const CATEGORY_LABELS: Record<ItemCategory, string> = {
   food: 'Еда и напитки',
   material: 'Материалы',
   quest: 'Сюжетный',
+  treasure: 'Сокровище',
 };
 
 // Подсказка под полем «Категория» в форме: что в эту категорию класть.
@@ -15,6 +22,14 @@ export const CATEGORY_HINTS: Record<ItemCategory, string> = {
   food: 'Пища, напитки, рационы',
   material: 'Сырьё и компоненты: руда, шкуры, травы, ткань',
   quest: 'Ключи, письма, реликвии — то, что важно для истории',
+  treasure: 'Драгоценные камни, произведения искусства, товары',
+};
+
+// Названия как на dnd.su (docs/dnd/items.md); торговые слитки — тоже «Товар».
+export const TREASURE_KIND_LABELS: Record<TreasureKind, string> = {
+  gem: 'Драгоценный камень',
+  art: 'Произведение искусства',
+  trade_good: 'Товар',
 };
 
 export const RARITY_LABELS: Record<ItemRarity, string> = {

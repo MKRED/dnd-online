@@ -4,7 +4,7 @@ import type { Item } from 'shared';
 import { useImageUrl } from '../../lib/useImageUrls';
 import { ItemBadges } from './ItemCollection';
 import ItemThumb from './ItemThumb';
-import { formatCost, formatWeight } from './itemLabels';
+import { TREASURE_KIND_LABELS, formatCost, formatWeight } from './itemLabels';
 import { itemImagePath } from './itemsApi';
 
 interface ItemDetailsProps {
@@ -63,6 +63,11 @@ function ItemDetails({ item, actions }: ItemDetailsProps) {
           <Stack gap={4}>
             {item.category === 'food' && (
               <Field label="Насыщение">{item.details.satiety} очк.</Field>
+            )}
+            {item.category === 'treasure' && (
+              <Field label="Вид">
+                {TREASURE_KIND_LABELS[item.details.kind]}
+              </Field>
             )}
             <Field label="Вес">{formatWeight(item.weight)}</Field>
             <Field label="Стоимость">{formatCost(item.cost)}</Field>

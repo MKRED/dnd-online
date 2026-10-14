@@ -26,6 +26,7 @@
   - `code_verifier`.
 
   Ответ: `{ access_token, token_type: "Bearer", expires_in: 3600 }`. Refresh-токена нет.
+
 - **`GET /oauth/userinfo`** с `Authorization: Bearer …` возвращает:
   - `sub` — постоянный id пользователя, свой для каждого сайта;
   - `nickname`;
@@ -80,6 +81,7 @@
 3. При любой ошибке — 302 на `/login?lolkaError=<код>`, страница входа показывает понятное сообщение.
 
 Почему так:
+
 - `client_secret` и обмен кода остаются на сервере, как требует лолька;
 - серверных сессий у нас нет, а подписанная cookie их заменяет;
 - `sameSite: lax` пропускает cookie при возврате с лольки, потому что это переход верхнего уровня методом GET;
@@ -102,6 +104,7 @@ CSP helmet не мешает: это навигация и редиректы, �
 ### Вызовы лольки — отдельный сервис с логами и таймаутом
 
 `LolkaOAuthService` в модуле `auth` (или своя папка `auth/lolka/`, если файлов станет больше двух):
+
 - `fetch` с `AbortSignal.timeout(10_000)`;
 - pino-логи по конвенции: начало, `durationMs`, итог;
 - сам токен и секрет в лог не пишем.
@@ -111,6 +114,7 @@ CSP helmet не мешает: это навигация и редиректы, �
 `LOLKA_CLIENT_ID`, `LOLKA_CLIENT_SECRET`, `LOLKA_REDIRECT_URI`, `LOLKA_BASE_URL` (по умолчанию `https://lolka.aoshi.ru`).
 
 Если `LOLKA_CLIENT_ID` не задан, вход через лольку выключен:
+
 - маршруты отвечают 404;
 - `GET /api/auth/providers` отдаёт `{ lolka: false }`, и кнопку не показываем.
 

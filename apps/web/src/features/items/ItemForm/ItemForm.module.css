@@ -1,0 +1,22 @@
+/* Картинка формы: квадрат ограниченной ширины, на телефоне — по ширине экрана. */
+.imageColumn {
+  max-width: 260px;
+}
+
+.dropzone {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--mantine-spacing-sm);
+}
+
+.cropStage {
+  position: relative;
+  height: min(55vh, 420px);
+  border-radius: var(--mantine-radius-md);
+  overflow: hidden;
+  /* Тёмный фон и в светлой схеме: прозрачные поля будущей миниатюры видны как поля. */
+  background: var(--mantine-color-dark-8);
+}

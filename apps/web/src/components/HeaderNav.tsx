@@ -6,6 +6,7 @@ import { useAuth } from '../features/auth';
 const NAV_LINKS = [
   { to: '/characters', label: 'Персонажи' },
   { to: '/maps', label: 'Карты' },
+  { to: '/items', label: 'Предметы' },
 ];
 
 // Правая часть шапки. На широком экране ссылки лежат в ряд, на узком они в ряд

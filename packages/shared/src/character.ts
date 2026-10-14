@@ -64,8 +64,9 @@ export type CharacterClass = (typeof CHARACTER_CLASSES)[number];
 export const SUBCLASS_MIN_LEVEL = 3;
 
 // Виды редакции 2024 из печатных книг: 10 из Player's Handbook, 5 из Eberron: Forge of the
-// Artificer, 4 из Ravenloft: The Horrors Within и фея из Lorwyn: First Light. Это ключи для
-// хранения; русские названия живут в web (characterSpecies.ts).
+// Artificer, 4 из Ravenloft: The Horrors Within и фея из Lorwyn: First Light. Плюс табакси
+// (книги 2014, переиздания под 2024 нет) и полутабакси — хоумбрю; оба добавлены по просьбе
+// пользователя. Это ключи для хранения; русские названия живут в web (characterSpecies.ts).
 export const CHARACTER_SPECIES = [
   'aasimar',
   'changeling',
@@ -76,6 +77,7 @@ export const CHARACTER_SPECIES = [
   'faerie',
   'gnome',
   'goliath',
+  'half_tabaxi',
   'halfling',
   'hexblood',
   'human',
@@ -85,6 +87,7 @@ export const CHARACTER_SPECIES = [
   'orc',
   'reborn',
   'shifter',
+  'tabaxi',
   'tiefling',
   'warforged',
 ] as const;

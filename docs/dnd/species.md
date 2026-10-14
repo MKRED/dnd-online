@@ -4,7 +4,7 @@ Reference for the species data behind the character sheet. The sheet follows the
 
 ## How it is used in code
 
-- `packages/shared/src/character.ts` — `CHARACTER_SPECIES`, the 20 species keys. A character stores the key (`elf`), never the Russian name.
+- `packages/shared/src/character.ts` — `CHARACTER_SPECIES`, the 22 species keys. A character stores the key (`elf`), never the Russian name.
 - `apps/server/src/characters/dto/create-character.dto.ts` — the server rejects a species outside that list.
 - `apps/web/src/features/characters/characterSpecies.ts` — Russian names (`SPECIES_LABELS`) and the sorted select options.
 - The form (`CharacterForm/IdentitySection/IdentitySection.tsx`) offers the species as a strict select: unlike the subclass, a homebrew species cannot be typed in.
@@ -13,41 +13,45 @@ Six species also make a choice inside the species (elven lineage, draconic ances
 
 ## Sources
 
-| Code | Book                                    |
-| ---- | --------------------------------------- |
-| PHB  | Player's Handbook (2024)                |
-| FotA | Eberron: Forge of the Artificer (2025)  |
-| RHW  | Ravenloft: The Horrors Within (2026)    |
-| ABH  | Astarion's Book of Hungers              |
-| LFL  | Lorwyn: First Light                     |
-| DDB  | D&D Beyond Drops (digital, subscribers) |
+| Code | Book                                                                 |
+| ---- | -------------------------------------------------------------------- |
+| PHB  | Player's Handbook (2024)                                             |
+| FotA | Eberron: Forge of the Artificer (2025)                               |
+| RHW  | Ravenloft: The Horrors Within (2026)                                 |
+| ABH  | Astarion's Book of Hungers                                           |
+| LFL  | Lorwyn: First Light                                                  |
+| DDB  | D&D Beyond Drops (digital, subscribers)                              |
+| MPMM | Mordenkainen Presents: Monsters of the Multiverse (2022, 2014 rules) |
+| HB   | Homebrew (no book)                                                   |
 
-The app offers 20 species: the 19 of the PHB, FotA and RHW (10, 5 and 4), plus the Faerie from LFL, added at the user's request on 2026-10-14. Forgotten Realms: Heroes of Faerûn and Arcana Unleashed add no species.
+The app offers 22 species: the 19 of the PHB, FotA and RHW (10, 5 and 4), plus three added at the user's request on 2026-10-14: the Faerie from LFL, the Tabaxi from MPMM and the homebrew Half-Tabaxi. Forgotten Realms: Heroes of Faerûn and Arcana Unleashed add no species.
 
 ## Species
 
-| Key          | Russian           | English    | Source   |
-| ------------ | ----------------- | ---------- | -------- |
-| `aasimar`    | Аасимар           | Aasimar    | PHB      |
-| `dragonborn` | Драконорождённый  | Dragonborn | PHB      |
-| `dwarf`      | Дварф             | Dwarf      | PHB      |
-| `elf`        | Эльф              | Elf        | PHB      |
-| `gnome`      | Гном              | Gnome      | PHB      |
-| `goliath`    | Голиаф            | Goliath    | PHB      |
-| `halfling`   | Полурослик        | Halfling   | PHB      |
-| `human`      | Человек           | Human      | PHB      |
-| `orc`        | Орк               | Orc        | PHB      |
-| `tiefling`   | Тифлинг           | Tiefling   | PHB      |
-| `changeling` | Ченжлинг          | Changeling | FotA     |
-| `kalashtar`  | Калаштар          | Kalashtar  | FotA     |
-| `khoravar`   | Кхоравар          | Khoravar   | FotA     |
-| `shifter`    | Шифтер            | Shifter    | FotA     |
-| `warforged`  | Кованый           | Warforged  | FotA     |
-| `dhampir`    | Дампир            | Dhampir    | RHW, ABH |
-| `hexblood`   | Ведьмовская кровь | Hexblood   | RHW      |
-| `lupin`      | Волколак          | Lupin      | RHW      |
-| `reborn`     | Возрождённый      | Reborn     | RHW      |
-| `faerie`     | Фея               | Faerie     | LFL      |
+| Key           | Russian           | English     | Source   |
+| ------------- | ----------------- | ----------- | -------- |
+| `aasimar`     | Аасимар           | Aasimar     | PHB      |
+| `dragonborn`  | Драконорождённый  | Dragonborn  | PHB      |
+| `dwarf`       | Дварф             | Dwarf       | PHB      |
+| `elf`         | Эльф              | Elf         | PHB      |
+| `gnome`       | Гном              | Gnome       | PHB      |
+| `goliath`     | Голиаф            | Goliath     | PHB      |
+| `halfling`    | Полурослик        | Halfling    | PHB      |
+| `human`       | Человек           | Human       | PHB      |
+| `orc`         | Орк               | Orc         | PHB      |
+| `tiefling`    | Тифлинг           | Tiefling    | PHB      |
+| `changeling`  | Ченжлинг          | Changeling  | FotA     |
+| `kalashtar`   | Калаштар          | Kalashtar   | FotA     |
+| `khoravar`    | Кхоравар          | Khoravar    | FotA     |
+| `shifter`     | Шифтер            | Shifter     | FotA     |
+| `warforged`   | Кованый           | Warforged   | FotA     |
+| `dhampir`     | Дампир            | Dhampir     | RHW, ABH |
+| `hexblood`    | Ведьмовская кровь | Hexblood    | RHW      |
+| `lupin`       | Волколак          | Lupin       | RHW      |
+| `reborn`      | Возрождённый      | Reborn      | RHW      |
+| `faerie`      | Фея               | Faerie      | LFL      |
+| `tabaxi`      | Табакси           | Tabaxi      | MPMM     |
+| `half_tabaxi` | Полутабакси       | Half-Tabaxi | HB       |
 
 ## Not in the app
 
@@ -59,7 +63,7 @@ The app offers 20 species: the 19 of the PHB, FotA and RHW (10, 5 and 4), plus t
 | Rimekin           | LFL    | same                                  |
 | Duskling          | DDB    | subscriber-only drop, unconfirmed     |
 
-The species of the 2014 books (Tabaxi, Tortle, Genasi, Firbolg and the rest of Mordenkainen Presents: Monsters of the Multiverse) are also absent: they have no 2024 reprint. The 2024 rules allow using them as they are, so a table that plays one has no way to pick it yet.
+The other species of the 2014 books (Tortle, Genasi, Firbolg and the rest of Mordenkainen Presents: Monsters of the Multiverse) are also absent: they have no 2024 reprint. The 2024 rules allow using them as they are, so a table that plays one has no way to pick it yet. The Tabaxi is the exception, added at the user's request.
 
 ## Choices inside a species (lineage)
 
@@ -84,7 +88,7 @@ Notes:
 - English names are from dnd2024.wikidot, Russian ones from the next.dnd.su species pages (`/species/<key>`); the pairs were matched by hand.
 - The app's wording departs slightly from next.dnd.su: the elven options are singular («Высший эльф», the site has «Высшие эльфы») and the dragons carry the word «дракон» («Белый дракон», the site's table has «Белый»), so the value reads on its own in the character list.
 - **Aasimar has no such choice**: Celestial Revelation (Heavenly Wings, Inner Radiance, Necrotic Shroud) is picked each time the aasimar transforms.
-- Dwarf, Faerie, Halfling, Human and Orc have none. For Changeling, Kalashtar, Khoravar, Warforged, Dhampir, Hexblood and Reborn this rests on the dungeonmister trait summary only; Lupin was checked on its wikidot page.
+- Dwarf, Faerie, Halfling, Human, Orc, Tabaxi and Half-Tabaxi have none. For Changeling, Kalashtar, Khoravar, Warforged, Dhampir, Hexblood and Reborn this rests on the dungeonmister trait summary only; Lupin was checked on its wikidot page.
 - dnd2024.wikidot also lists Lorwyn Elf and Shadowmoor Elf lineages (Lorwyn: First Light); they are not suggested, like the Lorwyn species.
 - Choices that are not a lineage are not recorded: size (Medium or Small), a skill, a spellcasting ability.
 
@@ -92,6 +96,8 @@ Notes:
 
 - **Russian names are fan translations** from next.dnd.su. That site lists exactly the same 19 species (all but the Faerie), each with its English name, so the RU↔EN pairs are not guesswork here.
 - **Faerie / Фея.** next.dnd.su has no page for it yet; «Фея» is the name the user chose (2026-10-14). The species comes from dnd2024.wikidot (`/species:faerie`, Lorwyn: First Light): Small, creature type Fey, no lineage choice (Shadowmoor faeries only differ in darkvision range; the Fairy Magic spellcasting ability is a choice that is not a lineage). Unlike the Lorwyn species still left out, dungeonmister does not list it, so its status in LFL rests on wikidot alone.
+- **Tabaxi / Табакси** is a 2014-rules species (Volo's Guide to Monsters, reprinted in MPMM in 2022), not a 2024 one; the 2024 PHB allows such older species as they are. The Russian name is the dnd.su one (`/multiverse/race/307-tabaxi/`, checked 2026-10-14).
+- **Half-Tabaxi / Полутабакси** is homebrew: no official book (and no dnd.su page) has it. The user asked for it on 2026-10-14 and chose the name; the app stores only the species key, so its traits are whatever the table agrees on.
 - **Lorwyn: First Light.** The sources disagree: dnd2024.wikidot lists five species, dungeonmister only two (Lorwyn Changeling, Rimekin).
 - **Duskling** is listed by dungeonmister and dnd2024.wikidot as a D&D Beyond Drop; no official page was checked.
 
@@ -100,5 +106,6 @@ Notes:
 - [next.dnd.su — виды 2024](https://next.dnd.su/race/) (Russian and English names, source filter)
 - [dnd2024.wikidot — Elf](https://dnd2024.wikidot.com/species:elf) (species pages are `/species:<key>`; used for the lineage options)
 - [dungeonmister — playable species in D&D 2024](https://dungeonmister.com/guides/races-and-species-in-dnd-2024/) (updated 2026-09-05)
+- [dnd.su — Табакси (MPMM)](https://dnd.su/multiverse/race/307-tabaxi/)
 - [dnd2024.wikidot — species](https://dnd2024.wikidot.com/species:all)
 - [D&D Beyond — the 10 species in the 2024 Player's Handbook](https://www.dndbeyond.com/posts/1783-the-10-species-in-the-2024-players-handbook)

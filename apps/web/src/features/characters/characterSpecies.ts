@@ -1,6 +1,7 @@
 import type { CharacterSpecies } from 'shared';
 
-// Русские названия — как на next.dnd.su (кроме феи: её там нет, название выбрал пользователь);
+// Русские названия — как на next.dnd.su; фею и полутабакси там не найти, их назвал пользователь,
+// табакси — как на dnd.su (книги 2014).
 // справочник с источниками лежит в docs/dnd/species.md.
 export const SPECIES_LABELS: Record<CharacterSpecies, string> = {
   aasimar: 'Аасимар',
@@ -12,6 +13,7 @@ export const SPECIES_LABELS: Record<CharacterSpecies, string> = {
   faerie: 'Фея',
   gnome: 'Гном',
   goliath: 'Голиаф',
+  half_tabaxi: 'Полутабакси',
   halfling: 'Полурослик',
   hexblood: 'Ведьмовская кровь',
   human: 'Человек',
@@ -21,6 +23,7 @@ export const SPECIES_LABELS: Record<CharacterSpecies, string> = {
   orc: 'Орк',
   reborn: 'Возрождённый',
   shifter: 'Шифтер',
+  tabaxi: 'Табакси',
   tiefling: 'Тифлинг',
   warforged: 'Кованый',
 };

@@ -17,6 +17,7 @@ import {
   CharacterSheet,
   deleteCharacter,
   getCharacter,
+  ShareDialog,
 } from '../features/characters';
 import { ApiError, errorMessage } from '../lib/apiRequest';
 import { usePageTitle } from '../lib/usePageTitle';
@@ -39,6 +40,7 @@ function CharacterViewPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
   const isAuthor = Boolean(character && user && character.userId === user.id);
 
   useEffect(() => {
@@ -72,6 +74,9 @@ function CharacterViewPage() {
         <Button component={Link} to={`/characters/${character.id}/edit`}>
           Редактировать
         </Button>
+        <Button variant="default" onClick={() => setSharing(true)}>
+          Поделиться
+        </Button>
         <Menu position="bottom-end">
           <Menu.Target>
             <ActionIcon
@@ -90,6 +95,18 @@ function CharacterViewPage() {
           </Menu.Dropdown>
         </Menu>
       </Group>
+      {/* Напоминание автору, что лист видят другие. */}
+      {character.linkAccess === 'link' && (
+        <Text size="sm" c="dimmed">
+          Открыт по ссылке: лист видят все, у кого она есть.
+        </Text>
+      )}
+      <ShareDialog
+        character={character}
+        opened={sharing}
+        onClose={() => setSharing(false)}
+        onChanged={setCharacter}
+      />
       {deleteError && (
         <Alert color="red" title="Ошибка">
           {deleteError}

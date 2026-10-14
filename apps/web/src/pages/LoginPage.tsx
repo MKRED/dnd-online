@@ -19,8 +19,10 @@ import {
   loginUser,
   lolkaErrorMessage,
   useAuth,
+  useNextPath,
   validateLogin,
   validatePassword,
+  withNext,
 } from '../features/auth';
 import { usePageTitle } from '../lib/usePageTitle';
 
@@ -42,9 +44,17 @@ function LoginPage() {
   );
   useEffect(() => {
     if (searchParams.has('lolkaError')) {
-      setSearchParams({}, { replace: true });
+      // Убираем только ошибку: ?next= нужен для повторной попытки.
+      setSearchParams(
+        (params) => {
+          params.delete('lolkaError');
+          return params;
+        },
+        { replace: true },
+      );
     }
   }, [searchParams, setSearchParams]);
+  const next = useNextPath();
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<LoginFormValues>({
@@ -61,7 +71,7 @@ function LoginPage() {
     loginUser(values)
       .then(({ user }) => {
         setUser(user);
-        void navigate('/');
+        void navigate(next, { replace: true });
       })
       .catch((err: unknown) => {
         console.error('Login failed', err);
@@ -79,7 +89,7 @@ function LoginPage() {
       </Title>
       <Text c="dimmed" size="sm" ta="center" mt={5}>
         Ещё нет аккаунта?{' '}
-        <Anchor component={Link} to="/register" size="sm">
+        <Anchor component={Link} to={withNext('/register', next)} size="sm">
           Зарегистрироваться
         </Anchor>
       </Text>

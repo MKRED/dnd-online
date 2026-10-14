@@ -1,4 +1,5 @@
 import type { CookieOptions, Request, Response } from 'express';
+import { safeReturnPath } from 'shared';
 
 // state и code_verifier живут между уходом на лольку и возвратом. Серверных сессий
 // у нас нет, поэтому — httpOnly cookie только для путей входа через лольку.
@@ -9,6 +10,8 @@ const MAX_AGE_MS = 10 * 60_000;
 export interface LolkaPending {
   state: string;
   verifier: string;
+  // Куда вернуть после входа (уже проверено safeReturnPath); нет — на главную.
+  next?: string;
 }
 
 function options(secure: boolean, maxAge: number): CookieOptions {
@@ -43,10 +46,15 @@ export function takePendingCookie(
     const parsed = JSON.parse(
       Buffer.from(raw, 'base64url').toString('utf8'),
     ) as Partial<LolkaPending>;
-    return typeof parsed.state === 'string' &&
-      typeof parsed.verifier === 'string'
-      ? { state: parsed.state, verifier: parsed.verifier }
-      : null;
+    if (
+      typeof parsed.state !== 'string' ||
+      typeof parsed.verifier !== 'string'
+    ) {
+      return null;
+    }
+    // Cookie подписи не имеет, поэтому путь проверяем ещё раз и при чтении.
+    const next = safeReturnPath(parsed.next) ?? undefined;
+    return { state: parsed.state, verifier: parsed.verifier, next };
   } catch {
     // Испорченная cookie — то же, что её отсутствие: вход начнётся заново.
     return null;

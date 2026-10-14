@@ -2,6 +2,7 @@ import { Button, Divider } from '@mantine/core';
 import { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../../../lib/apiBaseUrl';
 import { getAuthProviders } from '../authApi';
+import { useNextPath, withNext } from '../returnPath';
 import classes from './LolkaSignIn.module.css';
 import lolkaIcon from './lolka-icon.webp';
 
@@ -10,6 +11,7 @@ import lolkaIcon from './lolka-icon.webp';
 function LolkaSignIn() {
   const [enabled, setEnabled] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const next = useNextPath();
 
   useEffect(() => {
     getAuthProviders()
@@ -36,7 +38,7 @@ function LolkaSignIn() {
       {/* Обычная ссылка, а не fetch: дальше браузер уходит на лольку и обратно. */}
       <Button
         component="a"
-        href={`${API_BASE_URL}/auth/lolka/start`}
+        href={`${API_BASE_URL}${withNext('/auth/lolka/start', next)}`}
         // Фирменная бирюза с иконки лольки. Светлый край взят темнее, чем на иконке:
         // белый текст на нём должен читаться (контраст не ниже 4.5).
         variant="gradient"

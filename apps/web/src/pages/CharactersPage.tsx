@@ -111,6 +111,12 @@ function CharactersPage() {
                     >
                       {character.name}
                     </Anchor>
+                    {/* Чтобы автор помнил, что этот лист видят другие. */}
+                    {character.linkAccess === 'link' && (
+                      <Badge size="sm" variant="light" color="teal" ml="xs">
+                        По ссылке
+                      </Badge>
+                    )}
                     <Text size="sm" c="dimmed">
                       {SPECIES_LABELS[character.species]}
                       {character.speciesLineage &&

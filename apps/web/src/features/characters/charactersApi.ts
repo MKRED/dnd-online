@@ -1,6 +1,7 @@
 import type {
   AbilityScore,
   Character,
+  CharacterLinkAccess,
   CharacterClassLevel,
   CharacterCurrency,
   CharacterPersonality,
@@ -67,4 +68,15 @@ export function updateCharacter(
 
 export function deleteCharacter(id: string): Promise<void> {
   return request(`/characters/${id}`, { method: 'DELETE' });
+}
+
+// Доступ по ссылке: сохраняется сразу, отдельно от листа.
+export function setCharacterAccess(
+  id: string,
+  linkAccess: CharacterLinkAccess,
+): Promise<Character> {
+  return request(`/characters/${id}/access`, {
+    method: 'PUT',
+    body: JSON.stringify({ linkAccess }),
+  });
 }

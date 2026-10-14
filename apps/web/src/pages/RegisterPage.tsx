@@ -18,9 +18,11 @@ import {
   LolkaSignIn,
   registerUser,
   useAuth,
+  useNextPath,
   validateLogin,
   validateNickname,
   validatePassword,
+  withNext,
 } from '../features/auth';
 import { usePageTitle } from '../lib/usePageTitle';
 
@@ -35,6 +37,7 @@ function RegisterPage() {
   usePageTitle('Регистрация');
   const navigate = useNavigate();
   const { setUser } = useAuth();
+  const next = useNextPath();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -64,7 +67,7 @@ function RegisterPage() {
     })
       .then(({ user }) => {
         setUser(user);
-        void navigate('/');
+        void navigate(next, { replace: true });
       })
       .catch((err: unknown) => {
         console.error('Registration failed', err);
@@ -84,7 +87,7 @@ function RegisterPage() {
       </Title>
       <Text c="dimmed" size="sm" ta="center" mt={5}>
         Уже есть аккаунт?{' '}
-        <Anchor component={Link} to="/login" size="sm">
+        <Anchor component={Link} to={withNext('/login', next)} size="sm">
           Войти
         </Anchor>
       </Text>

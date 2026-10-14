@@ -10,6 +10,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
+import { safeReturnPath } from 'shared';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UserIdentitiesService } from '../../users/user-identities.service.js';
 import { AuthService } from '../auth.service.js';
@@ -45,10 +46,15 @@ export class LolkaController {
     this.secureCookies = configService.get('NODE_ENV') === 'production';
   }
 
+  // next — страница, куда вернуть после входа (например, ссылка на персонажа).
   @Get('start')
-  start(@Res() res: Response): void {
+  start(@Query('next') next: unknown, @Res() res: Response): void {
     this.requireEnabled();
-    const pending = { state: randomUrlToken(), verifier: randomUrlToken() };
+    const pending = {
+      state: randomUrlToken(),
+      verifier: randomUrlToken(),
+      next: safeReturnPath(next) ?? undefined,
+    };
     setPendingCookie(res, pending, this.secureCookies);
     res.redirect(
       this.lolka.authorizeUrl(pending.state, codeChallenge(pending.verifier)),
@@ -68,6 +74,7 @@ export class LolkaController {
       return this.fail(
         res,
         query.error === 'access_denied' ? 'denied' : 'failed',
+        pending?.next,
       );
     }
     // state из адреса должен совпасть с тем, что мы сами положили в cookie перед уходом:
@@ -77,7 +84,7 @@ export class LolkaController {
         { hasCookie: Boolean(pending) },
         'Lolka sign-in state mismatch',
       );
-      return this.fail(res, 'state');
+      return this.fail(res, 'state', pending?.next);
     }
 
     try {
@@ -94,16 +101,21 @@ export class LolkaController {
       const { tokens } = await this.authService.signIn(user);
       this.tokenService.setAuthCookies(res, tokens);
       this.logger.info({ userId: user.id, created }, 'Signed in through lolka');
-      res.redirect('/');
+      res.redirect(pending.next ?? '/');
     } catch (err) {
-      if (err instanceof LolkaOAuthError) return this.fail(res, err.code);
+      if (err instanceof LolkaOAuthError) {
+        return this.fail(res, err.code, pending.next);
+      }
       this.logger.error({ err }, 'Lolka sign-in failed');
-      this.fail(res, 'failed');
+      this.fail(res, 'failed', pending.next);
     }
   }
 
-  private fail(res: Response, error: SignInError): void {
-    res.redirect(`/login?lolkaError=${error}`);
+  // Страница входа сохраняет next: после второй попытки человек всё равно попадёт туда, куда шёл.
+  private fail(res: Response, error: SignInError, next?: string): void {
+    const query = new URLSearchParams({ lolkaError: error });
+    if (next) query.set('next', next);
+    res.redirect(`/login?${query}`);
   }
 
   // Без настроек лольки маршрутов как будто нет — кнопку веб тогда и не показывает.

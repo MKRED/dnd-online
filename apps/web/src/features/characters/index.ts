@@ -3,6 +3,7 @@ export {
   deleteCharacter,
   getCharacter,
   listCharacters,
+  setCharacterAccess,
   updateCharacter,
 } from './charactersApi';
 export type { CreateCharacterPayload } from './charactersApi';
@@ -21,4 +22,5 @@ export type {
 export { default as CharacterForm } from './CharacterForm';
 export { default as CharacterGallery } from './CharacterGallery';
 export { default as CharacterSheet } from './CharacterSheet';
+export { default as ShareDialog } from './ShareDialog';
 export { default as CharacterAvatar } from './CharacterAvatar';

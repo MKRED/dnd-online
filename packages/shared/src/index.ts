@@ -6,3 +6,4 @@ export * from './apiTokens.js';
 export * from './weapons.js';
 export * from './items.js';
 export * from './itemThumbCrop.js';
+export * from './returnPath.js';

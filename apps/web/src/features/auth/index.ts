@@ -18,3 +18,4 @@ export {
 export { default as RequireAuth } from './RequireAuth';
 export { default as RequireGuest } from './RequireGuest';
 export { LolkaSignIn, lolkaErrorMessage } from './LolkaSignIn';
+export { loginPathFor, useNextPath, withNext } from './returnPath';

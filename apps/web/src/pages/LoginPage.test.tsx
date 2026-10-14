@@ -32,6 +32,7 @@ function renderLoginPage(route = '/login') {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={<p>Главная</p>} />
+      <Route path="/characters/:id" element={<p>Лист персонажа</p>} />
     </Routes>,
     { route },
   );
@@ -64,6 +65,39 @@ describe('LoginPage', () => {
 
     expect(await screen.findByText('Главная')).toBeInTheDocument();
     expect(authValue.setUser).toHaveBeenCalledWith(user);
+  });
+
+  it('после входа возвращает туда, куда человек шёл', async () => {
+    stubFetch(200, { user: { id: '1', login: 'hero', nickname: 'Hero' } });
+    renderLoginPage('/login?next=%2Fcharacters%2Fabc');
+
+    await submitCredentials('hero', 'secret123');
+
+    expect(await screen.findByText('Лист персонажа')).toBeInTheDocument();
+  });
+
+  it('не уводит на чужой сайт по ?next=', async () => {
+    stubFetch(200, { user: { id: '1', login: 'hero', nickname: 'Hero' } });
+    renderLoginPage('/login?next=%2F%2Fevil.example');
+
+    await submitCredentials('hero', 'secret123');
+
+    expect(await screen.findByText('Главная')).toBeInTheDocument();
+  });
+
+  it('передаёт ?next= регистрации и лольке', async () => {
+    stubFetch(200, {}, { lolka: true });
+    renderLoginPage('/login?next=%2Fcharacters%2Fabc');
+
+    const lolka = await screen.findByRole('link', {
+      name: 'Войти через лольку',
+    });
+    expect(lolka.getAttribute('href')).toMatch(
+      /\/auth\/lolka\/start\?next=%2Fcharacters%2Fabc$/,
+    );
+    expect(
+      screen.getByRole('link', { name: 'Зарегистрироваться' }),
+    ).toHaveAttribute('href', '/register?next=%2Fcharacters%2Fabc');
   });
 
   it('показывает сообщение сервера при ошибке (например, rate limit)', async () => {

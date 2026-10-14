@@ -74,9 +74,9 @@ describe('LolkaController', () => {
   });
 
   // Уход на лольку: возвращает cookie, с которой потом придёт callback.
-  function start(): Record<string, string> {
+  function start(next?: string): Record<string, string> {
     const { cookies, asRes } = fakeRes();
-    controller.start(asRes);
+    controller.start(next, asRes);
     return cookies;
   }
 
@@ -89,7 +89,7 @@ describe('LolkaController', () => {
 
   it('start remembers state and verifier in a cookie and redirects to lolka', () => {
     const { res, cookies, asRes } = fakeRes();
-    controller.start(asRes);
+    controller.start(undefined, asRes);
 
     const state = stateFrom(cookies);
     expect(lolka.authorizeUrl).toHaveBeenCalledWith(state, expect.any(String));
@@ -124,6 +124,41 @@ describe('LolkaController', () => {
     });
     expect(res.clearCookie).toHaveBeenCalled();
     expect(res.redirect).toHaveBeenCalledWith('/');
+  });
+
+  it('callback returns to the page the sign-in started from', async () => {
+    const next = '/characters/11111111-1111-4111-8111-111111111111';
+    const cookies = start(next);
+    const { res, asRes } = fakeRes();
+    await controller.callback(
+      { code: 'c1', state: stateFrom(cookies) },
+      reqWith(cookies),
+      asRes,
+    );
+    expect(res.redirect).toHaveBeenCalledWith(next);
+  });
+
+  it('start drops a return path to another site', async () => {
+    const cookies = start('//evil.example');
+    const { res, asRes } = fakeRes();
+    await controller.callback(
+      { code: 'c1', state: stateFrom(cookies) },
+      reqWith(cookies),
+      asRes,
+    );
+    expect(res.redirect).toHaveBeenCalledWith('/');
+  });
+
+  it('a failed callback keeps the return path for the next try', async () => {
+    const { res, asRes } = fakeRes();
+    await controller.callback(
+      { error: 'access_denied' },
+      reqWith(start('/items')),
+      asRes,
+    );
+    expect(res.redirect).toHaveBeenCalledWith(
+      '/login?lolkaError=denied&next=%2Fitems',
+    );
   });
 
   it.each([
@@ -196,7 +231,9 @@ describe('LolkaController', () => {
 
   it('routes are 404 while lolka is not configured', async () => {
     lolka.enabled = false;
-    expect(() => controller.start(fakeRes().asRes)).toThrow(NotFoundException);
+    expect(() => controller.start(undefined, fakeRes().asRes)).toThrow(
+      NotFoundException,
+    );
     await expect(
       controller.callback({}, reqWith({}), fakeRes().asRes),
     ).rejects.toThrow(NotFoundException);

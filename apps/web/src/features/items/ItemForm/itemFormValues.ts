@@ -1,8 +1,16 @@
-import type { Coin, Item, ItemInput, ItemRarity } from 'shared';
+import type {
+  Coin,
+  Item,
+  ItemInput,
+  ItemRarity,
+  PlainItemCategory,
+} from 'shared';
 
 // Значения формы. Числа — number | string: NumberInput отдаёт '' для пустого поля.
 export interface ItemFormValues {
   name: string;
+  // Пока ни у одной категории нет своих полей; когда появятся, они добавятся сюда же.
+  category: PlainItemCategory;
   rarity: ItemRarity;
   weight: number | string;
   // Пустая стоимость — у предмета нет цены.
@@ -15,6 +23,7 @@ export interface ItemFormValues {
 export function toFormValues(item: Item | null): ItemFormValues {
   return {
     name: item?.name ?? '',
+    category: item?.category ?? 'basic',
     rarity: item?.rarity ?? 'none',
     weight: item?.weight ?? 0,
     costAmount: item?.cost?.amount ?? '',
@@ -25,12 +34,11 @@ export function toFormValues(item: Item | null): ItemFormValues {
   };
 }
 
-// Категория пока одна; когда появятся другие, она станет полем формы, а details —
-// полями этой категории.
+// details пустые: у выбираемых сейчас категорий своих полей нет.
 export function toItemInput(values: ItemFormValues): ItemInput {
   return {
     name: values.name.trim(),
-    category: 'basic',
+    category: values.category,
     details: {},
     rarity: values.rarity,
     weight: values.weight === '' ? 0 : Number(values.weight),

@@ -9,11 +9,17 @@ import {
   TextInput,
 } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
-import { COINS, ITEM_RARITIES, ITEM_CATEGORIES } from 'shared';
-import { CATEGORY_LABELS, COIN_LABELS, RARITY_LABELS } from '../itemLabels';
+import { COINS, ITEM_RARITIES, PLAIN_ITEM_CATEGORIES } from 'shared';
+import {
+  CATEGORY_HINTS,
+  CATEGORY_LABELS,
+  COIN_LABELS,
+  RARITY_LABELS,
+} from '../itemLabels';
 import type { ItemFormValues } from './itemFormValues';
 
-const CATEGORY_OPTIONS = ITEM_CATEGORIES.map((value) => ({
+// Пока все категории без своих полей; категории со своими полями потребуют их блока в форме.
+const CATEGORY_OPTIONS = PLAIN_ITEM_CATEGORIES.map((value) => ({
   value,
   label: CATEGORY_LABELS[value],
 }));
@@ -37,15 +43,12 @@ function ItemFields({ form }: { form: UseFormReturnType<ItemFormValues> }) {
         {...form.getInputProps('name')}
       />
       <SimpleGrid cols={{ base: 1, xs: 2 }}>
-        {/* Категория пока одна; поле уже здесь, чтобы с новыми категориями форма не
-            переделывалась. */}
         <Select
           label="Категория"
-          description="Другие категории появятся позже"
+          description={CATEGORY_HINTS[form.values.category]}
           data={CATEGORY_OPTIONS}
-          value="basic"
           allowDeselect={false}
-          readOnly
+          {...form.getInputProps('category')}
         />
         <Select
           label="Редкость"

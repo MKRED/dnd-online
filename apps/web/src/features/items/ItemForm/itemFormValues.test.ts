@@ -24,7 +24,7 @@ describe('itemFormValues', () => {
   it('переносит предмет в форму и обратно без потерь', () => {
     const item = {
       name: 'Зеркало',
-      category: 'basic',
+      category: 'quest',
       details: {},
       rarity: 'uncommon',
       weight: 0.5,

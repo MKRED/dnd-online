@@ -4,16 +4,27 @@ import type { ThumbCrop } from './images.js';
 // поля категории лежат в details — у каждой категории свои. Справка по весу, стоимости
 // и монетам с источниками — docs/dnd/items.md.
 
-// Ключи категорий для хранения; русские названия живут в web. Пока одна: «Базовый» —
-// всё, что не подходит под другие. Остальные добавляем по одной (план, раздел «Категории»).
-export const ITEM_CATEGORIES = ['basic'] as const;
+// Ключи категорий для хранения; русские названия живут в web. «Базовый» — всё, что не
+// подходит под другие. Остальные добавляем по одной (план, раздел «Категории»).
+export const ITEM_CATEGORIES = ['basic', 'food', 'material', 'quest'] as const;
 export type ItemCategory = (typeof ITEM_CATEGORIES)[number];
 
-// Поля категории. У «Базового» своих полей нет — details пустой объект.
-export type BasicItemDetails = Record<string, never>;
+// Категории без своих полей: details у них пустой объект (docs/plan/items-filters.md).
+export const PLAIN_ITEM_CATEGORIES = [
+  'basic',
+  'food',
+  'material',
+  'quest',
+] as const satisfies readonly ItemCategory[];
+export type PlainItemCategory = (typeof PLAIN_ITEM_CATEGORIES)[number];
+export type PlainItemDetails = Record<string, never>;
 
-// Размеченное объединение: по category понятно, какие поля лежат в details.
-export type ItemVariant = { category: 'basic'; details: BasicItemDetails };
+// Размеченное объединение: по category понятно, какие поля лежат в details. Категории
+// со своими полями добавятся сюда отдельными ветками.
+export type ItemVariant = {
+  category: PlainItemCategory;
+  details: PlainItemDetails;
+};
 export type ItemDetails = ItemVariant['details'];
 
 // Монеты — те же ключи, что у кошелька персонажа (CharacterCurrency).

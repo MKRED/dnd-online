@@ -70,6 +70,16 @@ describe('ItemDto', () => {
     });
   });
 
+  it.each(['food', 'material', 'quest'])(
+    'принимает категорию %s с пустыми details и не пускает в них поля',
+    async (category) => {
+      expect(await errorsOf({ category })).toEqual({});
+      expect(await errorsOf({ category, details: { portions: 3 } })).toEqual({
+        details: ['Поля предмета не подходят к его категории'],
+      });
+    },
+  );
+
   it('не пускает чужие поля в details базового предмета', async () => {
     expect(await errorsOf({ details: { damage: '1d6' } })).toEqual({
       details: ['Поля предмета не подходят к его категории'],

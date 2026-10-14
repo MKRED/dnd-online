@@ -1,11 +1,16 @@
 import { ValidationArguments, registerDecorator } from 'class-validator';
 import { ITEM_CATEGORIES, type ItemCategory } from 'shared';
 
-// Проверка details для каждой категории. У «Базового» своих полей нет — только пустой
+// Проверка details для каждой категории. У категорий без своих полей — только пустой
 // объект. Категории со своими полями добавят сюда проверку своим DTO-классом
 // (validateSync с whitelist и forbidNonWhitelisted).
+const isEmpty = (details: object) => Object.keys(details).length === 0;
+
 const DETAILS_CHECKS: Record<ItemCategory, (details: object) => boolean> = {
-  basic: (details) => Object.keys(details).length === 0,
+  basic: isEmpty,
+  food: isEmpty,
+  material: isEmpty,
+  quest: isEmpty,
 };
 
 // Кросс-полевая проверка: набор полей details зависит от category. Неизвестную категорию

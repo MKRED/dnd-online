@@ -4,6 +4,17 @@ import type { Coin, ItemCategory, ItemCost, ItemRarity } from 'shared';
 
 export const CATEGORY_LABELS: Record<ItemCategory, string> = {
   basic: 'Базовый',
+  food: 'Еда и напитки',
+  material: 'Материалы',
+  quest: 'Сюжетный',
+};
+
+// Подсказка под полем «Категория» в форме: что в эту категорию класть.
+export const CATEGORY_HINTS: Record<ItemCategory, string> = {
+  basic: 'Снаряжение и всё, что не подходит под другие категории',
+  food: 'Пища, напитки, рационы',
+  material: 'Сырьё и компоненты: руда, шкуры, травы, ткань',
+  quest: 'Ключи, письма, реликвии — то, что важно для истории',
 };
 
 export const RARITY_LABELS: Record<ItemRarity, string> = {

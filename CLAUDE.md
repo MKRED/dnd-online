@@ -83,6 +83,18 @@ Keep these docs current: when a change makes something in them wrong, update the
 
 ## Conventions (mandatory)
 
+### DnD rules and game data
+
+The app follows the real rules of DnD 5e, **2024 edition**. Don't write rules, lists or numbers from memory, and don't invent them.
+
+- **Check `docs/` first.** If the rule or data is already recorded there ([docs/classes.md](docs/classes.md), [docs/species.md](docs/species.md), …), build on that.
+- **If it isn't there, look it up** in the official sources before coding, and ask the user when the sources disagree or leave it open.
+- **Write down everything you find or agree on, in the same commit as the code that relies on it.** This covers both what was looked up on the web and what was decided with the user (a house rule, a simplification, something left out on purpose):
+  - one file per topic, `docs/<topic>.md`, like `classes.md`; extend an existing file rather than starting a near-duplicate, and add a new file to the Docs list above;
+  - name the source (book and edition, or the URL) and the date it was researched;
+  - mark what is unverified, and mark where the app departs from the book and why;
+  - say where that data lives in code.
+
 ### File structure and size
 
 - **One file, one responsibility.** Keep entry points and aggregating modules thin; move the implementation into neighbouring files.

@@ -27,7 +27,7 @@ function renderEditPage(id = sampleCharacter.id) {
   return renderWithProviders(
     <Routes>
       <Route path="/characters/:id/edit" element={<CharacterEditPage />} />
-      <Route path="/characters" element={<p>Список персонажей</p>} />
+      <Route path="/characters/:id" element={<p>Лист персонажа</p>} />
     </Routes>,
     { route: `/characters/${id}/edit` },
   );
@@ -47,7 +47,7 @@ describe('CharacterEditPage', { timeout: 15_000 }, () => {
     );
   });
 
-  it('сохраняет изменения через PUT и возвращает к списку', async () => {
+  it('сохраняет изменения через PUT и открывает лист персонажа', async () => {
     const fetchMock = stubFetch([
       { status: 200, body: sampleCharacter },
       EMPTY_GALLERY,
@@ -63,7 +63,7 @@ describe('CharacterEditPage', { timeout: 15_000 }, () => {
       screen.getByRole('button', { name: 'Сохранить изменения' }),
     );
 
-    expect(await screen.findByText('Список персонажей')).toBeInTheDocument();
+    expect(await screen.findByText('Лист персонажа')).toBeInTheDocument();
     const [url, init] = fetchMock.mock.calls[2];
     expect(url).toMatch(new RegExp(`/characters/${sampleCharacter.id}$`));
     expect(init?.method).toBe('PUT');

@@ -5,6 +5,7 @@ import ApiTokensPage from './pages/ApiTokensPage';
 import CharacterCreatePage from './pages/CharacterCreatePage';
 import CharacterEditPage from './pages/CharacterEditPage';
 import CharactersPage from './pages/CharactersPage';
+import CharacterViewPage from './pages/CharacterViewPage';
 import HomePage from './pages/HomePage';
 import ItemCreatePage from './pages/ItemCreatePage';
 import ItemEditPage from './pages/ItemEditPage';
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
           { path: '/', element: <HomePage /> },
           { path: '/characters', element: <CharactersPage /> },
           { path: '/characters/new', element: <CharacterCreatePage /> },
+          { path: '/characters/:id', element: <CharacterViewPage /> },
           { path: '/characters/:id/edit', element: <CharacterEditPage /> },
           { path: '/items', element: <ItemsPage /> },
           { path: '/items/new', element: <ItemCreatePage /> },

@@ -20,4 +20,5 @@ export type {
 } from './characterFormValues';
 export { default as CharacterForm } from './CharacterForm';
 export { default as CharacterGallery } from './CharacterGallery';
+export { default as CharacterSheet } from './CharacterSheet';
 export { default as CharacterAvatar } from './CharacterAvatar';

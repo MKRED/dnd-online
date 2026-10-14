@@ -4,6 +4,7 @@ import {
   type Weapon,
   type WeaponCategory,
   type WeaponGroup,
+  type WeaponProficiency,
 } from 'shared';
 
 // Русские названия оружия и его категорий (docs/dnd/proficiencies.md). Во владении оружием
@@ -60,6 +61,12 @@ const WEAPON_LABELS: Record<Weapon, string> = {
   handCrossbow: 'Одноручный арбалет',
   pistol: 'Пистоль',
   heavyCrossbow: 'Тяжёлый арбалет',
+};
+
+// Названия для владений оружием — категорий и отдельного оружия; их показывает лист.
+export const WEAPON_PROFICIENCY_LABELS: Record<WeaponProficiency, string> = {
+  ...CATEGORY_LABELS,
+  ...WEAPON_LABELS,
 };
 
 const WEAPON_GROUPS = Object.keys(WEAPONS_BY_GROUP) as WeaponGroup[];

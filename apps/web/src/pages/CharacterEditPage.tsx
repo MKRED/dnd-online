@@ -73,7 +73,7 @@ function CharacterEditPage() {
     setSubmitting(true);
     updateCharacter(id, toCreatePayload(values))
       .then((saved) => {
-        void navigate('/characters', { state: { updatedId: saved.id } });
+        void navigate(`/characters/${saved.id}`);
       })
       .catch((err: unknown) => {
         console.error('Character update failed', err);
@@ -102,8 +102,8 @@ function CharacterEditPage() {
         >
           {character ? `Редактирование: ${character.name}` : 'Редактирование'}
         </Title>
-        <Anchor component={Link} to="/characters" size="sm">
-          Назад к списку
+        <Anchor component={Link} to={`/characters/${id}`} size="sm">
+          К персонажу
         </Anchor>
       </Group>
 

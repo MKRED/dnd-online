@@ -8,12 +8,7 @@ import {
 } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import { useCallback, useState } from 'react';
-import {
-  ABILITY_SCORES,
-  SKILL_ABILITIES,
-  type AbilityScore,
-  type Skill,
-} from 'shared';
+import type { AbilityScore } from 'shared';
 import { ABILITY_LABELS } from '../../characterLabels';
 import type { CharacterFormValues } from '../../characterFormValues';
 import {
@@ -21,6 +16,7 @@ import {
   getAbilityModifier,
   getSavingThrowBonus,
 } from './abilityMath';
+import { SKILLS_BY_ABILITY } from '../../skillsByAbility';
 import SkillRow from './SkillRow';
 
 interface AbilityCardProps {
@@ -28,22 +24,6 @@ interface AbilityCardProps {
   ability: AbilityScore;
   proficiencyBonus: number;
 }
-
-const SKILLS_BY_ABILITY = (Object.keys(SKILL_ABILITIES) as Skill[]).reduce<
-  Record<AbilityScore, Skill[]>
->(
-  (acc, skill) => {
-    acc[SKILL_ABILITIES[skill]].push(skill);
-    return acc;
-  },
-  ABILITY_SCORES.reduce<Record<AbilityScore, Skill[]>>(
-    (acc, ability) => {
-      acc[ability] = [];
-      return acc;
-    },
-    {} as Record<AbilityScore, Skill[]>,
-  ),
-);
 
 // Следит только за своей характеристикой (значение + спасбросок) — соседние карточки
 // на её изменения не реагируют. proficiencyBonus — общее для всех, приходит пропом сверху.

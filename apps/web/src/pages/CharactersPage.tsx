@@ -1,5 +1,6 @@
 import {
   Alert,
+  Anchor,
   Badge,
   Button,
   Card,
@@ -11,7 +12,7 @@ import {
   Title,
 } from '@mantine/core';
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import type { Character } from 'shared';
 import {
   CLASS_LABELS,
@@ -29,21 +30,6 @@ function CharactersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  // Подсветка только что изменённого персонажа — id передан через navigate state со
-  // страницы редактирования, чтобы было видно, какая карточка.
-  // Запоминаем его в state компонента, а из истории сразу стираем (эффект ниже):
-  // браузер хранит history state между перезагрузками, и бейдж иначе не пропадал бы.
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [highlightedId] = useState(
-    () => (location.state as { updatedId?: string } | null)?.updatedId,
-  );
-
-  useEffect(() => {
-    if (location.state) {
-      void navigate(location.pathname, { replace: true, state: null });
-    }
-  }, [location.state, location.pathname, navigate]);
 
   useEffect(() => {
     listCharacters()
@@ -101,34 +87,30 @@ function CharactersPage() {
       ) : (
         <Stack>
           {characters.map((character) => (
-            <Card
-              key={character.id}
-              withBorder
-              radius="md"
-              p="md"
-              style={
-                character.id === highlightedId
-                  ? { borderColor: 'var(--mantine-color-green-6)' }
-                  : undefined
-              }
-            >
+            <Card key={character.id} withBorder radius="md" p="md">
               <Group justify="space-between" align="flex-start">
+                {/* Портрет и имя открывают лист персонажа. */}
                 <Group align="flex-start" wrap="nowrap">
-                  <CharacterAvatar
-                    characterId={character.id}
-                    name={character.name}
-                    mainImage={character.mainImage}
-                    size="lg"
-                  />
+                  <Link
+                    to={`/characters/${character.id}`}
+                    aria-label={`Открыть персонажа ${character.name}`}
+                  >
+                    <CharacterAvatar
+                      characterId={character.id}
+                      name={character.name}
+                      mainImage={character.mainImage}
+                      size="lg"
+                    />
+                  </Link>
                   <div>
-                    <Group gap="xs" align="center">
-                      <Text fw={600}>{character.name}</Text>
-                      {character.id === highlightedId && (
-                        <Badge color="green" size="sm">
-                          Изменён
-                        </Badge>
-                      )}
-                    </Group>
+                    <Anchor
+                      component={Link}
+                      to={`/characters/${character.id}`}
+                      fw={600}
+                      c="inherit"
+                    >
+                      {character.name}
+                    </Anchor>
                     <Text size="sm" c="dimmed">
                       {SPECIES_LABELS[character.species]}
                       {character.speciesLineage &&

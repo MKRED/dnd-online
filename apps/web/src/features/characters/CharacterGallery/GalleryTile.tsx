@@ -1,6 +1,7 @@
 import { ActionIcon, Badge, Loader, Menu, UnstyledButton } from '@mantine/core';
 import type { CharacterImage } from 'shared';
-import { useImageUrl } from '../useImageUrls';
+import { useImageUrl } from '../../../lib/useImageUrls';
+import { characterImagePath } from '../characterImagesApi';
 import classes from './CharacterGallery.module.css';
 import { IconMore } from './galleryIcons';
 
@@ -26,11 +27,7 @@ function GalleryTile({
   onEditThumbnail,
   onRemove,
 }: GalleryTileProps) {
-  const url = useImageUrl({
-    characterId,
-    imageId: image.id,
-    variant: 'preview',
-  });
+  const url = useImageUrl(characterImagePath(characterId, image.id, 'preview'));
 
   return (
     <div

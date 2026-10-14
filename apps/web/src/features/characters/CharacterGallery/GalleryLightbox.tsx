@@ -1,8 +1,8 @@
 import { Lightbox, type ToolbarItemsPayload } from '@mantine/lightbox';
 import { useState } from 'react';
 import type { CharacterImage } from 'shared';
-import { imageRequestKey, type ImageRequest } from '../imageUrlCache';
-import { useImageUrls } from '../useImageUrls';
+import { useImageUrls } from '../../../lib/useImageUrls';
+import { characterImagePath } from '../characterImagesApi';
 import {
   IconClose,
   IconDownload,
@@ -59,18 +59,18 @@ function GalleryLightbox({
   // остаются загруженными, пока просмотрщик открыт.
   const [visited, setVisited] = useState(() => new Set([initialIndex]));
 
-  const request = (image: CharacterImage, variant: 'full' | 'preview') =>
-    ({ characterId, imageId: image.id, variant }) satisfies ImageRequest;
+  const pathOf = (image: CharacterImage, variant: 'full' | 'preview') =>
+    characterImagePath(characterId, image.id, variant);
   const wantsFull = (position: number) =>
     visited.has(position) || Math.abs(position - index) <= 1;
   const urls = useImageUrls([
-    ...images.map((image) => request(image, 'preview')),
+    ...images.map((image) => pathOf(image, 'preview')),
     ...images
       .filter((_, position) => wantsFull(position))
-      .map((image) => request(image, 'full')),
+      .map((image) => pathOf(image, 'full')),
   ]);
   const urlOf = (image: CharacterImage, variant: 'full' | 'preview') =>
-    urls[imageRequestKey(request(image, variant))];
+    urls[pathOf(image, variant)];
 
   const slides = images.map((image, position) => {
     const preview = urlOf(image, 'preview');

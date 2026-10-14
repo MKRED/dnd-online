@@ -6,7 +6,13 @@ import {
 } from '@nestjs/common';
 import { and, eq, sql } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import type { ItemImage, ItemImageVariant, ThumbCrop } from 'shared';
+import {
+  defaultItemThumbCrop,
+  itemThumbCropError,
+  type ItemImage,
+  type ItemImageVariant,
+  type ThumbCrop,
+} from 'shared';
 import { DatabaseService } from '../database/database.service.js';
 import { itemImageFiles, itemImages, items } from '../database/schema/index.js';
 import { decodeToFull, UnsupportedImageError } from '../images/decode-image.js';
@@ -17,11 +23,7 @@ import {
   lockAuthoredItem,
   toItemImage,
 } from './item-image-access.js';
-import {
-  defaultItemThumbCrop,
-  itemThumbCropError,
-  renderItemThumb,
-} from './item-thumb.js';
+import { renderItemThumb } from './item-thumb.js';
 
 // Правки картинки предмета: загрузка (она же замена), вырез миниатюры, удаление.
 // Только автор; каждая правка идёт в транзакции с блокировкой строки предмета.

@@ -3,14 +3,13 @@ import {
   acquireImageUrl,
   peekImageUrl,
   releaseImageUrl,
-  type ImageRequest,
 } from './imageUrlCache';
 
 // У каждого теста своя картинка: кеш живёт на уровне модуля.
 let counter = 0;
-function nextRequest(): ImageRequest {
+function nextRequest(): string {
   counter += 1;
-  return { characterId: 'c', imageId: `image-${counter}`, variant: 'preview' };
+  return `/characters/c/images/image-${counter}/file?variant=preview`;
 }
 
 describe('imageUrlCache', () => {

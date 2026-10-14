@@ -11,7 +11,8 @@ import {
 import { useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
 import type { CharacterImage, ThumbCrop } from 'shared';
-import { useImageUrl } from '../useImageUrls';
+import { useImageUrl } from '../../../lib/useImageUrls';
+import { characterImagePath } from '../characterImagesApi';
 import classes from './CharacterGallery.module.css';
 
 const MAX_ZOOM = 5;
@@ -55,7 +56,7 @@ function ThumbnailEditor({
   onSave,
   onClose,
 }: ThumbnailEditorProps) {
-  const url = useImageUrl({ characterId, imageId: image.id, variant: 'full' });
+  const url = useImageUrl(characterImagePath(characterId, image.id, 'full'));
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [area, setArea] = useState<Area | null>(null);

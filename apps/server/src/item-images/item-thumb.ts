@@ -1,40 +1,8 @@
 import sharp from 'sharp';
 import type { ThumbCrop } from 'shared';
 
+// Вырез по умолчанию и его проверка — в shared (itemThumbCrop.ts): их же использует форма.
 export const ITEM_THUMB_SIDE = 256;
-// Насколько вырез может быть больше картинки: дальше сама картинка в миниатюре
-// превращается в точку, а рендер тратит процессор зря.
-const MAX_CROP_TO_IMAGE = 2;
-
-// Вырез по умолчанию — картинка целиком, вписанная в квадрат по центру. Квадрат по
-// короткой стороне (как у персонажа) отрезал бы концы длинному мечу или посоху.
-export function defaultItemThumbCrop(width: number, height: number): ThumbCrop {
-  const size = Math.max(width, height);
-  return {
-    x: Math.floor((width - size) / 2),
-    y: Math.floor((height - size) / 2),
-    size,
-  };
-}
-
-// Текст ошибки для выреза; null — вырез годится. Вырез может выходить за края (поля
-// будут прозрачными), но должен задевать картинку и не быть слишком большим.
-export function itemThumbCropError(
-  crop: ThumbCrop,
-  width: number,
-  height: number,
-): string | null {
-  if (crop.size < 1) return 'Миниатюра не может быть пустой';
-  if (crop.size > MAX_CROP_TO_IMAGE * Math.max(width, height)) {
-    return 'Миниатюра слишком большая для этой картинки';
-  }
-  const overlaps =
-    crop.x < width &&
-    crop.y < height &&
-    crop.x + crop.size > 0 &&
-    crop.y + crop.size > 0;
-  return overlaps ? null : 'Миниатюра не задевает картинку';
-}
 
 // Миниатюра из варианта full; вырез должен быть уже проверен (itemThumbCropError).
 // sharp не накладывает картинку больше холста, а холст размером с вырез мог бы занять

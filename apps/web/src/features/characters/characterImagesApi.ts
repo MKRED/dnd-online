@@ -1,5 +1,5 @@
 import type { CharacterImage, CharacterImageVariant, ThumbCrop } from 'shared';
-import { apiRequest, apiRequestBlob } from '../../lib/apiRequest';
+import { apiRequest } from '../../lib/apiRequest';
 
 const base = (characterId: string) => `/characters/${characterId}/images`;
 
@@ -36,15 +36,16 @@ export function deleteCharacterImage(
   return apiRequest(`${base(characterId)}/${imageId}`, { method: 'DELETE' });
 }
 
-// version нужна только миниатюре: её содержимое меняется при новом вырезе, а сервер
-// разрешает кешировать ответ навсегда.
-export function fetchCharacterImageFile(
+// Путь байтов картинки — его грузит кеш blob-адресов (lib/useImageUrls). version нужна
+// только миниатюре: её содержимое меняется при новом вырезе, а сервер разрешает
+// кешировать ответ навсегда.
+export function characterImagePath(
   characterId: string,
   imageId: string,
   variant: CharacterImageVariant,
   version?: number,
-): Promise<Blob> {
+): string {
   const query = new URLSearchParams({ variant });
   if (version !== undefined) query.set('v', String(version));
-  return apiRequestBlob(`${base(characterId)}/${imageId}/file?${query}`);
+  return `${base(characterId)}/${imageId}/file?${query}`;
 }

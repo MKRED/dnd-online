@@ -1,6 +1,7 @@
 import { Avatar, type AvatarProps } from '@mantine/core';
 import type { CharacterMainImage } from 'shared';
-import { useImageUrl } from './useImageUrls';
+import { useImageUrl } from '../../lib/useImageUrls';
+import { characterImagePath } from './characterImagesApi';
 
 interface CharacterAvatarProps extends Pick<AvatarProps, 'size'> {
   characterId: string;
@@ -17,12 +18,13 @@ function CharacterAvatar({
   size = 'lg',
 }: CharacterAvatarProps) {
   const url = useImageUrl(
-    mainImage && {
-      characterId,
-      imageId: mainImage.id,
-      variant: 'thumb',
-      version: mainImage.thumbVersion,
-    },
+    mainImage &&
+      characterImagePath(
+        characterId,
+        mainImage.id,
+        'thumb',
+        mainImage.thumbVersion,
+      ),
   );
   return (
     <Avatar

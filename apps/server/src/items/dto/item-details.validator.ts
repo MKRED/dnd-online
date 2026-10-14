@@ -1,7 +1,13 @@
-import { ValidationArguments, registerDecorator } from 'class-validator';
+import {
+  ValidationArguments,
+  isUUID,
+  registerDecorator,
+} from 'class-validator';
 import {
   ITEM_CATEGORIES,
   ITEM_MAX_WEIGHT,
+  ITEM_PACK_MAX_ENTRIES,
+  ITEM_PACK_MAX_QUANTITY,
   ITEM_SATIETY_MAX,
   TREASURE_KINDS,
   type ItemCategory,
@@ -54,6 +60,38 @@ function isContainer(details: object): boolean {
   return keys.length === 1 && keys[0] === 'capacity' && isCapacity(capacity);
 }
 
+function isPackEntry(entry: unknown): boolean {
+  if (typeof entry !== 'object' || entry === null) return false;
+  const keys = Object.keys(entry).sort();
+  const { itemId, quantity } = entry as {
+    itemId?: unknown;
+    quantity?: unknown;
+  };
+  return (
+    keys.length === 2 &&
+    keys[0] === 'itemId' &&
+    keys[1] === 'quantity' &&
+    isUUID(itemId) &&
+    Number.isInteger(quantity) &&
+    (quantity as number) >= 1 &&
+    (quantity as number) <= ITEM_PACK_MAX_QUANTITY
+  );
+}
+
+// Только форма состава: строки, количество, повторы. Существуют ли предметы и видны ли
+// они автору, проверяет сервис по базе (pack-contents).
+function isPack(details: object): boolean {
+  const keys = Object.keys(details);
+  const { contents } = details as { contents?: unknown };
+  if (keys.length !== 1 || keys[0] !== 'contents') return false;
+  if (!Array.isArray(contents)) return false;
+  if (contents.length < 1 || contents.length > ITEM_PACK_MAX_ENTRIES)
+    return false;
+  if (!contents.every(isPackEntry)) return false;
+  const ids = contents.map((entry: { itemId: string }) => entry.itemId);
+  return new Set(ids).size === ids.length;
+}
+
 const DETAILS_CHECKS: Record<ItemCategory, (details: object) => boolean> = {
   basic: isEmpty,
   food: isFood,
@@ -61,6 +99,7 @@ const DETAILS_CHECKS: Record<ItemCategory, (details: object) => boolean> = {
   quest: isEmpty,
   treasure: isTreasure,
   container: isContainer,
+  pack: isPack,
 };
 
 // Текст ошибки — для поля, которое правит человек; лишние поля шлёт только чужой клиент.
@@ -68,6 +107,7 @@ const MESSAGES: Partial<Record<ItemCategory, string>> = {
   food: `Насыщение — целое число от 0 до ${ITEM_SATIETY_MAX}`,
   treasure: 'Выберите вид сокровища',
   container: `Груз — больше 0 и до ${ITEM_MAX_WEIGHT} фнт., не больше двух знаков после запятой`,
+  pack: `В наборе — от 1 до ${ITEM_PACK_MAX_ENTRIES} разных предметов, количество каждого — целое от 1 до ${ITEM_PACK_MAX_QUANTITY}`,
 };
 const DEFAULT_MESSAGE = 'Поля предмета не подходят к его категории';
 

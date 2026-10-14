@@ -13,6 +13,7 @@ export const ITEM_CATEGORIES = [
   'quest',
   'treasure',
   'container',
+  'pack',
 ] as const;
 export type ItemCategory = (typeof ITEM_CATEGORIES)[number];
 
@@ -49,13 +50,50 @@ export interface ContainerItemDetails {
   capacity: number | null;
 }
 
+// Набор снаряжения (docs/plan/item-packs.md): состав — другие предметы каталога с
+// количеством. В базе состав лежит в отдельной таблице, а в API — в details, как поля
+// других категорий. Количество — в единице самого предмета: масло ×7 фляг, рационы ×10.
+export const ITEM_PACK_MAX_ENTRIES = 50;
+export const ITEM_PACK_MAX_QUANTITY = 1000;
+
+// Строка состава, как её присылает форма.
+export interface PackEntryInput {
+  itemId: string;
+  quantity: number;
+}
+
+// Краткая карточка предмета из состава — чтобы показать строку без отдельного запроса.
+export interface PackEntryItem {
+  name: string;
+  category: ItemCategory;
+  weight: number;
+  isPublic: boolean;
+  image: ItemImage | null;
+}
+
+export interface PackEntry extends PackEntryInput {
+  // null — автор предмета скрыл его от читателя. Удалённый предмет из состава пропадает сам.
+  item: PackEntryItem | null;
+}
+
+export interface PackItemDetails {
+  contents: PackEntry[];
+}
+
 // Размеченное объединение: по category понятно, какие поля лежат в details.
 export type ItemVariant =
   | { category: PlainItemCategory; details: PlainItemDetails }
   | { category: 'food'; details: FoodItemDetails }
   | { category: 'treasure'; details: TreasureItemDetails }
-  | { category: 'container'; details: ContainerItemDetails };
+  | { category: 'container'; details: ContainerItemDetails }
+  | { category: 'pack'; details: PackItemDetails };
 export type ItemDetails = ItemVariant['details'];
+
+// То же для записи: у набора в составе только ссылки и количество, карточки строит сервер.
+export type ItemInputVariant =
+  | Exclude<ItemVariant, { category: 'pack' }>
+  | { category: 'pack'; details: { contents: PackEntryInput[] } };
+export type ItemInputDetails = ItemInputVariant['details'];
 
 // Монеты — те же ключи, что у кошелька персонажа (CharacterCurrency).
 export const COINS = ['cp', 'sp', 'ep', 'gp', 'pp'] as const;
@@ -132,7 +170,7 @@ export type Item = ItemVariant & {
 };
 
 // Тело создания и полного редактирования.
-export type ItemInput = ItemVariant & {
+export type ItemInput = ItemInputVariant & {
   name: string;
   rarity: ItemRarity;
   weight: number;

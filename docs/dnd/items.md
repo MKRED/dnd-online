@@ -111,7 +111,7 @@
 
 Таблица выше идёт за wikidot.
 
-**Как в приложении:** ещё не сделано. План — [plan/item-packs.md](../plan/item-packs.md).
+**Как в приложении:** категория «Набор снаряжения» (`pack`): состав — другие предметы каталога с количеством, вес и цена набора — общие поля, вводятся вручную. Серверная часть — с 2026-10-14, интерфейс в работе. Решения и план — [plan/item-packs.md](../plan/item-packs.md).
 
 ## Категории без своих полей
 
@@ -119,6 +119,7 @@
 
 ## Где это в коде
 
-- `packages/shared/src/items.ts` — категории (`ITEM_CATEGORIES`, без своих полей — `PLAIN_ITEM_CATEGORIES`), виды сокровищ (`TREASURE_KINDS`), редкости (`ITEM_RARITIES`), монеты (`COINS`), лимиты, типы `Item` и `ItemInput`.
+- `packages/shared/src/items.ts` — категории (`ITEM_CATEGORIES`, без своих полей — `PLAIN_ITEM_CATEGORIES`), виды сокровищ (`TREASURE_KINDS`), состав набора (`PackEntry`, лимиты `ITEM_PACK_MAX_*`), редкости (`ITEM_RARITIES`), монеты (`COINS`), лимиты, типы `Item` и `ItemInput`.
 - `apps/server/src/items/` — модуль: DTO (`dto/item.dto.ts`, проверка `details` по категории в `dto/item-details.validator.ts`), доступ (`item-access.ts`), сервис, маппер.
 - `apps/server/src/database/schema/items.ts` — таблица `items`.
+- `apps/server/src/database/schema/item-pack-entries.ts` — состав наборов снаряжения; проверка ссылок и сборка состава — `apps/server/src/items/pack-contents/`.

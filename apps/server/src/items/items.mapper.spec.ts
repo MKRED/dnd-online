@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { items } from '../database/schema/index.js';
 import type { ItemDto } from './dto/item.dto.js';
-import { toItem, toItemValues } from './items.mapper.js';
+import { packContentsOf, toItem, toItemValues } from './items.mapper.js';
 
 const row: typeof items.$inferSelect = {
   id: 'i1',
@@ -79,6 +79,27 @@ describe('items.mapper', () => {
     expect(toItem({ ...container, details: {} }, 'Арвен').details).toEqual({
       capacity: null,
     });
+  });
+
+  it('отдаёт состав набора из своей таблицы', () => {
+    const pack = { ...row, category: 'pack' as const };
+    const contents = [{ itemId: 'i2', quantity: 10, item: null }];
+    expect(toItem(pack, 'Арвен', null, contents).details).toEqual({ contents });
+    expect(toItem(pack, 'Арвен').details).toEqual({ contents: [] });
+  });
+
+  it('у набора details в базе пустой, состав — отдельно', () => {
+    const dto = {
+      name: 'Набор путешественника',
+      category: 'pack',
+      rarity: 'none',
+      details: { contents: [{ itemId: 'i2', quantity: 10 }] },
+      weight: 55,
+      isPublic: false,
+    } as ItemDto;
+    expect(toItemValues(dto).details).toEqual({});
+    expect(packContentsOf(dto)).toEqual([{ itemId: 'i2', quantity: 10 }]);
+    expect(packContentsOf({ ...dto, category: 'basic' })).toBeNull();
   });
 
   it('снятая цена и описание пишутся как null и пустая строка', () => {

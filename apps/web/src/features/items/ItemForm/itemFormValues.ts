@@ -4,7 +4,7 @@ import type {
   ItemCategory,
   ItemInput,
   ItemRarity,
-  ItemVariant,
+  ItemInputVariant,
   TreasureKind,
 } from 'shared';
 
@@ -48,7 +48,7 @@ export function toFormValues(item: Item | null): ItemFormValues {
 }
 
 // Форма проверена до отправки, поэтому у сокровища вид уже выбран.
-function toVariant(values: ItemFormValues): ItemVariant {
+function toVariant(values: ItemFormValues): ItemInputVariant {
   switch (values.category) {
     case 'food':
       return { category: 'food', details: { satiety: Number(values.satiety) } };
@@ -64,6 +64,10 @@ function toVariant(values: ItemFormValues): ItemVariant {
           capacity: values.capacity === '' ? null : Number(values.capacity),
         },
       };
+    case 'pack':
+      // Поле состава появится на этапе интерфейса (docs/plan/item-packs.md); до него
+      // категорию в форме не выбрать, а пустой состав сервер всё равно отклонит.
+      return { category: 'pack', details: { contents: [] } };
     default:
       return { category: values.category, details: {} };
   }

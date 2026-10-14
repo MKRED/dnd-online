@@ -11,12 +11,14 @@ import {
   rejectEdit,
   visibleItem,
 } from './item-access.js';
-import { toItem, toItemValues } from './items.mapper.js';
+import { packContentsOf, toItem, toItemValues } from './items.mapper.js';
+import { PackContentsService } from './pack-contents/index.js';
 
 @Injectable()
 export class ItemsService {
   constructor(
     private readonly databaseService: DatabaseService,
+    private readonly packContents: PackContentsService,
     @InjectPinoLogger(ItemsService.name)
     private readonly logger: PinoLogger,
   ) {}
@@ -24,16 +26,25 @@ export class ItemsService {
   async create(userId: string, dto: ItemDto): Promise<Item> {
     const t0 = Date.now();
     try {
-      const [row] = await this.databaseService.db
-        .insert(items)
-        .values({ authorId: userId, ...toItemValues(dto) })
-        .returning();
+      // Предмет и состав набора пишутся вместе: отказ по составу не оставит пустой набор.
+      const row = await this.databaseService.db.transaction(async (tx) => {
+        const [inserted] = await tx
+          .insert(items)
+          .values({ authorId: userId, ...toItemValues(dto) })
+          .returning({ id: items.id });
+        const contents = packContentsOf(dto);
+        if (contents) {
+          await this.packContents.replace(tx, userId, inserted.id, contents);
+        }
+        return inserted;
+      });
       this.logger.info(
         { durationMs: Date.now() - t0, userId, itemId: row.id },
         'Item created',
       );
       return this.findOne(userId, row.id);
     } catch (err: unknown) {
+      if (err instanceof HttpException) throw err;
       this.logger.error(
         { err, durationMs: Date.now() - t0, userId },
         'Item creation failed',
@@ -57,8 +68,14 @@ export class ItemsService {
         { durationMs: Date.now() - t0, userId, scope, count: rows.length },
         'Items listed',
       );
+      const contents = await this.packContents.resolve(
+        userId,
+        rows
+          .filter(({ item }) => item.category === 'pack')
+          .map(({ item }) => item.id),
+      );
       return rows.map(({ item, authorNickname, image }) =>
-        toItem(item, authorNickname, image),
+        toItem(item, authorNickname, image, contents.get(item.id)),
       );
     } catch (err: unknown) {
       this.logger.error(
@@ -80,7 +97,11 @@ export class ItemsService {
         'Item lookup',
       );
       if (!row) throw new NotFoundException(ITEM_NOT_FOUND);
-      return toItem(row.item, row.authorNickname, row.image);
+      const contents =
+        row.item.category === 'pack'
+          ? await this.packContents.resolve(userId, [id])
+          : undefined;
+      return toItem(row.item, row.authorNickname, row.image, contents?.get(id));
     } catch (err: unknown) {
       if (err instanceof HttpException) throw err;
       this.logger.error(
@@ -95,12 +116,16 @@ export class ItemsService {
     const t0 = Date.now();
     const { db } = this.databaseService;
     try {
-      const [row] = await db
-        .update(items)
-        .set(toItemValues(dto))
-        .where(authoredItem(userId, id))
-        .returning({ id: items.id });
-      if (!row) await rejectEdit(db, userId, id);
+      await db.transaction(async (tx) => {
+        const [row] = await tx
+          .update(items)
+          .set(toItemValues(dto))
+          .where(authoredItem(userId, id))
+          .returning({ id: items.id });
+        if (!row) await rejectEdit(tx, userId, id);
+        // Состав заменяется целиком; сменил набор категорию — строки уходят.
+        await this.packContents.replace(tx, userId, id, packContentsOf(dto));
+      });
       this.logger.info(
         { durationMs: Date.now() - t0, userId, itemId: id },
         'Item updated',

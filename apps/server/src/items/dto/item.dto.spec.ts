@@ -125,6 +125,40 @@ describe('ItemDto', () => {
     expect(await container({ capacity: 30, volume: 1 })).toEqual(error);
   });
 
+  it('у набора — от 1 до 50 разных предметов, количество целое от 1 до 1000', async () => {
+    const pack = async (details: object) =>
+      errorsOf({ category: 'pack', details });
+    const error = {
+      details: [
+        'В наборе — от 1 до 50 разных предметов, количество каждого — целое от 1 до 1000',
+      ],
+    };
+    const rope = '0b6f3c1e-8a52-4d3a-9f1e-2c4b5a6d7e8f';
+    const torch = '1c7a4d2f-9b63-4e4b-8a2f-3d5c6b7e8f90';
+    const entry = (itemId: string, quantity: number) => ({ itemId, quantity });
+    expect(
+      await pack({ contents: [entry(rope, 1), entry(torch, 10)] }),
+    ).toEqual({});
+    expect(await pack({ contents: [entry(rope, 1000)] })).toEqual({});
+    expect(await pack({ contents: [] })).toEqual(error);
+    expect(await pack({})).toEqual(error);
+    expect(await pack({ contents: [entry(rope, 0)] })).toEqual(error);
+    expect(await pack({ contents: [entry(rope, 1001)] })).toEqual(error);
+    expect(await pack({ contents: [entry(rope, 1.5)] })).toEqual(error);
+    expect(await pack({ contents: [entry('факел', 1)] })).toEqual(error);
+    expect(await pack({ contents: [entry(rope, 1), entry(rope, 2)] })).toEqual(
+      error,
+    );
+    expect(
+      await pack({ contents: [{ ...entry(rope, 1), name: 'Верёвка' }] }),
+    ).toEqual(error);
+    expect(
+      await pack({
+        contents: Array.from({ length: 51 }, () => entry(rope, 1)),
+      }),
+    ).toEqual(error);
+  });
+
   it('не пускает чужие поля в details базового предмета', async () => {
     expect(await errorsOf({ details: { damage: '1d6' } })).toEqual({
       details: ['Поля предмета не подходят к его категории'],

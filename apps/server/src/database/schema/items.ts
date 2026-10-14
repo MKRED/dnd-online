@@ -12,7 +12,7 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
-import type { Coin, ItemCategory, ItemDetails, ItemRarity } from 'shared';
+import type { Coin, ItemCategory, ItemRarity } from 'shared';
 import { users } from './users.js';
 
 // Предмет общего каталога (docs/plan/items.md). Общие поля — колонки, поля категории —
@@ -36,7 +36,12 @@ export const items = pgTable(
       .$type<ItemRarity>()
       .notNull()
       .default('none'),
-    details: jsonb('details').notNull().$type<ItemDetails>().default({}),
+    // Поля категории; маппер читает их по category. У набора здесь пустой объект: его
+    // состав — в item_pack_entries.
+    details: jsonb('details')
+      .notNull()
+      .$type<Record<string, unknown>>()
+      .default({}),
     // Фунты до сотых: в книге бывает 1/4 фнт. mode number — без него drizzle отдаёт строку.
     weight: numeric('weight', { precision: 8, scale: 2, mode: 'number' })
       .notNull()

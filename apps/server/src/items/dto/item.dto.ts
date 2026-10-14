@@ -22,7 +22,7 @@ import {
   ITEM_RARITIES,
   type Coin,
   type ItemCategory,
-  type ItemDetails,
+  type ItemInputDetails,
   type ItemRarity,
 } from 'shared';
 import { DetailsForCategory } from './item-details.validator.js';
@@ -58,7 +58,7 @@ export class ItemDto {
   rarity: ItemRarity;
 
   @DetailsForCategory()
-  details: ItemDetails;
+  details: ItemInputDetails;
 
   @IsNumber(
     { maxDecimalPlaces: 2, allowNaN: false, allowInfinity: false },

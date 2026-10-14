@@ -101,6 +101,7 @@ describe('countByCategory', () => {
       quest: 1,
       treasure: 0,
       container: 0,
+      pack: 0,
     });
   });
 });

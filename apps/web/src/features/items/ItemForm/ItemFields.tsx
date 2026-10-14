@@ -19,7 +19,11 @@ import {
 import CategoryFields from './CategoryFields';
 import type { ItemFormValues } from './itemFormValues';
 
-const CATEGORY_OPTIONS = ITEM_CATEGORIES.map((value) => ({
+// Набора пока нет в выборе: поле состава появится на этапе интерфейса
+// (docs/plan/item-packs.md).
+const CATEGORY_OPTIONS = ITEM_CATEGORIES.filter(
+  (value) => value !== 'pack',
+).map((value) => ({
   value,
   label: CATEGORY_LABELS[value],
 }));

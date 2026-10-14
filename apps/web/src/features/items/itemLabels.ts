@@ -15,6 +15,7 @@ export const CATEGORY_LABELS: Record<ItemCategory, string> = {
   quest: 'Сюжетный',
   treasure: 'Сокровище',
   container: 'Контейнер',
+  pack: 'Набор снаряжения',
 };
 
 // Подсказка под полем «Категория» в форме: что в эту категорию класть.
@@ -25,6 +26,7 @@ export const CATEGORY_HINTS: Record<ItemCategory, string> = {
   quest: 'Ключи, письма, реликвии — то, что важно для истории',
   treasure: 'Драгоценные камни, произведения искусства, товары',
   container: 'Рюкзаки, мешки, сундуки, бочки, колчаны',
+  pack: 'Готовые наборы: путешественника, учёного',
 };
 
 // Названия как на dnd.su (docs/dnd/items.md); торговые слитки — тоже «Товар».

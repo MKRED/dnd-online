@@ -11,3 +11,4 @@ export * from './user-identities.js';
 export * from './items.js';
 export * from './item-images.js';
 export * from './item-image-files.js';
+export * from './item-pack-entries.js';

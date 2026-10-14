@@ -1,6 +1,6 @@
 # Web (`apps/web`)
 
-Vite + React 19 + TypeScript, Mantine 9 (UI, light «parchment» scheme by default, dark «charcoal + brass» via the header toggle), react-router 7, three.js + react-three-fiber 9 + drei for the 3D map.
+Vite + React 19 + TypeScript, Mantine 9.7 (UI, light «parchment» scheme by default, dark «charcoal + brass» via the header toggle), react-router 7, three.js + react-three-fiber 9 + drei for the 3D map.
 
 ## Layout
 

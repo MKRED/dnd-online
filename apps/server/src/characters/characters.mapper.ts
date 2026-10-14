@@ -18,6 +18,7 @@ export function toCharacter(row: CharacterRow): Character {
     userId: row.userId,
     name: row.name,
     species: row.species,
+    speciesLineage: row.speciesLineage,
     background: row.background,
     alignment: row.alignment,
     experiencePoints: row.experiencePoints,
@@ -73,6 +74,8 @@ export function toSheetValues(
   return {
     name: dto.name,
     species: dto.species,
+    // null, а не undefined: при смене вида прежний род должен стереться.
+    speciesLineage: dto.speciesLineage ?? null,
     background: dto.background,
     alignment: dto.alignment ?? null,
     experiencePoints: dto.experiencePoints,

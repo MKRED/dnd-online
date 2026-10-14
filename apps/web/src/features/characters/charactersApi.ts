@@ -5,6 +5,7 @@ import type {
   CharacterCurrency,
   CharacterPersonality,
   CharacterProficiencies,
+  CharacterSpecies,
   SkillProficiency,
 } from 'shared';
 import { apiRequest as request } from '../../lib/apiRequest';
@@ -13,7 +14,8 @@ import { apiRequest as request } from '../../lib/apiRequest';
 // (id/userId/createdAt) — форма присылает только то, что валидирует CreateCharacterDto.
 export interface CreateCharacterPayload {
   name: string;
-  species: string;
+  species: CharacterSpecies;
+  speciesLineage?: string;
   background: string;
   alignment?: string;
   experiencePoints?: number;

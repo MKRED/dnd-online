@@ -60,6 +60,43 @@ export type CharacterClass = (typeof CHARACTER_CLASSES)[number];
 // В редакции 2024 подкласс у всех классов выбирается на 3-м уровне этого класса.
 export const SUBCLASS_MIN_LEVEL = 3;
 
+// Виды редакции 2024 из печатных книг: 10 из Player's Handbook, 5 из Eberron: Forge of the
+// Artificer и 4 из Ravenloft: The Horrors Within. Это ключи для хранения; русские названия
+// живут в web (characterSpecies.ts).
+export const CHARACTER_SPECIES = [
+  'aasimar',
+  'changeling',
+  'dhampir',
+  'dragonborn',
+  'dwarf',
+  'elf',
+  'gnome',
+  'goliath',
+  'halfling',
+  'hexblood',
+  'human',
+  'kalashtar',
+  'khoravar',
+  'lupin',
+  'orc',
+  'reborn',
+  'shifter',
+  'tiefling',
+  'warforged',
+] as const;
+export type CharacterSpecies = (typeof CHARACTER_SPECIES)[number];
+
+// Виды, у которых при создании персонажа выбирают род или наследие (подвидов в редакции
+// 2024 нет — это их замена). У остальных видов такого выбора нет. Сами варианты — в web.
+export const SPECIES_WITH_LINEAGE: readonly CharacterSpecies[] = [
+  'dragonborn',
+  'elf',
+  'gnome',
+  'goliath',
+  'shifter',
+  'tiefling',
+];
+
 // Мультикласс — это список: у персонажа может быть больше одного класса+уровня+подкласса одновременно.
 export interface CharacterClassLevel {
   class: CharacterClass;
@@ -145,7 +182,9 @@ export interface Character {
   id: string;
   userId: string;
   name: string;
-  species: string;
+  species: CharacterSpecies;
+  // Род или наследие вида. Свободный текст, как подкласс: форма подсказывает варианты из книг.
+  speciesLineage: string | null;
   background: string;
   alignment: string | null;
   experiencePoints: number;

@@ -36,7 +36,10 @@ describe('CharacterEditPage', () => {
     renderEditPage();
 
     expect(await screen.findByLabelText(/Имя/)).toHaveValue('Арагорн');
-    expect(screen.getByLabelText(/Вид/)).toHaveValue('Человек');
+    // Вид — Select: у него подпись «Вид» есть и на поле, и на списке вариантов.
+    expect(screen.getByRole('combobox', { name: /Вид/ })).toHaveValue(
+      'Человек',
+    );
   });
 
   it('сохраняет изменения через PUT и возвращает к списку', async () => {

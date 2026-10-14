@@ -15,6 +15,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { Character } from 'shared';
 import {
   CLASS_LABELS,
+  SPECIES_LABELS,
   deleteCharacter,
   listCharacters,
 } from '../features/characters';
@@ -125,7 +126,10 @@ function CharactersPage() {
                     )}
                   </Group>
                   <Text size="sm" c="dimmed">
-                    {character.species} · {character.background}
+                    {SPECIES_LABELS[character.species]}
+                    {character.speciesLineage &&
+                      ` (${character.speciesLineage})`}{' '}
+                    · {character.background}
                   </Text>
                   <Group gap="xs" mt={4}>
                     {character.classes.map((entry) => (

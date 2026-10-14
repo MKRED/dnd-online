@@ -1,12 +1,14 @@
 import {
   ABILITY_SCORES,
   SKILL_ABILITIES,
+  SPECIES_WITH_LINEAGE,
   SUBCLASS_MIN_LEVEL,
   type AbilityScore,
   type Character,
   type CharacterClass,
   type CharacterCurrency,
   type CharacterPersonality,
+  type CharacterSpecies,
   type Skill,
 } from 'shared';
 import type { CreateCharacterPayload } from './charactersApi';
@@ -26,7 +28,8 @@ export interface CharacterFormClassEntry {
 
 export interface CharacterFormValues {
   name: string;
-  species: string;
+  species: CharacterSpecies | '';
+  speciesLineage: string;
   background: string;
   alignment: string;
   experiencePoints: number;
@@ -59,6 +62,7 @@ export function createInitialFormValues(): CharacterFormValues {
   return {
     name: '',
     species: '',
+    speciesLineage: '',
     background: '',
     alignment: '',
     experiencePoints: 0,
@@ -100,6 +104,7 @@ export function fromCharacter(character: Character): CharacterFormValues {
     ...base,
     name: character.name,
     species: character.species,
+    speciesLineage: character.speciesLineage ?? '',
     background: character.background,
     alignment: character.alignment ?? '',
     experiencePoints: character.experiencePoints,
@@ -137,7 +142,12 @@ export function toCreatePayload(
 ): CreateCharacterPayload {
   return {
     name: values.name.trim(),
-    species: values.species.trim(),
+    species: values.species as CharacterSpecies,
+    speciesLineage: SPECIES_WITH_LINEAGE.includes(
+      values.species as CharacterSpecies,
+    )
+      ? blankToUndefined(values.speciesLineage)
+      : undefined,
     background: values.background.trim(),
     alignment: blankToUndefined(values.alignment),
     experiencePoints: values.experiencePoints,

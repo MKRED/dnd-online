@@ -5,7 +5,7 @@ import type { CreateCharacterDto } from './dto/create-character.dto.js';
 // Минимальный payload формы: без полей, которые меняются по ходу игры через PATCH.
 const dto = {
   name: 'Арагорн',
-  species: 'Человек',
+  species: 'human',
   background: 'Солдат',
   classes: [{ class: 'ranger', level: 3 }],
   proficiencyBonus: 2,

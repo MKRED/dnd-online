@@ -1,0 +1,1 @@
+ALTER TABLE "characters" ADD COLUMN "species_lineage" varchar(50);

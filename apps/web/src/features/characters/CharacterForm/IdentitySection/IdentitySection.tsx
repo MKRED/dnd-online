@@ -11,6 +11,7 @@ import { memo } from 'react';
 import type { CharacterFormValues } from '../../characterFormValues';
 import { formErrorsEqual } from '../formSectionMemo';
 import ClassesList from './ClassesList';
+import SpeciesFields from './SpeciesFields';
 
 const ALIGNMENTS = [
   'Законно-добрый',
@@ -41,14 +42,7 @@ function IdentitySection({ form }: IdentitySectionProps) {
               {...form.getInputProps('name')}
             />
           </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 4 }}>
-            <TextInput
-              label="Вид"
-              placeholder="Например, эльф"
-              required
-              {...form.getInputProps('species')}
-            />
-          </Grid.Col>
+          <SpeciesFields form={form} />
           <Grid.Col span={{ base: 12, sm: 4 }}>
             <TextInput
               label="Предыстория"
@@ -57,7 +51,7 @@ function IdentitySection({ form }: IdentitySectionProps) {
               {...form.getInputProps('background')}
             />
           </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
+          <Grid.Col span={{ base: 12, sm: 4 }}>
             <Select
               label="Мировоззрение"
               placeholder="Не выбрано"
@@ -66,7 +60,7 @@ function IdentitySection({ form }: IdentitySectionProps) {
               {...form.getInputProps('alignment')}
             />
           </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6 }}>
+          <Grid.Col span={{ base: 12, sm: 4 }}>
             <NumberInput
               label="Опыт"
               min={0}

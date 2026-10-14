@@ -8,6 +8,7 @@ export {
 export type { CreateCharacterPayload } from './charactersApi';
 export { ABILITY_LABELS, SKILL_LABELS } from './characterLabels';
 export { CLASS_LABELS } from './characterClasses';
+export { SPECIES_LABELS } from './characterSpecies';
 export {
   createInitialFormValues,
   fromCharacter,

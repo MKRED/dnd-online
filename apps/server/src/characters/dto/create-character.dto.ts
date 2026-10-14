@@ -15,7 +15,11 @@ import {
   ValidationOptions,
   registerDecorator,
 } from 'class-validator';
-import { ABILITY_SCORES } from 'shared';
+import {
+  ABILITY_SCORES,
+  CHARACTER_SPECIES,
+  type CharacterSpecies,
+} from 'shared';
 import {
   AbilityScoresDto,
   ClassLevelDto,
@@ -27,6 +31,7 @@ import {
   InventoryItemDto,
   ProficienciesDto,
 } from './nested/equipment.dto.js';
+import { LineageForSpecies } from './nested/lineage-for-species.validator.js';
 import { FeatureDto, PersonalityDto } from './nested/narrative.dto.js';
 import { IsSpellSlots, KnownSpellDto } from './nested/spells.dto.js';
 
@@ -64,9 +69,14 @@ export class CreateCharacterDto {
   @Length(1, 100)
   name: string;
 
+  @IsIn(CHARACTER_SPECIES, { message: 'Неизвестный вид персонажа' })
+  species: CharacterSpecies;
+
+  @IsOptional()
   @IsString()
   @Length(1, 50)
-  species: string;
+  @LineageForSpecies()
+  speciesLineage?: string;
 
   @IsString()
   @Length(1, 50)

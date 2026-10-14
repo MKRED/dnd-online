@@ -9,6 +9,7 @@ describe('fromCharacter', () => {
     expect(payload).toEqual({
       name: c.name,
       species: c.species,
+      speciesLineage: undefined,
       background: c.background,
       alignment: undefined,
       experiencePoints: c.experiencePoints,
@@ -59,6 +60,15 @@ describe('fromCharacter', () => {
 });
 
 describe('toCreatePayload', () => {
+  it('отправляет род только у вида, где он есть', () => {
+    const values = fromCharacter(sampleCharacter);
+    values.speciesLineage = 'Дроу';
+    values.species = 'elf';
+    expect(toCreatePayload(values).speciesLineage).toBe('Дроу');
+    values.species = 'human';
+    expect(toCreatePayload(values).speciesLineage).toBeUndefined();
+  });
+
   it('не отправляет подкласс, пока уровень класса ниже 3-го', () => {
     const values = fromCharacter(sampleCharacter);
     values.classes = [

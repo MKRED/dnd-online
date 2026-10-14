@@ -15,6 +15,7 @@ import type {
   CharacterFeature,
   CharacterPersonality,
   CharacterProficiencies,
+  CharacterSpecies,
   InventoryItem,
   KnownSpell,
   SkillProficiency,
@@ -35,7 +36,12 @@ export const characters = pgTable('characters', {
     .references(() => users.id, { onDelete: 'cascade' }),
 
   name: varchar('name', { length: 100 }).notNull(),
-  species: varchar('species', { length: 50 }).notNull(),
+  // Ключ вида из справочника shared (CHARACTER_SPECIES); список проверяет DTO.
+  species: varchar('species', { length: 50 })
+    .$type<CharacterSpecies>()
+    .notNull(),
+  // Род или наследие вида (эльфийский род, наследие драконов…) — свободный текст.
+  speciesLineage: varchar('species_lineage', { length: 50 }),
   background: varchar('background', { length: 50 }).notNull(),
   alignment: varchar('alignment', { length: 30 }),
   experiencePoints: integer('experience_points').notNull().default(0),

@@ -97,6 +97,11 @@ export const SPECIES_WITH_LINEAGE: readonly CharacterSpecies[] = [
   'tiefling',
 ];
 
+// Кости хитов редакции 2024: к6, к8, к10 и к12. У каждого класса своя (docs/classes.md),
+// но чарник хранит её отдельным полем: игрок задаёт кость сам, независимо от класса.
+export const HIT_DICE = [6, 8, 10, 12] as const;
+export type HitDie = (typeof HIT_DICE)[number];
+
 // Мультикласс — это список: у персонажа может быть больше одного класса+уровня+подкласса одновременно.
 export interface CharacterClassLevel {
   class: CharacterClass;
@@ -198,6 +203,9 @@ export interface Character {
   hitPointsMax: number;
   hitPointsCurrent: number;
   hitPointsTemp: number;
+  // Число граней кости хитов; null — только у персонажей, созданных до появления
+  // этого поля: форма и сервер требуют её задать.
+  hitDie: HitDie | null;
   deathSaveSuccesses: number;
   deathSaveFailures: number;
   heroicInspiration: boolean;

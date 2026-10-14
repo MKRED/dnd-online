@@ -9,6 +9,7 @@ import {
   type CharacterCurrency,
   type CharacterPersonality,
   type CharacterSpecies,
+  type HitDie,
   type Skill,
 } from 'shared';
 import type { CreateCharacterPayload } from './charactersApi';
@@ -42,6 +43,8 @@ export interface CharacterFormValues {
   speed: number;
   hitPointsMax: number;
   hitPointsCurrent: number;
+  // Select работает со строками: '' — ещё не выбрана (форма такую не отправит), иначе число граней ('10').
+  hitDie: string;
   heroicInspiration: boolean;
   armorProficiencies: string[];
   weaponProficiencies: string[];
@@ -80,6 +83,7 @@ export function createInitialFormValues(): CharacterFormValues {
     speed: 30,
     hitPointsMax: 10,
     hitPointsCurrent: 10,
+    hitDie: '',
     heroicInspiration: false,
     armorProficiencies: [],
     weaponProficiencies: [],
@@ -120,6 +124,7 @@ export function fromCharacter(character: Character): CharacterFormValues {
     speed: character.speed,
     hitPointsMax: character.hitPointsMax,
     hitPointsCurrent: character.hitPointsCurrent,
+    hitDie: character.hitDie === null ? '' : String(character.hitDie),
     heroicInspiration: character.heroicInspiration,
     armorProficiencies: [...character.proficiencies.armor],
     weaponProficiencies: [...character.proficiencies.weapons],
@@ -174,6 +179,7 @@ export function toCreatePayload(
     speed: values.speed,
     hitPointsMax: values.hitPointsMax,
     hitPointsCurrent: values.hitPointsCurrent,
+    hitDie: Number(values.hitDie) as HitDie,
     heroicInspiration: values.heroicInspiration,
     proficiencies: {
       armor: values.armorProficiencies,

@@ -18,7 +18,9 @@ import {
 import {
   ABILITY_SCORES,
   CHARACTER_SPECIES,
+  HIT_DICE,
   type CharacterSpecies,
+  type HitDie,
 } from 'shared';
 import {
   AbilityScoresDto,
@@ -138,6 +140,9 @@ export class CreateCharacterDto {
   @IsInt()
   @Min(0)
   hitPointsTemp?: number;
+
+  @IsIn(HIT_DICE, { message: 'Кость хитов бывает только к6, к8, к10 или к12' })
+  hitDie: HitDie;
 
   @IsOptional()
   @IsInt()

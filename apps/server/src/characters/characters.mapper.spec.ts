@@ -23,6 +23,7 @@ const dto = {
   speed: 30,
   hitPointsMax: 28,
   hitPointsCurrent: 20,
+  hitDie: 10,
   proficiencies: { armor: [], weapons: [], tools: [], languages: [] },
   currency: { cp: 0, sp: 0, ep: 0, gp: 10, pp: 0 },
   personality: {},

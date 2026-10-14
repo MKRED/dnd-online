@@ -57,6 +57,7 @@ function CharacterForm({
         value >= 0 ? null : 'Не может быть отрицательным',
       speed: (value: number) =>
         value >= 0 ? null : 'Не может быть отрицательным',
+      hitDie: required,
       hitPointsMax: (value: number) => (value >= 1 ? null : 'Минимум 1'),
       hitPointsCurrent: (value: number, values: CharacterFormValues) => {
         if (value < 0) return 'Не может быть отрицательным';

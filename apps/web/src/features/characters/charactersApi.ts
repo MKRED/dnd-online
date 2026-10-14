@@ -6,6 +6,7 @@ import type {
   CharacterPersonality,
   CharacterProficiencies,
   CharacterSpecies,
+  HitDie,
   SkillProficiency,
 } from 'shared';
 import { apiRequest as request } from '../../lib/apiRequest';
@@ -28,6 +29,7 @@ export interface CreateCharacterPayload {
   speed: number;
   hitPointsMax: number;
   hitPointsCurrent: number;
+  hitDie: HitDie;
   heroicInspiration?: boolean;
   proficiencies: CharacterProficiencies;
   weaponMasteries?: string[];

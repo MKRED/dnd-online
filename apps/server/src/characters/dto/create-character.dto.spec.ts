@@ -42,4 +42,14 @@ describe('CreateCharacterDto', () => {
       }),
     ).toEqual(['У этого вида нет рода или наследия']);
   });
+
+  it('принимает только существующую кость хитов', async () => {
+    expect(await errorsFor('hitDie', { hitDie: 10 })).toEqual([]);
+    expect(await errorsFor('hitDie', {})).toEqual([
+      'Кость хитов бывает только к6, к8, к10 или к12',
+    ]);
+    expect(await errorsFor('hitDie', { hitDie: 20 })).toEqual([
+      'Кость хитов бывает только к6, к8, к10 или к12',
+    ]);
+  });
 });

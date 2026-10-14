@@ -16,6 +16,7 @@ import type {
   CharacterPersonality,
   CharacterProficiencies,
   CharacterSpecies,
+  HitDie,
   InventoryItem,
   KnownSpell,
   SkillProficiency,
@@ -68,6 +69,9 @@ export const characters = pgTable('characters', {
   hitPointsMax: integer('hit_points_max').notNull(),
   hitPointsCurrent: integer('hit_points_current').notNull(),
   hitPointsTemp: integer('hit_points_temp').notNull().default(0),
+  // Число граней кости хитов (HIT_DICE из shared); обязательна в DTO, а null
+  // остался у персонажей, созданных до появления поля, — до первого редактирования.
+  hitDie: integer('hit_die').$type<HitDie>(),
   deathSaveSuccesses: integer('death_save_successes').notNull().default(0),
   deathSaveFailures: integer('death_save_failures').notNull().default(0),
   heroicInspiration: boolean('heroic_inspiration').notNull().default(false),

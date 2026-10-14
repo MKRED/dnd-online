@@ -28,6 +28,7 @@ describe('fromCharacter', () => {
       speed: c.speed,
       hitPointsMax: c.hitPointsMax,
       hitPointsCurrent: c.hitPointsCurrent,
+      hitDie: c.hitDie,
       heroicInspiration: c.heroicInspiration,
       proficiencies: c.proficiencies,
       weaponMasteries: c.weaponMasteries,

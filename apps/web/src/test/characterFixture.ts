@@ -29,6 +29,7 @@ export const sampleCharacter: Character = {
     { skill: 'athletics', expertise: false },
   ],
   armorClass: 15,
+  hitDie: 10,
   speed: 30,
   hitPointsMax: 28,
   hitPointsCurrent: 20,

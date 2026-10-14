@@ -91,7 +91,8 @@ function ThumbnailEditor({
         </div>
         <Slider
           label={null}
-          aria-label="Приближение"
+          // aria-label у Slider до ручки не доходит — подпись ручке задаёт thumbLabel.
+          thumbLabel="Приближение"
           min={1}
           max={MAX_ZOOM}
           step={0.01}

@@ -74,6 +74,10 @@ function ItemThumbEditor({
             maxZoom={MAX_ZOOM}
             aspect={1}
             restrictPosition={false}
+            // По умолчанию (contain) рамка равна короткой стороне картинки на экране —
+            // у длинного меча это узкая полоска. cover растягивает картинку на всю
+            // область, и рамка получается во всю её высоту.
+            objectFit="cover"
             showGrid={false}
             // Редактор открывается на текущем вырезе, а не на центре.
             initialCroppedAreaPixels={{
@@ -89,7 +93,8 @@ function ItemThumbEditor({
         </div>
         <Slider
           label={null}
-          aria-label="Приближение"
+          // aria-label у Slider до ручки не доходит — подпись ручке задаёт thumbLabel.
+          thumbLabel="Приближение"
           min={minZoom}
           max={MAX_ZOOM}
           step={0.01}

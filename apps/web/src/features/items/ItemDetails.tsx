@@ -42,9 +42,12 @@ function ItemDetails({ item, actions }: ItemDetailsProps) {
             style={{
               display: 'block',
               maxWidth: '100%',
-              maxHeight: '60vh',
+              // На телефоне картинка над сведениями — высокая не должна их вытеснять.
+              maxHeight: '45vh',
               margin: '0 auto',
               borderRadius: 'var(--mantine-radius-md)',
+              // Подложка, как у миниатюр: у прозрачной картинки иначе не видно границ.
+              background: 'var(--mantine-color-default-hover)',
             }}
           />
         ) : (

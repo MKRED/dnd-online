@@ -2,6 +2,7 @@ import {
   Group,
   NumberInput,
   Select,
+  SimpleGrid,
   Stack,
   Switch,
   Textarea,
@@ -35,11 +36,12 @@ function ItemFields({ form }: { form: UseFormReturnType<ItemFormValues> }) {
         placeholder="Например, Верёвка пеньковая"
         {...form.getInputProps('name')}
       />
-      <Group grow align="flex-start">
+      <SimpleGrid cols={{ base: 1, xs: 2 }}>
         {/* Категория пока одна; поле уже здесь, чтобы с новыми категориями форма не
             переделывалась. */}
         <Select
           label="Категория"
+          description="Другие категории появятся позже"
           data={CATEGORY_OPTIONS}
           value="basic"
           allowDeselect={false}
@@ -52,8 +54,8 @@ function ItemFields({ form }: { form: UseFormReturnType<ItemFormValues> }) {
           allowDeselect={false}
           {...form.getInputProps('rarity')}
         />
-      </Group>
-      <Group grow align="flex-start">
+      </SimpleGrid>
+      <SimpleGrid cols={{ base: 1, xs: 2 }}>
         <NumberInput
           label="Вес"
           description="0 — без веса"
@@ -82,7 +84,7 @@ function ItemFields({ form }: { form: UseFormReturnType<ItemFormValues> }) {
             {...form.getInputProps('costCoin')}
           />
         </Group>
-      </Group>
+      </SimpleGrid>
       <Textarea
         label="Описание"
         autosize

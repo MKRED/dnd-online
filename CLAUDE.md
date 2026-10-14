@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Online DnD platform for playing with friends: 3D map, real-time updates, persistent state. pnpm workspaces monorepo, TypeScript everywhere. Production: https://dnd.aoshi.ru.
 
-- `apps/web` — Vite + React 19 + Mantine + react-router. Has auth (login/register, sign-in through lolka, a profile page with login and password), characters (list, create, edit, delete, an image gallery with a main image and its thumbnail), and maps (list, create, delete, 3D view via react-three-fiber, GM block editor with undo/redo).
+- `apps/web` — Vite + React 19 + Mantine + react-router. Has auth (login/register, sign-in through lolka, a profile page with login and password), characters (list, create, edit, delete, an image gallery with a main image and its thumbnail), items (a shared catalog: own and published items, grid or list, item card, a form with an image and its thumbnail), and maps (list, create, delete, 3D view via react-three-fiber, GM block editor with undo/redo).
 - `apps/server` — NestJS 12, **native ESM**, Drizzle + Postgres, pino. Modules: `auth`, `users`, `characters`, `character-images`, `maps`, `items`, `api-tokens`, `database`.
 - `apps/mcp` — local stdio MCP server for the map (an AI builds and inspects maps through the REST API with an API token). Wired up in `.mcp.json`; setup in [docs/mcp.md](docs/mcp.md).
 - `packages/shared` — code shared by web and server: the DnD 5e character-sheet types and the voxel map model (`src/map/`: chunks, palette, operations, ASCII slices) and the rules geometry on top of it (`src/map/rules/`: distance, creature bodies, line of sight and cover, areas of effect, walking paths), with its own vitest tests.

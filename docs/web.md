@@ -58,7 +58,7 @@ Vitest + Testing Library on jsdom, configured in the `test` section of `vite.con
 - Files: `*.test.ts(x)` next to the source. Globals are off — import from `vitest`.
 - `src/test/setup.ts` wires jest-dom matchers, `cleanup`, and the jsdom stubs Mantine needs (`matchMedia`, `ResizeObserver`, `document.fonts`).
 - `src/test/characterFixture.ts` — a fully populated `Character` for form/page tests.
-- Render components via `renderWithProviders` from `src/test/render.tsx`: Mantine + `MemoryRouter` + a stub `AuthContext` (so nothing hits `/auth/me`). Options: `route`, `auth` overrides; returns `authValue` to assert on `setUser` etc.
+- Render components via `renderWithProviders` from `src/test/render.tsx`: Mantine + `MemoryRouter` + a stub `AuthContext` (so nothing hits `/auth/me`). Options: `route`, `auth` overrides; returns `authValue` to assert on `setUser` etc. Mantine runs with `env="test"` there (no transitions, no portals), so a menu or dropdown is in the DOM right after the click; without it the menu opened on timers and the gallery tests failed under load. `setup.ts` raises the `findBy…`/`waitFor` timeout to 3 s for the same reason, and tests that render the whole character form get a 15 s limit (it takes 1.5–2 s in jsdom).
 - Mock the network with `vi.stubGlobal('fetch', …)` — globals and mocks are auto-restored between tests.
 - Run: `pnpm --filter web test` (or `test:watch`).
 

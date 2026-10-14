@@ -18,6 +18,9 @@ export interface RenderOptions {
 
 // Те же провайдеры, что в main.tsx, но MemoryRouter вместо браузерного роутера и
 // подставной AuthContext вместо AuthProvider — тот сразу пошёл бы в сеть за /auth/me.
+// env="test" отключает анимации и порталы Mantine: меню и списки появляются сразу после
+// клика, а не после перехода на таймерах. Иначе под нагрузкой (параллельные прогоны)
+// пункт меню не успевал появиться за время ожидания findBy, и тесты галереи падали через раз.
 export function renderWithProviders(
   ui: ReactElement,
   { route = '/', auth }: RenderOptions = {},
@@ -32,7 +35,7 @@ export function renderWithProviders(
 
   function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <MantineProvider theme={theme}>
+      <MantineProvider theme={theme} env="test">
         <AuthContext.Provider value={authValue}>
           <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
         </AuthContext.Provider>

@@ -33,7 +33,9 @@ function renderEditPage(id = sampleCharacter.id) {
   );
 }
 
-describe('CharacterEditPage', () => {
+// Форма персонажа большая: в jsdom её отрисовка занимает 1,5–2 с даже без нагрузки,
+// а при параллельных прогонах не укладывалась в стандартные 5 с.
+describe('CharacterEditPage', { timeout: 15_000 }, () => {
   it('заполняет форму данными персонажа', async () => {
     stubFetch([{ status: 200, body: sampleCharacter }, EMPTY_GALLERY]);
     renderEditPage();

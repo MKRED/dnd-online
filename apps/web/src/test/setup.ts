@@ -1,10 +1,14 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
 
 // Vitest globals выключены, поэтому Testing Library сама не вешает cleanup на
 // afterEach — без этого DOM из одного теста копился бы в следующих.
 afterEach(cleanup);
+
+// findBy…/waitFor по умолчанию ждут 1 с. Без нагрузки этого хватает, но при параллельных
+// прогонах jsdom отрисовывает большие формы дольше, и тесты падали через раз.
+configure({ asyncUtilTimeout: 3000 });
 
 // jsdom не реализует matchMedia и ResizeObserver, а Mantine их дёргает
 // (цветовая схема, адаптивные компоненты) — без заглушек рендер падает.

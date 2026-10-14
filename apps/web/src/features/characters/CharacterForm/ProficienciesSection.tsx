@@ -1,8 +1,26 @@
-import { Fieldset, Grid, TagsInput } from '@mantine/core';
+import {
+  Checkbox,
+  Fieldset,
+  Grid,
+  Group,
+  MultiSelect,
+  TagsInput,
+  Textarea,
+} from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import { memo } from 'react';
+import { ARMOR_TRAINING_OPTIONS } from '../characterArmorTraining';
 import type { CharacterFormValues } from '../characterFormValues';
+import { LANGUAGE_SUGGESTIONS } from '../characterLanguages';
+import { TOOL_SUGGESTIONS } from '../characterTools';
+import {
+  WEAPON_PROFICIENCY_OPTIONS,
+  WEAPON_SUGGESTIONS,
+} from '../characterWeapons';
 import { formErrorsEqual } from './formSectionMemo';
+
+// Как у подкласса: книжные варианты подсказываем, но своё вписать можно.
+const SUGGEST_PLACEHOLDER = 'Выберите или впишите своё';
 
 interface ProficienciesSectionProps {
   form: UseFormReturnType<CharacterFormValues>;
@@ -12,40 +30,71 @@ function ProficienciesSection({ form }: ProficienciesSectionProps) {
   return (
     <Fieldset legend="Владения и снаряжение">
       <Grid>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <TagsInput
+        <Grid.Col span={12}>
+          {/* Категорий по правилам всего четыре, поэтому галочки, а не свободный ввод. */}
+          <Checkbox.Group
             label="Доспехи"
-            placeholder="Enter — добавить"
             {...form.getInputProps('armorProficiencies')}
-          />
+          >
+            <Group mt="xs" gap="lg">
+              {ARMOR_TRAINING_OPTIONS.map(({ value, label }) => (
+                <Checkbox key={value} value={value} label={label} />
+              ))}
+            </Group>
+          </Checkbox.Group>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
-          <TagsInput
+          {/* Строгий выбор: своё оружие сюда вписать нельзя, для него есть «Прочие владения». */}
+          <MultiSelect
             label="Оружие"
-            placeholder="Enter — добавить"
+            placeholder="Выберите из списка"
+            data={WEAPON_PROFICIENCY_OPTIONS}
+            searchable
+            nothingFoundMessage="Такого оружия в списке нет"
+            // Enter в поиске без совпадений иначе отправляет всю форму.
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') event.preventDefault();
+            }}
             {...form.getInputProps('weaponProficiencies')}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <TagsInput
+            label="Мастерство оружия"
+            description="Оружие, свойство мастерства которого открыто персонажу"
+            placeholder={SUGGEST_PLACEHOLDER}
+            // Подсказка под полем, а не под заголовком: иначе поле съезжает вниз
+            // относительно соседнего «Оружия».
+            inputWrapperOrder={['label', 'input', 'description', 'error']}
+            data={WEAPON_SUGGESTIONS}
+            {...form.getInputProps('weaponMasteries')}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <TagsInput
             label="Инструменты"
-            placeholder="Enter — добавить"
+            placeholder={SUGGEST_PLACEHOLDER}
+            data={TOOL_SUGGESTIONS}
             {...form.getInputProps('toolProficiencies')}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <TagsInput
             label="Языки"
-            placeholder="Enter — добавить"
+            placeholder={SUGGEST_PLACEHOLDER}
+            data={LANGUAGE_SUGGESTIONS}
             {...form.getInputProps('languages')}
           />
         </Grid.Col>
         <Grid.Col span={12}>
-          <TagsInput
-            label="Мастерство оружия"
-            description="Новая механика редакции 2024"
-            placeholder="Enter — добавить"
-            {...form.getInputProps('weaponMasteries')}
+          <Textarea
+            label="Прочие владения"
+            description="Всё, чего нет в полях выше"
+            autosize
+            minRows={2}
+            maxRows={6}
+            maxLength={500}
+            {...form.getInputProps('otherProficiencies')}
           />
         </Grid.Col>
       </Grid>

@@ -1,5 +1,7 @@
 // Общие типы чарника DnD 5e (редакция 2024) — используются и на сервере (Drizzle jsonb-колонки), и на фронте (форма создания).
 
+import type { WeaponProficiency } from './weapons.js';
+
 export const ABILITY_SCORES = [
   'strength',
   'dexterity',
@@ -148,11 +150,20 @@ export interface CharacterFeature {
   description?: string;
 }
 
+// Владение доспехами (Armor Training) в редакции 2024 — ровно четыре категории: лёгкие,
+// средние и тяжёлые доспехи и щиты (docs/proficiencies.md). Это ключи для хранения;
+// русские названия живут в web (characterArmorTraining.ts).
+export const ARMOR_TRAINING = ['light', 'medium', 'heavy', 'shield'] as const;
+export type ArmorTraining = (typeof ARMOR_TRAINING)[number];
+
 export interface CharacterProficiencies {
-  armor: string[];
-  weapons: string[];
+  armor: ArmorTraining[];
+  // Категории и виды оружия из справочника (weapons.ts); своё значение вписать нельзя.
+  weapons: WeaponProficiency[];
   tools: string[];
   languages: string[];
+  // Свободный текст: всё, чему не нашлось места в полях выше.
+  other?: string;
 }
 
 // Мастерство оружия — новая механика редакции 2024: список оружия, для которого доступно свойство мастерства.

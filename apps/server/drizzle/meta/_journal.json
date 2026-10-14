@@ -78,6 +78,20 @@
       "when": 1791940307822,
       "tag": "0010_wise_bloodstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791941282388,
+      "tag": "0011_armor_training_keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791942690118,
+      "tag": "0012_weapon_proficiency_keys",
+      "breakpoints": true
     }
   ]
 }

@@ -38,8 +38,8 @@ export const sampleCharacter: Character = {
   deathSaveFailures: 0,
   heroicInspiration: true,
   proficiencies: {
-    armor: ['Лёгкие'],
-    weapons: ['Простое'],
+    armor: ['light'],
+    weapons: ['simple'],
     tools: [],
     languages: ['Общий', 'Эльфийский'],
   },

@@ -1,21 +1,38 @@
 import {
+  ArrayUnique,
   IsArray,
   IsBoolean,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
   Length,
+  MaxLength,
   Min,
 } from 'class-validator';
+import {
+  ARMOR_TRAINING,
+  WEAPON_PROFICIENCIES,
+  type ArmorTraining,
+  type WeaponProficiency,
+} from 'shared';
 
 export class ProficienciesDto {
   @IsArray()
-  @IsString({ each: true })
-  armor: string[];
+  @ArrayUnique({ message: 'Категории доспехов не должны повторяться' })
+  @IsIn(ARMOR_TRAINING, {
+    each: true,
+    message: 'Владение доспехами бывает только четырёх категорий',
+  })
+  armor: ArmorTraining[];
 
   @IsArray()
-  @IsString({ each: true })
-  weapons: string[];
+  @ArrayUnique({ message: 'Владения оружием не должны повторяться' })
+  @IsIn(WEAPON_PROFICIENCIES, {
+    each: true,
+    message: 'Владение оружием выбирается только из справочника',
+  })
+  weapons: WeaponProficiency[];
 
   @IsArray()
   @IsString({ each: true })
@@ -24,6 +41,11 @@ export class ProficienciesDto {
   @IsArray()
   @IsString({ each: true })
   languages: string[];
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500, { message: 'Прочие владения — не длиннее 500 символов' })
+  other?: string;
 }
 
 export class AttackDto {

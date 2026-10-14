@@ -30,7 +30,7 @@ describe('fromCharacter', () => {
       hitPointsCurrent: c.hitPointsCurrent,
       hitDie: c.hitDie,
       heroicInspiration: c.heroicInspiration,
-      proficiencies: c.proficiencies,
+      proficiencies: { ...c.proficiencies, other: undefined },
       weaponMasteries: c.weaponMasteries,
       currency: c.currency,
       personality: {
@@ -68,6 +68,25 @@ describe('toCreatePayload', () => {
     expect(toCreatePayload(values).speciesLineage).toBe('Дроу');
     values.species = 'human';
     expect(toCreatePayload(values).speciesLineage).toBeUndefined();
+  });
+
+  it('отправляет владение доспехами в порядке справочника', () => {
+    const values = fromCharacter(sampleCharacter);
+    values.armorProficiencies = ['shield', 'light'];
+    expect(toCreatePayload(values).proficiencies.armor).toEqual([
+      'light',
+      'shield',
+    ]);
+  });
+
+  it('отправляет владение оружием в порядке справочника, а прочие владения — как текст', () => {
+    const values = fromCharacter(sampleCharacter);
+    values.weaponProficiencies = ['dagger', 'martial'];
+    values.otherProficiencies = 'Ездовые животные';
+    expect(toCreatePayload(values).proficiencies).toMatchObject({
+      weapons: ['martial', 'dagger'],
+      other: 'Ездовые животные',
+    });
   });
 
   it('не отправляет подкласс, пока уровень класса ниже 3-го', () => {

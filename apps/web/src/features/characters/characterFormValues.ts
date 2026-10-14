@@ -1,9 +1,12 @@
 import {
   ABILITY_SCORES,
+  ARMOR_TRAINING,
   SKILL_ABILITIES,
   SPECIES_WITH_LINEAGE,
   SUBCLASS_MIN_LEVEL,
+  WEAPON_PROFICIENCIES,
   type AbilityScore,
+  type ArmorTraining,
   type Character,
   type CharacterClass,
   type CharacterCurrency,
@@ -11,6 +14,7 @@ import {
   type CharacterSpecies,
   type HitDie,
   type Skill,
+  type WeaponProficiency,
 } from 'shared';
 import type { CreateCharacterPayload } from './charactersApi';
 
@@ -46,10 +50,11 @@ export interface CharacterFormValues {
   // Select работает со строками: '' — ещё не выбрана (форма такую не отправит), иначе число граней ('10').
   hitDie: string;
   heroicInspiration: boolean;
-  armorProficiencies: string[];
-  weaponProficiencies: string[];
+  armorProficiencies: ArmorTraining[];
+  weaponProficiencies: WeaponProficiency[];
   toolProficiencies: string[];
   languages: string[];
+  otherProficiencies: string;
   weaponMasteries: string[];
   currency: CharacterCurrency;
   personality: CharacterPersonality;
@@ -89,6 +94,7 @@ export function createInitialFormValues(): CharacterFormValues {
     weaponProficiencies: [],
     toolProficiencies: [],
     languages: [],
+    otherProficiencies: '',
     weaponMasteries: [],
     currency: { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 },
     personality: {},
@@ -130,6 +136,7 @@ export function fromCharacter(character: Character): CharacterFormValues {
     weaponProficiencies: [...character.proficiencies.weapons],
     toolProficiencies: [...character.proficiencies.tools],
     languages: [...character.proficiencies.languages],
+    otherProficiencies: character.proficiencies.other ?? '',
     weaponMasteries: [...character.weaponMasteries],
     currency: { ...character.currency },
     personality: { ...character.personality },
@@ -182,10 +189,16 @@ export function toCreatePayload(
     hitDie: Number(values.hitDie) as HitDie,
     heroicInspiration: values.heroicInspiration,
     proficiencies: {
-      armor: values.armorProficiencies,
-      weapons: values.weaponProficiencies,
+      // Порядок как в справочнике, а не как отмечали галочки.
+      armor: ARMOR_TRAINING.filter((category) =>
+        values.armorProficiencies.includes(category),
+      ),
+      weapons: WEAPON_PROFICIENCIES.filter((weapon) =>
+        values.weaponProficiencies.includes(weapon),
+      ),
       tools: values.toolProficiencies,
       languages: values.languages,
+      other: blankToUndefined(values.otherProficiencies),
     },
     weaponMasteries: values.weaponMasteries,
     currency: values.currency,

@@ -2,6 +2,8 @@ import { Button, Divider } from '@mantine/core';
 import { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../../../lib/apiBaseUrl';
 import { getAuthProviders } from '../authApi';
+import classes from './LolkaSignIn.module.css';
+import lolkaIcon from './lolka-icon.webp';
 
 // «или — Войти через лольку» под формой входа и регистрации. Первый вход сразу
 // создаёт аккаунт, поэтому на обеих страницах одна и та же кнопка.
@@ -35,7 +37,11 @@ function LolkaSignIn() {
       <Button
         component="a"
         href={`${API_BASE_URL}/auth/lolka/start`}
-        variant="default"
+        // Фирменная бирюза с иконки лольки. Светлый край взят темнее, чем на иконке:
+        // белый текст на нём должен читаться (контраст не ниже 4.5).
+        variant="gradient"
+        gradient={{ from: '#15798b', to: '#0e4f5e', deg: 135 }}
+        leftSection={<img src={lolkaIcon} alt="" className={classes.icon} />}
         fullWidth
         loading={leaving}
         onClick={() => setLeaving(true)}

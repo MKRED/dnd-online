@@ -1,5 +1,6 @@
 // Общие типы чарника DnD 5e (редакция 2024) — используются и на сервере (Drizzle jsonb-колонки), и на фронте (форма создания).
 
+import type { CharacterMainImage } from './characterImages.js';
 import type { WeaponProficiency } from './weapons.js';
 
 export const ABILITY_SCORES = [
@@ -229,6 +230,8 @@ export interface Character {
   currency: CharacterCurrency;
   features: CharacterFeature[];
   personality: CharacterPersonality;
+  // Основная картинка галереи; null, пока картинок нет.
+  mainImage: CharacterMainImage | null;
   createdAt: string;
   updatedAt: string;
 }

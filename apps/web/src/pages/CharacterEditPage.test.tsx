@@ -20,6 +20,9 @@ function stubFetch(responses: { status: number; body?: unknown }[]): FetchMock {
   return fetchMock;
 }
 
+// Вторым запросом страница читает галерею картинок персонажа.
+const EMPTY_GALLERY = { status: 200, body: [] };
+
 function renderEditPage(id = sampleCharacter.id) {
   return renderWithProviders(
     <Routes>
@@ -32,7 +35,7 @@ function renderEditPage(id = sampleCharacter.id) {
 
 describe('CharacterEditPage', () => {
   it('заполняет форму данными персонажа', async () => {
-    stubFetch([{ status: 200, body: sampleCharacter }]);
+    stubFetch([{ status: 200, body: sampleCharacter }, EMPTY_GALLERY]);
     renderEditPage();
 
     expect(await screen.findByLabelText(/Имя/)).toHaveValue('Арагорн');
@@ -45,6 +48,7 @@ describe('CharacterEditPage', () => {
   it('сохраняет изменения через PUT и возвращает к списку', async () => {
     const fetchMock = stubFetch([
       { status: 200, body: sampleCharacter },
+      EMPTY_GALLERY,
       { status: 200, body: { ...sampleCharacter, name: 'Странник' } },
     ]);
     renderEditPage();
@@ -58,7 +62,7 @@ describe('CharacterEditPage', () => {
     );
 
     expect(await screen.findByText('Список персонажей')).toBeInTheDocument();
-    const [url, init] = fetchMock.mock.calls[1];
+    const [url, init] = fetchMock.mock.calls[2];
     expect(url).toMatch(new RegExp(`/characters/${sampleCharacter.id}$`));
     expect(init?.method).toBe('PUT');
     const body = JSON.parse(init?.body as string) as Record<string, unknown>;

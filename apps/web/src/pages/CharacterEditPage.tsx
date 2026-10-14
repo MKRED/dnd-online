@@ -1,9 +1,18 @@
-import { Alert, Anchor, Container, Group, Loader, Title } from '@mantine/core';
+import {
+  Alert,
+  Anchor,
+  Container,
+  Group,
+  Loader,
+  Stack,
+  Title,
+} from '@mantine/core';
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import type { Character } from 'shared';
 import {
   CharacterForm,
+  CharacterGallery,
   fromCharacter,
   getCharacter,
   toCreatePayload,
@@ -26,6 +35,19 @@ function toLoadErrorMessage(err: unknown): string {
 function CharacterEditPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
+  // Сюда приводит и создание персонажа: говорим, что он сохранён и что теперь можно
+  // добавить картинки. Признак запоминаем, а из истории сразу стираем (эффект ниже):
+  // браузер хранит history state между перезагрузками, и сообщение иначе не пропадало бы.
+  const location = useLocation();
+  const [justCreated] = useState(() =>
+    Boolean((location.state as { justCreated?: boolean } | null)?.justCreated),
+  );
+  useEffect(() => {
+    if (location.state) {
+      void navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.state, location.pathname, navigate]);
+
   const [character, setCharacter] = useState<Character | null>(null);
   usePageTitle(character?.name ?? 'Персонаж');
   const [initialValues, setInitialValues] =
@@ -82,15 +104,27 @@ function CharacterEditPage() {
       ) : character && initialValues ? (
         // Форма uncontrolled и читает initialValues один раз — монтируем её только
         // после загрузки, а key пересоздаёт её при переходе к другому персонажу.
-        <CharacterForm
-          key={character.id}
-          initialValues={initialValues}
-          submitLabel="Сохранить изменения"
-          submitting={submitting}
-          submitError={submitError}
-          errorTitle="Ошибка сохранения"
-          onSubmit={handleSubmit}
-        />
+        <Stack>
+          {justCreated && (
+            <Alert color="green" title="Персонаж создан">
+              Теперь ему можно добавить картинки.
+            </Alert>
+          )}
+          <CharacterGallery
+            key={`gallery-${character.id}`}
+            characterId={character.id}
+            characterName={character.name}
+          />
+          <CharacterForm
+            key={character.id}
+            initialValues={initialValues}
+            submitLabel="Сохранить изменения"
+            submitting={submitting}
+            submitError={submitError}
+            errorTitle="Ошибка сохранения"
+            onSubmit={handleSubmit}
+          />
+        </Stack>
       ) : (
         <Loader />
       )}

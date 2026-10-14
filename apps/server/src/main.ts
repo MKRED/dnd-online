@@ -19,10 +19,13 @@ async function bootstrap() {
   // с https: (Google Fonts) и 'unsafe-inline' (Mantine вставляет <style> в рантайме).
   // upgrade-insecure-requests выключаем вне прода: при локальном запуске собранного
   // сервера по http браузер иначе пытался бы грузить ассеты по https.
+  // blob: в img-src — для картинок персонажей: их байты приходят через fetch (тег <img>
+  // не умеет обновлять истёкшую сессию) и показываются как object URL.
   app.use(
     helmet({
       contentSecurityPolicy: {
         directives: {
+          imgSrc: ["'self'", 'data:', 'blob:'],
           upgradeInsecureRequests:
             process.env.NODE_ENV === 'production' ? [] : null,
         },

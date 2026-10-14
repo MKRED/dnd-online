@@ -18,15 +18,18 @@ interface ErrorBody {
 function send(path: string, init?: RequestInit): Promise<Response> {
   return fetch(`${API_BASE_URL}${path}`, {
     credentials: 'include',
-    headers: init?.body ? { 'Content-Type': 'application/json' } : undefined,
+    // У FormData заголовок с boundary браузер ставит сам; JSON — всё остальное.
+    headers:
+      init?.body && !(init.body instanceof FormData)
+        ? { 'Content-Type': 'application/json' }
+        : undefined,
     ...init,
   });
 }
 
-export async function apiRequest<T>(
-  path: string,
-  init?: RequestInit,
-): Promise<T> {
+// Запрос с обновлением сессии; успешный ответ отдаётся как есть, чтобы вызывающий сам
+// решил, читать его как JSON или как файл.
+async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   let res = await send(path, init);
   // Access-токен живёт 15 минут, после чего браузер удаляет его cookie. Без
   // перезагрузки страницы его никто не обновит — делаем это здесь и повторяем
@@ -43,9 +46,24 @@ export async function apiRequest<T>(
       : (data?.message ?? 'Request failed');
     throw new ApiError(res.status, message);
   }
+  return res;
+}
+
+export async function apiRequest<T>(
+  path: string,
+  init?: RequestInit,
+): Promise<T> {
+  const res = await apiFetch(path, init);
   // DELETE отвечает 204 без тела — res.json() на нём бросил бы.
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
+}
+
+// Бинарный ответ (картинка). Через тег <img> такое грузить нельзя: он не обновит
+// истёкшую сессию, а fetch здесь — обновит.
+export async function apiRequestBlob(path: string): Promise<Blob> {
+  const res = await apiFetch(path);
+  return res.blob();
 }
 
 export function errorMessage(err: unknown, fallback: string): string {

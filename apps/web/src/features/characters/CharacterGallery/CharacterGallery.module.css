@@ -1,0 +1,97 @@
+.hint {
+  flex: 1 1 260px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: var(--mantine-spacing-sm);
+}
+
+/* Плитка квадратная при любой ширине колонки. */
+.tile {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--mantine-radius-md);
+  overflow: hidden;
+  background: var(--mantine-color-default-hover);
+  border: 1px solid var(--mantine-color-default-border);
+}
+
+.tileMain {
+  border-color: var(--mantine-primary-color-filled);
+  box-shadow: 0 0 0 1px var(--mantine-primary-color-filled);
+}
+
+.tileButton {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: zoom-in;
+}
+
+.tileImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* У портрета в рост лицо вверху: при обрезке до квадрата держимся ближе к верху. */
+  object-position: center 20%;
+}
+
+.tileCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tileBadge {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  pointer-events: none;
+}
+
+.tileMenu {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+/* Зона загрузки занимает место плитки и выглядит как «пустая плитка». */
+.uploadTile {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--mantine-spacing-xs);
+}
+
+/* В пустой галерее зона одна и широкая — квадрат на всю строку был бы огромным. */
+.uploadWide {
+  aspect-ratio: auto;
+  min-height: 140px;
+  grid-column: 1 / -1;
+}
+
+.cropStage {
+  position: relative;
+  height: min(55vh, 420px);
+  border-radius: var(--mantine-radius-md);
+  overflow: hidden;
+  background: var(--mantine-color-dark-8);
+}
+
+.cropLoader {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+
+/* Рамка той же формы, что и миниатюра в списке: квадрат со скруглёнными углами. */
+.cropArea {
+  border-radius: 12%;
+}

@@ -51,6 +51,7 @@ export const sampleCharacter: Character = {
   currency: { cp: 1, sp: 2, ep: 0, gp: 30, pp: 0 },
   features: [],
   personality: { traits: 'Молчалив', backstory: 'Долгая история' },
+  mainImage: null,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-02T00:00:00.000Z',
 };

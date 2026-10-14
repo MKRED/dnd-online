@@ -92,6 +92,13 @@
       "when": 1791942690118,
       "tag": "0012_weapon_proficiency_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791946223402,
+      "tag": "0013_character_images",
+      "breakpoints": true
     }
   ]
 }

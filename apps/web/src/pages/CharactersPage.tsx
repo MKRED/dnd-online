@@ -15,6 +15,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { Character } from 'shared';
 import {
   CLASS_LABELS,
+  CharacterAvatar,
   SPECIES_LABELS,
   deleteCharacter,
   listCharacters,
@@ -28,19 +29,15 @@ function CharactersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  // Подсветка только что созданного или изменённого персонажа — id передан через
-  // navigate state со страницы создания/редактирования, чтобы было видно, какая карточка.
+  // Подсветка только что изменённого персонажа — id передан через navigate state со
+  // страницы редактирования, чтобы было видно, какая карточка.
   // Запоминаем его в state компонента, а из истории сразу стираем (эффект ниже):
   // браузер хранит history state между перезагрузками, и бейдж иначе не пропадал бы.
   const location = useLocation();
   const navigate = useNavigate();
-  const [highlight] = useState(
-    () =>
-      (location.state as { createdId?: string; updatedId?: string } | null) ??
-      {},
+  const [highlightedId] = useState(
+    () => (location.state as { updatedId?: string } | null)?.updatedId,
   );
-  const { createdId, updatedId } = highlight;
-  const highlightedId = createdId ?? updatedId;
 
   useEffect(() => {
     if (location.state) {
@@ -116,32 +113,40 @@ function CharactersPage() {
               }
             >
               <Group justify="space-between" align="flex-start">
-                <div>
-                  <Group gap="xs" align="center">
-                    <Text fw={600}>{character.name}</Text>
-                    {character.id === highlightedId && (
-                      <Badge color="green" size="sm">
-                        {createdId ? 'Новый' : 'Изменён'}
-                      </Badge>
-                    )}
-                  </Group>
-                  <Text size="sm" c="dimmed">
-                    {SPECIES_LABELS[character.species]}
-                    {character.speciesLineage &&
-                      ` (${character.speciesLineage})`}{' '}
-                    · {character.background}
-                  </Text>
-                  <Group gap="xs" mt={4}>
-                    {character.classes.map((entry) => (
-                      <Badge
-                        key={`${entry.class}-${entry.level}`}
-                        variant="light"
-                      >
-                        {CLASS_LABELS[entry.class]} {entry.level}
-                      </Badge>
-                    ))}
-                  </Group>
-                </div>
+                <Group align="flex-start" wrap="nowrap">
+                  <CharacterAvatar
+                    characterId={character.id}
+                    name={character.name}
+                    mainImage={character.mainImage}
+                    size="lg"
+                  />
+                  <div>
+                    <Group gap="xs" align="center">
+                      <Text fw={600}>{character.name}</Text>
+                      {character.id === highlightedId && (
+                        <Badge color="green" size="sm">
+                          Изменён
+                        </Badge>
+                      )}
+                    </Group>
+                    <Text size="sm" c="dimmed">
+                      {SPECIES_LABELS[character.species]}
+                      {character.speciesLineage &&
+                        ` (${character.speciesLineage})`}{' '}
+                      · {character.background}
+                    </Text>
+                    <Group gap="xs" mt={4}>
+                      {character.classes.map((entry) => (
+                        <Badge
+                          key={`${entry.class}-${entry.level}`}
+                          variant="light"
+                        >
+                          {CLASS_LABELS[entry.class]} {entry.level}
+                        </Badge>
+                      ))}
+                    </Group>
+                  </div>
+                </Group>
                 <Group gap="lg">
                   <Text size="sm">
                     ХП {character.hitPointsCurrent}/{character.hitPointsMax}

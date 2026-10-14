@@ -1,4 +1,4 @@
-import { Anchor, Container, Group, Title } from '@mantine/core';
+import { Anchor, Container, Group, Text, Title } from '@mantine/core';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -24,7 +24,11 @@ function CharacterCreatePage() {
     setSubmitting(true);
     createCharacter(toCreatePayload(values))
       .then((character) => {
-        void navigate('/characters', { state: { createdId: character.id } });
+        // Сразу на страницу редактирования: галерея картинок доступна только там,
+        // у ещё не созданного персонажа прикреплять картинки не к чему.
+        void navigate(`/characters/${character.id}/edit`, {
+          state: { justCreated: true },
+        });
       })
       .catch((err: unknown) => {
         console.error('Character creation failed', err);
@@ -45,6 +49,10 @@ function CharacterCreatePage() {
           Назад к списку
         </Anchor>
       </Group>
+
+      <Text size="sm" c="dimmed" mb="md">
+        Картинки персонажа можно будет добавить сразу после создания.
+      </Text>
 
       <CharacterForm
         initialValues={initialValues}

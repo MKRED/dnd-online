@@ -6,6 +6,7 @@ import { AppController } from './app.controller.js';
 import { ApiTokensModule } from './api-tokens/api-tokens.module.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
+import { CharacterImagesModule } from './character-images/character-images.module.js';
 import { CharactersModule } from './characters/characters.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { MapsModule } from './maps/maps.module.js';
@@ -22,6 +23,7 @@ const level = process.env.LOG_LEVEL ?? 'info';
     UsersModule,
     AuthModule,
     CharactersModule,
+    CharacterImagesModule,
     MapsModule,
     ApiTokensModule,
     ...webAppModules(),

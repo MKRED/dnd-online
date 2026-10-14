@@ -19,6 +19,8 @@ Requires the `DEPLOY_CICD` secret (SSH private key) in the GitHub repo. The serv
 - The runtime image keeps dev dependencies on purpose: `drizzle-kit` for migrations, `pino-pretty` for the `logs/app.log` transport.
 - The container joins the external `postgres-network` and `nginx-network`. Edge-nginx (separate `nginx` container, `/etc/nginx/conf.d/dnd.aoshi.ru.conf`) terminates HTTPS and proxies the domain to `dnd_online:3000`, appending the client IP to `X-Forwarded-For`.
 - The production DB is currently the same database as dev.
+- **Upload size.** Character images are uploaded as files of up to 10 MB, and nginx rejects bodies over 1 MB by default (413). The edge-nginx config for the domain needs `client_max_body_size 12m;` (in the `server` block of `dnd.aoshi.ru.conf`, then `nginx -s reload`). It lives on the server, outside the repo. Configured by the author on 2026-10-14.
+- `sharp` (image processing) brings native `@img/*` binaries as optional dependencies; the image build has not been tried with it yet.
 
 ## Checking production from the server
 

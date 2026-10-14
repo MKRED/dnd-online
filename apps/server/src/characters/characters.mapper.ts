@@ -2,6 +2,7 @@ import type {
   AbilityScore,
   Character,
   CharacterFeature,
+  CharacterMainImage,
   SkillProficiency,
 } from 'shared';
 import type { characters } from '../database/schema/index.js';
@@ -12,7 +13,12 @@ type NewCharacterRow = typeof characters.$inferInsert;
 
 // DB хранит характеристики плоскими колонками (см. characters.ts), а общий тип Character
 // группирует их в abilityScores — маппинг в обе стороны неизбежен, это не лишний слой.
-export function toCharacter(row: CharacterRow): Character {
+// mainImage приходит отдельным запросом к галерее (loadMainImages): в строке персонажа
+// его нет.
+export function toCharacter(
+  row: CharacterRow,
+  mainImage: CharacterMainImage | null = null,
+): Character {
   return {
     id: row.id,
     userId: row.userId,
@@ -52,6 +58,7 @@ export function toCharacter(row: CharacterRow): Character {
     currency: row.currency,
     features: row.features,
     personality: row.personality,
+    mainImage,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

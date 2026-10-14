@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { and, desc, eq } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { loadMainImages } from '../character-images/character-image-access.js';
 import { DatabaseService } from '../database/database.service.js';
 import { characters } from '../database/schema/index.js';
 import {
@@ -50,11 +51,17 @@ export class CharactersService {
         // createdAt — тай-брейкер для записей с одинаковым updatedAt (например,
         // проставленным миграцией), чтобы порядок не прыгал между запросами.
         .orderBy(desc(characters.updatedAt), desc(characters.createdAt));
+      const mainImages = await loadMainImages(
+        this.databaseService.db,
+        rows.map((row) => row.id),
+      );
       this.logger.debug(
         { durationMs: Date.now() - t0, userId, count: rows.length },
         'Characters listed',
       );
-      return rows.map(toCharacter);
+      return rows.map((row) =>
+        toCharacter(row, mainImages.get(row.id) ?? null),
+      );
     } catch (err: unknown) {
       this.logger.error(
         { err, durationMs: Date.now() - t0, userId },
@@ -84,7 +91,7 @@ export class CharactersService {
       if (!row) {
         throw new NotFoundException('Персонаж не найден');
       }
-      return toCharacter(row);
+      return toCharacter(row, await this.mainImageOf(id));
     } catch (err: unknown) {
       if (err instanceof NotFoundException) {
         throw err;
@@ -133,7 +140,7 @@ export class CharactersService {
         { durationMs: Date.now() - t0, userId, characterId: id, kind },
         'Character updated',
       );
-      return toCharacter(row);
+      return toCharacter(row, await this.mainImageOf(id));
     } catch (err: unknown) {
       if (err instanceof NotFoundException) {
         throw err;
@@ -144,6 +151,13 @@ export class CharactersService {
       );
       throw err;
     }
+  }
+
+  private async mainImageOf(characterId: string) {
+    const mainImages = await loadMainImages(this.databaseService.db, [
+      characterId,
+    ]);
+    return mainImages.get(characterId) ?? null;
   }
 
   async remove(userId: string, id: string) {

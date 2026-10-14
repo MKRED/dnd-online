@@ -1,17 +1,6 @@
-import {
-  customType,
-  integer,
-  pgTable,
-  primaryKey,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { integer, pgTable, primaryKey, uuid } from 'drizzle-orm/pg-core';
+import { bytea } from './bytea.js';
 import { maps } from './maps.js';
-
-// В drizzle 0.45 нет встроенного bytea. pg и так отдаёт/принимает Buffer — тип нужен
-// только для схемы и TS.
-const bytea = customType<{ data: Buffer; driverData: Buffer }>({
-  dataType: () => 'bytea',
-});
 
 // Чанк 16×16×16 карты в формате encodeChunk (shared). Пустые чанки не хранятся.
 export const mapChunks = pgTable(

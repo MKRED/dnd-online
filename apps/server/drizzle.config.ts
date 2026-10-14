@@ -7,6 +7,8 @@ export default defineConfig({
     './src/database/schema/users.ts',
     './src/database/schema/refresh-tokens.ts',
     './src/database/schema/characters.ts',
+    './src/database/schema/character-images.ts',
+    './src/database/schema/character-image-files.ts',
     './src/database/schema/maps.ts',
     './src/database/schema/map-chunks.ts',
     './src/database/schema/map-ops.ts',

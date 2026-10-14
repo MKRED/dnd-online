@@ -14,6 +14,7 @@ import type { Request, Response } from 'express';
 import type { AuthenticatedRequest } from './auth.guard.js';
 import { AuthGuard } from './auth.guard.js';
 import { AuthService } from './auth.service.js';
+import { LolkaOAuthService } from './lolka/lolka-oauth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { TokenService } from './token.service.js';
@@ -28,7 +29,14 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly tokenService: TokenService,
     private readonly usersService: UsersService,
+    private readonly lolka: LolkaOAuthService,
   ) {}
+
+  // Какие внешние способы входа включены — веб по нему показывает кнопки.
+  @Get('providers')
+  providers() {
+    return { lolka: this.lolka.enabled };
+  }
 
   @Post('register')
   @Throttle({ default: { limit: 5, ttl: 60 * 60_000 } })

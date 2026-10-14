@@ -70,6 +70,16 @@ export class AuthService {
     return { user: toPublicUser(user), tokens };
   }
 
+  // Вход, личность для которого уже подтвердил кто-то другой (лолька): только выдаём токены.
+  async signIn(user: {
+    id: string;
+    login: string;
+    nickname: string;
+  }): Promise<{ user: PublicUser; tokens: AuthTokens }> {
+    const tokens = await this.issueTokens(user.id, user.login);
+    return { user: toPublicUser(user), tokens };
+  }
+
   async refresh(refreshToken: string): Promise<AuthTokens> {
     let payload: { sub: string; login: string };
     try {

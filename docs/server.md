@@ -56,6 +56,12 @@ Drizzle ORM (`drizzle-orm/node-postgres`, `pg` driver) against Postgres.
 - JWT access + refresh tokens in `httpOnly`, `sameSite: lax` cookies (`access_token`, `refresh_token`; `secure` in production). Secrets/TTLs from `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACCESS_EXPIRES_SEC` (default 15 min), `JWT_REFRESH_EXPIRES_SEC` (default 30 days).
 - **API tokens** (`api-tokens` module) are for external clients — the map MCP server. Format `dnd_<random>`, only the sha256 hash and a display prefix are stored. `SessionOrApiTokenGuard` (used by the maps controllers) accepts either the cookie session or `Authorization: Bearer dnd_…`; `/api-tokens` itself is cookie-only (`AuthGuard`), so a leaked token can't mint new ones. A token's reach is exactly the routes that use that guard — today only maps.
 - `users.password_hash` is nullable: an account created by signing in through lolka has no password until its owner sets one, and `login` refuses it with the same `Invalid login or password` 401 as a wrong password. External sign-in identities live in `user_identities` (`provider` + `subject`, unique both ways); plan in [plan/lolka-login.md](plan/lolka-login.md).
+- **Sign-in through lolka** (OAuth 2.0 Authorization Code + PKCE S256, `auth/lolka/`). Both routes are full browser navigations that always answer with a redirect:
+  - `GET /auth/lolka/start` puts `state` and `code_verifier` into a 10-minute `httpOnly` cookie `lolka_oauth` (path `/api/auth/lolka`, `sameSite: lax`, so it survives the top-level GET back from lolka) and redirects to lolka's `/oauth/authorize`.
+  - `GET /auth/lolka/callback` takes and clears that cookie, checks `state`, exchanges the code (`LolkaOAuthService`: server-side, 10 s timeout, lolka's token is used once for `/oauth/userinfo` and never stored), finds or creates the user (`UserIdentitiesService.findOrCreateUser`), sets our usual cookies and redirects to `/`. Any failure redirects to `/login?lolkaError=denied|state|failed|rate_limited`.
+  - A new account gets the lolka nickname (only at creation), a technical login `lolka_<8 hex>` and no password.
+  - Config: `LOLKA_CLIENT_ID`, `LOLKA_CLIENT_SECRET`, `LOLKA_REDIRECT_URI`, optional `LOLKA_BASE_URL`. Without `LOLKA_CLIENT_ID` the feature is off: the routes are 404 and `GET /auth/providers` (public) answers `{ lolka: false }`, which is what the web uses to show the button.
+  - `UserIdentitiesService` is provider-agnostic: another external sign-in only needs its own routes and a different `provider`.
 - Refresh tokens carry a random `jti` and are stored in the DB only as a sha256 hash (`RefreshTokenService`); refresh rotates the token.
 - `AuthGuard` reads the access cookie and puts the payload on `request.user`.
 
@@ -63,7 +69,7 @@ Drizzle ORM (`drizzle-orm/node-postgres`, `pg` driver) against Postgres.
 
 - `main.ts` sets `trust proxy = 1` — exactly one proxy (edge-nginx) appends the client IP to `X-Forwarded-For`. Changing the proxy chain means changing this number, otherwise rate limiting sees the wrong IP.
 - `helmet()` with its default CSP — fine while scripts stay same-origin. Google Fonts and Mantine's runtime `<style>` tags are covered by the defaults (`https:` / `'unsafe-inline'` in `style-src`/`font-src`). A new third-party script/connect origin means extending the CSP directives there. `img-src` additionally allows `blob:`: character images are fetched as blobs and shown through object URLs. The Vite dev server sends no CSP, so a CSP mistake only shows on the built server. `upgrade-insecure-requests` is production-only.
-- `AuthController` is guarded by `@nestjs/throttler` (registered in `AuthModule`, in-memory storage): 60/min default, `login` 10/min, `register` 5/hour, per IP. The 429 message is in Russian because the web UI shows the server's `message` as-is.
+- `AuthController` is guarded by `@nestjs/throttler` (registered in `AuthModule`, in-memory storage): 60/min default, `login` 10/min, `register` 5/hour, per IP. `LolkaController` has its own 20/min. The 429 message is in Russian because the web UI shows the server's `message` as-is.
 
 ## Tests
 

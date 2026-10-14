@@ -69,14 +69,14 @@
 
 1. Кнопка — обычная ссылка `GET /api/auth/lolka/start`, полный переход страницы, а не `fetch`. Сервер:
    - генерирует `state` и `code_verifier`;
-   - кладёт их в короткоживущую cookie `lolka_oauth`: подписанный JWT, `httpOnly`, `sameSite: lax`, `path=/api/auth/lolka`, 10 минут;
+   - кладёт их в короткоживущую cookie `lolka_oauth`: `httpOnly`, base64url от JSON (без подписи: подделать её мог бы только тот, кто ставит cookie на наш домен, а против него подпись не помогла бы — он подставил бы свою настоящую), `sameSite: lax`, `path=/api/auth/lolka`, 10 минут;
    - отвечает 302 на `/oauth/authorize`.
 2. Лолька возвращает браузер на `GET /api/auth/lolka/callback?code&state`. Сервер:
    - сверяет `state` с cookie и стирает cookie;
    - меняет код на токен, получает `userinfo`;
    - находит или создаёт пользователя;
    - ставит наши обычные `access_token` и `refresh_token` (`TokenService.setAuthCookies`);
-   - отвечает 302 на `/characters`.
+   - отвечает 302 на `/`.
 3. При любой ошибке — 302 на `/login?lolkaError=<код>`, страница входа показывает понятное сообщение.
 
 Почему так:
@@ -139,14 +139,14 @@ CSP helmet не мешает: это навигация и редиректы, �
   - [x] Миграция `apps/server/drizzle/0014_lolka_identities.sql`.
   - [x] Накачена на прод 2026-10-14.
   - [x] `login` не пускает пользователей без пароля (тест в `auth.service.spec.ts`).
-- [ ] **2. Сервер.**
-  - `LolkaOAuthService`: PKCE, обмен кода, `userinfo`, таймауты, логи.
-  - Маршруты `start` и `callback` с cookie `state`.
-  - Поиск или создание пользователя.
-  - `GET /auth/providers`.
-  - Throttle на `start`/`callback`.
-  - Unit-тесты: PKCE, неверный или просроченный `state`, ошибки лольки, новый и повторный вход.
-  - Обновить [server.md](../server.md) (раздел Auth).
+- [x] **2. Сервер.**
+  - [x] `LolkaOAuthService` (`auth/lolka/`): PKCE, обмен кода, `userinfo`, таймауты, логи.
+  - [x] Маршруты `start` и `callback` с cookie `state` (`LolkaController`).
+  - [x] Поиск или создание пользователя — `UserIdentitiesService` в модуле `users`, не привязан к лольке.
+  - [x] `GET /auth/providers`.
+  - [x] Throttle 20/мин на маршруты лольки.
+  - [x] Unit-тесты: PKCE, неверный и отсутствующий `state`, ошибки лольки, новый и повторный вход, гонка двух первых входов. Проверено на собранном сервере: без ключей — 404, с ключами — редирект на лольку с PKCE.
+  - [x] Обновить [server.md](../server.md) (раздел Auth) и `.env.example`.
 - [ ] **3. Веб.**
   - Кнопка «Войти через лольку» на `LoginPage` и `RegisterPage`, под формой, через разделитель «или».
   - Скрыта, если `providers.lolka === false`.

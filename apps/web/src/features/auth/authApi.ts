@@ -78,3 +78,8 @@ export function getMe(): Promise<{ user: AuthUser }> {
 export function logoutUser(): Promise<void> {
   return postNoContent('/auth/logout');
 }
+
+// Какие внешние способы входа включены на сервере (без ключей лольки — никакие).
+export function getAuthProviders(): Promise<{ lolka: boolean }> {
+  return get('/auth/providers');
+}

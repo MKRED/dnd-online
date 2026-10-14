@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -6,21 +6,34 @@ import { renderWithProviders } from '../test/render';
 import LoginPage from './LoginPage';
 
 // Подменяем только сеть: authApi и разбор ошибок работают настоящие.
-function stubFetch(status: number, body: unknown) {
-  const fetchMock = vi.fn(() =>
-    Promise.resolve(new Response(JSON.stringify(body), { status })),
+// /auth/providers отвечает отдельно — его спрашивает кнопка лольки.
+function stubFetch(
+  status: number,
+  body: unknown,
+  providers = { lolka: false },
+) {
+  const fetchMock = vi.fn((url: string) =>
+    Promise.resolve(
+      url.endsWith('/auth/providers')
+        ? new Response(JSON.stringify(providers))
+        : new Response(JSON.stringify(body), { status }),
+    ),
   );
   vi.stubGlobal('fetch', fetchMock);
   return fetchMock;
 }
 
-function renderLoginPage() {
+function loginCalls(fetchMock: ReturnType<typeof stubFetch>) {
+  return fetchMock.mock.calls.filter(([url]) => url.endsWith('/auth/login'));
+}
+
+function renderLoginPage(route = '/login') {
   return renderWithProviders(
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={<p>Главная</p>} />
     </Routes>,
-    { route: '/login' },
+    { route },
   );
 }
 
@@ -39,7 +52,7 @@ describe('LoginPage', () => {
     await submitCredentials('ab', '123');
 
     expect(screen.getByText('Минимум 3 символа')).toBeInTheDocument();
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(loginCalls(fetchMock)).toHaveLength(0);
   });
 
   it('после входа сохраняет пользователя и уходит на главную', async () => {
@@ -66,6 +79,35 @@ describe('LoginPage', () => {
 
     expect(
       await screen.findByText('Слишком много попыток, попробуйте позже'),
+    ).toBeInTheDocument();
+  });
+
+  it('показывает кнопку лольки, только если вход через неё включён', async () => {
+    stubFetch(200, {}, { lolka: true });
+    renderLoginPage();
+
+    const link = await screen.findByRole('link', {
+      name: 'Войти через лольку',
+    });
+    expect(link.getAttribute('href')).toMatch(/\/auth\/lolka\/start$/);
+  });
+
+  it('не показывает кнопку лольки, если она выключена', async () => {
+    const fetchMock = stubFetch(200, {});
+    renderLoginPage();
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(
+      screen.queryByRole('link', { name: 'Войти через лольку' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('показывает, почему не удался вход через лольку', async () => {
+    stubFetch(200, {});
+    renderLoginPage('/login?lolkaError=denied');
+
+    expect(
+      await screen.findByText('Вход через лольку отменён.'),
     ).toBeInTheDocument();
   });
 });

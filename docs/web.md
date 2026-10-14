@@ -32,6 +32,7 @@ Vite + React 19 + TypeScript, Mantine 9.7 (UI, light «parchment» scheme by def
 - Every request uses `credentials: 'include'` — auth lives in httpOnly cookies (see [server auth](server.md#auth)).
 - Errors become `AuthApiError(status, message)`; the server's `message` is shown to the user as-is, so server-side user-facing messages are in Russian.
 - `AuthProvider` bootstraps the session: `GET /auth/me`, on 401 `refreshSession()` and retry. It also subscribes to `onSessionExpired` and drops the user when a refresh is rejected, so `RequireAuth` sends them to the login page. The access cookie lives 15 minutes, so without the refresh in `apiRequest` client-side navigation would start failing with «Access token missing». The bootstrap promise is module-level on purpose — StrictMode mounts effects twice, and a duplicate refresh would be rejected because the first one rotated the token.
+- **Sign-in through lolka** (`features/auth/LolkaSignIn/`): under the login and register forms, «или» and a «Войти через лольку» button. It shows only when `GET /auth/providers` says `lolka: true` (off locally: lolka accepts one return address, production's). The button is a plain link to `${API_BASE_URL}/auth/lolka/start`, not a `fetch`: the browser goes to lolka and comes back through the server, which sets the cookies and redirects to `/`. A failure comes back as `/login?lolkaError=<code>`; `LoginPage` shows `lolkaErrorMessage(code)` in its usual error alert and strips the parameter. Plan: [plan/lolka-login.md](plan/lolka-login.md).
 
 ## Styling
 

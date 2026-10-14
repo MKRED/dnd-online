@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   AuthApiError,
+  LolkaSignIn,
   registerUser,
   useAuth,
   validateLogin,
@@ -125,6 +126,7 @@ function RegisterPage() {
             Зарегистрироваться
           </Button>
         </form>
+        <LolkaSignIn />
       </Paper>
     </Container>
   );

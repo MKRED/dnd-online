@@ -11,11 +11,13 @@ import {
   Title,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AuthApiError,
+  LolkaSignIn,
   loginUser,
+  lolkaErrorMessage,
   useAuth,
   validateLogin,
   validatePassword,
@@ -31,7 +33,18 @@ function LoginPage() {
   usePageTitle('Вход');
   const navigate = useNavigate();
   const { setUser } = useAuth();
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  // Неудачный вход через лольку сервер возвращает сюда с ?lolkaError=<код>.
+  // Текст запоминаем, а параметр сразу убираем из адреса, чтобы он не пережил
+  // перезагрузку и не всплыл снова при следующем визите из истории.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [submitError, setSubmitError] = useState<string | null>(() =>
+    lolkaErrorMessage(searchParams.get('lolkaError')),
+  );
+  useEffect(() => {
+    if (searchParams.has('lolkaError')) {
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<LoginFormValues>({
@@ -96,6 +109,7 @@ function LoginPage() {
             Войти
           </Button>
         </form>
+        <LolkaSignIn />
       </Paper>
     </Container>
   );

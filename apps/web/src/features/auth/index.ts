@@ -1,5 +1,6 @@
 export {
   AuthApiError,
+  getAuthProviders,
   getMe,
   loginUser,
   logoutUser,
@@ -16,3 +17,4 @@ export {
 } from './authValidation';
 export { default as RequireAuth } from './RequireAuth';
 export { default as RequireGuest } from './RequireGuest';
+export { LolkaSignIn, lolkaErrorMessage } from './LolkaSignIn';

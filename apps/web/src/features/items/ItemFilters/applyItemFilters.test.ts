@@ -100,6 +100,7 @@ describe('countByCategory', () => {
       material: 1,
       quest: 1,
       treasure: 0,
+      container: 0,
     });
   });
 });

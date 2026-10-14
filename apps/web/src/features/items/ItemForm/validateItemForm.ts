@@ -49,6 +49,16 @@ export const validateItemForm = {
     values.category === 'treasure' && value === null
       ? 'Выберите вид сокровища'
       : null,
+  // Сотые обрезает само поле (decimalScale), поэтому здесь только границы — тексты
+  // короче серверного, тот покрывает всё сразу.
+  capacity: (value: number | string, values: { category: ItemCategory }) => {
+    if (values.category !== 'container' || value === '') return null;
+    const capacity = Number(value);
+    if (capacity <= 0) return 'Груз — больше 0. Не знаете — оставьте пустым';
+    return capacity > ITEM_MAX_WEIGHT
+      ? `Груз — не больше ${ITEM_MAX_WEIGHT} фнт.`
+      : null;
+  },
   description: (value: string) =>
     value.trim().length > ITEM_DESCRIPTION_MAX_LENGTH
       ? `Описание — не длиннее ${ITEM_DESCRIPTION_MAX_LENGTH} символов`

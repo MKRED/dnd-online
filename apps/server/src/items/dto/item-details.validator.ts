@@ -1,6 +1,7 @@
 import { ValidationArguments, registerDecorator } from 'class-validator';
 import {
   ITEM_CATEGORIES,
+  ITEM_MAX_WEIGHT,
   ITEM_SATIETY_MAX,
   TREASURE_KINDS,
   type ItemCategory,
@@ -35,18 +36,38 @@ function isTreasure(details: object): boolean {
   );
 }
 
+// Груз — как вес: больше нуля, до сотых (сравнение с допуском, 0.29 * 100 — 28,999…).
+// Ноль не пускаем: «не указан» — это null.
+function isCapacity(value: unknown): boolean {
+  if (value === null) return true;
+  if (typeof value !== 'number' || !Number.isFinite(value)) return false;
+  return (
+    value > 0 &&
+    value <= ITEM_MAX_WEIGHT &&
+    Math.abs(Math.round(value * 100) - value * 100) < 1e-6
+  );
+}
+
+function isContainer(details: object): boolean {
+  const keys = Object.keys(details);
+  const { capacity } = details as { capacity?: unknown };
+  return keys.length === 1 && keys[0] === 'capacity' && isCapacity(capacity);
+}
+
 const DETAILS_CHECKS: Record<ItemCategory, (details: object) => boolean> = {
   basic: isEmpty,
   food: isFood,
   material: isEmpty,
   quest: isEmpty,
   treasure: isTreasure,
+  container: isContainer,
 };
 
 // Текст ошибки — для поля, которое правит человек; лишние поля шлёт только чужой клиент.
 const MESSAGES: Partial<Record<ItemCategory, string>> = {
   food: `Насыщение — целое число от 0 до ${ITEM_SATIETY_MAX}`,
   treasure: 'Выберите вид сокровища',
+  container: `Груз — больше 0 и до ${ITEM_MAX_WEIGHT} фнт., не больше двух знаков после запятой`,
 };
 const DEFAULT_MESSAGE = 'Поля предмета не подходят к его категории';
 

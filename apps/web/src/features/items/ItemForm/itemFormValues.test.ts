@@ -48,6 +48,18 @@ describe('itemFormValues', () => {
     expect(toFormValues(null).treasureKind).toBeNull();
   });
 
+  it('у контейнера груз — число или null, если поле пустое', () => {
+    const bag = { category: 'container', details: { capacity: 30 } } as Item;
+    const values = { ...toFormValues(bag), name: 'Рюкзак' };
+    expect(values.capacity).toBe(30);
+    expect(toItemInput(values).details).toEqual({ capacity: 30 });
+    expect(toItemInput({ ...values, capacity: '' }).details).toEqual({
+      capacity: null,
+    });
+    const chest = { category: 'container', details: { capacity: null } };
+    expect(toFormValues(chest as Item).capacity).toBe('');
+  });
+
   it('переносит предмет в форму и обратно без потерь', () => {
     const item = {
       name: 'Зеркало',

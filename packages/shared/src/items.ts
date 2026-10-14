@@ -12,6 +12,7 @@ export const ITEM_CATEGORIES = [
   'material',
   'quest',
   'treasure',
+  'container',
 ] as const;
 export type ItemCategory = (typeof ITEM_CATEGORIES)[number];
 
@@ -41,11 +42,19 @@ export interface TreasureItemDetails {
   kind: TreasureKind;
 }
 
+// Контейнер: сколько фунтов груза вмещает (docs/dnd/items.md). Только фунты — решено
+// с пользователем: объём, жидкости и штуки («20 стрел») пишут в описании. null — груз не
+// указан: у сундука в книге есть только объём. Точность как у веса — до сотых.
+export interface ContainerItemDetails {
+  capacity: number | null;
+}
+
 // Размеченное объединение: по category понятно, какие поля лежат в details.
 export type ItemVariant =
   | { category: PlainItemCategory; details: PlainItemDetails }
   | { category: 'food'; details: FoodItemDetails }
-  | { category: 'treasure'; details: TreasureItemDetails };
+  | { category: 'treasure'; details: TreasureItemDetails }
+  | { category: 'container'; details: ContainerItemDetails };
 export type ItemDetails = ItemVariant['details'];
 
 // Монеты — те же ключи, что у кошелька персонажа (CharacterCurrency).

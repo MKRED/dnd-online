@@ -106,6 +106,25 @@ describe('ItemDto', () => {
     expect(await treasure({ kind: 'gem', size: 1 })).toEqual(error);
   });
 
+  it('у контейнера груз в фунтах до сотых или null', async () => {
+    const container = (details: unknown) =>
+      errorsOf({ category: 'container', details });
+    const error = {
+      details: [
+        'Груз — больше 0 и до 10000 фнт., не больше двух знаков после запятой',
+      ],
+    };
+    expect(await container({ capacity: 30 })).toEqual({});
+    expect(await container({ capacity: 0.29 })).toEqual({});
+    expect(await container({ capacity: null })).toEqual({});
+    expect(await container({})).toEqual(error);
+    expect(await container({ capacity: 0 })).toEqual(error);
+    expect(await container({ capacity: 0.125 })).toEqual(error);
+    expect(await container({ capacity: 10001 })).toEqual(error);
+    expect(await container({ capacity: '30' })).toEqual(error);
+    expect(await container({ capacity: 30, volume: 1 })).toEqual(error);
+  });
+
   it('не пускает чужие поля в details базового предмета', async () => {
     expect(await errorsOf({ details: { damage: '1d6' } })).toEqual({
       details: ['Поля предмета не подходят к его категории'],

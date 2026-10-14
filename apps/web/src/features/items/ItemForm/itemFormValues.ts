@@ -24,6 +24,8 @@ export interface ItemFormValues {
   satiety: number | string;
   // null — вид не выбран: Select отдаёт null, вид обязателен.
   treasureKind: TreasureKind | null;
+  // Пусто — груз не указан.
+  capacity: number | string;
 }
 
 export function toFormValues(item: Item | null): ItemFormValues {
@@ -40,6 +42,8 @@ export function toFormValues(item: Item | null): ItemFormValues {
     // Пусто, а не 0: насыщение у еды обязательно, пусть его укажут явно.
     satiety: item?.category === 'food' ? item.details.satiety : '',
     treasureKind: item?.category === 'treasure' ? item.details.kind : null,
+    capacity:
+      item?.category === 'container' ? (item.details.capacity ?? '') : '',
   };
 }
 
@@ -52,6 +56,13 @@ function toVariant(values: ItemFormValues): ItemVariant {
       return {
         category: 'treasure',
         details: { kind: values.treasureKind ?? 'trade_good' },
+      };
+    case 'container':
+      return {
+        category: 'container',
+        details: {
+          capacity: values.capacity === '' ? null : Number(values.capacity),
+        },
       };
     default:
       return { category: values.category, details: {} };

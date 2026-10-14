@@ -14,6 +14,7 @@ export const CATEGORY_LABELS: Record<ItemCategory, string> = {
   material: 'Материалы',
   quest: 'Сюжетный',
   treasure: 'Сокровище',
+  container: 'Контейнер',
 };
 
 // Подсказка под полем «Категория» в форме: что в эту категорию класть.
@@ -23,6 +24,7 @@ export const CATEGORY_HINTS: Record<ItemCategory, string> = {
   material: 'Сырьё и компоненты: руда, шкуры, травы, ткань',
   quest: 'Ключи, письма, реликвии — то, что важно для истории',
   treasure: 'Драгоценные камни, произведения искусства, товары',
+  container: 'Рюкзаки, мешки, сундуки, бочки, колчаны',
 };
 
 // Названия как на dnd.su (docs/dnd/items.md); торговые слитки — тоже «Товар».
@@ -70,6 +72,11 @@ const numberFormat = new Intl.NumberFormat('ru-RU', {
 // Нулевой вес — «—», как в книге у предметов без веса.
 export function formatWeight(weight: number): string {
   return weight === 0 ? '—' : `${numberFormat.format(weight)} фнт.`;
+}
+
+// Груз контейнера: «до 30 фнт.»; не указан — «—», как пустой вес.
+export function formatCapacity(capacity: number | null): string {
+  return capacity === null ? '—' : `до ${numberFormat.format(capacity)} фнт.`;
 }
 
 export function formatCost(cost: ItemCost | null): string {

@@ -71,6 +71,16 @@ describe('items.mapper', () => {
     });
   });
 
+  it('отдаёт груз контейнера; без числа — груз не указан', () => {
+    const container = { ...row, category: 'container' as const };
+    expect(
+      toItem({ ...container, details: { capacity: 30 } }, 'Арвен').details,
+    ).toEqual({ capacity: 30 });
+    expect(toItem({ ...container, details: {} }, 'Арвен').details).toEqual({
+      capacity: null,
+    });
+  });
+
   it('снятая цена и описание пишутся как null и пустая строка', () => {
     const dto = {
       name: 'Сюжетный ключ',

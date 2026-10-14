@@ -37,6 +37,13 @@ export function toItemVariant(
       },
     };
   }
+  if (category === 'container') {
+    const { capacity } = details as { capacity?: unknown };
+    return {
+      category,
+      details: { capacity: typeof capacity === 'number' ? capacity : null },
+    };
+  }
   return { category, details: {} };
 }
 

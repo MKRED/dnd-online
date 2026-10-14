@@ -10,6 +10,7 @@ import {
 } from 'shared';
 import type { itemImages, items } from '../database/schema/index.js';
 import type { ItemDto } from './dto/item.dto.js';
+import type { PackPublication } from './pack-contents/pack-contents.rules.js';
 
 type ItemRow = typeof items.$inferSelect;
 type NewItemRow = typeof items.$inferInsert;
@@ -120,4 +121,11 @@ export function packContentsOf(dto: ItemDto): PackEntryInput[] | null {
   return dto.category === 'pack'
     ? (dto.details as { contents: PackEntryInput[] }).contents
     : null;
+}
+
+export function publicationOf(dto: ItemDto): PackPublication {
+  return {
+    isPublic: dto.isPublic,
+    publishContents: dto.publishContents ?? false,
+  };
 }

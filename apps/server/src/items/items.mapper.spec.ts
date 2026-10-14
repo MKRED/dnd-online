@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { items } from '../database/schema/index.js';
 import type { ItemDto } from './dto/item.dto.js';
-import { packContentsOf, toItem, toItemValues } from './items.mapper.js';
+import {
+  packContentsOf,
+  publicationOf,
+  toItem,
+  toItemValues,
+} from './items.mapper.js';
 
 const row: typeof items.$inferSelect = {
   id: 'i1',
@@ -100,6 +105,18 @@ describe('items.mapper', () => {
     expect(toItemValues(dto).details).toEqual({});
     expect(packContentsOf(dto)).toEqual([{ itemId: 'i2', quantity: 10 }]);
     expect(packContentsOf({ ...dto, category: 'basic' })).toBeNull();
+  });
+
+  it('публикация состава — только по флагу запроса', () => {
+    const dto = { isPublic: true } as ItemDto;
+    expect(publicationOf(dto)).toEqual({
+      isPublic: true,
+      publishContents: false,
+    });
+    expect(publicationOf({ ...dto, publishContents: true })).toEqual({
+      isPublic: true,
+      publishContents: true,
+    });
   });
 
   it('снятая цена и описание пишутся как null и пустая строка', () => {

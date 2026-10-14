@@ -11,14 +11,23 @@ import {
   rejectEdit,
   visibleItem,
 } from './item-access.js';
-import { packContentsOf, toItem, toItemValues } from './items.mapper.js';
-import { PackContentsService } from './pack-contents/index.js';
+import {
+  packContentsOf,
+  publicationOf,
+  toItem,
+  toItemValues,
+} from './items.mapper.js';
+import {
+  PackContentsService,
+  PackUsageService,
+} from './pack-contents/index.js';
 
 @Injectable()
 export class ItemsService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly packContents: PackContentsService,
+    private readonly packUsage: PackUsageService,
     @InjectPinoLogger(ItemsService.name)
     private readonly logger: PinoLogger,
   ) {}
@@ -34,7 +43,13 @@ export class ItemsService {
           .returning({ id: items.id });
         const contents = packContentsOf(dto);
         if (contents) {
-          await this.packContents.replace(tx, userId, inserted.id, contents);
+          await this.packContents.replace(
+            tx,
+            userId,
+            inserted.id,
+            contents,
+            publicationOf(dto),
+          );
         }
         return inserted;
       });
@@ -101,7 +116,17 @@ export class ItemsService {
         row.item.category === 'pack'
           ? await this.packContents.resolve(userId, [id])
           : undefined;
-      return toItem(row.item, row.authorNickname, row.image, contents?.get(id));
+      const item = toItem(
+        row.item,
+        row.authorNickname,
+        row.image,
+        contents?.get(id),
+      );
+      // Где лежит предмет — только автору: остальным знать про чужие наборы незачем.
+      if (row.item.authorId === userId) {
+        item.packs = await this.packUsage.packsOf(userId, id);
+      }
+      return item;
     } catch (err: unknown) {
       if (err instanceof HttpException) throw err;
       this.logger.error(
@@ -124,7 +149,16 @@ export class ItemsService {
           .returning({ id: items.id });
         if (!row) await rejectEdit(tx, userId, id);
         // Состав заменяется целиком; сменил набор категорию — строки уходят.
-        await this.packContents.replace(tx, userId, id, packContentsOf(dto));
+        await this.packContents.replace(
+          tx,
+          userId,
+          id,
+          packContentsOf(dto),
+          publicationOf(dto),
+        );
+        if (!dto.isPublic && dto.hidePacks) {
+          await this.packUsage.hideOwnPacks(tx, userId, id);
+        }
       });
       this.logger.info(
         { durationMs: Date.now() - t0, userId, itemId: id },

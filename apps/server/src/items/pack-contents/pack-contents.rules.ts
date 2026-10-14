@@ -7,6 +7,13 @@ export const PACK_IN_PACK = 'Набор нельзя положить в дру�
 export const PACK_ITEM_IN_PACK =
   'Предмет лежит в наборах — набором он стать не может';
 
+// Как набор публикуется: isPublic — сам набор; publishContents — пользователь
+// согласился опубликовать вместе с ним свои скрытые предметы из состава.
+export interface PackPublication {
+  isPublic: boolean;
+  publishContents: boolean;
+}
+
 // Предмет из состава, как его нашёл запрос с условием видимости для автора набора.
 export interface FoundPackItem {
   id: string;
@@ -25,4 +32,14 @@ export function packContentsError(
   // Набор в наборе запрещён, как и в книге; заодно это исключает циклы.
   if (found.some((item) => item.category === 'pack')) return PACK_IN_PACK;
   return null;
+}
+
+// 409 при публикации набора со скрытыми предметами: называем их, чтобы было понятно, что
+// публиковать. Форма ловит это сама и предлагает опубликовать их вместе с набором.
+export function hiddenContentsError(
+  hidden: readonly { name: string }[],
+): string {
+  return `Сначала опубликуйте предметы из состава: ${hidden
+    .map((item) => item.name)
+    .join(', ')}`;
 }

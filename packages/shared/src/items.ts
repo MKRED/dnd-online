@@ -80,6 +80,17 @@ export interface PackItemDetails {
   contents: PackEntry[];
 }
 
+// Где лежит предмет — автору для подтверждения удаления и скрытия. Чужие наборы — числом.
+export interface ItemPackRef {
+  id: string;
+  name: string;
+  isPublic: boolean;
+}
+export interface ItemPacks {
+  mine: ItemPackRef[];
+  othersCount: number;
+}
+
 // Размеченное объединение: по category понятно, какие поля лежат в details.
 export type ItemVariant =
   | { category: PlainItemCategory; details: PlainItemDetails }
@@ -165,6 +176,8 @@ export type Item = ItemVariant & {
   cost: ItemCost | null;
   description: string;
   image: ItemImage | null;
+  // Только у автора и только в GET /items/:id: в каких наборах лежит предмет.
+  packs?: ItemPacks;
   createdAt: string;
   updatedAt: string;
 };
@@ -177,6 +190,10 @@ export type ItemInput = ItemInputVariant & {
   cost: ItemCost | null;
   description: string;
   isPublic: boolean;
+  // Опубликовать вместе с набором свои скрытые предметы из его состава.
+  publishContents?: boolean;
+  // Скрыть вместе с предметом свои опубликованные наборы, где он лежит.
+  hidePacks?: boolean;
 };
 
 // Какой список запрашиваем: свои предметы (и скрытые) или опубликованные всех.

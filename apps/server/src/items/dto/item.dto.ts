@@ -83,4 +83,15 @@ export class ItemDto {
 
   @IsBoolean({ message: 'Признак публикации — да или нет' })
   isPublic: boolean;
+
+  // Флаги одного запроса, в предмете не хранятся (docs/plan/item-packs.md). Опубликовать
+  // вместе с набором свои скрытые предметы из состава — иначе 409.
+  @IsOptional()
+  @IsBoolean({ message: 'Признак «опубликовать состав» — да или нет' })
+  publishContents?: boolean;
+
+  // Скрыть вместе с предметом свои опубликованные наборы, где он лежит.
+  @IsOptional()
+  @IsBoolean({ message: 'Признак «скрыть наборы» — да или нет' })
+  hidePacks?: boolean;
 }

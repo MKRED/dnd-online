@@ -159,6 +159,16 @@ describe('ItemDto', () => {
     ).toEqual(error);
   });
 
+  it('флаги publishContents и hidePacks — необязательные да или нет', async () => {
+    expect(await errorsOf({ publishContents: true, hidePacks: false })).toEqual(
+      {},
+    );
+    expect(await errorsOf({ publishContents: 'да' })).toHaveProperty(
+      'publishContents',
+    );
+    expect(await errorsOf({ hidePacks: 1 })).toHaveProperty('hidePacks');
+  });
+
   it('не пускает чужие поля в details базового предмета', async () => {
     expect(await errorsOf({ details: { damage: '1d6' } })).toEqual({
       details: ['Поля предмета не подходят к его категории'],

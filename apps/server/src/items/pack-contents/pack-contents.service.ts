@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { and, asc, eq, inArray, or } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { PackEntry, PackEntryInput } from 'shared';
@@ -12,7 +16,12 @@ import {
   items,
 } from '../../database/schema/index.js';
 import { toItemImage } from '../items.mapper.js';
-import { PACK_ITEM_IN_PACK, packContentsError } from './pack-contents.rules.js';
+import {
+  PACK_ITEM_IN_PACK,
+  type PackPublication,
+  hiddenContentsError,
+  packContentsError,
+} from './pack-contents.rules.js';
 
 // Состав наборов снаряжения (docs/plan/item-packs.md): запись строк вместе с предметом,
 // проверка ссылок и сборка состава для читателя.
@@ -31,6 +40,7 @@ export class PackContentsService {
     userId: string,
     packId: string,
     contents: readonly PackEntryInput[] | null,
+    publication: PackPublication,
   ): Promise<void> {
     const t0 = Date.now();
     await tx.delete(itemPackEntries).where(eq(itemPackEntries.packId, packId));
@@ -46,7 +56,12 @@ export class PackContentsService {
 
     const ids = contents.map((entry) => entry.itemId);
     const found = await tx
-      .select({ id: items.id, category: items.category })
+      .select({
+        id: items.id,
+        category: items.category,
+        name: items.name,
+        isPublic: items.isPublic,
+      })
       .from(items)
       .where(
         and(
@@ -62,6 +77,8 @@ export class PackContentsService {
       );
       throw new BadRequestException(error);
     }
+    if (publication.isPublic)
+      await this.publishContents(tx, userId, packId, found, publication);
 
     await tx.insert(itemPackEntries).values(
       contents.map((entry, position) => ({
@@ -74,6 +91,42 @@ export class PackContentsService {
     this.logger.debug(
       { durationMs: Date.now() - t0, userId, packId, entries: contents.length },
       'Pack contents replaced',
+    );
+  }
+
+  // Опубликованный набор — только с опубликованным составом (решено с пользователем).
+  // Скрытыми среди найденных могут быть только свои предметы: чужие скрытые отсеяны выше.
+  private async publishContents(
+    tx: DbTransaction,
+    userId: string,
+    packId: string,
+    found: readonly { id: string; name: string; isPublic: boolean }[],
+    { publishContents }: PackPublication,
+  ): Promise<void> {
+    const hidden = found.filter((item) => !item.isPublic);
+    if (hidden.length === 0) return;
+    if (!publishContents) {
+      this.logger.info(
+        { userId, packId, hidden: hidden.length },
+        'Pack publication rejected: hidden contents',
+      );
+      throw new ConflictException(hiddenContentsError(hidden));
+    }
+    await tx
+      .update(items)
+      .set({ isPublic: true })
+      .where(
+        and(
+          inArray(
+            items.id,
+            hidden.map((item) => item.id),
+          ),
+          eq(items.authorId, userId),
+        ),
+      );
+    this.logger.info(
+      { userId, packId, published: hidden.length },
+      'Pack contents published with the pack',
     );
   }
 

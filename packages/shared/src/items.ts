@@ -12,19 +12,24 @@ export type ItemCategory = (typeof ITEM_CATEGORIES)[number];
 // Категории без своих полей: details у них пустой объект (docs/plan/items-filters.md).
 export const PLAIN_ITEM_CATEGORIES = [
   'basic',
-  'food',
   'material',
   'quest',
 ] as const satisfies readonly ItemCategory[];
 export type PlainItemCategory = (typeof PLAIN_ITEM_CATEGORIES)[number];
 export type PlainItemDetails = Record<string, never>;
 
-// Размеченное объединение: по category понятно, какие поля лежат в details. Категории
-// со своими полями добавятся сюда отдельными ветками.
-export type ItemVariant = {
-  category: PlainItemCategory;
-  details: PlainItemDetails;
-};
+// Еда и напитки: насыщение — целые очки, как припасы в Baldur's Gate 3. Отступление от
+// книги, где норма в фунтах на день по размеру существа (docs/dnd/items.md). Сколько
+// очков нужно на отдых, пока не считаем.
+export interface FoodItemDetails {
+  satiety: number;
+}
+export const ITEM_SATIETY_MAX = 1000;
+
+// Размеченное объединение: по category понятно, какие поля лежат в details.
+export type ItemVariant =
+  | { category: PlainItemCategory; details: PlainItemDetails }
+  | { category: 'food'; details: FoodItemDetails };
 export type ItemDetails = ItemVariant['details'];
 
 // Монеты — те же ключи, что у кошелька персонажа (CharacterCurrency).

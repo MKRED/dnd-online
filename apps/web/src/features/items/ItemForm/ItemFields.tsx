@@ -9,7 +9,12 @@ import {
   TextInput,
 } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
-import { COINS, ITEM_RARITIES, PLAIN_ITEM_CATEGORIES } from 'shared';
+import {
+  COINS,
+  ITEM_CATEGORIES,
+  ITEM_RARITIES,
+  ITEM_SATIETY_MAX,
+} from 'shared';
 import {
   CATEGORY_HINTS,
   CATEGORY_LABELS,
@@ -18,8 +23,7 @@ import {
 } from '../itemLabels';
 import type { ItemFormValues } from './itemFormValues';
 
-// Пока все категории без своих полей; категории со своими полями потребуют их блока в форме.
-const CATEGORY_OPTIONS = PLAIN_ITEM_CATEGORIES.map((value) => ({
+const CATEGORY_OPTIONS = ITEM_CATEGORIES.map((value) => ({
   value,
   label: CATEGORY_LABELS[value],
 }));
@@ -58,6 +62,23 @@ function ItemFields({ form }: { form: UseFormReturnType<ItemFormValues> }) {
           {...form.getInputProps('rarity')}
         />
       </SimpleGrid>
+      {/* Поля категории — сразу под ней, чтобы было видно, откуда они взялись. */}
+      {form.values.category === 'food' && (
+        <SimpleGrid cols={{ base: 1, xs: 2 }}>
+          <NumberInput
+            label="Насыщение"
+            description="Очки: сколько насыщает еда или напиток"
+            required
+            min={0}
+            max={ITEM_SATIETY_MAX}
+            allowDecimal={false}
+            allowNegative={false}
+            rightSection="очк."
+            rightSectionWidth={44}
+            {...form.getInputProps('satiety')}
+          />
+        </SimpleGrid>
+      )}
       <SimpleGrid cols={{ base: 1, xs: 2 }}>
         <NumberInput
           label="Вес"

@@ -61,6 +61,9 @@ function ItemDetails({ item, actions }: ItemDetailsProps) {
           </Title>
           <ItemBadges item={item} showHidden />
           <Stack gap={4}>
+            {item.category === 'food' && (
+              <Field label="Насыщение">{item.details.satiety} очк.</Field>
+            )}
             <Field label="Вес">{formatWeight(item.weight)}</Field>
             <Field label="Стоимость">{formatCost(item.cost)}</Field>
             <Field label="Автор">{item.authorNickname}</Field>

@@ -21,6 +21,22 @@ describe('itemFormValues', () => {
     });
   });
 
+  it('у еды в запрос уходит насыщение, у других категорий details пустые', () => {
+    const food = { category: 'food', details: { satiety: 20 } } as Item;
+    const values = { ...toFormValues(food), name: 'Хлеб' };
+    expect(values.satiety).toBe(20);
+    expect(toItemInput(values)).toMatchObject({
+      category: 'food',
+      details: { satiety: 20 },
+    });
+    // Сменили категорию — насыщение в форме осталось, но в запрос не идёт.
+    expect(toItemInput({ ...values, category: 'quest' })).toMatchObject({
+      category: 'quest',
+      details: {},
+    });
+    expect(toFormValues(null).satiety).toBe('');
+  });
+
   it('переносит предмет в форму и обратно без потерь', () => {
     const item = {
       name: 'Зеркало',

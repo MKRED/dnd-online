@@ -70,7 +70,7 @@ describe('ItemDto', () => {
     });
   });
 
-  it.each(['food', 'material', 'quest'])(
+  it.each(['material', 'quest'])(
     'принимает категорию %s с пустыми details и не пускает в них поля',
     async (category) => {
       expect(await errorsOf({ category })).toEqual({});
@@ -79,6 +79,20 @@ describe('ItemDto', () => {
       });
     },
   );
+
+  it('у еды насыщение обязательно: целое от 0 до 1000, других полей нет', async () => {
+    const food = (details: unknown) => errorsOf({ category: 'food', details });
+    const error = { details: ['Насыщение — целое число от 0 до 1000'] };
+    expect(await food({ satiety: 20 })).toEqual({});
+    expect(await food({ satiety: 0 })).toEqual({});
+    expect(await food({ satiety: 1000 })).toEqual({});
+    expect(await food({})).toEqual(error);
+    expect(await food({ satiety: 1.5 })).toEqual(error);
+    expect(await food({ satiety: -1 })).toEqual(error);
+    expect(await food({ satiety: 1001 })).toEqual(error);
+    expect(await food({ satiety: '20' })).toEqual(error);
+    expect(await food({ satiety: 20, water: 1 })).toEqual(error);
+  });
 
   it('не пускает чужие поля в details базового предмета', async () => {
     expect(await errorsOf({ details: { damage: '1d6' } })).toEqual({

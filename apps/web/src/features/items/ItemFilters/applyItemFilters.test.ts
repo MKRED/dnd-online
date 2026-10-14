@@ -20,7 +20,8 @@ function item(overrides: Partial<Item>): Item {
     createdAt: '2026-10-14T00:00:00.000Z',
     updatedAt: '2026-10-14T00:00:00.000Z',
     ...overrides,
-  };
+    // Partial от объединения не сужается по category — проверку типа берём на себя.
+  } as Item;
 }
 
 // Порядок как с сервера — «сначала новые».
@@ -29,12 +30,14 @@ const items = [
   item({
     name: 'Рацион',
     category: 'food',
+    details: { satiety: 20 },
     weight: 2,
     cost: { amount: 5, coin: 'sp' },
   }),
   item({
     name: 'Зелье лечения',
     category: 'food',
+    details: { satiety: 0 },
     rarity: 'common',
     weight: 0.5,
     cost: { amount: 50, coin: 'gp' },

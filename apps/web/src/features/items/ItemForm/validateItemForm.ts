@@ -3,6 +3,8 @@ import {
   ITEM_DESCRIPTION_MAX_LENGTH,
   ITEM_MAX_WEIGHT,
   ITEM_NAME_MAX_LENGTH,
+  ITEM_SATIETY_MAX,
+  type ItemCategory,
 } from 'shared';
 
 // Те же правила, что у сервера (ItemDto): форма ловит ошибку до отправки, тексты те же.
@@ -32,6 +34,16 @@ export const validateItemForm = {
     return amount > ITEM_COST_MAX_AMOUNT
       ? `Стоимость — не больше ${ITEM_COST_MAX_AMOUNT}`
       : null;
+  },
+  // Насыщение проверяем только у еды: у других категорий поле скрыто и в запрос не идёт.
+  satiety: (value: number | string, values: { category: ItemCategory }) => {
+    if (values.category !== 'food') return null;
+    const satiety = value === '' ? NaN : Number(value);
+    return Number.isInteger(satiety) &&
+      satiety >= 0 &&
+      satiety <= ITEM_SATIETY_MAX
+      ? null
+      : `Насыщение — целое число от 0 до ${ITEM_SATIETY_MAX}`;
   },
   description: (value: string) =>
     value.trim().length > ITEM_DESCRIPTION_MAX_LENGTH

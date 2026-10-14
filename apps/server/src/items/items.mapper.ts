@@ -1,9 +1,25 @@
-import type { Item } from 'shared';
+import type { Item, ItemCategory, ItemDetails, ItemVariant } from 'shared';
 import type { itemImages, items } from '../database/schema/index.js';
 import type { ItemDto } from './dto/item.dto.js';
 
 type ItemRow = typeof items.$inferSelect;
 type NewItemRow = typeof items.$inferInsert;
+
+// Поля категории из базы. Еда, сохранённая до появления насыщения (2026-10-14), лежит с
+// пустыми details — читаем её как насыщение 0, а не правим строки миграцией.
+export function toItemVariant(
+  category: ItemCategory,
+  details: ItemDetails,
+): ItemVariant {
+  if (category === 'food') {
+    const { satiety } = details as { satiety?: unknown };
+    return {
+      category,
+      details: { satiety: typeof satiety === 'number' ? satiety : 0 },
+    };
+  }
+  return { category, details: {} };
+}
 
 // Стоимость в базе — две колонки (check-ограничение держит их в паре), в API — объект.
 export function toItem(
@@ -17,9 +33,8 @@ export function toItem(
     authorNickname,
     isPublic: row.isPublic,
     name: row.name,
-    category: row.category,
+    ...toItemVariant(row.category, row.details),
     rarity: row.rarity,
-    details: row.details,
     weight: row.weight,
     cost:
       row.costAmount !== null && row.costCoin !== null

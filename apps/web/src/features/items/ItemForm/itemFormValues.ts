@@ -1,16 +1,16 @@
 import type {
   Coin,
   Item,
+  ItemCategory,
   ItemInput,
   ItemRarity,
-  PlainItemCategory,
+  ItemVariant,
 } from 'shared';
 
 // Значения формы. Числа — number | string: NumberInput отдаёт '' для пустого поля.
 export interface ItemFormValues {
   name: string;
-  // Пока ни у одной категории нет своих полей; когда появятся, они добавятся сюда же.
-  category: PlainItemCategory;
+  category: ItemCategory;
   rarity: ItemRarity;
   weight: number | string;
   // Пустая стоимость — у предмета нет цены.
@@ -18,6 +18,9 @@ export interface ItemFormValues {
   costCoin: Coin;
   description: string;
   isPublic: boolean;
+  // Поля категорий лежат в форме все сразу: при смене категории туда и обратно
+  // введённое не теряется, а в запрос уходят только поля выбранной.
+  satiety: number | string;
 }
 
 export function toFormValues(item: Item | null): ItemFormValues {
@@ -31,15 +34,21 @@ export function toFormValues(item: Item | null): ItemFormValues {
     costCoin: item?.cost?.coin ?? 'gp',
     description: item?.description ?? '',
     isPublic: item?.isPublic ?? false,
+    // Пусто, а не 0: насыщение у еды обязательно, пусть его укажут явно.
+    satiety: item?.category === 'food' ? item.details.satiety : '',
   };
 }
 
-// details пустые: у выбираемых сейчас категорий своих полей нет.
+function toVariant(values: ItemFormValues): ItemVariant {
+  return values.category === 'food'
+    ? { category: 'food', details: { satiety: Number(values.satiety) } }
+    : { category: values.category, details: {} };
+}
+
 export function toItemInput(values: ItemFormValues): ItemInput {
   return {
     name: values.name.trim(),
-    category: values.category,
-    details: {},
+    ...toVariant(values),
     rarity: values.rarity,
     weight: values.weight === '' ? 0 : Number(values.weight),
     cost:

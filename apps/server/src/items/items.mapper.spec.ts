@@ -51,6 +51,16 @@ describe('items.mapper', () => {
     });
   });
 
+  it('отдаёт насыщение еды; старая еда без него — насыщение 0', () => {
+    const food = { ...row, category: 'food' as const };
+    expect(
+      toItem({ ...food, details: { satiety: 20 } }, 'Арвен'),
+    ).toMatchObject({ category: 'food', details: { satiety: 20 } });
+    expect(toItem({ ...food, details: {} }, 'Арвен').details).toEqual({
+      satiety: 0,
+    });
+  });
+
   it('снятая цена и описание пишутся как null и пустая строка', () => {
     const dto = {
       name: 'Сюжетный ключ',

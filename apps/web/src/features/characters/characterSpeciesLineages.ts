@@ -8,7 +8,7 @@ interface SpeciesLineage {
 
 // Выбор внутри вида (редакция 2024): делается один раз при создании персонажа. Ключи
 // совпадают с SPECIES_WITH_LINEAGE из shared. Это только подсказки — значение хранится
-// свободным текстом, как подкласс. Источники и английские названия — в docs/species.md.
+// свободным текстом, как подкласс. Источники и английские названия — в docs/dnd/species.md.
 export const SPECIES_LINEAGES: Partial<
   Record<CharacterSpecies, SpeciesLineage>
 > = {

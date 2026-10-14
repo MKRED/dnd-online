@@ -6,7 +6,7 @@ import {
   type WeaponGroup,
 } from 'shared';
 
-// Русские названия оружия и его категорий (docs/proficiencies.md). Во владении оружием
+// Русские названия оружия и его категорий (docs/dnd/proficiencies.md). Во владении оружием
 // хранится ключ; «Мастерство оружия» — свободный текст, туда названия идут как подсказки.
 
 const CATEGORY_LABELS: Record<WeaponCategory, string> = {

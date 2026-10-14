@@ -1,4 +1,4 @@
-// Оружие редакции 2024 (docs/proficiencies.md): 38 видов из свободных правил по четырём
+// Оружие редакции 2024 (docs/dnd/proficiencies.md): 38 видов из свободных правил по четырём
 // группам. Это ключи для хранения; русские названия живут в web (characterWeapons.ts).
 export const WEAPONS_BY_GROUP = {
   simpleMelee: [

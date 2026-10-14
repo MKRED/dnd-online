@@ -1,6 +1,6 @@
 import { ARMOR_TRAINING, type ArmorTraining } from 'shared';
 
-// Русские названия категорий владения доспехами (docs/proficiencies.md). В данных
+// Русские названия категорий владения доспехами (docs/dnd/proficiencies.md). В данных
 // персонажа хранится ключ, а не название.
 export const ARMOR_TRAINING_LABELS: Record<ArmorTraining, string> = {
   light: 'Лёгкие',

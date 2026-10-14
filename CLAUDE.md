@@ -72,10 +72,10 @@ Read the relevant file before working in that area:
 - [docs/plan/character-images.md](docs/plan/character-images.md) covers the character images (in Russian, a living plan): the gallery, the main image and its thumbnail, the viewer; decisions (storage in Postgres, owner-only access, libraries), open questions and the stage checklist
 - [docs/plan/lolka-login.md](docs/plan/lolka-login.md) covers sign-in through lolka (OAuth 2.0 + PKCE, in Russian, a living plan): what lolka's API gives, the server-side flow, the `user_identities` table, open questions, what the user does outside the code, and the stage checklist
 - [docs/mcp.md](docs/mcp.md) covers the map MCP server: tools, connecting it, the build → look → fix loop
-- [docs/classes.md](docs/classes.md) covers the character classes: the 13 classes and their 2024 subclasses (Russian and English names, source book), where that data lives in code, and what in it is unverified
-- [docs/species.md](docs/species.md) covers the character species: the 20 species of the 2024 books (Russian and English names, source book), where that data lives in code, and what was left out
-- [docs/combat-stats.md](docs/combat-stats.md) covers the combat numbers of the character sheet: how initiative is derived and why the hit die is picked by hand
-- [docs/proficiencies.md](docs/proficiencies.md) covers the proficiencies of the character sheet: the four armor training categories, the strict weapon list, and the suggested lists of weapon masteries, tools and languages (Russian and English names)
+- [docs/dnd/classes.md](docs/dnd/classes.md) covers the character classes: the 13 classes and their 2024 subclasses (Russian and English names, source book), where that data lives in code, and what in it is unverified
+- [docs/dnd/species.md](docs/dnd/species.md) covers the character species: the 20 species of the 2024 books (Russian and English names, source book), where that data lives in code, and what was left out
+- [docs/dnd/combat-stats.md](docs/dnd/combat-stats.md) covers the combat numbers of the character sheet: how initiative is derived and why the hit die is picked by hand
+- [docs/dnd/proficiencies.md](docs/dnd/proficiencies.md) covers the proficiencies of the character sheet: the four armor training categories, the strict weapon list, and the suggested lists of weapon masteries, tools and languages (Russian and English names)
 - [docs/deploy.md](docs/deploy.md) covers deployment:
   - CI pipeline via the `deploy` branch
   - Docker image
@@ -92,10 +92,10 @@ Keep these docs current: when a change makes something in them wrong, update the
 
 The app follows the real rules of DnD 5e, **2024 edition**. Don't write rules, lists or numbers from memory, and don't invent them.
 
-- **Check `docs/` first.** If the rule or data is already recorded there ([docs/classes.md](docs/classes.md), [docs/species.md](docs/species.md), [docs/combat-stats.md](docs/combat-stats.md), [docs/proficiencies.md](docs/proficiencies.md), …), build on that.
+- **Check `docs/dnd/` first.** If the rule or data is already recorded there ([docs/dnd/classes.md](docs/dnd/classes.md), [docs/dnd/species.md](docs/dnd/species.md), [docs/dnd/combat-stats.md](docs/dnd/combat-stats.md), [docs/dnd/proficiencies.md](docs/dnd/proficiencies.md), …), build on that.
 - **If it isn't there, look it up** in the official sources before coding, and ask the user when the sources disagree or leave it open.
 - **Write down everything you find or agree on, in the same commit as the code that relies on it.** This covers both what was looked up on the web and what was decided with the user (a house rule, a simplification, something left out on purpose):
-  - one file per topic, `docs/<topic>.md`, like `classes.md`; extend an existing file rather than starting a near-duplicate, and add a new file to the Docs list above;
+  - one file per topic, `docs/dnd/<topic>.md`, like `classes.md`; extend an existing file rather than starting a near-duplicate, and add a new file to the Docs list above;
   - name the source (book and edition, or the URL) and the date it was researched;
   - mark what is unverified, and mark where the app departs from the book and why;
   - say where that data lives in code.

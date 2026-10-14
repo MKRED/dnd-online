@@ -101,7 +101,7 @@ export const SPECIES_WITH_LINEAGE: readonly CharacterSpecies[] = [
   'tiefling',
 ];
 
-// Кости хитов редакции 2024: к6, к8, к10 и к12. У каждого класса своя (docs/classes.md),
+// Кости хитов редакции 2024: к6, к8, к10 и к12. У каждого класса своя (docs/dnd/classes.md),
 // но чарник хранит её отдельным полем: игрок задаёт кость сам, независимо от класса.
 export const HIT_DICE = [6, 8, 10, 12] as const;
 export type HitDie = (typeof HIT_DICE)[number];
@@ -153,7 +153,7 @@ export interface CharacterFeature {
 }
 
 // Владение доспехами (Armor Training) в редакции 2024 — ровно четыре категории: лёгкие,
-// средние и тяжёлые доспехи и щиты (docs/proficiencies.md). Это ключи для хранения;
+// средние и тяжёлые доспехи и щиты (docs/dnd/proficiencies.md). Это ключи для хранения;
 // русские названия живут в web (characterArmorTraining.ts).
 export const ARMOR_TRAINING = ['light', 'medium', 'heavy', 'shield'] as const;
 export type ArmorTraining = (typeof ARMOR_TRAINING)[number];

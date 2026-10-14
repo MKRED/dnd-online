@@ -2,7 +2,12 @@ import { Alert, Anchor, Button, Container, Group, Loader } from '@mantine/core';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../features/auth';
-import { deleteItem, ItemDetails, useItem } from '../features/items';
+import {
+  deleteConfirmText,
+  deleteItem,
+  ItemDetails,
+  useItem,
+} from '../features/items';
 import { errorMessage } from '../lib/apiRequest';
 import { usePageTitle } from '../lib/usePageTitle';
 
@@ -18,7 +23,7 @@ function ItemViewPage() {
 
   const handleDelete = () => {
     if (!item) return;
-    if (!window.confirm(`Удалить предмет «${item.name}» безвозвратно?`)) return;
+    if (!window.confirm(deleteConfirmText(item))) return;
     setDeleteError(null);
     setDeleting(true);
     deleteItem(item.id)

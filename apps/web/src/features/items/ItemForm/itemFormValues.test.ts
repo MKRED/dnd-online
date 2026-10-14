@@ -83,4 +83,28 @@ describe('itemFormValues', () => {
       isPublic: true,
     });
   });
+
+  it('у набора в запрос уходят только ссылки и количество', () => {
+    const contents = [
+      {
+        itemId: 'i2',
+        quantity: 10,
+        item: {
+          name: 'Факел',
+          category: 'basic' as const,
+          weight: 1,
+          isPublic: true,
+          image: null,
+        },
+      },
+    ];
+    const pack = { category: 'pack', details: { contents } } as Item;
+    const values = { ...toFormValues(pack), name: 'Набор' };
+    expect(values.packContents).toBe(contents);
+    expect(toItemInput(values)).toMatchObject({
+      category: 'pack',
+      details: { contents: [{ itemId: 'i2', quantity: 10 }] },
+    });
+    expect(toFormValues(null).packContents).toEqual([]);
+  });
 });

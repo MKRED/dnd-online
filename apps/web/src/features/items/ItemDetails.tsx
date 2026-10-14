@@ -4,6 +4,7 @@ import type { Item } from 'shared';
 import { useImageUrl } from '../../lib/useImageUrls';
 import { ItemBadges } from './ItemCollection';
 import ItemThumb from './ItemThumb';
+import { PackContentsView } from './PackContents';
 import {
   TREASURE_KIND_LABELS,
   formatCapacity,
@@ -83,6 +84,9 @@ function ItemDetails({ item, actions }: ItemDetailsProps) {
             <Field label="Стоимость">{formatCost(item.cost)}</Field>
             <Field label="Автор">{item.authorNickname}</Field>
           </Stack>
+          {item.category === 'pack' && (
+            <PackContentsView contents={item.details.contents} />
+          )}
           {item.description && (
             <Text style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
               {item.description}

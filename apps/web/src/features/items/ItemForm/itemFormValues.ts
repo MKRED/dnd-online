@@ -1,3 +1,4 @@
+import type { FormPackEntry } from './PackContentsField/packContents';
 import type {
   Coin,
   Item,
@@ -26,6 +27,8 @@ export interface ItemFormValues {
   treasureKind: TreasureKind | null;
   // Пусто — груз не указан.
   capacity: number | string;
+  // Состав набора — с карточками предметов, чтобы показать строки и сложить вес.
+  packContents: FormPackEntry[];
 }
 
 export function toFormValues(item: Item | null): ItemFormValues {
@@ -44,6 +47,7 @@ export function toFormValues(item: Item | null): ItemFormValues {
     treasureKind: item?.category === 'treasure' ? item.details.kind : null,
     capacity:
       item?.category === 'container' ? (item.details.capacity ?? '') : '',
+    packContents: item?.category === 'pack' ? item.details.contents : [],
   };
 }
 
@@ -65,9 +69,16 @@ function toVariant(values: ItemFormValues): ItemInputVariant {
         },
       };
     case 'pack':
-      // Поле состава появится на этапе интерфейса (docs/plan/item-packs.md); до него
-      // категорию в форме не выбрать, а пустой состав сервер всё равно отклонит.
-      return { category: 'pack', details: { contents: [] } };
+      // Карточки строк строит сервер — ему уходят только ссылки и количество.
+      return {
+        category: 'pack',
+        details: {
+          contents: values.packContents.map(({ itemId, quantity }) => ({
+            itemId,
+            quantity: Number(quantity),
+          })),
+        },
+      };
     default:
       return { category: values.category, details: {} };
   }

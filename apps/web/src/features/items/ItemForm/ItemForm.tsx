@@ -11,6 +11,12 @@ import {
   toItemInput,
   type ItemFormValues,
 } from './itemFormValues';
+import SaveConfirm from './SaveConfirm';
+import {
+  saveConfirmation,
+  type SaveConfirmation,
+  type SaveFlags,
+} from './saveConfirmation';
 import { saveItem } from './saveItem';
 import { useImageDraft } from './useImageDraft';
 import { validateItemForm } from './validateItemForm';
@@ -25,9 +31,15 @@ interface ItemFormProps {
 
 // Форма предмета: поля и картинка сохраняются одной кнопкой.
 function ItemForm({ item, submitLabel, cancelTo, onSaved }: ItemFormProps) {
+  // Вопрос перед сохранением (публикация состава, скрытие наборов). Любая правка формы
+  // его снимает: ответ относился к прежним значениям.
+  const [confirmation, setConfirmation] = useState<SaveConfirmation | null>(
+    null,
+  );
   const form = useForm<ItemFormValues>({
     initialValues: toFormValues(item),
     validate: validateItemForm,
+    onValuesChange: () => setConfirmation(null),
   });
   const [draft, setDraft] = useImageDraft(item);
   // Предмет на сервере. При создании он появляется после первого «Сохранить»: если
@@ -37,12 +49,13 @@ function ItemForm({ item, submitLabel, cancelTo, onSaved }: ItemFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = form.onSubmit((values) => {
+  const save = (values: ItemFormValues, flags: SaveFlags) => {
+    setConfirmation(null);
     setError(null);
     setSubmitting(true);
     saveItem(
       saved?.id ?? null,
-      toItemInput(values),
+      { ...toItemInput(values), ...flags },
       draft,
       saved?.image ?? null,
     )
@@ -61,6 +74,12 @@ function ItemForm({ item, submitLabel, cancelTo, onSaved }: ItemFormProps) {
         setError(errorMessage(err, 'Не удалось сохранить предмет'));
       })
       .finally(() => setSubmitting(false));
+  };
+
+  const handleSubmit = form.onSubmit((values) => {
+    const question = saveConfirmation(values, saved);
+    if (question) setConfirmation(question);
+    else save(values, {});
   });
 
   return (
@@ -76,9 +95,17 @@ function ItemForm({ item, submitLabel, cancelTo, onSaved }: ItemFormProps) {
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 'auto' }}>
-            <ItemFields form={form} />
+            <ItemFields form={form} itemId={saved?.id ?? null} />
           </Grid.Col>
         </Grid>
+        {confirmation && (
+          <SaveConfirm
+            confirmation={confirmation}
+            // Значения уже проверены: форма с вопросом не менялась.
+            onConfirm={(flags) => save(form.getValues(), flags)}
+            onCancel={() => setConfirmation(null)}
+          />
+        )}
         {error && (
           <Alert color="red" title="Ошибка сохранения">
             {error}

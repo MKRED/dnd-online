@@ -3,9 +3,11 @@ import {
   ITEM_DESCRIPTION_MAX_LENGTH,
   ITEM_MAX_WEIGHT,
   ITEM_NAME_MAX_LENGTH,
+  ITEM_PACK_MAX_ENTRIES,
   ITEM_SATIETY_MAX,
   type ItemCategory,
 } from 'shared';
+import type { FormPackEntry } from './PackContentsField/packContents';
 
 // Те же правила, что у сервера (ItemDto): форма ловит ошибку до отправки, тексты те же.
 export const validateItemForm = {
@@ -57,6 +59,24 @@ export const validateItemForm = {
     if (capacity <= 0) return 'Груз — больше 0. Не знаете — оставьте пустым';
     return capacity > ITEM_MAX_WEIGHT
       ? `Груз — не больше ${ITEM_MAX_WEIGHT} фнт.`
+      : null;
+  },
+  // Состав проверяем целиком: ошибка показывается под блоком «Состав».
+  packContents: (
+    value: FormPackEntry[],
+    values: { category: ItemCategory },
+  ) => {
+    if (values.category !== 'pack') return null;
+    if (value.length === 0) return 'Добавьте в набор хотя бы один предмет';
+    if (value.length > ITEM_PACK_MAX_ENTRIES)
+      return `В наборе — не больше ${ITEM_PACK_MAX_ENTRIES} разных предметов`;
+    // Верхнюю границу и целое число держит само поле количества.
+    if (
+      value.some((entry) => entry.quantity === '' || Number(entry.quantity) < 1)
+    )
+      return 'Укажите количество каждого предмета — от 1';
+    return value.some((entry) => !entry.item)
+      ? 'Уберите предметы, скрытые автором: с ними набор не сохранить'
       : null;
   },
   description: (value: string) =>

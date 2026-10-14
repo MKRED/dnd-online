@@ -3,14 +3,22 @@ import type { UseFormReturnType } from '@mantine/form';
 import { ITEM_MAX_WEIGHT, ITEM_SATIETY_MAX, TREASURE_KINDS } from 'shared';
 import { TREASURE_KIND_LABELS } from '../itemLabels';
 import type { ItemFormValues } from './itemFormValues';
+import PackContentsField from './PackContentsField';
 
 const TREASURE_KIND_OPTIONS = TREASURE_KINDS.map((value) => ({
   value,
   label: TREASURE_KIND_LABELS[value],
 }));
 
+interface CategoryFieldsProps {
+  form: UseFormReturnType<ItemFormValues>;
+  // Предмет на сервере; null — ещё не создан. Нужен составу набора, чтобы не класть
+  // предмет в самого себя.
+  itemId: string | null;
+}
+
 // Свои поля категории (details). У категорий без своих полей — ничего.
-function CategoryFields({ form }: { form: UseFormReturnType<ItemFormValues> }) {
+function CategoryFields({ form, itemId }: CategoryFieldsProps) {
   return (
     <>
       {form.values.category === 'food' && (
@@ -58,6 +66,9 @@ function CategoryFields({ form }: { form: UseFormReturnType<ItemFormValues> }) {
             {...form.getInputProps('capacity')}
           />
         </SimpleGrid>
+      )}
+      {form.values.category === 'pack' && (
+        <PackContentsField form={form} selfId={itemId} />
       )}
     </>
   );

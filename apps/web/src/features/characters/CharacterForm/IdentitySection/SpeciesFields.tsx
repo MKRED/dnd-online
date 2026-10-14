@@ -24,19 +24,19 @@ function SpeciesFields({ form }: SpeciesFieldsProps) {
 
   const lineage = species ? SPECIES_LINEAGES[species] : undefined;
   let lineagePlaceholder = 'Выберите или впишите свой';
-  if (!species) lineagePlaceholder = 'Сначала выберите вид';
-  else if (!lineage) lineagePlaceholder = 'У этого вида выбора нет';
+  if (!species) lineagePlaceholder = 'Сначала выберите расу';
+  else if (!lineage) lineagePlaceholder = 'У этой расы выбора нет';
 
   return (
     <>
       <Grid.Col span={{ base: 12, sm: 4 }}>
         <Select
-          label="Вид"
-          placeholder="Выберите вид"
+          label="Раса"
+          placeholder="Выберите расу"
           data={SPECIES_OPTIONS}
           searchable
           allowDeselect={false}
-          nothingFoundMessage="Такого вида нет"
+          nothingFoundMessage="Такой расы нет"
           required
           {...form.getInputProps('species')}
           onChange={(value) => {

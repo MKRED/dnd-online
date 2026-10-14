@@ -8,6 +8,7 @@ Reference for the species data behind the character sheet. The sheet follows the
 - `apps/server/src/characters/dto/create-character.dto.ts` — the server rejects a species outside that list.
 - `apps/web/src/features/characters/characterSpecies.ts` — Russian names (`SPECIES_LABELS`) and the sorted select options.
 - The form (`CharacterForm/IdentitySection/IdentitySection.tsx`) offers the species as a strict select: unlike the subclass, a homebrew species cannot be typed in.
+- **The UI calls it «Раса», not «Вид».** The 2024 books renamed race to species, and next.dnd.su translates it as «вид», but the user asked for the familiar «Раса» (2026-10-15). Only the user-facing strings say «раса» (field label, placeholder, server error messages); the code keeps `species`.
 
 Six species also make a choice inside the species (elven lineage, draconic ancestry and the like); see [Choices inside a species](#choices-inside-a-species-lineage).
 

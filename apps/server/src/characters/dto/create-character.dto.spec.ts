@@ -39,9 +39,9 @@ describe('CreateCharacterDto', () => {
   });
 
   it('отклоняет вид не из справочника', async () => {
-    expect(await speciesErrors('Эльф')).toEqual(['Неизвестный вид персонажа']);
+    expect(await speciesErrors('Эльф')).toEqual(['Неизвестная раса персонажа']);
     expect(await speciesErrors(undefined)).toEqual([
-      'Неизвестный вид персонажа',
+      'Неизвестная раса персонажа',
     ]);
   });
 
@@ -58,7 +58,7 @@ describe('CreateCharacterDto', () => {
         species: 'human',
         speciesLineage: 'Дроу',
       }),
-    ).toEqual(['У этого вида нет рода или наследия']);
+    ).toEqual(['У этой расы нет рода или наследия']);
   });
 
   it('принимает только существующую кость хитов', async () => {

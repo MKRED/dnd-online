@@ -26,7 +26,7 @@ const FIELD_ORDER = [
 
 const FIELD_LABELS: Record<string, string> = {
   name: 'Имя',
-  species: 'Вид',
+  species: 'Раса',
   background: 'Предыстория',
   proficiencyBonus: 'Бонус мастерства',
   armorClass: 'Класс доспеха',

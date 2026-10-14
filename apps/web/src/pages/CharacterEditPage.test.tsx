@@ -39,8 +39,8 @@ describe('CharacterEditPage', () => {
     renderEditPage();
 
     expect(await screen.findByLabelText(/Имя/)).toHaveValue('Арагорн');
-    // Вид — Select: у него подпись «Вид» есть и на поле, и на списке вариантов.
-    expect(screen.getByRole('combobox', { name: /Вид/ })).toHaveValue(
+    // Раса — Select: у него подпись «Раса» есть и на поле, и на списке вариантов.
+    expect(screen.getByRole('combobox', { name: /Раса/ })).toHaveValue(
       'Человек',
     );
   });

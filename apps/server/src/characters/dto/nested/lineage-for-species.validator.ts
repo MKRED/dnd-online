@@ -16,7 +16,7 @@ export function LineageForSpecies() {
           return SPECIES_WITH_LINEAGE.includes(species as CharacterSpecies);
         },
         defaultMessage() {
-          return 'У этого вида нет рода или наследия';
+          return 'У этой расы нет рода или наследия';
         },
       },
     });

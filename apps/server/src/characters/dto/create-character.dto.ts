@@ -71,7 +71,7 @@ export class CreateCharacterDto {
   @Length(1, 100)
   name: string;
 
-  @IsIn(CHARACTER_SPECIES, { message: 'Неизвестный вид персонажа' })
+  @IsIn(CHARACTER_SPECIES, { message: 'Неизвестная раса персонажа' })
   species: CharacterSpecies;
 
   @IsOptional()

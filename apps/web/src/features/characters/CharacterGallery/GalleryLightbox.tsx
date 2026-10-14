@@ -10,6 +10,7 @@ import {
   IconExitFullscreen,
   IconThumbnails,
 } from './galleryIcons';
+import { useZoomedViewport } from './useZoomedViewport';
 
 // Прозрачный пиксель: слайду нужен src сразу, а картинка ещё грузится.
 const EMPTY_PIXEL =
@@ -52,6 +53,8 @@ function GalleryLightbox({
   onClose,
 }: GalleryLightboxProps) {
   const [index, setIndex] = useState(initialIndex);
+  // Если страницу приблизили щипком, слой ставим на видимую её часть.
+  const zoomed = useZoomedViewport();
   // Полные картинки грузим не все сразу, а для открытой и её соседей; просмотренные
   // остаются загруженными, пока просмотрщик открыт.
   const [visited, setVisited] = useState(() => new Set([initialIndex]));
@@ -140,6 +143,8 @@ function GalleryLightbox({
       vars={() => ({
         root: { '--lightbox-overlay-color': '#000' },
       })}
+      styles={{ overlay: zoomed?.box, content: zoomed?.box }}
+      transitionProps={zoomed && { transition: zoomed.transition }}
     />
   );
 }

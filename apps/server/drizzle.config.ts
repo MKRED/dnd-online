@@ -13,6 +13,7 @@ export default defineConfig({
     './src/database/schema/map-chunks.ts',
     './src/database/schema/map-ops.ts',
     './src/database/schema/api-tokens.ts',
+    './src/database/schema/user-identities.ts',
   ],
   dialect: 'postgresql',
   dbCredentials: {

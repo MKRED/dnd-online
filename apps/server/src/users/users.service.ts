@@ -9,7 +9,7 @@ type User = typeof users.$inferSelect;
 export interface CreateUserInput {
   login: string;
   nickname: string;
-  passwordHash: string;
+  passwordHash: string | null;
 }
 
 @Injectable()

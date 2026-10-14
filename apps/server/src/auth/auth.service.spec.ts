@@ -18,7 +18,13 @@ import { TokenService } from './token.service.js';
 const BCRYPT_ROUNDS_FOR_TESTS = 4;
 
 describe('AuthService', () => {
-  const storedUser = {
+  const storedUser: {
+    id: string;
+    login: string;
+    nickname: string;
+    passwordHash: string | null;
+    createdAt: Date;
+  } = {
     id: 'u1',
     login: 'bob',
     nickname: 'Bob',
@@ -130,6 +136,17 @@ describe('AuthService', () => {
 
     await expect(
       service.login({ login: 'bob', password: 'wrong-password' }),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('rejects login for an account without a password (created via lolka)', async () => {
+    usersService.findByLogin.mockResolvedValue({
+      ...storedUser,
+      passwordHash: null,
+    });
+
+    await expect(
+      service.login({ login: 'bob', password: 'whatever' }),
     ).rejects.toThrow(UnauthorizedException);
   });
 

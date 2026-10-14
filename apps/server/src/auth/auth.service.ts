@@ -56,7 +56,12 @@ export class AuthService {
     dto: LoginDto,
   ): Promise<{ user: PublicUser; tokens: AuthTokens }> {
     const user = await this.usersService.findByLogin(dto.login);
-    if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
+    // Без хэша — аккаунт из лольки, пароль ему ещё не задали: отказ тем же ответом,
+    // чтобы по ошибке нельзя было узнать, что такой логин есть.
+    const passwordOk =
+      user?.passwordHash != null &&
+      (await bcrypt.compare(dto.password, user.passwordHash));
+    if (!user || !passwordOk) {
       this.logger.warn({ login: dto.login }, 'Login attempt failed');
       throw new UnauthorizedException('Invalid login or password');
     }

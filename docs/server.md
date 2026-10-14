@@ -25,7 +25,7 @@ NestJS 12 + TypeScript 6, **native ESM** (`"type": "module"`), Express platform.
 Drizzle ORM (`drizzle-orm/node-postgres`, `pg` driver) against Postgres.
 
 - `DatabaseModule` (`src/database/`) is `@Global()` and exports `DatabaseService`: owns the `pg.Pool` and the drizzle instance (`databaseService.db`), checks connectivity with `select 1` in `onModuleInit`, closes the pool in `onModuleDestroy`.
-- Schema: `src/database/schema/`, one file per table (`users.ts`, `refresh-tokens.ts`, `characters.ts`, …) plus an `index.ts` barrel (what `import * as schema` in `database.service.ts` resolves to). Add new tables as new files there.
+- Schema: `src/database/schema/`, one file per table (`users.ts`, `refresh-tokens.ts`, `characters.ts`, …) plus an `index.ts` barrel (what `import * as schema` in `database.service.ts` resolves to). Add new tables as new files there. A new table file must also go into the list in `drizzle.config.ts`, or `db:generate` silently leaves it out.
 - `drizzle.config.ts` lists the individual table files (not the barrel) so drizzle-kit doesn't see tables twice. It runs outside Nest DI, so it loads `DATABASE_URL` itself via `import 'dotenv/config'`.
 - `DATABASE_URL` comes from `apps/server/.env` (gitignored; shape in `.env.example`), read through `ConfigModule.forRoot({ isGlobal: true })`. Never hardcode it.
 - **Migrations are not run on boot.** `pnpm db:generate` writes a migration into `apps/server/drizzle/`, `pnpm db:migrate` applies it. A schema change must come with its migration.
@@ -55,6 +55,7 @@ Drizzle ORM (`drizzle-orm/node-postgres`, `pg` driver) against Postgres.
 
 - JWT access + refresh tokens in `httpOnly`, `sameSite: lax` cookies (`access_token`, `refresh_token`; `secure` in production). Secrets/TTLs from `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACCESS_EXPIRES_SEC` (default 15 min), `JWT_REFRESH_EXPIRES_SEC` (default 30 days).
 - **API tokens** (`api-tokens` module) are for external clients — the map MCP server. Format `dnd_<random>`, only the sha256 hash and a display prefix are stored. `SessionOrApiTokenGuard` (used by the maps controllers) accepts either the cookie session or `Authorization: Bearer dnd_…`; `/api-tokens` itself is cookie-only (`AuthGuard`), so a leaked token can't mint new ones. A token's reach is exactly the routes that use that guard — today only maps.
+- `users.password_hash` is nullable: an account created by signing in through lolka has no password until its owner sets one, and `login` refuses it with the same `Invalid login or password` 401 as a wrong password. External sign-in identities live in `user_identities` (`provider` + `subject`, unique both ways); plan in [plan/lolka-login.md](plan/lolka-login.md).
 - Refresh tokens carry a random `jti` and are stored in the DB only as a sha256 hash (`RefreshTokenService`); refresh rotates the token.
 - `AuthGuard` reads the access cookie and puts the payload on `request.user`.
 

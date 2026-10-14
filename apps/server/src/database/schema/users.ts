@@ -4,7 +4,8 @@ export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   login: varchar('login', { length: 32 }).notNull().unique(),
   nickname: varchar('nickname', { length: 64 }).notNull(),
-  passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+  // null — аккаунт создан входом через лольку и пароль ещё не задан: по логину в него не войти.
+  passwordHash: varchar('password_hash', { length: 255 }),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

@@ -1,10 +1,14 @@
 import { Alert, Button, Group, Stack } from '@mantine/core';
-import { useForm } from '@mantine/form';
+import { useForm, type FormErrors } from '@mantine/form';
+import type { FormEvent } from 'react';
 import { ABILITY_SCORES } from 'shared';
 import type { CharacterFormValues } from '../characterFormValues';
 import AbilityScoresSection from './AbilityScoresSection';
 import CombatSection from './CombatSection';
 import CurrencyPersonalitySection from './CurrencyPersonalitySection';
+import { focusField } from './focusField';
+import { errorFields } from './formErrorFields';
+import FormErrorSummary from './FormErrorSummary';
 import IdentitySection from './IdentitySection';
 import ProficienciesSection from './ProficienciesSection';
 
@@ -67,20 +71,41 @@ function CharacterForm({
     },
   });
 
+  const invalid = errorFields(form.errors);
+
+  // Кнопка внизу длинной формы, а ошибки могут быть в самом начале: ведём к первой.
+  const handleInvalid = (
+    errors: FormErrors,
+    _values: CharacterFormValues,
+    event?: FormEvent<HTMLFormElement>,
+  ) => {
+    const [first] = errorFields(errors);
+    if (first && event) focusField(event.currentTarget, first.path);
+  };
+
   return (
-    <form onSubmit={form.onSubmit(onSubmit)}>
+    // noValidate: обязательные поля проверяет форма, а не браузер. Его подсказка
+    // показывается иначе, прячет поле под шапку и не попадает в сводку у кнопки.
+    <form noValidate onSubmit={form.onSubmit(onSubmit, handleInvalid)}>
       <Stack>
-        {submitError && (
-          <Alert color="red" title={errorTitle}>
-            {submitError}
-          </Alert>
-        )}
         <IdentitySection form={form} />
         <AbilityScoresSection form={form} />
         <CombatSection form={form} />
         <ProficienciesSection form={form} />
         <CurrencyPersonalitySection form={form} />
 
+        {invalid.length > 0 && (
+          <FormErrorSummary
+            fields={invalid}
+            onPick={(path, from) => focusField(from, path)}
+          />
+        )}
+        {/* Ошибка сервера — тоже у кнопки: её нажимают внизу страницы. */}
+        {submitError && (
+          <Alert color="red" title={errorTitle}>
+            {submitError}
+          </Alert>
+        )}
         <Group justify="flex-end">
           <Button type="submit" loading={submitting}>
             {submitLabel}

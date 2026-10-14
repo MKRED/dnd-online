@@ -1,5 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, or } from 'drizzle-orm';
 import type { CharacterImage, CharacterMainImage } from 'shared';
 import type {
   DatabaseService,
@@ -28,6 +28,26 @@ export async function assertOwnedCharacter(
     .where(and(eq(characters.id, characterId), eq(characters.userId, userId)))
     .limit(1);
   const [row] = forUpdate ? await query.for('update') : await query;
+  if (!row) throw new NotFoundException(CHARACTER_NOT_FOUND);
+}
+
+// Право смотреть галерею: автор или любой вошедший, если персонаж открыт по ссылке.
+// Закрытый чужой персонаж неотличим от несуществующего.
+export async function assertViewableCharacter(
+  db: Db,
+  userId: string,
+  characterId: string,
+): Promise<void> {
+  const [row] = await db
+    .select({ id: characters.id })
+    .from(characters)
+    .where(
+      and(
+        eq(characters.id, characterId),
+        or(eq(characters.userId, userId), eq(characters.linkAccess, 'link')),
+      ),
+    )
+    .limit(1);
   if (!row) throw new NotFoundException(CHARACTER_NOT_FOUND);
 }
 

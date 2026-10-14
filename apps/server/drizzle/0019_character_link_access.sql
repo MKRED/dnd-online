@@ -1,0 +1,1 @@
+ALTER TABLE "characters" ADD COLUMN "link_access" varchar(20) DEFAULT 'private' NOT NULL;

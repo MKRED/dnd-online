@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, or } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { loadMainImages } from '../character-images/character-image-access.js';
 import { DatabaseService } from '../database/database.service.js';
-import { characters } from '../database/schema/index.js';
+import { characters, users } from '../database/schema/index.js';
+import { nicknameOf } from './character-author.js';
 import {
   toCharacter,
   toInsertValues,
@@ -31,7 +32,10 @@ export class CharactersService {
         { durationMs: Date.now() - t0, userId, characterId: row.id },
         'Character created',
       );
-      return toCharacter(row);
+      return toCharacter(row, {
+        mainImage: null,
+        authorNickname: await nicknameOf(this.databaseService.db, userId),
+      });
     } catch (err: unknown) {
       this.logger.error(
         { err, durationMs: Date.now() - t0, userId },
@@ -45,22 +49,26 @@ export class CharactersService {
     const t0 = Date.now();
     try {
       const rows = await this.databaseService.db
-        .select()
+        .select({ row: characters, authorNickname: users.nickname })
         .from(characters)
+        .innerJoin(users, eq(users.id, characters.userId))
         .where(eq(characters.userId, userId))
         // createdAt — тай-брейкер для записей с одинаковым updatedAt (например,
         // проставленным миграцией), чтобы порядок не прыгал между запросами.
         .orderBy(desc(characters.updatedAt), desc(characters.createdAt));
       const mainImages = await loadMainImages(
         this.databaseService.db,
-        rows.map((row) => row.id),
+        rows.map(({ row }) => row.id),
       );
       this.logger.debug(
         { durationMs: Date.now() - t0, userId, count: rows.length },
         'Characters listed',
       );
-      return rows.map((row) =>
-        toCharacter(row, mainImages.get(row.id) ?? null),
+      return rows.map(({ row, authorNickname }) =>
+        toCharacter(row, {
+          mainImage: mainImages.get(row.id) ?? null,
+          authorNickname,
+        }),
       );
     } catch (err: unknown) {
       this.logger.error(
@@ -71,27 +79,42 @@ export class CharactersService {
     }
   }
 
-  async findOneForUser(userId: string, id: string) {
+  // Автору — всегда, остальным — если открыт доступ по ссылке. Закрытый чужой персонаж
+  // неотличим от несуществующего.
+  async findOneVisible(userId: string, id: string) {
     const t0 = Date.now();
     try {
-      const [row] = await this.databaseService.db
-        .select()
+      const [found] = await this.databaseService.db
+        .select({ row: characters, authorNickname: users.nickname })
         .from(characters)
-        .where(and(eq(characters.id, id), eq(characters.userId, userId)))
+        .innerJoin(users, eq(users.id, characters.userId))
+        .where(
+          and(
+            eq(characters.id, id),
+            or(
+              eq(characters.userId, userId),
+              eq(characters.linkAccess, 'link'),
+            ),
+          ),
+        )
         .limit(1);
       this.logger.debug(
         {
           durationMs: Date.now() - t0,
           userId,
           characterId: id,
-          found: Boolean(row),
+          found: Boolean(found),
+          own: found ? found.row.userId === userId : undefined,
         },
         'Character lookup',
       );
-      if (!row) {
+      if (!found) {
         throw new NotFoundException('Персонаж не найден');
       }
-      return toCharacter(row, await this.mainImageOf(id));
+      return toCharacter(found.row, {
+        mainImage: await this.mainImageOf(id),
+        authorNickname: found.authorNickname,
+      });
     } catch (err: unknown) {
       if (err instanceof NotFoundException) {
         throw err;
@@ -108,8 +131,10 @@ export class CharactersService {
     // Пустой PATCH ({}) — валидный запрос по DTO (все поля @IsOptional()), но
     // drizzle's .set({}) синхронно бросает "No values to set". Раз обновлять
     // нечего, просто отдаём текущую запись (заодно проверяя владение/существование).
-    if (Object.keys(dto).length === 0) {
-      return this.findOneForUser(userId, id);
+    // Смотрим на значения, а не на ключи: у экземпляра DTO неприсланные поля — свои
+    // ключи со значением undefined.
+    if (Object.values(dto).every((value) => value === undefined)) {
+      return this.findOwn(userId, id);
     }
     return this.applyUpdate(userId, id, dto, 'patch');
   }
@@ -140,7 +165,10 @@ export class CharactersService {
         { durationMs: Date.now() - t0, userId, characterId: id, kind },
         'Character updated',
       );
-      return toCharacter(row, await this.mainImageOf(id));
+      return toCharacter(row, {
+        mainImage: await this.mainImageOf(id),
+        authorNickname: await nicknameOf(this.databaseService.db, userId),
+      });
     } catch (err: unknown) {
       if (err instanceof NotFoundException) {
         throw err;
@@ -151,6 +179,15 @@ export class CharactersService {
       );
       throw err;
     }
+  }
+
+  // Свой персонаж: пустой PATCH не должен отдавать чужого, даже открытого по ссылке.
+  private async findOwn(userId: string, id: string) {
+    const character = await this.findOneVisible(userId, id);
+    if (character.userId !== userId) {
+      throw new NotFoundException('Персонаж не найден');
+    }
+    return character;
   }
 
   private async mainImageOf(characterId: string) {

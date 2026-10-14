@@ -8,12 +8,12 @@ import {
   characterImages,
 } from '../database/schema/index.js';
 import {
-  assertOwnedCharacter,
+  assertViewableCharacter,
   IMAGE_NOT_FOUND,
   toCharacterImage,
 } from './character-image-access.js';
 
-// Чтение галереи: список метаданных и байты вариантов. Правки — в CharacterImageEditService.
+// Чтение галереи: список метаданных и байты вариантов. Читать может и зритель по ссылке. Правки — в CharacterImageEditService.
 @Injectable()
 export class CharacterImagesService {
   constructor(
@@ -26,7 +26,7 @@ export class CharacterImagesService {
     const t0 = Date.now();
     try {
       const { db } = this.databaseService;
-      await assertOwnedCharacter(db, userId, characterId, { forUpdate: false });
+      await assertViewableCharacter(db, userId, characterId);
       const rows = await db
         .select()
         .from(characterImages)
@@ -56,7 +56,7 @@ export class CharacterImagesService {
     const t0 = Date.now();
     try {
       const { db } = this.databaseService;
-      await assertOwnedCharacter(db, userId, characterId, { forUpdate: false });
+      await assertViewableCharacter(db, userId, characterId);
       const [row] = await db
         .select({ data: characterImageFiles.data })
         .from(characterImageFiles)

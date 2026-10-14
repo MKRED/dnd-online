@@ -13,6 +13,7 @@ import type {
   CharacterClassLevel,
   CharacterCurrency,
   CharacterFeature,
+  CharacterLinkAccess,
   CharacterPersonality,
   CharacterProficiencies,
   CharacterSpecies,
@@ -96,6 +97,13 @@ export const characters = pgTable('characters', {
 
   features: jsonb('features').notNull().$type<CharacterFeature[]>().default([]),
   personality: jsonb('personality').notNull().$type<CharacterPersonality>(),
+
+  // Доступ по ссылке (CHARACTER_LINK_ACCESS из shared); список проверяет DTO. Строка, а не
+  // boolean: позже может появиться доступ для участников кампании.
+  linkAccess: varchar('link_access', { length: 20 })
+    .$type<CharacterLinkAccess>()
+    .notNull()
+    .default('private'),
 
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()

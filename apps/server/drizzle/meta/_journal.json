@@ -134,6 +134,13 @@
       "when": 1791975297610,
       "tag": "0018_item_pack_entries",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791998800036,
+      "tag": "0019_character_link_access",
+      "breakpoints": true
     }
   ]
 }

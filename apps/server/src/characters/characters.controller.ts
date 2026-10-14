@@ -14,14 +14,19 @@ import {
 } from '@nestjs/common';
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import { AuthGuard } from '../auth/auth.guard.js';
+import { CharacterAccessService } from './character-access.service.js';
 import { CharactersService } from './characters.service.js';
 import { CreateCharacterDto } from './dto/create-character.dto.js';
+import { UpdateCharacterAccessDto } from './dto/update-character-access.dto.js';
 import { UpdateCharacterDto } from './dto/update-character.dto.js';
 
 @Controller('characters')
 @UseGuards(AuthGuard)
 export class CharactersController {
-  constructor(private readonly charactersService: CharactersService) {}
+  constructor(
+    private readonly charactersService: CharactersService,
+    private readonly accessService: CharacterAccessService,
+  ) {}
 
   @Post()
   create(@Req() req: AuthenticatedRequest, @Body() dto: CreateCharacterDto) {
@@ -33,12 +38,13 @@ export class CharactersController {
     return this.charactersService.findAllForUser(req.user.sub);
   }
 
+  // Свой персонаж или чужой, открытый по ссылке.
   @Get(':id')
   findOne(
     @Req() req: AuthenticatedRequest,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.charactersService.findOneForUser(req.user.sub, id);
+    return this.charactersService.findOneVisible(req.user.sub, id);
   }
 
   @Put(':id')
@@ -48,6 +54,15 @@ export class CharactersController {
     @Body() dto: CreateCharacterDto,
   ) {
     return this.charactersService.replace(req.user.sub, id, dto);
+  }
+
+  @Put(':id/access')
+  setAccess(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateCharacterAccessDto,
+  ) {
+    return this.accessService.setLinkAccess(req.user.sub, id, dto.linkAccess);
   }
 
   @Patch(':id')

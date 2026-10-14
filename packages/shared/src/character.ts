@@ -199,6 +199,11 @@ export interface CharacterPersonality {
   appearance?: string;
 }
 
+// Кто может открыть персонажа: только автор или любой вошедший, у кого есть ссылка
+// (адрес страницы персонажа). Изменять его может только автор при любом доступе.
+export const CHARACTER_LINK_ACCESS = ['private', 'link'] as const;
+export type CharacterLinkAccess = (typeof CHARACTER_LINK_ACCESS)[number];
+
 export interface Character {
   id: string;
   userId: string;
@@ -236,6 +241,9 @@ export interface Character {
   personality: CharacterPersonality;
   // Основная картинка галереи; null, пока картинок нет.
   mainImage: CharacterMainImage | null;
+  linkAccess: CharacterLinkAccess;
+  // Ник автора: по ссылке персонажа открывают и другие игроки.
+  authorNickname: string;
   createdAt: string;
   updatedAt: string;
 }

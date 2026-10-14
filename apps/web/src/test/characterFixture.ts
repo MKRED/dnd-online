@@ -52,6 +52,8 @@ export const sampleCharacter: Character = {
   features: [],
   personality: { traits: 'Молчалив', backstory: 'Долгая история' },
   mainImage: null,
+  linkAccess: 'private',
+  authorNickname: 'claude_smoketest',
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-02T00:00:00.000Z',
 };

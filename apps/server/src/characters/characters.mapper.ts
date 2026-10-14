@@ -13,11 +13,14 @@ type NewCharacterRow = typeof characters.$inferInsert;
 
 // DB хранит характеристики плоскими колонками (см. characters.ts), а общий тип Character
 // группирует их в abilityScores — маппинг в обе стороны неизбежен, это не лишний слой.
-// mainImage приходит отдельным запросом к галерее (loadMainImages): в строке персонажа
-// его нет.
+// mainImage приходит отдельным запросом к галерее (loadMainImages), ник автора — из
+// users: в строке персонажа их нет.
 export function toCharacter(
   row: CharacterRow,
-  mainImage: CharacterMainImage | null = null,
+  {
+    mainImage,
+    authorNickname,
+  }: { mainImage: CharacterMainImage | null; authorNickname: string },
 ): Character {
   return {
     id: row.id,
@@ -59,6 +62,8 @@ export function toCharacter(
     features: row.features,
     personality: row.personality,
     mainImage,
+    linkAccess: row.linkAccess,
+    authorNickname,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

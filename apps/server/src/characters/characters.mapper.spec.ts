@@ -54,6 +54,16 @@ describe('toSheetValues', () => {
     }
   });
 
+  // Доступ по ссылке меняется отдельным запросом; сохранение формы его не сбрасывает,
+  // даже если клиент пришлёт поле в теле.
+  it('never sets the link access', () => {
+    const values = toSheetValues({
+      ...dto,
+      linkAccess: 'link',
+    } as CreateCharacterDto);
+    expect(values).not.toHaveProperty('linkAccess');
+  });
+
   it('is what toInsertValues uses, plus the owner', () => {
     expect(toInsertValues('user-1', dto)).toEqual({
       userId: 'user-1',

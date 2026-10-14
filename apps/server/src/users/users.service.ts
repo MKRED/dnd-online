@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { DatabaseService } from '../database/database.service.js';
 import { users } from '../database/schema/index.js';
@@ -59,5 +59,38 @@ export class UsersService {
       'User created',
     );
     return user;
+  }
+
+  // Логин и пароль аккаунту, созданному через лольку. Условие `password_hash IS NULL`
+  // в самом UPDATE: два параллельных запроса не перезапишут уже заданный пароль.
+  // Вернёт false, если пароль уже был. Занятый логин — ошибка unique от базы.
+  async setCredentials(
+    id: string,
+    login: string,
+    passwordHash: string,
+  ): Promise<boolean> {
+    const t0 = Date.now();
+    const updated = await this.databaseService.db
+      .update(users)
+      .set({ login, passwordHash })
+      .where(and(eq(users.id, id), isNull(users.passwordHash)))
+      .returning({ id: users.id });
+    this.logger.info(
+      { durationMs: Date.now() - t0, id, updated: updated.length },
+      'User credentials set',
+    );
+    return updated.length > 0;
+  }
+
+  async updatePassword(id: string, passwordHash: string): Promise<void> {
+    const t0 = Date.now();
+    await this.databaseService.db
+      .update(users)
+      .set({ passwordHash })
+      .where(eq(users.id, id));
+    this.logger.info(
+      { durationMs: Date.now() - t0, id },
+      'User password changed',
+    );
   }
 }

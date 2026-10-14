@@ -19,7 +19,7 @@ export interface ExternalIdentity {
 const NICKNAME_MAX = 64;
 
 // Postgres: нарушение уникальности. Drizzle кладёт ошибку драйвера в `cause`.
-function isUniqueViolation(err: unknown): boolean {
+export function isUniqueViolation(err: unknown): boolean {
   const code = (e: unknown) => (e as { code?: unknown } | null)?.code;
   return (
     code(err) === '23505' ||
@@ -84,6 +84,20 @@ export class UserIdentitiesService {
       );
       throw err;
     }
+  }
+
+  // Какими внешними сервисами пользователь может войти — для страницы профиля.
+  async providersOf(userId: string): Promise<string[]> {
+    const t0 = Date.now();
+    const rows = await this.databaseService.db
+      .select({ provider: userIdentities.provider })
+      .from(userIdentities)
+      .where(eq(userIdentities.userId, userId));
+    this.logger.debug(
+      { durationMs: Date.now() - t0, userId, count: rows.length },
+      'External identities listed',
+    );
+    return rows.map((row) => row.provider);
   }
 
   private async findUser(

@@ -11,7 +11,7 @@ import { RegisterDto } from './dto/register.dto.js';
 import { RefreshTokenService } from './refresh-token.service.js';
 import { TokenService } from './token.service.js';
 
-const PASSWORD_SALT_ROUNDS = 10;
+export const PASSWORD_SALT_ROUNDS = 10;
 
 export interface AuthTokens {
   accessToken: string;

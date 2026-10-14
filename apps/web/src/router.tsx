@@ -10,6 +10,7 @@ import LoginPage from './pages/LoginPage';
 import MapsPage from './pages/MapsPage';
 import MapViewPage from './pages/MapViewPage';
 import NotFoundPage from './pages/NotFoundPage';
+import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
 
 export const router = createBrowserRouter([
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
           { path: '/maps', element: <MapsPage /> },
           { path: '/maps/:id', element: <MapViewPage /> },
           { path: '/tokens', element: <ApiTokensPage /> },
+          { path: '/profile', element: <ProfilePage /> },
           { path: '*', element: <NotFoundPage /> },
         ],
       },

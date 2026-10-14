@@ -7,6 +7,8 @@ import { AuthGuard } from './auth.guard.js';
 import { AuthService } from './auth.service.js';
 import { LolkaOAuthService } from './lolka/lolka-oauth.service.js';
 import { LolkaController } from './lolka/lolka.controller.js';
+import { ProfileController } from './profile/profile.controller.js';
+import { ProfileService } from './profile/profile.service.js';
 import { RefreshTokenService } from './refresh-token.service.js';
 import { TokenService } from './token.service.js';
 
@@ -23,13 +25,14 @@ import { TokenService } from './token.service.js';
       errorMessage: 'Слишком много попыток, попробуйте позже',
     }),
   ],
-  controllers: [AuthController, LolkaController],
+  controllers: [AuthController, LolkaController, ProfileController],
   providers: [
     AuthService,
     TokenService,
     RefreshTokenService,
     AuthGuard,
     LolkaOAuthService,
+    ProfileService,
   ],
   exports: [AuthGuard, TokenService],
 })

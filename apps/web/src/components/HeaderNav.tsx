@@ -38,9 +38,19 @@ function HeaderNav() {
             {label}
           </Button>
         ))}
-        <Text fw={500} maw={200} truncate>
-          {user.nickname}
-        </Text>
+        {/* Ник ведёт в профиль: там логин, пароль и способы входа. */}
+        <Button
+          component={Link}
+          to="/profile"
+          variant="subtle"
+          size="sm"
+          maw={200}
+          title="Профиль"
+        >
+          <Text span inherit truncate>
+            {user.nickname}
+          </Text>
+        </Button>
         <Button variant="subtle" size="sm" onClick={() => void logout()}>
           Выйти
         </Button>
@@ -72,6 +82,9 @@ function HeaderNav() {
             </Menu.Item>
           ))}
           <Menu.Divider />
+          <Menu.Item component={Link} to="/profile">
+            Профиль
+          </Menu.Item>
           <Menu.Item onClick={() => void logout()}>Выйти</Menu.Item>
         </Menu.Dropdown>
       </Menu>

@@ -17,7 +17,8 @@ const user = { id: 'u1', login: 'lolka_ab12cd34', nickname: 'Арвен' };
 function fakeRes() {
   const cookies: Record<string, string> = {};
   const res = {
-    cookie: vi.fn((name: string, value: string) => {
+    cookie: vi.fn((name: string, value: string, _options?: object) => {
+      void _options;
       cookies[name] = value;
     }),
     clearCookie: vi.fn(),

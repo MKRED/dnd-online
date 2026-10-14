@@ -89,7 +89,17 @@ function CharacterEditPage() {
   return (
     <Container size="md" py="xl">
       <Group justify="space-between" align="center" mb="lg">
-        <Title order={1}>
+        {/* Одно слово «Редактирование:» шрифтом h1 шире экрана телефона, а длинное имя
+            может не влезть само: страница становилась шире экрана, и браузер отдалял её.
+            На узком экране шрифт меньше, слишком длинное слово переносится. */}
+        <Title
+          order={1}
+          miw={0}
+          style={{
+            fontSize: 'min(var(--mantine-h1-font-size), 8vw)',
+            overflowWrap: 'anywhere',
+          }}
+        >
           {character ? `Редактирование: ${character.name}` : 'Редактирование'}
         </Title>
         <Anchor component={Link} to="/characters" size="sm">

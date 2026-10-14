@@ -64,8 +64,8 @@ export type CharacterClass = (typeof CHARACTER_CLASSES)[number];
 export const SUBCLASS_MIN_LEVEL = 3;
 
 // Виды редакции 2024 из печатных книг: 10 из Player's Handbook, 5 из Eberron: Forge of the
-// Artificer и 4 из Ravenloft: The Horrors Within. Это ключи для хранения; русские названия
-// живут в web (characterSpecies.ts).
+// Artificer, 4 из Ravenloft: The Horrors Within и фея из Lorwyn: First Light. Это ключи для
+// хранения; русские названия живут в web (characterSpecies.ts).
 export const CHARACTER_SPECIES = [
   'aasimar',
   'changeling',
@@ -73,6 +73,7 @@ export const CHARACTER_SPECIES = [
   'dragonborn',
   'dwarf',
   'elf',
+  'faerie',
   'gnome',
   'goliath',
   'halfling',

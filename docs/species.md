@@ -4,7 +4,7 @@ Reference for the species data behind the character sheet. The sheet follows the
 
 ## How it is used in code
 
-- `packages/shared/src/character.ts` — `CHARACTER_SPECIES`, the 19 species keys. A character stores the key (`elf`), never the Russian name.
+- `packages/shared/src/character.ts` — `CHARACTER_SPECIES`, the 20 species keys. A character stores the key (`elf`), never the Russian name.
 - `apps/server/src/characters/dto/create-character.dto.ts` — the server rejects a species outside that list.
 - `apps/web/src/features/characters/characterSpecies.ts` — Russian names (`SPECIES_LABELS`) and the sorted select options.
 - The form (`CharacterForm/IdentitySection/IdentitySection.tsx`) offers the species as a strict select: unlike the subclass, a homebrew species cannot be typed in.
@@ -22,7 +22,7 @@ Six species also make a choice inside the species (elven lineage, draconic ances
 | LFL  | Lorwyn: First Light                     |
 | DDB  | D&D Beyond Drops (digital, subscribers) |
 
-The app offers the 19 species of the printed books: 10 from the PHB, 5 from FotA, 4 from RHW. Forgotten Realms: Heroes of Faerûn and Arcana Unleashed add no species.
+The app offers 20 species: the 19 of the PHB, FotA and RHW (10, 5 and 4), plus the Faerie from LFL, added at the user's request on 2026-10-14. Forgotten Realms: Heroes of Faerûn and Arcana Unleashed add no species.
 
 ## Species
 
@@ -47,13 +47,13 @@ The app offers the 19 species of the printed books: 10 from the PHB, 5 from FotA
 | `hexblood`   | Ведьмовская кровь | Hexblood   | RHW      |
 | `lupin`      | Волколак          | Lupin      | RHW      |
 | `reborn`     | Возрождённый      | Reborn     | RHW      |
+| `faerie`     | Фея               | Faerie     | LFL      |
 
 ## Not in the app
 
 | English           | Source | Why                                   |
 | ----------------- | ------ | ------------------------------------- |
 | Boggart           | LFL    | no Russian name yet, sources disagree |
-| Faerie            | LFL    | same                                  |
 | Flamekin          | LFL    | same                                  |
 | Lorwyn Changeling | LFL    | same                                  |
 | Rimekin           | LFL    | same                                  |
@@ -84,13 +84,14 @@ Notes:
 - English names are from dnd2024.wikidot, Russian ones from the next.dnd.su species pages (`/species/<key>`); the pairs were matched by hand.
 - The app's wording departs slightly from next.dnd.su: the elven options are singular («Высший эльф», the site has «Высшие эльфы») and the dragons carry the word «дракон» («Белый дракон», the site's table has «Белый»), so the value reads on its own in the character list.
 - **Aasimar has no such choice**: Celestial Revelation (Heavenly Wings, Inner Radiance, Necrotic Shroud) is picked each time the aasimar transforms.
-- Dwarf, Halfling, Human and Orc have none. For Changeling, Kalashtar, Khoravar, Warforged, Dhampir, Hexblood and Reborn this rests on the dungeonmister trait summary only; Lupin was checked on its wikidot page.
+- Dwarf, Faerie, Halfling, Human and Orc have none. For Changeling, Kalashtar, Khoravar, Warforged, Dhampir, Hexblood and Reborn this rests on the dungeonmister trait summary only; Lupin was checked on its wikidot page.
 - dnd2024.wikidot also lists Lorwyn Elf and Shadowmoor Elf lineages (Lorwyn: First Light); they are not suggested, like the Lorwyn species.
 - Choices that are not a lineage are not recorded: size (Medium or Small), a skill, a spellcasting ability.
 
 ## What is uncertain
 
-- **Russian names are fan translations** from next.dnd.su. That site lists exactly the same 19 species, each with its English name, so the RU↔EN pairs are not guesswork here.
+- **Russian names are fan translations** from next.dnd.su. That site lists exactly the same 19 species (all but the Faerie), each with its English name, so the RU↔EN pairs are not guesswork here.
+- **Faerie / Фея.** next.dnd.su has no page for it yet; «Фея» is the name the user chose (2026-10-14). The species comes from dnd2024.wikidot (`/species:faerie`, Lorwyn: First Light): Small, creature type Fey, no lineage choice (Shadowmoor faeries only differ in darkvision range; the Fairy Magic spellcasting ability is a choice that is not a lineage). Unlike the Lorwyn species still left out, dungeonmister does not list it, so its status in LFL rests on wikidot alone.
 - **Lorwyn: First Light.** The sources disagree: dnd2024.wikidot lists five species, dungeonmister only two (Lorwyn Changeling, Rimekin).
 - **Duskling** is listed by dungeonmister and dnd2024.wikidot as a D&D Beyond Drop; no official page was checked.
 

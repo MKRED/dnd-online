@@ -1,6 +1,7 @@
 import type { CharacterSpecies } from 'shared';
 
-// Русские названия — как на next.dnd.su; справочник с источниками лежит в docs/species.md.
+// Русские названия — как на next.dnd.su (кроме феи: её там нет, название выбрал пользователь);
+// справочник с источниками лежит в docs/species.md.
 export const SPECIES_LABELS: Record<CharacterSpecies, string> = {
   aasimar: 'Аасимар',
   changeling: 'Ченжлинг',
@@ -8,6 +9,7 @@ export const SPECIES_LABELS: Record<CharacterSpecies, string> = {
   dragonborn: 'Драконорождённый',
   dwarf: 'Дварф',
   elf: 'Эльф',
+  faerie: 'Фея',
   gnome: 'Гном',
   goliath: 'Голиаф',
   halfling: 'Полурослик',

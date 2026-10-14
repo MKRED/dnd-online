@@ -73,7 +73,7 @@ Read the relevant file before working in that area:
 - [docs/plan/lolka-login.md](docs/plan/lolka-login.md) covers sign-in through lolka (OAuth 2.0 + PKCE, in Russian, a living plan): what lolka's API gives, the server-side flow, the `user_identities` table, open questions, what the user does outside the code, and the stage checklist
 - [docs/mcp.md](docs/mcp.md) covers the map MCP server: tools, connecting it, the build → look → fix loop
 - [docs/classes.md](docs/classes.md) covers the character classes: the 13 classes and their 2024 subclasses (Russian and English names, source book), where that data lives in code, and what in it is unverified
-- [docs/species.md](docs/species.md) covers the character species: the 19 species of the 2024 books (Russian and English names, source book), where that data lives in code, and what was left out
+- [docs/species.md](docs/species.md) covers the character species: the 20 species of the 2024 books (Russian and English names, source book), where that data lives in code, and what was left out
 - [docs/combat-stats.md](docs/combat-stats.md) covers the combat numbers of the character sheet: how initiative is derived and why the hit die is picked by hand
 - [docs/proficiencies.md](docs/proficiencies.md) covers the proficiencies of the character sheet: the four armor training categories, the strict weapon list, and the suggested lists of weapon masteries, tools and languages (Russian and English names)
 - [docs/deploy.md](docs/deploy.md) covers deployment:

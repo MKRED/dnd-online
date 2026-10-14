@@ -39,7 +39,7 @@ export const RARITY_COLORS: Record<ItemRarity, string> = {
   artifact: 'red',
 };
 
-// Сокращения как на next.dnd.su («2 СМ»); ЭМ и ПМ не сверены (docs/dnd/items.md).
+// Сокращения как на next.dnd.su («2 СМ»), все пять сверены с глоссарием (docs/dnd/items.md).
 export const COIN_LABELS: Record<Coin, string> = {
   cp: 'ММ',
   sp: 'СМ',

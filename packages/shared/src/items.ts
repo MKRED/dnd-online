@@ -31,6 +31,16 @@ export type ItemDetails = ItemVariant['details'];
 export const COINS = ['cp', 'sp', 'ep', 'gp', 'pp'] as const;
 export type Coin = (typeof COINS)[number];
 
+// Курс монет в медных (правила 2024, docs/dnd/items.md): нужен, чтобы сравнивать цены
+// в разных монетах.
+export const COIN_VALUE_IN_CP: Record<Coin, number> = {
+  cp: 1,
+  sp: 10,
+  ep: 50,
+  gp: 100,
+  pp: 1000,
+};
+
 // Редкость. По правилам она есть только у магических предметов, у снаряжения её нет —
 // это 'none'. 'common' («Обычный») — редкость магического предмета, а не «простой
 // предмет», поэтому значением по умолчанию быть не может.

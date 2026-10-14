@@ -5,18 +5,26 @@ import {
   Group,
   Loader,
   SegmentedControl,
+  Stack,
   Text,
   Title,
 } from '@mantine/core';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import type { Item, ItemListScope } from 'shared';
+import type { ItemListScope } from 'shared';
 import {
+  countByCategory,
+  DEFAULT_ITEM_FILTERS,
+  filterItems,
   ItemCollection,
-  listItems,
+  ItemFilters,
+  readItemFilters,
+  sortItems,
+  useItemList,
+  writeItemFilters,
   type ItemCollectionView,
+  type ItemFilterValues as Filters,
 } from '../features/items';
-import { errorMessage } from '../lib/apiRequest';
 import { usePageTitle } from '../lib/usePageTitle';
 
 const VIEW_STORAGE_KEY = 'items.view';
@@ -48,37 +56,26 @@ const EMPTY_TEXT: Record<ItemListScope, string> = {
 
 function ItemsPage() {
   usePageTitle('Предметы');
-  // Вкладка — в адресе: «Назад» с карточки предмета возвращает на ту же вкладку.
+  // Вкладка и фильтры — в адресе: «Назад» с карточки предмета возвращает тот же список.
   const [params, setParams] = useSearchParams();
   const scope: ItemListScope =
     params.get('tab') === 'catalog' ? 'catalog' : 'mine';
+  const filters = readItemFilters(params);
   const [view, setView] = useState(readView);
-  // Список помечен вкладкой, для которой загружен: при переключении старый не мелькает,
-  // и сбрасывать состояние в эффекте не нужно.
-  const [loaded, setLoaded] = useState<{
-    scope: ItemListScope;
-    items: Item[] | null;
-    error: string | null;
-  } | null>(null);
-  const current = loaded?.scope === scope ? loaded : null;
-  const items = current?.items ?? null;
-  const error = current?.error ?? null;
+  const { items, error } = useItemList(scope);
 
-  useEffect(() => {
-    let active = true;
-    listItems(scope)
-      .then((list) => {
-        if (active) setLoaded({ scope, items: list, error: null });
-      })
-      .catch((err: unknown) => {
-        console.error('Failed to load items', err);
-        const message = errorMessage(err, 'Не удалось загрузить предметы');
-        if (active) setLoaded({ scope, items: null, error: message });
-      });
-    return () => {
-      active = false;
-    };
-  }, [scope]);
+  // Фильтры меняют адрес без новой записи в истории: «Назад» уводит со страницы, а не
+  // перебирает каждую нажатую букву поиска.
+  const setFilters = (next: Filters) =>
+    setParams(writeItemFilters(params, next), { replace: true });
+  // Вкладка — новая запись в истории; фильтры при переключении остаются.
+  const setScope = (next: string) => {
+    const nextParams = new URLSearchParams(params);
+    if (next === 'catalog') nextParams.set('tab', 'catalog');
+    else nextParams.delete('tab');
+    setParams(nextParams);
+  };
+  const visible = items && sortItems(filterItems(items, filters), filters.sort);
 
   return (
     <Container size="lg" py="xl">
@@ -92,9 +89,7 @@ function ItemsPage() {
         <SegmentedControl
           aria-label="Какие предметы показать"
           value={scope}
-          onChange={(value) =>
-            setParams(value === 'catalog' ? { tab: 'catalog' } : {})
-          }
+          onChange={setScope}
           data={[
             { value: 'mine', label: 'Мои' },
             { value: 'catalog', label: 'Каталог' },
@@ -120,12 +115,34 @@ function ItemsPage() {
         <Alert color="red" title="Ошибка">
           {error}
         </Alert>
-      ) : !items ? (
+      ) : !items || !visible ? (
         <Loader />
       ) : items.length === 0 ? (
+        // Фильтровать нечего — панель фильтров не показываем.
         <Text c="dimmed">{EMPTY_TEXT[scope]}</Text>
       ) : (
-        <ItemCollection items={items} view={view} scope={scope} />
+        <>
+          <ItemFilters
+            filters={filters}
+            counts={countByCategory(items, filters)}
+            onChange={setFilters}
+          />
+          {visible.length > 0 ? (
+            <ItemCollection items={visible} view={view} scope={scope} />
+          ) : (
+            <Stack align="flex-start" gap="sm">
+              <Text c="dimmed">Под фильтры ничего не подошло.</Text>
+              <Button
+                variant="default"
+                onClick={() =>
+                  setFilters({ ...DEFAULT_ITEM_FILTERS, sort: filters.sort })
+                }
+              >
+                Сбросить фильтры
+              </Button>
+            </Stack>
+          )}
+        </>
       )}
     </Container>
   );

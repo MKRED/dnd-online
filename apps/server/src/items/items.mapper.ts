@@ -14,6 +14,7 @@ export function toItem(row: ItemRow, authorNickname: string): Item {
     isPublic: row.isPublic,
     name: row.name,
     category: row.category,
+    rarity: row.rarity,
     details: row.details,
     weight: row.weight,
     cost:
@@ -31,6 +32,7 @@ export function toItemValues(dto: ItemDto): Omit<NewItemRow, 'authorId'> {
   return {
     name: dto.name,
     category: dto.category,
+    rarity: dto.rarity,
     details: dto.details,
     weight: dto.weight,
     // null, а не undefined: при редактировании снятая цена должна стереться.

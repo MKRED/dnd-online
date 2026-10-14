@@ -9,6 +9,7 @@ const row: typeof items.$inferSelect = {
   isPublic: true,
   name: 'Зеркало',
   category: 'basic',
+  rarity: 'none',
   details: {},
   weight: 0.5,
   costAmount: 5,
@@ -35,6 +36,7 @@ describe('items.mapper', () => {
     const dto = {
       name: 'Сюжетный ключ',
       category: 'basic',
+      rarity: 'uncommon',
       details: {},
       weight: 0,
       isPublic: false,

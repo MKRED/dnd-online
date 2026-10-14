@@ -8,6 +8,7 @@ import { ItemDto } from './item.dto.js';
 const valid = {
   name: 'Верёвка',
   category: 'basic',
+  rarity: 'none',
   details: {},
   weight: 5,
   cost: { amount: 1, coin: 'gp' },
@@ -50,6 +51,14 @@ describe('ItemDto', () => {
     expect(await errorsOf({ name: '   ' })).toEqual({
       name: ['Название предмета — от 1 до 100 символов'],
     });
+  });
+
+  it('редкость обязательна и только из справочника', async () => {
+    expect(await errorsOf({ rarity: 'very_rare' })).toEqual({});
+    expect(await errorsOf({ rarity: 'Редкий' })).toEqual({
+      rarity: ['Неизвестная редкость предмета'],
+    });
+    expect(await errorsOf({ rarity: undefined })).toHaveProperty('rarity');
   });
 
   it('отклоняет неизвестную категорию и монету', async () => {

@@ -19,9 +19,11 @@ import {
   ITEM_DESCRIPTION_MAX_LENGTH,
   ITEM_MAX_WEIGHT,
   ITEM_NAME_MAX_LENGTH,
+  ITEM_RARITIES,
   type Coin,
   type ItemCategory,
   type ItemDetails,
+  type ItemRarity,
 } from 'shared';
 import { DetailsForCategory } from './item-details.validator.js';
 
@@ -51,6 +53,9 @@ export class ItemDto {
 
   @IsIn(ITEM_CATEGORIES, { message: 'Неизвестная категория предмета' })
   category: ItemCategory;
+
+  @IsIn(ITEM_RARITIES, { message: 'Неизвестная редкость предмета' })
+  rarity: ItemRarity;
 
   @DetailsForCategory()
   details: ItemDetails;

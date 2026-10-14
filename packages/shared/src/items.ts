@@ -18,6 +18,20 @@ export type ItemDetails = ItemVariant['details'];
 export const COINS = ['cp', 'sp', 'ep', 'gp', 'pp'] as const;
 export type Coin = (typeof COINS)[number];
 
+// Редкость. По правилам она есть только у магических предметов, у снаряжения её нет —
+// это 'none'. 'common' («Обычный») — редкость магического предмета, а не «простой
+// предмет», поэтому значением по умолчанию быть не может.
+export const ITEM_RARITIES = [
+  'none',
+  'common',
+  'uncommon',
+  'rare',
+  'very_rare',
+  'legendary',
+  'artifact',
+] as const;
+export type ItemRarity = (typeof ITEM_RARITIES)[number];
+
 // Стоимость храним как в книге («2 СМ»), а не пересчитанной в медь.
 export interface ItemCost {
   amount: number;
@@ -38,6 +52,7 @@ export type Item = ItemVariant & {
   // Скрытый предмет видит только автор; опубликованный — все в каталоге.
   isPublic: boolean;
   name: string;
+  rarity: ItemRarity;
   // Ноль — «без веса» (в книге пишут «—»).
   weight: number;
   cost: ItemCost | null;
@@ -49,6 +64,7 @@ export type Item = ItemVariant & {
 // Тело создания и полного редактирования.
 export type ItemInput = ItemVariant & {
   name: string;
+  rarity: ItemRarity;
   weight: number;
   cost: ItemCost | null;
   description: string;

@@ -109,7 +109,7 @@ Vitest (`vitest.config.ts`, `vitest.config.e2e.ts`) with `unplugin-swc` — Vite
 - Integration tests (plan: [plan/testing.md](plan/testing.md)): `test/*.e2e-spec.ts`, run with `pnpm --filter api test:e2e`. Each file boots the full `AppModule` through `createTestApp()` (`test/support/test-app.ts`) with the same setup as production (`src/configure-app.ts`: `/api` prefix, cookies, validation) and calls it with supertest; `loginAs(login)` registers a user and returns an agent that keeps its cookies.
   - **Database:** only `TEST_DATABASE_URL`, never `DATABASE_URL` (which points at production). The name must end in `_test`, checked before the run and again on the live connection; otherwise nothing runs. Locally it is `dnd_online_test` on the production Postgres server (created 2026-10-15), through the same tunnel.
   - `globalSetup` applies the migrations from `drizzle/`; every test file truncates all tables first, so files run one at a time (`fileParallelism: false`).
-  - Catalogs share one scenario, `describeCatalog` (`test/support/catalog-scenario.ts`): access to hidden and published entries and the image; each catalog's own fields are tested in its file.
+  - Catalogs share one scenario, `describeCatalog` (`test/support/catalog-scenario/`): access to hidden and published entries and the image; each catalog's own fields are tested in its file.
   - The `test-runner` subagent (`.claude/agents/test-runner.md`) runs all checks, e2e included, and reports without changing anything.
   - The `ThrottlerGuard` is replaced by a pass-through; request logs are off (`LOG_LEVEL=debug` brings them back).
 - Globals are off: import `describe`/`it`/`expect`/`vi` from `vitest`.

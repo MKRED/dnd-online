@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describeCatalog } from './support/catalog-scenario.js';
+import { describeCatalog } from './support/catalog-scenario/index.js';
 
 const costs = {
   uses: { count: { kind: 'proficiency' }, recovery: 'long' },

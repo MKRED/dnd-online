@@ -1,19 +1,14 @@
 import type request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { characterBody } from './support/character-fixture.js';
+import {
+  createCharacter as createCharacterOf,
+  inventoryUrl as items,
+  readInventory as inventory,
+} from './support/inventory-fixture.js';
 import { createItem, itemBody, packBody } from './support/item-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-interface Entry {
-  id: string;
-  location: 'carried' | 'stash';
-  quantity: number;
-  item: { id: string; name: string } | null;
-  missing: 'hidden' | 'deleted' | null;
-  inactive?: boolean;
-}
-
-// Правила инвентаря — docs/plan/character-inventory.md.
+// Стопки, переносы и распаковка — docs/plan/character-inventory.md.
 describe('инвентарь персонажа (e2e)', () => {
   let t: TestApp;
   let owner: request.Agent;
@@ -29,22 +24,7 @@ describe('инвентарь персонажа (e2e)', () => {
     await t.close();
   });
 
-  async function createCharacter(): Promise<string> {
-    const res = await owner
-      .post('/api/characters')
-      .send(characterBody())
-      .expect(201);
-    return (res.body as { id: string }).id;
-  }
-
-  const items = (id: string) => `/api/characters/${id}/items`;
-
-  const inventory = async (agent: request.Agent, id: string) =>
-    (
-      (await agent.get(`/api/characters/${id}`).expect(200)).body as {
-        inventory: Entry[];
-      }
-    ).inventory;
+  const createCharacter = () => createCharacterOf(owner);
 
   it('тот же предмет в том же месте складывается, в другом — отдельной строкой', async () => {
     const id = await createCharacter();
@@ -101,79 +81,6 @@ describe('инвентарь персонажа (e2e)', () => {
     expect(await inventory(owner, id)).toEqual([]);
   });
 
-  it('чужой скрытый предмет не положить; скрытый после — строка без карточки', async () => {
-    const id = await createCharacter();
-    const hidden = await createItem(stranger, { name: 'Тайна' });
-    await owner
-      .post(items(id))
-      .send({ itemId: hidden.id, quantity: 1, location: 'carried' })
-      .expect(400);
-
-    const lamp = await createItem(stranger, {
-      name: 'Лампа',
-      isPublic: true,
-    });
-    await owner
-      .post(items(id))
-      .send({ itemId: lamp.id, quantity: 1, location: 'carried' })
-      .expect(201);
-    await stranger
-      .put(`/api/items/${lamp.id}`)
-      .send(itemBody({ name: 'Лампа', isPublic: false }))
-      .expect(200);
-    const [entry] = await inventory(owner, id);
-    expect(entry).toMatchObject({ item: null, missing: 'hidden' });
-    expect(JSON.stringify(entry)).not.toContain('Лампа');
-
-    await stranger.delete(`/api/items/${lamp.id}`).expect(204);
-    expect((await inventory(owner, id))[0]).toMatchObject({
-      item: null,
-      missing: 'deleted',
-    });
-  });
-
-  it('чужой не меняет инвентарь, даже если лист открыт по ссылке', async () => {
-    const id = await createCharacter();
-    const torch = await createItem(owner, { isPublic: true });
-    await owner
-      .post(items(id))
-      .send({ itemId: torch.id, quantity: 1, location: 'carried' })
-      .expect(201);
-    await owner
-      .put(`/api/characters/${id}/access`)
-      .send({ linkAccess: 'link' })
-      .expect(200);
-    const [entry] = await inventory(stranger, id);
-
-    await stranger
-      .post(items(id))
-      .send({ itemId: torch.id, quantity: 1, location: 'carried' })
-      .expect(404);
-    await stranger
-      .patch(`${items(id)}/${entry.id}`)
-      .send({ quantity: 9 })
-      .expect(404);
-    await stranger.delete(`${items(id)}/${entry.id}`).expect(404);
-    expect((await inventory(owner, id))[0].quantity).toBe(1);
-  });
-
-  it('зритель по ссылке не видит скрытый от него предмет владельца', async () => {
-    const id = await createCharacter();
-    const secret = await createItem(owner, { name: 'Дневник' });
-    await owner
-      .post(items(id))
-      .send({ itemId: secret.id, quantity: 1, location: 'carried' })
-      .expect(201);
-    await owner
-      .put(`/api/characters/${id}/access`)
-      .send({ linkAccess: 'link' })
-      .expect(200);
-    expect((await inventory(owner, id))[0].item?.name).toBe('Дневник');
-    const [seen] = await inventory(stranger, id);
-    expect(seen).toMatchObject({ item: null, missing: 'hidden' });
-    expect(JSON.stringify(seen)).not.toContain('Дневник');
-  });
-
   it('распаковка набора кладёт видимый состав × число наборов', async () => {
     const id = await createCharacter();
     const torch = await createItem(owner, { name: 'Факел', isPublic: true });
@@ -196,11 +103,7 @@ describe('инвентарь персонажа (e2e)', () => {
       .expect(200);
 
     // Набор чужой для stranger: его скрытая верёвка не должна попасть к нему.
-    const res = await stranger
-      .post('/api/characters')
-      .send(characterBody())
-      .expect(201);
-    const theirs = (res.body as { id: string }).id;
+    const theirs = await createCharacterOf(stranger);
     await stranger
       .post(items(theirs))
       .send({

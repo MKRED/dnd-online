@@ -43,3 +43,24 @@ export function packBody(
     ...over,
   });
 }
+
+export interface PackCard {
+  id: string;
+  isPublic: boolean;
+  details: {
+    contents: {
+      itemId: string;
+      quantity: number;
+      item: { name: string } | null;
+    }[];
+  };
+  packs?: { mine: { id: string }[]; othersCount: number };
+}
+
+// Карточка предмета или набора глазами agent.
+export async function readItem(
+  agent: request.Agent,
+  id: string,
+): Promise<PackCard> {
+  return (await agent.get(`/api/items/${id}`).expect(200)).body as PackCard;
+}

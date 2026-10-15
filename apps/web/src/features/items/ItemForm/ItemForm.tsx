@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Item } from 'shared';
 import { errorMessage } from '../../../lib/apiRequest';
+import { ImageField, useImageDraft } from '../../catalog';
+import { itemImagePath } from '../itemsApi';
 import ItemFields from './ItemFields';
-import ItemImageField from './ItemImageField';
 import {
   toFormValues,
   toItemInput,
@@ -18,7 +19,6 @@ import {
   type SaveFlags,
 } from './saveConfirmation';
 import { saveItem } from './saveItem';
-import { useImageDraft } from './useImageDraft';
 import { validateItemForm } from './validateItemForm';
 
 interface ItemFormProps {
@@ -41,7 +41,7 @@ function ItemForm({ item, submitLabel, cancelTo, onSaved }: ItemFormProps) {
     validate: validateItemForm,
     onValuesChange: () => setConfirmation(null),
   });
-  const [draft, setDraft] = useImageDraft(item);
+  const [draft, setDraft] = useImageDraft(item?.image ?? null);
   // Предмет на сервере. При создании он появляется после первого «Сохранить»: если
   // картинка тогда не загрузилась, повторное сохранение правит уже созданный предмет,
   // а не создаёт второй.
@@ -87,9 +87,10 @@ function ItemForm({ item, submitLabel, cancelTo, onSaved }: ItemFormProps) {
       <Stack>
         <Grid gap="xl">
           <Grid.Col span={{ base: 12, sm: 'content' }}>
-            <ItemImageField
-              itemId={saved?.id ?? null}
-              itemName={form.values.name}
+            <ImageField
+              entryId={saved?.id ?? null}
+              entryName={form.values.name}
+              imagePath={itemImagePath}
               draft={draft}
               onChange={setDraft}
             />

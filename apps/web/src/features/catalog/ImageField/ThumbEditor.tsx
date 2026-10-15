@@ -10,14 +10,14 @@ import {
 import { useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
 import { catalogThumbCropError, type ThumbCrop } from 'shared';
-import classes from './ItemForm.module.css';
+import classes from './ImageField.module.css';
 
 const MAX_ZOOM = 5;
 // Насколько можно отдалить сверх «картинка целиком в рамке»: немного полей вокруг.
 // Сервер разрешает вырез до двух длинных сторон, 0.8 даёт 1,25 — с запасом.
 const ZOOM_OUT_MARGIN = 0.8;
 
-interface ItemThumbEditorProps {
+interface ThumbEditorProps {
   src: string;
   // Размеры картинки в тех же пикселях, что и вырез.
   width: number;
@@ -40,14 +40,14 @@ function toThumbCrop(area: Area): ThumbCrop {
 
 // Выбор миниатюры: рамка стоит на месте, картинку двигают, приближают и отдаляют.
 // Компонент монтируют на время редактирования.
-function ItemThumbEditor({
+function ThumbEditor({
   src,
   width,
   height,
   crop,
   onSave,
   onClose,
-}: ItemThumbEditorProps) {
+}: ThumbEditorProps) {
   // При zoom = 1 рамка равна короткой стороне картинки; чтобы картинка влезла
   // целиком, её надо отдалить до короткая/длинная.
   const minZoom =
@@ -118,4 +118,4 @@ function ItemThumbEditor({
   );
 }
 
-export default ItemThumbEditor;
+export default ThumbEditor;

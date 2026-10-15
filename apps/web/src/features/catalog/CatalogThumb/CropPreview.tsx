@@ -1,5 +1,5 @@
 import type { ThumbCrop } from 'shared';
-import classes from './ItemThumb.module.css';
+import classes from './CatalogThumb.module.css';
 
 interface CropPreviewProps {
   src: string;

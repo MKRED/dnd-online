@@ -3,16 +3,16 @@ import { Dropzone, type FileRejection } from '@mantine/dropzone';
 import { useState } from 'react';
 import { IMAGE_MAX_BYTES, IMAGE_MIME_TYPES } from 'shared';
 import { useImageUrl } from '../../../lib/useImageUrls';
-import ItemThumb, { CropPreview } from '../ItemThumb';
-import { itemImagePath } from '../itemsApi';
+import type { ImagePathFn } from '../catalogApi';
+import CatalogThumb, { CropPreview } from '../CatalogThumb';
 import {
   effectiveCrop,
   readImageFile,
   sameCrop,
   type ImageDraft,
 } from './imageDraft';
-import classes from './ItemForm.module.css';
-import ItemThumbEditor from './ItemThumbEditor';
+import classes from './ImageField.module.css';
+import ThumbEditor from './ThumbEditor';
 
 const MAX_MEGABYTES = IMAGE_MAX_BYTES / (1024 * 1024);
 const ACCEPT = [...IMAGE_MIME_TYPES];
@@ -26,31 +26,33 @@ function rejectionMessage([rejection]: FileRejection[]): string {
   return 'Не тот формат — подойдут JPEG, PNG и WebP';
 }
 
-interface ItemImageFieldProps {
-  // null — предмет ещё не создан, сохранённой картинки у него нет.
-  itemId: string | null;
-  itemName: string;
+interface ImageFieldProps {
+  // null — запись ещё не создана, сохранённой картинки у неё нет.
+  entryId: string | null;
+  entryName: string;
+  imagePath: ImagePathFn;
   draft: ImageDraft;
   onChange: (draft: ImageDraft) => void;
 }
 
-// Картинка предмета и её миниатюра. Изменения копятся в черновике и уходят на сервер
-// вместе с формой.
-function ItemImageField({
-  itemId,
-  itemName,
+// Картинка записи каталога и её миниатюра. Изменения копятся в черновике и уходят на
+// сервер вместе с формой (saveImage).
+function ImageField({
+  entryId,
+  entryName,
+  imagePath,
   draft,
   onChange,
-}: ItemImageFieldProps) {
+}: ImageFieldProps) {
   const [problem, setProblem] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const recropped =
     draft.kind === 'saved' && !sameCrop(draft.crop, draft.image.thumbCrop);
-  // Полная картинка сохранённого предмета нужна только редактору и предпросмотру
+  // Полная картинка сохранённой записи нужна только редактору и предпросмотру
   // изменённого выреза: для обычного показа хватает миниатюры с сервера.
   const fullUrl = useImageUrl(
-    draft.kind === 'saved' && itemId && (editing || recropped)
-      ? itemImagePath(itemId, 'full', draft.image.version)
+    draft.kind === 'saved' && entryId && (editing || recropped)
+      ? imagePath(entryId, 'full', draft.image.version)
       : null,
   );
   const src = draft.kind === 'new' ? draft.url : fullUrl;
@@ -67,7 +69,7 @@ function ItemImageField({
         onChange({ kind: 'new', file, url, width, height, crop: null }),
       )
       .catch((err: unknown) => {
-        console.error('Failed to read item image file', err);
+        console.error('Failed to read image file', err);
         setProblem('Не удалось прочитать картинку');
       });
   };
@@ -103,8 +105,11 @@ function ItemImageField({
   const { width, height, crop } = effectiveCrop(draft);
   return (
     <Stack gap="xs" className={classes.imageColumn}>
-      {draft.kind === 'saved' && !recropped && itemId ? (
-        <ItemThumb item={{ id: itemId, name: itemName, image: draft.image }} />
+      {draft.kind === 'saved' && !recropped && entryId ? (
+        <CatalogThumb
+          entry={{ id: entryId, name: entryName, image: draft.image }}
+          imagePath={imagePath}
+        />
       ) : src ? (
         <CropPreview src={src} width={width} height={height} crop={crop} />
       ) : (
@@ -136,7 +141,7 @@ function ItemImageField({
         </Text>
       )}
       {editing && src && (
-        <ItemThumbEditor
+        <ThumbEditor
           src={src}
           width={width}
           height={height}
@@ -152,4 +157,4 @@ function ItemImageField({
   );
 }
 
-export default ItemImageField;
+export default ImageField;

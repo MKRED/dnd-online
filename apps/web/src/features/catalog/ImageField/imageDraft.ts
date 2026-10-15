@@ -1,11 +1,10 @@
 import {
   defaultCatalogThumbCrop,
-  type Item,
   type CatalogImage,
   type ThumbCrop,
 } from 'shared';
 
-// Картинка в форме предмета до сохранения. Сохраняется вместе с формой одной кнопкой.
+// Картинка в форме записи каталога до сохранения. Сохраняется вместе с формой одной кнопкой.
 export type ImageDraft =
   // Картинки нет (или её убрали — тогда при сохранении она удалится).
   | { kind: 'none' }
@@ -23,9 +22,9 @@ export type ImageDraft =
       crop: ThumbCrop | null;
     };
 
-export function initialDraft(item: Item | null): ImageDraft {
-  return item?.image
-    ? { kind: 'saved', image: item.image, crop: item.image.thumbCrop }
+export function initialDraft(image: CatalogImage | null): ImageDraft {
+  return image
+    ? { kind: 'saved', image, crop: image.thumbCrop }
     : { kind: 'none' };
 }
 

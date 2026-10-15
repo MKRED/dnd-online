@@ -1,9 +1,8 @@
-import { Grid, Group, Loader, Stack, Text, Title } from '@mantine/core';
+import { Grid, Stack, Text, Title } from '@mantine/core';
 import type { ReactNode } from 'react';
 import type { Item } from 'shared';
-import { useImageUrl } from '../../lib/useImageUrls';
+import { DetailsField, EntryImage } from '../catalog';
 import { ItemBadges } from './ItemCollection';
-import ItemThumb from './ItemThumb';
 import { PackContentsView } from './PackContents';
 import {
   TREASURE_KIND_LABELS,
@@ -19,46 +18,12 @@ interface ItemDetailsProps {
   actions?: ReactNode;
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <Group gap="xs" wrap="nowrap" align="baseline">
-      <Text c="dimmed" size="sm" w={88} style={{ flexShrink: 0 }}>
-        {label}
-      </Text>
-      <Text size="sm">{children}</Text>
-    </Group>
-  );
-}
-
 // Карточка предмета так, как её видят все: картинка целиком, поля, описание.
 function ItemDetails({ item, actions }: ItemDetailsProps) {
-  const fullUrl = useImageUrl(
-    item.image && itemImagePath(item.id, 'full', item.image.version),
-  );
-
   return (
     <Grid gap="xl">
       <Grid.Col span={{ base: 12, sm: 5 }}>
-        {!item.image ? (
-          <ItemThumb item={item} placeholderSize="4rem" />
-        ) : fullUrl ? (
-          <img
-            src={fullUrl}
-            alt={item.name}
-            style={{
-              display: 'block',
-              maxWidth: '100%',
-              // На телефоне картинка над сведениями — высокая не должна их вытеснять.
-              maxHeight: '45vh',
-              margin: '0 auto',
-              borderRadius: 'var(--mantine-radius-md)',
-              // Подложка, как у миниатюр: у прозрачной картинки иначе не видно границ.
-              background: 'var(--mantine-color-default-hover)',
-            }}
-          />
-        ) : (
-          <Loader />
-        )}
+        <EntryImage entry={item} imagePath={itemImagePath} />
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 7 }}>
         <Stack gap="sm">
@@ -68,21 +33,25 @@ function ItemDetails({ item, actions }: ItemDetailsProps) {
           <ItemBadges item={item} showHidden />
           <Stack gap={4}>
             {item.category === 'food' && (
-              <Field label="Насыщение">{item.details.satiety} очк.</Field>
+              <DetailsField label="Насыщение">
+                {item.details.satiety} очк.
+              </DetailsField>
             )}
             {item.category === 'container' && (
-              <Field label="Груз">
+              <DetailsField label="Груз">
                 {formatCapacity(item.details.capacity)}
-              </Field>
+              </DetailsField>
             )}
             {item.category === 'treasure' && (
-              <Field label="Вид">
+              <DetailsField label="Вид">
                 {TREASURE_KIND_LABELS[item.details.kind]}
-              </Field>
+              </DetailsField>
             )}
-            <Field label="Вес">{formatWeight(item.weight)}</Field>
-            <Field label="Стоимость">{formatCost(item.cost)}</Field>
-            <Field label="Автор">{item.authorNickname}</Field>
+            <DetailsField label="Вес">{formatWeight(item.weight)}</DetailsField>
+            <DetailsField label="Стоимость">
+              {formatCost(item.cost)}
+            </DetailsField>
+            <DetailsField label="Автор">{item.authorNickname}</DetailsField>
           </Stack>
           {item.category === 'pack' && (
             <PackContentsView contents={item.details.contents} />

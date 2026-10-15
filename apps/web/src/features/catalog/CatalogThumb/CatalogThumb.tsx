@@ -1,23 +1,26 @@
 import { Loader } from '@mantine/core';
 import type { CSSProperties } from 'react';
-import type { Item } from 'shared';
+import type { CatalogImage } from 'shared';
 import { useImageUrl } from '../../../lib/useImageUrls';
-import { itemImagePath } from '../itemsApi';
-import classes from './ItemThumb.module.css';
+import type { ImagePathFn } from '../catalogApi';
+import classes from './CatalogThumb.module.css';
 
-interface ItemThumbProps {
-  item: Pick<Item, 'id' | 'name' | 'image'>;
+interface CatalogThumbProps {
+  entry: { id: string; name: string; image: CatalogImage | null };
+  imagePath: ImagePathFn;
   // Размер буквы-заглушки: в списке квадрат маленький, в сетке — большой.
   placeholderSize?: string;
 }
 
-// Миниатюра предмета (вариант thumb с сервера), квадрат по ширине родителя. Без картинки —
-// первая буква названия.
-function ItemThumb({ item, placeholderSize }: ItemThumbProps) {
-  const { image } = item;
-  const url = useImageUrl(
-    image && itemImagePath(item.id, 'thumb', image.version),
-  );
+// Миниатюра записи каталога (вариант thumb с сервера), квадрат по ширине родителя. Без
+// картинки — первая буква названия.
+function CatalogThumb({
+  entry,
+  imagePath,
+  placeholderSize,
+}: CatalogThumbProps) {
+  const { image } = entry;
+  const url = useImageUrl(image && imagePath(entry.id, 'thumb', image.version));
   const style = placeholderSize
     ? ({ '--placeholder-size': placeholderSize } as CSSProperties)
     : undefined;
@@ -32,11 +35,11 @@ function ItemThumb({ item, placeholderSize }: ItemThumbProps) {
         </div>
       ) : (
         <div className={classes.placeholder} aria-hidden>
-          {item.name.trim().charAt(0).toUpperCase()}
+          {entry.name.trim().charAt(0).toUpperCase()}
         </div>
       )}
     </div>
   );
 }
 
-export default ItemThumb;
+export default CatalogThumb;

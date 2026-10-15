@@ -1,7 +1,7 @@
 import type { Item, CatalogImage, ItemInput } from 'shared';
 import { describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../../../lib/apiRequest';
-import type { ImageDraft } from './imageDraft';
+import type { ImageDraft } from '../../catalog';
 import { saveItem } from './saveItem';
 
 const input: ItemInput = {

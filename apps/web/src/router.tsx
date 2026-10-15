@@ -17,6 +17,37 @@ import MapViewPage from './pages/MapViewPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
+import {
+  ABILITIES,
+  EFFECTS,
+  SimpleCreatePage,
+  SimpleEditPage,
+  SimpleListPage,
+  SimpleViewPage,
+  type SimpleCatalogDef,
+} from './features/simpleCatalog';
+
+// Маршруты раздела справочника со способностями или эффектами. key — по разделу: у
+// разделов одни и те же компоненты, и без ключа React перенёс бы состояние страницы
+// способностей на страницу эффектов.
+function simpleCatalogRoutes(def: SimpleCatalogDef) {
+  const key = def.section;
+  return [
+    { path: def.path, element: <SimpleListPage key={key} def={def} /> },
+    {
+      path: `${def.path}/new`,
+      element: <SimpleCreatePage key={key} def={def} />,
+    },
+    {
+      path: `${def.path}/:id`,
+      element: <SimpleViewPage key={key} def={def} />,
+    },
+    {
+      path: `${def.path}/:id/edit`,
+      element: <SimpleEditPage key={key} def={def} />,
+    },
+  ];
+}
 
 export const router = createBrowserRouter([
   {
@@ -34,6 +65,8 @@ export const router = createBrowserRouter([
           { path: '/items/new', element: <ItemCreatePage /> },
           { path: '/items/:id', element: <ItemViewPage /> },
           { path: '/items/:id/edit', element: <ItemEditPage /> },
+          ...simpleCatalogRoutes(ABILITIES),
+          ...simpleCatalogRoutes(EFFECTS),
           { path: '/maps', element: <MapsPage /> },
           { path: '/maps/:id', element: <MapViewPage /> },
           { path: '/tokens', element: <ApiTokensPage /> },

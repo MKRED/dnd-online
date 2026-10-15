@@ -5,12 +5,8 @@ import {
   type ItemCategory,
   type ItemCost,
 } from 'shared';
+import { nameCollator, normalizeSearch } from '../../catalog';
 import type { ItemFilters, ItemSort } from './filterParams';
-
-// Поиск без учёта регистра, «ё» = «е»: «Верёвка» находится по «веревка».
-function normalize(text: string): string {
-  return text.toLocaleLowerCase('ru-RU').replaceAll('ё', 'е').trim();
-}
 
 function matchesExceptCategory(
   item: Item,
@@ -25,11 +21,11 @@ function matchesExceptCategory(
   ) {
     return false;
   }
-  return query === '' || normalize(item.name).includes(query);
+  return query === '' || normalizeSearch(item.name).includes(query);
 }
 
 export function filterItems(items: Item[], filters: ItemFilters): Item[] {
-  const query = normalize(filters.query);
+  const query = normalizeSearch(filters.query);
   return items.filter(
     (item) =>
       (filters.categories.length === 0 ||
@@ -44,7 +40,7 @@ export function countByCategory(
   items: Item[],
   filters: ItemFilters,
 ): Record<ItemCategory, number> {
-  const query = normalize(filters.query);
+  const query = normalizeSearch(filters.query);
   const counts = Object.fromEntries(
     ITEM_CATEGORIES.map((category) => [category, 0]),
   ) as Record<ItemCategory, number>;
@@ -58,8 +54,6 @@ function costInCp(cost: ItemCost | null): number {
   return cost ? cost.amount * COIN_VALUE_IN_CP[cost.coin] : Infinity;
 }
 
-const byName = new Intl.Collator('ru-RU', { sensitivity: 'base' });
-
 // «Сначала новые» — порядок сервера (по дате изменения), его не трогаем. Сортировка
 // стабильная, поэтому при равных весе и цене порядок тоже остаётся серверным. Предметы
 // без цены — в конце.
@@ -69,7 +63,7 @@ export function sortItems(items: Item[], sort: ItemSort): Item[] {
     Exclude<ItemSort, 'recent'>,
     (a: Item, b: Item) => number
   > = {
-    name: (a, b) => byName.compare(a.name, b.name),
+    name: (a, b) => nameCollator.compare(a.name, b.name),
     weight: (a, b) => a.weight - b.weight,
     cost: (a, b) => {
       const left = costInCp(a.cost);

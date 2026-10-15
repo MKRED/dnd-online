@@ -2,6 +2,8 @@ import { IsIn, ValidateBy } from 'class-validator';
 import {
   EFFECT_CATEGORIES,
   isEffectDuration,
+  isSenseDetails,
+  SENSE_RANGE_MAX,
   type EffectCategory,
   type EffectDuration,
 } from 'shared';
@@ -17,8 +19,10 @@ export class EffectDto extends CatalogEntryDto {
   category: EffectCategory;
 
   @CategoryDetails<EffectCategory>(
-    { basic: isEmptyDetails },
-    {},
+    { basic: isEmptyDetails, sense: isSenseDetails },
+    {
+      sense: `Укажите вид чувства и дистанцию в футах: кратную 5, до ${SENSE_RANGE_MAX}`,
+    },
     'Поля эффекта не подходят к его категории',
   )
   details: object;

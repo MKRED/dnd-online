@@ -87,7 +87,7 @@ export const EFFECTS: SimpleCatalogDef = {
   path: '/effects',
   api: catalogApi<SimpleEntry, SimpleInput>('/effects'),
   categories: EFFECT_CATEGORIES,
-  categoryLabels: { basic: 'Базовый' },
+  categoryLabels: { basic: 'Базовый', sense: 'Чувство' },
   hasDuration: true,
   loadTexts: {
     notFound: 'Эффект не найден',

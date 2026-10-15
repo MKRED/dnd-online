@@ -1,6 +1,7 @@
 import {
   DEFAULT_EFFECT_DURATION,
   isEffectDuration,
+  isSenseDetails,
   type EffectFields,
   type EffectVariant,
 } from 'shared';
@@ -22,16 +23,26 @@ export const EFFECT_ACCESS: CatalogAccess = {
 
 export type EffectRecordFields = EffectVariant & EffectFields;
 
-// Пока есть только «Базовый» — без своих полей. Новая категория добавит свою ветку.
+// Категория и её поля из базы. Неизвестную категорию или испорченные поля читаем как
+// «Базовый»: описание остаётся, а каталог не падает из-за одной записи.
+function toCategory(
+  category: string,
+  details: Record<string, unknown>,
+): EffectVariant {
+  if (category === 'sense' && isSenseDetails(details)) {
+    return { category: 'sense', details };
+  }
+  return { category: 'basic', details: {} };
+}
+
 // Длительность лежит в extra; у записей, созданных до неё, её нет — они бессрочные.
 export function toEffectVariant(
-  _category: string,
-  _details: Record<string, unknown>,
+  category: string,
+  details: Record<string, unknown>,
   extra: Record<string, unknown>,
 ): EffectRecordFields {
   return {
-    category: 'basic',
-    details: {},
+    ...toCategory(category, details),
     duration: isEffectDuration(extra.duration)
       ? extra.duration
       : DEFAULT_EFFECT_DURATION,

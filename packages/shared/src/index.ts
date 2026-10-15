@@ -13,4 +13,5 @@ export * from './abilities.js';
 export * from './effects.js';
 export * from './effectDuration.js';
 export * from './effectDurationLabels.js';
+export * from './effectSenses.js';
 export * from './returnPath.js';

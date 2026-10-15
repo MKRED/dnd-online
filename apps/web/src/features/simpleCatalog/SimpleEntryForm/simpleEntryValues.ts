@@ -13,8 +13,14 @@ import type {
   SimpleEntry,
   SimpleInput,
 } from '../simpleCatalogs';
+import {
+  categoryValidate,
+  toCategoryValues,
+  toCategoryVariant,
+  type CategoryValues,
+} from './categoryValues';
 
-export interface SimpleFormValues {
+export interface SimpleFormValues extends CategoryValues {
   name: string;
   category: string;
   description: string;
@@ -36,6 +42,7 @@ export const simpleFormValidate = {
       ? null
       : `Описание — не длиннее ${CATALOG_DESCRIPTION_MAX_LENGTH} символов`,
   duration: { amount: validateDurationAmount },
+  ...categoryValidate,
 };
 
 export function toSimpleFormValues(
@@ -47,25 +54,28 @@ export function toSimpleFormValues(
     category: entry?.category ?? def.categories[0],
     description: entry?.description ?? '',
     isPublic: entry?.isPublic ?? false,
+    ...toCategoryValues(entry),
     duration: toDurationValues(
       entry && 'duration' in entry ? entry.duration : undefined,
     ),
   };
 }
 
-// Пока у категорий нет своих полей, details всегда пустой.
 export function toSimpleInput(
   def: SimpleCatalogDef,
   values: SimpleFormValues,
 ): SimpleInput {
   const input = {
     name: values.name.trim(),
-    category: 'basic' as const,
-    details: {},
+    ...toCategoryVariant(values.category, values),
     description: values.description,
     isPublic: values.isPublic,
   };
-  return def.hasDuration
-    ? { ...input, duration: fromDurationValues(values.duration) }
-    : input;
+  // Категории и поля приходят из списка категорий раздела (def.categories), поэтому
+  // способность получит только свои категории; TypeScript этой связи не видит.
+  return (
+    def.hasDuration
+      ? { ...input, duration: fromDurationValues(values.duration) }
+      : input
+  ) as SimpleInput;
 }

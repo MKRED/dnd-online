@@ -10,6 +10,7 @@ import {
   useCollectionView,
 } from '../catalog';
 import { usePageTitle } from '../../lib/usePageTitle';
+import CategoryChips from './CategoryChips';
 import SimpleBadges from './SimpleBadges';
 import type { SimpleCatalogDef } from './simpleCatalogs';
 import {
@@ -36,7 +37,7 @@ function SimpleListPage({ def }: SimpleListPageProps) {
   const [params, setParams] = useSearchParams();
   const [scope, setScope] = useCatalogScope();
   const [view, setView] = useCollectionView();
-  const filters = readSimpleFilters(params);
+  const filters = readSimpleFilters(params, def.categories);
   const { entries, error } = useCatalogList(
     def.api.list,
     scope,
@@ -68,6 +69,16 @@ function SimpleListPage({ def }: SimpleListPageProps) {
               value={filters.query}
               onChange={(query) => setFilters({ ...filters, query })}
             />
+            {def.categories.length > 1 && entries && (
+              <CategoryChips
+                def={def}
+                entries={entries}
+                value={filters.categories}
+                onChange={(categories) =>
+                  setFilters({ ...filters, categories })
+                }
+              />
+            )}
             <Select
               aria-label="Сортировка"
               data={SORT_OPTIONS}
@@ -105,14 +116,14 @@ function SimpleListPage({ def }: SimpleListPageProps) {
             />
           ) : (
             <Stack align="flex-start" gap="sm">
-              <Text c="dimmed">Под поиск ничего не подошло.</Text>
+              <Text c="dimmed">Под фильтры ничего не подошло.</Text>
               <Button
                 variant="default"
                 onClick={() =>
                   setFilters({ ...DEFAULT_SIMPLE_FILTERS, sort: filters.sort })
                 }
               >
-                Сбросить поиск
+                Сбросить фильтры
               </Button>
             </Stack>
           )}

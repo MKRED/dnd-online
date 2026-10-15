@@ -20,6 +20,20 @@ describe('effects.config', () => {
     ).toEqual({ kind: 'permanent' });
   });
 
+  it('читает чувство, а испорченное — как «Базовый»', () => {
+    const details = { sense: 'darkvision', range: 60 };
+    expect(toEffectVariant('sense', details, {})).toMatchObject({
+      category: 'sense',
+      details,
+    });
+    expect(
+      toEffectVariant('sense', { sense: 'darkvision', range: null }, {}),
+    ).toMatchObject({ category: 'basic', details: {} });
+    expect(toEffectVariant('aura', {}, {})).toMatchObject({
+      category: 'basic',
+    });
+  });
+
   it('пишет длительность из тела в extra', () => {
     const duration = { kind: 'turn', edge: 'end', owner: 'bearer' } as const;
     expect(EFFECTS_CONFIG.toExtra?.({ duration } as EffectDto)).toEqual({

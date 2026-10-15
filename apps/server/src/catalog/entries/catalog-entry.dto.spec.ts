@@ -5,6 +5,7 @@ import { validate } from 'class-validator';
 import { describe, expect, it } from 'vitest';
 import { AbilityDto } from '../../abilities/dto/ability.dto.js';
 import { EffectDto } from '../../effects/dto/effect.dto.js';
+import type { CatalogEntryDto } from './dto/catalog-entry.dto.js';
 
 const valid = {
   name: 'Ядовитый луч',
@@ -17,7 +18,7 @@ const valid = {
 // Общие поля проверяет CatalogEntryDto, категорию и details — класс каталога. У обоих
 // каталогов пока одна категория, поэтому проверяем их одними и теми же случаями. У эффекта
 // длительность обязательна — кладём её в тело.
-describe.each([
+describe.each<[string, new () => CatalogEntryDto, object]>([
   ['AbilityDto', AbilityDto, {}],
   ['EffectDto', EffectDto, { duration: { kind: 'permanent' } }],
 ])('%s', (_name, Dto, own) => {
@@ -41,7 +42,7 @@ describe.each([
   });
 
   it('не пускает неизвестную категорию', async () => {
-    expect(await errorsOf({ category: 'spell' })).toEqual(['category']);
+    expect(await errorsOf({ category: 'aura' })).toEqual(['category']);
   });
 
   it('у базовой категории details — только пустой объект', async () => {
@@ -92,5 +93,34 @@ describe('EffectDto: длительность', () => {
       }),
     ).toEqual(['duration']);
     expect(await errorsOf({ kind: 'instant' })).toEqual(['duration']);
+  });
+});
+
+describe('EffectDto: чувство', () => {
+  async function errorsOf(details: unknown): Promise<string[]> {
+    const errors = await validate(
+      plainToInstance(EffectDto, {
+        ...valid,
+        category: 'sense',
+        details,
+        duration: { kind: 'permanent' },
+      }),
+    );
+    return errors.map((error) => error.property);
+  }
+
+  it('принимает вид с дистанцией и видение невидимого без неё', async () => {
+    expect(await errorsOf({ sense: 'darkvision', range: 60 })).toEqual([]);
+    expect(await errorsOf({ sense: 'see_invisible', range: null })).toEqual([]);
+  });
+
+  it('не пускает чувство без дистанции, некратную 5 и пустые поля', async () => {
+    expect(await errorsOf({ sense: 'darkvision', range: null })).toEqual([
+      'details',
+    ]);
+    expect(await errorsOf({ sense: 'blindsight', range: 12 })).toEqual([
+      'details',
+    ]);
+    expect(await errorsOf({})).toEqual(['details']);
   });
 });

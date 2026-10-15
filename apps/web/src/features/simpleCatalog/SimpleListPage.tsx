@@ -1,4 +1,5 @@
 import { Button, Select, Stack, Text } from '@mantine/core';
+import { formatEffectDurationShort } from 'shared';
 import { useSearchParams } from 'react-router-dom';
 import {
   CatalogCollection,
@@ -88,6 +89,12 @@ function SimpleListPage({ def }: SimpleListPageProps) {
               scope={scope}
               basePath={def.path}
               imagePath={def.api.imagePath}
+              // Длительность — в колонке списка, как вес у предметов.
+              numbers={(entry) =>
+                'duration' in entry
+                  ? { primary: formatEffectDurationShort(entry.duration) }
+                  : undefined
+              }
               badges={(entry) => (
                 <SimpleBadges
                   def={def}

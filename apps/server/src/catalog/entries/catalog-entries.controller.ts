@@ -10,13 +10,19 @@ import {
 import type { AuthenticatedRequest } from '../../auth/auth.guard.js';
 import { ListCatalogQueryDto } from '../catalog-list-query.dto.js';
 import type { CatalogEntriesService } from './catalog-entries.service.js';
+import type { CatalogEntryDto } from './dto/catalog-entry.dto.js';
 
 // Маршруты простого каталога без тела записи: список, карточка, удаление. Каждый каталог
 // наследует класс со своим адресом и AuthGuard и сам объявляет POST и PUT: тело
 // проверяется DTO его класса, а базовый метод не знает, какого. Nest читает декораторы
 // методов и по цепочке наследования.
-export abstract class CatalogEntriesController<V> {
-  protected constructor(protected readonly service: CatalogEntriesService<V>) {}
+export abstract class CatalogEntriesController<
+  V,
+  D extends CatalogEntryDto = CatalogEntryDto,
+> {
+  protected constructor(
+    protected readonly service: CatalogEntriesService<V, D>,
+  ) {}
 
   @Get()
   list(@Req() req: AuthenticatedRequest, @Query() query: ListCatalogQueryDto) {

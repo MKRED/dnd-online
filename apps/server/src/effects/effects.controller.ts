@@ -8,17 +8,20 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import type { EffectVariant } from 'shared';
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { CatalogEntriesController } from '../catalog/entries/catalog-entries.controller.js';
+import type { EffectRecordFields } from './effects.config.js';
 import { EffectsService } from './effects.service.js';
 import { EffectDto } from './dto/effect.dto.js';
 
 // Список, карточка и удаление — общие (CatalogEntriesController), тело — EffectDto.
 @Controller('effects')
 @UseGuards(AuthGuard)
-export class EffectsController extends CatalogEntriesController<EffectVariant> {
+export class EffectsController extends CatalogEntriesController<
+  EffectRecordFields,
+  EffectDto
+> {
   constructor(service: EffectsService) {
     super(service);
   }

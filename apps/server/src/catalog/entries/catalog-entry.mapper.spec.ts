@@ -13,6 +13,7 @@ const row: CatalogEntryRow = {
   name: 'Тёмное зрение',
   category: 'basic',
   details: {},
+  extra: {},
   description: '60 фт.',
   createdAt: new Date('2026-10-15T10:00:00Z'),
   updatedAt: new Date('2026-10-15T11:00:00Z'),
@@ -66,6 +67,7 @@ describe('catalog-entry.mapper', () => {
       name: 'Луч',
       category: 'basic',
       details: {},
+      extra: {},
       description: '',
       isPublic: false,
     });

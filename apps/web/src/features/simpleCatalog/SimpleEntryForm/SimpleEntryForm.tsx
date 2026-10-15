@@ -12,49 +12,16 @@ import {
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { errorMessage } from '../../../lib/apiRequest';
+import { ImageField, saveWithImage, useImageDraft } from '../../catalog';
+import DurationField from '../DurationField';
+import type { SimpleCatalogDef, SimpleEntry } from '../simpleCatalogs';
 import {
-  CATALOG_DESCRIPTION_MAX_LENGTH,
-  CATALOG_NAME_MAX_LENGTH,
-} from 'shared';
-import { errorMessage } from '../../lib/apiRequest';
-import { ImageField, saveWithImage, useImageDraft } from '../catalog';
-import type {
-  SimpleCatalogDef,
-  SimpleEntry,
-  SimpleInput,
-} from './simpleCatalogs';
-
-interface FormValues {
-  name: string;
-  category: string;
-  description: string;
-  isPublic: boolean;
-}
-
-// Те же правила и тексты, что у сервера (CatalogEntryDto).
-const validate = {
-  name: (value: string) => {
-    const length = value.trim().length;
-    return length >= 1 && length <= CATALOG_NAME_MAX_LENGTH
-      ? null
-      : `Название — от 1 до ${CATALOG_NAME_MAX_LENGTH} символов`;
-  },
-  description: (value: string) =>
-    value.length <= CATALOG_DESCRIPTION_MAX_LENGTH
-      ? null
-      : `Описание — не длиннее ${CATALOG_DESCRIPTION_MAX_LENGTH} символов`,
-};
-
-// Пока у категорий нет своих полей, details всегда пустой.
-function toInput(values: FormValues): SimpleInput {
-  return {
-    name: values.name.trim(),
-    category: 'basic',
-    details: {},
-    description: values.description,
-    isPublic: values.isPublic,
-  };
-}
+  simpleFormValidate,
+  toSimpleFormValues,
+  toSimpleInput,
+  type SimpleFormValues,
+} from './simpleEntryValues';
 
 interface SimpleEntryFormProps {
   def: SimpleCatalogDef;
@@ -74,14 +41,9 @@ function SimpleEntryForm({
   cancelTo,
   onSaved,
 }: SimpleEntryFormProps) {
-  const form = useForm<FormValues>({
-    initialValues: {
-      name: entry?.name ?? '',
-      category: entry?.category ?? def.categories[0],
-      description: entry?.description ?? '',
-      isPublic: entry?.isPublic ?? false,
-    },
-    validate,
+  const form = useForm<SimpleFormValues>({
+    initialValues: toSimpleFormValues(def, entry),
+    validate: simpleFormValidate,
   });
   const [draft, setDraft] = useImageDraft(entry?.image ?? null);
   // Запись на сервере. При создании она появляется после первого «Сохранить»: если
@@ -93,7 +55,7 @@ function SimpleEntryForm({
   const handleSubmit = form.onSubmit((values) => {
     setError(null);
     setSubmitting(true);
-    const input = toInput(values);
+    const input = toSimpleInput(def, values);
     const savedId = saved?.id;
     saveWithImage(
       () => (savedId ? def.api.update(savedId, input) : def.api.create(input)),
@@ -152,6 +114,7 @@ function SimpleEntryForm({
                 maw={320}
                 {...form.getInputProps('category')}
               />
+              {def.hasDuration && <DurationField form={form} />}
               <Textarea
                 label="Описание"
                 placeholder={def.texts.descriptionPlaceholder}

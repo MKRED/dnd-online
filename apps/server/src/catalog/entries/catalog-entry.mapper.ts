@@ -9,12 +9,16 @@ import type { CatalogEntryDto } from './dto/catalog-entry.dto.js';
 export type CatalogEntryRow = CatalogEntryTable['$inferSelect'];
 type NewCatalogEntryRow = CatalogEntryTable['$inferInsert'];
 
-// Категория и её поля из базы. Каждый каталог читает их сам: в базе category — строка,
-// а в API — размеченное объединение каталога.
+// Категория, её поля и поля каталога (extra) из базы. Каждый каталог читает их сам: в
+// базе category — строка, а в API — размеченное объединение каталога.
 export type ToVariant<V> = (
   category: string,
   details: Record<string, unknown>,
+  extra: Record<string, unknown>,
 ) => V;
+
+// Поля каталога из тела запроса — в колонку extra. У каталога без своих полей её нет.
+export type ToExtra<D> = (dto: D) => Record<string, unknown>;
 
 export function toCatalogEntry<V>(
   row: CatalogEntryRow,
@@ -28,7 +32,7 @@ export function toCatalogEntry<V>(
     authorNickname,
     isPublic: row.isPublic,
     name: row.name,
-    ...toVariant(row.category, row.details),
+    ...toVariant(row.category, row.details, row.extra),
     description: row.description,
     image: toCatalogImage(image),
     createdAt: row.createdAt.toISOString(),
@@ -37,8 +41,9 @@ export function toCatalogEntry<V>(
 }
 
 // Поля записи из DTO — общая часть создания и полного редактирования (PUT).
-export function toCatalogEntryValues(
-  dto: CatalogEntryDto,
+export function toCatalogEntryValues<D extends CatalogEntryDto>(
+  dto: D,
+  toExtra?: ToExtra<D>,
 ): Omit<NewCatalogEntryRow, 'authorId'> {
   return {
     name: dto.name,
@@ -46,6 +51,7 @@ export function toCatalogEntryValues(
     // Копия, а не сам объект: у интерфейсов полей нет индексной сигнатуры, которую ждёт
     // колонка.
     details: { ...dto.details },
+    extra: toExtra?.(dto) ?? {},
     description: dto.description ?? '',
     isPublic: dto.isPublic,
   };

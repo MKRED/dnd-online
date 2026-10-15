@@ -162,6 +162,13 @@
       "when": 1792040626646,
       "tag": "0022_abilities_effects",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792046231297,
+      "tag": "0023_catalog_extra",
+      "breakpoints": true
     }
   ]
 }

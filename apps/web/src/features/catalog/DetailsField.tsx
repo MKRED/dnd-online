@@ -11,7 +11,7 @@ function DetailsField({
 }) {
   return (
     <Group gap="xs" wrap="nowrap" align="baseline">
-      <Text c="dimmed" size="sm" w={88} style={{ flexShrink: 0 }}>
+      <Text c="dimmed" size="sm" w={104} style={{ flexShrink: 0 }}>
         {label}
       </Text>
       <Text size="sm">{children}</Text>

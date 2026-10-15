@@ -1,4 +1,5 @@
 import type { CatalogEntryFields, CatalogEntryInputFields } from './catalog.js';
+import type { EffectDuration } from './effectDuration.js';
 
 // Эффекты (docs/plan/effects.md): общий каталог того, что действует на существо, —
 // образцы; наложенный экземпляр появится со связью с персонажем. Поля категории лежат
@@ -12,5 +13,12 @@ export type EffectVariant = {
   details: Record<string, never>;
 };
 
-export type Effect = EffectVariant & CatalogEntryFields;
-export type EffectInput = EffectVariant & CatalogEntryInputFields;
+// Поля всех эффектов, кроме общих для каталогов.
+export interface EffectFields {
+  duration: EffectDuration;
+}
+
+export type Effect = EffectVariant & EffectFields & CatalogEntryFields;
+export type EffectInput = EffectVariant &
+  EffectFields &
+  CatalogEntryInputFields;

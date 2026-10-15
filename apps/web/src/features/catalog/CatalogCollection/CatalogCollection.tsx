@@ -24,9 +24,12 @@ interface CatalogCollectionProps<Entry extends CollectionEntry> {
   basePath: string;
   imagePath: ImagePathFn;
   badges: (entry: Entry) => ReactNode;
-  // Числа записи (у предмета — вес и цена): в сетке строкой под бейджами, в списке —
-  // колонкой справа, чтобы их было удобно сравнивать. Нет — ничего не показываем.
-  numbers?: (entry: Entry) => { primary: string; secondary: string };
+  // Числа записи (у предмета — вес и цена, у эффекта — длительность): в сетке строкой
+  // под бейджами, в списке — колонкой справа, чтобы их было удобно сравнивать. Нет —
+  // ничего не показываем.
+  numbers?: (
+    entry: Entry,
+  ) => { primary: string; secondary?: string } | undefined;
 }
 
 // Записи каталога сеткой карточек (узнать по картинке) или списком (сравнить числа).
@@ -76,9 +79,11 @@ function CatalogCollection<Entry extends CollectionEntry>({
                 {values && (
                   <div className={classes.rowNumbers}>
                     <Text size="sm">{values.primary}</Text>
-                    <Text size="sm" c="dimmed">
-                      {values.secondary}
-                    </Text>
+                    {values.secondary && (
+                      <Text size="sm" c="dimmed">
+                        {values.secondary}
+                      </Text>
+                    )}
                   </div>
                 )}
               </Group>
@@ -107,7 +112,9 @@ function CatalogCollection<Entry extends CollectionEntry>({
               {badges(entry)}
               {values && (
                 <Text size="xs" c="dimmed">
-                  {values.primary} · {values.secondary}
+                  {values.secondary
+                    ? `${values.primary} · ${values.secondary}`
+                    : values.primary}
                 </Text>
               )}
               {!mine && (

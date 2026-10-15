@@ -17,38 +17,44 @@ import {
 import {
   toCatalogEntry,
   toCatalogEntryValues,
+  type ToExtra,
   type ToVariant,
 } from './catalog-entry.mapper.js';
 import type { CatalogEntryDto } from './dto/catalog-entry.dto.js';
 
-// Чем один простой каталог отличается от другого. catalog — имя в логах.
-export interface CatalogEntriesConfig<V> {
+// Чем один простой каталог отличается от другого. catalog — имя в логах. D — тело
+// запроса каталога.
+export interface CatalogEntriesConfig<
+  V,
+  D extends CatalogEntryDto = CatalogEntryDto,
+> {
   catalog: string;
   table: CatalogEntryTable;
   images: CatalogImageTables;
   access: CatalogAccess;
   toVariant: ToVariant<V>;
+  toExtra?: ToExtra<D>;
 }
 
 // CRUD простого каталога (способности, эффекты): доступ как у предметов, без их веса,
 // стоимости и наборов. Каждый каталог наследует класс со своими таблицами и логгером.
-export abstract class CatalogEntriesService<V> {
+export abstract class CatalogEntriesService<
+  V,
+  D extends CatalogEntryDto = CatalogEntryDto,
+> {
   protected constructor(
     private readonly databaseService: DatabaseService,
     private readonly logger: PinoLogger,
-    private readonly config: CatalogEntriesConfig<V>,
+    private readonly config: CatalogEntriesConfig<V, D>,
   ) {}
 
-  async create(
-    userId: string,
-    dto: CatalogEntryDto,
-  ): Promise<V & CatalogEntryFields> {
-    const { table, catalog } = this.config;
+  async create(userId: string, dto: D): Promise<V & CatalogEntryFields> {
+    const { table, catalog, toExtra } = this.config;
     const t0 = Date.now();
     try {
       const [row] = await this.databaseService.db
         .insert(table)
-        .values({ authorId: userId, ...toCatalogEntryValues(dto) })
+        .values({ authorId: userId, ...toCatalogEntryValues(dto, toExtra) })
         .returning({ id: table.id });
       this.logger.info(
         { durationMs: Date.now() - t0, catalog, userId, entryId: row.id },
@@ -139,15 +145,15 @@ export abstract class CatalogEntriesService<V> {
   async replace(
     userId: string,
     id: string,
-    dto: CatalogEntryDto,
+    dto: D,
   ): Promise<V & CatalogEntryFields> {
-    const { table, access, catalog } = this.config;
+    const { table, access, catalog, toExtra } = this.config;
     const t0 = Date.now();
     const { db } = this.databaseService;
     try {
       const [row] = await db
         .update(table)
-        .set(toCatalogEntryValues(dto))
+        .set(toCatalogEntryValues(dto, toExtra))
         .where(authoredEntry(access, userId, id))
         .returning({ id: table.id });
       if (!row) await rejectCatalogEdit(db, access, userId, id);

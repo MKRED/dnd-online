@@ -15,14 +15,15 @@ const valid = {
 };
 
 // Общие поля проверяет CatalogEntryDto, категорию и details — класс каталога. У обоих
-// каталогов пока одна категория, поэтому проверяем их одними и теми же случаями.
+// каталогов пока одна категория, поэтому проверяем их одними и теми же случаями. У эффекта
+// длительность обязательна — кладём её в тело.
 describe.each([
-  ['AbilityDto', AbilityDto],
-  ['EffectDto', EffectDto],
-])('%s', (_name, Dto) => {
+  ['AbilityDto', AbilityDto, {}],
+  ['EffectDto', EffectDto, { duration: { kind: 'permanent' } }],
+])('%s', (_name, Dto, own) => {
   async function errorsOf(overrides: object): Promise<string[]> {
     const errors = await validate(
-      plainToInstance(Dto, { ...valid, ...overrides }),
+      plainToInstance(Dto, { ...valid, ...own, ...overrides }),
     );
     return errors.map((error) => error.property);
   }
@@ -54,5 +55,42 @@ describe.each([
     expect(await errorsOf({ description: 'я'.repeat(5001) })).toEqual([
       'description',
     ]);
+  });
+});
+
+describe('EffectDto: длительность', () => {
+  async function errorsOf(duration: unknown): Promise<string[]> {
+    const errors = await validate(
+      plainToInstance(EffectDto, { ...valid, duration }),
+    );
+    return errors.map((error) => error.property);
+  }
+
+  it('принимает каждый вид длительности', async () => {
+    expect(
+      await errorsOf({
+        kind: 'time',
+        amount: 10,
+        unit: 'minute',
+        concentration: true,
+      }),
+    ).toEqual([]);
+    expect(
+      await errorsOf({ kind: 'turn', edge: 'start', owner: 'creator' }),
+    ).toEqual([]);
+    expect(await errorsOf({ kind: 'rest', rest: 'short' })).toEqual([]);
+  });
+
+  it('требует длительность и не пускает неверную', async () => {
+    expect(await errorsOf(undefined)).toEqual(['duration']);
+    expect(
+      await errorsOf({
+        kind: 'time',
+        amount: 0,
+        unit: 'minute',
+        concentration: false,
+      }),
+    ).toEqual(['duration']);
+    expect(await errorsOf({ kind: 'instant' })).toEqual(['duration']);
   });
 });

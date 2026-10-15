@@ -40,6 +40,13 @@ export function catalogEntryTable(name: string) {
         .notNull()
         .$type<Record<string, unknown>>()
         .default({}),
+      // Поля всех записей каталога, которых нет у других каталогов (у эффекта —
+      // длительность). jsonb, а не свои колонки: таблицы каталогов — одной заготовки, и
+      // общий код работает с любой. Состав читает и проверяет код каталога.
+      extra: jsonb('extra')
+        .notNull()
+        .$type<Record<string, unknown>>()
+        .default({}),
       description: text('description').notNull().default(''),
       createdAt: timestamp('created_at', { withTimezone: true })
         .notNull()

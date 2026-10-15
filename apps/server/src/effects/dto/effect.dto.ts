@@ -1,5 +1,10 @@
-import { IsIn } from 'class-validator';
-import { EFFECT_CATEGORIES, type EffectCategory } from 'shared';
+import { IsIn, ValidateBy } from 'class-validator';
+import {
+  EFFECT_CATEGORIES,
+  isEffectDuration,
+  type EffectCategory,
+  type EffectDuration,
+} from 'shared';
 import {
   CategoryDetails,
   isEmptyDetails,
@@ -17,4 +22,14 @@ export class EffectDto extends CatalogEntryDto {
     'Поля эффекта не подходят к его категории',
   )
   details: object;
+
+  // Общее поле всех эффектов, обязательно. Виды и пределы — в shared (effectDuration.ts).
+  @ValidateBy({
+    name: 'effectDuration',
+    validator: {
+      validate: isEffectDuration,
+      defaultMessage: () => 'Длительность эффекта задана неверно',
+    },
+  })
+  duration: EffectDuration;
 }

@@ -1,7 +1,7 @@
 import {
-  defaultItemThumbCrop,
+  defaultCatalogThumbCrop,
   type Item,
-  type ItemImage,
+  type CatalogImage,
   type ThumbCrop,
 } from 'shared';
 
@@ -11,7 +11,7 @@ export type ImageDraft =
   | { kind: 'none' }
   // Сохранённая картинка; crop — в пикселях варианта full, может отличаться от
   // сохранённого, если вырез поправили.
-  | { kind: 'saved'; image: ItemImage; crop: ThumbCrop }
+  | { kind: 'saved'; image: CatalogImage; crop: ThumbCrop }
   // Новый файл. Размеры и вырез — в пикселях исходного файла; null — вырез не трогали,
   // сервер сам впишет картинку целиком.
   | {
@@ -47,7 +47,7 @@ export function effectiveCrop(draft: Exclude<ImageDraft, { kind: 'none' }>): {
   return {
     width,
     height,
-    crop: draft.crop ?? defaultItemThumbCrop(width, height),
+    crop: draft.crop ?? defaultCatalogThumbCrop(width, height),
   };
 }
 

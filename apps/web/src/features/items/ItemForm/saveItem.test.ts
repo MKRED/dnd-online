@@ -1,4 +1,4 @@
-import type { Item, ItemImage, ItemInput } from 'shared';
+import type { Item, CatalogImage, ItemInput } from 'shared';
 import { describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../../../lib/apiRequest';
 import type { ImageDraft } from './imageDraft';
@@ -15,7 +15,7 @@ const input: ItemInput = {
   isPublic: false,
 };
 const item = { id: 'i1', image: null } as Item;
-const savedImage: ItemImage = {
+const savedImage: CatalogImage = {
   version: 1,
   width: 1000,
   height: 250,

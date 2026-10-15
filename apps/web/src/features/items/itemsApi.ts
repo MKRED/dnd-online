@@ -1,14 +1,14 @@
 import type {
   Item,
-  ItemImage,
-  ItemImageVariant,
+  CatalogImage,
+  CatalogImageVariant,
   ItemInput,
-  ItemListScope,
+  CatalogListScope,
   ThumbCrop,
 } from 'shared';
 import { apiRequest } from '../../lib/apiRequest';
 
-export function listItems(scope: ItemListScope): Promise<Item[]> {
+export function listItems(scope: CatalogListScope): Promise<Item[]> {
   return apiRequest(`/items?scope=${scope}`);
 }
 
@@ -37,7 +37,7 @@ const imageBase = (itemId: string) => `/items/${itemId}/image`;
 export function uploadItemImage(
   itemId: string,
   file: File,
-): Promise<ItemImage> {
+): Promise<CatalogImage> {
   const body = new FormData();
   body.append('file', file);
   return apiRequest(imageBase(itemId), { method: 'PUT', body });
@@ -46,7 +46,7 @@ export function uploadItemImage(
 export function recropItemImage(
   itemId: string,
   thumbCrop: ThumbCrop,
-): Promise<ItemImage> {
+): Promise<CatalogImage> {
   return apiRequest(imageBase(itemId), {
     method: 'PATCH',
     body: JSON.stringify({ thumbCrop }),
@@ -61,7 +61,7 @@ export function deleteItemImage(itemId: string): Promise<void> {
 // замене картинки и смене выреза, а сервер разрешает кешировать ответ навсегда.
 export function itemImagePath(
   itemId: string,
-  variant: ItemImageVariant,
+  variant: CatalogImageVariant,
   version: number,
 ): string {
   return `${imageBase(itemId)}?variant=${variant}&v=${version}`;

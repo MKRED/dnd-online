@@ -1,4 +1,5 @@
-import type { ItemCategory, ItemImage, ItemRarity } from './items.js';
+import type { CatalogImage } from './catalogImage.js';
+import type { ItemCategory, ItemRarity } from './items.js';
 
 // Инвентарь персонажа (docs/plan/character-inventory.md): строки ссылаются на предметы
 // каталога. «При себе» входит в груз, «Хранилище» — без лимита и в груз не входит.
@@ -16,7 +17,7 @@ export interface InventoryItemCard {
   rarity: ItemRarity;
   weight: number;
   isPublic: boolean;
-  image: ItemImage | null;
+  image: CatalogImage | null;
 }
 
 // Почему у строки нет карточки: автор скрыл предмет от смотрящего или удалил его.

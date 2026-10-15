@@ -10,7 +10,7 @@ import {
   itemImages,
   items,
 } from '../../database/schema/index.js';
-import { toItemImage } from '../../items/items.mapper.js';
+import { toCatalogImage } from '../../catalog/catalog-image.mapper.js';
 
 type Db = DatabaseService['db'] | DbTransaction;
 type EntryRow = typeof characterItems.$inferSelect;
@@ -48,7 +48,7 @@ export function toInventoryEntry(
       rarity: item.rarity,
       weight: item.weight,
       isPublic: item.isPublic,
-      image: toItemImage(image),
+      image: toCatalogImage(image),
     },
     missing: null,
     inactive: !sees(ownerId),
@@ -73,7 +73,7 @@ export async function loadInventories(
     .from(characterItems)
     .innerJoin(characters, eq(characters.id, characterItems.characterId))
     .leftJoin(items, eq(items.id, characterItems.itemId))
-    .leftJoin(itemImages, eq(itemImages.itemId, items.id))
+    .leftJoin(itemImages, eq(itemImages.ownerId, items.id))
     .where(inArray(characterItems.characterId, [...characterIds]))
     // id — тай-брейкер на случай одинакового времени.
     .orderBy(asc(characterItems.addedAt), asc(characterItems.id));

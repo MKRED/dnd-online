@@ -1,4 +1,4 @@
-import type { Item, ItemImage, ItemInput } from 'shared';
+import type { Item, CatalogImage, ItemInput } from 'shared';
 import { errorMessage } from '../../../lib/apiRequest';
 import * as itemsApi from '../itemsApi';
 import { sameCrop, scaleCrop, type ImageDraft } from './imageDraft';
@@ -25,7 +25,7 @@ export async function saveItem(
   itemId: string | null,
   input: ItemInput,
   draft: ImageDraft,
-  savedImage: ItemImage | null,
+  savedImage: CatalogImage | null,
   api: ItemsApi = itemsApi,
 ): Promise<SaveResult> {
   const item = itemId
@@ -47,7 +47,7 @@ async function saveImage(
   api: ItemsApi,
   itemId: string,
   draft: ImageDraft,
-  savedImage: ItemImage | null,
+  savedImage: CatalogImage | null,
 ): Promise<void> {
   if (draft.kind === 'none') {
     if (savedImage) await api.deleteItemImage(itemId);

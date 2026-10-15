@@ -1,4 +1,4 @@
-import type { ThumbCrop } from './images.js';
+import type { CatalogImage } from './catalogImage.js';
 
 // Предметы (docs/plan/items.md): общий каталог. Общие поля у всех предметов одинаковые,
 // поля категории лежат в details — у каждой категории свои. Справка по весу, стоимости
@@ -68,7 +68,7 @@ export interface PackEntryItem {
   category: ItemCategory;
   weight: number;
   isPublic: boolean;
-  image: ItemImage | null;
+  image: CatalogImage | null;
 }
 
 export interface PackEntry extends PackEntryInput {
@@ -158,22 +158,6 @@ export const ITEM_DESCRIPTION_MAX_LENGTH = 5000;
 export const ITEM_MAX_WEIGHT = 10_000;
 export const ITEM_COST_MAX_AMOUNT = 1_000_000;
 
-// Картинка предмета — одна, в двух вариантах WebP: full — для просмотра, thumb —
-// квадрат 256×256 для карточки. Вырез миниатюры (ThumbCrop, в пикселях full) может
-// выходить за края картинки: поля прозрачные, так длинный меч вписывается целиком.
-export const ITEM_IMAGE_VARIANTS = ['full', 'thumb'] as const;
-export type ItemImageVariant = (typeof ITEM_IMAGE_VARIANTS)[number];
-
-export interface ItemImage {
-  // Растёт при замене картинки и смене выреза: идёт в адрес обоих вариантов, чтобы
-  // браузер не показал старую из кеша.
-  version: number;
-  // Размеры варианта full.
-  width: number;
-  height: number;
-  thumbCrop: ThumbCrop;
-}
-
 export type Item = ItemVariant & {
   id: string;
   authorId: string;
@@ -186,7 +170,7 @@ export type Item = ItemVariant & {
   weight: number;
   cost: ItemCost | null;
   description: string;
-  image: ItemImage | null;
+  image: CatalogImage | null;
   // Только у автора и только в GET /items/:id: в каких наборах лежит предмет.
   packs?: ItemPacks;
   // Только у автора и только в GET /items/:id: у каких персонажей лежит предмет.
@@ -208,7 +192,3 @@ export type ItemInput = ItemInputVariant & {
   // Скрыть вместе с предметом свои опубликованные наборы, где он лежит.
   hidePacks?: boolean;
 };
-
-// Какой список запрашиваем: свои предметы (и скрытые) или опубликованные всех.
-export const ITEM_LIST_SCOPES = ['mine', 'catalog'] as const;
-export type ItemListScope = (typeof ITEM_LIST_SCOPES)[number];

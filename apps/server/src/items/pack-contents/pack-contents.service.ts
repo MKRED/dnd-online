@@ -15,7 +15,7 @@ import {
   itemPackEntries,
   items,
 } from '../../database/schema/index.js';
-import { toItemImage } from '../items.mapper.js';
+import { toCatalogImage } from '../../catalog/catalog-image.mapper.js';
 import {
   PACK_ITEM_IN_PACK,
   type PackPublication,
@@ -144,7 +144,7 @@ export class PackContentsService {
         .select({ entry: itemPackEntries, item: items, image: itemImages })
         .from(itemPackEntries)
         .innerJoin(items, eq(items.id, itemPackEntries.itemId))
-        .leftJoin(itemImages, eq(itemImages.itemId, items.id))
+        .leftJoin(itemImages, eq(itemImages.ownerId, items.id))
         .where(inArray(itemPackEntries.packId, [...packIds]))
         .orderBy(asc(itemPackEntries.position));
       for (const { entry, item, image } of rows) {
@@ -159,7 +159,7 @@ export class PackContentsService {
                 category: item.category,
                 weight: item.weight,
                 isPublic: item.isPublic,
-                image: toItemImage(image),
+                image: toCatalogImage(image),
               }
             : null,
         });

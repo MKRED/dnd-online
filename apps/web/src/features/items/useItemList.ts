@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
-import type { Item, ItemListScope } from 'shared';
+import type { Item, CatalogListScope } from 'shared';
 import { errorMessage } from '../../lib/apiRequest';
 import { listItems } from './itemsApi';
 
 // Список предметов вкладки. items === null — ещё грузится (или ошибка).
-export function useItemList(scope: ItemListScope): {
+export function useItemList(scope: CatalogListScope): {
   items: Item[] | null;
   error: string | null;
 } {
   // Список помечен вкладкой, для которой загружен: при переключении старый не мелькает,
   // и сбрасывать состояние в эффекте не нужно.
   const [loaded, setLoaded] = useState<{
-    scope: ItemListScope;
+    scope: CatalogListScope;
     items: Item[] | null;
     error: string | null;
   } | null>(null);

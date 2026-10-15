@@ -15,7 +15,7 @@ import {
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { ItemDto } from './dto/item.dto.js';
-import { ListItemsQueryDto } from './dto/list-items-query.dto.js';
+import { ListCatalogQueryDto } from '../catalog/catalog-list-query.dto.js';
 import { ItemsService } from './items.service.js';
 
 @Controller('items')
@@ -29,7 +29,7 @@ export class ItemsController {
   }
 
   @Get()
-  list(@Req() req: AuthenticatedRequest, @Query() query: ListItemsQueryDto) {
+  list(@Req() req: AuthenticatedRequest, @Query() query: ListCatalogQueryDto) {
     return this.itemsService.list(req.user.sub, query.scope);
   }
 

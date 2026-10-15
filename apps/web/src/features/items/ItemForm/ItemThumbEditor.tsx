@@ -9,7 +9,7 @@ import {
 } from '@mantine/core';
 import { useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
-import { itemThumbCropError, type ThumbCrop } from 'shared';
+import { catalogThumbCropError, type ThumbCrop } from 'shared';
 import classes from './ItemForm.module.css';
 
 const MAX_ZOOM = 5;
@@ -56,7 +56,7 @@ function ItemThumbEditor({
   const [zoom, setZoom] = useState(1);
   const [area, setArea] = useState<Area | null>(null);
   const next = area && toThumbCrop(area);
-  const error = next && itemThumbCropError(next, width, height);
+  const error = next && catalogThumbCropError(next, width, height);
 
   return (
     <Modal opened onClose={onClose} title="Миниатюра" size="lg" centered>

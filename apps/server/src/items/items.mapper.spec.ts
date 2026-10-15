@@ -40,7 +40,7 @@ describe('items.mapper', () => {
   it('отдаёт метаданные картинки или null', () => {
     expect(toItem(row, 'Арвен').image).toBeNull();
     const image = {
-      itemId: 'i1',
+      ownerId: 'i1',
       width: 800,
       height: 200,
       thumbCrop: { x: 0, y: -300, size: 800 },

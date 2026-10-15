@@ -155,6 +155,13 @@
       "when": 1792035157762,
       "tag": "0021_drop_character_inventory",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1792040626646,
+      "tag": "0022_abilities_effects",
+      "breakpoints": true
     }
   ]
 }

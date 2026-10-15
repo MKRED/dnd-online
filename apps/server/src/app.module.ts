@@ -3,12 +3,14 @@ import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { join } from 'path';
 import { AppController } from './app.controller.js';
+import { AbilitiesModule } from './abilities/abilities.module.js';
 import { ApiTokensModule } from './api-tokens/api-tokens.module.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CharacterImagesModule } from './character-images/character-images.module.js';
 import { CharactersModule } from './characters/characters.module.js';
 import { DatabaseModule } from './database/database.module.js';
+import { EffectsModule } from './effects/effects.module.js';
 import { ItemImagesModule } from './item-images/item-images.module.js';
 import { ItemsModule } from './items/items.module.js';
 import { MapsModule } from './maps/maps.module.js';
@@ -29,6 +31,8 @@ const level = process.env.LOG_LEVEL ?? 'info';
     MapsModule,
     ItemsModule,
     ItemImagesModule,
+    AbilitiesModule,
+    EffectsModule,
     ApiTokensModule,
     ...webAppModules(),
     LoggerModule.forRoot({

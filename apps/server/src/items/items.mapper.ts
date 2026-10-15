@@ -2,20 +2,21 @@ import {
   TREASURE_KINDS,
   type Item,
   type ItemCategory,
-  type ItemImage,
   type ItemVariant,
   type PackEntry,
   type PackEntryInput,
   type TreasureKind,
 } from 'shared';
-import type { itemImages, items } from '../database/schema/index.js';
+import {
+  toCatalogImage,
+  type CatalogImageRow,
+} from '../catalog/catalog-image.mapper.js';
+import type { items } from '../database/schema/index.js';
 import type { ItemDto } from './dto/item.dto.js';
 import type { PackPublication } from './pack-contents/pack-contents.rules.js';
 
 type ItemRow = typeof items.$inferSelect;
 type NewItemRow = typeof items.$inferInsert;
-
-type ItemImageRow = typeof itemImages.$inferSelect;
 
 // Поля категории из базы. Еда, сохранённая до появления насыщения (2026-10-14), лежит с
 // пустыми details — читаем её как насыщение 0, а не правим строки миграцией. Состав
@@ -57,23 +58,11 @@ export function toItemVariant(
   return { category, details: {} };
 }
 
-// Метаданные картинки без байтов — для карточки предмета и строк состава набора.
-export function toItemImage(image: ItemImageRow | null): ItemImage | null {
-  return image
-    ? {
-        version: image.version,
-        width: image.width,
-        height: image.height,
-        thumbCrop: image.thumbCrop,
-      }
-    : null;
-}
-
 // Стоимость в базе — две колонки (check-ограничение держит их в паре), в API — объект.
 export function toItem(
   row: ItemRow,
   authorNickname: string,
-  image: ItemImageRow | null = null,
+  image: CatalogImageRow | null = null,
   packContents: PackEntry[] = [],
 ): Item {
   return {
@@ -90,7 +79,7 @@ export function toItem(
         ? { amount: row.costAmount, coin: row.costCoin }
         : null,
     description: row.description,
-    image: toItemImage(image),
+    image: toCatalogImage(image),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

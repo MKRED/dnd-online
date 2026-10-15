@@ -16,9 +16,10 @@ export default defineConfig({
     './src/database/schema/user-identities.ts',
     './src/database/schema/items.ts',
     './src/database/schema/item-images.ts',
-    './src/database/schema/item-image-files.ts',
     './src/database/schema/item-pack-entries.ts',
     './src/database/schema/character-items.ts',
+    './src/database/schema/abilities.ts',
+    './src/database/schema/effects.ts',
   ],
   dialect: 'postgresql',
   dbCredentials: {

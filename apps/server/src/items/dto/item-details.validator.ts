@@ -1,10 +1,5 @@
+import { isUUID } from 'class-validator';
 import {
-  ValidationArguments,
-  isUUID,
-  registerDecorator,
-} from 'class-validator';
-import {
-  ITEM_CATEGORIES,
   ITEM_MAX_WEIGHT,
   ITEM_PACK_MAX_ENTRIES,
   ITEM_PACK_MAX_QUANTITY,
@@ -13,12 +8,15 @@ import {
   type ItemCategory,
   type TreasureKind,
 } from 'shared';
+import {
+  CategoryDetails,
+  isEmptyDetails,
+} from '../../catalog/category-details.validator.js';
 
 // Проверка details для каждой категории. У категорий без своих полей — только пустой
 // объект. Поля у категорий пока простые, поэтому хватает функции; категория с
 // вложенными полями заведёт свой DTO-класс (validateSync с whitelist и
 // forbidNonWhitelisted).
-const isEmpty = (details: object) => Object.keys(details).length === 0;
 
 function isFood(details: object): boolean {
   const keys = Object.keys(details);
@@ -93,10 +91,10 @@ function isPack(details: object): boolean {
 }
 
 const DETAILS_CHECKS: Record<ItemCategory, (details: object) => boolean> = {
-  basic: isEmpty,
+  basic: isEmptyDetails,
   food: isFood,
-  material: isEmpty,
-  quest: isEmpty,
+  material: isEmptyDetails,
+  quest: isEmptyDetails,
   treasure: isTreasure,
   container: isContainer,
   pack: isPack,
@@ -111,27 +109,7 @@ const MESSAGES: Partial<Record<ItemCategory, string>> = {
 };
 const DEFAULT_MESSAGE = 'Поля предмета не подходят к его категории';
 
-// Кросс-полевая проверка: набор полей details зависит от category. Неизвестную категорию
-// отклоняет её собственный декоратор, поэтому здесь ошибка не дублируется.
+// Кросс-полевая проверка — общая для каталогов (CategoryDetails).
 export function DetailsForCategory() {
-  return function (target: object, propertyName: string) {
-    registerDecorator({
-      name: 'detailsForCategory',
-      target: target.constructor,
-      propertyName,
-      validator: {
-        validate(value: unknown, args: ValidationArguments) {
-          const { category } = args.object as { category?: unknown };
-          if (!ITEM_CATEGORIES.includes(category as ItemCategory)) return true;
-          if (typeof value !== 'object' || value === null) return false;
-          if (Array.isArray(value)) return false;
-          return DETAILS_CHECKS[category as ItemCategory](value);
-        },
-        defaultMessage(args: ValidationArguments) {
-          const { category } = args.object as { category?: unknown };
-          return MESSAGES[category as ItemCategory] ?? DEFAULT_MESSAGE;
-        },
-      },
-    });
-  };
+  return CategoryDetails(DETAILS_CHECKS, MESSAGES, DEFAULT_MESSAGE);
 }

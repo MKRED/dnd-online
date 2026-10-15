@@ -1,7 +1,7 @@
 import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { desc, eq, type SQL } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import type { Item, ItemListScope } from 'shared';
+import type { Item, CatalogListScope } from 'shared';
 import { DatabaseService } from '../database/database.service.js';
 import { itemImages, items, users } from '../database/schema/index.js';
 import { ItemDto } from './dto/item.dto.js';
@@ -71,7 +71,7 @@ export class ItemsService {
   }
 
   // «Мои» — все свои, и скрытые тоже; «Каталог» — опубликованные всех, свои в том числе.
-  async list(userId: string, scope: ItemListScope): Promise<Item[]> {
+  async list(userId: string, scope: CatalogListScope): Promise<Item[]> {
     const t0 = Date.now();
     const where =
       scope === 'mine' ? eq(items.authorId, userId) : eq(items.isPublic, true);
@@ -214,7 +214,7 @@ export class ItemsService {
         .from(items)
         .innerJoin(users, eq(users.id, items.authorId))
         // Метаданные картинки (без байтов): карточке нужно знать, есть ли миниатюра и её версию.
-        .leftJoin(itemImages, eq(itemImages.itemId, items.id))
+        .leftJoin(itemImages, eq(itemImages.ownerId, items.id))
         .where(where)
     );
   }

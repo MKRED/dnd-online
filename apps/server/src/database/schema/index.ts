@@ -10,6 +10,11 @@ export * from './api-tokens.js';
 export * from './user-identities.js';
 export * from './items.js';
 export * from './item-images.js';
-export * from './item-image-files.js';
 export * from './item-pack-entries.js';
 export * from './character-items.js';
+export * from './abilities.js';
+export * from './effects.js';
+export type {
+  CatalogEntryTable,
+  CatalogImageTables,
+} from './catalog-tables.js';

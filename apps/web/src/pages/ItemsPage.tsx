@@ -11,7 +11,7 @@ import {
 } from '@mantine/core';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import type { ItemListScope } from 'shared';
+import type { CatalogListScope } from 'shared';
 import {
   countByCategory,
   DEFAULT_ITEM_FILTERS,
@@ -48,7 +48,7 @@ function saveView(view: ItemCollectionView) {
   }
 }
 
-const EMPTY_TEXT: Record<ItemListScope, string> = {
+const EMPTY_TEXT: Record<CatalogListScope, string> = {
   mine: 'У вас пока нет предметов. Создайте первый — например, верёвку или зелье.',
   catalog:
     'В каталоге пока пусто. Опубликуйте свой предмет, чтобы его увидели другие.',
@@ -58,7 +58,7 @@ function ItemsPage() {
   usePageTitle('Предметы');
   // Вкладка и фильтры — в адресе: «Назад» с карточки предмета возвращает тот же список.
   const [params, setParams] = useSearchParams();
-  const scope: ItemListScope =
+  const scope: CatalogListScope =
     params.get('tab') === 'catalog' ? 'catalog' : 'mine';
   const filters = readItemFilters(params);
   const [view, setView] = useState(readView);

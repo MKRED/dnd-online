@@ -125,6 +125,20 @@ The app follows the real rules of DnD 5e, **2024 edition**. Don't write rules, l
   - a single colocated `*.spec.ts`/`*.test.ts` doesn't count.
 - **Colocate feature constants and types** with their usage, not in an app-wide barrel.
 
+### Tests
+
+New or changed logic ships with its tests in the same commit, whenever it can be tested:
+
+- **Every new or changed API route gets integration tests** in `apps/server/test/*.e2e-spec.ts` (how they work: [docs/server.md](docs/server.md#tests), plan: [docs/plan/testing.md](docs/plan/testing.md)). Cover at least:
+  - the happy path and what it changes in the data;
+  - access: anonymous (401), another user (404 or 403, as the module does it), and a shared/public variant if there is one;
+  - invalid input (400) and conflicts (409) the route promises.
+- **A new catalog** reuses `describeCatalog` (`test/support/catalog-scenario/`) and tests only its own fields.
+- **Pure logic** (rules in `packages/shared`, mappers, validators) gets unit tests next to it; UI gets component tests as described in [docs/web.md](docs/web.md).
+- **Check that a test can fail:** for an access rule, break it in the server code for a moment and see the test go red, then restore it.
+- **Before a commit or deploy, run every check** through the `test-runner` subagent (`.claude/agents/test-runner.md`), in the background. CI runs the same checks on every push to `master` and before every deploy.
+- If something truly can't be tested (an external service like lolka), say so in the report and in the plan, instead of skipping it silently.
+
 ### UI changes (`apps/web`)
 
 Any change the user sees or touches goes through two steps besides the code itself. The details and the checklist are in [docs/web.md](docs/web.md#ui-changes-ux-and-the-browser-check).

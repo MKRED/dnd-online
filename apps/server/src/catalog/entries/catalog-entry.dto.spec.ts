@@ -154,6 +154,7 @@ describe('AbilityDto: активация и затраты', () => {
           ...costs,
           uses: { count: { kind: 'proficiency' }, recovery: 'short_one' },
           spellSlot: { minLevel: 2 },
+          movement: { kind: 'feet', feet: 30 },
         },
       }),
     ).toEqual([]);

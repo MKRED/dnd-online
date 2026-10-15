@@ -48,8 +48,23 @@ export type UsesRecovery = (typeof USES_RECOVERIES)[number];
 export const USES_AMOUNT_MAX = 99;
 export const SPELL_SLOT_LEVEL_MAX = 9;
 
-export const MOVEMENT_COSTS = ['half', 'all'] as const;
-export type MovementCost = (typeof MOVEMENT_COSTS)[number];
+// Половина скорости, вся скорость или столько-то футов. Футы кратны 5 (клетка карты),
+// предел — с запасом выше обычной скорости, чтобы опечатка не дала 5000 фт.
+export type MovementCost =
+  { kind: 'half' } | { kind: 'all' } | { kind: 'feet'; feet: number };
+export const MOVEMENT_COST_KINDS = [
+  'half',
+  'all',
+  'feet',
+] as const satisfies readonly MovementCost['kind'][];
+export const MOVEMENT_FEET_STEP = 5;
+export const MOVEMENT_FEET_MAX = 120;
+
+export const isMovementFeet = (value: unknown) =>
+  Number.isInteger(value) &&
+  (value as number) >= MOVEMENT_FEET_STEP &&
+  (value as number) <= MOVEMENT_FEET_MAX &&
+  (value as number) % MOVEMENT_FEET_STEP === 0;
 
 // null — затраты такого вида нет.
 export interface AbilityCosts {
@@ -147,7 +162,19 @@ export function isAbilityCosts(value: unknown): value is AbilityCosts {
     (isObject(spellSlot) &&
       keysAre(spellSlot, 'minLevel') &&
       isIntIn(spellSlot.minLevel, 1, SPELL_SLOT_LEVEL_MAX));
-  const movementOk =
-    movement === null || MOVEMENT_COSTS.includes(movement as MovementCost);
+  const movementOk = movement === null || isMovementCost(movement);
   return usesOk && slotOk && movementOk && typeof hitDie === 'boolean';
+}
+
+function isMovementCost(value: unknown): value is MovementCost {
+  if (!isObject(value)) return false;
+  switch (value.kind) {
+    case 'half':
+    case 'all':
+      return keysAre(value, 'kind');
+    case 'feet':
+      return keysAre(value, 'feet,kind') && isMovementFeet(value.feet);
+    default:
+      return false;
+  }
 }

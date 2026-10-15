@@ -7,7 +7,7 @@ const full: AbilityFields = {
   costs: {
     uses: { count: { kind: 'ability', ability: 'wisdom' }, recovery: 'short' },
     spellSlot: { minLevel: 2 },
-    movement: 'all',
+    movement: { kind: 'feet', feet: 15 },
     hitDie: true,
   },
 };
@@ -55,6 +55,12 @@ describe('usageForm', () => {
         usage: { ...usage, usesCount: 'fixed' },
       }),
     ).toBe('От 1 до 99');
+    expect(usageValidate.movementFeet(12, { usage })).toBe(
+      'От 5 до 120, кратно 5',
+    );
+    expect(
+      usageValidate.movementFeet('', { usage: { ...usage, movement: 'all' } }),
+    ).toBeNull();
     expect(usageValidate.amount('', { usage })).toBeNull();
     expect(
       usageValidate.amount('', { usage: { ...usage, kind: 'time' } }),

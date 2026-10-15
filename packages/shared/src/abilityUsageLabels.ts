@@ -2,6 +2,7 @@ import {
   SPELL_SLOT_LEVEL_MAX,
   type AbilityActivation,
   type AbilityCosts,
+  type MovementCost,
   type UsesCount,
   type UsesRecovery,
 } from './abilityUsage.js';
@@ -62,6 +63,17 @@ function formatUsesCount(count: UsesCount): string {
   }
 }
 
+function formatMovement(movement: MovementCost): string {
+  switch (movement.kind) {
+    case 'half':
+      return 'Половина скорости';
+    case 'all':
+      return 'Вся скорость';
+    case 'feet':
+      return `${movement.feet} фт. перемещения`;
+  }
+}
+
 const RECOVERY_LABELS: Record<UsesRecovery, string> = {
   long: 'все после долгого отдыха',
   short: 'все после короткого или долгого отдыха',
@@ -86,11 +98,7 @@ export function formatCosts(costs: AbilityCosts): string[] {
           : `Ячейка заклинаний ${minLevel} круга или выше`,
     );
   }
-  if (costs.movement) {
-    lines.push(
-      costs.movement === 'half' ? 'Половина скорости' : 'Вся скорость',
-    );
-  }
+  if (costs.movement) lines.push(formatMovement(costs.movement));
   if (costs.hitDie) lines.push('Кость хитов');
   return lines;
 }

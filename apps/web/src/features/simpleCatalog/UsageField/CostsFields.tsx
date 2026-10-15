@@ -10,8 +10,11 @@ import {
 import type { UseFormReturnType } from '@mantine/form';
 import {
   ABILITY_SCORES,
+  MOVEMENT_FEET_MAX,
+  MOVEMENT_FEET_STEP,
   SPELL_SLOT_LEVEL_MAX,
   USES_AMOUNT_MAX,
+  type MovementCost,
   type UsesCount,
   type UsesRecovery,
 } from 'shared';
@@ -28,6 +31,12 @@ const RECOVERY_OPTIONS: { value: UsesRecovery; label: string }[] = [
   { value: 'long', label: 'Все — после долгого отдыха' },
   { value: 'short', label: 'Все — после короткого или долгого' },
   { value: 'short_one', label: 'Один — после короткого, все — после долгого' },
+];
+
+const MOVEMENT_OPTIONS: { value: MovementCost['kind']; label: string }[] = [
+  { value: 'half', label: 'Половина' },
+  { value: 'all', label: 'Вся скорость' },
+  { value: 'feet', label: 'Футы' },
 ];
 
 const ABILITY_OPTIONS = ABILITY_SCORES.map((value) => ({
@@ -117,15 +126,27 @@ function CostsFields({ form }: CostsFieldsProps) {
           {...form.getInputProps('usage.movementOn', { type: 'checkbox' })}
         />
         {usage.movementOn && (
-          <SegmentedControl
-            data={[
-              { value: 'half', label: 'Половина скорости' },
-              { value: 'all', label: 'Вся скорость' },
-            ]}
-            ml="xl"
-            style={{ alignSelf: 'flex-start' }}
-            {...form.getInputProps('usage.movement')}
-          />
+          <Group gap="xs" align="flex-start" {...nested}>
+            <SegmentedControl
+              aria-label="Сколько движения"
+              data={MOVEMENT_OPTIONS}
+              {...form.getInputProps('usage.movement')}
+            />
+            {usage.movement === 'feet' && (
+              <NumberInput
+                aria-label="Футов движения"
+                min={MOVEMENT_FEET_STEP}
+                max={MOVEMENT_FEET_MAX}
+                step={MOVEMENT_FEET_STEP}
+                allowDecimal={false}
+                allowNegative={false}
+                rightSection="фт."
+                rightSectionWidth={36}
+                w={110}
+                {...form.getInputProps('usage.movementFeet')}
+              />
+            )}
+          </Group>
         )}
         <Checkbox
           label="Кость хитов"

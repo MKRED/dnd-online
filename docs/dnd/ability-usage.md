@@ -45,7 +45,7 @@ Decided with the user on 2026-10-15 ([plan/abilities.md](../plan/abilities.md)).
 - **Costs** are four optional kinds, each at most once:
   - **Заряды** — a number 1–99, the proficiency bonus or an ability modifier (minimum 1), with one of the three recoveries above;
   - **Ячейка заклинаний** of at least level N (1 — any);
-  - **Движение** — half the speed or all of it;
+  - **Движение** — half the speed, all of it, or a fixed number of feet (5–120, a multiple of 5). The fixed feet are the user's addition (2026-10-15) for homebrew abilities; no 2024 feature found that costs a fixed distance;
   - **Кость хитов** — one.
 - **Left out for now**, written in the description: shared pools of the character, spending another ability's use, and use counts that grow with level. All of them belong to the character and come with the link to it.
 - **Terms:** «долгий отдых» as in the 2024 translation; «бонус мастерства» kept from the character sheet, though the 2024 translation says «бонус владения» (the user's choice).

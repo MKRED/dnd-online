@@ -2,8 +2,11 @@ import {
   ACTIVATION_AMOUNT_MAX,
   ABILITY_TRIGGER_MAX_LENGTH,
   DEFAULT_ABILITY_FIELDS,
+  MOVEMENT_FEET_MAX,
+  MOVEMENT_FEET_STEP,
   SPELL_SLOT_LEVEL_MAX,
   USES_AMOUNT_MAX,
+  isMovementFeet,
   type AbilityActivation,
   type AbilityActivationKind,
   type AbilityCosts,
@@ -31,7 +34,8 @@ export interface UsageValues {
   slotOn: boolean;
   slotLevel: number | string;
   movementOn: boolean;
-  movement: MovementCost;
+  movement: MovementCost['kind'];
+  movementFeet: number | string;
   hitDie: boolean;
 }
 
@@ -49,6 +53,7 @@ const BLANK: UsageValues = {
   slotLevel: 1,
   movementOn: false,
   movement: 'half',
+  movementFeet: 10,
   hitDie: false,
 };
 
@@ -76,7 +81,9 @@ export function toUsageValues(
   }
   if (costs.movement) {
     values.movementOn = true;
-    values.movement = costs.movement;
+    values.movement = costs.movement.kind;
+    if (costs.movement.kind === 'feet')
+      values.movementFeet = costs.movement.feet;
   }
   values.hitDie = costs.hitDie;
   return values;
@@ -105,13 +112,19 @@ function toUsesCount(values: UsageValues): UsesCount {
   }
 }
 
+function toMovement(values: UsageValues): MovementCost {
+  return values.movement === 'feet'
+    ? { kind: 'feet', feet: Number(values.movementFeet) }
+    : { kind: values.movement };
+}
+
 function toCosts(values: UsageValues): AbilityCosts {
   return {
     uses: values.usesOn
       ? { count: toUsesCount(values), recovery: values.usesRecovery }
       : null,
     spellSlot: values.slotOn ? { minLevel: Number(values.slotLevel) } : null,
-    movement: values.movementOn ? values.movement : null,
+    movement: values.movementOn ? toMovement(values) : null,
     hitDie: values.hitDie,
   };
 }
@@ -148,4 +161,10 @@ export const usageValidate = {
     !values.usage?.slotOn || intIn(value, SPELL_SLOT_LEVEL_MAX)
       ? null
       : `От 1 до ${SPELL_SLOT_LEVEL_MAX}`,
+  movementFeet: (value: number | string, values: WithUsage) =>
+    !values.usage?.movementOn ||
+    values.usage.movement !== 'feet' ||
+    (value !== '' && isMovementFeet(Number(value)))
+      ? null
+      : `От ${MOVEMENT_FEET_STEP} до ${MOVEMENT_FEET_MAX}, кратно ${MOVEMENT_FEET_STEP}`,
 };

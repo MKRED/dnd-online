@@ -41,7 +41,7 @@ describe('isAbilityCosts', () => {
   const all: AbilityCosts = {
     uses: { count: { kind: 'ability', ability: 'charisma' }, recovery: 'long' },
     spellSlot: { minLevel: 3 },
-    movement: 'half',
+    movement: { kind: 'feet', feet: 10 },
     hitDie: true,
   };
 
@@ -52,7 +52,14 @@ describe('isAbilityCosts', () => {
 
   it('отклоняет неверные затраты', () => {
     expect(isAbilityCosts({ ...all, spellSlot: { minLevel: 10 } })).toBe(false);
-    expect(isAbilityCosts({ ...all, movement: 'double' })).toBe(false);
+    expect(isAbilityCosts({ ...all, movement: 'half' })).toBe(false);
+    expect(
+      isAbilityCosts({ ...all, movement: { kind: 'feet', feet: 12 } }),
+    ).toBe(false);
+    expect(
+      isAbilityCosts({ ...all, movement: { kind: 'feet', feet: 125 } }),
+    ).toBe(false);
+    expect(isAbilityCosts({ ...all, movement: { kind: 'feet' } })).toBe(false);
     expect(
       isAbilityCosts({
         ...all,
@@ -91,7 +98,7 @@ describe('формат', () => {
       formatCosts({
         uses: { count: { kind: 'fixed', amount: 2 }, recovery: 'short_one' },
         spellSlot: { minLevel: 1 },
-        movement: 'all',
+        movement: { kind: 'all' },
         hitDie: true,
       }),
     ).toEqual([
@@ -105,10 +112,12 @@ describe('формат', () => {
         ...NO_ABILITY_COSTS,
         uses: { count: { kind: 'proficiency' }, recovery: 'long' },
         spellSlot: { minLevel: 3 },
+        movement: { kind: 'feet', feet: 10 },
       }),
     ).toEqual([
       'Заряды: бонус мастерства — все после долгого отдыха',
       'Ячейка заклинаний 3 круга или выше',
+      '10 фт. перемещения',
     ]);
   });
 });

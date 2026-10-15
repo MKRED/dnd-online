@@ -6,7 +6,7 @@ describe('abilities.config', () => {
   const costs = {
     uses: { count: { kind: 'fixed', amount: 2 }, recovery: 'short' },
     spellSlot: null,
-    movement: 'half',
+    movement: { kind: 'half' },
     hitDie: false,
   };
 

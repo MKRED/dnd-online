@@ -134,17 +134,6 @@ export interface KnownSpell {
   prepared: boolean;
 }
 
-// Старый инвентарь свободным списком — колонка characters.inventory. Его заменил
-// инвентарь из каталога (InventoryEntry); колонку удалим миграцией после деплоя, пока её
-// ещё читает прежняя версия сервера (docs/plan/character-inventory.md).
-export interface InventoryItem {
-  name: string;
-  quantity: number;
-  weight?: number;
-  equipped?: boolean;
-  attuned?: boolean;
-}
-
 export const FEATURE_SOURCES = [
   'class',
   'species',

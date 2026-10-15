@@ -18,7 +18,6 @@ import type {
   CharacterProficiencies,
   CharacterSpecies,
   HitDie,
-  InventoryItem,
   KnownSpell,
   SkillProficiency,
   SpellSlots,
@@ -92,10 +91,6 @@ export const characters = pgTable('characters', {
     .$type<KnownSpell[]>()
     .default([]),
 
-  // Старый инвентарь свободным списком: не читается и не пишется, его заменила таблица
-  // character_items. Удаляем после деплоя, пока колонку ещё читает прежняя версия
-  // сервера (docs/plan/character-inventory.md, этап 4).
-  inventory: jsonb('inventory').notNull().$type<InventoryItem[]>().default([]),
   currency: jsonb('currency').notNull().$type<CharacterCurrency>(),
 
   features: jsonb('features').notNull().$type<CharacterFeature[]>().default([]),

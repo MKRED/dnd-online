@@ -97,7 +97,7 @@ Drizzle ORM (`drizzle-orm/node-postgres`, `pg` driver) against Postgres.
 
 ## Security middleware
 
-- `main.ts` sets `trust proxy = 1` — exactly one proxy (edge-nginx) appends the client IP to `X-Forwarded-For`. Changing the proxy chain means changing this number, otherwise rate limiting sees the wrong IP.
+- `configure-app.ts` (called from `main.ts` and from the integration tests) sets `trust proxy = 1` — exactly one proxy (edge-nginx) appends the client IP to `X-Forwarded-For`. Changing the proxy chain means changing this number, otherwise rate limiting sees the wrong IP.
 - `helmet()` with its default CSP — fine while scripts stay same-origin. Google Fonts and Mantine's runtime `<style>` tags are covered by the defaults (`https:` / `'unsafe-inline'` in `style-src`/`font-src`). A new third-party script/connect origin means extending the CSP directives there. `img-src` additionally allows `blob:`: character images are fetched as blobs and shown through object URLs. The Vite dev server sends no CSP, so a CSP mistake only shows on the built server. `upgrade-insecure-requests` is production-only.
 - `AuthController` is guarded by `@nestjs/throttler` (registered in `AuthModule`, in-memory storage): 60/min default, `login` 10/min, `register` 5/hour, per IP. `LolkaController` has its own 20/min. The 429 message is in Russian because the web UI shows the server's `message` as-is.
 
@@ -105,7 +105,11 @@ Drizzle ORM (`drizzle-orm/node-postgres`, `pg` driver) against Postgres.
 
 Vitest (`vitest.config.ts`, `vitest.config.e2e.ts`) with `unplugin-swc` — Vitest's default esbuild transform can't emit decorator metadata, without which Nest DI can't resolve constructor params.
 
-- Unit tests: `*.spec.ts` next to the source. E2E: `test/*.e2e-spec.ts`; boots the full `AppModule`, so it needs a reachable `DATABASE_URL`.
+- Unit tests: `*.spec.ts` next to the source.
+- Integration tests (plan: [plan/testing.md](plan/testing.md)): `test/*.e2e-spec.ts`, run with `pnpm --filter api test:e2e`. Each file boots the full `AppModule` through `createTestApp()` (`test/support/test-app.ts`) with the same setup as production (`src/configure-app.ts`: `/api` prefix, cookies, validation) and calls it with supertest; `loginAs(login)` registers a user and returns an agent that keeps its cookies.
+  - **Database:** only `TEST_DATABASE_URL`, never `DATABASE_URL` (which points at production). The name must end in `_test`, checked before the run and again on the live connection; otherwise nothing runs. Locally it is `dnd_online_test` on the production Postgres server (created 2026-10-15), through the same tunnel.
+  - `globalSetup` applies the migrations from `drizzle/`; every test file truncates all tables first, so files run one at a time (`fileParallelism: false`).
+  - The `ThrottlerGuard` is replaced by a pass-through; request logs are off (`LOG_LEVEL=debug` brings them back).
 - Globals are off: import `describe`/`it`/`expect`/`vi` from `vitest`.
 - `pnpm test` type-checks first (`tsc -p tsconfig.json --noEmit`, which covers the specs). Vitest strips types without checking them, and `nest build` excludes the specs, so without this step broken test types went unnoticed.
 - Drizzle's `const [row] = await …select()` is typed as the row, not `row | undefined` (`noUncheckedIndexedAccess` is off). A function that returns such a lookup gets an explicit `Promise<Row | undefined>` return type, so callers have to handle "not found".

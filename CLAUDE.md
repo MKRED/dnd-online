@@ -27,7 +27,7 @@ pnpm lint              # each app's own eslint.config.mjs
 pnpm format            # prettier --write (format:check to verify)
 ```
 
-From `apps/server`: `pnpm test:e2e` (needs a reachable `DATABASE_URL`), `pnpm build`, `pnpm db:generate` / `pnpm db:migrate` / `pnpm db:studio`.
+From `apps/server`: `pnpm test:e2e` (needs `TEST_DATABASE_URL` pointing at a database whose name ends in `_test`; see [docs/server.md](docs/server.md#tests)), `pnpm build`, `pnpm db:generate` / `pnpm db:migrate` / `pnpm db:studio`.
 
 Single test: `pnpm --filter api exec vitest run path/to/file.spec.ts`, `pnpm --filter web exec vitest run path/to/file.test.tsx`, `pnpm --filter shared exec vitest run src/map/x.test.ts` or `pnpm --filter map-mcp exec vitest run src/server.test.ts` (add `-t "name"` to filter).
 

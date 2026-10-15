@@ -5,6 +5,8 @@ import {
   entryName,
   entryWeight,
   inventoryCandidates,
+  itemsCount,
+  packOptions,
 } from './inventoryView';
 
 function entry(
@@ -59,5 +61,42 @@ describe('inventoryView', () => {
     const result = inventoryCandidates(mine, catalog, 'me');
     expect(result.mine.map((i) => i.name)).toEqual(['Верёвка', 'Факел']);
     expect(result.others.map((i) => i.id)).toEqual(['3']);
+  });
+});
+
+describe('packOptions', () => {
+  const pack = {
+    category: 'pack',
+    weight: 55,
+    details: {
+      contents: [
+        { itemId: 'a', quantity: 2, item: { weight: 1 } },
+        { itemId: 'b', quantity: 10, item: { weight: 0.5 } },
+        { itemId: 'c', quantity: 1, item: null },
+      ],
+    },
+  } as unknown as Extract<Item, { category: 'pack' }>;
+
+  it('считает вес целиком и распакованным, скрытые — отдельно', () => {
+    expect(packOptions(pack, 2)).toEqual({
+      wholeWeight: 110,
+      unpackedRows: 2,
+      unpackedWeight: 14,
+      hiddenCount: 1,
+    });
+  });
+});
+
+describe('itemsCount', () => {
+  it('склоняет «предмет»', () => {
+    expect([1, 3, 8, 11, 21, 22, 25].map(itemsCount)).toEqual([
+      '1 предмет',
+      '3 предмета',
+      '8 предметов',
+      '11 предметов',
+      '21 предмет',
+      '22 предмета',
+      '25 предметов',
+    ]);
   });
 });

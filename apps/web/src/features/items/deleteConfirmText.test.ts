@@ -2,7 +2,8 @@ import type { Item } from 'shared';
 import { describe, expect, it } from 'vitest';
 import { deleteConfirmText } from './deleteConfirmText';
 
-const item = (packs?: Item['packs']) => ({ name: 'Факел', packs }) as Item;
+const item = (packs?: Item['packs'], holders?: Item['holders']) =>
+  ({ name: 'Факел', packs, holders }) as Item;
 const pack = (name: string) => ({ id: name, name, isPublic: true });
 
 describe('deleteConfirmText', () => {
@@ -25,6 +26,26 @@ describe('deleteConfirmText', () => {
     );
     expect(deleteConfirmText(item({ mine: [], othersCount: 21 }))).toContain(
       'Он лежит в 21 чужом наборе.',
+    );
+  });
+
+  it('называет своих персонажей и считает чужих', () => {
+    expect(
+      deleteConfirmText(
+        item(undefined, {
+          mine: [{ id: 'c', name: 'Арагорн' }],
+          othersCount: 1,
+        }),
+      ),
+    ).toBe(
+      'Удалить предмет «Факел» безвозвратно?\n\nОн лежит у ваших персонажей: «Арагорн» — и ещё у 1 чужого персонажа. В инвентаре останется строка «Предмет удалён автором».',
+    );
+    expect(
+      deleteConfirmText(
+        item({ mine: [], othersCount: 2 }, { mine: [], othersCount: 5 }),
+      ),
+    ).toBe(
+      'Удалить предмет «Факел» безвозвратно?\n\nОн лежит в 2 чужих наборах. Из них он тоже пропадёт.\n\nОн лежит у 5 чужих персонажей. В инвентаре останется строка «Предмет удалён автором».',
     );
   });
 });

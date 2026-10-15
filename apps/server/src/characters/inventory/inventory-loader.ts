@@ -75,7 +75,7 @@ export async function loadInventories(
     .leftJoin(items, eq(items.id, characterItems.itemId))
     .leftJoin(itemImages, eq(itemImages.itemId, items.id))
     .where(inArray(characterItems.characterId, [...characterIds]))
-    // id — тай-брейкер для строк, добавленных в одну транзакцию (распаковка набора).
+    // id — тай-брейкер на случай одинакового времени.
     .orderBy(asc(characterItems.addedAt), asc(characterItems.id));
   for (const { entry, ownerId, item, image } of rows) {
     const list = result.get(entry.characterId) ?? [];

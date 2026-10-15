@@ -43,6 +43,7 @@ describe('saveConfirmation', () => {
       kind: 'hide',
       ownPackNames: ['Набор путешественника'],
       othersCount: 2,
+      othersCharactersCount: 0,
     });
     // Уже был скрыт или остаётся опубликованным — спрашивать не о чем.
     expect(saveConfirmation(values, { ...saved, isPublic: false })).toBeNull();
@@ -50,5 +51,26 @@ describe('saveConfirmation', () => {
     // Ни в каких опубликованных наборах — тоже.
     const lonely = { ...saved, packs: { mine: [], othersCount: 0 } };
     expect(saveConfirmation(values, lonely)).toBeNull();
+  });
+
+  it('скрытие предмета у чужих персонажей — спросить про них', () => {
+    const saved = {
+      isPublic: true,
+      packs: { mine: [], othersCount: 0 },
+      holders: { mine: [{ id: 'c', name: 'Арагорн' }], othersCount: 3 },
+    } as unknown as Item;
+    const values = { ...toFormValues(null), isPublic: false };
+    expect(saveConfirmation(values, saved)).toEqual({
+      kind: 'hide',
+      ownPackNames: [],
+      othersCount: 0,
+      othersCharactersCount: 3,
+    });
+    // Только у своих персонажей — свой скрытый предмет для них не меняется.
+    const ownOnly = {
+      ...saved,
+      holders: { ...saved.holders!, othersCount: 0 },
+    };
+    expect(saveConfirmation(values, ownOnly)).toBeNull();
   });
 });

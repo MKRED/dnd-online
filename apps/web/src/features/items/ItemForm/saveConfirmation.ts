@@ -6,8 +6,15 @@ import type { ItemFormValues } from './itemFormValues';
 export type SaveConfirmation =
   // Публикуем набор, а в составе свои скрытые предметы: опубликовать их вместе с ним.
   | { kind: 'publish'; hiddenNames: string[] }
-  // Скрываем предмет, который лежит в опубликованных наборах.
-  | { kind: 'hide'; ownPackNames: string[]; othersCount: number };
+  // Скрываем предмет, который лежит в опубликованных наборах или у чужих персонажей.
+  | {
+      kind: 'hide';
+      ownPackNames: string[];
+      othersCount: number;
+      // У чужих персонажей скрытый предмет перестанет действовать
+      // (docs/plan/character-inventory.md); у своих он виден автору и действует дальше.
+      othersCharactersCount: number;
+    };
 
 // Флаги запроса, которые выбирает ответ на вопрос.
 export interface SaveFlags {
@@ -27,13 +34,18 @@ export function saveConfirmation(
     if (hiddenNames.length > 0) return { kind: 'publish', hiddenNames };
   }
   // Скрывают только опубликованный: новый предмет ни в каких наборах не лежит.
-  if (saved?.isPublic && !values.isPublic && saved.packs) {
-    const ownPackNames = saved.packs.mine
+  if (saved?.isPublic && !values.isPublic) {
+    const ownPackNames = (saved.packs?.mine ?? [])
       .filter((pack) => pack.isPublic)
       .map((pack) => pack.name);
-    const { othersCount } = saved.packs;
-    if (ownPackNames.length > 0 || othersCount > 0) {
-      return { kind: 'hide', ownPackNames, othersCount };
+    const othersCount = saved.packs?.othersCount ?? 0;
+    const othersCharactersCount = saved.holders?.othersCount ?? 0;
+    if (
+      ownPackNames.length > 0 ||
+      othersCount > 0 ||
+      othersCharactersCount > 0
+    ) {
+      return { kind: 'hide', ownPackNames, othersCount, othersCharactersCount };
     }
   }
   return null;

@@ -1,5 +1,6 @@
 import { Alert, Button, Group, Text } from '@mantine/core';
 import { useEffect, useRef } from 'react';
+import { othersCharactersPhrase } from '../deleteConfirmText';
 import type { SaveConfirmation, SaveFlags } from './saveConfirmation';
 
 interface SaveConfirmProps {
@@ -43,12 +44,17 @@ function SaveConfirm({ confirmation, onConfirm, onCancel }: SaveConfirmProps) {
     );
   }
 
-  const { ownPackNames, othersCount } = confirmation;
+  const { ownPackNames, othersCount, othersCharactersCount } = confirmation;
+  const inPacks = ownPackNames.length > 0 || othersCount > 0;
   return (
     <Alert
       ref={ref}
       color="yellow"
-      title="Предмет лежит в опубликованных наборах"
+      title={
+        inPacks
+          ? 'Предмет лежит в опубликованных наборах'
+          : 'Предмет лежит у чужих персонажей'
+      }
     >
       {ownPackNames.length > 0 && (
         <Text size="sm">
@@ -60,6 +66,13 @@ function SaveConfirm({ confirmation, onConfirm, onCancel }: SaveConfirmProps) {
         <Text size="sm">
           Чужих наборов: {othersCount}. В них другие увидят строку «Предмет
           скрыт автором».
+        </Text>
+      )}
+      {othersCharactersCount > 0 && (
+        <Text size="sm">
+          Он лежит {othersCharactersPhrase(othersCharactersCount)}. У них он
+          станет строкой «Предмет скрыт автором» и перестанет действовать на
+          персонажа.
         </Text>
       )}
       <Group gap="xs" mt="sm">

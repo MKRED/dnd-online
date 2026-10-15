@@ -9,15 +9,15 @@ import {
   Stack,
   Text,
 } from '@mantine/core';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   INVENTORY_MAX_QUANTITY,
   type InventoryAddInput,
   type InventoryLocation,
 } from 'shared';
-import { useAuth } from '../../auth';
-import { useItemList } from '../../items';
-import { inventoryCandidates, LOCATION_LABELS } from './inventoryView';
+import { LOCATION_LABELS } from './inventoryView';
+import PackChoice from './PackChoice';
+import { useAddCandidates } from './useAddCandidates';
 
 interface AddItemDialogProps {
   busy: boolean;
@@ -30,61 +30,36 @@ interface AddItemDialogProps {
 // выбор очищается: инвентарь обычно собирают из нескольких предметов подряд. Монтируется
 // только на время показа — списки предметов грузятся при открытии.
 function AddItemDialog({ busy, error, onAdd, onClose }: AddItemDialogProps) {
-  const { user } = useAuth();
-  const mine = useItemList('mine');
-  const catalog = useItemList('catalog');
+  const { loaded, options, byId, error: loadError } = useAddCandidates();
   const [itemId, setItemId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number | string>(1);
   const [location, setLocation] = useState<InventoryLocation>('carried');
+  // У набора по умолчанию — распаковать: так его содержимое сразу видно в инвентаре.
+  const [unpack, setUnpack] = useState(true);
   const [added, setAdded] = useState<string | null>(null);
 
-  const candidates = useMemo(
-    () =>
-      mine.items && catalog.items && user
-        ? inventoryCandidates(mine.items, catalog.items, user.id)
-        : null,
-    [mine.items, catalog.items, user],
-  );
-  const options = useMemo(
-    () =>
-      candidates
-        ? [
-            {
-              group: 'Мои предметы',
-              items: candidates.mine.map(({ id, name }) => ({
-                value: id,
-                label: name,
-              })),
-            },
-            {
-              group: 'Каталог',
-              items: candidates.others.map(({ id, name, authorNickname }) => ({
-                value: id,
-                label: `${name} · ${authorNickname}`,
-              })),
-            },
-          ].filter((group) => group.items.length > 0)
-        : [],
-    [candidates],
-  );
-
+  const picked = itemId ? byId.get(itemId) : undefined;
+  const pack = picked?.category === 'pack' ? picked : null;
+  // Распаковать нечего — тогда набор кладётся целиком, что бы ни было выбрано.
+  const unpacking =
+    pack !== null && unpack && pack.details.contents.some((e) => e.item);
   const count = Number(quantity);
   const valid =
     itemId !== null &&
     Number.isInteger(count) &&
     count >= 1 &&
     count <= INVENTORY_MAX_QUANTITY;
-  const loadError = mine.error ?? catalog.error;
 
   const handleSubmit = async () => {
     if (!valid) return;
-    const picked = [
-      ...(candidates?.mine ?? []),
-      ...(candidates?.others ?? []),
-    ].find((item) => item.id === itemId);
-    if (await onAdd({ itemId, quantity: count, location })) {
+    const input: InventoryAddInput = { itemId, quantity: count, location };
+    if (unpacking) input.unpack = true;
+    if (await onAdd(input)) {
+      const what = unpacking
+        ? `состав «${picked?.name}»`
+        : (picked?.name ?? 'предмет');
       setAdded(
-        `Добавлено: ${picked?.name ?? 'предмет'} ×${count} — ${LOCATION_LABELS[location].toLowerCase()}`,
+        `Добавлено: ${what} ×${count} — ${LOCATION_LABELS[location].toLowerCase()}`,
       );
       setItemId(null);
       setQuantity(1);
@@ -112,25 +87,24 @@ function AddItemDialog({ busy, error, onAdd, onClose }: AddItemDialogProps) {
           )}
           <Select
             label="Предмет"
-            placeholder={
-              candidates ? 'Найти по названию' : 'Загружаем предметы…'
-            }
+            placeholder={loaded ? 'Найти по названию' : 'Загружаем предметы…'}
             data={options}
             value={itemId}
             onChange={(value) => {
               setItemId(value);
+              setUnpack(true);
               setAdded(null);
             }}
             searchable
             selectFirstOptionOnChange
-            disabled={!candidates}
+            disabled={!loaded}
             nothingFoundMessage="Ничего не нашлось"
             limit={50}
             data-autofocus
           />
           <Group gap="md" align="flex-end" wrap="wrap">
             <NumberInput
-              label="Количество"
+              label={pack ? 'Сколько наборов' : 'Количество'}
               value={quantity}
               onChange={setQuantity}
               min={1}
@@ -138,7 +112,7 @@ function AddItemDialog({ busy, error, onAdd, onClose }: AddItemDialogProps) {
               allowDecimal={false}
               allowNegative={false}
               clampBehavior="strict"
-              w={120}
+              w={140}
             />
             <SegmentedControl
               aria-label="Куда положить"
@@ -150,6 +124,14 @@ function AddItemDialog({ busy, error, onAdd, onClose }: AddItemDialogProps) {
               ]}
             />
           </Group>
+          {pack && (
+            <PackChoice
+              pack={pack}
+              count={Number.isInteger(count) && count > 0 ? count : 1}
+              unpack={unpacking}
+              onChange={setUnpack}
+            />
+          )}
           {added && (
             <Text size="sm" c="green">
               {added}

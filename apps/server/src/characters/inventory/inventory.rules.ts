@@ -10,6 +10,8 @@ export const INVENTORY_ENTRY_LOCKED =
   'Предмет скрыт или удалён автором — его можно только убрать';
 export const INVENTORY_NOTHING_TO_CHANGE = 'Нечего менять';
 export const INVENTORY_QUANTITY_LIMIT = `В одной строке — не больше ${INVENTORY_MAX_QUANTITY} шт.`;
+export const INVENTORY_NOT_A_PACK = 'Распаковать можно только набор';
+export const INVENTORY_PACK_EMPTY = 'В наборе нет предметов, которые вы видите';
 export const INVENTORY_SAME_PLACE = 'Предмет уже лежит здесь';
 export const INVENTORY_MOVE_TOO_MANY = 'Столько здесь не лежит';
 

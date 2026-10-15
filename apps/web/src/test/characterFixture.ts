@@ -62,6 +62,7 @@ export const sampleCharacter: Character = {
         image: null,
       },
       missing: null,
+      inactive: false,
     },
   ],
   currency: { cp: 1, sp: 2, ep: 0, gp: 30, pp: 0 },

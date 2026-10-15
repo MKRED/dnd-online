@@ -5,6 +5,7 @@ import type { Item, ItemListScope } from 'shared';
 import { DatabaseService } from '../database/database.service.js';
 import { itemImages, items, users } from '../database/schema/index.js';
 import { ItemDto } from './dto/item.dto.js';
+import { ItemHoldersService } from './item-holders.service.js';
 import {
   ITEM_NOT_FOUND,
   authoredItem,
@@ -28,6 +29,7 @@ export class ItemsService {
     private readonly databaseService: DatabaseService,
     private readonly packContents: PackContentsService,
     private readonly packUsage: PackUsageService,
+    private readonly holders: ItemHoldersService,
     @InjectPinoLogger(ItemsService.name)
     private readonly logger: PinoLogger,
   ) {}
@@ -122,9 +124,11 @@ export class ItemsService {
         row.image,
         contents?.get(id),
       );
-      // Где лежит предмет — только автору: остальным знать про чужие наборы незачем.
+      // Где лежит предмет — только автору: остальным знать про чужие наборы и персонажей
+      // незачем.
       if (row.item.authorId === userId) {
         item.packs = await this.packUsage.packsOf(userId, id);
+        item.holders = await this.holders.holdersOf(userId, id);
       }
       return item;
     } catch (err: unknown) {

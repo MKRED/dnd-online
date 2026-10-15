@@ -91,6 +91,17 @@ export interface ItemPacks {
   othersCount: number;
 }
 
+// У каких персонажей лежит предмет — автору для подтверждения удаления и скрытия
+// (docs/plan/character-inventory.md). Чужие персонажи — числом.
+export interface ItemCharacterRef {
+  id: string;
+  name: string;
+}
+export interface ItemHolders {
+  mine: ItemCharacterRef[];
+  othersCount: number;
+}
+
 // Размеченное объединение: по category понятно, какие поля лежат в details.
 export type ItemVariant =
   | { category: PlainItemCategory; details: PlainItemDetails }
@@ -178,6 +189,8 @@ export type Item = ItemVariant & {
   image: ItemImage | null;
   // Только у автора и только в GET /items/:id: в каких наборах лежит предмет.
   packs?: ItemPacks;
+  // Только у автора и только в GET /items/:id: у каких персонажей лежит предмет.
+  holders?: ItemHolders;
   createdAt: string;
   updatedAt: string;
 };

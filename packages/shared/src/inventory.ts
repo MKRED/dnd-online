@@ -40,10 +40,13 @@ export type InventoryEntry = {
 );
 
 // Добавить предмет каталога; тот же предмет в том же месте прибавляется к количеству.
+// unpack — набор кладётся не целиком, а своим составом × quantity; скрытые от игрока
+// предметы состава не кладутся.
 export interface InventoryAddInput {
   itemId: string;
   quantity: number;
   location: InventoryLocation;
+  unpack?: boolean;
 }
 
 // Изменить строку: количество или место. Перенос туда, где предмет уже есть, складывает строки.

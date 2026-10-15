@@ -1,4 +1,12 @@
-import { IsIn, IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 import {
   INVENTORY_LOCATIONS,
   INVENTORY_MAX_QUANTITY,
@@ -22,6 +30,10 @@ export class AddInventoryItemDto implements InventoryAddInput {
 
   @IsIn(INVENTORY_LOCATIONS, { message: LOCATION_MESSAGE })
   location: InventoryLocation;
+
+  @IsOptional()
+  @IsBoolean()
+  unpack?: boolean;
 }
 
 // Хотя бы одно поле проверяет сервис: пустое тело — 400 «Нечего менять».

@@ -22,6 +22,7 @@ import {
   findEntryAt,
 } from './inventory-entries.js';
 import { loadInventory } from './inventory-loader.js';
+import { rowsToAdd } from './inventory-unpack.js';
 import {
   INVENTORY_ENTRY_NOT_FOUND,
   INVENTORY_ITEM_NOT_FOUND,
@@ -58,16 +59,28 @@ export class InventoryService {
         });
         // Положить можно только то, что видишь сам: чужой скрытый неотличим от несуществующего.
         const [item] = await tx
-          .select({ id: items.id })
+          .select({ id: items.id, category: items.category })
           .from(items)
           .where(visibleItem(userId, dto.itemId))
           .limit(1);
         if (!item) throw new BadRequestException(INVENTORY_ITEM_NOT_FOUND);
+        const rows = await rowsToAdd(tx, userId, item, dto);
+        const addedAt = Date.now();
         // Повтор в том же месте прибавляется к строке атомарно: два быстрых клика не
-        // упрутся в уникальность. Перебор лимита ловит check-ограничение.
+        // упрутся в уникальность. Перебор лимита ловит check-ограничение. В составе
+        // набора предмет встречается один раз, поэтому строки одной вставки не спорят.
         await tx
           .insert(characterItems)
-          .values({ characterId, ...dto })
+          .values(
+            // Время с шагом в миллисекунду держит порядок состава набора: defaultNow()
+            // дал бы всем строкам одной транзакции одно время.
+            rows.map((row, index) => ({
+              characterId,
+              location: dto.location,
+              addedAt: new Date(addedAt + index),
+              ...row,
+            })),
+          )
           .onConflictDoUpdate({
             target: [
               characterItems.characterId,
@@ -80,7 +93,12 @@ export class InventoryService {
           });
       });
       this.logger.info(
-        { ...log, durationMs: Date.now() - t0, quantity: dto.quantity },
+        {
+          ...log,
+          durationMs: Date.now() - t0,
+          quantity: dto.quantity,
+          unpack: dto.unpack ?? false,
+        },
         'Inventory item added',
       );
       return await this.inventoryOf(userId, characterId);

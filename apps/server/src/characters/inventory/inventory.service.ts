@@ -44,8 +44,10 @@ export class InventoryService {
     const log = { userId, characterId, itemId: dto.itemId };
     try {
       await this.databaseService.db.transaction(async (tx) => {
+        // Блокировка — как у переноса: иначе перенос и добавление того же предмета в то
+        // же место разойдутся и упрутся в уникальность строки.
         await assertOwnedCharacter(tx, userId, characterId, {
-          forUpdate: false,
+          forUpdate: true,
         });
         // Положить можно только то, что видишь сам: чужой скрытый неотличим от несуществующего.
         const [item] = await tx

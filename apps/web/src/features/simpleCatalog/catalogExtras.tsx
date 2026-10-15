@@ -8,8 +8,7 @@ import {
   formatEffectDuration,
   formatEffectDurationShort,
 } from 'shared';
-import DurationField from './DurationField';
-import { fromDurationValues } from './DurationField/durationForm';
+import DurationField, { fromDurationValues } from './DurationField';
 import type { SimpleFormValues } from './SimpleEntryForm/simpleEntryValues';
 import type { SimpleEntry } from './simpleCatalogs';
 import UsageField, { fromUsageValues } from './UsageField';

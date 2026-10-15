@@ -1,8 +1,9 @@
-import type {
-  AbilityActivation,
-  AbilityCosts,
-  UsesCount,
-  UsesRecovery,
+import {
+  SPELL_SLOT_LEVEL_MAX,
+  type AbilityActivation,
+  type AbilityCosts,
+  type UsesCount,
+  type UsesRecovery,
 } from './abilityUsage.js';
 import type { AbilityScore } from './character.js';
 import { pluralRu } from './pluralRu.js';
@@ -80,7 +81,9 @@ export function formatCosts(costs: AbilityCosts): string[] {
     lines.push(
       minLevel === 1
         ? 'Ячейка заклинаний'
-        : `Ячейка заклинаний ${minLevel} круга или выше`,
+        : minLevel === SPELL_SLOT_LEVEL_MAX
+          ? `Ячейка заклинаний ${minLevel} круга`
+          : `Ячейка заклинаний ${minLevel} круга или выше`,
     );
   }
   if (costs.movement) {

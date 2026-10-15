@@ -44,7 +44,7 @@
 
 ### Хранение — по таблице на каталог, `details` в jsonb
 
-- Таблицы `abilities` и `effects` с колонками `id`, `author_id`, `is_public`, `name`, `category`, `details jsonb`, `extra jsonb`, `description`, `created_at`, `updated_at`. В `extra` — поля всех записей одного каталога, которых нет у другого: у эффекта это длительность (миграция `0023`). Картинки лежат в своих таблицах: `ability_images`/`ability_image_files` и `effect_images`/`effect_image_files`, по образцу `item_images`.
+- Таблицы `abilities` и `effects` с колонками `id`, `author_id`, `is_public`, `name`, `category`, `details jsonb`, `extra jsonb`, `description`, `created_at`, `updated_at`. В `extra` — поля всех записей одного каталога, которых нет у другого: у эффекта это длительность, у способности — активация и затраты (колонка — миграция `0023`). Картинки лежат в своих таблицах: `ability_images`/`ability_image_files` и `effect_images`/`effect_image_files`, по образцу `item_images`.
 - Поля категории хранятся в `details`, в `shared` это размеченное объединение по `category`, как у предметов. Новая категория не требует миграции.
 - **Почему не одна таблица на оба каталога.** Это разные сущности с разными полями и ссылками друг на друга. Внешний ключ «способность → эффект» проще и надёжнее между двумя таблицами.
 - Миграция одна на оба каталога и идёт в прод-базу. **Перед `db:migrate` спрашиваем пользователя.**

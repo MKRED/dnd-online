@@ -52,7 +52,13 @@ export const ABILITIES_CONFIG: CatalogEntriesConfig<
   images: abilityImageTables,
   access: ABILITY_ACCESS,
   toVariant: toAbilityVariant,
-  toExtra: (dto) => ({ activation: dto.activation, costs: dto.costs }),
+  toStored: (dto) => ({
+    category: dto.category,
+    // Копия, а не сам объект: у интерфейсов полей нет индексной сигнатуры, которую ждёт
+    // колонка.
+    details: { ...dto.details },
+    extra: { activation: dto.activation, costs: dto.costs },
+  }),
 };
 
 export const ABILITY_IMAGE_CONFIG: CatalogImageConfig = {

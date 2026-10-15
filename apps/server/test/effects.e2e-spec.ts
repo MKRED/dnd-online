@@ -1,4 +1,7 @@
+import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
+import { DatabaseService } from '../src/database/database.service.js';
+import { effects } from '../src/database/schema/index.js';
 import { describeCatalog } from './support/catalog-scenario/index.js';
 
 const duration = {
@@ -7,70 +10,117 @@ const duration = {
   unit: 'round',
   concentration: false,
 };
+const dark = { kind: 'sense', sense: 'darkvision', range: 60 };
+const messages = (res: { body: unknown }) =>
+  (res.body as { message: string[] }).message;
 
 describeCatalog(
   {
     path: 'effects',
     body: {
       name: 'Горение',
-      category: 'basic',
-      details: {},
+      components: [],
       description: 'тест',
       isPublic: false,
       duration,
+      saveEnds: null,
     },
+    invalid: { components: [{ kind: 'aura' }] },
   },
   (get) => {
-    describe('длительность', () => {
-      it('сохраняется и возвращается в карточке', async () => {
+    describe('длительность и снятие спасброском', () => {
+      it('сохраняются и возвращаются в карточке', async () => {
         const { author, url, create } = get();
-        const { id } = await create();
+        const saveEnds = { ability: 'constitution', edge: 'start' };
+        const { id } = await create({ saveEnds });
         const card = await author.get(url(id)).expect(200);
-        expect(card.body).toMatchObject({ duration });
+        expect(card.body).toMatchObject({ duration, saveEnds });
+        const plain = await create();
+        const plainCard = await author.get(url(plain.id)).expect(200);
+        expect(plainCard.body).toMatchObject({ saveEnds: null });
       });
 
-      it('без длительности или с нулевой — 400', async () => {
+      it('без полей или с неверными — 400', async () => {
         const { author, url, body } = get();
-        await author
-          .post(url())
-          .send(body({ duration: undefined }))
-          .expect(400);
-        await author
-          .post(url())
-          .send(body({ duration: { ...duration, amount: 0 } }))
-          .expect(400);
+        for (const over of [
+          { duration: undefined },
+          { duration: { ...duration, amount: 0 } },
+          { saveEnds: undefined },
+          { saveEnds: { ability: 'luck', edge: 'end' } },
+        ]) {
+          await author.post(url()).send(body(over)).expect(400);
+        }
       });
     });
 
-    describe('категория «Чувство»', () => {
-      it('тёмное зрение с дистанцией и видение невидимого без неё', async () => {
-        const { author, url, create } = get();
-        const { id } = await create({
-          category: 'sense',
-          details: { sense: 'darkvision', range: 60 },
-        });
+    describe('составляющие', () => {
+      it('два чувства в одном эффекте, затем пустой список', async () => {
+        const { author, url, body, create } = get();
+        const invisible = {
+          kind: 'sense',
+          sense: 'see_invisible',
+          range: null,
+        };
+        const { id } = await create({ components: [dark, invisible] });
         const card = await author.get(url(id)).expect(200);
-        expect(card.body).toMatchObject({
-          category: 'sense',
-          details: { sense: 'darkvision', range: 60 },
-        });
-        await create({
-          category: 'sense',
-          details: { sense: 'see_invisible', range: null },
-        });
+        expect(card.body).toMatchObject({ components: [dark, invisible] });
+        expect(card.body).not.toHaveProperty('category');
+        const edited = await author
+          .put(url(id))
+          .send(body({ components: [] }))
+          .expect(200);
+        expect(edited.body).toMatchObject({ components: [] });
       });
 
-      it('без дистанции или не кратно 5 — 400', async () => {
+      it('повтор чувства, неверная дистанция, лишние и без списка — 400', async () => {
         const { author, url, body } = get();
-        for (const details of [
-          { sense: 'darkvision', range: null },
-          { sense: 'blindsight', range: 12 },
+        const many = Array.from({ length: 21 }, () => dark);
+        for (const components of [
+          [dark, { ...dark, range: 120 }],
+          [{ ...dark, range: 62 }],
+          many,
+          undefined,
         ]) {
-          await author
+          const res = await author
             .post(url())
-            .send(body({ category: 'sense', details }))
+            .send(body({ components }))
             .expect(400);
+          expect(messages(res)[0]).toMatch(
+            /^Составляющие эффекта заданы неверно/,
+          );
         }
+      });
+
+      // Старое тело с категорией: category и details отбрасываются, а без составляющих
+      // запрос не проходит.
+      it('тело старого вида с категорией — 400', async () => {
+        const { author, url, body } = get();
+        const res = await author
+          .post(url())
+          .send(
+            body({
+              category: 'sense',
+              details: { sense: 'darkvision', range: 60 },
+              components: undefined,
+            }),
+          )
+          .expect(400);
+        expect(messages(res)).toHaveLength(1);
+      });
+
+      it('эффект категории «Чувство» до составляющих читается одной составляющей', async () => {
+        const { app, author, url, create } = get();
+        const { id } = await create();
+        await app
+          .get(DatabaseService)
+          .db.update(effects)
+          .set({
+            category: 'sense',
+            details: { sense: 'darkvision', range: 60 },
+          })
+          .where(eq(effects.id, id));
+        const card = await author.get(url(id)).expect(200);
+        expect(card.body).toMatchObject({ components: [dark] });
       });
     });
   },

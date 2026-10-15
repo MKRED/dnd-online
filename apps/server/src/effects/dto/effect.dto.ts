@@ -1,33 +1,30 @@
-import { IsIn, ValidateBy } from 'class-validator';
+import { ValidateBy } from 'class-validator';
 import {
-  EFFECT_CATEGORIES,
+  EFFECT_COMPONENTS_MAX,
+  isEffectComponents,
   isEffectDuration,
-  isSenseDetails,
+  isEffectSaveEnds,
   SENSE_RANGE_MAX,
-  type EffectCategory,
+  type EffectComponent,
   type EffectDuration,
+  type EffectSaveEnds,
 } from 'shared';
-import {
-  CategoryDetails,
-  isEmptyDetails,
-} from '../../catalog/category-details.validator.js';
 import { CatalogEntryDto } from '../../catalog/entries/dto/catalog-entry.dto.js';
 
-// Создание и полное редактирование эффекта — одно и то же тело.
+// Создание и полное редактирование эффекта — одно и то же тело. Все три поля
+// обязательны; виды и пределы — в shared (effectComponents.ts, effectDuration.ts,
+// effectSaveEnds.ts).
 export class EffectDto extends CatalogEntryDto {
-  @IsIn(EFFECT_CATEGORIES, { message: 'Неизвестная категория эффекта' })
-  category: EffectCategory;
-
-  @CategoryDetails<EffectCategory>(
-    { basic: isEmptyDetails, sense: isSenseDetails },
-    {
-      sense: `Укажите вид чувства и дистанцию в футах: кратную 5, до ${SENSE_RANGE_MAX}`,
+  @ValidateBy({
+    name: 'effectComponents',
+    validator: {
+      validate: isEffectComponents,
+      defaultMessage: () =>
+        `Составляющие эффекта заданы неверно: не больше ${EFFECT_COMPONENTS_MAX}, каждое чувство — один раз, дистанция кратна 5, до ${SENSE_RANGE_MAX} фт.`,
     },
-    'Поля эффекта не подходят к его категории',
-  )
-  details: object;
+  })
+  components: EffectComponent[];
 
-  // Общее поле всех эффектов, обязательно. Виды и пределы — в shared (effectDuration.ts).
   @ValidateBy({
     name: 'effectDuration',
     validator: {
@@ -36,4 +33,15 @@ export class EffectDto extends CatalogEntryDto {
     },
   })
   duration: EffectDuration;
+
+  // null — эффект спасброском не снимается; поле всё равно обязательно, чтобы забытое
+  // поле не выглядело как осознанное «не снимается».
+  @ValidateBy({
+    name: 'effectSaveEnds',
+    validator: {
+      validate: isEffectSaveEnds,
+      defaultMessage: () => 'Спасбросок, снимающий эффект, задан неверно',
+    },
+  })
+  saveEnds: EffectSaveEnds | null;
 }

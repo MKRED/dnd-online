@@ -23,7 +23,7 @@ export const ACTIVATION_LABELS: Record<AbilityActivation['kind'], string> = {
 };
 
 // «модификатор Силы».
-const ABILITY_GENITIVE: Record<AbilityScore, string> = {
+export const ABILITY_GENITIVE: Record<AbilityScore, string> = {
   strength: 'Силы',
   dexterity: 'Ловкости',
   constitution: 'Телосложения',

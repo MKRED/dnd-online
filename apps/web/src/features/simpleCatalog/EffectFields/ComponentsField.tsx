@@ -1,0 +1,90 @@
+import {
+  ActionIcon,
+  Button,
+  Group,
+  Input,
+  Menu,
+  Paper,
+  Stack,
+  Text,
+} from '@mantine/core';
+import type { UseFormReturnType } from '@mantine/form';
+import {
+  EFFECT_COMPONENT_KINDS,
+  EFFECT_COMPONENT_LABELS,
+  EFFECT_COMPONENTS_MAX,
+} from 'shared';
+import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
+import { newComponent } from './effectForm';
+import SenseComponentFields from './SenseComponentFields';
+
+interface ComponentsFieldProps {
+  form: UseFormReturnType<SimpleFormValues>;
+}
+
+// Составляющие эффекта списком карточек (docs/plan/effects.md): у каждой свои поля и
+// крестик. Новая добавляется из меню видов — оно растёт с каждым этапом плана.
+function ComponentsField({ form }: ComponentsFieldProps) {
+  const { components } = form.getValues().effect;
+  const full = components.length >= EFFECT_COMPONENTS_MAX;
+
+  return (
+    <Input.Wrapper
+      label="Составляющие"
+      description="Что эффект делает. Без составляющих эффект «Базовый»: всё, что он делает, — в описании"
+    >
+      <Stack gap="xs" mt={6}>
+        {components.map((component, index) => (
+          <Paper key={component.key} withBorder p="sm" radius="md">
+            <Group justify="space-between" mb={4} wrap="nowrap">
+              <Text size="sm" fw={500}>
+                {EFFECT_COMPONENT_LABELS[component.kind]}
+              </Text>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                aria-label="Убрать составляющую"
+                title="Убрать составляющую"
+                onClick={() => form.removeListItem('effect.components', index)}
+              >
+                ✕
+              </ActionIcon>
+            </Group>
+            <SenseComponentFields form={form} index={index} />
+          </Paper>
+        ))}
+        <Menu position="bottom-start">
+          <Menu.Target>
+            <Button
+              variant="light"
+              size="xs"
+              w="fit-content"
+              disabled={full}
+              title={
+                full
+                  ? `Не больше ${EFFECT_COMPONENTS_MAX} составляющих`
+                  : undefined
+              }
+            >
+              + Составляющая
+            </Button>
+          </Menu.Target>
+          <Menu.Dropdown>
+            {EFFECT_COMPONENT_KINDS.map((kind) => (
+              <Menu.Item
+                key={kind}
+                onClick={() =>
+                  form.insertListItem('effect.components', newComponent(kind))
+                }
+              >
+                {EFFECT_COMPONENT_LABELS[kind]}
+              </Menu.Item>
+            ))}
+          </Menu.Dropdown>
+        </Menu>
+      </Stack>
+    </Input.Wrapper>
+  );
+}
+
+export default ComponentsField;

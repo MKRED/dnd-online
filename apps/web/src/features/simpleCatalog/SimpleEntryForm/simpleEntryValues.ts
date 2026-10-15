@@ -7,31 +7,31 @@ import {
   validateDurationAmount,
   type DurationValues,
 } from '../DurationField/durationForm';
+import {
+  effectValidate,
+  toEffectValues,
+  type EffectValues,
+} from '../EffectFields';
 import { toUsageValues, usageValidate, type UsageValues } from '../UsageField';
 import type {
   SimpleCatalogDef,
   SimpleEntry,
   SimpleInput,
 } from '../simpleCatalogs';
-import {
-  categoryValidate,
-  toCategoryValues,
-  toCategoryVariant,
-  type CategoryValues,
-} from './categoryValues';
-
-export interface SimpleFormValues extends CategoryValues {
+export interface SimpleFormValues {
   name: string;
+  // Категория способности; у эффекта категории нет — поле не уходит в запрос.
   category: string;
   description: string;
   isPublic: boolean;
   // Общие поля разделов (catalogExtras.tsx). В форме есть поля обоих разделов, а в
   // запрос уходят только поля своего.
   duration: DurationValues;
+  effect: EffectValues;
   usage: UsageValues;
 }
 
-// Те же правила и тексты, что у сервера (CatalogEntryDto, EffectDto).
+// Те же правила и тексты, что у сервера (CatalogEntryDto, EffectDto, AbilityDto).
 export const simpleFormValidate = {
   name: (value: string) => {
     const length = value.trim().length;
@@ -44,8 +44,8 @@ export const simpleFormValidate = {
       ? null
       : `Описание — не длиннее ${CATALOG_DESCRIPTION_MAX_LENGTH} символов`,
   duration: { amount: validateDurationAmount },
+  effect: effectValidate,
   usage: usageValidate,
-  ...categoryValidate,
 };
 
 export function toSimpleFormValues(
@@ -54,13 +54,16 @@ export function toSimpleFormValues(
 ): SimpleFormValues {
   return {
     name: entry?.name ?? '',
-    category: entry?.category ?? def.categories[0],
+    category:
+      entry && 'category' in entry
+        ? entry.category
+        : (def.categories?.[0] ?? ''),
     description: entry?.description ?? '',
     isPublic: entry?.isPublic ?? false,
-    ...toCategoryValues(entry),
     duration: toDurationValues(
       entry && 'duration' in entry ? entry.duration : undefined,
     ),
+    effect: toEffectValues(entry && 'components' in entry ? entry : undefined),
     usage: toUsageValues(entry && 'activation' in entry ? entry : undefined),
   };
 }
@@ -71,11 +74,10 @@ export function toSimpleInput(
 ): SimpleInput {
   const input = {
     name: values.name.trim(),
-    ...toCategoryVariant(values.category, values),
     description: values.description,
     isPublic: values.isPublic,
   };
-  // Категории и поля приходят из списка категорий раздела (def.categories), поэтому
-  // способность получит только свои категории; TypeScript этой связи не видит.
+  // Свои поля раздела (категорию способности, составляющие эффекта) кладёт def.extras;
+  // TypeScript этой связи раздела и его полей не видит.
   return { ...input, ...def.extras.toInput(values) } as SimpleInput;
 }

@@ -1,43 +1,53 @@
 import { describe, expect, it } from 'vitest';
 import type { EffectDto } from './dto/effect.dto.js';
-import { EFFECTS_CONFIG, toEffectVariant } from './effects.config.js';
+import { EFFECTS_CONFIG, toEffectFields } from './effects.config.js';
+
+const dark = { kind: 'sense', sense: 'darkvision', range: 60 } as const;
 
 describe('effects.config', () => {
-  it('читает длительность из extra', () => {
+  it('читает составляющие, длительность и спасбросок', () => {
     const duration = { kind: 'rest', rest: 'long' };
-    expect(toEffectVariant('basic', {}, { duration }).duration).toEqual(
-      duration,
-    );
-  });
-
-  // Записи, созданные до длительности, и испорченный jsonb не ломают каталог.
-  it('без длительности или с неверной считает эффект бессрочным', () => {
-    expect(toEffectVariant('basic', {}, {}).duration).toEqual({
-      kind: 'permanent',
-    });
+    const saveEnds = { ability: 'wisdom', edge: 'end' };
     expect(
-      toEffectVariant('basic', {}, { duration: { kind: 'time' } }).duration,
-    ).toEqual({ kind: 'permanent' });
+      toEffectFields('basic', { components: [dark] }, { duration, saveEnds }),
+    ).toEqual({ components: [dark], duration, saveEnds });
   });
 
-  it('читает чувство, а испорченное — как «Базовый»', () => {
-    const details = { sense: 'darkvision', range: 60 };
-    expect(toEffectVariant('sense', details, {})).toMatchObject({
-      category: 'sense',
-      details,
-    });
+  // Записи, созданные до этих полей, и испорченный jsonb не ломают каталог.
+  it('без полей или с неверными — бессрочный эффект без составляющих', () => {
+    const fallback = {
+      components: [],
+      duration: { kind: 'permanent' },
+      saveEnds: null,
+    };
+    expect(toEffectFields('basic', {}, {})).toEqual(fallback);
     expect(
-      toEffectVariant('sense', { sense: 'darkvision', range: null }, {}),
-    ).toMatchObject({ category: 'basic', details: {} });
-    expect(toEffectVariant('aura', {}, {})).toMatchObject({
-      category: 'basic',
-    });
+      toEffectFields(
+        'basic',
+        { components: [{ kind: 'aura' }] },
+        { duration: { kind: 'time' }, saveEnds: { ability: 'luck' } },
+      ),
+    ).toEqual(fallback);
   });
 
-  it('пишет длительность из тела в extra', () => {
+  it('эффект категории «Чувство» до составляющих читает одной составляющей', () => {
+    expect(
+      toEffectFields('sense', { sense: 'darkvision', range: 60 }, {})
+        .components,
+    ).toEqual([dark]);
+    expect(
+      toEffectFields('sense', { sense: 'darkvision', range: null }, {})
+        .components,
+    ).toEqual([]);
+  });
+
+  it('пишет составляющие в details, длительность и спасбросок — в extra', () => {
     const duration = { kind: 'turn', edge: 'end', owner: 'bearer' } as const;
-    expect(EFFECTS_CONFIG.toExtra?.({ duration } as EffectDto)).toEqual({
-      duration,
+    const dto = { components: [dark], duration, saveEnds: null } as EffectDto;
+    expect(EFFECTS_CONFIG.toStored(dto)).toEqual({
+      category: 'basic',
+      details: { components: [dark] },
+      extra: { duration, saveEnds: null },
     });
   });
 });

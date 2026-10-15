@@ -12,7 +12,6 @@ import {
 } from '@mantine/core';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { formatSense } from 'shared';
 import { useAuth } from '../auth';
 import { DetailsField, EntryImage, useCatalogEntry } from '../catalog';
 import { errorMessage } from '../../lib/apiRequest';
@@ -85,11 +84,6 @@ function SimpleViewPage({ def }: SimpleViewPageProps) {
               </Title>
               <SimpleBadges def={def} entry={entry} showHidden />
               <DetailsField label="Автор">{entry.authorNickname}</DetailsField>
-              {entry.category === 'sense' && (
-                <DetailsField label="Чувство">
-                  {formatSense(entry.details)}
-                </DetailsField>
-              )}
               {def.extras.rows(entry).map(({ label, value }) => (
                 <DetailsField key={label} label={label}>
                   {value}

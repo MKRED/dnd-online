@@ -1,25 +1,16 @@
 import type { CatalogEntryFields, CatalogEntryInputFields } from './catalog.js';
+import type { EffectComponent } from './effectComponents.js';
 import type { EffectDuration } from './effectDuration.js';
-import type { SenseDetails } from './effectSenses.js';
+import type { EffectSaveEnds } from './effectSaveEnds.js';
 
 // Эффекты (docs/plan/effects.md): общий каталог того, что действует на существо, —
-// образцы; наложенный экземпляр появится со связью с персонажем. Поля категории лежат
-// в details. «Базовый» — без своих полей; остальное добавляем по одному (план, раздел
-// «Порядок работ»).
-export const EFFECT_CATEGORIES = ['basic', 'sense'] as const;
-export type EffectCategory = (typeof EFFECT_CATEGORIES)[number];
-
-export type EffectVariant =
-  | { category: 'basic'; details: Record<string, never> }
-  // Вид чувства и дистанция (effectSenses.ts).
-  | { category: 'sense'; details: SenseDetails };
-
-// Поля всех эффектов, кроме общих для каталогов.
+// образцы; наложенный экземпляр появится со связью с персонажем. Категории у эффекта нет:
+// он — список составляющих (effectComponents.ts), пустой список — «Базовый».
 export interface EffectFields {
+  components: EffectComponent[];
   duration: EffectDuration;
+  saveEnds: EffectSaveEnds | null;
 }
 
-export type Effect = EffectVariant & EffectFields & CatalogEntryFields;
-export type EffectInput = EffectVariant &
-  EffectFields &
-  CatalogEntryInputFields;
+export type Effect = EffectFields & CatalogEntryFields;
+export type EffectInput = EffectFields & CatalogEntryInputFields;

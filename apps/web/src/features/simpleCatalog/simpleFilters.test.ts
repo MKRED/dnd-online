@@ -5,7 +5,9 @@ import {
   DEFAULT_SIMPLE_FILTERS,
   readSimpleFilters,
   writeSimpleFilters,
+  type SimpleFilters,
 } from './simpleFilters';
+import { ABILITIES, EFFECTS } from './simpleCatalogs';
 
 const base = (name: string) => ({
   id: name,
@@ -19,7 +21,7 @@ const base = (name: string) => ({
   updatedAt: '',
 });
 
-const entry = (name: string): Ability => ({
+const ability = (name: string): Ability => ({
   ...base(name),
   category: 'basic',
   details: {},
@@ -27,45 +29,60 @@ const entry = (name: string): Ability => ({
   costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
 });
 
-const sense = (name: string): Effect => ({
+const effect = (
+  name: string,
+  components: Effect['components'] = [],
+): Effect => ({
   ...base(name),
-  category: 'sense',
-  details: { sense: 'darkvision', range: 60 },
+  components,
   duration: { kind: 'permanent' },
+  saveEnds: null,
 });
+
+const dark = { kind: 'sense', sense: 'darkvision', range: 60 } as const;
+
+const filter = (list: Effect[], over: Partial<SimpleFilters>) =>
+  applySimpleFilters(
+    list,
+    { ...DEFAULT_SIMPLE_FILTERS, ...over },
+    EFFECTS.kinds.of,
+  );
 
 describe('simpleFilters', () => {
   it('ищет без учёта регистра и «ё»', () => {
-    const list = [entry('Горение'), entry('Тёмное зрение'), entry('Луч')];
-    const found = applySimpleFilters(list, {
-      query: 'темное',
-      categories: [],
-      sort: 'recent',
-    });
-    expect(found.map((e) => e.name)).toEqual(['Тёмное зрение']);
+    const list = [effect('Горение'), effect('Тёмное зрение'), effect('Луч')];
+    expect(filter(list, { query: 'темное' }).map((e) => e.name)).toEqual([
+      'Тёмное зрение',
+    ]);
   });
 
-  it('оставляет записи выбранных категорий', () => {
-    const list = [entry('Горение'), sense('Тёмное зрение')];
+  it('оставляет записи, у которых есть выбранный вид', () => {
+    const list = [effect('Горение'), effect('Тёмное зрение', [dark])];
+    const names = (categories: string[]) =>
+      filter(list, { categories }).map((e) => e.name);
+    expect(names(['sense'])).toEqual(['Тёмное зрение']);
+    // Эффект без составляющих — «Базовый».
+    expect(names(['basic'])).toEqual(['Горение']);
+    expect(names(['basic', 'sense'])).toEqual(['Горение', 'Тёмное зрение']);
+  });
+
+  it('у способности вид — её категория', () => {
     expect(
-      applySimpleFilters(list, {
-        query: '',
-        categories: ['sense'],
-        sort: 'recent',
-      }).map((e) => e.name),
-    ).toEqual(['Тёмное зрение']);
+      applySimpleFilters(
+        [ability('Луч')],
+        { ...DEFAULT_SIMPLE_FILTERS, categories: ['basic'] },
+        ABILITIES.kinds.of,
+      ),
+    ).toHaveLength(1);
   });
 
   it('сортирует по названию, а «Сначала новые» оставляет порядок сервера', () => {
-    const list = [entry('Луч'), entry('Горение')];
-    expect(
-      applySimpleFilters(list, { query: '', categories: [], sort: 'name' }).map(
-        (e) => e.name,
-      ),
-    ).toEqual(['Горение', 'Луч']);
-    expect(
-      applySimpleFilters(list, { query: '', categories: [], sort: 'recent' }),
-    ).toBe(list);
+    const list = [effect('Луч'), effect('Горение')];
+    expect(filter(list, { sort: 'name' }).map((e) => e.name)).toEqual([
+      'Горение',
+      'Луч',
+    ]);
+    expect(filter(list, { sort: 'recent' })).toBe(list);
   });
 
   it('читает и пишет адрес, не трогая вкладку и не записывая умолчания', () => {

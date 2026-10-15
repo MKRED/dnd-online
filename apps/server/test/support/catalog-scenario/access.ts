@@ -53,16 +53,13 @@ export function describeAccess(get: () => CatalogContext): void {
       await author.get(url()).expect(400);
     });
 
-    it('пустое имя и чужие поля категории — 400', async () => {
-      const { author, url, body } = get();
+    it('пустое имя и неверные свои поля каталога — 400', async () => {
+      const { author, url, body, invalid } = get();
       await author
         .post(url())
         .send(body({ name: ' ' }))
         .expect(400);
-      await author
-        .post(url())
-        .send(body({ details: { x: 1 } }))
-        .expect(400);
+      await author.post(url()).send(body(invalid)).expect(400);
     });
   });
 }

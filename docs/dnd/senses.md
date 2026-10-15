@@ -48,11 +48,11 @@ Goliath, Halfling and Human have no darkvision. Not checked: the Aasimar (not in
 
 Decided with the user on 2026-10-15 ([plan/effects.md](../plan/effects.md)).
 
-- The effect category «Чувство» (`sense`) has the kind and the range: `{ sense, range }` in `details`.
+- The effect component «Чувство» (`kind: 'sense'`) has the kind and the range: `{ kind: 'sense', sense, range }` in the effect's `components`. An effect can carry several senses, each kind at most once. Effects saved before components, with category `sense` and `{ sense, range }` in `details`, read as one such component.
 - **Six kinds:** the four of the glossary plus «Дьявольское зрение» and «Видение невидимого». The last two are the app's addition: the book doesn't list them as senses.
 - **Range** is required, whole feet in steps of 5 (one map block is 5 ft.), up to 1000. «Видение невидимого» has none (`null`): it works wherever the creature looks. A forgotten range must not turn into an unlimited sense, so only that kind may omit it.
 - Other senses (homebrew, «чует нежить») are written as a «Базовый» effect for now; a kind «Другое» can be added if they pile up.
 - **Unverified, for later:** two sources of one sense (darkvision 60 ft. from the species plus the 150 ft. spell) most likely don't add up; the larger range applies.
 - Nothing in play uses the sense yet: there is no lighting on the map. The effect only stores it.
 
-Code: `packages/shared/src/effectSenses.ts` (kinds, `isSenseDetails`, Russian labels, `formatSense`); the form fields are in `apps/web/src/features/simpleCatalog/SimpleEntryForm/CategoryFields.tsx`.
+Code: `packages/shared/src/effectSenses.ts` (kinds, `isSenseDetails`, Russian labels, `formatSense`); the component list is `packages/shared/src/effectComponents.ts`; the form fields are in `apps/web/src/features/simpleCatalog/EffectFields/SenseComponentFields.tsx`.

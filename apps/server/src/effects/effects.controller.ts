@@ -11,7 +11,7 @@ import {
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { CatalogEntriesController } from '../catalog/entries/catalog-entries.controller.js';
-import type { EffectRecordFields } from './effects.config.js';
+import type { EffectFields } from 'shared';
 import { EffectsService } from './effects.service.js';
 import { EffectDto } from './dto/effect.dto.js';
 
@@ -19,7 +19,7 @@ import { EffectDto } from './dto/effect.dto.js';
 @Controller('effects')
 @UseGuards(AuthGuard)
 export class EffectsController extends CatalogEntriesController<
-  EffectRecordFields,
+  EffectFields,
   EffectDto
 > {
   constructor(service: EffectsService) {

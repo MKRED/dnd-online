@@ -63,11 +63,10 @@ describe('catalog-entry.mapper', () => {
       details: {},
       isPublic: false,
     } as AbilityDto;
-    expect(toCatalogEntryValues(dto)).toEqual({
+    const stored = { category: 'basic', details: {}, extra: {} };
+    expect(toCatalogEntryValues(dto, () => stored)).toEqual({
       name: 'Луч',
-      category: 'basic',
-      details: {},
-      extra: {},
+      ...stored,
       description: '',
       isPublic: false,
     });

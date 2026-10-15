@@ -60,4 +60,4 @@ What follows from them for the app:
 
 ## Where it lives in code
 
-Nowhere yet. The damage types, conditions and area shapes will go to `packages/shared` with the ability and effect stages that use them.
+The repeated save that ends an effect is the effect field `saveEnds` (`packages/shared/src/effectSaveEnds.ts`): the ability and the edge of the bearer's turn, no DC. The rest is not in code yet. The damage types, conditions and area shapes will go to `packages/shared` with the ability and effect stages that use them.

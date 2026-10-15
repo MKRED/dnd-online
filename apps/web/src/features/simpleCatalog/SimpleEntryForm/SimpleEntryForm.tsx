@@ -14,7 +14,6 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { errorMessage } from '../../../lib/apiRequest';
 import { ImageField, saveWithImage, useImageDraft } from '../../catalog';
-import CategoryFields from './CategoryFields';
 import type { SimpleCatalogDef, SimpleEntry } from '../simpleCatalogs';
 import {
   simpleFormValidate,
@@ -101,24 +100,25 @@ function SimpleEntryForm({
                 placeholder={def.texts.namePlaceholder}
                 {...form.getInputProps('name')}
               />
-              {/* Пока у раздела одна категория, поле всё равно есть: новые категории
-                  добавятся сюда (docs/plan/abilities.md, docs/plan/effects.md). */}
-              <Select
-                label="Категория"
-                description={
-                  def.categories.length === 1
-                    ? 'Другие категории появятся позже'
-                    : undefined
-                }
-                data={def.categories.map((value) => ({
-                  value,
-                  label: def.categoryLabels[value],
-                }))}
-                allowDeselect={false}
-                maw={320}
-                {...form.getInputProps('category')}
-              />
-              <CategoryFields form={form} />
+              {/* Категория — только у способностей; пока она одна, поле всё равно
+                  есть: «Заклинание» добавится сюда (docs/plan/abilities.md). */}
+              {def.categories && (
+                <Select
+                  label="Категория"
+                  description={
+                    def.categories.length === 1
+                      ? 'Другие категории появятся позже'
+                      : undefined
+                  }
+                  data={def.categories.map((value) => ({
+                    value,
+                    label: def.kinds.labels[value],
+                  }))}
+                  allowDeselect={false}
+                  maw={320}
+                  {...form.getInputProps('category')}
+                />
+              )}
               <def.extras.Field form={form} />
               <Textarea
                 label="Описание"

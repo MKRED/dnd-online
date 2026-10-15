@@ -1,21 +1,27 @@
-import { Stack, Text } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import type { ReactNode } from 'react';
 import {
   ACTIVATION_LABELS,
+  EFFECT_COMPONENT_LABELS,
   formatActivation,
   formatCosts,
   formatEffectDuration,
   formatEffectDurationShort,
+  formatSaveEnds,
+  formatSense,
+  type Effect,
 } from 'shared';
-import DurationField, { fromDurationValues } from './DurationField';
+import CardLines from './CardLines';
+import { fromDurationValues } from './DurationField';
+import EffectFields, { fromEffectValues } from './EffectFields';
 import type { SimpleFormValues } from './SimpleEntryForm/simpleEntryValues';
 import type { SimpleEntry } from './simpleCatalogs';
 import UsageField, { fromUsageValues } from './UsageField';
 
-// Общие поля всех записей одного раздела, которых нет у другого: у эффекта — длительность,
-// у способности — активация и затраты. Раздел описывает их здесь, а форма, карточка и
-// список берут отсюда, не зная, что это за поля.
+// Свои поля всех записей одного раздела, которых нет у другого: у эффекта — составляющие,
+// длительность и снятие спасброском, у способности — категория, активация и затраты.
+// Раздел описывает их здесь, а форма, карточка и список берут отсюда, не зная, что это
+// за поля.
 export interface CatalogExtras {
   Field: (props: { form: UseFormReturnType<SimpleFormValues> }) => ReactNode;
   // Поля для тела запроса.
@@ -26,20 +32,46 @@ export interface CatalogExtras {
   listValue: (entry: SimpleEntry) => string | null;
 }
 
+// Строки по одной на вид составляющей: несколько чувств — в одной строке «Чувство».
+function componentRows(effect: Effect) {
+  const senses = effect.components.map(formatSense);
+  return senses.length === 0
+    ? []
+    : [
+        {
+          label: EFFECT_COMPONENT_LABELS.sense,
+          value: <CardLines lines={senses} />,
+        },
+      ];
+}
+
 export const EFFECT_EXTRAS: CatalogExtras = {
-  Field: DurationField,
-  toInput: (values) => ({ duration: fromDurationValues(values.duration) }),
-  rows: (entry) =>
-    'duration' in entry
-      ? [{ label: 'Длительность', value: formatEffectDuration(entry.duration) }]
-      : [],
+  Field: EffectFields,
+  toInput: (values) => ({
+    ...fromEffectValues(values.effect),
+    duration: fromDurationValues(values.duration),
+  }),
+  rows: (entry) => {
+    if (!('components' in entry)) return [];
+    return [
+      ...componentRows(entry),
+      { label: 'Длительность', value: formatEffectDuration(entry.duration) },
+      ...(entry.saveEnds
+        ? [{ label: 'Снимается', value: formatSaveEnds(entry.saveEnds) }]
+        : []),
+    ];
+  },
   listValue: (entry) =>
     'duration' in entry ? formatEffectDurationShort(entry.duration) : null,
 };
 
 export const ABILITY_EXTRAS: CatalogExtras = {
   Field: UsageField,
-  toInput: (values) => fromUsageValues(values.usage),
+  toInput: (values) => ({
+    category: values.category,
+    details: {},
+    ...fromUsageValues(values.usage),
+  }),
   rows: (entry) => {
     if (!('activation' in entry)) return [];
     const costs = formatCosts(entry.costs);
@@ -48,17 +80,7 @@ export const ABILITY_EXTRAS: CatalogExtras = {
       {
         label: 'Затраты',
         value:
-          costs.length === 0 ? (
-            'Ничего не тратит'
-          ) : (
-            <Stack gap={2} component="span">
-              {costs.map((line) => (
-                <Text key={line} size="sm" span display="block">
-                  {line}
-                </Text>
-              ))}
-            </Stack>
-          ),
+          costs.length === 0 ? 'Ничего не тратит' : <CardLines lines={costs} />,
       },
     ];
   },

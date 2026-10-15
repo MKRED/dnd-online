@@ -17,7 +17,7 @@ import {
 import {
   toCatalogEntry,
   toCatalogEntryValues,
-  type ToExtra,
+  type ToStored,
   type ToVariant,
 } from './catalog-entry.mapper.js';
 import type { CatalogEntryDto } from './dto/catalog-entry.dto.js';
@@ -33,7 +33,7 @@ export interface CatalogEntriesConfig<
   images: CatalogImageTables;
   access: CatalogAccess;
   toVariant: ToVariant<V>;
-  toExtra?: ToExtra<D>;
+  toStored: ToStored<D>;
 }
 
 // CRUD простого каталога (способности, эффекты): доступ как у предметов, без их веса,
@@ -49,12 +49,12 @@ export abstract class CatalogEntriesService<
   ) {}
 
   async create(userId: string, dto: D): Promise<V & CatalogEntryFields> {
-    const { table, catalog, toExtra } = this.config;
+    const { table, catalog, toStored } = this.config;
     const t0 = Date.now();
     try {
       const [row] = await this.databaseService.db
         .insert(table)
-        .values({ authorId: userId, ...toCatalogEntryValues(dto, toExtra) })
+        .values({ authorId: userId, ...toCatalogEntryValues(dto, toStored) })
         .returning({ id: table.id });
       this.logger.info(
         { durationMs: Date.now() - t0, catalog, userId, entryId: row.id },
@@ -147,13 +147,13 @@ export abstract class CatalogEntriesService<
     id: string,
     dto: D,
   ): Promise<V & CatalogEntryFields> {
-    const { table, access, catalog, toExtra } = this.config;
+    const { table, access, catalog, toStored } = this.config;
     const t0 = Date.now();
     const { db } = this.databaseService;
     try {
       const [row] = await db
         .update(table)
-        .set(toCatalogEntryValues(dto, toExtra))
+        .set(toCatalogEntryValues(dto, toStored))
         .where(authoredEntry(access, userId, id))
         .returning({ id: table.id });
       if (!row) await rejectCatalogEdit(db, access, userId, id);

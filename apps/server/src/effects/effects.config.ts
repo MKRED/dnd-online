@@ -1,9 +1,11 @@
 import {
   DEFAULT_EFFECT_DURATION,
+  isEffectComponents,
   isEffectDuration,
+  isEffectSaveEnds,
   isSenseDetails,
+  type EffectComponent,
   type EffectFields,
-  type EffectVariant,
 } from 'shared';
 import type { CatalogAccess } from '../catalog/catalog-access.js';
 import type { CatalogEntriesConfig } from '../catalog/entries/catalog-entries.service.js';
@@ -21,44 +23,54 @@ export const EFFECT_ACCESS: CatalogAccess = {
   authorOnly: 'Менять эффект может только его автор',
 };
 
-export type EffectRecordFields = EffectVariant & EffectFields;
+// Составляющие лежат в details.components, колонка category у эффекта — всегда 'basic':
+// так новые записи безвредно читает и сервер, выпущенный до составляющих.
+const STORED_CATEGORY = 'basic';
 
-// Категория и её поля из базы. Неизвестную категорию или испорченные поля читаем как
-// «Базовый»: описание остаётся, а каталог не падает из-за одной записи.
-function toCategory(
+// Составляющие из базы. До них у эффекта была категория: «Чувство» с полями в details —
+// это одна составляющая. Испорченное читаем как эффект без составляющих: описание
+// остаётся, а каталог не падает из-за одной записи.
+function toComponents(
   category: string,
   details: Record<string, unknown>,
-): EffectVariant {
+): EffectComponent[] {
+  if (isEffectComponents(details.components)) return details.components;
   if (category === 'sense' && isSenseDetails(details)) {
-    return { category: 'sense', details };
+    return [{ kind: 'sense', ...details }];
   }
-  return { category: 'basic', details: {} };
+  return [];
 }
 
-// Длительность лежит в extra; у записей, созданных до неё, её нет — они бессрочные.
-export function toEffectVariant(
+// Длительность и снятие спасброском лежат в extra; у записей, созданных до них, их нет —
+// такие эффекты бессрочные и спасброском не снимаются.
+export function toEffectFields(
   category: string,
   details: Record<string, unknown>,
   extra: Record<string, unknown>,
-): EffectRecordFields {
+): EffectFields {
   return {
-    ...toCategory(category, details),
+    components: toComponents(category, details),
     duration: isEffectDuration(extra.duration)
       ? extra.duration
       : DEFAULT_EFFECT_DURATION,
+    saveEnds:
+      extra.saveEnds !== undefined && isEffectSaveEnds(extra.saveEnds)
+        ? extra.saveEnds
+        : null,
   };
 }
 
-export const EFFECTS_CONFIG: CatalogEntriesConfig<
-  EffectRecordFields,
-  EffectDto
-> = {
+export const EFFECTS_CONFIG: CatalogEntriesConfig<EffectFields, EffectDto> = {
   catalog: 'effect',
   table: effects,
   images: effectImageTables,
   access: EFFECT_ACCESS,
-  toVariant: toEffectVariant,
-  toExtra: (dto) => ({ duration: dto.duration }),
+  toVariant: toEffectFields,
+  toStored: (dto) => ({
+    category: STORED_CATEGORY,
+    details: { components: dto.components },
+    extra: { duration: dto.duration, saveEnds: dto.saveEnds },
+  }),
 };
 
 export const EFFECT_IMAGE_CONFIG: CatalogImageConfig = {

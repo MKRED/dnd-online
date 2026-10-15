@@ -1,6 +1,8 @@
 import {
   ABILITY_CATEGORIES,
-  EFFECT_CATEGORIES,
+  EFFECT_COMPONENT_KINDS,
+  EFFECT_COMPONENT_LABELS,
+  effectComponentKinds,
   type Ability,
   type AbilityInput,
   type Effect,
@@ -14,8 +16,8 @@ import {
 } from './catalogExtras';
 
 // Запись простого каталога — способность или эффект (docs/plan/abilities-effects.md).
-// Страницы у них одни; чем разделы отличаются — категории, их поля (CategoryFields) и
-// общие поля раздела (extras).
+// Страницы у них одни; чем разделы отличаются — виды записей для чипов и бейджей (kinds)
+// и свои поля раздела (extras).
 export type SimpleEntry = Ability | Effect;
 export type SimpleInput = AbilityInput | EffectInput;
 
@@ -25,9 +27,17 @@ export interface SimpleCatalogDef {
   section: Exclude<CatalogSection, 'items'>;
   path: string;
   api: ReturnType<typeof catalogApi<SimpleEntry, SimpleInput>>;
-  categories: readonly string[];
-  categoryLabels: Record<string, string>;
-  // Общие поля раздела: длительность эффекта, активация и затраты способности.
+  // Категории способности — выбор в форме. У эффекта категории нет.
+  categories?: readonly string[];
+  // Виды записей для чипов и бейджей: категория способности, составляющие эффекта
+  // («Базовый» — эффект без составляющих). У записи их бывает несколько.
+  kinds: {
+    values: readonly string[];
+    labels: Record<string, string>;
+    of: (entry: SimpleEntry) => readonly string[];
+  };
+  // Свои поля раздела: составляющие, длительность и снятие спасброском у эффекта;
+  // категория, активация и затраты у способности.
   extras: CatalogExtras;
   // Тексты ошибок загрузки записи — один объект на раздел: useCatalogEntry ждёт
   // постоянный объект, иначе перезапускает загрузку.
@@ -56,7 +66,11 @@ export const ABILITIES: SimpleCatalogDef = {
   path: '/abilities',
   api: catalogApi<SimpleEntry, SimpleInput>('/abilities'),
   categories: ABILITY_CATEGORIES,
-  categoryLabels: { basic: 'Базовая' },
+  kinds: {
+    values: ABILITY_CATEGORIES,
+    labels: { basic: 'Базовая' },
+    of: (entry) => ['category' in entry ? entry.category : 'basic'],
+  },
   extras: ABILITY_EXTRAS,
   loadTexts: {
     notFound: 'Способность не найдена',
@@ -89,8 +103,14 @@ export const EFFECTS: SimpleCatalogDef = {
   section: 'effects',
   path: '/effects',
   api: catalogApi<SimpleEntry, SimpleInput>('/effects'),
-  categories: EFFECT_CATEGORIES,
-  categoryLabels: { basic: 'Базовый', sense: 'Чувство' },
+  kinds: {
+    values: ['basic', ...EFFECT_COMPONENT_KINDS],
+    labels: { basic: 'Базовый', ...EFFECT_COMPONENT_LABELS },
+    of: (entry) =>
+      'components' in entry && entry.components.length > 0
+        ? effectComponentKinds(entry.components)
+        : ['basic'],
+  },
   extras: EFFECT_EXTRAS,
   loadTexts: {
     notFound: 'Эффект не найден',

@@ -1,3 +1,4 @@
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import type request from 'supertest';
 
 export interface CatalogScenario {
@@ -5,13 +6,18 @@ export interface CatalogScenario {
   path: string;
   // Тело, которое сервер примет; поверх него тесты меняют отдельные поля.
   body: Record<string, unknown>;
+  // Свои поля каталога, которые сервер обязан отклонить (400).
+  invalid: Record<string, unknown>;
 }
 
 export interface CatalogContext {
+  // Приложение — для тестов, которым нужна база напрямую (старые записи).
+  app: NestExpressApplication;
   author: request.Agent;
   stranger: request.Agent;
   anonymous: request.Agent;
   url: (id?: string) => string;
   body: (over?: Record<string, unknown>) => Record<string, unknown>;
   create: (over?: Record<string, unknown>) => Promise<{ id: string }>;
+  invalid: Record<string, unknown>;
 }

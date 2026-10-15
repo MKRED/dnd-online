@@ -15,8 +15,8 @@ const trim = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
 
 // Общие поля тела создания и полного редактирования записи простого каталога
-// (способности, эффекты). Категорию и её details добавляет класс каталога: у каждого
-// свой список категорий и свои проверки полей.
+// (способности, эффекты). Свои поля (категорию способности, составляющие эффекта)
+// добавляет класс каталога, а в колонки их раскладывает toStored его конфига.
 export abstract class CatalogEntryDto {
   @Transform(trim)
   @IsString({ message: 'Название — строка' })
@@ -24,9 +24,6 @@ export abstract class CatalogEntryDto {
     message: `Название — от 1 до ${CATALOG_NAME_MAX_LENGTH} символов`,
   })
   name: string;
-
-  abstract category: string;
-  abstract details: object;
 
   @IsOptional()
   @IsString({ message: 'Описание — строка' })

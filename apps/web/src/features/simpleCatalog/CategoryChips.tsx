@@ -9,11 +9,11 @@ interface CategoryChipsProps {
   onChange: (categories: string[]) => void;
 }
 
-// Категории чипами с числом записей, как у предметов (ItemFilters). Ничего не выбрано —
-// «Все».
+// Виды записей чипами с числом записей, как категории у предметов (ItemFilters). Эффект
+// с чувством и уроном считается в обоих чипах. Ничего не выбрано — «Все».
 function CategoryChips({ def, entries, value, onChange }: CategoryChipsProps) {
   const count = (category: string) =>
-    entries.filter((entry) => entry.category === category).length;
+    entries.filter((entry) => def.kinds.of(entry).includes(category)).length;
 
   return (
     <Group gap={6} role="group" aria-label="Категории">
@@ -25,9 +25,9 @@ function CategoryChips({ def, entries, value, onChange }: CategoryChipsProps) {
         Все
       </Chip>
       <Chip.Group multiple value={value} onChange={onChange}>
-        {def.categories.map((category) => (
+        {def.kinds.values.map((category) => (
           <Chip key={category} value={category} size="sm">
-            {def.categoryLabels[category]}{' '}
+            {def.kinds.labels[category]}{' '}
             {/* Цвет надписи, а не dimmed: на закрашенном выбранном чипе серый не виден. */}
             <Text span size="xs" c="inherit" opacity={0.7}>
               {count(category)}

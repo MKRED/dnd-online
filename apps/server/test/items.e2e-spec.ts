@@ -14,6 +14,7 @@ describeCatalog(
       weight: 1,
       cost: null,
     },
+    invalid: { details: { x: 1 } },
   },
   (get) => {
     describe('поля предмета', () => {

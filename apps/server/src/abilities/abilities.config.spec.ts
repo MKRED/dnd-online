@@ -30,11 +30,17 @@ describe('abilities.config', () => {
     ).toMatchObject(fallback);
   });
 
-  it('пишет активацию и затраты из тела в extra', () => {
-    const dto = { activation: { kind: 'action' }, costs } as AbilityDto;
-    expect(ABILITIES_CONFIG.toExtra?.(dto)).toEqual({
+  it('пишет категорию в колонку, активацию и затраты — в extra', () => {
+    const dto = {
+      category: 'basic',
+      details: {},
       activation: { kind: 'action' },
       costs,
+    } as AbilityDto;
+    expect(ABILITIES_CONFIG.toStored(dto)).toEqual({
+      category: 'basic',
+      details: {},
+      extra: { activation: { kind: 'action' }, costs },
     });
   });
 });

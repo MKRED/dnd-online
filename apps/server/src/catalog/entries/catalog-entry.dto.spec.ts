@@ -9,25 +9,26 @@ import type { CatalogEntryDto } from './dto/catalog-entry.dto.js';
 
 const valid = {
   name: 'Ядовитый луч',
-  category: 'basic',
-  details: {},
   description: 'Дальность 60 фт., 2d6 яда',
   isPublic: false,
 };
 
-// Общие поля проверяет CatalogEntryDto, категорию и details — класс каталога. У обоих
-// каталогов пока одна категория, поэтому проверяем их одними и теми же случаями. У эффекта
-// длительность обязательна — кладём её в тело.
+const ability = {
+  category: 'basic',
+  details: {},
+  activation: { kind: 'action' },
+  costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
+};
+const effect = {
+  components: [],
+  duration: { kind: 'permanent' },
+  saveEnds: null,
+};
+
+// Общие поля проверяет CatalogEntryDto, свои — класс каталога: их кладём в тело готовыми.
 describe.each<[string, new () => CatalogEntryDto, object]>([
-  [
-    'AbilityDto',
-    AbilityDto,
-    {
-      activation: { kind: 'action' },
-      costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
-    },
-  ],
-  ['EffectDto', EffectDto, { duration: { kind: 'permanent' } }],
+  ['AbilityDto', AbilityDto, ability],
+  ['EffectDto', EffectDto, effect],
 ])('%s', (_name, Dto, own) => {
   async function errorsOf(overrides: object): Promise<string[]> {
     const errors = await validate(
@@ -48,6 +49,22 @@ describe.each<[string, new () => CatalogEntryDto, object]>([
     expect(await errorsOf({ name: 'я'.repeat(101) })).toEqual(['name']);
   });
 
+  it('требует признак публикации и ограничивает описание', async () => {
+    expect(await errorsOf({ isPublic: 'да' })).toEqual(['isPublic']);
+    expect(await errorsOf({ description: 'я'.repeat(5001) })).toEqual([
+      'description',
+    ]);
+  });
+});
+
+describe('AbilityDto: категория', () => {
+  async function errorsOf(overrides: object): Promise<string[]> {
+    const errors = await validate(
+      plainToInstance(AbilityDto, { ...valid, ...ability, ...overrides }),
+    );
+    return errors.map((error) => error.property);
+  }
+
   it('не пускает неизвестную категорию', async () => {
     expect(await errorsOf({ category: 'aura' })).toEqual(['category']);
   });
@@ -57,19 +74,12 @@ describe.each<[string, new () => CatalogEntryDto, object]>([
     expect(await errorsOf({ details: [] })).toEqual(['details']);
     expect(await errorsOf({ details: null })).toEqual(['details']);
   });
-
-  it('требует признак публикации и ограничивает описание', async () => {
-    expect(await errorsOf({ isPublic: 'да' })).toEqual(['isPublic']);
-    expect(await errorsOf({ description: 'я'.repeat(5001) })).toEqual([
-      'description',
-    ]);
-  });
 });
 
 describe('EffectDto: длительность', () => {
   async function errorsOf(duration: unknown): Promise<string[]> {
     const errors = await validate(
-      plainToInstance(EffectDto, { ...valid, duration }),
+      plainToInstance(EffectDto, { ...valid, ...effect, duration }),
     );
     return errors.map((error) => error.property);
   }
@@ -103,32 +113,37 @@ describe('EffectDto: длительность', () => {
   });
 });
 
-describe('EffectDto: чувство', () => {
-  async function errorsOf(details: unknown): Promise<string[]> {
+describe('EffectDto: составляющие и снятие спасброском', () => {
+  async function errorsOf(overrides: object): Promise<string[]> {
     const errors = await validate(
-      plainToInstance(EffectDto, {
-        ...valid,
-        category: 'sense',
-        details,
-        duration: { kind: 'permanent' },
-      }),
+      plainToInstance(EffectDto, { ...valid, ...effect, ...overrides }),
     );
     return errors.map((error) => error.property);
   }
 
-  it('принимает вид с дистанцией и видение невидимого без неё', async () => {
-    expect(await errorsOf({ sense: 'darkvision', range: 60 })).toEqual([]);
-    expect(await errorsOf({ sense: 'see_invisible', range: null })).toEqual([]);
+  it('принимает чувства и спасбросок в начале или конце хода', async () => {
+    expect(
+      await errorsOf({
+        components: [
+          { kind: 'sense', sense: 'darkvision', range: 60 },
+          { kind: 'sense', sense: 'see_invisible', range: null },
+        ],
+        saveEnds: { ability: 'wisdom', edge: 'end' },
+      }),
+    ).toEqual([]);
   });
 
-  it('не пускает чувство без дистанции, некратную 5 и пустые поля', async () => {
-    expect(await errorsOf({ sense: 'darkvision', range: null })).toEqual([
-      'details',
-    ]);
-    expect(await errorsOf({ sense: 'blindsight', range: 12 })).toEqual([
-      'details',
-    ]);
-    expect(await errorsOf({})).toEqual(['details']);
+  it('требует оба поля и не пускает неверные', async () => {
+    expect(await errorsOf({ components: undefined })).toEqual(['components']);
+    expect(await errorsOf({ saveEnds: undefined })).toEqual(['saveEnds']);
+    expect(
+      await errorsOf({
+        components: [{ kind: 'sense', sense: 'darkvision', range: null }],
+      }),
+    ).toEqual(['components']);
+    expect(
+      await errorsOf({ saveEnds: { ability: 'wisdom', edge: 'noon' } }),
+    ).toEqual(['saveEnds']);
   });
 });
 
@@ -138,6 +153,7 @@ describe('AbilityDto: активация и затраты', () => {
     const errors = await validate(
       plainToInstance(AbilityDto, {
         ...valid,
+        ...ability,
         activation: { kind: 'bonus_action' },
         costs,
         ...overrides,

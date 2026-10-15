@@ -9,9 +9,9 @@ const effect: Effect = {
   authorNickname: 'Арвен',
   isPublic: false,
   name: 'Горение',
-  category: 'basic',
-  details: {},
+  components: [{ kind: 'sense', sense: 'darkvision', range: 60 }],
   duration: { kind: 'turn', edge: 'end', owner: 'bearer' },
+  saveEnds: { ability: 'constitution', edge: 'start' },
   description: '',
   image: null,
   createdAt: '',
@@ -19,19 +19,19 @@ const effect: Effect = {
 };
 
 describe('simpleEntryValues', () => {
-  it('эффект отправляет длительность из формы', () => {
+  it('эффект отправляет свои поля из формы, без категории', () => {
     const values = toSimpleFormValues(EFFECTS, effect);
     expect(toSimpleInput(EFFECTS, values)).toEqual({
       name: 'Горение',
-      category: 'basic',
-      details: {},
       description: '',
       isPublic: false,
+      components: [{ kind: 'sense', sense: 'darkvision', range: 60 }],
       duration: { kind: 'turn', edge: 'end', owner: 'bearer' },
+      saveEnds: { ability: 'constitution', edge: 'start' },
     });
   });
 
-  it('способность отправляет активацию и затраты, а длительность — нет', () => {
+  it('способность отправляет категорию, активацию и затраты, а поля эффекта — нет', () => {
     const values = toSimpleFormValues(ABILITIES, null);
     expect(toSimpleInput(ABILITIES, { ...values, name: ' Луч ' })).toEqual({
       name: 'Луч',

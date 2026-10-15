@@ -1,4 +1,4 @@
-import { NumberInput, Select, Stack } from '@mantine/core';
+import { Group, NumberInput, Select } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import {
   SENSE_KINDS,
@@ -8,7 +8,7 @@ import {
   senseHasRange,
   type SenseKind,
 } from 'shared';
-import type { SimpleFormValues } from './simpleEntryValues';
+import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 
 const SENSE_OPTIONS = SENSE_KINDS.map((value) => ({
   value,
@@ -27,17 +27,18 @@ const SENSE_HINTS: Record<SenseKind, string> = {
   see_invisible: 'Видит невидимых и Эфирный план везде, куда смотрит',
 };
 
-interface CategoryFieldsProps {
+interface SenseComponentFieldsProps {
   form: UseFormReturnType<SimpleFormValues>;
+  index: number;
 }
 
-// Свои поля категории (details). У категорий без своих полей — ничего.
-function CategoryFields({ form }: CategoryFieldsProps) {
-  const { category, sense } = form.getValues();
-  if (category !== 'sense') return null;
+// Поля составляющей «Чувство»: вид и дистанция в футах.
+function SenseComponentFields({ form, index }: SenseComponentFieldsProps) {
+  const path = `effect.components.${index}`;
+  const { sense } = form.getValues().effect.components[index];
 
   return (
-    <Stack gap="sm">
+    <Group gap="xs" align="flex-start">
       <Select
         label="Вид чувства"
         description={sense ? SENSE_HINTS[sense] : undefined}
@@ -45,8 +46,8 @@ function CategoryFields({ form }: CategoryFieldsProps) {
         required
         data={SENSE_OPTIONS}
         allowDeselect={false}
-        maw={320}
-        {...form.getInputProps('sense')}
+        w={260}
+        {...form.getInputProps(`${path}.sense`)}
       />
       {sense && senseHasRange(sense) && (
         <NumberInput
@@ -61,11 +62,11 @@ function CategoryFields({ form }: CategoryFieldsProps) {
           rightSection="фт."
           rightSectionWidth={36}
           w={140}
-          {...form.getInputProps('senseRange')}
+          {...form.getInputProps(`${path}.range`)}
         />
       )}
-    </Stack>
+    </Group>
   );
 }
 
-export default CategoryFields;
+export default SenseComponentFields;

@@ -17,8 +17,14 @@ export type ToVariant<V> = (
   extra: Record<string, unknown>,
 ) => V;
 
-// Поля каталога из тела запроса — в колонку extra. У каталога без своих полей её нет.
-export type ToExtra<D> = (dto: D) => Record<string, unknown>;
+// Свои поля каталога из тела запроса — в колонки category, details и extra. Обратное
+// чтение — ToVariant.
+export interface StoredFields {
+  category: string;
+  details: Record<string, unknown>;
+  extra: Record<string, unknown>;
+}
+export type ToStored<D> = (dto: D) => StoredFields;
 
 export function toCatalogEntry<V>(
   row: CatalogEntryRow,
@@ -43,15 +49,11 @@ export function toCatalogEntry<V>(
 // Поля записи из DTO — общая часть создания и полного редактирования (PUT).
 export function toCatalogEntryValues<D extends CatalogEntryDto>(
   dto: D,
-  toExtra?: ToExtra<D>,
+  toStored: ToStored<D>,
 ): Omit<NewCatalogEntryRow, 'authorId'> {
   return {
     name: dto.name,
-    category: dto.category,
-    // Копия, а не сам объект: у интерфейсов полей нет индексной сигнатуры, которую ждёт
-    // колонка.
-    details: { ...dto.details },
-    extra: toExtra?.(dto) ?? {},
+    ...toStored(dto),
     description: dto.description ?? '',
     isPublic: dto.isPublic,
   };

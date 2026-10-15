@@ -14,6 +14,8 @@ export * from './effects.js';
 export * from './effectDuration.js';
 export * from './effectDurationLabels.js';
 export * from './effectSenses.js';
+export * from './effectComponents.js';
+export * from './effectSaveEnds.js';
 export * from './abilityUsage.js';
 export * from './abilityUsageLabels.js';
 export * from './pluralRu.js';

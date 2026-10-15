@@ -36,7 +36,7 @@ function SimpleListPage({ def }: SimpleListPageProps) {
   const [params, setParams] = useSearchParams();
   const [scope, setScope] = useCatalogScope();
   const [view, setView] = useCollectionView();
-  const filters = readSimpleFilters(params, def.categories);
+  const filters = readSimpleFilters(params, def.kinds.values);
   const { entries, error } = useCatalogList(
     def.api.list,
     scope,
@@ -45,7 +45,7 @@ function SimpleListPage({ def }: SimpleListPageProps) {
   // Без новой записи в истории: «Назад» уводит со страницы, а не перебирает буквы поиска.
   const setFilters = (next: SimpleFilters) =>
     setParams(writeSimpleFilters(params, next), { replace: true });
-  const visible = entries && applySimpleFilters(entries, filters);
+  const visible = entries && applySimpleFilters(entries, filters, def.kinds.of);
 
   return (
     <CatalogListLayout
@@ -68,7 +68,7 @@ function SimpleListPage({ def }: SimpleListPageProps) {
               value={filters.query}
               onChange={(query) => setFilters({ ...filters, query })}
             />
-            {def.categories.length > 1 && entries && (
+            {def.kinds.values.length > 1 && entries && (
               <CategoryChips
                 def={def}
                 entries={entries}

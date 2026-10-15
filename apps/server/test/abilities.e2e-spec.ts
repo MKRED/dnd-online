@@ -20,6 +20,7 @@ describeCatalog(
       activation: { kind: 'reaction', trigger: 'когда вас бьют' },
       costs,
     },
+    invalid: { details: { x: 1 } },
   },
   (get) => {
     describe('активация и затраты', () => {

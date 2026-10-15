@@ -1,14 +1,15 @@
 import { nameCollator, normalizeSearch } from '../catalog';
 import type { SimpleEntry } from './simpleCatalogs';
 
-// Фильтры простого каталога: поиск по названию, категории и сортировка, в адресе, как у
-// предметов (q, cat, sort). Чипы категорий показываются, когда категорий больше одной.
+// Фильтры простого каталога: поиск по названию, виды записей (категории способности,
+// составляющие эффекта) и сортировка, в адресе, как у предметов (q, cat, sort). Чипы
+// показываются, когда видов больше одного.
 export const SIMPLE_SORTS = ['recent', 'name'] as const;
 export type SimpleSort = (typeof SIMPLE_SORTS)[number];
 
 export interface SimpleFilters {
   query: string;
-  // Пустой список — все категории.
+  // Виды записей; пустой список — все.
   categories: string[];
   sort: SimpleSort;
 }
@@ -19,8 +20,8 @@ export const DEFAULT_SIMPLE_FILTERS: SimpleFilters = {
   sort: 'recent',
 };
 
-// Неизвестные значения из адреса молча отбрасываем: его правят руками. known — категории
-// раздела.
+// Неизвестные значения из адреса молча отбрасываем: его правят руками. known — виды
+// записей раздела.
 export function readSimpleFilters(
   params: URLSearchParams,
   known: readonly string[],
@@ -52,10 +53,12 @@ export function writeSimpleFilters(
   return next;
 }
 
-// «Сначала новые» — порядок сервера (по дате изменения), его не трогаем.
+// «Сначала новые» — порядок сервера (по дате изменения), его не трогаем. Запись проходит,
+// если у неё есть хоть один выбранный вид; kindsOf — def.kinds.of раздела.
 export function applySimpleFilters<Entry extends SimpleEntry>(
   entries: Entry[],
   filters: SimpleFilters,
+  kindsOf: (entry: Entry) => readonly string[],
 ): Entry[] {
   const query = normalizeSearch(filters.query);
   const { categories } = filters;
@@ -63,7 +66,8 @@ export function applySimpleFilters<Entry extends SimpleEntry>(
     query || categories.length > 0
       ? entries.filter(
           (entry) =>
-            (categories.length === 0 || categories.includes(entry.category)) &&
+            (categories.length === 0 ||
+              kindsOf(entry).some((kind) => categories.includes(kind))) &&
             normalizeSearch(entry.name).includes(query),
         )
       : entries;

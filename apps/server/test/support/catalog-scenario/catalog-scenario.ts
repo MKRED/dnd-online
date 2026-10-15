@@ -28,6 +28,7 @@ export function describeCatalog(
         ...over,
       });
       ctx = {
+        app: t.app,
         author,
         stranger: await t.loginAs('stranger'),
         anonymous: t.anonymous(),
@@ -37,6 +38,7 @@ export function describeCatalog(
           const res = await author.post(url()).send(body(over)).expect(201);
           return res.body as { id: string };
         },
+        invalid: scenario.invalid,
       };
     });
 

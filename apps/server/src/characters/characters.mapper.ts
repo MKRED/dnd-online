@@ -3,6 +3,7 @@ import type {
   Character,
   CharacterFeature,
   CharacterMainImage,
+  InventoryEntry,
   SkillProficiency,
 } from 'shared';
 import type { characters } from '../database/schema/index.js';
@@ -13,14 +14,20 @@ type NewCharacterRow = typeof characters.$inferInsert;
 
 // DB хранит характеристики плоскими колонками (см. characters.ts), а общий тип Character
 // группирует их в abilityScores — маппинг в обе стороны неизбежен, это не лишний слой.
-// mainImage приходит отдельным запросом к галерее (loadMainImages), ник автора — из
-// users: в строке персонажа их нет.
+// mainImage приходит отдельным запросом к галерее (loadMainImages), инвентарь — из
+// character_items глазами смотрящего (loadInventories), ник автора — из users: в строке
+// персонажа их нет.
 export function toCharacter(
   row: CharacterRow,
   {
     mainImage,
     authorNickname,
-  }: { mainImage: CharacterMainImage | null; authorNickname: string },
+    inventory,
+  }: {
+    mainImage: CharacterMainImage | null;
+    authorNickname: string;
+    inventory: InventoryEntry[];
+  },
 ): Character {
   return {
     id: row.id,
@@ -57,7 +64,7 @@ export function toCharacter(
     attacks: row.attacks,
     spellSlots: row.spellSlots,
     spellsKnown: row.spellsKnown,
-    inventory: row.inventory,
+    inventory,
     currency: row.currency,
     features: row.features,
     personality: row.personality,
@@ -79,7 +86,7 @@ export function toInsertValues(
 // Поля чарника из DTO — общая часть создания и полного редактирования (PUT).
 // Необязательные поля, которых нет в DTO, остаются undefined: drizzle пропускает
 // такие ключи в .set(), поэтому при редактировании они не затираются (то, что меняется
-// по ходу игры через PATCH — инвентарь, спасброски от смерти и т.п. — форма не шлёт).
+// по ходу игры через PATCH — спасброски от смерти и т.п. — форма не шлёт).
 // В DTO не должно быть инициализаторов по умолчанию (`= []`), иначе это сломается.
 export function toSheetValues(
   dto: CreateCharacterDto,
@@ -118,7 +125,6 @@ export function toSheetValues(
     attacks: dto.attacks,
     spellSlots: dto.spellSlots,
     spellsKnown: dto.spellsKnown,
-    inventory: dto.inventory,
     currency: dto.currency,
     features: dto.features as CharacterFeature[] | undefined,
     personality: dto.personality,

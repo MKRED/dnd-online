@@ -12,3 +12,4 @@ export * from './items.js';
 export * from './item-images.js';
 export * from './item-image-files.js';
 export * from './item-pack-entries.js';
+export * from './character-items.js';

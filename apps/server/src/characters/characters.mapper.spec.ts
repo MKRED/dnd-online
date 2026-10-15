@@ -37,7 +37,7 @@ describe('toSheetValues', () => {
     expect(values.alignment).toBeNull();
   });
 
-  // Иначе полное редактирование (PUT) затирало бы инвентарь, ХП и т.п.
+  // Иначе полное редактирование (PUT) затирало бы ХП, заклинания и т.п.
   it('leaves fields absent from the payload undefined', () => {
     const values = toSheetValues(dto);
     for (const key of [
@@ -47,7 +47,6 @@ describe('toSheetValues', () => {
       'attacks',
       'spellSlots',
       'spellsKnown',
-      'inventory',
       'features',
     ] as const) {
       expect(values[key]).toBeUndefined();

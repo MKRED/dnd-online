@@ -5,6 +5,7 @@ import { loadMainImages } from '../character-images/character-image-access.js';
 import { DatabaseService } from '../database/database.service.js';
 import { characters, users } from '../database/schema/index.js';
 import { nicknameOf } from './character-author.js';
+import { loadInventories, loadInventory } from './inventory/index.js';
 import {
   toCharacter,
   toInsertValues,
@@ -35,6 +36,7 @@ export class CharactersService {
       return toCharacter(row, {
         mainImage: null,
         authorNickname: await nicknameOf(this.databaseService.db, userId),
+        inventory: [],
       });
     } catch (err: unknown) {
       this.logger.error(
@@ -56,9 +58,12 @@ export class CharactersService {
         // createdAt — тай-брейкер для записей с одинаковым updatedAt (например,
         // проставленным миграцией), чтобы порядок не прыгал между запросами.
         .orderBy(desc(characters.updatedAt), desc(characters.createdAt));
-      const mainImages = await loadMainImages(
+      const ids = rows.map(({ row }) => row.id);
+      const mainImages = await loadMainImages(this.databaseService.db, ids);
+      const inventories = await loadInventories(
         this.databaseService.db,
-        rows.map(({ row }) => row.id),
+        userId,
+        ids,
       );
       this.logger.debug(
         { durationMs: Date.now() - t0, userId, count: rows.length },
@@ -68,6 +73,7 @@ export class CharactersService {
         toCharacter(row, {
           mainImage: mainImages.get(row.id) ?? null,
           authorNickname,
+          inventory: inventories.get(row.id) ?? [],
         }),
       );
     } catch (err: unknown) {
@@ -114,6 +120,8 @@ export class CharactersService {
       return toCharacter(found.row, {
         mainImage: await this.mainImageOf(id),
         authorNickname: found.authorNickname,
+        // Глазами смотрящего: чужие скрытые от него предметы — строки без карточки.
+        inventory: await loadInventory(this.databaseService.db, userId, id),
       });
     } catch (err: unknown) {
       if (err instanceof NotFoundException) {
@@ -168,6 +176,7 @@ export class CharactersService {
       return toCharacter(row, {
         mainImage: await this.mainImageOf(id),
         authorNickname: await nicknameOf(this.databaseService.db, userId),
+        inventory: await loadInventory(this.databaseService.db, userId, id),
       });
     } catch (err: unknown) {
       if (err instanceof NotFoundException) {

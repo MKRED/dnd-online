@@ -30,7 +30,6 @@ import {
 import {
   AttackDto,
   CurrencyDto,
-  InventoryItemDto,
   ProficienciesDto,
 } from './nested/equipment.dto.js';
 import { LineageForSpecies } from './nested/lineage-for-species.validator.js';
@@ -186,12 +185,6 @@ export class CreateCharacterDto {
   @ValidateNested({ each: true })
   @Type(() => KnownSpellDto)
   spellsKnown?: KnownSpellDto[];
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => InventoryItemDto)
-  inventory?: InventoryItemDto[];
 
   @ValidateNested()
   @Type(() => CurrencyDto)

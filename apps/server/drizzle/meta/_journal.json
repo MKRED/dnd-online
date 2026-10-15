@@ -141,6 +141,13 @@
       "when": 1791998800036,
       "tag": "0019_character_link_access",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792030470122,
+      "tag": "0020_character_items",
+      "breakpoints": true
     }
   ]
 }

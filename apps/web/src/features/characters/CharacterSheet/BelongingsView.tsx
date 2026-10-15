@@ -7,8 +7,8 @@ import SheetField from './SheetField';
 // Сокращения — общие с ценой предмета (docs/dnd/items.md).
 const COINS: (keyof CharacterCurrency)[] = ['pp', 'gp', 'ep', 'sp', 'cp'];
 
-// Снаряжение и деньги. Снаряжения в форме пока нет, но его меняют по ходу игры (PATCH),
-// поэтому показываем, если оно есть.
+// Снаряжение и деньги. Пока — строкой названий; полный инвентарь с грузом и хранилищем —
+// этап 2 docs/plan/character-inventory.md. Скрытые и удалённые предметы без названий.
 function BelongingsView({ character }: { character: Character }) {
   const money = COINS.filter((coin) => character.currency[coin] > 0)
     .map((coin) => `${character.currency[coin]} ${COIN_LABELS[coin]}`)
@@ -23,11 +23,14 @@ function BelongingsView({ character }: { character: Character }) {
         {inventory.length > 0 && (
           <SheetField label="Снаряжение">
             {inventory
-              .map((item) =>
-                item.quantity > 1
-                  ? `${item.name} ×${item.quantity}`
-                  : item.name,
-              )
+              .map((entry) => {
+                const name =
+                  entry.item?.name ??
+                  (entry.missing === 'hidden'
+                    ? 'Предмет скрыт автором'
+                    : 'Предмет удалён автором');
+                return entry.quantity > 1 ? `${name} ×${entry.quantity}` : name;
+              })
               .join(', ')}
           </SheetField>
         )}

@@ -5,5 +5,7 @@ export * from './map/index.js';
 export * from './apiTokens.js';
 export * from './weapons.js';
 export * from './items.js';
+export * from './inventory.js';
+export * from './carrying.js';
 export * from './itemThumbCrop.js';
 export * from './returnPath.js';

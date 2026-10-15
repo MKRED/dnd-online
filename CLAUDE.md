@@ -80,6 +80,7 @@ Read the relevant file before working in that area:
 - [docs/dnd/classes.md](docs/dnd/classes.md) covers the character classes: the 13 classes and their 2024 subclasses (Russian and English names, source book), where that data lives in code, and what in it is unverified
 - [docs/dnd/species.md](docs/dnd/species.md) covers the character species: the 22 species: those of the 2024 books plus the Tabaxi and a homebrew Half-Tabaxi (Russian and English names, source book), where that data lives in code, and what was left out
 - [docs/dnd/items.md](docs/dnd/items.md) covers the item rules data: weight in pounds (fractional, or none), cost as an amount and a coin, the coin abbreviations, and where that data lives in code
+- [docs/dnd/carrying.md](docs/dnd/carrying.md) covers carrying capacity: the 2024 size table, the drag/lift/push limit, how the app counts the load (Strength × 15 for everyone, Goliath left out on purpose, no blocking over capacity) and where it lives in code
 - [docs/dnd/combat-stats.md](docs/dnd/combat-stats.md) covers the combat numbers of the character sheet: how initiative is derived and why the hit die is picked by hand
 - [docs/dnd/proficiencies.md](docs/dnd/proficiencies.md) covers the proficiencies of the character sheet: the four armor training categories, the strict weapon list, and the suggested lists of weapon masteries, tools and languages (Russian and English names)
 - [docs/deploy.md](docs/deploy.md) covers deployment:

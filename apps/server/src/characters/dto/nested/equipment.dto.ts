@@ -1,7 +1,6 @@
 import {
   ArrayUnique,
   IsArray,
-  IsBoolean,
   IsIn,
   IsInt,
   IsOptional,
@@ -68,29 +67,6 @@ export class AttackDto {
   @IsOptional()
   @IsString()
   notes?: string;
-}
-
-export class InventoryItemDto {
-  @IsString()
-  @Length(1, 100)
-  name: string;
-
-  @IsInt()
-  @Min(0)
-  quantity: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  weight?: number;
-
-  @IsOptional()
-  @IsBoolean()
-  equipped?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  attuned?: boolean;
 }
 
 export class CurrencyDto {

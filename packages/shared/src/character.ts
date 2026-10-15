@@ -1,6 +1,7 @@
 // Общие типы чарника DnD 5e (редакция 2024) — используются и на сервере (Drizzle jsonb-колонки), и на фронте (форма создания).
 
 import type { CharacterMainImage } from './characterImages.js';
+import type { InventoryEntry } from './inventory.js';
 import type { WeaponProficiency } from './weapons.js';
 
 export const ABILITY_SCORES = [
@@ -133,6 +134,9 @@ export interface KnownSpell {
   prepared: boolean;
 }
 
+// Старый инвентарь свободным списком — колонка characters.inventory. Его заменил
+// инвентарь из каталога (InventoryEntry); колонку удалим миграцией после деплоя, пока её
+// ещё читает прежняя версия сервера (docs/plan/character-inventory.md).
 export interface InventoryItem {
   name: string;
   quantity: number;
@@ -235,7 +239,8 @@ export interface Character {
   attacks: CharacterAttack[];
   spellSlots: SpellSlots;
   spellsKnown: KnownSpell[];
-  inventory: InventoryItem[];
+  // Строки видны так, как смотрящему позволяет доступ к карточкам предметов.
+  inventory: InventoryEntry[];
   currency: CharacterCurrency;
   features: CharacterFeature[];
   personality: CharacterPersonality;

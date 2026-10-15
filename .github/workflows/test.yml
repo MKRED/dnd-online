@@ -1,0 +1,77 @@
+name: Test
+
+# Все проверки проекта: типы и unit-тесты, линтер, формат, интеграционные тесты API.
+# Запускается на каждый пуш в master, а деплой вызывает его перед собой (deploy.yml):
+# если тесты упали, на прод ничего не уходит (docs/plan/testing.md).
+on:
+  push:
+    branches: [master]
+  workflow_call: {}
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Своя временная база на прогон: серверная тестовая база из CI недоступна и не нужна.
+    # Версия — как у Postgres на сервере (17).
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dnd_online_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Имя базы оканчивается на _test — без этого тесты откажутся её очищать.
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dnd_online_test
+      # Секреты только для подписи токенов в тестах, к проду отношения не имеют.
+      JWT_ACCESS_SECRET: ci-access-secret
+      JWT_REFRESH_SECRET: ci-refresh-secret
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Версию pnpm берёт из packageManager корневого package.json.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      # Node — как в Dockerfile.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Без dist/ пакета shared сервер и тесты падают с ERR_MODULE_NOT_FOUND.
+      - name: Build shared
+        run: pnpm --filter shared build
+
+      - name: Unit tests and types
+        run: pnpm test
+
+      # lint у приложений запускается с --fix и сам правит исправимое; в CI правка
+      # пропадёт, поэтому любое изменение файлов после него — ошибка.
+      - name: Lint
+        run: |
+          pnpm lint
+          git diff --exit-code
+
+      - name: Format
+        run: pnpm format:check
+
+      - name: Integration tests
+        run: pnpm --filter api test:e2e

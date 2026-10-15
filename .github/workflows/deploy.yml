@@ -18,7 +18,12 @@ env:
   APP_DIR: /mnt/ssd/docker/dnd_online
 
 jobs:
+  # Сначала все проверки (test.yml); упали — деплой не начинается.
+  test:
+    uses: ./.github/workflows/test.yml
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       # 1. Код репозитория — на раннер (отсюда берётся build-контекст).

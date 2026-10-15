@@ -6,6 +6,7 @@ Production: https://dnd.aoshi.ru, on the author's home server.
 
 Push to the `deploy` branch (or run the workflow manually) → `.github/workflows/deploy.yml`, the same pattern as the author's `tg-rp-bot`:
 
+0. **Tests first.** The `test` job calls `.github/workflows/test.yml`; the `deploy` job `needs` it, so a failing check means nothing is built or deployed. The same workflow also runs on every push to `master` (so a usual deploy runs it twice: once for `master`, once inside the deploy). It runs on a GitHub runner with Node 24 and pnpm from `packageManager`: build `shared`, `pnpm test`, `pnpm lint` (then `git diff --exit-code`, because the apps' lint runs with `--fix`), `pnpm format:check`, and the integration tests against a throwaway `postgres:17` service container (`dnd_online_test`; CI never touches the server's databases). The JWT secrets there are dummy values for signing test tokens.
 1. A `docker context` over SSH points at the server's Docker daemon; the root `Dockerfile` is built **on the server** (no registry).
 2. `docker-compose.yml` is uploaded to `/mnt/ssd/docker/dnd_online/`.
 3. `drizzle-kit migrate` runs via `docker compose run --rm api`; if it fails, the old container keeps running.

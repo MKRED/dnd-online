@@ -35,7 +35,7 @@ function item(patch: Partial<ItemRow> = {}): ItemRow {
 
 describe('toInventoryEntry', () => {
   it('опубликованный предмет — с карточкой', () => {
-    expect(toInventoryEntry(entry, item(), null, 'viewer')).toEqual({
+    expect(toInventoryEntry(entry, item(), null, 'viewer', 'owner')).toEqual({
       id: 'e1',
       location: 'carried',
       quantity: 2,
@@ -58,6 +58,7 @@ describe('toInventoryEntry', () => {
       item({ isPublic: false }),
       null,
       'author',
+      'author',
     );
     expect(result.item?.isPublic).toBe(false);
   });
@@ -65,7 +66,13 @@ describe('toInventoryEntry', () => {
   // Ни названия, ни веса, ни id: решено с пользователем.
   it('чужой скрытый — строка без карточки', () => {
     expect(
-      toInventoryEntry(entry, item({ isPublic: false }), null, 'viewer'),
+      toInventoryEntry(
+        entry,
+        item({ isPublic: false }),
+        null,
+        'viewer',
+        'owner',
+      ),
     ).toEqual({
       id: 'e1',
       location: 'carried',
@@ -75,9 +82,28 @@ describe('toInventoryEntry', () => {
     });
   });
 
+  // Автор скрытого предмета смотрит на чужой лист: предмет на персонажа не действует.
+  it('скрытый от владельца — скрыт и для автора предмета', () => {
+    expect(
+      toInventoryEntry(
+        entry,
+        item({ isPublic: false }),
+        null,
+        'author',
+        'owner',
+      ),
+    ).toMatchObject({ item: null, missing: 'hidden' });
+  });
+
   it('удалённый автором — строка без карточки', () => {
     expect(
-      toInventoryEntry({ ...entry, itemId: null }, null, null, 'viewer'),
+      toInventoryEntry(
+        { ...entry, itemId: null },
+        null,
+        null,
+        'viewer',
+        'owner',
+      ),
     ).toMatchObject({ item: null, missing: 'deleted' });
   });
 });

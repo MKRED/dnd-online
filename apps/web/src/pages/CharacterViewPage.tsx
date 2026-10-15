@@ -140,7 +140,18 @@ function CharacterViewPage() {
       ) : !character ? (
         <Loader />
       ) : (
-        <CharacterSheet character={character} aside={aside} />
+        <CharacterSheet
+          character={character}
+          aside={aside}
+          onInventoryChange={
+            isAuthor
+              ? (inventory) =>
+                  setCharacter((current) =>
+                    current ? { ...current, inventory } : current,
+                  )
+              : undefined
+          }
+        />
       )}
     </Container>
   );

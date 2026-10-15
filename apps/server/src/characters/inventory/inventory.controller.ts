@@ -13,6 +13,7 @@ import type { AuthenticatedRequest } from '../../auth/auth.guard.js';
 import { AuthGuard } from '../../auth/auth.guard.js';
 import {
   AddInventoryItemDto,
+  MoveInventoryEntryDto,
   UpdateInventoryEntryDto,
 } from './dto/inventory.dto.js';
 import { InventoryService } from './inventory.service.js';
@@ -45,6 +46,16 @@ export class InventoryController {
       entryId,
       dto,
     );
+  }
+
+  @Post(':entryId/move')
+  move(
+    @Req() req: AuthenticatedRequest,
+    @Param('characterId', ParseUUIDPipe) characterId: string,
+    @Param('entryId', ParseUUIDPipe) entryId: string,
+    @Body() dto: MoveInventoryEntryDto,
+  ) {
+    return this.inventoryService.move(req.user.sub, characterId, entryId, dto);
   }
 
   @Delete(':entryId')

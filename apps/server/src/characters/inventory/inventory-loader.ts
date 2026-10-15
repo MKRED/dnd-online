@@ -6,6 +6,7 @@ import type {
 } from '../../database/database.service.js';
 import {
   characterItems,
+  characters,
   itemImages,
   items,
 } from '../../database/schema/index.js';
@@ -16,14 +17,18 @@ type EntryRow = typeof characterItems.$inferSelect;
 type ItemRow = typeof items.$inferSelect;
 type ItemImageRow = typeof itemImages.$inferSelect;
 
-// Строка инвентаря глазами смотрящего: карточку видит тот, кто видит сам предмет (автор
-// или любой — у опубликованного), как в составе наборов. Скрытому от смотрящего не
-// отдаём ничего из карточки, даже id и вес (решено с пользователем).
+// Строка инвентаря глазами смотрящего. Карточка видна, только если предмет видят и
+// смотрящий, и владелец персонажа (автор предмета или любой — у опубликованного):
+// - скрытому от смотрящего не отдаём ничего из карточки, даже id и вес (решено с
+//   пользователем);
+// - скрытый от владельца на персонажа не действует, поэтому и автор предмета, глядя на
+//   чужой лист, видит его скрытым — иначе его груз вышел бы больше, чем у владельца.
 export function toInventoryEntry(
   entry: EntryRow,
   item: ItemRow | null,
   image: ItemImageRow | null,
   viewerId: string,
+  ownerId: string,
 ): InventoryEntry {
   const base = {
     id: entry.id,
@@ -31,7 +36,8 @@ export function toInventoryEntry(
     quantity: entry.quantity,
   };
   if (!item) return { ...base, item: null, missing: 'deleted' };
-  if (item.authorId !== viewerId && !item.isPublic) {
+  const sees = (userId: string) => item.authorId === userId || item.isPublic;
+  if (!sees(viewerId) || !sees(ownerId)) {
     return { ...base, item: null, missing: 'hidden' };
   }
   return {
@@ -58,16 +64,22 @@ export async function loadInventories(
   const result = new Map<string, InventoryEntry[]>();
   if (characterIds.length === 0) return result;
   const rows = await db
-    .select({ entry: characterItems, item: items, image: itemImages })
+    .select({
+      entry: characterItems,
+      ownerId: characters.userId,
+      item: items,
+      image: itemImages,
+    })
     .from(characterItems)
+    .innerJoin(characters, eq(characters.id, characterItems.characterId))
     .leftJoin(items, eq(items.id, characterItems.itemId))
     .leftJoin(itemImages, eq(itemImages.itemId, items.id))
     .where(inArray(characterItems.characterId, [...characterIds]))
     // id — тай-брейкер для строк, добавленных в одну транзакцию (распаковка набора).
     .orderBy(asc(characterItems.addedAt), asc(characterItems.id));
-  for (const { entry, item, image } of rows) {
+  for (const { entry, ownerId, item, image } of rows) {
     const list = result.get(entry.characterId) ?? [];
-    list.push(toInventoryEntry(entry, item, image, viewerId));
+    list.push(toInventoryEntry(entry, item, image, viewerId, ownerId));
     result.set(entry.characterId, list);
   }
   return result;

@@ -4,6 +4,7 @@ import {
   INVENTORY_MAX_QUANTITY,
   type InventoryAddInput,
   type InventoryEntryPatch,
+  type InventoryMoveInput,
   type InventoryLocation,
 } from 'shared';
 
@@ -34,4 +35,14 @@ export class UpdateInventoryEntryDto implements InventoryEntryPatch {
   @IsOptional()
   @IsIn(INVENTORY_LOCATIONS, { message: LOCATION_MESSAGE })
   location?: InventoryLocation;
+}
+
+export class MoveInventoryEntryDto implements InventoryMoveInput {
+  @IsIn(INVENTORY_LOCATIONS, { message: LOCATION_MESSAGE })
+  location: InventoryLocation;
+
+  @IsInt({ message: QUANTITY_MESSAGE })
+  @Min(1, { message: QUANTITY_MESSAGE })
+  @Max(INVENTORY_MAX_QUANTITY, { message: QUANTITY_MESSAGE })
+  quantity: number;
 }

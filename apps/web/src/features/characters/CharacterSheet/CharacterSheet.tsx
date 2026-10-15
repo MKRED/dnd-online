@@ -1,9 +1,10 @@
 import { Grid, Stack } from '@mantine/core';
 import type { ReactNode } from 'react';
-import type { Character } from 'shared';
+import type { Character, InventoryEntry } from 'shared';
 import AbilitiesView from './AbilitiesView';
-import BelongingsView, { PersonalityView } from './BelongingsView';
 import CombatView from './CombatView';
+import InventorySection from '../Inventory';
+import PersonalityView from './PersonalityView';
 import ProficienciesView from './ProficienciesView';
 import SheetHeader from './SheetHeader';
 import SheetImages from './SheetImages';
@@ -11,11 +12,18 @@ import SheetImages from './SheetImages';
 interface CharacterSheetProps {
   character: Character;
   aside: ReactNode;
+  // Есть — автор меняет инвентарь прямо на листе; нет — лист только для чтения.
+  onInventoryChange?: (inventory: InventoryEntry[]) => void;
 }
 
-// Лист персонажа только для чтения — так его видят и автор, и зритель по ссылке.
+// Лист персонажа — так его видят и автор, и зритель по ссылке. Менять на листе можно
+// только инвентарь (у автора); остальное — формой.
 // Разделы идут в порядке формы, пустые не показываются.
-function CharacterSheet({ character, aside }: CharacterSheetProps) {
+function CharacterSheet({
+  character,
+  aside,
+  onInventoryChange,
+}: CharacterSheetProps) {
   return (
     <Stack gap="lg">
       <Grid gap="xl">
@@ -34,7 +42,7 @@ function CharacterSheet({ character, aside }: CharacterSheetProps) {
       </Grid>
       <AbilitiesView character={character} />
       <ProficienciesView character={character} />
-      <BelongingsView character={character} />
+      <InventorySection character={character} onChange={onInventoryChange} />
       <PersonalityView character={character} />
     </Stack>
   );

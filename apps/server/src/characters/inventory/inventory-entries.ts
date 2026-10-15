@@ -6,9 +6,11 @@ import { characterItems, items } from '../../database/schema/index.js';
 import {
   INVENTORY_ENTRY_LOCKED,
   INVENTORY_ENTRY_NOT_FOUND,
+  type EntryChange,
 } from './inventory.rules.js';
 
-// Чтение строк инвентаря внутри транзакции правки. Владельца персонажа проверяет сервис.
+// Чтение и запись строк инвентаря внутри транзакции правки. Владельца персонажа
+// проверяет сервис.
 
 // Строку можно менять, только пока её предмет виден автору персонажа.
 export async function findEditableEntry(
@@ -54,4 +56,44 @@ export async function findEntryAt(
     )
     .limit(1);
   return row ?? null;
+}
+
+// Применить спланированное изменение строки (planEntryChange, planMove).
+export async function applyEntryChange(
+  tx: DbTransaction,
+  entry: { id: string; characterId: string; itemId: string },
+  change: EntryChange,
+): Promise<void> {
+  if (change.kind === 'update') {
+    await tx
+      .update(characterItems)
+      .set({ quantity: change.quantity, location: change.location })
+      .where(eq(characterItems.id, entry.id));
+    return;
+  }
+  if (change.kind === 'merge') {
+    await tx
+      .update(characterItems)
+      .set({ quantity: change.quantity })
+      .where(eq(characterItems.id, change.targetId));
+    await tx.delete(characterItems).where(eq(characterItems.id, entry.id));
+    return;
+  }
+  await tx
+    .update(characterItems)
+    .set({ quantity: change.remaining })
+    .where(eq(characterItems.id, entry.id));
+  if (change.targetId) {
+    await tx
+      .update(characterItems)
+      .set({ quantity: change.quantity })
+      .where(eq(characterItems.id, change.targetId));
+  } else {
+    await tx.insert(characterItems).values({
+      characterId: entry.characterId,
+      itemId: entry.itemId,
+      location: change.location,
+      quantity: change.quantity,
+    });
+  }
 }

@@ -44,3 +44,9 @@ export interface InventoryEntryPatch {
   quantity?: number;
   location?: InventoryLocation;
 }
+
+// Переложить часть стопки (или всю) в другое место: quantity — сколько переложить.
+export interface InventoryMoveInput {
+  location: InventoryLocation;
+  quantity: number;
+}

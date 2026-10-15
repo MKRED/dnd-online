@@ -28,7 +28,14 @@ export type InventoryEntry = {
   location: InventoryLocation;
   quantity: number;
 } & (
-  | { item: InventoryItemCard; missing: null }
+  | {
+      item: InventoryItemCard;
+      missing: null;
+      // Предмет скрыт от владельца персонажа, но виден смотрящему — его автору на чужом
+      // листе. Свои предметы автор видит всегда, а на персонажа скрытый не действует:
+      // карточка есть, в груз строка не входит (вариант Б, решено с пользователем).
+      inactive: boolean;
+    }
   | { item: null; missing: InventoryMissing }
 );
 

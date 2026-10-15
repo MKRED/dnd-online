@@ -13,7 +13,7 @@ interface LoadSummaryProps {
 // Груз при себе против грузоподъёмности (docs/dnd/carrying.md). Перегруз ничего не
 // запрещает — только красное число: последствия считает мастер в сессии.
 function LoadSummary({ entries, strength }: LoadSummaryProps) {
-  const { weight, missing } = carriedLoad(entries);
+  const { weight, excluded } = carriedLoad(entries);
   const { carry, dragLiftPush } = carryingCapacity(strength);
   const over = weight > carry;
 
@@ -34,8 +34,8 @@ function LoadSummary({ entries, strength }: LoadSummaryProps) {
       <Text size="xs" c="dimmed">
         Тащить, поднять, толкать — до {numberFormat.format(dragLiftPush)} фнт.
       </Text>
-      {/* Вес скрытых и удалённых не считается и не раскрывается. */}
-      {missing > 0 && (
+      {/* Вес скрытых, удалённых и не действующих не считается и не раскрывается. */}
+      {excluded > 0 && (
         <Text size="xs" c="dimmed">
           Без скрытых и удалённых предметов
         </Text>

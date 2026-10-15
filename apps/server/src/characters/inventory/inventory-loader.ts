@@ -17,12 +17,13 @@ type EntryRow = typeof characterItems.$inferSelect;
 type ItemRow = typeof items.$inferSelect;
 type ItemImageRow = typeof itemImages.$inferSelect;
 
-// Строка инвентаря глазами смотрящего. Карточка видна, только если предмет видят и
-// смотрящий, и владелец персонажа (автор предмета или любой — у опубликованного):
+// Строка инвентаря глазами смотрящего. Предмет видит его автор или любой — у
+// опубликованного:
 // - скрытому от смотрящего не отдаём ничего из карточки, даже id и вес (решено с
 //   пользователем);
-// - скрытый от владельца на персонажа не действует, поэтому и автор предмета, глядя на
-//   чужой лист, видит его скрытым — иначе его груз вышел бы больше, чем у владельца.
+// - скрытый от владельца на персонажа не действует. Автор предмета на чужом листе видит
+//   свою карточку (свои предметы видны всегда), но строка помечена inactive и в груз не
+//   входит — вариант Б, решено с пользователем.
 export function toInventoryEntry(
   entry: EntryRow,
   item: ItemRow | null,
@@ -37,9 +38,7 @@ export function toInventoryEntry(
   };
   if (!item) return { ...base, item: null, missing: 'deleted' };
   const sees = (userId: string) => item.authorId === userId || item.isPublic;
-  if (!sees(viewerId) || !sees(ownerId)) {
-    return { ...base, item: null, missing: 'hidden' };
-  }
+  if (!sees(viewerId)) return { ...base, item: null, missing: 'hidden' };
   return {
     ...base,
     item: {
@@ -52,6 +51,7 @@ export function toInventoryEntry(
       image: toItemImage(image),
     },
     missing: null,
+    inactive: !sees(ownerId),
   };
 }
 

@@ -18,8 +18,15 @@ function entry(
   weight: number,
   quantity: number,
   location: InventoryEntry['location'] = 'carried',
-): InventoryEntry {
-  return { id: 'e', location, quantity, item: card(weight), missing: null };
+): Extract<InventoryEntry, { missing: null }> {
+  return {
+    id: 'e',
+    location,
+    quantity,
+    item: card(weight),
+    missing: null,
+    inactive: false,
+  };
 }
 
 describe('carryingCapacity', () => {
@@ -33,7 +40,7 @@ describe('carriedLoad', () => {
   it('складывает вес × количество при себе', () => {
     expect(carriedLoad([entry(5, 2), entry(0.25, 3)])).toEqual({
       weight: 10.75,
-      missing: 0,
+      excluded: 0,
     });
   });
 
@@ -62,11 +69,17 @@ describe('carriedLoad', () => {
     };
     expect(carriedLoad([entry(2, 1), hidden, deletedInStash])).toEqual({
       weight: 2,
-      missing: 1,
+      excluded: 1,
     });
   });
 
+  it('не действующий на персонажа не входит', () => {
+    expect(
+      carriedLoad([entry(2, 1), { ...entry(50, 1), inactive: true }]),
+    ).toEqual({ weight: 2, excluded: 1 });
+  });
+
   it('пустой инвентарь — ноль', () => {
-    expect(carriedLoad([])).toEqual({ weight: 0, missing: 0 });
+    expect(carriedLoad([])).toEqual({ weight: 0, excluded: 0 });
   });
 });

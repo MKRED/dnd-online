@@ -11,7 +11,7 @@ function entry(
   location: InventoryEntry['location'],
   quantity: number,
   weight: number,
-): InventoryEntry {
+): Extract<InventoryEntry, { missing: null }> {
   return {
     id,
     location,
@@ -26,6 +26,7 @@ function entry(
       image: null,
     },
     missing: null,
+    inactive: false,
   };
 }
 
@@ -67,6 +68,21 @@ describe('InventorySection', () => {
       screen.getByText('Без скрытых и удалённых предметов'),
     ).toBeInTheDocument();
     expect(screen.getByText('▸ Хранилище · 1')).toBeInTheDocument();
+  });
+
+  // Автор скрытого предмета на чужом листе: карточка видна, но в груз не входит.
+  it('не действующий предмет — с пометкой и без веса в грузе', () => {
+    renderWithProviders(
+      <InventorySection
+        character={character([
+          entry('a', 'carried', 1, 5),
+          { ...entry('b', 'carried', 1, 50), inactive: true },
+        ])}
+      />,
+    );
+    expect(screen.getByText('5 / 150 фнт.')).toBeInTheDocument();
+    expect(screen.getByText('Предмет b')).toBeInTheDocument();
+    expect(screen.getByText('Не действует')).toBeInTheDocument();
   });
 
   it('при перегрузе пишет об этом', () => {

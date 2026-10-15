@@ -25,6 +25,7 @@ function entry(
       image: null,
     },
     missing: null,
+    inactive: false,
     ...rest,
   } as InventoryEntry;
 }

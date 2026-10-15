@@ -40,6 +40,7 @@ describe('toInventoryEntry', () => {
       location: 'carried',
       quantity: 2,
       missing: null,
+      inactive: false,
       item: {
         id: 'i1',
         name: 'Верёвка',
@@ -82,8 +83,9 @@ describe('toInventoryEntry', () => {
     });
   });
 
-  // Автор скрытого предмета смотрит на чужой лист: предмет на персонажа не действует.
-  it('скрытый от владельца — скрыт и для автора предмета', () => {
+  // Автор скрытого предмета смотрит на чужой лист: свою карточку видит, но предмет на
+  // персонажа не действует.
+  it('скрытый от владельца — автору с карточкой, но не действует', () => {
     expect(
       toInventoryEntry(
         entry,
@@ -92,7 +94,7 @@ describe('toInventoryEntry', () => {
         'author',
         'owner',
       ),
-    ).toMatchObject({ item: null, missing: 'hidden' });
+    ).toMatchObject({ item: { id: 'i1' }, missing: null, inactive: true });
   });
 
   it('удалённый автором — строка без карточки', () => {

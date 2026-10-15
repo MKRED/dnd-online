@@ -1,6 +1,7 @@
 import {
   ActionIcon,
   Anchor,
+  Badge,
   Box,
   Button,
   Group,
@@ -37,6 +38,8 @@ function InventoryRow({
 }: InventoryRowProps) {
   const { item } = entry;
   const name = entryName(entry);
+  // Скрытый от владельца предмет, который видит его автор: в груз не входит.
+  const inactive = item !== null && entry.inactive;
   const weight = item ? formatWeight(entryWeight(entry)) : '—';
   const numbers = item
     ? `×${entry.quantity} · ${weight}`
@@ -70,6 +73,17 @@ function InventoryRow({
             {name}
           </Text>
         )}
+        {inactive && (
+          <Tooltip
+            label="Вы скрыли этот предмет: на персонажа он не действует и в груз не входит"
+            multiline
+            w={260}
+          >
+            <Badge size="xs" variant="outline" color="gray">
+              Не действует
+            </Badge>
+          </Tooltip>
+        )}
         {/* На узком экране числа уходят под название: иначе на него не остаётся места. */}
         <Text size="xs" c="dimmed" hiddenFrom="sm">
           {numbers}
@@ -82,6 +96,7 @@ function InventoryRow({
         size="sm"
         w={72}
         ta="right"
+        c={inactive ? 'dimmed' : undefined}
         visibleFrom="sm"
         style={{ flexShrink: 0 }}
       >

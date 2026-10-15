@@ -148,6 +148,13 @@
       "when": 1792030470122,
       "tag": "0020_character_items",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1792035157762,
+      "tag": "0021_drop_character_inventory",
+      "breakpoints": true
     }
   ]
 }

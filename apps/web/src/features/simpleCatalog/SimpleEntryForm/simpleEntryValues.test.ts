@@ -31,7 +31,7 @@ describe('simpleEntryValues', () => {
     });
   });
 
-  it('способность длительность не отправляет', () => {
+  it('способность отправляет активацию и затраты, а длительность — нет', () => {
     const values = toSimpleFormValues(ABILITIES, null);
     expect(toSimpleInput(ABILITIES, { ...values, name: ' Луч ' })).toEqual({
       name: 'Луч',
@@ -39,6 +39,8 @@ describe('simpleEntryValues', () => {
       details: {},
       description: '',
       isPublic: false,
+      activation: { kind: 'action' },
+      costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
     });
   });
 });

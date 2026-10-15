@@ -7,22 +7,28 @@ import {
   writeSimpleFilters,
 } from './simpleFilters';
 
-const entry = (name: string): Ability => ({
+const base = (name: string) => ({
   id: name,
   authorId: 'u1',
   authorNickname: 'Арвен',
   isPublic: true,
   name,
-  category: 'basic',
-  details: {},
   description: '',
   image: null,
   createdAt: '',
   updatedAt: '',
 });
 
+const entry = (name: string): Ability => ({
+  ...base(name),
+  category: 'basic',
+  details: {},
+  activation: { kind: 'action' },
+  costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
+});
+
 const sense = (name: string): Effect => ({
-  ...entry(name),
+  ...base(name),
   category: 'sense',
   details: { sense: 'darkvision', range: 60 },
   duration: { kind: 'permanent' },

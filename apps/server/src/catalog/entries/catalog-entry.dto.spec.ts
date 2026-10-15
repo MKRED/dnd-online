@@ -19,7 +19,14 @@ const valid = {
 // каталогов пока одна категория, поэтому проверяем их одними и теми же случаями. У эффекта
 // длительность обязательна — кладём её в тело.
 describe.each<[string, new () => CatalogEntryDto, object]>([
-  ['AbilityDto', AbilityDto, {}],
+  [
+    'AbilityDto',
+    AbilityDto,
+    {
+      activation: { kind: 'action' },
+      costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
+    },
+  ],
   ['EffectDto', EffectDto, { duration: { kind: 'permanent' } }],
 ])('%s', (_name, Dto, own) => {
   async function errorsOf(overrides: object): Promise<string[]> {
@@ -122,5 +129,44 @@ describe('EffectDto: чувство', () => {
       'details',
     ]);
     expect(await errorsOf({})).toEqual(['details']);
+  });
+});
+
+describe('AbilityDto: активация и затраты', () => {
+  const costs = { uses: null, spellSlot: null, movement: null, hitDie: false };
+  async function errorsOf(overrides: object): Promise<string[]> {
+    const errors = await validate(
+      plainToInstance(AbilityDto, {
+        ...valid,
+        activation: { kind: 'bonus_action' },
+        costs,
+        ...overrides,
+      }),
+    );
+    return errors.map((error) => error.property);
+  }
+
+  it('принимает реакцию с условием и заряды с ячейкой', async () => {
+    expect(
+      await errorsOf({
+        activation: { kind: 'reaction', trigger: 'когда вас бьют' },
+        costs: {
+          ...costs,
+          uses: { count: { kind: 'proficiency' }, recovery: 'short_one' },
+          spellSlot: { minLevel: 2 },
+        },
+      }),
+    ).toEqual([]);
+  });
+
+  it('требует оба поля и не пускает неверные', async () => {
+    expect(await errorsOf({ activation: undefined })).toEqual(['activation']);
+    expect(await errorsOf({ costs: undefined })).toEqual(['costs']);
+    expect(await errorsOf({ activation: { kind: 'magic' } })).toEqual([
+      'activation',
+    ]);
+    expect(await errorsOf({ costs: { ...costs, movement: 'double' } })).toEqual(
+      ['costs'],
+    );
   });
 });

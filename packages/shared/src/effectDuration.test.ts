@@ -84,7 +84,7 @@ describe('formatEffectDuration', () => {
     ).toBe('До конца своего следующего хода');
     expect(formatEffectDurationShort(turn)).toBe('До начала хода');
     expect(formatEffectDuration({ kind: 'rest', rest: 'short' })).toBe(
-      'До короткого или длинного отдыха',
+      'До короткого или долгого отдыха',
     );
     expect(formatEffectDurationShort({ kind: 'rest', rest: 'short' })).toBe(
       'До отдыха',

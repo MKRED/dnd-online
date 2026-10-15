@@ -8,17 +8,20 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import type { AbilityVariant } from 'shared';
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { CatalogEntriesController } from '../catalog/entries/catalog-entries.controller.js';
+import type { AbilityRecordFields } from './abilities.config.js';
 import { AbilitiesService } from './abilities.service.js';
 import { AbilityDto } from './dto/ability.dto.js';
 
 // Список, карточка и удаление — общие (CatalogEntriesController), тело — AbilityDto.
 @Controller('abilities')
 @UseGuards(AuthGuard)
-export class AbilitiesController extends CatalogEntriesController<AbilityVariant> {
+export class AbilitiesController extends CatalogEntriesController<
+  AbilityRecordFields,
+  AbilityDto
+> {
   constructor(service: AbilitiesService) {
     super(service);
   }

@@ -3,11 +3,11 @@ import {
   CATALOG_NAME_MAX_LENGTH,
 } from 'shared';
 import {
-  fromDurationValues,
   toDurationValues,
   validateDurationAmount,
   type DurationValues,
 } from '../DurationField/durationForm';
+import { toUsageValues, usageValidate, type UsageValues } from '../UsageField';
 import type {
   SimpleCatalogDef,
   SimpleEntry,
@@ -25,8 +25,10 @@ export interface SimpleFormValues extends CategoryValues {
   category: string;
   description: string;
   isPublic: boolean;
-  // Есть в форме всегда, но в запрос уходит, только если у каталога есть длительность.
+  // Общие поля разделов (catalogExtras.tsx). В форме есть поля обоих разделов, а в
+  // запрос уходят только поля своего.
   duration: DurationValues;
+  usage: UsageValues;
 }
 
 // Те же правила и тексты, что у сервера (CatalogEntryDto, EffectDto).
@@ -42,6 +44,7 @@ export const simpleFormValidate = {
       ? null
       : `Описание — не длиннее ${CATALOG_DESCRIPTION_MAX_LENGTH} символов`,
   duration: { amount: validateDurationAmount },
+  usage: usageValidate,
   ...categoryValidate,
 };
 
@@ -58,6 +61,7 @@ export function toSimpleFormValues(
     duration: toDurationValues(
       entry && 'duration' in entry ? entry.duration : undefined,
     ),
+    usage: toUsageValues(entry && 'activation' in entry ? entry : undefined),
   };
 }
 
@@ -73,9 +77,5 @@ export function toSimpleInput(
   };
   // Категории и поля приходят из списка категорий раздела (def.categories), поэтому
   // способность получит только свои категории; TypeScript этой связи не видит.
-  return (
-    def.hasDuration
-      ? { ...input, duration: fromDurationValues(values.duration) }
-      : input
-  ) as SimpleInput;
+  return { ...input, ...def.extras.toInput(values) } as SimpleInput;
 }

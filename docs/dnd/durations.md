@@ -66,7 +66,7 @@ Decided with the user on 2026-10-15 ([plan/effects.md](../plan/effects.md)). Dur
 - **Бессрочно** (`permanent`) — until removed. Covers "Until dispelled" and permanent traits: the user adds «Тёмное зрение» to their elf by hand, there is no species → effect link. Effects saved before the field existed read as this.
 - **Время** (`time`) — 1–999 rounds, minutes, hours or days, with an optional «Концентрация» flag (only here, as in the book: "Concentration, up to …").
 - **До следующего хода** (`turn`) — the start or the end of the next turn, of the creator (the default, as "your next turn" in a spell) or of the bearer.
-- **До отдыха** (`rest`) — until the bearer finishes a short or long rest, or only a long one. **House rule:** the book has no such duration form (see above); kept because it is handy for one's own effects.
+- **До отдыха** (`rest`) — until the bearer finishes a short or long rest, or only a long one («до короткого или долгого отдыха», «до долгого отдыха»: «долгий» as in the 2024 translation). **House rule:** the book has no such duration form (see above); kept because it is handy for one's own effects.
 - **No «Мгновенно»:** an effect in the catalog is something that stays on a creature. An instantaneous spell is an ability, and what it leaves behind is an effect with its own duration.
 - "Special" and "Until dispelled or triggered" are written as «Бессрочно» with the rule in the description.
 - Ending early on a successful save ("repeat the save at the end of each of its turns") is not a duration kind; it comes with the effect categories that need it.

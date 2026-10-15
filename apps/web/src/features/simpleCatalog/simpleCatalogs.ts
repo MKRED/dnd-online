@@ -7,11 +7,15 @@ import {
   type EffectInput,
 } from 'shared';
 import { catalogApi, type CatalogSection } from '../catalog';
+import {
+  ABILITY_EXTRAS,
+  EFFECT_EXTRAS,
+  type CatalogExtras,
+} from './catalogExtras';
 
 // Запись простого каталога — способность или эффект (docs/plan/abilities-effects.md).
-// Пока у обоих одна категория без своих полей, и формы у них почти одинаковые: у эффекта
-// есть длительность. Когда у каталога появятся свои категории, его страницы получат свои
-// поля категории.
+// Страницы у них одни; чем разделы отличаются — категории, их поля (CategoryFields) и
+// общие поля раздела (extras).
 export type SimpleEntry = Ability | Effect;
 export type SimpleInput = AbilityInput | EffectInput;
 
@@ -23,8 +27,8 @@ export interface SimpleCatalogDef {
   api: ReturnType<typeof catalogApi<SimpleEntry, SimpleInput>>;
   categories: readonly string[];
   categoryLabels: Record<string, string>;
-  // Длительность — общее поле эффектов (docs/plan/effects.md).
-  hasDuration: boolean;
+  // Общие поля раздела: длительность эффекта, активация и затраты способности.
+  extras: CatalogExtras;
   // Тексты ошибок загрузки записи — один объект на раздел: useCatalogEntry ждёт
   // постоянный объект, иначе перезапускает загрузку.
   loadTexts: { notFound: string; failed: string };
@@ -53,7 +57,7 @@ export const ABILITIES: SimpleCatalogDef = {
   api: catalogApi<SimpleEntry, SimpleInput>('/abilities'),
   categories: ABILITY_CATEGORIES,
   categoryLabels: { basic: 'Базовая' },
-  hasDuration: false,
+  extras: ABILITY_EXTRAS,
   loadTexts: {
     notFound: 'Способность не найдена',
     failed: 'Не удалось загрузить способность',
@@ -72,8 +76,7 @@ export const ABILITIES: SimpleCatalogDef = {
     namePlaceholder: 'Например, Ядовитый луч',
     publicHint:
       'Скрытую способность видите только вы. Опубликованную видят все, но менять её можете только вы.',
-    descriptionPlaceholder:
-      'Что делает способность: дальность, урон, время активации…',
+    descriptionPlaceholder: 'Что делает способность: дальность, цель, урон…',
     empty: {
       mine: 'У вас пока нет способностей. Создайте первую — например, удар или заклинание.',
       catalog:
@@ -88,7 +91,7 @@ export const EFFECTS: SimpleCatalogDef = {
   api: catalogApi<SimpleEntry, SimpleInput>('/effects'),
   categories: EFFECT_CATEGORIES,
   categoryLabels: { basic: 'Базовый', sense: 'Чувство' },
-  hasDuration: true,
+  extras: EFFECT_EXTRAS,
   loadTexts: {
     notFound: 'Эффект не найден',
     failed: 'Не удалось загрузить эффект',

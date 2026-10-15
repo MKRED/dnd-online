@@ -1,3 +1,4 @@
+import type { AbilityFields } from './abilityUsage.js';
 import type { CatalogEntryFields, CatalogEntryInputFields } from './catalog.js';
 
 // Способности (docs/plan/abilities.md): общий каталог того, что персонаж умеет делать.
@@ -11,5 +12,8 @@ export type AbilityVariant = {
   details: Record<string, never>;
 };
 
-export type Ability = AbilityVariant & CatalogEntryFields;
-export type AbilityInput = AbilityVariant & CatalogEntryInputFields;
+// Активация и затраты — общие поля всех способностей (abilityUsage.ts).
+export type Ability = AbilityVariant & AbilityFields & CatalogEntryFields;
+export type AbilityInput = AbilityVariant &
+  AbilityFields &
+  CatalogEntryInputFields;

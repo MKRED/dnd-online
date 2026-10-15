@@ -12,7 +12,7 @@ import {
 } from '@mantine/core';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { formatEffectDuration, formatSense } from 'shared';
+import { formatSense } from 'shared';
 import { useAuth } from '../auth';
 import { DetailsField, EntryImage, useCatalogEntry } from '../catalog';
 import { errorMessage } from '../../lib/apiRequest';
@@ -90,11 +90,11 @@ function SimpleViewPage({ def }: SimpleViewPageProps) {
                   {formatSense(entry.details)}
                 </DetailsField>
               )}
-              {'duration' in entry && (
-                <DetailsField label="Длительность">
-                  {formatEffectDuration(entry.duration)}
+              {def.extras.rows(entry).map(({ label, value }) => (
+                <DetailsField key={label} label={label}>
+                  {value}
                 </DetailsField>
-              )}
+              ))}
               {entry.description && (
                 <Text
                   style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}

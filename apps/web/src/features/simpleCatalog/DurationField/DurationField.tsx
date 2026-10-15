@@ -117,8 +117,8 @@ function DurationField({ form }: DurationFieldProps) {
             display="flex"
             maw={360}
             data={[
-              { value: 'short', label: 'Короткого или длинного' },
-              { value: 'long', label: 'Только длинного' },
+              { value: 'short', label: 'Короткого или долгого' },
+              { value: 'long', label: 'Только долгого' },
             ]}
             {...form.getInputProps('duration.rest')}
           />

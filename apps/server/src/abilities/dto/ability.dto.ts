@@ -1,5 +1,12 @@
-import { IsIn } from 'class-validator';
-import { ABILITY_CATEGORIES, type AbilityCategory } from 'shared';
+import { IsIn, ValidateBy } from 'class-validator';
+import {
+  ABILITY_CATEGORIES,
+  isAbilityActivation,
+  isAbilityCosts,
+  type AbilityActivation,
+  type AbilityCategory,
+  type AbilityCosts,
+} from 'shared';
 import {
   CategoryDetails,
   isEmptyDetails,
@@ -17,4 +24,24 @@ export class AbilityDto extends CatalogEntryDto {
     'Поля способности не подходят к её категории',
   )
   details: object;
+
+  // Активация и затраты — общие поля всех способностей, обязательны. Виды и пределы — в
+  // shared (abilityUsage.ts).
+  @ValidateBy({
+    name: 'abilityActivation',
+    validator: {
+      validate: isAbilityActivation,
+      defaultMessage: () => 'Активация способности задана неверно',
+    },
+  })
+  activation: AbilityActivation;
+
+  @ValidateBy({
+    name: 'abilityCosts',
+    validator: {
+      validate: isAbilityCosts,
+      defaultMessage: () => 'Затраты способности заданы неверно',
+    },
+  })
+  costs: AbilityCosts;
 }

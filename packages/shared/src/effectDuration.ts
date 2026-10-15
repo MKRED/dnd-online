@@ -15,7 +15,7 @@ export type DurationTurnEdge = (typeof DURATION_TURN_EDGES)[number];
 export const DURATION_TURN_OWNERS = ['creator', 'bearer'] as const;
 export type DurationTurnOwner = (typeof DURATION_TURN_OWNERS)[number];
 
-// short — короткий или длинный отдых (длинный тоже снимает), long — только длинный.
+// short — короткий или долгий отдых (долгий тоже снимает), long — только долгий.
 export const DURATION_RESTS = ['short', 'long'] as const;
 export type DurationRest = (typeof DURATION_RESTS)[number];
 

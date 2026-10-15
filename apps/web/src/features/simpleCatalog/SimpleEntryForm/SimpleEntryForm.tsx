@@ -14,7 +14,6 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { errorMessage } from '../../../lib/apiRequest';
 import { ImageField, saveWithImage, useImageDraft } from '../../catalog';
-import DurationField from '../DurationField';
 import CategoryFields from './CategoryFields';
 import type { SimpleCatalogDef, SimpleEntry } from '../simpleCatalogs';
 import {
@@ -120,7 +119,7 @@ function SimpleEntryForm({
                 {...form.getInputProps('category')}
               />
               <CategoryFields form={form} />
-              {def.hasDuration && <DurationField form={form} />}
+              <def.extras.Field form={form} />
               <Textarea
                 label="Описание"
                 placeholder={def.texts.descriptionPlaceholder}

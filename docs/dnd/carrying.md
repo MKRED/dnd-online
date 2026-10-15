@@ -28,7 +28,7 @@ Decided with the user on 2026-10-15 ([plan/character-inventory.md](../plan/chara
 - Capacity is Strength × 15 to carry and Strength × 30 to drag, lift or push, for every character.
 - **Departure from the book:** the Goliath's Powerful Build is not applied. Species and class traits will later be attached to the character and change its numbers themselves.
 - Over capacity, nothing is blocked: the sheet only shows the load in red. What it costs in play is decided in the session.
-- The load counts only items «При себе» (`carried`), not the «Хранилище» (`stash`), and only items the viewer can see: an item its author hid from the viewer does not act on the character, and a deleted one is gone.
+- The load counts only items «При себе» (`carried`), not the «Хранилище» (`stash`). A hidden item does not act on the character, so an item hidden from the character's owner is left out; a viewer of a shared sheet also doesn't see (or count) items hidden from them, so their load can be lower than the owner's, never higher. A deleted item is gone.
 - Coin weight (50 coins = 1 lb., [items.md](items.md)) is not counted yet.
 
 Code: `packages/shared/src/carrying.ts` — `carryingCapacity(strength)` and `carriedLoad(entries)` (in hundredths of a pound, so fractional weights don't drift).

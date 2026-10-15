@@ -48,8 +48,10 @@ function InventorySection({ character, onChange }: InventorySectionProps) {
   const carried = byLocation(inventory, 'carried');
   const stash = byLocation(inventory, 'stash');
 
-  const move = (entry: InventoryEntry, quantity: number) =>
-    run(
+  const move = (entry: InventoryEntry, quantity: number) => {
+    // Свёрнутое хранилище раскрываем: иначе перенесённый предмет просто пропал бы с глаз.
+    if (entry.location === 'carried') setStashOpen(true);
+    return run(
       entry.id,
       () =>
         moveInventoryEntry(id, entry.id, {
@@ -58,6 +60,7 @@ function InventorySection({ character, onChange }: InventorySectionProps) {
         }),
       'Не удалось переложить предмет',
     );
+  };
 
   const rowHandlers = {
     editable,

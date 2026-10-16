@@ -22,6 +22,8 @@ export * from './effectAdvantage.js';
 export * from './effectAdvantageWhen.js';
 export * from './effectAutoFail.js';
 export * from './effectSpeedTotal.js';
+export * from './conditionComponents.js';
+export * from './conditionsExpand.js';
 export * from './damageTypes.js';
 export * from './effectComponents.js';
 export * from './effectComponentsRead.js';

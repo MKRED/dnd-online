@@ -1,3 +1,4 @@
+import { expandConditions } from './conditionsExpand.js';
 import type { EffectComponent } from './effectComponents.js';
 import type { SpeedDetails } from './effectSpeed.js';
 
@@ -35,10 +36,13 @@ type Modifier = { shift: number; power: number; zero: boolean };
 
 // Одно заклинание дважды не складывается: по книге действует сильнейший экземпляр,
 // при равных — последний. Пока экземпляры одной записи одинаковы (рост с ячейкой ещё
-// не сделан, пробел К), достаточно оставить последний.
+// не сделан, пробел К), достаточно оставить последний. Состояния сначала раскрываются
+// в свои составляющие: «Схваченный» — это Скорость 0.
 function speedChanges(effects: readonly AppliedEffect[]): SpeedDetails[] {
   const bySource = new Map<string, AppliedEffect>();
-  for (const effect of effects) bySource.set(effect.source, effect);
+  for (const effect of expandConditions(effects)) {
+    bySource.set(effect.source, effect);
+  }
   return [...bySource.values()].flatMap((effect) =>
     effect.components.flatMap((c) => (c.kind === 'speed' ? [c] : [])),
   );

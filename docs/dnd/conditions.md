@@ -40,9 +40,13 @@ A condition is a temporary game state. **A condition doesn't stack with itself**
 - **Exhaustion has no level field.** Each time it's received it gives one level, so an effect with «Истощение» means +1 level. Not checked against every 2024 spell: if one gives several levels at once, that's a question for the user.
 - **No source in the template.** Charmed (the charmer), Frightened (the source of fear) and Grappled (the grappler and the escape DC) depend on who applied the effect. Like the DC of the repeated save, that comes from the ability that applied it or is kept in the applied instance, not in the catalog entry.
 - **Included conditions aren't added or forbidden.** An effect with Paralyzed doesn't get Incapacitated automatically, and an effect may list both; the redundant pair changes nothing.
+- **Each condition as components** (2026-10-17): `CONDITION_RULES` writes the 15 conditions with the same components as the catalog's effects, so the engine computes them like any effect. Included conditions are references (`includes`), not copies. What components can't express yet is named by the gap letter of [plan/effects-coverage.md](../plan/effects-coverage.md): Charmed, Frightened and Incapacitated miss action limits, Blinded and Deafened «can't see / hear», Paralyzed and Unconscious the Critical Hit from within 5 ft., Grappled and Prone their end by an action, Invisible «unless the creature can see you», Exhaustion its −2 to D20 Tests per level and death at 6. Exhaustion is one level: Speed −5 ft. Fully expressed: Poisoned, Restrained, Petrified (weight ×10 and not aging stay in the description), Stunned.
+- **On a creature** (`expandConditions`): the same condition from several effects is one; Exhaustion adds up, one level per time it's received, even from one catalog entry; immunity to a condition cancels it, also when the immunity comes from another condition (Petrified → Poisoned).
 - **Prone and Grappled end by what the creature does** (standing up, escaping), not by the duration. The effect's duration stays whatever the author picks; ending them by those actions comes with play on the map.
 
 ## Where it lives in code
+
+- `packages/shared/src/conditionComponents.ts`: each condition as components, included conditions, the gaps; `conditionsExpand.ts`: conditions on a creature → components (used by `totalSpeed`).
 
 - `packages/shared/src/effectConditions.ts`: the 15 keys, the Russian names, the component check.
 - `packages/shared/src/effectComponents.ts`: the component kind `condition`, the «once per effect» check, the card line.

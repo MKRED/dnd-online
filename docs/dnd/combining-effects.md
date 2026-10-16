@@ -20,7 +20,7 @@ How the 2024 rules combine several effects on one creature: different spells, th
 
 ## How the app uses it
 
-The first evaluator is the total Speed: `totalSpeed` in `packages/shared/src/effectSpeedTotal.ts`, with its tests next to it. Nothing else computes effects yet. What this means for the engine is written in [plan/effects-coverage.md](../plan/effects-coverage.md):
+The first evaluator is the total Speed: `totalSpeed` in `packages/shared/src/effectSpeedTotal.ts`, with its tests next to it. It expands conditions first (`expandConditions`, [conditions.md](conditions.md)): a condition from several effects counts once, Exhaustion adds up, and immunity to a condition cancels it. Nothing else computes effects yet. What this means for the engine is written in [plan/effects-coverage.md](../plan/effects-coverage.md):
 
 - an applied effect remembers which catalog entry (spell) it came from (`source`), so that the same entry twice doesn't add up. Today two instances of one entry are identical, so the evaluator keeps the latest one;
 - «the most potent» will need a way to compare two instances of one entry (a bonus, a die) once effects grow with the spell slot;

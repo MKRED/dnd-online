@@ -25,6 +25,7 @@ import {
   type ItemInputDetails,
   type ItemRarity,
 } from 'shared';
+import { CatalogSources } from '../../catalog/catalog-sources.validator.js';
 import { DetailsForCategory } from './item-details.validator.js';
 
 const trim = ({ value }: { value: unknown }) =>
@@ -80,6 +81,9 @@ export class ItemDto {
     message: `Описание — не длиннее ${ITEM_DESCRIPTION_MAX_LENGTH} символов`,
   })
   description?: string;
+
+  @CatalogSources()
+  sources?: string[];
 
   @IsBoolean({ message: 'Признак публикации — да или нет' })
   isPublic: boolean;

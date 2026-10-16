@@ -50,6 +50,8 @@ export const items = pgTable(
     costAmount: integer('cost_amount'),
     costCoin: varchar('cost_coin', { length: 2 }).$type<Coin>(),
     description: text('description').notNull().default(''),
+    // Источники предмета: строки текста или ссылок (shared/catalogSources.ts).
+    sources: jsonb('sources').notNull().$type<string[]>().default([]),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

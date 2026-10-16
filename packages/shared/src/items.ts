@@ -170,6 +170,8 @@ export type Item = ItemVariant & {
   weight: number;
   cost: ItemCost | null;
   description: string;
+  // Откуда предмет взят: текст или ссылка (catalogSources.ts).
+  sources: string[];
   image: CatalogImage | null;
   // Только у автора и только в GET /items/:id: в каких наборах лежит предмет.
   packs?: ItemPacks;
@@ -186,6 +188,7 @@ export type ItemInput = ItemInputVariant & {
   weight: number;
   cost: ItemCost | null;
   description: string;
+  sources: string[];
   isPublic: boolean;
   // Опубликовать вместе с набором свои скрытые предметы из его состава.
   publishContents?: boolean;

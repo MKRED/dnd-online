@@ -9,6 +9,7 @@ export * from './inventory.js';
 export * from './carrying.js';
 export * from './catalogImage.js';
 export * from './catalog.js';
+export * from './catalogSources.js';
 export * from './abilities.js';
 export * from './effects.js';
 export * from './effectDuration.js';

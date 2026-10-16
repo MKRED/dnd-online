@@ -26,6 +26,7 @@ function item(patch: Partial<ItemRow> = {}): ItemRow {
     costAmount: 1,
     costCoin: 'gp',
     description: '',
+    sources: [],
     isPublic: true,
     createdAt: new Date(),
     updatedAt: new Date(),

@@ -6,9 +6,10 @@ import type {
   CatalogScenario,
 } from './catalog-scenario.types.js';
 import { describeImage } from './image.js';
+import { describeSources } from './sources.js';
 
 // Общее для каталогов предметов, способностей и эффектов: доступ к скрытым и
-// опубликованным записям, общие поля и картинка. Свои поля каталога файл проверяет
+// опубликованным записям, общие поля, источники и картинка. Свои поля каталога файл проверяет
 // сам через fields(ctx).
 export function describeCatalog(
   scenario: CatalogScenario,
@@ -48,6 +49,7 @@ export function describeCatalog(
 
     describeAccess(() => ctx);
     describeImage(() => ctx);
+    describeSources(() => ctx);
     fields?.(() => ctx);
   });
 }

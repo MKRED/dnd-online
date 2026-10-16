@@ -15,6 +15,7 @@ const row: CatalogEntryRow = {
   details: {},
   extra: {},
   description: '60 фт.',
+  sources: ['Книга игрока 2024'],
   createdAt: new Date('2026-10-15T10:00:00Z'),
   updatedAt: new Date('2026-10-15T11:00:00Z'),
 };
@@ -32,6 +33,7 @@ describe('catalog-entry.mapper', () => {
       category: 'basic',
       details: {},
       description: '60 фт.',
+      sources: ['Книга игрока 2024'],
       image: null,
       createdAt: '2026-10-15T10:00:00.000Z',
       updatedAt: '2026-10-15T11:00:00.000Z',
@@ -56,7 +58,13 @@ describe('catalog-entry.mapper', () => {
     });
   });
 
-  it('пустое описание из формы пишет пустой строкой', () => {
+  it('испорченные источники в базе читает пустым списком', () => {
+    expect(
+      toCatalogEntry({ ...row, sources: [''] }, 'Арвен', null, basic).sources,
+    ).toEqual([]);
+  });
+
+  it('пустое описание и источники из формы пишет пустыми', () => {
     const dto = {
       name: 'Луч',
       category: 'basic',
@@ -68,6 +76,7 @@ describe('catalog-entry.mapper', () => {
       name: 'Луч',
       ...stored,
       description: '',
+      sources: [],
       isPublic: false,
     });
   });

@@ -1,3 +1,4 @@
+import { toSourcesInput } from '../../catalog';
 import type { FormPackEntry } from './PackContentsField/packContents';
 import type {
   Coin,
@@ -19,6 +20,7 @@ export interface ItemFormValues {
   costAmount: number | string;
   costCoin: Coin;
   description: string;
+  sources: string[];
   isPublic: boolean;
   // Поля категорий лежат в форме все сразу: при смене категории туда и обратно
   // введённое не теряется, а в запрос уходят только поля выбранной.
@@ -41,6 +43,7 @@ export function toFormValues(item: Item | null): ItemFormValues {
     // Золото — самая частая монета в ценах книги.
     costCoin: item?.cost?.coin ?? 'gp',
     description: item?.description ?? '',
+    sources: item?.sources ?? [],
     isPublic: item?.isPublic ?? false,
     // Пусто, а не 0: насыщение у еды обязательно, пусть его укажут явно.
     satiety: item?.category === 'food' ? item.details.satiety : '',
@@ -95,6 +98,7 @@ export function toItemInput(values: ItemFormValues): ItemInput {
         ? null
         : { amount: Number(values.costAmount), coin: values.costCoin },
     description: values.description.trim(),
+    sources: toSourcesInput(values.sources),
     isPublic: values.isPublic,
   };
 }

@@ -16,6 +16,7 @@ const base = (name: string) => ({
   isPublic: true,
   name,
   description: '',
+  sources: [],
   image: null,
   createdAt: '',
   updatedAt: '',

@@ -22,6 +22,8 @@ export interface CatalogEntryFields {
   name: string;
   // Пока главное поле: в нём записано всё, для чего у категории ещё нет своих полей.
   description: string;
+  // Откуда запись взята: текст или ссылка, по строке на источник (catalogSources.ts).
+  sources: string[];
   image: CatalogImage | null;
   createdAt: string;
   updatedAt: string;
@@ -31,5 +33,6 @@ export interface CatalogEntryFields {
 export interface CatalogEntryInputFields {
   name: string;
   description: string;
+  sources: string[];
   isPublic: boolean;
 }

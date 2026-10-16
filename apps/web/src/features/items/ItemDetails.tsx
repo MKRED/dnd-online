@@ -1,7 +1,7 @@
 import { Grid, Stack, Text, Title } from '@mantine/core';
 import type { ReactNode } from 'react';
 import type { Item } from 'shared';
-import { DetailsField, EntryImage } from '../catalog';
+import { DetailsField, EntryImage, SourcesList } from '../catalog';
 import { ItemBadges } from './ItemCollection';
 import { PackContentsView } from './PackContents';
 import {
@@ -61,6 +61,7 @@ function ItemDetails({ item, actions }: ItemDetailsProps) {
               {item.description}
             </Text>
           )}
+          <SourcesList sources={item.sources} />
           {actions}
         </Stack>
       </Grid.Col>

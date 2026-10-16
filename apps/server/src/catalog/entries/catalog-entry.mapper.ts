@@ -1,4 +1,4 @@
-import type { CatalogEntryFields } from 'shared';
+import { isCatalogSources, type CatalogEntryFields } from 'shared';
 import type { CatalogEntryTable } from '../../database/schema/index.js';
 import {
   toCatalogImage,
@@ -40,6 +40,8 @@ export function toCatalogEntry<V>(
     name: row.name,
     ...toVariant(row.category, row.details, row.extra),
     description: row.description,
+    // Испорченный jsonb не ломает каталог: источников просто нет.
+    sources: isCatalogSources(row.sources) ? row.sources : [],
     image: toCatalogImage(image),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -55,6 +57,7 @@ export function toCatalogEntryValues<D extends CatalogEntryDto>(
     name: dto.name,
     ...toStored(dto),
     description: dto.description ?? '',
+    sources: dto.sources ?? [],
     isPublic: dto.isPublic,
   };
 }

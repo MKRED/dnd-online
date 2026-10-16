@@ -10,6 +10,7 @@ import {
 } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import { COINS, ITEM_CATEGORIES, ITEM_RARITIES } from 'shared';
+import { SourcesField } from '../../catalog';
 import {
   CATEGORY_HINTS,
   CATEGORY_LABELS,
@@ -113,6 +114,10 @@ function ItemFields({ form, itemId }: ItemFieldsProps) {
         minRows={4}
         maxRows={14}
         {...form.getInputProps('description')}
+      />
+      <SourcesField
+        value={form.values.sources}
+        onChange={(sources) => form.setFieldValue('sources', sources)}
       />
       <Switch
         label="Показывать в каталоге"

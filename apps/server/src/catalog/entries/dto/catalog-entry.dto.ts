@@ -10,6 +10,7 @@ import {
   CATALOG_DESCRIPTION_MAX_LENGTH,
   CATALOG_NAME_MAX_LENGTH,
 } from 'shared';
+import { CatalogSources } from '../../catalog-sources.validator.js';
 
 const trim = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
@@ -31,6 +32,9 @@ export abstract class CatalogEntryDto {
     message: `Описание — не длиннее ${CATALOG_DESCRIPTION_MAX_LENGTH} символов`,
   })
   description?: string;
+
+  @CatalogSources()
+  sources?: string[];
 
   @IsBoolean({ message: 'Признак публикации — да или нет' })
   isPublic: boolean;

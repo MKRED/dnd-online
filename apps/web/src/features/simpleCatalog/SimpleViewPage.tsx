@@ -13,7 +13,12 @@ import {
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth';
-import { DetailsField, EntryImage, useCatalogEntry } from '../catalog';
+import {
+  DetailsField,
+  EntryImage,
+  SourcesList,
+  useCatalogEntry,
+} from '../catalog';
 import { errorMessage } from '../../lib/apiRequest';
 import { usePageTitle } from '../../lib/usePageTitle';
 import type { SimpleCatalogDef } from './simpleCatalogs';
@@ -96,6 +101,7 @@ function SimpleViewPage({ def }: SimpleViewPageProps) {
                   {entry.description}
                 </Text>
               )}
+              <SourcesList sources={entry.sources} />
               {isAuthor && (
                 <>
                   {deleteError && (

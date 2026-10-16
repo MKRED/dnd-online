@@ -17,6 +17,7 @@ export {
 } from './ImageField';
 export type { ImageDraft } from './ImageField';
 export { default as SearchField } from './SearchField';
+export { SourcesField, SourcesList, toSourcesInput } from './Sources';
 export { useCatalogEntry } from './useCatalogEntry';
 export { useCatalogList } from './useCatalogList';
 export { useCatalogScope } from './useCatalogScope';

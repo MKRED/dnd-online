@@ -12,6 +12,7 @@ const input: ItemInput = {
   weight: 3,
   cost: null,
   description: '',
+  sources: [],
   isPublic: false,
 };
 const item = { id: 'i1', image: null } as Item;

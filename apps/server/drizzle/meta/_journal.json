@@ -169,6 +169,13 @@
       "when": 1792046231297,
       "tag": "0023_catalog_extra",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792161712807,
+      "tag": "0024_curved_hawkeye",
+      "breakpoints": true
     }
   ]
 }

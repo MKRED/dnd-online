@@ -2,6 +2,7 @@ import {
   CATALOG_DESCRIPTION_MAX_LENGTH,
   CATALOG_NAME_MAX_LENGTH,
 } from 'shared';
+import { toSourcesInput } from '../../catalog';
 import {
   toDurationValues,
   validateDurationAmount,
@@ -23,6 +24,7 @@ export interface SimpleFormValues {
   // Категория способности; у эффекта категории нет — поле не уходит в запрос.
   category: string;
   description: string;
+  sources: string[];
   isPublic: boolean;
   // Общие поля разделов (catalogExtras.tsx). В форме есть поля обоих разделов, а в
   // запрос уходят только поля своего.
@@ -59,6 +61,7 @@ export function toSimpleFormValues(
         ? entry.category
         : (def.categories?.[0] ?? ''),
     description: entry?.description ?? '',
+    sources: entry?.sources ?? [],
     isPublic: entry?.isPublic ?? false,
     duration: toDurationValues(
       entry && 'duration' in entry ? entry.duration : undefined,
@@ -75,6 +78,7 @@ export function toSimpleInput(
   const input = {
     name: values.name.trim(),
     description: values.description,
+    sources: toSourcesInput(values.sources),
     isPublic: values.isPublic,
   };
   // Свои поля раздела (категорию способности, составляющие эффекта) кладёт def.extras;

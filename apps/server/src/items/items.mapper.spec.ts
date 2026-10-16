@@ -20,6 +20,7 @@ const row: typeof items.$inferSelect = {
   costAmount: 5,
   costCoin: 'gp',
   description: '',
+  sources: [],
   createdAt: new Date('2026-10-14T10:00:00Z'),
   updatedAt: new Date('2026-10-14T11:00:00Z'),
 };
@@ -132,6 +133,7 @@ describe('items.mapper', () => {
       costAmount: null,
       costCoin: null,
       description: '',
+      sources: [],
     });
   });
 });

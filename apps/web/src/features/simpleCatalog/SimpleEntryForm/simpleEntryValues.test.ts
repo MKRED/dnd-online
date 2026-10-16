@@ -13,6 +13,7 @@ const effect: Effect = {
   duration: { kind: 'turn', edge: 'end', owner: 'bearer' },
   saveEnds: { ability: 'constitution', edge: 'start' },
   description: '',
+  sources: ['https://next.dnd.su'],
   image: null,
   createdAt: '',
   updatedAt: '',
@@ -21,9 +22,12 @@ const effect: Effect = {
 describe('simpleEntryValues', () => {
   it('эффект отправляет свои поля из формы, без категории', () => {
     const values = toSimpleFormValues(EFFECTS, effect);
+    // Пустое поле и пробелы по краям в запрос не уходят.
+    values.sources = [...values.sources, '  ', ' Книга игрока '];
     expect(toSimpleInput(EFFECTS, values)).toEqual({
       name: 'Горение',
       description: '',
+      sources: ['https://next.dnd.su', 'Книга игрока'],
       isPublic: false,
       components: [{ kind: 'sense', sense: 'darkvision', range: 60 }],
       duration: { kind: 'turn', edge: 'end', owner: 'bearer' },
@@ -38,6 +42,7 @@ describe('simpleEntryValues', () => {
       category: 'basic',
       details: {},
       description: '',
+      sources: [],
       isPublic: false,
       activation: { kind: 'action' },
       costs: { uses: null, spellSlot: null, movement: null, hitDie: false },

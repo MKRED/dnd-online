@@ -13,7 +13,12 @@ import { useForm } from '@mantine/form';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { errorMessage } from '../../../lib/apiRequest';
-import { ImageField, saveWithImage, useImageDraft } from '../../catalog';
+import {
+  ImageField,
+  saveWithImage,
+  SourcesField,
+  useImageDraft,
+} from '../../catalog';
 import type { SimpleCatalogDef, SimpleEntry } from '../simpleCatalogs';
 import {
   simpleFormValidate,
@@ -127,6 +132,10 @@ function SimpleEntryForm({
                 minRows={6}
                 maxRows={18}
                 {...form.getInputProps('description')}
+              />
+              <SourcesField
+                value={form.values.sources}
+                onChange={(sources) => form.setFieldValue('sources', sources)}
               />
               <Switch
                 label="Показывать в каталоге"

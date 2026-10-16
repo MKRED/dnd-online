@@ -1,4 +1,5 @@
 import {
+  isCatalogSources,
   TREASURE_KINDS,
   type Item,
   type ItemCategory,
@@ -79,6 +80,7 @@ export function toItem(
         ? { amount: row.costAmount, coin: row.costCoin }
         : null,
     description: row.description,
+    sources: isCatalogSources(row.sources) ? row.sources : [],
     image: toCatalogImage(image),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -99,6 +101,7 @@ export function toItemValues(dto: ItemDto): Omit<NewItemRow, 'authorId'> {
     costAmount: dto.cost?.amount ?? null,
     costCoin: dto.cost?.coin ?? null,
     description: dto.description ?? '',
+    sources: dto.sources ?? [],
     isPublic: dto.isPublic,
   };
 }

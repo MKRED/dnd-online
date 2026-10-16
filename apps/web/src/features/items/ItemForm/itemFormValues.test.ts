@@ -17,6 +17,7 @@ describe('itemFormValues', () => {
       weight: 0,
       cost: null,
       description: '',
+      sources: [],
       isPublic: false,
     });
   });
@@ -69,9 +70,19 @@ describe('itemFormValues', () => {
       weight: 0.5,
       cost: { amount: 5, coin: 'gp' },
       description: 'Стальное',
+      sources: ['Книга мастера 2024'],
       isPublic: true,
     } as Item;
-    const { name, category, details, rarity, weight, cost, description } = item;
+    const {
+      name,
+      category,
+      details,
+      rarity,
+      weight,
+      cost,
+      description,
+      sources,
+    } = item;
     expect(toItemInput(toFormValues(item))).toEqual({
       name,
       category,
@@ -80,6 +91,7 @@ describe('itemFormValues', () => {
       weight,
       cost,
       description,
+      sources,
       isPublic: true,
     });
   });

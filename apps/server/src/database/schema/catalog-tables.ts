@@ -48,6 +48,8 @@ export function catalogEntryTable(name: string) {
         .$type<Record<string, unknown>>()
         .default({}),
       description: text('description').notNull().default(''),
+      // Источники записи: строки текста или ссылок (shared/catalogSources.ts).
+      sources: jsonb('sources').notNull().$type<string[]>().default([]),
       createdAt: timestamp('created_at', { withTimezone: true })
         .notNull()
         .defaultNow(),

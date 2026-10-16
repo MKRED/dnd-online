@@ -29,17 +29,25 @@ export const EFFECT_COMPONENT_KINDS = [
   'condition',
   'per_turn',
   'defense',
+  'no_healing',
 ] as const;
 export type EffectComponentKind = (typeof EFFECT_COMPONENT_KINDS)[number];
 
+// Виды без полей: во втором экземпляре смысла нет, форма не даёт добавить его снова.
+export const SINGLE_EFFECT_COMPONENT_KINDS: readonly EffectComponentKind[] = [
+  'no_healing',
+];
+
 // Чувство — вид и дистанция (effectSenses.ts), состояние — одно из книги
 // (effectConditions.ts), урон или лечение за ход — effectPerTurn.ts, сопротивление и
-// иммунитет — effectDefenses.ts.
+// иммунитет — effectDefenses.ts. Запрет лечения полей не имеет: носитель не
+// восстанавливает хиты, как от Chill Touch (docs/dnd/modifiers.md).
 export type EffectComponent =
   | ({ kind: 'sense' } & SenseDetails)
   | ({ kind: 'condition' } & ConditionDetails)
   | ({ kind: 'per_turn' } & PerTurnDetails)
-  | ({ kind: 'defense' } & DefenseDetails);
+  | ({ kind: 'defense' } & DefenseDetails)
+  | { kind: 'no_healing' };
 
 // Больше в одном эффекте в книге не встречается; предел защищает форму и базу.
 export const EFFECT_COMPONENTS_MAX = 20;
@@ -49,6 +57,7 @@ export const EFFECT_COMPONENT_LABELS: Record<EffectComponentKind, string> = {
   condition: 'Состояние',
   per_turn: 'Урон или лечение за ход',
   defense: 'Сопротивление и иммунитет',
+  no_healing: 'Запрет лечения',
 };
 
 function isEffectComponent(value: unknown): value is EffectComponent {
@@ -58,6 +67,7 @@ function isEffectComponent(value: unknown): value is EffectComponent {
   if (kind === 'condition') return isConditionDetails(rest);
   if (kind === 'per_turn') return isPerTurnDetails(rest);
   if (kind === 'defense') return isDefenseDetails(rest);
+  if (kind === 'no_healing') return Object.keys(rest).length === 0;
   return false;
 }
 
@@ -74,6 +84,8 @@ function componentKeys(component: EffectComponent): string[] {
       return [];
     case 'defense':
       return defenseKeys(component).map((key) => `defense:${key}`);
+    case 'no_healing':
+      return ['no_healing'];
     default:
       return component satisfies never;
   }
@@ -109,6 +121,8 @@ export function formatEffectComponent(component: EffectComponent): string {
       return formatPerTurn(component);
     case 'defense':
       return formatDefense(component);
+    case 'no_healing':
+      return 'Не восстанавливает хиты';
     default:
       return component satisfies never;
   }

@@ -206,6 +206,20 @@ describeCatalog(
         }
       });
 
+      it('запрет лечения: принимается, дважды и с полями — 400', async () => {
+        const { author, url, body, create } = get();
+        const noHealing = { kind: 'no_healing' };
+        const { id } = await create({ components: [noHealing, burn] });
+        const card = await author.get(url(id)).expect(200);
+        expect(card.body).toMatchObject({ components: [noHealing, burn] });
+        for (const components of [
+          [noHealing, noHealing],
+          [{ ...noHealing, turns: 1 }],
+        ]) {
+          await author.post(url()).send(body({ components })).expect(400);
+        }
+      });
+
       // Старое тело с категорией: category и details отбрасываются, а без составляющих
       // запрос не проходит.
       it('тело старого вида с категорией — 400', async () => {

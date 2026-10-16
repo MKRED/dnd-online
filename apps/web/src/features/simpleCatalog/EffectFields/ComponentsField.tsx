@@ -14,11 +14,13 @@ import {
   EFFECT_COMPONENT_KINDS,
   EFFECT_COMPONENT_LABELS,
   EFFECT_COMPONENTS_MAX,
+  SINGLE_EFFECT_COMPONENT_KINDS,
   type EffectComponentKind,
 } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import ConditionComponentFields from './ConditionComponentFields';
 import DefenseComponentFields from './DefenseComponentFields';
+import NoHealingComponentFields from './NoHealingComponentFields';
 import { newComponent } from './effectForm';
 import PerTurnComponentFields from './PerTurnComponentFields';
 import SenseComponentFields from './SenseComponentFields';
@@ -36,6 +38,7 @@ const KIND_FIELDS: Record<
   condition: ConditionComponentFields,
   per_turn: PerTurnComponentFields,
   defense: DefenseComponentFields,
+  no_healing: NoHealingComponentFields,
 };
 
 // Составляющие эффекта списком карточек (docs/plan/effects.md): у каждой свои поля и
@@ -94,6 +97,11 @@ function ComponentsField({ form }: ComponentsFieldProps) {
             {EFFECT_COMPONENT_KINDS.map((kind) => (
               <Menu.Item
                 key={kind}
+                // Вид без полей второй раз ничего не добавит.
+                disabled={
+                  SINGLE_EFFECT_COMPONENT_KINDS.includes(kind) &&
+                  components.some((component) => component.kind === kind)
+                }
                 onClick={() =>
                   form.insertListItem('effect.components', newComponent(kind))
                 }

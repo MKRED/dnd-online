@@ -177,6 +177,14 @@ describe('effectForm', () => {
     expect(rules.count(0, form, at(2, 'count'))).toBeNull();
   });
 
+  it('запрет лечения уходит без полей и читается обратно', () => {
+    const { effect } = values({ components: [newComponent('no_healing')] });
+    const fields = fromEffectValues(effect);
+    expect(fields.components).toEqual([{ kind: 'no_healing' }]);
+    const back = toEffectValues({ ...fields, duration: { kind: 'permanent' } });
+    expect(back.components[0].kind).toBe('no_healing');
+  });
+
   it('требует характеристику только с галочкой', () => {
     const { ability } = effectValidate.saveEnds;
     expect(ability(null, values({}))).toBeNull();

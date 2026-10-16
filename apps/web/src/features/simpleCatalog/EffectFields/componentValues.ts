@@ -63,6 +63,8 @@ export function toComponentValues(component: EffectComponent): ComponentValues {
       const { kind, ...details } = component;
       return { ...values, kind, defense: details };
     }
+    case 'no_healing':
+      return values;
     default:
       return component satisfies never;
   }
@@ -88,6 +90,8 @@ export function fromComponentValues(c: ComponentValues): EffectComponent[] {
       return [{ kind: 'per_turn', ...fromPerTurnValues(c.perTurn) }];
     case 'defense':
       return [{ kind: 'defense', ...fromDefenseValues(c.defense) }];
+    case 'no_healing':
+      return [{ kind: 'no_healing' }];
     default:
       return c.kind satisfies never;
   }

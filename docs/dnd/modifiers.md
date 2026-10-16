@@ -47,10 +47,12 @@ What 2024 spells change on a creature while they last (defenses, speed, Advantag
 Decided with the user on 2026-10-16: not one universal «modifier» component but six kinds with their own fields, built one at a time ([plan/effects.md](../plan/effects.md), stage 7).
 
 - **7.1 «Сопротивление и иммунитет»** (done): a level (Сопротивление, Уязвимость, Иммунитет) and the damage types it covers; Immunity may also list conditions. One component may cover several types, like Stoneskin. In one effect a damage type or a condition appears once per level; different levels for one type aren't forbidden, how they combine is a rule of play on the map. The Resistance cantrip's 1d4 isn't this component: it stays in the description.
-- 7.2–7.6 (no speed, Advantage, roll bonus and AC components yet): see the plan.
+- **7.2 «Запрет лечения»** (done): no fields, the bearer can't regain Hit Points, as from Chill Touch. Temporary Hit Points still come: getting them isn't healing ([per-turn-damage.md](per-turn-damage.md), unverified wording). Once per effect; the form disables the menu item when the effect already has it.
+- 7.3–7.6 (no speed, Advantage, roll bonus and AC components yet): see the plan.
 - **Left in the description:** protections that depend on who attacks (Protection from Evil and Good), Haste's extra action, Death Ward, Freedom of Movement.
 
 ## Where it lives in code
 
 - `packages/shared/src/effectDefenses.ts`: the levels with Russian names, the component check, the «once per level» keys, the card line.
 - `apps/web/src/features/simpleCatalog/EffectFields/DefenseComponentFields.tsx` and `defenseForm.ts`: the form.
+- `packages/shared/src/effectComponents.ts`: the field-less kind `no_healing` and `SINGLE_EFFECT_COMPONENT_KINDS`; `NoHealingComponentFields.tsx`: its card.

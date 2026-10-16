@@ -75,6 +75,14 @@ describe('effectComponents', () => {
     expect(isEffectComponents([{ ...burn, count: 0 }])).toBe(false);
   });
 
+  it('запрет лечения — без полей и один раз', () => {
+    const noHealing = { kind: 'no_healing' } as const;
+    expect(isEffectComponents([noHealing, poisoned])).toBe(true);
+    expect(isEffectComponents([noHealing, noHealing])).toBe(false);
+    expect(isEffectComponents([{ ...noHealing, turns: 1 }])).toBe(false);
+    expect(formatEffectComponent(noHealing)).toBe('Не восстанавливает хиты');
+  });
+
   it('виды без повторов', () => {
     expect(
       effectComponentKinds([

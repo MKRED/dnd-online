@@ -4,7 +4,6 @@ import {
   isEffectComponents,
   isEffectDuration,
   isEffectSaveEnds,
-  SENSE_RANGE_MAX,
   type EffectComponent,
   type EffectDuration,
   type EffectSaveEnds,
@@ -20,7 +19,9 @@ export class EffectDto extends CatalogEntryDto {
     validator: {
       validate: isEffectComponents,
       defaultMessage: () =>
-        `Составляющие эффекта заданы неверно: не больше ${EFFECT_COMPONENTS_MAX}, каждое чувство — один раз, дистанция кратна 5, до ${SENSE_RANGE_MAX} фт.`,
+        // Общий текст на все виды: форма проверяет каждое поле сама, сюда доходит только
+        // запрос в обход неё.
+        `Составляющие эффекта заданы неверно: не больше ${EFFECT_COMPONENTS_MAX}; каждое чувство и состояние — один раз, тип урона — один раз на уровень защиты; проверьте поля каждой составляющей`,
     },
   })
   components: EffectComponent[];

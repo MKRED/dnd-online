@@ -4,6 +4,12 @@ import {
   type ConditionDetails,
 } from './effectConditions.js';
 import {
+  defenseKeys,
+  formatDefense,
+  isDefenseDetails,
+  type DefenseDetails,
+} from './effectDefenses.js';
+import {
   formatPerTurn,
   isPerTurnDetails,
   type PerTurnDetails,
@@ -22,15 +28,18 @@ export const EFFECT_COMPONENT_KINDS = [
   'sense',
   'condition',
   'per_turn',
+  'defense',
 ] as const;
 export type EffectComponentKind = (typeof EFFECT_COMPONENT_KINDS)[number];
 
 // Чувство — вид и дистанция (effectSenses.ts), состояние — одно из книги
-// (effectConditions.ts), урон или лечение за ход — effectPerTurn.ts.
+// (effectConditions.ts), урон или лечение за ход — effectPerTurn.ts, сопротивление и
+// иммунитет — effectDefenses.ts.
 export type EffectComponent =
   | ({ kind: 'sense' } & SenseDetails)
   | ({ kind: 'condition' } & ConditionDetails)
-  | ({ kind: 'per_turn' } & PerTurnDetails);
+  | ({ kind: 'per_turn' } & PerTurnDetails)
+  | ({ kind: 'defense' } & DefenseDetails);
 
 // Больше в одном эффекте в книге не встречается; предел защищает форму и базу.
 export const EFFECT_COMPONENTS_MAX = 20;
@@ -39,6 +48,7 @@ export const EFFECT_COMPONENT_LABELS: Record<EffectComponentKind, string> = {
   sense: 'Чувство',
   condition: 'Состояние',
   per_turn: 'Урон или лечение за ход',
+  defense: 'Сопротивление и иммунитет',
 };
 
 function isEffectComponent(value: unknown): value is EffectComponent {
@@ -47,33 +57,37 @@ function isEffectComponent(value: unknown): value is EffectComponent {
   if (kind === 'sense') return isSenseDetails(rest);
   if (kind === 'condition') return isConditionDetails(rest);
   if (kind === 'per_turn') return isPerTurnDetails(rest);
+  if (kind === 'defense') return isDefenseDetails(rest);
   return false;
 }
 
-// Что в одном эффекте не должно повторяться: вид чувства или состояние. Урон за ход
-// повторяться может (огонь и холод одновременно) — null.
-function componentKey(component: EffectComponent): string | null {
+// Что в одном эффекте не должно повторяться: вид чувства, состояние, тип урона или
+// состояние на одном уровне защиты. Урон за ход повторяться может (огонь и холод
+// одновременно) — у него ключей нет.
+function componentKeys(component: EffectComponent): string[] {
   switch (component.kind) {
     case 'sense':
-      return `sense:${component.sense}`;
+      return [`sense:${component.sense}`];
     case 'condition':
-      return `condition:${component.condition}`;
+      return [`condition:${component.condition}`];
     case 'per_turn':
-      return null;
+      return [];
+    case 'defense':
+      return defenseKeys(component).map((key) => `defense:${key}`);
     default:
       return component satisfies never;
   }
 }
 
-// Проверка тела запроса и jsonb из базы. Каждое чувство и каждое состояние — не больше
-// раза: два «Тёмных зрения» с разной дистанцией ничего не значат, а состояние по книге
-// с самим собой не складывается.
+// Проверка тела запроса и jsonb из базы. Каждое чувство, состояние и защита — не больше
+// раза: два «Тёмных зрения» с разной дистанцией ничего не значат, состояние по книге
+// с самим собой не складывается, два сопротивления огню — одно.
 export function isEffectComponents(value: unknown): value is EffectComponent[] {
   if (!Array.isArray(value) || value.length > EFFECT_COMPONENTS_MAX) {
     return false;
   }
   if (!value.every(isEffectComponent)) return false;
-  const keys = value.map(componentKey).filter((key) => key !== null);
+  const keys = value.flatMap(componentKeys);
   return new Set(keys).size === keys.length;
 }
 
@@ -93,6 +107,8 @@ export function formatEffectComponent(component: EffectComponent): string {
       return CONDITION_LABELS[component.condition];
     case 'per_turn':
       return formatPerTurn(component);
+    case 'defense':
+      return formatDefense(component);
     default:
       return component satisfies never;
   }

@@ -164,6 +164,48 @@ describeCatalog(
         }
       });
 
+      it('сопротивление нескольким типам, иммунитет к урону и состоянию', async () => {
+        const { author, url, create } = get();
+        const stoneskin = {
+          kind: 'defense',
+          level: 'resistance',
+          damageTypes: ['bludgeoning', 'piercing', 'slashing'],
+          conditions: [],
+        };
+        const mindBlank = {
+          kind: 'defense',
+          level: 'immunity',
+          damageTypes: ['psychic'],
+          conditions: ['charmed'],
+        };
+        const { id } = await create({ components: [stoneskin, mindBlank] });
+        const card = await author.get(url(id)).expect(200);
+        expect(card.body).toMatchObject({ components: [stoneskin, mindBlank] });
+      });
+
+      it('пустая защита, состояние у сопротивления, повтор типа — 400', async () => {
+        const { author, url, body } = get();
+        const fire = {
+          kind: 'defense',
+          level: 'resistance',
+          damageTypes: ['fire'],
+          conditions: [],
+        };
+        for (const components of [
+          [{ ...fire, damageTypes: [] }],
+          [{ ...fire, conditions: ['charmed'] }],
+          [fire, { ...fire, damageTypes: ['cold', 'fire'] }],
+        ]) {
+          const res = await author
+            .post(url())
+            .send(body({ components }))
+            .expect(400);
+          expect(messages(res)[0]).toMatch(
+            /^Составляющие эффекта заданы неверно/,
+          );
+        }
+      });
+
       // Старое тело с категорией: category и details отбрасываются, а без составляющих
       // запрос не проходит.
       it('тело старого вида с категорией — 400', async () => {

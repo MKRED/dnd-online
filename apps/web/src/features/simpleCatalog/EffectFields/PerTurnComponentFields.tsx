@@ -52,6 +52,7 @@ function PerTurnComponentFields({ form, index }: PerTurnComponentFieldsProps) {
       <SegmentedControl
         aria-label="Что происходит каждый ход"
         data={OUTCOME_OPTIONS}
+        size="xs"
         w="fit-content"
         maw="100%"
         {...form.getInputProps(`${path}.outcome`)}
@@ -103,6 +104,7 @@ function PerTurnComponentFields({ form, index }: PerTurnComponentFieldsProps) {
       <SegmentedControl
         aria-label="Когда срабатывает"
         data={EDGE_OPTIONS}
+        size="xs"
         w="fit-content"
         maw="100%"
         {...form.getInputProps(`${path}.edge`)}

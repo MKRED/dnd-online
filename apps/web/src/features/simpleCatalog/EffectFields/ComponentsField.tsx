@@ -18,6 +18,7 @@ import {
 } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import ConditionComponentFields from './ConditionComponentFields';
+import DefenseComponentFields from './DefenseComponentFields';
 import { newComponent } from './effectForm';
 import PerTurnComponentFields from './PerTurnComponentFields';
 import SenseComponentFields from './SenseComponentFields';
@@ -34,6 +35,7 @@ const KIND_FIELDS: Record<
   sense: SenseComponentFields,
   condition: ConditionComponentFields,
   per_turn: PerTurnComponentFields,
+  defense: DefenseComponentFields,
 };
 
 // Составляющие эффекта списком карточек (docs/plan/effects.md): у каждой свои поля и

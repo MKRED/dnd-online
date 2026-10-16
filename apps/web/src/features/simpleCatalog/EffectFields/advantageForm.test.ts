@@ -23,21 +23,57 @@ describe('advantageForm', () => {
       advantage({ mode: 'disadvantage', roll: 'check' }),
     ]);
     expect(fromEffectValues(form.effect).components).toEqual([
-      { kind: 'advantage', mode: 'advantage', roll: 'attacked', ability: null },
+      {
+        kind: 'advantage',
+        mode: 'advantage',
+        roll: 'attacked',
+        ability: null,
+        when: null,
+      },
       {
         kind: 'advantage',
         mode: 'advantage',
         roll: 'save',
         ability: 'dexterity',
+        when: null,
       },
-      { kind: 'advantage', mode: 'disadvantage', roll: 'check', ability: null },
+      {
+        kind: 'advantage',
+        mode: 'disadvantage',
+        roll: 'check',
+        ability: null,
+        when: null,
+      },
     ]);
   });
 
-  it('«все характеристики» читается обратно', () => {
+  it('условие уходит, только если оно есть у выбранного броска', () => {
+    const form = formOf([
+      advantage({ roll: 'attacked', when: 'within_5ft' }),
+      advantage({ roll: 'save', when: 'within_5ft' }),
+      advantage({ roll: 'initiative', when: 'source_in_sight' }),
+    ]);
     expect(
-      toAdvantageValues({ mode: 'advantage', roll: 'd20', ability: null }),
-    ).toEqual({ mode: 'advantage', roll: 'd20', ability: 'all' });
+      fromEffectValues(form.effect).components.map(
+        (c) => c.kind === 'advantage' && c.when,
+      ),
+    ).toEqual(['within_5ft', null, null]);
+  });
+
+  it('«все характеристики» и «всегда» читаются обратно', () => {
+    expect(
+      toAdvantageValues({
+        mode: 'advantage',
+        roll: 'd20',
+        ability: null,
+        when: null,
+      }),
+    ).toEqual({
+      mode: 'advantage',
+      roll: 'd20',
+      ability: 'all',
+      when: 'always',
+    });
   });
 
   it('те же броски с другим знаком — ошибка у второй карточки', () => {
@@ -53,5 +89,17 @@ describe('advantageForm', () => {
       'Эти броски уже есть в другой карточке',
     );
     expect(rule(null, form, at(3))).toBeNull();
+  });
+
+  it('те же броски с другим условием — не повтор (Опрокинутый)', () => {
+    const form = formOf([
+      advantage({ roll: 'attacked', when: 'within_5ft' }),
+      advantage({ mode: 'disadvantage', roll: 'attacked', when: 'beyond_5ft' }),
+      advantage({ mode: 'disadvantage', roll: 'attacked', when: 'within_5ft' }),
+    ]);
+    expect(rule(null, form, at(1))).toBeNull();
+    expect(rule(null, form, at(2))).toBe(
+      'Эти броски уже есть в другой карточке',
+    );
   });
 });

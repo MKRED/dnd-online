@@ -26,6 +26,7 @@ const haste: AppliedEffect = {
       mode: 'advantage',
       roll: 'save',
       ability: 'dexterity',
+      when: null,
     },
   ],
 };

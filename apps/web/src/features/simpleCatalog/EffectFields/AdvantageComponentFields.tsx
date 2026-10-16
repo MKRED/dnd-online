@@ -6,7 +6,10 @@ import {
   ADVANTAGE_MODES,
   ADVANTAGE_ROLL_LABELS,
   ADVANTAGE_ROLLS,
+  ADVANTAGE_WHEN_LABELS,
   advantageHasAbility,
+  advantageWhens,
+  type AdvantageRoll,
 } from 'shared';
 import { ABILITY_LABELS } from '../../characters';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
@@ -24,14 +27,24 @@ const ABILITY_OPTIONS = [
   ...ABILITY_SCORES.map((value) => ({ value, label: ABILITY_LABELS[value] })),
 ];
 
+const whenOptions = (roll: AdvantageRoll) => [
+  { value: 'always', label: 'Всегда' },
+  ...advantageWhens(roll).map((value) => ({
+    value,
+    label: ADVANTAGE_WHEN_LABELS[value],
+  })),
+];
+
 interface AdvantageComponentFieldsProps {
   form: UseFormReturnType<SimpleFormValues>;
   index: number;
 }
 
 // Поля составляющей «Преимущество или помеха»: что, на какие броски и, у спасбросков и
-// проверок, с какой характеристикой. Проверки и спасброски Силы, как у Enlarge, — две
-// карточки: так у каждой одна строка в карточке эффекта.
+// проверок, с какой характеристикой, и когда. Проверки и спасброски Силы, как у Enlarge, — две
+// карточки: так у каждой одна строка в карточке эффекта. «Когда» видно только у бросков,
+// где есть условия (у инициативы их нет): пустой список с одним «Всегда» только мешал бы.
+// Опрокинутый — тоже две карточки: преимущество в 5 фт. и помеха дальше.
 function AdvantageComponentFields({
   form,
   index,
@@ -63,6 +76,15 @@ function AdvantageComponentFields({
           allowDeselect={false}
           maw={260}
           {...form.getInputProps(`${path}.ability`)}
+        />
+      )}
+      {advantageWhens(roll).length > 0 && (
+        <Select
+          label="Когда"
+          data={whenOptions(roll)}
+          allowDeselect={false}
+          maw={320}
+          {...form.getInputProps(`${path}.when`)}
         />
       )}
     </Stack>

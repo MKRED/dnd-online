@@ -122,12 +122,14 @@ export function describeEffectModifiers(get: () => CatalogContext): void {
         kind: 'advantage',
         mode: 'advantage',
         ability: 'strength',
+        when: null,
       };
       const blur = {
         kind: 'advantage',
         mode: 'disadvantage',
         roll: 'attacked',
         ability: null,
+        when: null,
       };
       const components = [
         { ...strength, roll: 'check' },
@@ -146,11 +148,14 @@ export function describeEffectModifiers(get: () => CatalogContext): void {
         mode: 'advantage',
         roll: 'save',
         ability: 'dexterity',
+        when: null,
       };
       for (const components of [
         [{ ...haste, roll: 'attack' }],
         [{ ...haste, ability: 'luck' }],
         [haste, { ...haste, mode: 'disadvantage' }],
+        [{ ...haste, when: 'within_5ft' }],
+        [{ ...haste, roll: 'initiative', ability: null, when: 'vs_source' }],
       ]) {
         const res = await author
           .post(url())
@@ -160,6 +165,27 @@ export function describeEffectModifiers(get: () => CatalogContext): void {
           /^Составляющие эффекта заданы неверно/,
         );
       }
+    });
+
+    // Опрокинутый: по нему в 5 фт. с преимуществом, дальше — с помехой; условие различает
+    // броски. Инициатива — новый пункт «На какие броски».
+    it('преимущество с условием: Опрокинутый и инициатива', async () => {
+      const { author, url, create } = get();
+      const near = {
+        kind: 'advantage',
+        mode: 'advantage',
+        roll: 'attacked',
+        ability: null,
+        when: 'within_5ft',
+      };
+      const components = [
+        near,
+        { ...near, mode: 'disadvantage', when: 'beyond_5ft' },
+        { ...near, roll: 'initiative', when: null },
+      ];
+      const { id } = await create({ components });
+      const card = await author.get(url(id)).expect(200);
+      expect(card.body).toMatchObject({ components });
     });
   });
 }

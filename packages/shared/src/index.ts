@@ -19,6 +19,7 @@ export * from './effectPerTurn.js';
 export * from './effectDefenses.js';
 export * from './effectSpeed.js';
 export * from './effectAdvantage.js';
+export * from './effectAdvantageWhen.js';
 export * from './effectSpeedTotal.js';
 export * from './damageTypes.js';
 export * from './effectComponents.js';

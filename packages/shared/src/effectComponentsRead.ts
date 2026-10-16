@@ -15,7 +15,7 @@ const STORED_DEFAULTS: Partial<
   per_turn: { bonus: 0, addModifier: false },
   defense: { conditions: [] },
   speed: { hover: false },
-  advantage: { ability: null },
+  advantage: { ability: null, when: null },
 };
 
 function withDefaults(stored: object): object {

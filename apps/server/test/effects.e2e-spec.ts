@@ -194,15 +194,22 @@ describeCatalog(
         const { app, author, url, create } = get();
         const { id } = await create();
         const fly = { kind: 'speed', change: 'fly', feet: 60 };
+        // Преимущество до поля «Когда» (пункт 3 effects-coverage.md).
+        const blur = {
+          kind: 'advantage',
+          mode: 'disadvantage',
+          roll: 'attacked',
+        };
         await app
           .get(DatabaseService)
           .db.update(effects)
-          .set({ details: { components: [fly, { kind: 'aura' }, dark] } })
+          .set({ details: { components: [fly, { kind: 'aura' }, dark, blur] } })
           .where(eq(effects.id, id));
         const card = await author.get(url(id)).expect(200);
         expect((card.body as { components: unknown[] }).components).toEqual([
           { ...fly, hover: false },
           dark,
+          { ...blur, ability: null, when: null },
         ]);
       });
     });

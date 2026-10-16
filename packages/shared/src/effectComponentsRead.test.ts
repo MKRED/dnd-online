@@ -21,7 +21,13 @@ describe('readEffectComponents', () => {
       ]),
     ).toEqual([
       { kind: 'speed', change: 'fly', feet: 60, hover: false },
-      { kind: 'advantage', mode: 'advantage', roll: 'attacked', ability: null },
+      {
+        kind: 'advantage',
+        mode: 'advantage',
+        roll: 'attacked',
+        ability: null,
+        when: null,
+      },
       {
         kind: 'defense',
         level: 'resistance',

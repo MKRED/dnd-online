@@ -1,4 +1,10 @@
 import {
+  advantageKey,
+  formatAdvantage,
+  isAdvantageDetails,
+  type AdvantageDetails,
+} from './effectAdvantage.js';
+import {
   CONDITION_LABELS,
   isConditionDetails,
   type ConditionDetails,
@@ -37,6 +43,7 @@ export const EFFECT_COMPONENT_KINDS = [
   'defense',
   'no_healing',
   'speed',
+  'advantage',
 ] as const;
 export type EffectComponentKind = (typeof EFFECT_COMPONENT_KINDS)[number];
 
@@ -49,14 +56,15 @@ export const SINGLE_EFFECT_COMPONENT_KINDS: readonly EffectComponentKind[] = [
 // (effectConditions.ts), урон или лечение за ход — effectPerTurn.ts, сопротивление и
 // иммунитет — effectDefenses.ts. Запрет лечения полей не имеет: носитель не
 // восстанавливает хиты, как от Chill Touch (docs/dnd/modifiers.md). Скорость —
-// effectSpeed.ts.
+// effectSpeed.ts, преимущество и помеха — effectAdvantage.ts.
 export type EffectComponent =
   | ({ kind: 'sense' } & SenseDetails)
   | ({ kind: 'condition' } & ConditionDetails)
   | ({ kind: 'per_turn' } & PerTurnDetails)
   | ({ kind: 'defense' } & DefenseDetails)
   | { kind: 'no_healing' }
-  | ({ kind: 'speed' } & SpeedDetails);
+  | ({ kind: 'speed' } & SpeedDetails)
+  | ({ kind: 'advantage' } & AdvantageDetails);
 
 // Больше в одном эффекте в книге не встречается; предел защищает форму и базу.
 export const EFFECT_COMPONENTS_MAX = 20;
@@ -68,6 +76,7 @@ export const EFFECT_COMPONENT_LABELS: Record<EffectComponentKind, string> = {
   defense: 'Сопротивление и иммунитет',
   no_healing: 'Запрет лечения',
   speed: 'Скорость',
+  advantage: 'Преимущество или помеха',
 };
 
 function isEffectComponent(value: unknown): value is EffectComponent {
@@ -79,11 +88,13 @@ function isEffectComponent(value: unknown): value is EffectComponent {
   if (kind === 'defense') return isDefenseDetails(rest);
   if (kind === 'no_healing') return Object.keys(rest).length === 0;
   if (kind === 'speed') return isSpeedDetails(rest);
+  if (kind === 'advantage') return isAdvantageDetails(rest);
   return false;
 }
 
 // Что в одном эффекте не должно повторяться: вид чувства, состояние, тип урона или
-// состояние на одном уровне защиты, изменение Скорости, особая скорость. Урон за ход повторяться может (огонь и холод
+// состояние на одном уровне защиты, изменение Скорости, особая скорость, одни и те же
+// броски с преимуществом или помехой. Урон за ход повторяться может (огонь и холод
 // одновременно) — у него ключей нет.
 function componentKeys(component: EffectComponent): string[] {
   switch (component.kind) {
@@ -99,6 +110,8 @@ function componentKeys(component: EffectComponent): string[] {
       return ['no_healing'];
     case 'speed':
       return [`speed:${speedKey(component)}`];
+    case 'advantage':
+      return [`advantage:${advantageKey(component)}`];
     default:
       return component satisfies never;
   }
@@ -138,6 +151,8 @@ export function formatEffectComponent(component: EffectComponent): string {
       return 'Не восстанавливает хиты';
     case 'speed':
       return formatSpeed(component);
+    case 'advantage':
+      return formatAdvantage(component);
     default:
       return component satisfies never;
   }

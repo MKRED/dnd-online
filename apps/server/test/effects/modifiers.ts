@@ -115,5 +115,51 @@ export function describeEffectModifiers(get: () => CatalogContext): void {
         );
       }
     });
+
+    it('преимущество и помеха: Enlarge и Blur вместе', async () => {
+      const { author, url, create } = get();
+      const strength = {
+        kind: 'advantage',
+        mode: 'advantage',
+        ability: 'strength',
+      };
+      const blur = {
+        kind: 'advantage',
+        mode: 'disadvantage',
+        roll: 'attacked',
+        ability: null,
+      };
+      const components = [
+        { ...strength, roll: 'check' },
+        { ...strength, roll: 'save' },
+        blur,
+      ];
+      const { id } = await create({ components });
+      const card = await author.get(url(id)).expect(200);
+      expect(card.body).toMatchObject({ components });
+    });
+
+    it('преимущество: характеристика у атак, те же броски с другим знаком — 400', async () => {
+      const { author, url, body } = get();
+      const haste = {
+        kind: 'advantage',
+        mode: 'advantage',
+        roll: 'save',
+        ability: 'dexterity',
+      };
+      for (const components of [
+        [{ ...haste, roll: 'attack' }],
+        [{ ...haste, ability: 'luck' }],
+        [haste, { ...haste, mode: 'disadvantage' }],
+      ]) {
+        const res = await author
+          .post(url())
+          .send(body({ components }))
+          .expect(400);
+        expect(messages(res)[0]).toMatch(
+          /^Составляющие эффекта заданы неверно/,
+        );
+      }
+    });
   });
 }

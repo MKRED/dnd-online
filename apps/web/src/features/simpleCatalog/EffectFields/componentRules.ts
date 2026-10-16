@@ -6,6 +6,7 @@ import {
   type SenseKind,
 } from 'shared';
 import type { ComponentValues } from './componentValues';
+import { advantageRollError } from './advantageForm';
 import { defenseDamageTypesError } from './defenseForm';
 import { perTurnValidate, type PerTurnValues } from './perTurnForm';
 import { speedValidate } from './speedForm';
@@ -113,6 +114,17 @@ export const componentRules = {
       return component.kind === 'speed'
         ? speedValidate.feet(component.speed)
         : null;
+    },
+  },
+  advantage: {
+    // Повтор — у выбора бросков.
+    roll: (_value: unknown, values: WithEffect, path: string) => {
+      const component = componentAt(values, path);
+      if (component.kind !== 'advantage') return null;
+      const earlier = earlierOf(values, path)
+        .filter((c) => c.kind === 'advantage')
+        .map((c) => c.advantage);
+      return advantageRollError(component.advantage, earlier);
     },
   },
 };

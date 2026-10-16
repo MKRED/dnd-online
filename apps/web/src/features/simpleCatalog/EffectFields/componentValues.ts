@@ -7,6 +7,12 @@ import {
   type SenseKind,
 } from 'shared';
 import {
+  fromAdvantageValues,
+  NEW_ADVANTAGE,
+  toAdvantageValues,
+  type AdvantageValues,
+} from './advantageForm';
+import {
   fromDefenseValues,
   NEW_DEFENSE,
   type DefenseValues,
@@ -27,7 +33,7 @@ import {
 // Составляющие и снятие спасброском в форме эффекта (docs/plan/effects.md). key — только
 // для React: по нему список не путает строки при удалении из середины. Поля всех видов
 // лежат в одной строке: Mantine проверяет списки по путям, а каждая карточка читает
-// только поля своего вида. Урон за ход, защита и скорость — отдельными объектами.
+// только поля своего вида. Виды с несколькими полями — отдельными объектами.
 export interface ComponentValues {
   key: string;
   kind: EffectComponentKind;
@@ -38,6 +44,7 @@ export interface ComponentValues {
   perTurn: PerTurnValues;
   defense: DefenseValues;
   speed: SpeedValues;
+  advantage: AdvantageValues;
 }
 
 export function newComponent(kind: EffectComponentKind): ComponentValues {
@@ -50,6 +57,7 @@ export function newComponent(kind: EffectComponentKind): ComponentValues {
     perTurn: NEW_PER_TURN,
     defense: NEW_DEFENSE,
     speed: NEW_SPEED,
+    advantage: NEW_ADVANTAGE,
   };
 }
 export function toComponentValues(component: EffectComponent): ComponentValues {
@@ -76,6 +84,10 @@ export function toComponentValues(component: EffectComponent): ComponentValues {
     case 'speed': {
       const { kind, ...details } = component;
       return { ...values, kind, speed: toSpeedValues(details) };
+    }
+    case 'advantage': {
+      const { kind, ...details } = component;
+      return { ...values, kind, advantage: toAdvantageValues(details) };
     }
     default:
       return component satisfies never;
@@ -106,6 +118,8 @@ export function fromComponentValues(c: ComponentValues): EffectComponent[] {
       return [{ kind: 'no_healing' }];
     case 'speed':
       return [{ kind: 'speed', ...fromSpeedValues(c.speed) }];
+    case 'advantage':
+      return [{ kind: 'advantage', ...fromAdvantageValues(c.advantage) }];
     default:
       return c.kind satisfies never;
   }

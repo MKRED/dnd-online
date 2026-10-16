@@ -4,6 +4,11 @@ import {
   type ConditionDetails,
 } from './effectConditions.js';
 import {
+  formatPerTurn,
+  isPerTurnDetails,
+  type PerTurnDetails,
+} from './effectPerTurn.js';
+import {
   formatSense,
   isSenseDetails,
   type SenseDetails,
@@ -13,14 +18,19 @@ import {
 // любом наборе, а не одна категория. Эффект без составляющих — «Базовый»: всё в описании.
 // Каждый этап плана добавляет вид. Ключи хранятся в базе: добавлять можно,
 // переименовывать — только с миграцией данных.
-export const EFFECT_COMPONENT_KINDS = ['sense', 'condition'] as const;
+export const EFFECT_COMPONENT_KINDS = [
+  'sense',
+  'condition',
+  'per_turn',
+] as const;
 export type EffectComponentKind = (typeof EFFECT_COMPONENT_KINDS)[number];
 
 // Чувство — вид и дистанция (effectSenses.ts), состояние — одно из книги
-// (effectConditions.ts).
+// (effectConditions.ts), урон или лечение за ход — effectPerTurn.ts.
 export type EffectComponent =
   | ({ kind: 'sense' } & SenseDetails)
-  | ({ kind: 'condition' } & ConditionDetails);
+  | ({ kind: 'condition' } & ConditionDetails)
+  | ({ kind: 'per_turn' } & PerTurnDetails);
 
 // Больше в одном эффекте в книге не встречается; предел защищает форму и базу.
 export const EFFECT_COMPONENTS_MAX = 20;
@@ -28,6 +38,7 @@ export const EFFECT_COMPONENTS_MAX = 20;
 export const EFFECT_COMPONENT_LABELS: Record<EffectComponentKind, string> = {
   sense: 'Чувство',
   condition: 'Состояние',
+  per_turn: 'Урон или лечение за ход',
 };
 
 function isEffectComponent(value: unknown): value is EffectComponent {
@@ -35,16 +46,20 @@ function isEffectComponent(value: unknown): value is EffectComponent {
   const { kind, ...rest } = value as Record<string, unknown>;
   if (kind === 'sense') return isSenseDetails(rest);
   if (kind === 'condition') return isConditionDetails(rest);
+  if (kind === 'per_turn') return isPerTurnDetails(rest);
   return false;
 }
 
-// Что в одном эффекте не должно повторяться: вид чувства или состояние.
-function componentKey(component: EffectComponent): string {
+// Что в одном эффекте не должно повторяться: вид чувства или состояние. Урон за ход
+// повторяться может (огонь и холод одновременно) — null.
+function componentKey(component: EffectComponent): string | null {
   switch (component.kind) {
     case 'sense':
       return `sense:${component.sense}`;
     case 'condition':
       return `condition:${component.condition}`;
+    case 'per_turn':
+      return null;
     default:
       return component satisfies never;
   }
@@ -58,7 +73,7 @@ export function isEffectComponents(value: unknown): value is EffectComponent[] {
     return false;
   }
   if (!value.every(isEffectComponent)) return false;
-  const keys = value.map(componentKey);
+  const keys = value.map(componentKey).filter((key) => key !== null);
   return new Set(keys).size === keys.length;
 }
 
@@ -76,6 +91,8 @@ export function formatEffectComponent(component: EffectComponent): string {
       return formatSense(component);
     case 'condition':
       return CONDITION_LABELS[component.condition];
+    case 'per_turn':
+      return formatPerTurn(component);
     default:
       return component satisfies never;
   }

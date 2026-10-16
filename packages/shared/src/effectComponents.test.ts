@@ -60,6 +60,21 @@ describe('effectComponents', () => {
     expect(isEffectComponents([{ kind: 'condition' }])).toBe(false);
   });
 
+  it('урон за ход может повторяться', () => {
+    const burn = {
+      kind: 'per_turn',
+      outcome: 'damage',
+      damageType: 'fire',
+      count: 1,
+      die: 6,
+      bonus: 0,
+      addModifier: false,
+      edge: 'start',
+    };
+    expect(isEffectComponents([burn, burn, poisoned])).toBe(true);
+    expect(isEffectComponents([{ ...burn, count: 0 }])).toBe(false);
+  });
+
   it('виды без повторов', () => {
     expect(
       effectComponentKinds([

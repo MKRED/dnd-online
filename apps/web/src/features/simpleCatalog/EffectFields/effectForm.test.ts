@@ -5,6 +5,7 @@ import {
   fromEffectValues,
   newComponent,
   toEffectValues,
+  type ComponentValues,
   type EffectValues,
 } from './effectForm';
 
@@ -17,6 +18,10 @@ const condition = (kind: ConditionKind | null) => ({
   ...newComponent('condition'),
   condition: kind,
 });
+const perTurn = (over: Partial<ComponentValues['perTurn']> = {}) => {
+  const component = newComponent('per_turn');
+  return { ...component, perTurn: { ...component.perTurn, ...over } };
+};
 const values = (effect: Partial<EffectValues>) => ({
   effect: { ...toEffectValues(), ...effect },
 });
@@ -105,6 +110,71 @@ describe('effectForm', () => {
     // И наоборот: у чувства нет ошибки состояния.
     const senses = values({ components: [sense('darkvision', 60)] });
     expect(rules.condition(null, senses, at(0, 'condition'))).toBeNull();
+  });
+
+  it('урон за ход: в запросе числа, тип урона только у урона', () => {
+    const { effect } = values({
+      components: [
+        perTurn({ damageType: 'fire' }),
+        perTurn({
+          outcome: 'temp_hp',
+          damageType: 'fire',
+          count: 0,
+          addModifier: true,
+        }),
+      ],
+    });
+    const { components } = fromEffectValues(effect);
+    expect(components).toEqual([
+      {
+        kind: 'per_turn',
+        outcome: 'damage',
+        damageType: 'fire',
+        count: 1,
+        die: 6,
+        bonus: 0,
+        addModifier: false,
+        edge: 'start',
+      },
+      expect.objectContaining({
+        outcome: 'temp_hp',
+        damageType: null,
+        count: 0,
+      }),
+    ]);
+    const back = toEffectValues({
+      ...fromEffectValues(effect),
+      duration: { kind: 'permanent' },
+    });
+    expect(back.components[0].perTurn).toMatchObject({
+      die: '6',
+      damageType: 'fire',
+    });
+  });
+
+  it('урон за ход: тип, пустая сумма и пределы — у своей карточки', () => {
+    const rules = effectValidate.components.perTurn;
+    const form = values({
+      components: [
+        perTurn(),
+        perTurn({ outcome: 'healing', count: 0, bonus: 0 }),
+        condition('prone'),
+      ],
+    });
+    const at = (index: number, field: string) =>
+      `effect.components.${index}.perTurn.${field}`;
+    expect(rules.damageType(null, form, at(0, 'damageType'))).toBe(
+      'Выберите тип урона',
+    );
+    expect(rules.damageType(null, form, at(1, 'damageType'))).toBeNull();
+    expect(rules.count(0, form, at(1, 'count'))).toBe(
+      'Укажите кости, число или модификатор',
+    );
+    expect(rules.count(41, form, at(0, 'count'))).toBe('От 0 до 40');
+    expect(rules.count('', form, at(0, 'count'))).toBe('От 0 до 40');
+    expect(rules.bonus(101, form, at(0, 'bonus'))).toBe('От 0 до 100');
+    // У состояния правил урона нет.
+    expect(rules.count(0, form, at(2, 'count'))).toBeNull();
   });
 
   it('требует характеристику только с галочкой', () => {

@@ -13,6 +13,17 @@ const duration = {
 const dark = { kind: 'sense', sense: 'darkvision', range: 60 };
 const poisoned = { kind: 'condition', condition: 'poisoned' };
 const prone = { kind: 'condition', condition: 'prone' };
+// «Палящая кара»: 1d6 огнём в начале хода.
+const burn = {
+  kind: 'per_turn',
+  outcome: 'damage',
+  damageType: 'fire',
+  count: 1,
+  die: 6,
+  bonus: 0,
+  addModifier: false,
+  edge: 'start',
+};
 const messages = (res: { body: unknown }) =>
   (res.body as { message: string[] }).message;
 
@@ -112,6 +123,40 @@ describeCatalog(
           const res = await author
             .post(url())
             .send(body({ components }))
+            .expect(400);
+          expect(messages(res)[0]).toMatch(
+            /^Составляющие эффекта заданы неверно/,
+          );
+        }
+      });
+
+      it('урон за ход повторяется, временные хиты от модификатора', async () => {
+        const { author, url, create } = get();
+        const heroism = {
+          ...burn,
+          outcome: 'temp_hp',
+          damageType: null,
+          count: 0,
+          addModifier: true,
+        };
+        const cold = { ...burn, damageType: 'cold', edge: 'end' };
+        const components = [burn, cold, burn, heroism];
+        const { id } = await create({ components });
+        const card = await author.get(url(id)).expect(200);
+        expect(card.body).toMatchObject({ components });
+      });
+
+      it('урон без типа, лечение с типом, пустая сумма и d20 — 400', async () => {
+        const { author, url, body } = get();
+        for (const component of [
+          { ...burn, damageType: null },
+          { ...burn, outcome: 'healing' },
+          { ...burn, count: 0 },
+          { ...burn, die: 20 },
+        ]) {
+          const res = await author
+            .post(url())
+            .send(body({ components: [component] }))
             .expect(400);
           expect(messages(res)[0]).toMatch(
             /^Составляющие эффекта заданы неверно/,

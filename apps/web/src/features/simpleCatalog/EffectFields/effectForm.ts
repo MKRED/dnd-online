@@ -11,11 +11,18 @@ import {
   type SaveEndsEdge,
   type SenseKind,
 } from 'shared';
+import {
+  fromPerTurnValues,
+  NEW_PER_TURN,
+  perTurnValidate,
+  toPerTurnValues,
+  type PerTurnValues,
+} from './perTurnForm';
 
 // Составляющие и снятие спасброском в форме эффекта (docs/plan/effects.md). key — только
 // для React: по нему список не путает строки при удалении из середины. Поля всех видов
-// лежат в одной плоской строке: Mantine проверяет списки по путям, а каждая карточка
-// читает только поля своего вида.
+// лежат в одной строке: Mantine проверяет списки по путям, а каждая карточка читает
+// только поля своего вида. Урон за ход — отдельным объектом: у него полей много.
 export interface ComponentValues {
   key: string;
   kind: EffectComponentKind;
@@ -23,6 +30,7 @@ export interface ComponentValues {
   sense: SenseKind | null;
   range: number | string;
   condition: ConditionKind | null;
+  perTurn: PerTurnValues;
 }
 
 // Галочка снятой не стирает выбранное: вернул галочку — поля на месте.
@@ -38,7 +46,14 @@ export interface EffectValues {
 }
 
 export function newComponent(kind: EffectComponentKind): ComponentValues {
-  return { key: randomId(), kind, sense: null, range: '', condition: null };
+  return {
+    key: randomId(),
+    kind,
+    sense: null,
+    range: '',
+    condition: null,
+    perTurn: NEW_PER_TURN,
+  };
 }
 
 function toComponentValues(component: EffectComponent): ComponentValues {
@@ -52,6 +67,10 @@ function toComponentValues(component: EffectComponent): ComponentValues {
       };
     case 'condition':
       return { ...values, condition: component.condition };
+    case 'per_turn': {
+      const { kind, ...details } = component;
+      return { ...values, kind, perTurn: toPerTurnValues(details) };
+    }
     default:
       return component satisfies never;
   }
@@ -73,6 +92,8 @@ function fromComponentValues(c: ComponentValues): EffectComponent[] {
         : [];
     case 'condition':
       return c.condition ? [{ kind: 'condition', condition: c.condition }] : [];
+    case 'per_turn':
+      return [{ kind: 'per_turn', ...fromPerTurnValues(c.perTurn) }];
     default:
       return c.kind satisfies never;
   }
@@ -103,6 +124,7 @@ export function fromEffectValues(
 type WithEffect = { effect: EffectValues };
 
 // Строка списка по пути поля: 'effect.components.2.range' → третья составляющая.
+// Путь поля урона за ход длиннее ('effect.components.2.perTurn.count'), индекс тот же.
 const componentAt = (values: WithEffect, path: string) =>
   values.effect.components[Number(path.split('.')[2])];
 
@@ -112,6 +134,23 @@ const repeated = (
   path: string,
   same: (c: ComponentValues) => boolean,
 ) => values.effect.components.findIndex(same) !== Number(path.split('.')[2]);
+
+// Правила полей урона за ход — только у карточки этого вида.
+function perTurnRules() {
+  const only =
+    <V>(rule: (value: V, perTurn: PerTurnValues) => string | null) =>
+    (value: V, values: WithEffect, path: string) => {
+      const component = componentAt(values, path);
+      return component.kind === 'per_turn'
+        ? rule(value, component.perTurn)
+        : null;
+    };
+  return {
+    damageType: only(perTurnValidate.damageType),
+    count: only(perTurnValidate.count),
+    bonus: only(perTurnValidate.bonus),
+  };
+}
 
 // Те же правила, что у сервера (isEffectComponents, isEffectSaveEnds). Правило поля
 // работает только у карточки своего вида.
@@ -155,6 +194,7 @@ export const effectValidate = {
         ? 'Это состояние уже есть в эффекте'
         : null;
     },
+    perTurn: perTurnRules(),
   },
   saveEnds: {
     ability: (value: AbilityScore | null, values: WithEffect) =>

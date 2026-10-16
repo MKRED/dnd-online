@@ -60,4 +60,4 @@ What follows from them for the app:
 
 ## Where it lives in code
 
-The repeated save that ends an effect is the effect field `saveEnds` (`packages/shared/src/effectSaveEnds.ts`): the ability and the edge of the bearer's turn, no DC. The conditions are the effect component «Состояние» (`packages/shared/src/effectConditions.ts`, [conditions.md](conditions.md)). The rest is not in code yet. The damage types and area shapes will go to `packages/shared` with the ability and effect stages that use them.
+The repeated save that ends an effect is the effect field `saveEnds` (`packages/shared/src/effectSaveEnds.ts`): the ability and the edge of the bearer's turn, no DC. The conditions are the effect component «Состояние» (`packages/shared/src/effectConditions.ts`, [conditions.md](conditions.md)). The damage types and dice are in `packages/shared/src/damageTypes.ts`, used so far by the effect component «Урон или лечение за ход» ([per-turn-damage.md](per-turn-damage.md)). The rest is not in code yet. The area shapes will go to `packages/shared` with the ability and effect stages that use them.

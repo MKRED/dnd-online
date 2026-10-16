@@ -19,6 +19,7 @@ import {
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import ConditionComponentFields from './ConditionComponentFields';
 import { newComponent } from './effectForm';
+import PerTurnComponentFields from './PerTurnComponentFields';
 import SenseComponentFields from './SenseComponentFields';
 
 interface ComponentsFieldProps {
@@ -32,6 +33,7 @@ const KIND_FIELDS: Record<
 > = {
   sense: SenseComponentFields,
   condition: ConditionComponentFields,
+  per_turn: PerTurnComponentFields,
 };
 
 // Составляющие эффекта списком карточек (docs/plan/effects.md): у каждой свои поля и

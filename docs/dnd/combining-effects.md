@@ -20,8 +20,9 @@ How the 2024 rules combine several effects on one creature: different spells, th
 
 ## How the app uses it
 
-Nothing computes effects yet. What this means for the future engine is written in [plan/effects-coverage.md](../plan/effects-coverage.md):
+The first evaluator is the total Speed: `totalSpeed` in `packages/shared/src/effectSpeedTotal.ts`, with its tests next to it. Nothing else computes effects yet. What this means for the engine is written in [plan/effects-coverage.md](../plan/effects-coverage.md):
 
-- an applied effect has to remember which catalog entry (spell) it came from, so that the same entry twice doesn't add up;
-- «the most potent» needs a way to compare two instances of one entry (a bonus, a die);
-- **the order of Speed changes** (house rule, decided with the user on 2026-10-16, since the book is silent): first every «±N ft.», then «doubled» and «halved», last «becomes 0», after which nothing raises it. A special speed «equal to Speed» is taken from the result. Round down. Not in code yet: it comes with the first evaluator.
+- an applied effect remembers which catalog entry (spell) it came from (`source`), so that the same entry twice doesn't add up. Today two instances of one entry are identical, so the evaluator keeps the latest one;
+- «the most potent» will need a way to compare two instances of one entry (a bonus, a die) once effects grow with the spell slot;
+- **the order of Speed changes** (house rule, decided with the user on 2026-10-16, since the book is silent): first every «±N ft.», then «doubled» and «halved», last «becomes 0», after which nothing raises it. A special speed «equal to Speed» is taken from the result. Round down to a whole number, not to a multiple of 5 (Speed 25 halved is 12). Since «becomes 0» comes last, it also covers the conditions' «Speed 0 and can't increase». Several «±N» are summed and the sum can't take Speed below 0 before the doubling; one power of two with one rounding at the end, so Haste and Slow on Speed 25 leave 25, not 24.
+- **Special speeds** (decided with the user on 2026-10-16; the glossary only says they change «by an equal amount»): the same operation as the Speed, so Fly 60 under Haste is 120 and Speed 0 makes every special speed 0. The same special speed from several sources doesn't add up: the highest applies (an interpretation). The creature hovers if any source of its Fly Speed grants hovering.

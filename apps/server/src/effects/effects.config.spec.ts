@@ -30,6 +30,14 @@ describe('effects.config', () => {
     ).toEqual(fallback);
   });
 
+  it('недостающее поле — умолчание, испорченная составляющая пропускается', () => {
+    const fly = { kind: 'speed', change: 'fly', feet: 60 };
+    expect(
+      toEffectFields('basic', { components: [fly, { kind: 'aura' }, dark] }, {})
+        .components,
+    ).toEqual([{ ...fly, hover: false }, dark]);
+  });
+
   it('эффект категории «Чувство» до составляющих читает одной составляющей', () => {
     expect(
       toEffectFields('sense', { sense: 'darkvision', range: 60 }, {})

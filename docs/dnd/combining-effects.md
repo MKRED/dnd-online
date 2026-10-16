@@ -24,4 +24,4 @@ Nothing computes effects yet. What this means for the future engine is written i
 
 - an applied effect has to remember which catalog entry (spell) it came from, so that the same entry twice doesn't add up;
 - «the most potent» needs a way to compare two instances of one entry (a bonus, a die);
-- the order of Speed changes needs a house rule, to be agreed with the user.
+- **the order of Speed changes** (house rule, decided with the user on 2026-10-16, since the book is silent): first every «±N ft.», then «doubled» and «halved», last «becomes 0», after which nothing raises it. A special speed «equal to Speed» is taken from the result. Round down. Not in code yet: it comes with the first evaluator.

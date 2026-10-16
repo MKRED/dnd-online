@@ -21,6 +21,7 @@ export * from './effectSpeed.js';
 export * from './effectAdvantage.js';
 export * from './damageTypes.js';
 export * from './effectComponents.js';
+export * from './effectComponentsRead.js';
 export * from './effectSaveEnds.js';
 export * from './abilityUsage.js';
 export * from './abilityUsageLabels.js';

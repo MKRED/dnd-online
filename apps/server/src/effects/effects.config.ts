@@ -1,9 +1,9 @@
 import {
   DEFAULT_EFFECT_DURATION,
-  isEffectComponents,
   isEffectDuration,
   isEffectSaveEnds,
   isSenseDetails,
+  readEffectComponents,
   type EffectComponent,
   type EffectFields,
 } from 'shared';
@@ -27,14 +27,17 @@ export const EFFECT_ACCESS: CatalogAccess = {
 // так новые записи безвредно читает и сервер, выпущенный до составляющих.
 const STORED_CATEGORY = 'basic';
 
-// Составляющие из базы. До них у эффекта была категория: «Чувство» с полями в details —
-// это одна составляющая. Испорченное читаем как эффект без составляющих: описание
-// остаётся, а каталог не падает из-за одной записи.
+// Составляющие из базы. Недостающие поля получают умолчания, испорченная составляющая
+// пропускается (readEffectComponents): каталог не падает из-за одной записи. До
+// составляющих у эффекта была категория: «Чувство» с полями в details — это одна
+// составляющая.
 function toComponents(
   category: string,
   details: Record<string, unknown>,
 ): EffectComponent[] {
-  if (isEffectComponents(details.components)) return details.components;
+  if (Array.isArray(details.components)) {
+    return readEffectComponents(details.components);
+  }
   if (category === 'sense' && isSenseDetails(details)) {
     return [{ kind: 'sense', ...details }];
   }

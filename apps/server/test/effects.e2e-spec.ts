@@ -11,6 +11,8 @@ const duration = {
   concentration: false,
 };
 const dark = { kind: 'sense', sense: 'darkvision', range: 60 };
+const poisoned = { kind: 'condition', condition: 'poisoned' };
+const prone = { kind: 'condition', condition: 'prone' };
 const messages = (res: { body: unknown }) =>
   (res.body as { message: string[] }).message;
 
@@ -80,6 +82,32 @@ describeCatalog(
           [{ ...dark, range: 62 }],
           many,
           undefined,
+        ]) {
+          const res = await author
+            .post(url())
+            .send(body({ components }))
+            .expect(400);
+          expect(messages(res)[0]).toMatch(
+            /^Составляющие эффекта заданы неверно/,
+          );
+        }
+      });
+
+      it('разные состояния вместе с чувством', async () => {
+        const { author, url, create } = get();
+        const { id } = await create({ components: [poisoned, prone, dark] });
+        const card = await author.get(url(id)).expect(200);
+        expect(card.body).toMatchObject({
+          components: [poisoned, prone, dark],
+        });
+      });
+
+      it('повтор состояния, неизвестное и уровень истощения — 400', async () => {
+        const { author, url, body } = get();
+        for (const components of [
+          [poisoned, poisoned],
+          [{ kind: 'condition', condition: 'cursed' }],
+          [{ kind: 'condition', condition: 'exhaustion', level: 2 }],
         ]) {
           const res = await author
             .post(url())

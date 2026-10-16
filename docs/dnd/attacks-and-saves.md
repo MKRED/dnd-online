@@ -27,7 +27,7 @@ Acid / Кислота, Bludgeoning / Дробящий, Cold / Холод, Fire /
 
 Blinded / Ослеплённый, Charmed / Очарованный, Deafened / Оглохший, Exhaustion / Истощение, Frightened / Испуганный, Grappled / Схваченный, Incapacitated / Недееспособный, Invisible / Невидимый, Paralyzed / Парализованный, Petrified / Окаменевший, Poisoned / Отравленный, Prone / Опрокинутый, Restrained / Опутанный, Stunned / Ошеломлённый, Unconscious / Бессознательный.
 
-What each condition does is not recorded yet: that comes with the effect stage «Состояние из книги».
+What each condition does, and how effects use them: [conditions.md](conditions.md).
 
 ### Area shapes (6)
 
@@ -60,4 +60,4 @@ What follows from them for the app:
 
 ## Where it lives in code
 
-The repeated save that ends an effect is the effect field `saveEnds` (`packages/shared/src/effectSaveEnds.ts`): the ability and the edge of the bearer's turn, no DC. The rest is not in code yet. The damage types, conditions and area shapes will go to `packages/shared` with the ability and effect stages that use them.
+The repeated save that ends an effect is the effect field `saveEnds` (`packages/shared/src/effectSaveEnds.ts`): the ability and the edge of the bearer's turn, no DC. The conditions are the effect component «Состояние» (`packages/shared/src/effectConditions.ts`, [conditions.md](conditions.md)). The rest is not in code yet. The damage types and area shapes will go to `packages/shared` with the ability and effect stages that use them.

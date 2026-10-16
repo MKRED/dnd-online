@@ -9,18 +9,30 @@ import {
   Text,
 } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
+import type { ReactNode } from 'react';
 import {
   EFFECT_COMPONENT_KINDS,
   EFFECT_COMPONENT_LABELS,
   EFFECT_COMPONENTS_MAX,
+  type EffectComponentKind,
 } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
+import ConditionComponentFields from './ConditionComponentFields';
 import { newComponent } from './effectForm';
 import SenseComponentFields from './SenseComponentFields';
 
 interface ComponentsFieldProps {
   form: UseFormReturnType<SimpleFormValues>;
 }
+
+// Поля карточки по виду: новый вид без своих полей не соберётся.
+const KIND_FIELDS: Record<
+  EffectComponentKind,
+  (props: ComponentsFieldProps & { index: number }) => ReactNode
+> = {
+  sense: SenseComponentFields,
+  condition: ConditionComponentFields,
+};
 
 // Составляющие эффекта списком карточек (docs/plan/effects.md): у каждой свои поля и
 // крестик. Новая добавляется из меню видов — оно растёт с каждым этапом плана.
@@ -34,25 +46,30 @@ function ComponentsField({ form }: ComponentsFieldProps) {
       description="Что эффект делает. Без составляющих эффект «Базовый»: всё, что он делает, — в описании"
     >
       <Stack gap="xs" mt={6}>
-        {components.map((component, index) => (
-          <Paper key={component.key} withBorder p="sm" radius="md">
-            <Group justify="space-between" mb={4} wrap="nowrap">
-              <Text size="sm" fw={500}>
-                {EFFECT_COMPONENT_LABELS[component.kind]}
-              </Text>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                aria-label="Убрать составляющую"
-                title="Убрать составляющую"
-                onClick={() => form.removeListItem('effect.components', index)}
-              >
-                ✕
-              </ActionIcon>
-            </Group>
-            <SenseComponentFields form={form} index={index} />
-          </Paper>
-        ))}
+        {components.map((component, index) => {
+          const Fields = KIND_FIELDS[component.kind];
+          return (
+            <Paper key={component.key} withBorder p="sm" radius="md">
+              <Group justify="space-between" mb={4} wrap="nowrap">
+                <Text size="sm" fw={500}>
+                  {EFFECT_COMPONENT_LABELS[component.kind]}
+                </Text>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  aria-label="Убрать составляющую"
+                  title="Убрать составляющую"
+                  onClick={() =>
+                    form.removeListItem('effect.components', index)
+                  }
+                >
+                  ✕
+                </ActionIcon>
+              </Group>
+              <Fields form={form} index={index} />
+            </Paper>
+          );
+        })}
         <Menu position="bottom-start">
           <Menu.Target>
             <Button

@@ -1,4 +1,4 @@
-import type { SenseKind } from 'shared';
+import type { ConditionKind, SenseKind } from 'shared';
 import { describe, expect, it } from 'vitest';
 import {
   effectValidate,
@@ -12,6 +12,10 @@ const sense = (kind: SenseKind | null, range: number | string = '') => ({
   ...newComponent('sense'),
   sense: kind,
   range,
+});
+const condition = (kind: ConditionKind | null) => ({
+  ...newComponent('condition'),
+  condition: kind,
 });
 const values = (effect: Partial<EffectValues>) => ({
   effect: { ...toEffectValues(), ...effect },
@@ -64,6 +68,43 @@ describe('effectForm', () => {
     expect(range('', form, at(1, 'range'))).not.toBeNull();
     expect(range(62, form, at(0, 'range'))).not.toBeNull();
     expect(range('', form, at(2, 'range'))).toBeNull();
+  });
+
+  it('собирает состояния и читает их обратно', () => {
+    const { effect } = values({
+      components: [condition('poisoned'), sense('darkvision', 60)],
+    });
+    const fields = fromEffectValues(effect);
+    expect(fields.components).toEqual([
+      { kind: 'condition', condition: 'poisoned' },
+      { kind: 'sense', sense: 'darkvision', range: 60 },
+    ]);
+    const back = toEffectValues({ ...fields, duration: { kind: 'permanent' } });
+    expect(back.components[0]).toMatchObject({
+      kind: 'condition',
+      condition: 'poisoned',
+    });
+  });
+
+  it('у состояния свои правила, а правила чувства его не трогают', () => {
+    const rules = effectValidate.components;
+    const form = values({
+      components: [condition('prone'), condition('prone'), condition(null)],
+    });
+    const at = (index: number, field: string) =>
+      `effect.components.${index}.${field}`;
+    expect(rules.sense(null, form, at(0, 'sense'))).toBeNull();
+    expect(rules.range('', form, at(0, 'range'))).toBeNull();
+    expect(rules.condition('prone', form, at(0, 'condition'))).toBeNull();
+    expect(rules.condition('prone', form, at(1, 'condition'))).toBe(
+      'Это состояние уже есть в эффекте',
+    );
+    expect(rules.condition(null, form, at(2, 'condition'))).toBe(
+      'Выберите состояние',
+    );
+    // И наоборот: у чувства нет ошибки состояния.
+    const senses = values({ components: [sense('darkvision', 60)] });
+    expect(rules.condition(null, senses, at(0, 'condition'))).toBeNull();
   });
 
   it('требует характеристику только с галочкой', () => {

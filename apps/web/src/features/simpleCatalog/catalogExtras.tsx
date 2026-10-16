@@ -3,12 +3,13 @@ import type { ReactNode } from 'react';
 import {
   ACTIVATION_LABELS,
   EFFECT_COMPONENT_LABELS,
+  effectComponentKinds,
   formatActivation,
   formatCosts,
   formatEffectDuration,
   formatEffectDurationShort,
+  formatEffectComponent,
   formatSaveEnds,
-  formatSense,
   type Effect,
 } from 'shared';
 import CardLines from './CardLines';
@@ -34,15 +35,16 @@ export interface CatalogExtras {
 
 // Строки по одной на вид составляющей: несколько чувств — в одной строке «Чувство».
 function componentRows(effect: Effect) {
-  const senses = effect.components.map(formatSense);
-  return senses.length === 0
-    ? []
-    : [
-        {
-          label: EFFECT_COMPONENT_LABELS.sense,
-          value: <CardLines lines={senses} />,
-        },
-      ];
+  return effectComponentKinds(effect.components).map((kind) => ({
+    label: EFFECT_COMPONENT_LABELS[kind],
+    value: (
+      <CardLines
+        lines={effect.components
+          .filter((component) => component.kind === kind)
+          .map(formatEffectComponent)}
+      />
+    ),
+  }));
 }
 
 export const EFFECT_EXTRAS: CatalogExtras = {

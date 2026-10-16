@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   EFFECT_COMPONENTS_MAX,
   effectComponentKinds,
+  formatEffectComponent,
   isEffectComponents,
 } from './effectComponents.js';
 
-const dark = { kind: 'sense', sense: 'darkvision', range: 60 };
+const dark = { kind: 'sense', sense: 'darkvision', range: 60 } as const;
+const poisoned = { kind: 'condition', condition: 'poisoned' } as const;
 
 describe('effectComponents', () => {
   it('принимает пустой список и несколько разных чувств', () => {
@@ -39,6 +41,25 @@ describe('effectComponents', () => {
     expect(isEffectComponents(many)).toBe(false);
   });
 
+  it('принимает разные состояния вместе с чувством', () => {
+    expect(
+      isEffectComponents([
+        poisoned,
+        { kind: 'condition', condition: 'prone' },
+        dark,
+      ]),
+    ).toBe(true);
+  });
+
+  it('не пускает одно состояние дважды, неизвестное и лишние поля', () => {
+    expect(isEffectComponents([poisoned, poisoned])).toBe(false);
+    expect(
+      isEffectComponents([{ kind: 'condition', condition: 'cursed' }]),
+    ).toBe(false);
+    expect(isEffectComponents([{ ...poisoned, level: 2 }])).toBe(false);
+    expect(isEffectComponents([{ kind: 'condition' }])).toBe(false);
+  });
+
   it('виды без повторов', () => {
     expect(
       effectComponentKinds([
@@ -46,6 +67,17 @@ describe('effectComponents', () => {
         { kind: 'sense', sense: 'blindsight', range: 10 },
       ]),
     ).toEqual(['sense']);
+    expect(
+      effectComponentKinds([
+        { kind: 'condition', condition: 'poisoned' },
+        { kind: 'sense', sense: 'darkvision', range: 60 },
+      ]),
+    ).toEqual(['condition', 'sense']);
     expect(effectComponentKinds([])).toEqual([]);
+  });
+
+  it('строка карточки по виду', () => {
+    expect(formatEffectComponent(poisoned)).toBe('Отравленный');
+    expect(formatEffectComponent(dark)).toBe('Тёмное зрение, 60 фт.');
   });
 });

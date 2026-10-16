@@ -1,15 +1,8 @@
-import {
-  Alert,
-  Anchor,
-  Container,
-  Group,
-  Loader,
-  Stack,
-  Title,
-} from '@mantine/core';
+import { Alert, Anchor, Container, Group, Loader, Stack } from '@mantine/core';
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import type { Character } from 'shared';
+import EditPageTitle from '../components/EditPageTitle';
 import {
   CharacterForm,
   CharacterGallery,
@@ -89,19 +82,7 @@ function CharacterEditPage() {
   return (
     <Container size="md" py="xl">
       <Group justify="space-between" align="center" mb="lg">
-        {/* Одно слово «Редактирование:» шрифтом h1 шире экрана телефона, а длинное имя
-            может не влезть само: страница становилась шире экрана, и браузер отдалял её.
-            На узком экране шрифт меньше, слишком длинное слово переносится. */}
-        <Title
-          order={1}
-          miw={0}
-          style={{
-            fontSize: 'min(var(--mantine-h1-font-size), 8vw)',
-            overflowWrap: 'anywhere',
-          }}
-        >
-          {character ? `Редактирование: ${character.name}` : 'Редактирование'}
-        </Title>
+        <EditPageTitle name={character?.name} />
         <Anchor component={Link} to={`/characters/${id}`} size="sm">
           К персонажу
         </Anchor>

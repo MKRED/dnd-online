@@ -1,5 +1,6 @@
 import { Alert, Container, Loader, Title } from '@mantine/core';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import EditPageTitle from '../../components/EditPageTitle';
 import { useAuth } from '../auth';
 import { useCatalogEntry } from '../catalog';
 import { usePageTitle } from '../../lib/usePageTitle';
@@ -48,16 +49,7 @@ export function SimpleEditPage({ def }: SimpleFormPageProps) {
 
   return (
     <Container size="lg" py="xl">
-      <Title
-        order={1}
-        mb="lg"
-        style={{
-          fontSize: 'min(var(--mantine-h1-font-size), 8vw)',
-          overflowWrap: 'anywhere',
-        }}
-      >
-        {entry ? `Редактирование: ${entry.name}` : 'Редактирование'}
-      </Title>
+      <EditPageTitle name={entry?.name} mb="lg" />
       {error ? (
         <Alert color="red" title="Ошибка">
           {error}

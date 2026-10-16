@@ -13,6 +13,12 @@ import {
   type AdvantageValues,
 } from './advantageForm';
 import {
+  fromAutoFailValues,
+  NEW_AUTO_FAIL,
+  toAutoFailValues,
+  type AutoFailValues,
+} from './autoFailForm';
+import {
   fromDefenseValues,
   NEW_DEFENSE,
   type DefenseValues,
@@ -45,6 +51,7 @@ export interface ComponentValues {
   defense: DefenseValues;
   speed: SpeedValues;
   advantage: AdvantageValues;
+  autoFail: AutoFailValues;
 }
 
 export function newComponent(kind: EffectComponentKind): ComponentValues {
@@ -58,6 +65,7 @@ export function newComponent(kind: EffectComponentKind): ComponentValues {
     defense: NEW_DEFENSE,
     speed: NEW_SPEED,
     advantage: NEW_ADVANTAGE,
+    autoFail: NEW_AUTO_FAIL,
   };
 }
 export function toComponentValues(component: EffectComponent): ComponentValues {
@@ -88,6 +96,10 @@ export function toComponentValues(component: EffectComponent): ComponentValues {
     case 'advantage': {
       const { kind, ...details } = component;
       return { ...values, kind, advantage: toAdvantageValues(details) };
+    }
+    case 'auto_fail': {
+      const { kind, ...details } = component;
+      return { ...values, kind, autoFail: toAutoFailValues(details) };
     }
     default:
       return component satisfies never;
@@ -120,6 +132,8 @@ export function fromComponentValues(c: ComponentValues): EffectComponent[] {
       return [{ kind: 'speed', ...fromSpeedValues(c.speed) }];
     case 'advantage':
       return [{ kind: 'advantage', ...fromAdvantageValues(c.advantage) }];
+    case 'auto_fail':
+      return [{ kind: 'auto_fail', ...fromAutoFailValues(c.autoFail) }];
     default:
       return c.kind satisfies never;
   }

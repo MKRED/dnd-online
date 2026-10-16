@@ -19,6 +19,7 @@ import {
 } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import AdvantageComponentFields from './AdvantageComponentFields';
+import AutoFailComponentFields from './AutoFailComponentFields';
 import ConditionComponentFields from './ConditionComponentFields';
 import DefenseComponentFields from './DefenseComponentFields';
 import NoHealingComponentFields from './NoHealingComponentFields';
@@ -43,6 +44,7 @@ const KIND_FIELDS: Record<
   no_healing: NoHealingComponentFields,
   speed: SpeedComponentFields,
   advantage: AdvantageComponentFields,
+  auto_fail: AutoFailComponentFields,
 };
 
 // Составляющие эффекта списком карточек (docs/plan/effects.md): у каждой свои поля и

@@ -187,5 +187,38 @@ export function describeEffectModifiers(get: () => CatalogContext): void {
       const card = await author.get(url(id)).expect(200);
       expect(card.body).toMatchObject({ components });
     });
+
+    // Парализованный: автопровал спасбросков Силы и Ловкости; Ослеплённый — проверок,
+    // где нужно зрение.
+    it('автопровал: Парализованный и Ослеплённый', async () => {
+      const { author, url, create } = get();
+      const save = { kind: 'auto_fail', roll: 'save', ability: 'strength' };
+      const components = [
+        save,
+        { ...save, ability: 'dexterity' },
+        { kind: 'auto_fail', roll: 'sight_check', ability: null },
+      ];
+      const { id } = await create({ components });
+      const card = await author.get(url(id)).expect(200);
+      expect(card.body).toMatchObject({ components });
+    });
+
+    it('автопровал: характеристика у проверок, повтор — 400', async () => {
+      const { author, url, body } = get();
+      const save = { kind: 'auto_fail', roll: 'save', ability: 'strength' };
+      for (const components of [
+        [{ ...save, roll: 'hearing_check' }],
+        [{ ...save, ability: 'luck' }],
+        [save, save],
+      ]) {
+        const res = await author
+          .post(url())
+          .send(body({ components }))
+          .expect(400);
+        expect(messages(res)[0]).toMatch(
+          /^Составляющие эффекта заданы неверно/,
+        );
+      }
+    });
   });
 }

@@ -13,6 +13,7 @@ import {
 } from 'shared';
 import { ABILITY_LABELS } from '../../characters';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
+import { shownAdvantageWhen } from './advantageForm';
 
 const MODE_OPTIONS = ADVANTAGE_MODES.map((value) => ({
   value,
@@ -50,7 +51,8 @@ function AdvantageComponentFields({
   index,
 }: AdvantageComponentFieldsProps) {
   const path = `effect.components.${index}.advantage`;
-  const { roll } = form.getValues().effect.components[index].advantage;
+  const advantage = form.getValues().effect.components[index].advantage;
+  const { roll } = advantage;
 
   return (
     <Stack gap="xs">
@@ -85,6 +87,7 @@ function AdvantageComponentFields({
           allowDeselect={false}
           maw={320}
           {...form.getInputProps(`${path}.when`)}
+          value={shownAdvantageWhen(advantage)}
         />
       )}
     </Stack>

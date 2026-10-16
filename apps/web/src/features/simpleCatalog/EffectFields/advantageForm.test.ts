@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { toAdvantageValues, type AdvantageValues } from './advantageForm';
+import {
+  shownAdvantageWhen,
+  toAdvantageValues,
+  type AdvantageValues,
+} from './advantageForm';
 import { effectValidate, fromEffectValues, newComponent } from './effectForm';
 
 const advantage = (over: Partial<AdvantageValues>) => {
@@ -58,6 +62,12 @@ describe('advantageForm', () => {
         (c) => c.kind === 'advantage' && c.when,
       ),
     ).toEqual(['within_5ft', null, null]);
+  });
+
+  it('условие не своего броска показывается как «Всегда»', () => {
+    const near = advantage({ roll: 'attacked', when: 'within_5ft' }).advantage;
+    expect(shownAdvantageWhen(near)).toBe('within_5ft');
+    expect(shownAdvantageWhen({ ...near, roll: 'save' })).toBe('always');
   });
 
   it('«все характеристики» и «всегда» читаются обратно', () => {

@@ -51,6 +51,12 @@ export function fromAdvantageValues(values: AdvantageValues): AdvantageDetails {
   };
 }
 
+// Что показать в «Когда»: условие, которого у нового броска нет, хранится (переключил
+// обратно — оно на месте), но не уходит на сервер. Показываем «Всегда» — то, что уйдёт:
+// значение не из списка Select показал бы пустым.
+export const shownAdvantageWhen = (values: AdvantageValues) =>
+  fromAdvantageValues(values).when ?? 'always';
+
 // Тот же ключ, что у сервера (advantageKey): повтор отмечаем у второй карточки.
 // earlier — составляющие «Преимущество или помеха» выше этой в списке.
 export function advantageRollError(

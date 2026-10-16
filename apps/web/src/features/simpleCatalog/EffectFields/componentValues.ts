@@ -17,11 +17,17 @@ import {
   toPerTurnValues,
   type PerTurnValues,
 } from './perTurnForm';
+import {
+  fromSpeedValues,
+  NEW_SPEED,
+  toSpeedValues,
+  type SpeedValues,
+} from './speedForm';
 
 // Составляющие и снятие спасброском в форме эффекта (docs/plan/effects.md). key — только
 // для React: по нему список не путает строки при удалении из середины. Поля всех видов
 // лежат в одной строке: Mantine проверяет списки по путям, а каждая карточка читает
-// только поля своего вида. Урон за ход и защита — отдельными объектами: полей много.
+// только поля своего вида. Урон за ход, защита и скорость — отдельными объектами.
 export interface ComponentValues {
   key: string;
   kind: EffectComponentKind;
@@ -31,6 +37,7 @@ export interface ComponentValues {
   condition: ConditionKind | null;
   perTurn: PerTurnValues;
   defense: DefenseValues;
+  speed: SpeedValues;
 }
 
 export function newComponent(kind: EffectComponentKind): ComponentValues {
@@ -42,6 +49,7 @@ export function newComponent(kind: EffectComponentKind): ComponentValues {
     condition: null,
     perTurn: NEW_PER_TURN,
     defense: NEW_DEFENSE,
+    speed: NEW_SPEED,
   };
 }
 export function toComponentValues(component: EffectComponent): ComponentValues {
@@ -65,6 +73,10 @@ export function toComponentValues(component: EffectComponent): ComponentValues {
     }
     case 'no_healing':
       return values;
+    case 'speed': {
+      const { kind, ...details } = component;
+      return { ...values, kind, speed: toSpeedValues(details) };
+    }
     default:
       return component satisfies never;
   }
@@ -92,6 +104,8 @@ export function fromComponentValues(c: ComponentValues): EffectComponent[] {
       return [{ kind: 'defense', ...fromDefenseValues(c.defense) }];
     case 'no_healing':
       return [{ kind: 'no_healing' }];
+    case 'speed':
+      return [{ kind: 'speed', ...fromSpeedValues(c.speed) }];
     default:
       return c.kind satisfies never;
   }

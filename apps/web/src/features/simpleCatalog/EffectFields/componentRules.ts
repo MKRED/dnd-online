@@ -8,6 +8,7 @@ import {
 import type { ComponentValues } from './componentValues';
 import { defenseDamageTypesError } from './defenseForm';
 import { perTurnValidate, type PerTurnValues } from './perTurnForm';
+import { speedValidate } from './speedForm';
 
 type WithEffect = { effect: { components: ComponentValues[] } };
 
@@ -22,6 +23,10 @@ const repeated = (
   path: string,
   same: (c: ComponentValues) => boolean,
 ) => values.effect.components.findIndex(same) !== Number(path.split('.')[2]);
+
+// Составляющие того же вида выше этой в списке — для ошибки повтора у второй карточки.
+const earlierOf = (values: WithEffect, path: string) =>
+  values.effect.components.slice(0, Number(path.split('.')[2]));
 
 // Правила полей урона за ход — только у карточки этого вида.
 function perTurnRules() {
@@ -85,14 +90,29 @@ export const componentRules = {
   defense: {
     // Пустая защита и повтор — у типов урона: это поле есть у всех уровней.
     damageTypes: (_value: unknown, values: WithEffect, path: string) => {
-      const index = Number(path.split('.')[2]);
-      const component = values.effect.components[index];
+      const component = componentAt(values, path);
       if (component.kind !== 'defense') return null;
-      const earlier = values.effect.components
-        .slice(0, index)
+      const earlier = earlierOf(values, path)
         .filter((c) => c.kind === 'defense')
         .map((c) => c.defense);
       return defenseDamageTypesError(component.defense, earlier);
+    },
+  },
+  speed: {
+    // Повтор — у выбора изменения, число — у своего поля.
+    change: (_value: unknown, values: WithEffect, path: string) => {
+      const component = componentAt(values, path);
+      if (component.kind !== 'speed') return null;
+      const earlier = earlierOf(values, path)
+        .filter((c) => c.kind === 'speed')
+        .map((c) => c.speed);
+      return speedValidate.change(component.speed, earlier);
+    },
+    feet: (_value: unknown, values: WithEffect, path: string) => {
+      const component = componentAt(values, path);
+      return component.kind === 'speed'
+        ? speedValidate.feet(component.speed)
+        : null;
     },
   },
 };

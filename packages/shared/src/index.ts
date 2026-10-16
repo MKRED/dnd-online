@@ -17,6 +17,7 @@ export * from './effectSenses.js';
 export * from './effectConditions.js';
 export * from './effectPerTurn.js';
 export * from './effectDefenses.js';
+export * from './effectSpeed.js';
 export * from './damageTypes.js';
 export * from './effectComponents.js';
 export * from './effectSaveEnds.js';

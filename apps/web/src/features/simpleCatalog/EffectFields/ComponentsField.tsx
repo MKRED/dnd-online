@@ -24,6 +24,7 @@ import NoHealingComponentFields from './NoHealingComponentFields';
 import { newComponent } from './effectForm';
 import PerTurnComponentFields from './PerTurnComponentFields';
 import SenseComponentFields from './SenseComponentFields';
+import SpeedComponentFields from './SpeedComponentFields';
 
 interface ComponentsFieldProps {
   form: UseFormReturnType<SimpleFormValues>;
@@ -39,6 +40,7 @@ const KIND_FIELDS: Record<
   per_turn: PerTurnComponentFields,
   defense: DefenseComponentFields,
   no_healing: NoHealingComponentFields,
+  speed: SpeedComponentFields,
 };
 
 // Составляющие эффекта списком карточек (docs/plan/effects.md): у каждой свои поля и

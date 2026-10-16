@@ -19,6 +19,12 @@ import {
   isSenseDetails,
   type SenseDetails,
 } from './effectSenses.js';
+import {
+  formatSpeed,
+  isSpeedDetails,
+  speedKey,
+  type SpeedDetails,
+} from './effectSpeed.js';
 
 // Составляющие эффекта (docs/plan/effects.md): эффект — список того, что он делает, в
 // любом наборе, а не одна категория. Эффект без составляющих — «Базовый»: всё в описании.
@@ -30,6 +36,7 @@ export const EFFECT_COMPONENT_KINDS = [
   'per_turn',
   'defense',
   'no_healing',
+  'speed',
 ] as const;
 export type EffectComponentKind = (typeof EFFECT_COMPONENT_KINDS)[number];
 
@@ -41,13 +48,15 @@ export const SINGLE_EFFECT_COMPONENT_KINDS: readonly EffectComponentKind[] = [
 // Чувство — вид и дистанция (effectSenses.ts), состояние — одно из книги
 // (effectConditions.ts), урон или лечение за ход — effectPerTurn.ts, сопротивление и
 // иммунитет — effectDefenses.ts. Запрет лечения полей не имеет: носитель не
-// восстанавливает хиты, как от Chill Touch (docs/dnd/modifiers.md).
+// восстанавливает хиты, как от Chill Touch (docs/dnd/modifiers.md). Скорость —
+// effectSpeed.ts.
 export type EffectComponent =
   | ({ kind: 'sense' } & SenseDetails)
   | ({ kind: 'condition' } & ConditionDetails)
   | ({ kind: 'per_turn' } & PerTurnDetails)
   | ({ kind: 'defense' } & DefenseDetails)
-  | { kind: 'no_healing' };
+  | { kind: 'no_healing' }
+  | ({ kind: 'speed' } & SpeedDetails);
 
 // Больше в одном эффекте в книге не встречается; предел защищает форму и базу.
 export const EFFECT_COMPONENTS_MAX = 20;
@@ -58,6 +67,7 @@ export const EFFECT_COMPONENT_LABELS: Record<EffectComponentKind, string> = {
   per_turn: 'Урон или лечение за ход',
   defense: 'Сопротивление и иммунитет',
   no_healing: 'Запрет лечения',
+  speed: 'Скорость',
 };
 
 function isEffectComponent(value: unknown): value is EffectComponent {
@@ -68,11 +78,12 @@ function isEffectComponent(value: unknown): value is EffectComponent {
   if (kind === 'per_turn') return isPerTurnDetails(rest);
   if (kind === 'defense') return isDefenseDetails(rest);
   if (kind === 'no_healing') return Object.keys(rest).length === 0;
+  if (kind === 'speed') return isSpeedDetails(rest);
   return false;
 }
 
 // Что в одном эффекте не должно повторяться: вид чувства, состояние, тип урона или
-// состояние на одном уровне защиты. Урон за ход повторяться может (огонь и холод
+// состояние на одном уровне защиты, изменение Скорости, особая скорость. Урон за ход повторяться может (огонь и холод
 // одновременно) — у него ключей нет.
 function componentKeys(component: EffectComponent): string[] {
   switch (component.kind) {
@@ -86,6 +97,8 @@ function componentKeys(component: EffectComponent): string[] {
       return defenseKeys(component).map((key) => `defense:${key}`);
     case 'no_healing':
       return ['no_healing'];
+    case 'speed':
+      return [`speed:${speedKey(component)}`];
     default:
       return component satisfies never;
   }
@@ -123,6 +136,8 @@ export function formatEffectComponent(component: EffectComponent): string {
       return formatDefense(component);
     case 'no_healing':
       return 'Не восстанавливает хиты';
+    case 'speed':
+      return formatSpeed(component);
     default:
       return component satisfies never;
   }

@@ -17,6 +17,7 @@ import {
   SAVE_DC_MAX,
   SAVE_DC_MIN,
   type AttackKind,
+  type StepLink,
 } from 'shared';
 import { ABILITY_LABELS } from '../../characters';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
@@ -48,11 +49,13 @@ const DC_ABILITIES = [SPELLCASTING, ...SIX];
 interface CheckFieldsProps {
   form: UseFormReturnType<SimpleFormValues>;
   index: number;
+  // Что оставил прошлый шаг — от него зависят подходящие цели.
+  link: StepLink | null;
 }
 
 // Проверка шага: бросок атаки (вид и бонус), спасбросок (характеристика и Сл) или
 // никакой. Бонус и Сл — «характеристика + бонус мастерства» или числом.
-function CheckFields({ form, index }: CheckFieldsProps) {
+function CheckFields({ form, index, link }: CheckFieldsProps) {
   const path = `steps.${index}`;
   const step = form.getValues().steps[index];
   const attack = step.check === 'attack';
@@ -92,7 +95,7 @@ function CheckFields({ form, index }: CheckFieldsProps) {
             value={step.check}
             // Смена проверки подбирает подходящую цель (withCheck).
             onChange={(check) =>
-              form.setFieldValue(path, withCheck(step, check))
+              form.setFieldValue(path, withCheck(step, check, link))
             }
           />
         </div>
@@ -106,7 +109,10 @@ function CheckFields({ form, index }: CheckFieldsProps) {
           value={step.attack}
           // Смена вида подставляет его цель и характеристику (withAttack).
           onChange={(value) =>
-            form.setFieldValue(path, withAttack(step, value as AttackKind))
+            form.setFieldValue(
+              path,
+              withAttack(step, value as AttackKind, link),
+            )
           }
         />
       )}

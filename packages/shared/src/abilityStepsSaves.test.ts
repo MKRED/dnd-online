@@ -12,6 +12,8 @@ const fire = (count: number, die: 6 | 8) => ({
   type: 'fire' as const,
 });
 const fireball: AbilityStep = {
+  when: 'always',
+  times: 1,
   target: {
     kind: 'area',
     area: { shape: 'sphere', radius: 20 },
@@ -39,6 +41,8 @@ const breath: AbilityStep = {
   },
 };
 const sacredFlame: AbilityStep = {
+  when: 'always',
+  times: 1,
   target: { kind: 'range', feet: 60, longFeet: null },
   check: {
     kind: 'save',
@@ -52,6 +56,8 @@ const sacredFlame: AbilityStep = {
   miss: { damage: 'none' },
 };
 const magicMissile: AbilityStep = {
+  when: 'always',
+  times: 1,
   target: { kind: 'range', feet: 120, longFeet: null },
   check: { kind: 'none' },
   hit: {

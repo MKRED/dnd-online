@@ -2,6 +2,8 @@ import { randomId } from '@mantine/hooks';
 import {
   ATTACK_DEFAULTS,
   stepTargets,
+  type StepLink,
+  type StepWhen,
   type AbilityCheck,
   type AbilityCheckKind,
   type AbilityScore,
@@ -35,6 +37,8 @@ export interface DamageValues {
 
 export interface StepValues extends TargetValues {
   key: string;
+  when: StepWhen;
+  times: number | string;
   check: AbilityCheckKind;
   attack: AttackKind;
   bonusKind: 'ability' | 'fixed';
@@ -57,10 +61,13 @@ export const newDamage = (type: DamageType = 'fire'): DamageValues => ({
   type,
 });
 
-// Чаще всего это заклинание вроде «Огненного снаряда».
+// Чаще всего это заклинание вроде «Огненного снаряда». Цель шага 2 и дальше подберёт
+// цепочка (stepChain.ts): обычно та же, что у прошлого.
 export function newStep(): StepValues {
   return {
     key: randomId(),
+    when: 'always',
+    times: 1,
     check: 'attack',
     attack: 'ranged_spell',
     target: 'range',
@@ -104,17 +111,23 @@ export function checkOf(values: StepValues): AbilityCheck {
   }
 }
 
-// Цель остаётся, если подходит новой проверке, иначе — первая подходящая.
-const keepTarget = (step: StepValues) => {
-  const allowed = stepTargets(checkOf(step));
+// Цель остаётся, если подходит новой проверке и прошлому шагу (link), иначе — первая
+// подходящая.
+export const keepTarget = (step: StepValues, link: StepLink | null) => {
+  const allowed = stepTargets(checkOf(step), link);
   return allowed.includes(step.target) ? step : { ...step, target: allowed[0] };
 };
 
 // Другой вид атаки — его цель, характеристика и модификатор к урону по умолчанию.
-// Цель остаётся, если подходит: «Касание» не сбросится при переходе к атаке оружием.
-export function withAttack(step: StepValues, attack: AttackKind): StepValues {
+// Цель остаётся, если подходит: «Касание» не сбросится при переходе к атаке оружием,
+// «Та же цель» — тоже.
+export function withAttack(
+  step: StepValues,
+  attack: AttackKind,
+  link: StepLink | null,
+): StepValues {
   const defaults = ATTACK_DEFAULTS[attack];
-  const next = keepTarget({ ...step, attack });
+  const next = keepTarget({ ...step, attack }, link);
   return {
     ...next,
     target: next.target === step.target ? step.target : defaults.target,
@@ -128,15 +141,19 @@ export function withAttack(step: StepValues, attack: AttackKind): StepValues {
 export function withCheck(
   step: StepValues,
   check: AbilityCheckKind,
+  link: StepLink | null,
 ): StepValues {
-  if (check === 'attack') return withAttack({ ...step, check }, step.attack);
-  return keepTarget({ ...step, check, addModifier: false });
+  if (check === 'attack')
+    return withAttack({ ...step, check }, step.attack, link);
+  return keepTarget({ ...step, check, addModifier: false }, link);
 }
 
 export function toStepValues(step: AbilityStep): StepValues {
   const values: StepValues = {
     ...newStep(),
     ...toTargetValues(step.target),
+    when: step.when,
+    times: step.times,
     check: step.check.kind,
     damage: step.hit.damage.map((part) => ({
       ...part,
@@ -171,11 +188,14 @@ const fromDamage = (values: DamageValues): DamagePart => ({
 });
 
 // Модификатор к урону — только у атаки с бонусом от характеристики, половина — только от
-// урона и при проверке: иначе сервер откажет (abilityStepsCheck.ts).
+// урона и при проверке: иначе сервер откажет (abilityStepsCheck.ts). «Когда» и цель
+// против прошлого шага сверяет цепочка (chainSteps) до этого.
 export function fromStepValues(values: StepValues): AbilityStep {
   const check = checkOf(values);
   const modifier = check.kind === 'attack' && check.bonus.kind === 'ability';
   return {
+    when: values.when,
+    times: Number(values.times),
     target: fromTargetValues(
       values,
       check.kind === 'attack' ? check.attack : null,

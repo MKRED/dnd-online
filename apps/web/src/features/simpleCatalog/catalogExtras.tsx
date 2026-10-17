@@ -4,7 +4,7 @@ import {
   ACTIVATION_LABELS,
   EFFECT_COMPONENT_LABELS,
   effectComponentKinds,
-  formatAbilityStep,
+  formatAbilitySteps,
   formatActivation,
   formatCosts,
   formatEffectDuration,
@@ -19,7 +19,7 @@ import EffectFields, { fromEffectValues } from './EffectFields';
 import type { SimpleFormValues } from './SimpleEntryForm/simpleEntryValues';
 import type { SimpleEntry } from './simpleCatalogs';
 import AbilityFields from './AbilityFields';
-import { fromStepValues } from './StepsField';
+import { chainSteps, fromStepValues } from './StepsField';
 import { fromUsageValues } from './UsageField';
 
 // Свои поля всех записей одного раздела, которых нет у другого: у эффекта — составляющие,
@@ -76,7 +76,8 @@ export const ABILITY_EXTRAS: CatalogExtras = {
     category: values.category,
     details: {},
     ...fromUsageValues(values.usage),
-    steps: values.steps.map(fromStepValues),
+    // Цепочка ещё раз сверяется перед отправкой: правка могла не успеть отрисоваться.
+    steps: chainSteps(values.steps).map(fromStepValues),
   }),
   rows: (entry) => {
     if (!('activation' in entry)) return [];
@@ -88,9 +89,10 @@ export const ABILITY_EXTRAS: CatalogExtras = {
         value:
           costs.length === 0 ? 'Ничего не тратит' : <CardLines lines={costs} />,
       },
-      ...entry.steps.map((step) => ({
-        label: 'Применение',
-        value: <CardLines lines={formatAbilityStep(step)} />,
+      // Подпись — ещё и ключ строки: у нескольких шагов она своя у каждого.
+      ...formatAbilitySteps(entry.steps).map((lines, index, all) => ({
+        label: all.length > 1 ? `Шаг ${index + 1}` : 'Применение',
+        value: <CardLines lines={lines} />,
       })),
     ];
   },

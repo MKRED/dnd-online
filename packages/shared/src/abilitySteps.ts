@@ -3,8 +3,8 @@ import { ABILITY_SCORES, type AbilityScore } from './character.js';
 import type { DamageDie, DamageType } from './damageTypes.js';
 
 // «Применение» способности — список шагов (docs/plan/abilities.md, docs/dnd/attacks-and-saves.md).
-// Шаг: цель, проверка (бросок атаки, спасбросок или никакой) и последствия. Несколько
-// шагов добавит этап 5. Ключи хранятся в базе: добавлять можно, переименовывать — только
+// Шаг: когда он срабатывает, цель, проверка (бросок атаки, спасбросок или никакой),
+// сколько раз и последствия. Как шаги связаны в цепочку — abilityStepLinks.ts. Ключи хранятся в базе: добавлять можно, переименовывать — только
 // с миграцией данных.
 
 export const ATTACK_KINDS = [
@@ -46,16 +46,21 @@ export type SaveDc =
 export const SAVE_DC_MIN = 1;
 export const SAVE_DC_MAX = 30;
 
-// Цель: на себя, касание, досягаемость, дистанция или область. Какие подходят — решает
-// проверка (stepTargets). Дальняя дистанция (с помехой) — только у оружия: «Длинный
-// лук» 150/600.
+// Цель: на себя, касание, досягаемость, дистанция или область. Какие подходят — решают
+// проверка и прошлый шаг (stepTargets). Дальняя дистанция (с помехой) — только у
+// оружия: «Длинный лук» 150/600. У шага 2 и дальше есть ещё цели прошлого шага: «Та же
+// цель» и «Она и все вокруг неё» на feet футов («Ледяной кинжал»: цель и все в 5 фт.).
 export type StepTarget =
+  | { kind: 'previous' }
+  | { kind: 'around'; feet: number }
   | { kind: 'self' }
   | { kind: 'touch' }
   | { kind: 'reach'; feet: number }
   | { kind: 'range'; feet: number; longFeet: number | null }
   | { kind: 'area'; area: AreaSpec; origin: AreaOrigin };
 export const STEP_TARGET_KINDS = [
+  'previous',
+  'around',
   'self',
   'touch',
   'reach',
@@ -66,6 +71,8 @@ export type StepTargetKind = (typeof STEP_TARGET_KINDS)[number];
 
 export const FEET_STEP = 5;
 export const REACH_FEET_MAX = 30;
+// «Цепная молния» — 30 фт. от первой цели, с запасом.
+export const AROUND_FEET_MAX = 60;
 // Миля — самая большая дистанция заклинаний в футах; «без ограничений» не нужна атакам.
 export const RANGE_FEET_MAX = 5280;
 
@@ -116,15 +123,26 @@ export interface MissOutcome {
   damage: MissDamage;
 }
 
+// Когда шаг срабатывает: всегда или по исходу прошлого шага (hit — попадание или
+// провал, miss — промах или успех). У первого шага — всегда.
+export const STEP_WHENS = ['always', 'hit', 'miss'] as const;
+export type StepWhen = (typeof STEP_WHENS)[number];
+
+// Сколько раз: «Палящий луч» — 3 луча, у каждого свой бросок; цели выбирают при
+// применении, одну или разные. 9 круг «Волшебной стрелы» — 11 дротиков.
+export const STEP_TIMES_MAX = 20;
+
 export interface AbilityStep {
+  when: StepWhen;
   target: StepTarget;
+  times: number;
   check: AbilityCheck;
   hit: HitOutcome;
   miss: MissOutcome;
 }
 
-// Этап 5 поднимет предел.
-export const ABILITY_STEPS_MAX = 1;
+// В книге больше двух шагов не нашлось («Ледяной кинжал»), три — с запасом.
+export const ABILITY_STEPS_MAX = 3;
 
 // Значение по умолчанию для вида атаки: цель, характеристика и модификатор к урону.
 export const ATTACK_DEFAULTS: Record<
@@ -140,16 +158,3 @@ export const ATTACK_DEFAULTS: Record<
     addModifier: false,
   },
 };
-
-// Какие цели подходят проверке. Атака — касание и досягаемость у ближней, дистанция у
-// дальнобойной. Спасбросок — кроме «на себя»: себе его не назначают. Без проверки — все.
-export function stepTargets(check: AbilityCheck): StepTargetKind[] {
-  switch (check.kind) {
-    case 'attack':
-      return isMeleeAttack(check.attack) ? ['touch', 'reach'] : ['range'];
-    case 'save':
-      return ['touch', 'reach', 'range', 'area'];
-    case 'none':
-      return [...STEP_TARGET_KINDS];
-  }
-}

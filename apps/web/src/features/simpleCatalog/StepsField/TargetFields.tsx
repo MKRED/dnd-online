@@ -1,11 +1,14 @@
 import { Checkbox, Group, NumberInput, Select, Stack } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import {
+  AROUND_FEET_MAX,
   FEET_STEP,
   RANGE_FEET_MAX,
   REACH_FEET_MAX,
   STEP_TARGET_LABELS,
+  STEP_TIMES_MAX,
   stepTargets,
+  type StepLink,
 } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import AreaFields from './AreaFields';
@@ -14,6 +17,7 @@ import { checkOf } from './stepsForm';
 interface TargetFieldsProps {
   form: UseFormReturnType<SimpleFormValues>;
   index: number;
+  link: StepLink | null;
 }
 
 // Футы кратны 5 — клетка карты.
@@ -25,11 +29,12 @@ const feetProps = (max: number) => ({
   allowNegative: false,
 });
 
-// Цель шага: на выбор только то, что подходит проверке (stepTargets), и поля этой цели.
-function TargetFields({ form, index }: TargetFieldsProps) {
+// Цель шага: на выбор только то, что подходит проверке и прошлому шагу (stepTargets),
+// поля этой цели и сколько раз шаг повторяется.
+function TargetFields({ form, index, link }: TargetFieldsProps) {
   const path = `steps.${index}`;
   const step = form.getValues().steps[index];
-  const options = stepTargets(checkOf(step)).map((value) => ({
+  const options = stepTargets(checkOf(step), link).map((value) => ({
     value,
     label: STEP_TARGET_LABELS[value],
   }));
@@ -43,9 +48,17 @@ function TargetFields({ form, index }: TargetFieldsProps) {
           label="Цель"
           data={options}
           allowDeselect={false}
-          w={180}
+          w={200}
           {...form.getInputProps(`${path}.target`)}
         />
+        {step.target === 'around' && (
+          <NumberInput
+            label="Вокруг неё, фт."
+            {...feetProps(AROUND_FEET_MAX)}
+            w={130}
+            {...form.getInputProps(`${path}.aroundFeet`)}
+          />
+        )}
         {step.target === 'reach' && (
           <NumberInput
             label="Досягаемость, фт."
@@ -71,6 +84,17 @@ function TargetFields({ form, index }: TargetFieldsProps) {
             {...form.getInputProps(`${path}.longFeet`)}
           />
         )}
+        <NumberInput
+          label="Сколько раз"
+          // Пояснение подсказкой: описание под подписью сдвинуло бы поле ниже соседних.
+          title="Лучи, дротики: каждый раз свой бросок, цели выбирают при применении"
+          min={1}
+          max={STEP_TIMES_MAX}
+          allowDecimal={false}
+          allowNegative={false}
+          w={110}
+          {...form.getInputProps(`${path}.times`)}
+        />
       </Group>
       {step.target === 'range' && rangedWeapon && (
         <Checkbox

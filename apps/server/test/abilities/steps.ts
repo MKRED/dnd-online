@@ -4,11 +4,14 @@ import { DatabaseService } from '../../src/database/database.service.js';
 import { abilities } from '../../src/database/schema/index.js';
 import type { CatalogContext } from '../support/catalog-scenario/index.js';
 
-// «Применение» способности: шаги с атакой и уроном (docs/plan/abilities.md, этап 3).
+// «Применение» способности: шаги с атакой и уроном (docs/plan/abilities.md, этапы 3 и 4;
+// цепочки шагов этапа 5 — chains.ts).
 // Отдельным файлом, чтобы abilities.e2e-spec.ts не рос с каждым этапом.
 
 // «Огненный снаряд»: дальнобойная атака заклинанием, 120 фт., 1d10 Огнём.
-const fireBolt = {
+export const fireBolt = {
+  when: 'always',
+  times: 1,
   target: { kind: 'range', feet: 120, longFeet: null },
   check: {
     kind: 'attack',
@@ -42,7 +45,7 @@ export function describeAbilitySteps(get: () => CatalogContext): void {
       expect(cleared.body).toMatchObject({ steps: [] });
     });
 
-    it('неверный шаг и два шага — 400', async () => {
+    it('неверный шаг и больше трёх шагов — 400', async () => {
       const { author, url, body } = get();
       for (const steps of [
         [{ ...fireBolt, target: { kind: 'touch' } }],
@@ -56,7 +59,7 @@ export function describeAbilitySteps(get: () => CatalogContext): void {
         [{ ...fireBolt, hit: { ...fireBolt.hit, addModifier: 'yes' } }],
         // Без промаха: запрос проверяется строго, умолчания — только при чтении.
         [{ ...fireBolt, miss: undefined }],
-        [fireBolt, fireBolt],
+        [fireBolt, fireBolt, fireBolt, fireBolt],
         {},
       ]) {
         const res = await author.post(url()).send(body({ steps })).expect(400);
@@ -96,6 +99,8 @@ export function describeAbilitySteps(get: () => CatalogContext): void {
     it('спасбросок с областью и шаг без проверки сохраняются, неверная область — 400', async () => {
       const { author, url, body, create } = get();
       const fireball = {
+        when: 'always',
+        times: 1,
         target: {
           kind: 'area',
           area: { shape: 'sphere', radius: 20 },
@@ -112,11 +117,14 @@ export function describeAbilitySteps(get: () => CatalogContext): void {
         },
         miss: { damage: 'half' },
       };
+      // Три дротика по 1d4 + 1 — «сколько раз» этапа 5.
       const missile = {
+        when: 'always',
+        times: 3,
         target: { kind: 'range', feet: 120, longFeet: null },
         check: { kind: 'none' },
         hit: {
-          damage: [{ count: 3, die: 4, number: 3, type: 'force' }],
+          damage: [{ count: 1, die: 4, number: 1, type: 'force' }],
           addModifier: false,
         },
         miss: { damage: 'none' },

@@ -44,9 +44,11 @@ describe('abilities.config', () => {
     });
   });
 
-  // «Огненный снаряд»: испорченный шаг рядом с верным пропускается один.
-  it('читает шаги, испорченный пропускает, без поля — пустой список', () => {
+  // «Огненный снаряд»: испорченный шаг обрывает цепочку на себе.
+  it('читает шаги до испорченного, без поля — пустой список', () => {
     const bolt = {
+      when: 'always',
+      times: 1,
       target: { kind: 'range', feet: 120, longFeet: null },
       check: {
         kind: 'attack',
@@ -60,7 +62,8 @@ describe('abilities.config', () => {
       miss: { damage: 'none' },
     };
     expect(
-      toAbilityVariant('basic', {}, { steps: [{ target: 1 }, bolt] }).steps,
+      toAbilityVariant('basic', {}, { steps: [bolt, { target: 1 }, bolt] })
+        .steps,
     ).toEqual([bolt]);
     expect(toAbilityVariant('basic', {}, {}).steps).toEqual([]);
   });

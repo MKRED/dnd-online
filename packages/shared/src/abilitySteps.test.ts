@@ -6,6 +6,8 @@ import { readAbilitySteps } from './abilityStepsRead.js';
 
 // Примеры из книги 2024 (docs/dnd/attacks-and-saves.md).
 const fireBolt: AbilityStep = {
+  when: 'always',
+  times: 1,
   target: { kind: 'range', feet: 120, longFeet: null },
   check: {
     kind: 'attack',
@@ -19,6 +21,8 @@ const fireBolt: AbilityStep = {
   miss: { damage: 'none' },
 };
 const longbow: AbilityStep = {
+  when: 'always',
+  times: 1,
   target: { kind: 'range', feet: 150, longFeet: 600 },
   check: {
     kind: 'attack',
@@ -32,6 +36,8 @@ const longbow: AbilityStep = {
   miss: { damage: 'none' },
 };
 const flameTongue: AbilityStep = {
+  when: 'always',
+  times: 1,
   target: { kind: 'reach', feet: 5 },
   check: {
     kind: 'attack',
@@ -94,14 +100,19 @@ describe('шаги «Применения»', () => {
       },
     ];
     for (const step of bad) expect(isAbilitySteps([step])).toBe(false);
-    // Пока шаг один (этап 5 поднимет предел).
-    expect(isAbilitySteps([fireBolt, longbow])).toBe(false);
+    // Не больше трёх шагов.
+    expect(isAbilitySteps([fireBolt, longbow, longbow])).toBe(true);
+    expect(isAbilitySteps([fireBolt, longbow, longbow, longbow])).toBe(false);
   });
 
-  it('при чтении пропускает испорченный шаг', () => {
+  // Выкинуть шаг из середины нельзя: следующий привязался бы к чужому прошлому.
+  it('при чтении испорченный шаг обрывает цепочку', () => {
     expect(
       readAbilitySteps([{ ...fireBolt, miss: { damage: 'x' } }, longbow]),
-    ).toEqual([longbow]);
+    ).toEqual([]);
+    expect(
+      readAbilitySteps([fireBolt, { ...longbow, times: 0 }, longbow]),
+    ).toEqual([fireBolt]);
     expect(readAbilitySteps(undefined)).toEqual([]);
   });
 
@@ -111,6 +122,9 @@ describe('шаги «Применения»', () => {
     const noModifier = { ...fireBolt, hit: { damage: fireBolt.hit.damage } };
     expect(readAbilitySteps([noMiss])).toEqual([fireBolt]);
     expect(readAbilitySteps([noModifier])).toEqual([fireBolt]);
+    // Шаги этапов 3 и 4 — без «когда» и «сколько раз».
+    const { when: _when, times: _times, ...stage3 } = fireBolt;
+    expect(readAbilitySteps([stage3])).toEqual([fireBolt]);
   });
 
   it('строки карточки', () => {

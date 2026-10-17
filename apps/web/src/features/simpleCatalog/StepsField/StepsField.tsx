@@ -8,22 +8,36 @@ import {
   Text,
 } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
+import { useEffect } from 'react';
 import { ABILITY_STEPS_MAX } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import CheckFields from './CheckFields';
 import DamageFields from './DamageFields';
+import { chainLinks, chainSteps } from './stepChain';
 import { newStep } from './stepsForm';
 import TargetFields from './TargetFields';
+import WhenField from './WhenField';
 
 interface StepsFieldProps {
   form: UseFormReturnType<SimpleFormValues>;
 }
 
 // «Применение» способности (docs/plan/abilities.md): шаги карточками, как составляющие
-// эффекта. Пока шаг один; несколько шагов — этап 5.
+// эффекта. Шаг 2 и дальше опирается на прошлый: «когда» и его цели (stepChain.ts).
 function StepsField({ form }: StepsFieldProps) {
   const { steps } = form.getValues();
   const full = steps.length >= ABILITY_STEPS_MAX;
+  const links = chainLinks(steps);
+  const numbered = steps.length > 1;
+
+  // Правка одного шага может сделать неверным следующий: прошлый стал без проверки —
+  // «при попадании» больше нет; удалили первый — у нового первого нет «той же цели».
+  // Поправляем после отрисовки, по порядку шагов.
+  useEffect(() => {
+    const fixed = chainSteps(steps);
+    if (fixed.some((step, index) => step !== steps[index]))
+      form.setFieldValue('steps', fixed);
+  }, [steps, form]);
 
   return (
     <Input.Wrapper
@@ -35,7 +49,7 @@ function StepsField({ form }: StepsFieldProps) {
           <Paper key={step.key} withBorder p="sm" radius="md">
             <Group justify="space-between" mb={4} wrap="nowrap">
               <Text size="sm" fw={500}>
-                Шаг
+                {numbered ? `Шаг ${index + 1}` : 'Шаг'}
               </Text>
               <ActionIcon
                 variant="subtle"
@@ -48,8 +62,11 @@ function StepsField({ form }: StepsFieldProps) {
               </ActionIcon>
             </Group>
             <Stack gap="sm">
-              <CheckFields form={form} index={index} />
-              <TargetFields form={form} index={index} />
+              {links[index] && (
+                <WhenField form={form} index={index} link={links[index]} />
+              )}
+              <CheckFields form={form} index={index} link={links[index]} />
+              <TargetFields form={form} index={index} link={links[index]} />
               <DamageFields form={form} index={index} />
             </Stack>
           </Paper>
@@ -59,7 +76,14 @@ function StepsField({ form }: StepsFieldProps) {
             variant="light"
             size="xs"
             w="fit-content"
-            onClick={() => form.insertListItem('steps', newStep())}
+            // Шаг 2 и дальше чаще всего бьёт ту же цель («Ледяной кинжал»); если она не
+            // подходит, цепочка подберёт другую.
+            onClick={() =>
+              form.insertListItem('steps', {
+                ...newStep(),
+                ...(steps.length > 0 ? { target: 'previous' } : {}),
+              })
+            }
           >
             + Шаг
           </Button>

@@ -1,4 +1,5 @@
 import { formatArea, formatAreaOrigin } from './abilityStepAreas.js';
+import { stepLinks, type StepLink } from './abilityStepLinks.js';
 import type {
   AbilityCheck,
   AbilityCheckKind,
@@ -9,6 +10,7 @@ import type {
   SaveDcAbility,
   StepTarget,
   StepTargetKind,
+  StepWhen,
 } from './abilitySteps.js';
 import { ABILITY_GENITIVE } from './abilityUsageLabels.js';
 import { DAMAGE_TYPE_LABELS } from './damageTypes.js';
@@ -29,6 +31,8 @@ export const ATTACK_KIND_LABELS: Record<AttackKind, string> = {
 };
 
 export const STEP_TARGET_LABELS: Record<StepTargetKind, string> = {
+  previous: 'Та же цель',
+  around: 'Она и все вокруг неё',
   self: 'На себя',
   touch: 'Касание',
   reach: 'Досягаемость',
@@ -47,6 +51,17 @@ export const OUTCOME_LABELS: Record<
   none: { hit: 'Урон', miss: null },
 };
 
+// «Когда» шага 2 и дальше — по исходу проверки прошлого шага (её вид — ключ). После
+// шага без проверки исхода нет — только «Затем».
+export const STEP_WHEN_LABELS: Record<
+  AbilityCheckKind,
+  Record<StepWhen, string>
+> = {
+  attack: { always: 'Затем', hit: 'При попадании', miss: 'При промахе' },
+  save: { always: 'Затем', hit: 'При провале', miss: 'При успехе' },
+  none: { always: 'Затем', hit: 'Затем', miss: 'Затем' },
+};
+
 // «модификатор Силы или Ловкости».
 const abilityGenitive = (ability: AttackAbility | SaveDcAbility) =>
   ability === 'finesse'
@@ -57,6 +72,10 @@ const abilityGenitive = (ability: AttackAbility | SaveDcAbility) =>
 
 function formatTarget(target: StepTarget): string {
   switch (target.kind) {
+    case 'previous':
+      return 'та же цель';
+    case 'around':
+      return `цель и все в ${target.feet} фт. от неё`;
     case 'self':
       return 'на себя';
     case 'touch':
@@ -105,19 +124,35 @@ export function formatDamagePart(part: DamagePart): string {
   return `${amount} ${DAMAGE_TYPE_LABELS[part.type]}`;
 }
 
-// Строки карточки: проверка и цель, бонус или Сл, первый исход, второй (если он что-то
-// делает).
-export function formatAbilityStep(step: AbilityStep): string[] {
+const lowerFirst = (text: string) => text[0].toLowerCase() + text.slice(1);
+
+// Строки карточки: когда (у шага 2 и дальше), проверка, сколько раз и цель, бонус или
+// Сл, первый исход, второй (если он что-то делает). link — связь с прошлым шагом
+// (abilityStepLinks.ts), у первого null.
+export function formatAbilityStep(
+  step: AbilityStep,
+  link: StepLink | null = null,
+): string[] {
   const [check, value] = checkLines(step.check);
   const labels = OUTCOME_LABELS[step.check.kind];
   const parts = step.hit.damage.map(formatDamagePart);
   if (step.hit.addModifier) parts.push('модификатор');
+  const times = step.times > 1 ? ` ×${step.times}` : '';
+  const head = `${check}${times}, ${formatTarget(step.target)}`;
   return [
-    `${check}, ${formatTarget(step.target)}`,
+    link
+      ? `${STEP_WHEN_LABELS[link.check][step.when]} — ${lowerFirst(head)}`
+      : head,
     ...(value ? [value] : []),
     `${labels.hit}: ${parts.length > 0 ? parts.join(' + ') : 'без урона'}`,
     ...(labels.miss && step.miss.damage === 'half'
       ? [`${labels.miss}: половина урона`]
       : []),
   ];
+}
+
+// Строки всех шагов по порядку, со связями.
+export function formatAbilitySteps(steps: readonly AbilityStep[]): string[][] {
+  const links = stepLinks(steps);
+  return steps.map((step, index) => formatAbilityStep(step, links[index]));
 }

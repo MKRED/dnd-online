@@ -1,4 +1,5 @@
 import { ABILITY_STEPS_MAX, type AbilityStep } from './abilitySteps.js';
+import { nextLink, type StepLink } from './abilityStepLinks.js';
 import { isAbilityStep } from './abilityStepsCheck.js';
 
 // Поля шага, у которых есть естественное значение по умолчанию, по уровням вложенности.
@@ -7,7 +8,7 @@ import { isAbilityStep } from './abilityStepsCheck.js';
 // пропадут. Поле без естественного умолчания так добавлять нельзя — только с миграцией
 // данных. Тот же приём, что у составляющих эффекта (effectComponentsRead.ts).
 export const STEP_STORED_DEFAULTS = {
-  step: { miss: { damage: 'none' } },
+  step: { when: 'always', times: 1, miss: { damage: 'none' } },
   hit: { damage: [], addModifier: false },
   miss: {},
 } satisfies Record<'step' | 'hit' | 'miss', Record<string, unknown>>;
@@ -30,12 +31,17 @@ function fill(stored: Record<string, unknown>): unknown {
 }
 
 // Шаги из базы — мягче, чем из запроса (isAbilitySteps): недостающие поля заполняются
-// умолчаниями, испорченный шаг пропускается, остальные остаются.
+// умолчаниями. Испорченный шаг обрывает цепочку на себе: выкинуть его из середины
+// нельзя — следующий шаг привязался бы к чужому прошлому.
 export function readAbilitySteps(value: unknown): AbilityStep[] {
   if (!Array.isArray(value)) return [];
-  return value
-    .filter(isObject)
-    .map(fill)
-    .filter(isAbilityStep)
-    .slice(0, ABILITY_STEPS_MAX);
+  const steps: AbilityStep[] = [];
+  let link: StepLink | null = null;
+  for (const stored of value.slice(0, ABILITY_STEPS_MAX)) {
+    const step = isObject(stored) ? fill(stored) : stored;
+    if (!isAbilityStep(step, link)) break;
+    steps.push(step);
+    link = nextLink(step, link);
+  }
+  return steps;
 }

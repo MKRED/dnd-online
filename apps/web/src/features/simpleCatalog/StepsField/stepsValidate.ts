@@ -1,5 +1,7 @@
 import {
   AREA_FEET_MAX,
+  AROUND_FEET_MAX,
+  STEP_TIMES_MAX,
   ATTACK_BONUS_MAX,
   ATTACK_BONUS_MIN,
   DAMAGE_DICE_MAX,
@@ -44,6 +46,13 @@ const areaFeet = (value: number | string, shown: boolean) =>
     : feetError(AREA_FEET_MAX);
 
 export const stepsValidate = {
+  times: (value: number | string) =>
+    intIn(value, 1, STEP_TIMES_MAX) ? null : `От 1 до ${STEP_TIMES_MAX}`,
+  aroundFeet: (value: number | string, form: WithSteps, path: string) =>
+    stepOf(form, path).target !== 'around' ||
+    isFeet(Number(value), AROUND_FEET_MAX)
+      ? null
+      : feetError(AROUND_FEET_MAX),
   reachFeet: (value: number | string, form: WithSteps, path: string) =>
     stepOf(form, path).target !== 'reach' ||
     isFeet(Number(value), REACH_FEET_MAX)

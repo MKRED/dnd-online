@@ -11,6 +11,7 @@ import type {
 // только у линии.
 export interface TargetValues {
   target: StepTargetKind;
+  aroundFeet: number | string;
   reachFeet: number | string;
   rangeFeet: number | string;
   longOn: boolean;
@@ -25,6 +26,7 @@ export interface TargetValues {
 
 // «Огненный шар»: сфера радиусом 20 фт. в точке в пределах 150 фт.
 export const TARGET_BLANK: Omit<TargetValues, 'target'> = {
+  aroundFeet: 5,
   reachFeet: 5,
   rangeFeet: 120,
   longOn: false,
@@ -56,6 +58,9 @@ function toArea(area: AreaSpec): Partial<TargetValues> {
 
 export function toTargetValues(target: StepTarget): Partial<TargetValues> {
   switch (target.kind) {
+    case 'around':
+      return { target: 'around', aroundFeet: target.feet };
+    case 'previous':
     case 'self':
     case 'touch':
       return { target: target.kind };
@@ -113,6 +118,9 @@ export function fromTargetValues(
   attack: AttackKind | null,
 ): StepTarget {
   switch (values.target) {
+    case 'around':
+      return { kind: 'around', feet: Number(values.aroundFeet) };
+    case 'previous':
     case 'self':
     case 'touch':
       return { kind: values.target };

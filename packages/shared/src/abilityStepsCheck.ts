@@ -7,7 +7,8 @@ import {
   SAVE_DC_ABILITIES,
   SAVE_DC_MAX,
   SAVE_DC_MIN,
-  stepTargets,
+  AROUND_FEET_MAX,
+  STEP_TIMES_MAX,
   DAMAGE_DICE_MAX,
   DAMAGE_NUMBER_MAX,
   DAMAGE_PARTS_MAX,
@@ -22,7 +23,14 @@ import {
   type MissDamage,
   type MissOutcome,
   type StepTargetKind,
+  type StepWhen,
 } from './abilitySteps.js';
+import {
+  nextLink,
+  stepTargets,
+  stepWhens,
+  type StepLink,
+} from './abilityStepLinks.js';
 import { isArea } from './abilityStepAreasCheck.js';
 import { isFeet, isIntIn, isObject, keysAre } from './abilityStepGuards.js';
 import { ABILITY_SCORES, type AbilityScore } from './character.js';
@@ -98,12 +106,20 @@ function isCheck(value: unknown): value is AbilityCheck {
   }
 }
 
-// Цель должна подходить проверке (stepTargets); дальняя дистанция — только у
-// дальнобойного оружия и дальше обычной.
-function isTarget(value: unknown, check: AbilityCheck): boolean {
+// Цель должна подходить проверке и прошлому шагу (stepTargets); дальняя дистанция —
+// только у дальнобойного оружия и дальше обычной.
+function isTarget(
+  value: unknown,
+  check: AbilityCheck,
+  link: StepLink | null,
+): boolean {
   if (!isObject(value)) return false;
-  if (!stepTargets(check).includes(value.kind as StepTargetKind)) return false;
+  if (!stepTargets(check, link).includes(value.kind as StepTargetKind))
+    return false;
   switch (value.kind) {
+    case 'around':
+      return keysAre(value, 'feet,kind') && isFeet(value.feet, AROUND_FEET_MAX);
+    case 'previous':
     case 'self':
     case 'touch':
       return keysAre(value, 'kind');
@@ -156,19 +172,31 @@ function isMiss(
   );
 }
 
-export function isAbilityStep(value: unknown): value is AbilityStep {
+// link — что оставил прошлый шаг (abilityStepLinks.ts), у первого null.
+export function isAbilityStep(
+  value: unknown,
+  link: StepLink | null = null,
+): value is AbilityStep {
   if (!isObject(value)) return false;
-  if (!keysAre(value, 'check,hit,miss,target')) return false;
+  if (!keysAre(value, 'check,hit,miss,target,times,when')) return false;
   const { check } = value;
   return (
+    stepWhens(link).includes(value.when as StepWhen) &&
+    isIntIn(value.times, 1, STEP_TIMES_MAX) &&
     isCheck(check) &&
-    isTarget(value.target, check) &&
+    isTarget(value.target, check, link) &&
     isHit(value.hit, check) &&
     isMiss(value.miss, value.hit, check)
   );
 }
 
-export const isAbilitySteps = (value: unknown): value is AbilityStep[] =>
-  Array.isArray(value) &&
-  value.length <= ABILITY_STEPS_MAX &&
-  value.every(isAbilityStep);
+// Шаги проверяются цепочкой: каждый — против того, что оставил прошлый.
+export function isAbilitySteps(value: unknown): value is AbilityStep[] {
+  if (!Array.isArray(value) || value.length > ABILITY_STEPS_MAX) return false;
+  let link: StepLink | null = null;
+  for (const step of value) {
+    if (!isAbilityStep(step, link)) return false;
+    link = nextLink(step, link);
+  }
+  return true;
+}

@@ -12,6 +12,8 @@ import {
 import { stepsValidate } from './stepsValidate';
 
 const longbow: AbilityStep = {
+  when: 'always',
+  times: 1,
   target: { kind: 'range', feet: 150, longFeet: 600 },
   check: {
     kind: 'attack',
@@ -53,7 +55,7 @@ describe('stepsForm', () => {
   });
 
   it('смена вида атаки подставляет цель и характеристику', () => {
-    const sword = withAttack(newStep(), 'melee_weapon');
+    const sword = withAttack(newStep(), 'melee_weapon', null);
     expect(sword).toMatchObject({
       target: 'reach',
       bonusAbility: 'strength',
@@ -61,10 +63,10 @@ describe('stepsForm', () => {
     });
     // Касание подходит и атаке оружием — остаётся.
     const touch = {
-      ...withAttack(newStep(), 'melee_spell'),
+      ...withAttack(newStep(), 'melee_spell', null),
       target: 'touch' as const,
     };
-    expect(withAttack(touch, 'melee_weapon').target).toBe('touch');
+    expect(withAttack(touch, 'melee_weapon', null).target).toBe('touch');
   });
 
   it('проверки: футы, дальняя дальше обычной, пустой урон', () => {
@@ -97,6 +99,8 @@ describe('stepsForm', () => {
 });
 
 const fireball: AbilityStep = {
+  when: 'always',
+  times: 1,
   target: {
     kind: 'area',
     area: { shape: 'sphere', radius: 20 },
@@ -126,6 +130,8 @@ describe('stepsForm: спасбросок, область, без проверк
       check: { ...fireball.check, dc: { kind: 'fixed', value: 15 } },
     } as AbilityStep;
     const missile: AbilityStep = {
+      when: 'always',
+      times: 1,
       target: { kind: 'self' },
       check: { kind: 'none' },
       hit: fireball.hit,
@@ -138,13 +144,13 @@ describe('stepsForm: спасбросок, область, без проверк
 
   it('смена проверки подбирает цель и убирает модификатор', () => {
     const bow = toStepValues(longbow);
-    const save = withCheck(bow, 'save');
+    const save = withCheck(bow, 'save', null);
     expect(save).toMatchObject({ target: 'range', addModifier: false });
     // «На себя» есть только без проверки: у спасброска цель сменится.
-    const self = { ...withCheck(bow, 'none'), target: 'self' as const };
-    expect(withCheck(self, 'save').target).toBe('touch');
+    const self = { ...withCheck(bow, 'none', null), target: 'self' as const };
+    expect(withCheck(self, 'save', null).target).toBe('touch');
     // Назад к атаке — цель и характеристика вида атаки.
-    expect(withCheck(save, 'attack')).toMatchObject({
+    expect(withCheck(save, 'attack', null)).toMatchObject({
       target: 'range',
       bonusAbility: 'dexterity',
       addModifier: true,

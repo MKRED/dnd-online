@@ -1,6 +1,6 @@
 # Attacks, saving throws and damage
 
-Reference for how abilities hit their targets (2024 edition): attack rolls, saving throws, damage types, conditions and areas. Researched on 2026-10-16. Not used in code yet: the decision on how abilities and effects store this is in [plan/abilities.md](../plan/abilities.md) and [plan/effects.md](../plan/effects.md).
+Reference for how abilities hit their targets (2024 edition): attack rolls, saving throws, damage types, conditions and areas. Researched on 2026-10-16; attack bonus, range and reach added on 2026-10-17. How abilities and effects store this is in [plan/abilities.md](../plan/abilities.md) and [plan/effects.md](../plan/effects.md).
 
 ## Sources
 
@@ -58,6 +58,20 @@ What follows from them for the app:
 - an effect can combine parts (Searing Smite's burning: damage each turn plus a save that ends it);
 - the repeated save belongs to the effect (its ability and when it's made), but the DC comes from whoever applied it.
 
+## Attack bonus, damage, range and reach
+
+Researched on 2026-10-17 in the free rules (Playing the Game, Equipment, Spells, Rules Glossary).
+
+- **Attack roll:** d20 + the relevant ability modifier + the Proficiency Bonus if relevant. Strength for a melee attack with a weapon or an Unarmed Strike, Dexterity for a ranged attack with a weapon, the spellcasting ability for a spell attack. Finesse: "use your choice of your Strength or Dexterity modifier for the attack and damage rolls". The Proficiency Bonus is added for a weapon you're proficient with and for a spell.
+- **Spell attack modifier** = spellcasting ability modifier + Proficiency Bonus. **Spell save DC** = 8 + spellcasting ability modifier + Proficiency Bonus.
+- **Damage:** a weapon adds the same ability modifier as the attack (Finesse and Thrown say so explicitly; a general verbatim rule was not found, unverified). A spell says itself whether a modifier is added (Flame Blade: "3d6 plus your spellcasting ability modifier"); usually it isn't.
+- **Critical Hit:** a 20 on the d20 hits regardless of AC; "Roll all of the attack's damage dice twice and add them together. Then add any relevant modifiers."
+- **Range property:** two numbers, normal and long range ("Range 150/600" of the Longbow). Beyond normal range the attack has Disadvantage; beyond long range it can't be made.
+- **Reach:** a melee weapon attacks within 5 feet; a Reach weapon adds 5 feet. Spell range forms: a distance in feet, Touch (within the caster's reach), Self; Unlimited appears as a value.
+- **Examples:** Fire Bolt — ranged spell attack, 120 feet, 1d10 Fire; Shocking Grasp — Touch, melee spell attack, 1d8 Lightning; Longbow — 1d8 Piercing, Range 150/600.
+
+**In the app (stage 3 of the ability plan, 2026-10-17):** an ability step is an attack of one of the four kinds (melee or ranged, weapon or spell). The target is Touch or a reach in feet for a melee attack, a range in feet for a ranged one, and a long range only for a ranged weapon. The attack bonus is an ability modifier plus the Proficiency Bonus — one of the six, «Сила или Ловкость» (Finesse; the game will take the higher) or the spellcasting ability — or a fixed number (a monster or an item). On a hit there are damage rows (dice + a number, a type) and one optional ability modifier for the whole damage; on a miss nothing or half the damage. **Departures:** weapon proficiency is assumed; the spellcasting ability isn't on the character sheet yet; the critical hit isn't stored, the game doubles the dice; damage growth (cantrips, higher slots) waits for the Spell stage. The Russian names of the four attack kinds are the app's own wording, not checked against next.dnd.su.
+
 ## Where it lives in code
 
-The repeated save that ends an effect is the effect field `saveEnds` (`packages/shared/src/effectSaveEnds.ts`): the ability and the edge of the bearer's turn, no DC. The conditions are the effect component «Состояние» (`packages/shared/src/effectConditions.ts`, [conditions.md](conditions.md)). The damage types and dice are in `packages/shared/src/damageTypes.ts`, used so far by the effect component «Урон или лечение за ход» ([per-turn-damage.md](per-turn-damage.md)). The rest is not in code yet. The area shapes will go to `packages/shared` with the ability and effect stages that use them.
+The repeated save that ends an effect is the effect field `saveEnds` (`packages/shared/src/effectSaveEnds.ts`): the ability and the edge of the bearer's turn, no DC. The conditions are the effect component «Состояние» (`packages/shared/src/effectConditions.ts`, [conditions.md](conditions.md)). The damage types and dice are in `packages/shared/src/damageTypes.ts`, used so far by the effect component «Урон или лечение за ход» ([per-turn-damage.md](per-turn-damage.md)). The ability steps with an attack and damage are `packages/shared/src/abilitySteps.ts` (types and limits), `abilityStepsCheck.ts` (validation: strict for a request, lenient when reading), `abilityStepLabels.ts` (card text); the form is `apps/web/src/features/simpleCatalog/StepsField/`. The area shapes will go to `packages/shared` with the ability and effect stages that use them.

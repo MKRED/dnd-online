@@ -1,3 +1,4 @@
+import type { AbilityStep } from './abilitySteps.js';
 import { ABILITY_SCORES, type AbilityScore } from './character.js';
 
 // Как способность применяют и что она тратит — общие поля всех способностей
@@ -82,15 +83,18 @@ export const NO_ABILITY_COSTS: AbilityCosts = {
   hitDie: false,
 };
 
-// Поля всех способностей, кроме общих для каталогов.
+// Поля всех способностей, кроме общих для каталогов. steps — «Применение»
+// (abilitySteps.ts); пустой список — всё в описании.
 export interface AbilityFields {
   activation: AbilityActivation;
   costs: AbilityCosts;
+  steps: AbilityStep[];
 }
 
 export const DEFAULT_ABILITY_FIELDS: AbilityFields = {
   activation: { kind: 'action' },
   costs: NO_ABILITY_COSTS,
+  steps: [],
 };
 
 const keysAre = (value: object, keys: string) =>

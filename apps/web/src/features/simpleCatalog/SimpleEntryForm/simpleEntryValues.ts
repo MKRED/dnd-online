@@ -13,6 +13,7 @@ import {
   toEffectValues,
   type EffectValues,
 } from '../EffectFields';
+import { stepsValidate, toStepValues, type StepValues } from '../StepsField';
 import { toUsageValues, usageValidate, type UsageValues } from '../UsageField';
 import type {
   SimpleCatalogDef,
@@ -31,6 +32,8 @@ export interface SimpleFormValues {
   duration: DurationValues;
   effect: EffectValues;
   usage: UsageValues;
+  // «Применение» способности.
+  steps: StepValues[];
 }
 
 // Те же правила и тексты, что у сервера (CatalogEntryDto, EffectDto, AbilityDto).
@@ -48,6 +51,7 @@ export const simpleFormValidate = {
   duration: { amount: validateDurationAmount },
   effect: effectValidate,
   usage: usageValidate,
+  steps: stepsValidate,
 };
 
 export function toSimpleFormValues(
@@ -68,6 +72,7 @@ export function toSimpleFormValues(
     ),
     effect: toEffectValues(entry && 'components' in entry ? entry : undefined),
     usage: toUsageValues(entry && 'activation' in entry ? entry : undefined),
+    steps: entry && 'steps' in entry ? entry.steps.map(toStepValues) : [],
   };
 }
 

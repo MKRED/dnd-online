@@ -35,7 +35,7 @@ describe('simpleEntryValues', () => {
     });
   });
 
-  it('способность отправляет категорию, активацию и затраты, а поля эффекта — нет', () => {
+  it('способность отправляет категорию, активацию, затраты и шаги, а поля эффекта — нет', () => {
     const values = toSimpleFormValues(ABILITIES, null);
     expect(toSimpleInput(ABILITIES, { ...values, name: ' Луч ' })).toEqual({
       name: 'Луч',
@@ -46,6 +46,7 @@ describe('simpleEntryValues', () => {
       isPublic: false,
       activation: { kind: 'action' },
       costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
+      steps: [],
     });
   });
 });

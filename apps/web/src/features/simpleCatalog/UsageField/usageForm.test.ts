@@ -2,7 +2,7 @@ import type { AbilityFields } from 'shared';
 import { describe, expect, it } from 'vitest';
 import { fromUsageValues, toUsageValues, usageValidate } from './usageForm';
 
-const full: AbilityFields = {
+const full: Omit<AbilityFields, 'steps'> = {
   activation: { kind: 'reaction', trigger: 'когда вас бьют' },
   costs: {
     uses: { count: { kind: 'ability', ability: 'wisdom' }, recovery: 'short' },

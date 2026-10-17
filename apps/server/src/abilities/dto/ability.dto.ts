@@ -1,11 +1,13 @@
-import { IsIn, ValidateBy } from 'class-validator';
+import { IsIn, IsOptional, ValidateBy } from 'class-validator';
 import {
   ABILITY_CATEGORIES,
   isAbilityActivation,
   isAbilityCosts,
+  isAbilitySteps,
   type AbilityActivation,
   type AbilityCategory,
   type AbilityCosts,
+  type AbilityStep,
 } from 'shared';
 import {
   CategoryDetails,
@@ -44,4 +46,16 @@ export class AbilityDto extends CatalogEntryDto {
     },
   })
   costs: AbilityCosts;
+
+  // «Применение» (abilitySteps.ts). Необязательно: без поля — пустой список, как у
+  // запросов, написанных до этапа 3.
+  @IsOptional()
+  @ValidateBy({
+    name: 'abilitySteps',
+    validator: {
+      validate: isAbilitySteps,
+      defaultMessage: () => 'Применение способности задано неверно',
+    },
+  })
+  steps?: AbilityStep[];
 }

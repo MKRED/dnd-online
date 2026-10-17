@@ -58,7 +58,7 @@ const BLANK: UsageValues = {
 };
 
 export function toUsageValues(
-  fields: AbilityFields = DEFAULT_ABILITY_FIELDS,
+  fields: Pick<AbilityFields, 'activation' | 'costs'> = DEFAULT_ABILITY_FIELDS,
 ): UsageValues {
   const { activation, costs } = fields;
   const values: UsageValues = { ...BLANK, kind: activation.kind };
@@ -129,7 +129,10 @@ function toCosts(values: UsageValues): AbilityCosts {
   };
 }
 
-export function fromUsageValues(values: UsageValues): AbilityFields {
+// Шаги «Применения» — свои поля формы (StepsField).
+type UsageFields = Pick<AbilityFields, 'activation' | 'costs'>;
+
+export function fromUsageValues(values: UsageValues): UsageFields {
   return { activation: toActivation(values), costs: toCosts(values) };
 }
 

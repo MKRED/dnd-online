@@ -40,7 +40,26 @@ describe('abilities.config', () => {
     expect(ABILITIES_CONFIG.toStored(dto)).toEqual({
       category: 'basic',
       details: {},
-      extra: { activation: { kind: 'action' }, costs },
+      extra: { activation: { kind: 'action' }, costs, steps: [] },
     });
+  });
+
+  // «Огненный снаряд»: испорченный шаг рядом с верным пропускается один.
+  it('читает шаги, испорченный пропускает, без поля — пустой список', () => {
+    const bolt = {
+      target: { kind: 'range', feet: 120, longFeet: null },
+      check: {
+        kind: 'attack',
+        attack: 'ranged_spell',
+        bonus: { kind: 'ability', ability: 'spellcasting' },
+      },
+      damage: [{ count: 1, die: 10, number: 0, type: 'fire' }],
+      addModifier: false,
+      onMiss: 'none',
+    };
+    expect(
+      toAbilityVariant('basic', {}, { steps: [{ target: 1 }, bolt] }).steps,
+    ).toEqual([bolt]);
+    expect(toAbilityVariant('basic', {}, {}).steps).toEqual([]);
   });
 });

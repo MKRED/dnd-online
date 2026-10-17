@@ -2,6 +2,7 @@ import {
   DEFAULT_ABILITY_FIELDS,
   isAbilityActivation,
   isAbilityCosts,
+  readAbilitySteps,
   type AbilityFields,
   type AbilityVariant,
 } from 'shared';
@@ -24,8 +25,9 @@ export const ABILITY_ACCESS: CatalogAccess = {
 export type AbilityRecordFields = AbilityVariant & AbilityFields;
 
 // Пока есть только «Базовая» — без своих полей. Новая категория добавит свою ветку.
-// Активация и затраты лежат в extra; у записей без них (или с испорченными) — значения
-// по умолчанию: действие, без затрат.
+// Активация, затраты и шаги «Применения» лежат в extra; у записей без них (или с
+// испорченными) — значения по умолчанию: действие, без затрат, без шагов. Испорченный шаг
+// пропускается, остальные остаются.
 export function toAbilityVariant(
   _category: string,
   _details: Record<string, unknown>,
@@ -40,6 +42,7 @@ export function toAbilityVariant(
     costs: isAbilityCosts(extra.costs)
       ? extra.costs
       : DEFAULT_ABILITY_FIELDS.costs,
+    steps: readAbilitySteps(extra.steps),
   };
 }
 
@@ -57,7 +60,11 @@ export const ABILITIES_CONFIG: CatalogEntriesConfig<
     // Копия, а не сам объект: у интерфейсов полей нет индексной сигнатуры, которую ждёт
     // колонка.
     details: { ...dto.details },
-    extra: { activation: dto.activation, costs: dto.costs },
+    extra: {
+      activation: dto.activation,
+      costs: dto.costs,
+      steps: dto.steps ?? [],
+    },
   }),
 };
 

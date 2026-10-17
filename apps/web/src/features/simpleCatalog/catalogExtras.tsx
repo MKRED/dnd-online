@@ -4,6 +4,7 @@ import {
   ACTIVATION_LABELS,
   EFFECT_COMPONENT_LABELS,
   effectComponentKinds,
+  formatAbilityStep,
   formatActivation,
   formatCosts,
   formatEffectDuration,
@@ -17,7 +18,9 @@ import { fromDurationValues } from './DurationField';
 import EffectFields, { fromEffectValues } from './EffectFields';
 import type { SimpleFormValues } from './SimpleEntryForm/simpleEntryValues';
 import type { SimpleEntry } from './simpleCatalogs';
-import UsageField, { fromUsageValues } from './UsageField';
+import AbilityFields from './AbilityFields';
+import { fromStepValues } from './StepsField';
+import { fromUsageValues } from './UsageField';
 
 // Свои поля всех записей одного раздела, которых нет у другого: у эффекта — составляющие,
 // длительность и снятие спасброском, у способности — категория, активация и затраты.
@@ -68,11 +71,12 @@ export const EFFECT_EXTRAS: CatalogExtras = {
 };
 
 export const ABILITY_EXTRAS: CatalogExtras = {
-  Field: UsageField,
+  Field: AbilityFields,
   toInput: (values) => ({
     category: values.category,
     details: {},
     ...fromUsageValues(values.usage),
+    steps: values.steps.map(fromStepValues),
   }),
   rows: (entry) => {
     if (!('activation' in entry)) return [];
@@ -84,6 +88,10 @@ export const ABILITY_EXTRAS: CatalogExtras = {
         value:
           costs.length === 0 ? 'Ничего не тратит' : <CardLines lines={costs} />,
       },
+      ...entry.steps.map((step) => ({
+        label: 'Применение',
+        value: <CardLines lines={formatAbilityStep(step)} />,
+      })),
     ];
   },
   // Условие реакции в колонке не поместится — только вид или время.

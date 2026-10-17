@@ -27,14 +27,25 @@ const haste = entry('Ускорение', [
 const grappled = entry('Захват', [
   { kind: 'condition', condition: 'grappled' },
 ]);
+// КД 14, Ловкость 16 (+3).
+const abilityScores = {
+  strength: 10,
+  dexterity: 16,
+  constitution: 10,
+  intelligence: 10,
+  wisdom: 10,
+  charisma: 10,
+};
 const totals = (...effects: CharacterEffectEntry[]) =>
-  sheetTotals({ speed: 30, effects });
+  sheetTotals({ speed: 30, armorClass: 14, abilityScores, effects });
 
 describe('sheetTotals', () => {
   it('без эффектов — база и пустые списки', () => {
     expect(totals()).toEqual({
       speed: { speed: 30, special: {}, hover: false },
       speedChanges: [],
+      armorClass: 14,
+      armorClassChanges: [],
       conditions: [],
       defenses: [],
       senses: [],
@@ -58,6 +69,21 @@ describe('sheetTotals', () => {
         text: 'Помеха на свои броски атаки, кроме как по наложившему',
         from: ['Схваченный'],
       },
+    ]);
+  });
+
+  it('КД: итог и что его изменило', () => {
+    const faith = entry('Щит веры', [
+      { kind: 'armor_class', change: 'bonus', value: 2 },
+    ]);
+    const mage = entry('Доспехи мага', [
+      { kind: 'armor_class', change: 'base', value: 13 },
+    ]);
+    const t = totals(faith, mage);
+    expect(t.armorClass).toBe(18);
+    expect(t.armorClassChanges).toEqual([
+      { text: 'КД +2', from: ['Щит веры'] },
+      { text: 'Базовый КД 13 + модификатор Ловкости', from: ['Доспехи мага'] },
     ]);
   });
 

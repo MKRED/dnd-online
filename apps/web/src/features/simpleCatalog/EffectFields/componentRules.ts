@@ -7,6 +7,7 @@ import {
 } from 'shared';
 import type { ComponentValues } from './componentValues';
 import { advantageRollError } from './advantageForm';
+import { armorClassValidate } from './armorClassForm';
 import { autoFailRollError } from './autoFailForm';
 import { defenseDamageTypesError } from './defenseForm';
 import { perTurnValidate, type PerTurnValues } from './perTurnForm';
@@ -137,6 +138,23 @@ export const componentRules = {
         .filter((c) => c.kind === 'auto_fail')
         .map((c) => c.autoFail);
       return autoFailRollError(component.autoFail, earlier);
+    },
+  },
+  armorClass: {
+    // Повтор — у выбора изменения, число — у своего поля.
+    change: (_value: unknown, values: WithEffect, path: string) => {
+      const component = componentAt(values, path);
+      if (component.kind !== 'armor_class') return null;
+      const earlier = earlierOf(values, path)
+        .filter((c) => c.kind === 'armor_class')
+        .map((c) => c.armorClass);
+      return armorClassValidate.change(component.armorClass, earlier);
+    },
+    value: (_value: unknown, values: WithEffect, path: string) => {
+      const component = componentAt(values, path);
+      return component.kind === 'armor_class'
+        ? armorClassValidate.value(component.armorClass)
+        : null;
     },
   },
 };

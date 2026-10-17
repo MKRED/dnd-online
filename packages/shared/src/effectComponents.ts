@@ -5,6 +5,12 @@ import {
   type AdvantageDetails,
 } from './effectAdvantage.js';
 import {
+  armorClassKey,
+  formatArmorClass,
+  isArmorClassDetails,
+  type ArmorClassDetails,
+} from './effectArmorClass.js';
+import {
   autoFailKey,
   formatAutoFail,
   isAutoFailDetails,
@@ -51,6 +57,7 @@ export const EFFECT_COMPONENT_KINDS = [
   'speed',
   'advantage',
   'auto_fail',
+  'armor_class',
 ] as const;
 export type EffectComponentKind = (typeof EFFECT_COMPONENT_KINDS)[number];
 
@@ -63,7 +70,8 @@ export const SINGLE_EFFECT_COMPONENT_KINDS: readonly EffectComponentKind[] = [
 // (effectConditions.ts), урон или лечение за ход — effectPerTurn.ts, сопротивление и
 // иммунитет — effectDefenses.ts. Запрет лечения полей не имеет: носитель не
 // восстанавливает хиты, как от Chill Touch (docs/dnd/modifiers.md). Скорость —
-// effectSpeed.ts, преимущество и помеха — effectAdvantage.ts, автопровал — effectAutoFail.ts.
+// effectSpeed.ts, преимущество и помеха — effectAdvantage.ts, автопровал — effectAutoFail.ts,
+// Класс доспеха — effectArmorClass.ts.
 export type EffectComponent =
   | ({ kind: 'sense' } & SenseDetails)
   | ({ kind: 'condition' } & ConditionDetails)
@@ -72,7 +80,8 @@ export type EffectComponent =
   | { kind: 'no_healing' }
   | ({ kind: 'speed' } & SpeedDetails)
   | ({ kind: 'advantage' } & AdvantageDetails)
-  | ({ kind: 'auto_fail' } & AutoFailDetails);
+  | ({ kind: 'auto_fail' } & AutoFailDetails)
+  | ({ kind: 'armor_class' } & ArmorClassDetails);
 
 // Больше в одном эффекте в книге не встречается; предел защищает форму и базу.
 export const EFFECT_COMPONENTS_MAX = 20;
@@ -86,6 +95,7 @@ export const EFFECT_COMPONENT_LABELS: Record<EffectComponentKind, string> = {
   speed: 'Скорость',
   advantage: 'Преимущество или помеха',
   auto_fail: 'Автопровал',
+  armor_class: 'Класс доспеха',
 };
 
 function isEffectComponent(value: unknown): value is EffectComponent {
@@ -99,13 +109,14 @@ function isEffectComponent(value: unknown): value is EffectComponent {
   if (kind === 'speed') return isSpeedDetails(rest);
   if (kind === 'advantage') return isAdvantageDetails(rest);
   if (kind === 'auto_fail') return isAutoFailDetails(rest);
+  if (kind === 'armor_class') return isArmorClassDetails(rest);
   return false;
 }
 
 // Что в одном эффекте не должно повторяться: вид чувства, состояние, тип урона или
 // состояние на одном уровне защиты, изменение Скорости, особая скорость, одни и те же
-// броски с преимуществом или помехой, с автопровалом. Урон за ход повторяться может (огонь и холод
-// одновременно) — у него ключей нет.
+// броски с преимуществом или помехой, с автопровалом, сдвиг КД, «не ниже» и база КД.
+// Урон за ход повторяться может (огонь и холод одновременно) — у него ключей нет.
 function componentKeys(component: EffectComponent): string[] {
   switch (component.kind) {
     case 'sense':
@@ -124,6 +135,8 @@ function componentKeys(component: EffectComponent): string[] {
       return [`advantage:${advantageKey(component)}`];
     case 'auto_fail':
       return [`auto_fail:${autoFailKey(component)}`];
+    case 'armor_class':
+      return [`armor_class:${armorClassKey(component)}`];
     default:
       return component satisfies never;
   }
@@ -167,6 +180,8 @@ export function formatEffectComponent(component: EffectComponent): string {
       return formatAdvantage(component);
     case 'auto_fail':
       return formatAutoFail(component);
+    case 'armor_class':
+      return formatArmorClass(component);
     default:
       return component satisfies never;
   }

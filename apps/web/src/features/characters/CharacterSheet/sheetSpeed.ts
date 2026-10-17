@@ -1,4 +1,5 @@
 import type { SheetTotals, SpecialSpeed } from 'shared';
+import { changedBy } from './changedBy';
 
 const SPECIAL_LABELS: Record<SpecialSpeed, string> = {
   fly: 'Полёт',
@@ -24,14 +25,11 @@ export function speedTile(
     return [kind === 'fly' && hover ? `${parts}, парит` : parts];
   });
   const changed = speed !== base || specials.length > 0;
-  const reasons = totals.speedChanges.map(
-    (line) => `${line.from.join(', ')}: ${line.text.replace(/\.?$/, '.')}`,
-  );
   return {
     value: `${speed} фт`,
     hint: specials.length > 0 ? specials.join(' · ') : undefined,
     changedBy: changed
-      ? [`Без эффектов ${base} фт.`, ...reasons].join('\n')
+      ? changedBy(`${base} фт`, totals.speedChanges)
       : undefined,
   };
 }

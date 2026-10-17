@@ -1,8 +1,9 @@
 // Формулы 5e: модификатор от значения характеристики, и бонусы, которые от него зависят.
 
-export function getAbilityModifier(score: number): number {
-  return Math.floor((score - 10) / 2);
-}
+import { getAbilityModifier } from 'shared';
+
+// Модификатор живёт в shared: от него считает и итог эффектов (базовый КД Mage Armor).
+export { getAbilityModifier };
 
 export function formatModifier(modifier: number): string {
   return modifier >= 0 ? `+${modifier}` : `${modifier}`;

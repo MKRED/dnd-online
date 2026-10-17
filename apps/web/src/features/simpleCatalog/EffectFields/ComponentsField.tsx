@@ -19,6 +19,7 @@ import {
 } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import AdvantageComponentFields from './AdvantageComponentFields';
+import ArmorClassComponentFields from './ArmorClassComponentFields';
 import AutoFailComponentFields from './AutoFailComponentFields';
 import ConditionComponentFields from './ConditionComponentFields';
 import DefenseComponentFields from './DefenseComponentFields';
@@ -45,6 +46,7 @@ const KIND_FIELDS: Record<
   speed: SpeedComponentFields,
   advantage: AdvantageComponentFields,
   auto_fail: AutoFailComponentFields,
+  armor_class: ArmorClassComponentFields,
 };
 
 // Составляющие эффекта списком карточек (docs/plan/effects.md): у каждой свои поля и

@@ -5,6 +5,7 @@ import {
   getAbilityModifier,
 } from '../CharacterForm/AbilityScoresSection/abilityMath';
 import classes from './CharacterSheet.module.css';
+import { armorClassTile } from './sheetArmorClass';
 import { speedTile } from './sheetSpeed';
 
 interface StatTileProps {
@@ -70,9 +71,10 @@ interface CombatViewProps {
 
 // Боевые числа плитками: их смотрят чаще всего, поэтому они крупно и сразу под шапкой.
 // Инициатива не хранится — это модификатор Ловкости (docs/dnd/combat-stats.md).
-// Эффекты пока пересчитывают только Скорость (docs/plan/character-effects.md).
+// Эффекты пересчитывают Класс доспеха и Скорость (docs/plan/character-effects.md).
 function CombatView({ character, totals }: CombatViewProps) {
   const initiative = getAbilityModifier(character.abilityScores.dexterity);
+  const armorClass = armorClassTile(character.armorClass, totals);
   const speed = speedTile(character.speed, totals);
   return (
     <SimpleGrid cols={3} spacing="xs">
@@ -85,7 +87,7 @@ function CombatView({ character, totals }: CombatViewProps) {
             : undefined
         }
       />
-      <StatTile label="Класс доспеха" value={String(character.armorClass)} />
+      <StatTile label="Класс доспеха" {...armorClass} />
       <StatTile label="Инициатива" value={formatModifier(initiative)} />
       <StatTile label="Скорость" {...speed} />
       <StatTile

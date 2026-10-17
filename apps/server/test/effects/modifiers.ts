@@ -203,6 +203,39 @@ export function describeEffectModifiers(get: () => CatalogContext): void {
       expect(card.body).toMatchObject({ components });
     });
 
+    // Щит веры, Дубовая кора и Доспехи мага в одном эффекте: сдвиг, «не ниже» и база.
+    it('КД: бонус, «не ниже» и база', async () => {
+      const { author, url, create } = get();
+      const components = [
+        { kind: 'armor_class', change: 'bonus', value: 2 },
+        { kind: 'armor_class', change: 'minimum', value: 17 },
+        { kind: 'armor_class', change: 'base', value: 13 },
+      ];
+      const { id } = await create({ components });
+      const card = await author.get(url(id)).expect(200);
+      expect(card.body).toMatchObject({ components });
+    });
+
+    it('КД: число вне пределов, неизвестное изменение, два сдвига — 400', async () => {
+      const { author, url, body } = get();
+      const faith = { kind: 'armor_class', change: 'bonus', value: 2 };
+      for (const components of [
+        [{ ...faith, value: 11 }],
+        [{ ...faith, value: 1.5 }],
+        [{ ...faith, change: 'minimum', value: 5 }],
+        [{ ...faith, change: 'formula' }],
+        [faith, { ...faith, change: 'penalty' }],
+      ]) {
+        const res = await author
+          .post(url())
+          .send(body({ components }))
+          .expect(400);
+        expect(messages(res)[0]).toMatch(
+          /^Составляющие эффекта заданы неверно/,
+        );
+      }
+    });
+
     it('автопровал: характеристика у проверок, повтор — 400', async () => {
       const { author, url, body } = get();
       const save = { kind: 'auto_fail', roll: 'save', ability: 'strength' };

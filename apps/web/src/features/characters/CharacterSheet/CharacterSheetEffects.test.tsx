@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { sampleCharacter } from '../../../test/characterFixture';
 import { renderWithProviders } from '../../../test/render';
 import CharacterSheet from './CharacterSheet';
+import { armorClassTile } from './sheetArmorClass';
 import { speedTile } from './sheetSpeed';
 
 const entry = (
@@ -66,11 +67,49 @@ describe('лист с эффектами', () => {
   });
 });
 
+// КД 15 в форме, Ловкость 14 (+2): Доспехи мага дают 15 — не больше, но плитка
+// выделена и объясняет, почему число то же.
+it('КД: Щит веры и Доспехи мага — итог и подсказка', async () => {
+  const faith = entry('Щит веры', [
+    { kind: 'armor_class', change: 'bonus', value: 2 },
+  ]);
+  const mage = entry('Доспехи мага', [
+    { kind: 'armor_class', change: 'base', value: 13 },
+  ]);
+  renderWithProviders(
+    <CharacterSheet character={sheet([faith, mage])} aside={null} />,
+  );
+  expect(screen.getByLabelText(/^Класс доспеха: /)).toHaveAccessibleName(
+    'Класс доспеха: 17. Без эффектов 15. Щит веры: КД +2. Доспехи мага: Базовый КД 13 + модификатор Ловкости.',
+  );
+
+  await userEvent.click(screen.getByRole('radio', { name: 'Без эффектов' }));
+  expect(screen.queryByLabelText(/^Класс доспеха: /)).toBeNull();
+  expect(
+    screen.getByText('Класс доспеха', { selector: 'p' }).closest('div')!
+      .textContent,
+  ).toBe('Класс доспеха15');
+});
+
+it('КД: Доспехи мага слабее КД формы — число то же, но объяснено', () => {
+  const mage = entry('Доспехи мага', [
+    { kind: 'armor_class', change: 'base', value: 13 },
+  ]);
+  renderWithProviders(
+    <CharacterSheet character={sheet([mage])} aside={null} />,
+  );
+  expect(
+    screen.getByLabelText(/^Класс доспеха: 15\. Без эффектов 15\./),
+  ).toBeInTheDocument();
+});
+
 describe('speedTile', () => {
   it('эффекты без изменений Скорости — число не выделено', () => {
     const totals = {
       speed: { speed: 30, special: {}, hover: false },
       speedChanges: [],
+      armorClass: 15,
+      armorClassChanges: [],
       conditions: [],
       defenses: [],
       senses: [],
@@ -80,5 +119,6 @@ describe('speedTile', () => {
     };
     expect(speedTile(30, totals)).toEqual({ value: '30 фт' });
     expect(speedTile(30, null)).toEqual({ value: '30 фт' });
+    expect(armorClassTile(15, totals)).toEqual({ value: '15' });
   });
 });

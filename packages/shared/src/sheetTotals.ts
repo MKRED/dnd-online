@@ -3,6 +3,8 @@ import type { CharacterEffectEntry } from './characterEffects.js';
 import { expandConditions } from './conditionsExpand.js';
 import { DAMAGE_TYPE_LABELS } from './damageTypes.js';
 import { advantageKey, formatAdvantage } from './effectAdvantage.js';
+import { formatArmorClass } from './effectArmorClass.js';
+import { totalArmorClass } from './effectArmorClassTotal.js';
 import { autoFailKey, formatAutoFail } from './effectAutoFail.js';
 import type { EffectComponent } from './effectComponents.js';
 import { CONDITION_LABELS } from './effectConditions.js';
@@ -19,7 +21,7 @@ import { conditionOf, sheetConditions } from './sheetConditions.js';
 
 // Итог листа персонажа: база из формы плюс наложенные эффекты
 // (docs/plan/character-effects.md). Числа пересчитываются там, где движок это умеет
-// (пока Скорость), остальное собирается в списки. У каждой строки — откуда она: названия
+// (Скорость и Класс доспеха), остальное собирается в списки. У каждой строки — откуда она: названия
 // эффектов или состояний, для подсказки на листе.
 
 export type TotalLine = { text: string; from: string[] };
@@ -28,6 +30,9 @@ export type SheetTotals = {
   speed: SpeedTotal;
   // Что меняет Скорость и особые скорости: «Ускорение: Скорость вдвое больше».
   speedChanges: TotalLine[];
+  armorClass: number;
+  // Что меняет КД: «Щит веры: КД +2».
+  armorClassChanges: TotalLine[];
   conditions: ReturnType<typeof sheetConditions>;
   defenses: (TotalLine & { level: DefenseLevel })[];
   senses: TotalLine[];
@@ -62,7 +67,10 @@ function collect() {
 }
 
 export function sheetTotals(
-  character: Pick<Character, 'speed' | 'effects'>,
+  character: Pick<
+    Character,
+    'speed' | 'armorClass' | 'abilityScores' | 'effects'
+  >,
   entries: readonly CharacterEffectEntry[] = character.effects,
 ): SheetTotals {
   const applied = activeEffects(entries);
@@ -77,6 +85,7 @@ export function sheetTotals(
   const expanded = expandConditions(applied);
 
   const speedLines = collect();
+  const armorClassLines = collect();
   const defenses = new Map<string, TotalLine & { level: DefenseLevel }>();
   const senses = new Map<SenseKind, { range: number | null; from: string[] }>();
   const rolls = collect();
@@ -87,6 +96,12 @@ export function sheetTotals(
     switch (c.kind) {
       case 'speed':
         return speedLines.add(formatSpeed(c), formatSpeed(c), from);
+      case 'armor_class':
+        return armorClassLines.add(
+          formatArmorClass(c),
+          formatArmorClass(c),
+          from,
+        );
       case 'defense':
         for (const item of [
           ...c.damageTypes.map((t) => DAMAGE_TYPE_LABELS[t]),
@@ -137,6 +152,14 @@ export function sheetTotals(
   return {
     speed: totalSpeed({ speed: character.speed }, applied),
     speedChanges: speedLines.list(),
+    armorClass: totalArmorClass(
+      {
+        armorClass: character.armorClass,
+        dexterity: character.abilityScores.dexterity,
+      },
+      applied,
+    ),
+    armorClassChanges: armorClassLines.list(),
     conditions: sheetConditions(applied, expanded, nameOf),
     defenses: [...defenses.values()],
     senses: [...senses].map(([sense, { range, from }]) => ({

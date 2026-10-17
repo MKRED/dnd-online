@@ -58,6 +58,17 @@ What follows from them for the app:
 - an effect can combine parts (Searing Smite's burning: damage each turn plus a save that ends it);
 - the repeated save belongs to the effect (its ability and when it's made), but the DC comes from whoever applied it.
 
+## Several steps and repeats
+
+Researched on 2026-10-17 in the free rules, «Spell Descriptions» (https://www.dndbeyond.com/sources/dnd/free-rules/spell-descriptions).
+
+- **A second roll after the first, around the target:** Ice Knife — "Hit or miss, the shard then explodes. The target and each creature within 5 feet of it must succeed on a Dexterity saving throw or take 2d6 Cold damage." The first target is in the burst too.
+- **Repeats with their own roll:** Scorching Ray — "You hurl three fiery rays. You can hurl them at one target within range or at several. Make a ranged spell attack for each ray"; Eldritch Blast — two beams at level 5, three at 11, four at 17, "the same target or … different ones. Make a separate attack roll for each beam"; Magic Missile — three darts, "1d4 + 1 Force damage", no roll, "one creature or several".
+- **Jumps to new targets:** Chain Lightning — a first target, then "as many as three other targets", each "within 30 feet of the first target", each making a Dexterity save (10d8, half on a success); Chromatic Orb — on a hit, if two or more d8s match, "the orb leaps to a different target of your choice within 30 feet of the target", with a new attack and damage roll.
+- **Healing the caster:** Vampiric Touch — on a hit 3d6 Necrotic, "and you regain Hit Points equal to half the amount of Necrotic damage dealt".
+
+**For the app (stage 5, planned 2026-10-17):** a step after the first says when it happens (always, or on the previous step's hit/fail or miss/success) and whom it targets (the same target, the target and everyone within N ft. of it, or a new target); a step has a repeat count with its own roll each time and targets chosen when used. **Left out on purpose:** Chromatic Orb's leap on matching dice and Chain Lightning's new targets measured from the first target stay in the description; healing the caster waits for effects.
+
 ## Attack bonus, damage, range and reach
 
 Researched on 2026-10-17 in the free rules (Playing the Game, Equipment, Spells, Rules Glossary).

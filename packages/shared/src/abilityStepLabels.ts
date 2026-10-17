@@ -61,12 +61,12 @@ export function formatAbilityStep(step: AbilityStep): string[] {
     check.bonus.kind === 'fixed'
       ? `${check.bonus.value < 0 ? '−' : '+'}${Math.abs(check.bonus.value)}`
       : `модификатор ${abilityGenitive(check.bonus.ability)} + бонус мастерства`;
-  const parts = step.damage.map(formatDamagePart);
-  if (step.addModifier) parts.push('модификатор');
+  const parts = step.hit.damage.map(formatDamagePart);
+  if (step.hit.addModifier) parts.push('модификатор');
   return [
     `${ATTACK_KIND_LABELS[check.attack]}, ${formatTarget(step.target)}`,
     `Бонус атаки: ${bonus}`,
     `Попадание: ${parts.length > 0 ? parts.join(' + ') : 'без урона'}`,
-    ...(step.onMiss === 'half' ? ['Промах: половина урона'] : []),
+    ...(step.miss.damage === 'half' ? ['Промах: половина урона'] : []),
   ];
 }

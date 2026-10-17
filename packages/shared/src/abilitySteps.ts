@@ -63,8 +63,9 @@ export const DAMAGE_DICE_MAX = 40;
 export const DAMAGE_NUMBER_MAX = 100;
 export const DAMAGE_PARTS_MAX = 5;
 
-export const MISS_OUTCOMES = ['none', 'half'] as const;
-export type MissOutcome = (typeof MISS_OUTCOMES)[number];
+// Урон при промахе: ничего или половина урона попадания («Кислотная стрела»).
+export const MISS_DAMAGES = ['none', 'half'] as const;
+export type MissDamage = (typeof MISS_DAMAGES)[number];
 
 export interface AttackCheck {
   kind: 'attack';
@@ -72,16 +73,27 @@ export interface AttackCheck {
   bonus: AttackBonus;
 }
 
-// Урон без строк бывает: «Сеть» только опутывает (эффекты в последствиях — этап 7).
-// addModifier — модификатор той же характеристики, что у атаки, один раз на весь урон:
-// у оружия да, у заклинаний обычно нет. При числовом бонусе его нет: число урона —
-// в строках.
+// Последствия — два исхода отдельными объектами, чтобы расти без переименований.
+// hit — проверка сработала против цели: попадание атакой, а у спасброска (этап 4) —
+// провал; miss — промах или успех спасброска. Эффекты в последствиях (этап 7) лягут
+// в оба: у «Ошеломляющего удара» свой эффект и при успехе.
+//
+// Урон без строк бывает: «Сеть» только опутывает. addModifier — модификатор той же
+// характеристики, что у атаки, один раз на весь урон: у оружия да, у заклинаний обычно
+// нет. При числовом бонусе его нет: число урона — в строках.
+export interface HitOutcome {
+  damage: DamagePart[];
+  addModifier: boolean;
+}
+export interface MissOutcome {
+  damage: MissDamage;
+}
+
 export interface AbilityStep {
   target: StepTarget;
   check: AttackCheck;
-  damage: DamagePart[];
-  addModifier: boolean;
-  onMiss: MissOutcome;
+  hit: HitOutcome;
+  miss: MissOutcome;
 }
 
 // Этап 5 поднимет предел.

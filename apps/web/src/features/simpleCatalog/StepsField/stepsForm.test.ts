@@ -17,9 +17,11 @@ const longbow: AbilityStep = {
     attack: 'ranged_weapon',
     bonus: { kind: 'ability', ability: 'dexterity' },
   },
-  damage: [{ count: 1, die: 8, number: 0, type: 'piercing' }],
-  addModifier: true,
-  onMiss: 'none',
+  hit: {
+    damage: [{ count: 1, die: 8, number: 0, type: 'piercing' }],
+    addModifier: true,
+  },
+  miss: { damage: 'none' },
 };
 
 const formOf = (step: StepValues) => ({ steps: [step] });
@@ -43,10 +45,10 @@ describe('stepsForm', () => {
     };
     expect(fromStepValues(fixed)).toMatchObject({
       check: { bonus: { kind: 'fixed', value: 5 } },
-      addModifier: false,
+      hit: { addModifier: false },
     });
     const empty = { ...newStep(), damage: [], onMiss: 'half' as const };
-    expect(fromStepValues(empty).onMiss).toBe('none');
+    expect(fromStepValues(empty).miss).toEqual({ damage: 'none' });
   });
 
   it('смена вида атаки подставляет цель и характеристику', () => {

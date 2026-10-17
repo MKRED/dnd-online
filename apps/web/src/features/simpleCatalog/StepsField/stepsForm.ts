@@ -7,7 +7,7 @@ import {
   type DamageDie,
   type DamagePart,
   type DamageType,
-  type MissOutcome,
+  type MissDamage,
   type StepTarget,
   type StepTargetKind,
 } from 'shared';
@@ -36,7 +36,7 @@ export interface StepValues {
   bonusValue: number | string;
   damage: DamageValues[];
   addModifier: boolean;
-  onMiss: MissOutcome;
+  onMiss: MissDamage;
 }
 
 export const newDamage = (type: DamageType = 'fire'): DamageValues => ({
@@ -88,13 +88,13 @@ export function toStepValues(step: AbilityStep): StepValues {
     ...newStep(),
     attack: step.check.attack,
     target: step.target.kind,
-    damage: step.damage.map((part) => ({
+    damage: step.hit.damage.map((part) => ({
       ...part,
       key: randomId(),
       die: String(part.die),
     })),
-    addModifier: step.addModifier,
-    onMiss: step.onMiss,
+    addModifier: step.hit.addModifier,
+    onMiss: step.miss.damage,
   };
   if (step.target.kind === 'reach') values.reachFeet = step.target.feet;
   if (step.target.kind === 'range') {
@@ -147,8 +147,10 @@ export function fromStepValues(values: StepValues): AbilityStep {
         ? { kind: 'ability', ability: values.bonusAbility }
         : { kind: 'fixed', value: Number(values.bonusValue) },
     },
-    damage: values.damage.map(fromDamage),
-    addModifier: ability && values.addModifier,
-    onMiss: values.damage.length > 0 ? values.onMiss : 'none',
+    hit: {
+      damage: values.damage.map(fromDamage),
+      addModifier: ability && values.addModifier,
+    },
+    miss: { damage: values.damage.length > 0 ? values.onMiss : 'none' },
   };
 }

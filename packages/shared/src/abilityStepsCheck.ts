@@ -9,13 +9,16 @@ import {
   DAMAGE_NUMBER_MAX,
   DAMAGE_PARTS_MAX,
   FEET_STEP,
-  MISS_OUTCOMES,
+  MISS_DAMAGES,
   RANGE_FEET_MAX,
   REACH_FEET_MAX,
   type AbilityStep,
   type AttackAbility,
+  type AttackBonus,
   type AttackKind,
   type DamagePart,
+  type HitOutcome,
+  type MissDamage,
   type MissOutcome,
 } from './abilitySteps.js';
 import {
@@ -25,9 +28,8 @@ import {
   type DamageType,
 } from './damageTypes.js';
 
-// Проверка шагов «Применения»: строгая для запроса (isAbilitySteps) и мягкая для чтения
-// из базы (readAbilitySteps) — испорченный шаг пропускается, остальные остаются, как у
-// составляющих эффекта (effectComponentsRead.ts).
+// Строгая проверка шагов «Применения» — для запроса. Из базы шаги читаются мягче, с
+// умолчаниями (abilityStepsRead.ts).
 
 const keysAre = (value: object, keys: string) =>
   Object.keys(value).sort().join(',') === keys;
@@ -92,10 +94,32 @@ function isTarget(value: unknown, attack: AttackKind): boolean {
   }
 }
 
+function isHit(value: unknown, bonus: AttackBonus): value is HitOutcome {
+  return (
+    isObject(value) &&
+    keysAre(value, 'addModifier,damage') &&
+    Array.isArray(value.damage) &&
+    value.damage.length <= DAMAGE_PARTS_MAX &&
+    value.damage.every(isDamagePart) &&
+    typeof value.addModifier === 'boolean' &&
+    (!value.addModifier || bonus.kind === 'ability')
+  );
+}
+
+function isMiss(value: unknown, hit: HitOutcome): value is MissOutcome {
+  return (
+    isObject(value) &&
+    keysAre(value, 'damage') &&
+    MISS_DAMAGES.includes(value.damage as MissDamage) &&
+    // Половина от ничего — ошибка в форме, а не замысел.
+    (value.damage === 'none' || hit.damage.length > 0)
+  );
+}
+
 export function isAbilityStep(value: unknown): value is AbilityStep {
   if (!isObject(value)) return false;
-  if (!keysAre(value, 'addModifier,check,damage,onMiss,target')) return false;
-  const { check, damage, addModifier, onMiss } = value;
+  if (!keysAre(value, 'check,hit,miss,target')) return false;
+  const { check } = value;
   if (
     !isObject(check) ||
     check.kind !== 'attack' ||
@@ -105,17 +129,11 @@ export function isAbilityStep(value: unknown): value is AbilityStep {
   ) {
     return false;
   }
-  const bonus = check.bonus as AbilityStep['check']['bonus'];
+  const bonus = check.bonus as AttackBonus;
   return (
     isTarget(value.target, check.attack as AttackKind) &&
-    Array.isArray(damage) &&
-    damage.length <= DAMAGE_PARTS_MAX &&
-    damage.every(isDamagePart) &&
-    typeof addModifier === 'boolean' &&
-    (!addModifier || bonus.kind === 'ability') &&
-    MISS_OUTCOMES.includes(onMiss as MissOutcome) &&
-    // Половина от ничего — ошибка в форме, а не замысел.
-    (onMiss === 'none' || damage.length > 0)
+    isHit(value.hit, bonus) &&
+    isMiss(value.miss, value.hit)
   );
 }
 
@@ -123,8 +141,3 @@ export const isAbilitySteps = (value: unknown): value is AbilityStep[] =>
   Array.isArray(value) &&
   value.length <= ABILITY_STEPS_MAX &&
   value.every(isAbilityStep);
-
-export const readAbilitySteps = (value: unknown): AbilityStep[] =>
-  Array.isArray(value)
-    ? value.filter(isAbilityStep).slice(0, ABILITY_STEPS_MAX)
-    : [];

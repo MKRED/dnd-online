@@ -1,4 +1,7 @@
+import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
+import { DatabaseService } from '../../src/database/database.service.js';
+import { abilities } from '../../src/database/schema/index.js';
 import type { CatalogContext } from '../support/catalog-scenario/index.js';
 
 // «Применение» способности: шаги с атакой и уроном (docs/plan/abilities.md, этап 3).
@@ -12,9 +15,11 @@ const fireBolt = {
     attack: 'ranged_spell',
     bonus: { kind: 'ability', ability: 'spellcasting' },
   },
-  damage: [{ count: 1, die: 10, number: 0, type: 'fire' }],
-  addModifier: false,
-  onMiss: 'none',
+  hit: {
+    damage: [{ count: 1, die: 10, number: 0, type: 'fire' }],
+    addModifier: false,
+  },
+  miss: { damage: 'none' },
 };
 
 export function describeAbilitySteps(get: () => CatalogContext): void {
@@ -41,8 +46,16 @@ export function describeAbilitySteps(get: () => CatalogContext): void {
       const { author, url, body } = get();
       for (const steps of [
         [{ ...fireBolt, target: { kind: 'touch' } }],
-        [{ ...fireBolt, damage: [], onMiss: 'half' }],
-        [{ ...fireBolt, addModifier: 'yes' }],
+        [
+          {
+            ...fireBolt,
+            hit: { damage: [], addModifier: false },
+            miss: { damage: 'half' },
+          },
+        ],
+        [{ ...fireBolt, hit: { ...fireBolt.hit, addModifier: 'yes' } }],
+        // Без промаха: запрос проверяется строго, умолчания — только при чтении.
+        [{ ...fireBolt, miss: undefined }],
         [fireBolt, fireBolt],
         {},
       ]) {
@@ -51,6 +64,31 @@ export function describeAbilitySteps(get: () => CatalogContext): void {
           'Применение способности задано неверно',
         );
       }
+    });
+
+    // Шаг, сохранённый до нового поля, читается с умолчанием (abilityStepsRead.ts), а
+    // испорченный пропускается, не стирая остальные.
+    it('шаг из базы без поля читается с умолчанием, испорченный пропускается', async () => {
+      const { app, author, url, create } = get();
+      const { id } = await create();
+      const noMiss = {
+        target: fireBolt.target,
+        check: fireBolt.check,
+        hit: fireBolt.hit,
+      };
+      const noModifier = { ...fireBolt, hit: { damage: fireBolt.hit.damage } };
+      const read = async (steps: unknown[]) => {
+        await app
+          .get(DatabaseService)
+          .db.update(abilities)
+          .set({ extra: { activation: { kind: 'action' }, steps } })
+          .where(eq(abilities.id, id));
+        const card = await author.get(url(id)).expect(200);
+        return (card.body as { steps: unknown[] }).steps;
+      };
+      expect(await read([noMiss])).toEqual([fireBolt]);
+      expect(await read([noModifier])).toEqual([fireBolt]);
+      expect(await read([{ target: 1 }])).toEqual([]);
     });
   });
 }

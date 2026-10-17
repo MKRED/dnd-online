@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { formatAbilityStep } from './abilityStepLabels.js';
 import type { AbilityStep } from './abilitySteps.js';
-import { isAbilitySteps, readAbilitySteps } from './abilityStepsCheck.js';
+import { isAbilitySteps } from './abilityStepsCheck.js';
+import { readAbilitySteps } from './abilityStepsRead.js';
 
 // Примеры из книги 2024 (docs/dnd/attacks-and-saves.md).
 const fireBolt: AbilityStep = {
@@ -11,9 +12,11 @@ const fireBolt: AbilityStep = {
     attack: 'ranged_spell',
     bonus: { kind: 'ability', ability: 'spellcasting' },
   },
-  damage: [{ count: 1, die: 10, number: 0, type: 'fire' }],
-  addModifier: false,
-  onMiss: 'none',
+  hit: {
+    damage: [{ count: 1, die: 10, number: 0, type: 'fire' }],
+    addModifier: false,
+  },
+  miss: { damage: 'none' },
 };
 const longbow: AbilityStep = {
   target: { kind: 'range', feet: 150, longFeet: 600 },
@@ -22,9 +25,11 @@ const longbow: AbilityStep = {
     attack: 'ranged_weapon',
     bonus: { kind: 'ability', ability: 'dexterity' },
   },
-  damage: [{ count: 1, die: 8, number: 0, type: 'piercing' }],
-  addModifier: true,
-  onMiss: 'none',
+  hit: {
+    damage: [{ count: 1, die: 8, number: 0, type: 'piercing' }],
+    addModifier: true,
+  },
+  miss: { damage: 'none' },
 };
 const flameTongue: AbilityStep = {
   target: { kind: 'reach', feet: 5 },
@@ -33,13 +38,19 @@ const flameTongue: AbilityStep = {
     attack: 'melee_weapon',
     bonus: { kind: 'fixed', value: 7 },
   },
-  damage: [
-    { count: 1, die: 8, number: 3, type: 'slashing' },
-    { count: 2, die: 6, number: 0, type: 'fire' },
-  ],
-  addModifier: false,
-  onMiss: 'half',
+  hit: {
+    damage: [
+      { count: 1, die: 8, number: 3, type: 'slashing' },
+      { count: 2, die: 6, number: 0, type: 'fire' },
+    ],
+    addModifier: false,
+  },
+  miss: { damage: 'half' },
 };
+const withDamage = (step: AbilityStep, damage: unknown[]) => ({
+  ...step,
+  hit: { ...step.hit, damage },
+});
 
 describe('шаги «Применения»', () => {
   it('принимает примеры из книги и пустой список', () => {
@@ -60,12 +71,14 @@ describe('шаги «Применения»', () => {
       { ...longbow, target: { kind: 'range', feet: 152, longFeet: null } },
       { ...flameTongue, target: { kind: 'reach', feet: 35 } },
       // Пустая строка урона, неизвестный тип, к20.
-      { ...fireBolt, damage: [{ count: 0, die: 10, number: 0, type: 'fire' }] },
-      { ...fireBolt, damage: [{ count: 1, die: 10, number: 0, type: 'heat' }] },
-      { ...fireBolt, damage: [{ count: 1, die: 20, number: 0, type: 'fire' }] },
+      withDamage(fireBolt, [{ count: 0, die: 10, number: 0, type: 'fire' }]),
+      withDamage(fireBolt, [{ count: 1, die: 10, number: 0, type: 'heat' }]),
+      withDamage(fireBolt, [{ count: 1, die: 20, number: 0, type: 'fire' }]),
       // Модификатор к урону при числовом бонусе, половина от пустого урона.
-      { ...flameTongue, addModifier: true },
-      { ...fireBolt, damage: [], onMiss: 'half' },
+      { ...flameTongue, hit: { ...flameTongue.hit, addModifier: true } },
+      { ...withDamage(fireBolt, []), miss: { damage: 'half' } },
+      // Исходы плоско, как до разделения на попадание и промах.
+      { ...fireBolt, hit: undefined, damage: [], addModifier: false },
       // Лишнее поле, бонус вне пределов, неизвестная характеристика.
       { ...fireBolt, extra: 1 },
       {
@@ -86,10 +99,18 @@ describe('шаги «Применения»', () => {
   });
 
   it('при чтении пропускает испорченный шаг', () => {
-    expect(readAbilitySteps([{ ...fireBolt, onMiss: 'x' }, longbow])).toEqual([
-      longbow,
-    ]);
+    expect(
+      readAbilitySteps([{ ...fireBolt, miss: { damage: 'x' } }, longbow]),
+    ).toEqual([longbow]);
     expect(readAbilitySteps(undefined)).toEqual([]);
+  });
+
+  // Поле, добавленное позже, у шага из базы получает умолчание, а не роняет шаг.
+  it('при чтении дополняет недостающие поля умолчаниями', () => {
+    const { miss: _miss, ...noMiss } = fireBolt;
+    const noModifier = { ...fireBolt, hit: { damage: fireBolt.hit.damage } };
+    expect(readAbilitySteps([noMiss])).toEqual([fireBolt]);
+    expect(readAbilitySteps([noModifier])).toEqual([fireBolt]);
   });
 
   it('строки карточки', () => {

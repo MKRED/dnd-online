@@ -53,9 +53,11 @@ describe('abilities.config', () => {
         attack: 'ranged_spell',
         bonus: { kind: 'ability', ability: 'spellcasting' },
       },
-      damage: [{ count: 1, die: 10, number: 0, type: 'fire' }],
-      addModifier: false,
-      onMiss: 'none',
+      hit: {
+        damage: [{ count: 1, die: 10, number: 0, type: 'fire' }],
+        addModifier: false,
+      },
+      miss: { damage: 'none' },
     };
     expect(
       toAbilityVariant('basic', {}, { steps: [{ target: 1 }, bolt] }).steps,

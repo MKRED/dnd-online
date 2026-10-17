@@ -13,6 +13,7 @@ import {
   toEffectValues,
   type EffectValues,
 } from '../EffectFields';
+import { spellValidate, toSpellValues, type SpellValues } from '../SpellFields';
 import { stepsValidate, toStepValues, type StepValues } from '../StepsField';
 import { toUsageValues, usageValidate, type UsageValues } from '../UsageField';
 import type {
@@ -34,6 +35,8 @@ export interface SimpleFormValues {
   usage: UsageValues;
   // «Применение» способности.
   steps: StepValues[];
+  // Поля категории «Заклинание»; у других категорий не уходят в запрос.
+  spell: SpellValues;
 }
 
 // Те же правила и тексты, что у сервера (CatalogEntryDto, EffectDto, AbilityDto).
@@ -52,6 +55,7 @@ export const simpleFormValidate = {
   effect: effectValidate,
   usage: usageValidate,
   steps: stepsValidate,
+  spell: spellValidate,
 };
 
 export function toSimpleFormValues(
@@ -73,6 +77,11 @@ export function toSimpleFormValues(
     effect: toEffectValues(entry && 'components' in entry ? entry : undefined),
     usage: toUsageValues(entry && 'activation' in entry ? entry : undefined),
     steps: entry && 'steps' in entry ? entry.steps.map(toStepValues) : [],
+    spell: toSpellValues(
+      entry && 'category' in entry && entry.category === 'spell'
+        ? entry.details
+        : undefined,
+    ),
   };
 }
 

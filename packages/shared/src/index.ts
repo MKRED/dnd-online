@@ -43,5 +43,7 @@ export * from './abilityStepLinks.js';
 export * from './abilityStepsCheck.js';
 export * from './abilityStepsRead.js';
 export * from './abilityStepLabels.js';
+export * from './abilitySpell.js';
+export * from './abilitySpellLabels.js';
 export * from './pluralRu.js';
 export * from './returnPath.js';

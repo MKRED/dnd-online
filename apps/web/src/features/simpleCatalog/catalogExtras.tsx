@@ -11,6 +11,9 @@ import {
   formatEffectDurationShort,
   formatEffectComponent,
   formatSaveEnds,
+  formatSpellDuration,
+  formatSpellHeader,
+  type Ability,
   type Effect,
 } from 'shared';
 import CardLines from './CardLines';
@@ -19,6 +22,7 @@ import EffectFields, { fromEffectValues } from './EffectFields';
 import type { SimpleFormValues } from './SimpleEntryForm/simpleEntryValues';
 import type { SimpleEntry } from './simpleCatalogs';
 import AbilityFields from './AbilityFields';
+import { fromSpellValues, spellCosts } from './SpellFields';
 import { chainSteps, fromStepValues } from './StepsField';
 import { fromUsageValues } from './UsageField';
 
@@ -70,25 +74,59 @@ export const EFFECT_EXTRAS: CatalogExtras = {
     'duration' in entry ? formatEffectDurationShort(entry.duration) : null,
 };
 
+// Категория и её поля для запроса: у заклинания ячейка в затратах — его круга.
+function abilityCategoryInput(values: SimpleFormValues) {
+  const usage = fromUsageValues(values.usage);
+  if (values.category !== 'spell')
+    return { category: values.category, details: {}, ...usage };
+  const details = fromSpellValues(values.spell);
+  return {
+    category: 'spell',
+    details,
+    ...usage,
+    costs: spellCosts(usage.costs, details.level),
+  };
+}
+
+// Строки заклинания до активации: «3 круг, воплощение» — как заголовок в книге.
+const spellHeaderRows = (entry: Ability) =>
+  entry.category === 'spell'
+    ? [{ label: 'Заклинание', value: formatSpellHeader(entry.details) }]
+    : [];
+
+// После затрат, как в книге — компоненты и длительность.
+function spellTailRows(entry: Ability) {
+  if (entry.category !== 'spell') return [];
+  const { components, duration } = entry.details;
+  return [
+    ...(components ? [{ label: 'Компоненты', value: components }] : []),
+    { label: 'Длительность', value: formatSpellDuration(duration) },
+  ];
+}
+
 export const ABILITY_EXTRAS: CatalogExtras = {
   Field: AbilityFields,
   toInput: (values) => ({
-    category: values.category,
-    details: {},
-    ...fromUsageValues(values.usage),
+    ...abilityCategoryInput(values),
     // Цепочка ещё раз сверяется перед отправкой: правка могла не успеть отрисоваться.
     steps: chainSteps(values.steps).map(fromStepValues),
   }),
   rows: (entry) => {
     if (!('activation' in entry)) return [];
     const costs = formatCosts(entry.costs);
+    const ritual = entry.category === 'spell' && entry.details.ritual;
     return [
-      { label: 'Активация', value: formatActivation(entry.activation) },
+      ...spellHeaderRows(entry),
+      {
+        label: 'Активация',
+        value: `${formatActivation(entry.activation)}${ritual ? ' или ритуал' : ''}`,
+      },
       {
         label: 'Затраты',
         value:
           costs.length === 0 ? 'Ничего не тратит' : <CardLines lines={costs} />,
       },
+      ...spellTailRows(entry),
       // Подпись — ещё и ключ строки: у нескольких шагов она своя у каждого.
       ...formatAbilitySteps(entry.steps).map((lines, index, all) => ({
         label: all.length > 1 ? `Шаг ${index + 1}` : 'Применение',

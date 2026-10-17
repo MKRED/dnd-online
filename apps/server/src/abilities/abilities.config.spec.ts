@@ -18,6 +18,23 @@ describe('abilities.config', () => {
     });
   });
 
+  it('читает поля заклинания, испорченные — как базовую', () => {
+    const details = {
+      level: 0,
+      school: 'evocation',
+      components: 'В, С',
+      ritual: false,
+      duration: { kind: 'instant' },
+    };
+    expect(toAbilityVariant('spell', details, {})).toMatchObject({
+      category: 'spell',
+      details,
+    });
+    expect(
+      toAbilityVariant('spell', { ...details, level: 10 }, {}),
+    ).toMatchObject({ category: 'basic', details: {} });
+  });
+
   // Записи без этих полей и испорченный jsonb не ломают каталог.
   it('без полей или с неверными — действие без затрат', () => {
     const fallback = {

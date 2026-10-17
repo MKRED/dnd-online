@@ -10,6 +10,7 @@ import {
 } from '../catalog';
 import { usePageTitle } from '../../lib/usePageTitle';
 import CategoryChips from './CategoryChips';
+import LevelChips from './LevelChips';
 import SimpleBadges from './SimpleBadges';
 import type { SimpleCatalogDef } from './simpleCatalogs';
 import {
@@ -45,7 +46,20 @@ function SimpleListPage({ def }: SimpleListPageProps) {
   // Без новой записи в истории: «Назад» уводит со страницы, а не перебирает буквы поиска.
   const setFilters = (next: SimpleFilters) =>
     setParams(writeSimpleFilters(params, next), { replace: true });
-  const visible = entries && applySimpleFilters(entries, filters, def.kinds.of);
+  const visible =
+    entries && applySimpleFilters(entries, filters, def.kinds.of, def.levelOf);
+  // Круги заклинаний среди записей выбранных категорий: выбрали «Базовую» — чипов кругов
+  // нет, им нечего отбирать.
+  const levels =
+    entries && def.levelOf
+      ? applySimpleFilters(
+          entries,
+          { ...DEFAULT_SIMPLE_FILTERS, categories: filters.categories },
+          def.kinds.of,
+        )
+          .map(def.levelOf)
+          .filter((level) => level !== null)
+      : [];
 
   return (
     <CatalogListLayout
@@ -76,6 +90,13 @@ function SimpleListPage({ def }: SimpleListPageProps) {
                 onChange={(categories) =>
                   setFilters({ ...filters, categories })
                 }
+              />
+            )}
+            {(levels.length > 0 || filters.levels.length > 0) && (
+              <LevelChips
+                levels={levels}
+                value={filters.levels}
+                onChange={(next) => setFilters({ ...filters, levels: next })}
               />
             )}
             <Select

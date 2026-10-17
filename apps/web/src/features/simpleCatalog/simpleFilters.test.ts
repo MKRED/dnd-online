@@ -92,11 +92,13 @@ describe('simpleFilters', () => {
     expect(readSimpleFilters(params, ['basic', 'sense'])).toEqual({
       query: '',
       categories: [],
+      levels: [],
       sort: 'recent',
     });
     const written = writeSimpleFilters(params, {
       query: 'луч',
       categories: ['sense'],
+      levels: [],
       sort: 'name',
     });
     expect(written.toString()).toBe(
@@ -108,5 +110,43 @@ describe('simpleFilters', () => {
     expect(writeSimpleFilters(written, DEFAULT_SIMPLE_FILTERS).toString()).toBe(
       'tab=catalog',
     );
+  });
+
+  it('круг заклинания: только заклинания выбранных кругов, круг в адресе', () => {
+    const spell = (name: string, level: number): Ability => ({
+      ...ability(name),
+      category: 'spell',
+      details: {
+        level,
+        school: 'evocation',
+        components: '',
+        ritual: false,
+        duration: { kind: 'instant' },
+      },
+    });
+    const list = [
+      ability('Удар'),
+      spell('Огненный снаряд', 0),
+      spell('Огненный шар', 3),
+    ];
+    const names = (levels: number[]) =>
+      applySimpleFilters(
+        list,
+        { ...DEFAULT_SIMPLE_FILTERS, levels },
+        ABILITIES.kinds.of,
+        ABILITIES.levelOf,
+      ).map((a) => a.name);
+    expect(names([])).toHaveLength(3);
+    expect(names([0])).toEqual(['Огненный снаряд']);
+    expect(names([0, 3])).toEqual(['Огненный снаряд', 'Огненный шар']);
+    const params = writeSimpleFilters(new URLSearchParams(), {
+      ...DEFAULT_SIMPLE_FILTERS,
+      levels: [0, 3],
+    });
+    expect(params.toString()).toBe('lvl=0%2C3');
+    // Неизвестное из адреса отбрасывается.
+    expect(
+      readSimpleFilters(new URLSearchParams('lvl=3,10,x,3'), []).levels,
+    ).toEqual([3]);
   });
 });

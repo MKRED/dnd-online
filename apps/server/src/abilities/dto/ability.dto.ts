@@ -4,6 +4,7 @@ import {
   isAbilityActivation,
   isAbilityCosts,
   isAbilitySteps,
+  isSpellDetails,
   type AbilityActivation,
   type AbilityCategory,
   type AbilityCosts,
@@ -14,6 +15,7 @@ import {
   isEmptyDetails,
 } from '../../catalog/category-details.validator.js';
 import { CatalogEntryDto } from '../../catalog/entries/dto/catalog-entry.dto.js';
+import { SpellSlotFitsLevel } from './spell-slot.validator.js';
 
 // Создание и полное редактирование способности — одно и то же тело.
 export class AbilityDto extends CatalogEntryDto {
@@ -21,8 +23,8 @@ export class AbilityDto extends CatalogEntryDto {
   category: AbilityCategory;
 
   @CategoryDetails<AbilityCategory>(
-    { basic: isEmptyDetails },
-    {},
+    { basic: isEmptyDetails, spell: isSpellDetails },
+    { spell: 'Поля заклинания заданы неверно' },
     'Поля способности не подходят к её категории',
   )
   details: object;
@@ -45,6 +47,7 @@ export class AbilityDto extends CatalogEntryDto {
       defaultMessage: () => 'Затраты способности заданы неверно',
     },
   })
+  @SpellSlotFitsLevel()
   costs: AbilityCosts;
 
   // «Применение» (abilitySteps.ts). Необязательно: без поля — пустой список, как у

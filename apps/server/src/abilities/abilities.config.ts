@@ -2,6 +2,7 @@ import {
   DEFAULT_ABILITY_FIELDS,
   isAbilityActivation,
   isAbilityCosts,
+  isSpellDetails,
   readAbilitySteps,
   type AbilityFields,
   type AbilityVariant,
@@ -24,18 +25,22 @@ export const ABILITY_ACCESS: CatalogAccess = {
 
 export type AbilityRecordFields = AbilityVariant & AbilityFields;
 
-// Пока есть только «Базовая» — без своих полей. Новая категория добавит свою ветку.
+// «Базовая» — без своих полей, у «Заклинания» — круг, школа и прочее (shared/abilitySpell.ts);
+// заклинание с испорченными полями читается как «Базовая», чтобы карточка открылась.
 // Активация, затраты и шаги «Применения» лежат в extra; у записей без них (или с
 // испорченными) — значения по умолчанию: действие, без затрат, без шагов. Испорченный шаг
 // пропускается, остальные остаются.
 export function toAbilityVariant(
-  _category: string,
-  _details: Record<string, unknown>,
+  category: string,
+  details: Record<string, unknown>,
   extra: Record<string, unknown>,
 ): AbilityRecordFields {
+  const variant: AbilityVariant =
+    category === 'spell' && isSpellDetails(details)
+      ? { category, details }
+      : { category: 'basic', details: {} };
   return {
-    category: 'basic',
-    details: {},
+    ...variant,
     activation: isAbilityActivation(extra.activation)
       ? extra.activation
       : DEFAULT_ABILITY_FIELDS.activation,

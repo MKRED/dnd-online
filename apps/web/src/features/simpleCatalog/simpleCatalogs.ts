@@ -36,6 +36,8 @@ export interface SimpleCatalogDef {
     labels: Record<string, string>;
     of: (entry: SimpleEntry) => readonly string[];
   };
+  // Круг заклинания для фильтра «Круг»; у остальных записей null. Нет — нет и фильтра.
+  levelOf?: (entry: SimpleEntry) => number | null;
   // Свои поля раздела: составляющие, длительность и снятие спасброском у эффекта;
   // категория, активация и затраты у способности.
   extras: CatalogExtras;
@@ -68,9 +70,13 @@ export const ABILITIES: SimpleCatalogDef = {
   categories: ABILITY_CATEGORIES,
   kinds: {
     values: ABILITY_CATEGORIES,
-    labels: { basic: 'Базовая' },
+    labels: { basic: 'Базовая', spell: 'Заклинание' },
     of: (entry) => ['category' in entry ? entry.category : 'basic'],
   },
+  levelOf: (entry) =>
+    'category' in entry && entry.category === 'spell'
+      ? entry.details.level
+      : null,
   extras: ABILITY_EXTRAS,
   loadTexts: {
     notFound: 'Способность не найдена',

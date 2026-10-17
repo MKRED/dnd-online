@@ -141,7 +141,7 @@ const intIn = (value: number | string, max: number) => {
   return value !== '' && Number.isInteger(n) && n >= 1 && n <= max;
 };
 
-type WithUsage = { usage?: UsageValues };
+type WithUsage = { usage?: UsageValues; category?: string };
 
 // Те же пределы, что у сервера (isAbilityActivation, isAbilityCosts). Поле проверяем,
 // только когда оно в деле: выбран его вид или отмечена его галочка.
@@ -161,7 +161,10 @@ export const usageValidate = {
       ? null
       : `От 1 до ${USES_AMOUNT_MAX}`,
   slotLevel: (value: number | string, values: WithUsage) =>
-    !values.usage?.slotOn || intIn(value, SPELL_SLOT_LEVEL_MAX)
+    // У заклинания круг ячейки — его круг, поля нет (SpellFields/spellSlot.ts).
+    !values.usage?.slotOn ||
+    values.category === 'spell' ||
+    intIn(value, SPELL_SLOT_LEVEL_MAX)
       ? null
       : `От 1 до ${SPELL_SLOT_LEVEL_MAX}`,
   movementFeet: (value: number | string, values: WithUsage) =>

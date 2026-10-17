@@ -51,7 +51,9 @@ interface CostsFieldsProps {
 // Что тратит способность: галочка на каждый вид, отмеченная раскрывает свои поля. Ничего
 // не отмечено — способность ничего не тратит.
 function CostsFields({ form }: CostsFieldsProps) {
-  const usage = form.getValues().usage;
+  const { usage, category, spell } = form.getValues();
+  // У заклинания круг ячейки — его круг, у заговора ячейки нет.
+  const spellLevel = category === 'spell' ? Number(spell.level) : null;
   const nested = { pl: 'xl' } as const;
 
   return (
@@ -104,11 +106,21 @@ function CostsFields({ form }: CostsFieldsProps) {
             />
           </Stack>
         )}
-        <Checkbox
-          label="Ячейка заклинаний"
-          {...form.getInputProps('usage.slotOn', { type: 'checkbox' })}
-        />
-        {usage.slotOn && (
+        {spellLevel === null ? (
+          <Checkbox
+            label="Ячейка заклинаний"
+            {...form.getInputProps('usage.slotOn', { type: 'checkbox' })}
+          />
+        ) : (
+          spellLevel >= 1 && (
+            <Checkbox
+              label={`Ячейка заклинаний ${spellLevel} круга или выше`}
+              description="Круг — заклинания. Снимите, если его сотворяют без ячейки: например, раз за долгий отдых от черты"
+              {...form.getInputProps('usage.slotOn', { type: 'checkbox' })}
+            />
+          )
+        )}
+        {spellLevel === null && usage.slotOn && (
           <NumberInput
             label="Круг не ниже"
             description="1 — любой круг"

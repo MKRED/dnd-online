@@ -97,4 +97,4 @@ Decided with the user on 2026-10-17 ([plan/abilities.md](../plan/abilities.md), 
 - **Duration is a field of the spell**, as the line in the book: Concentration belongs to the caster, and Moonbeam or a summon have no effect on a creature to carry it. Effects (stage 8) keep their own duration; for Hold Person both match.
 - **Growth is a separate stage (7)** and lives on a step, not on the spell: Ice Knife grows only in step 2, and the Breath Weapon grows with character level without being a spell.
 
-Code: not written yet (stage 6).
+Code: `packages/shared/src/abilitySpell.ts` (`SpellDetails`, `isSpellDetails`, `spellSlotFits`) and `abilitySpellLabels.ts` (school names, «3 круг, воплощение», the duration line); the server checks the slot in `apps/server/src/abilities/dto/spell-slot.validator.ts`; the form is `apps/web/src/features/simpleCatalog/SpellFields/`.

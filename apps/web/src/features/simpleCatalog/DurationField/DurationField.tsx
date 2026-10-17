@@ -1,23 +1,16 @@
 import {
-  Checkbox,
   Group,
   Input,
-  NumberInput,
   SegmentedControl,
   Select,
   Stack,
   Text,
 } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
-import {
-  DURATION_AMOUNT_MAX,
-  DURATION_UNITS,
-  durationUnitLabel,
-  formatEffectDuration,
-  type EffectDurationKind,
-} from 'shared';
+import { formatEffectDuration, type EffectDurationKind } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import { fromDurationValues, validateDurationAmount } from './durationForm';
+import TimeFields from './TimeFields';
 
 const KIND_OPTIONS: { value: EffectDurationKind; label: string }[] = [
   { value: 'permanent', label: 'Бессрочно' },
@@ -43,7 +36,6 @@ interface DurationFieldProps {
 // длительность прочитается на карточке.
 function DurationField({ form }: DurationFieldProps) {
   const values = form.getValues().duration;
-  const amount = Number(values.amount) || 1;
 
   return (
     <Stack gap="xs">
@@ -56,36 +48,12 @@ function DurationField({ form }: DurationFieldProps) {
         {...form.getInputProps('duration.kind')}
       />
       {values.kind === 'time' && (
-        <>
-          <Group gap="xs" align="flex-start" wrap="nowrap">
-            <NumberInput
-              aria-label="Сколько"
-              min={1}
-              max={DURATION_AMOUNT_MAX}
-              allowDecimal={false}
-              allowNegative={false}
-              w={96}
-              {...form.getInputProps('duration.amount')}
-            />
-            <Select
-              aria-label="Единица времени"
-              data={DURATION_UNITS.map((unit) => ({
-                value: unit,
-                label: durationUnitLabel(unit, amount),
-              }))}
-              allowDeselect={false}
-              w={140}
-              {...form.getInputProps('duration.unit')}
-            />
-          </Group>
-          <Checkbox
-            label="Концентрация"
-            description="Эффект спадёт раньше, если наложивший потеряет концентрацию"
-            {...form.getInputProps('duration.concentration', {
-              type: 'checkbox',
-            })}
-          />
-        </>
+        <TimeFields
+          form={form}
+          path="duration"
+          value={values}
+          concentrationHint="Эффект спадёт раньше, если наложивший потеряет концентрацию"
+        />
       )}
       {values.kind === 'turn' && (
         <Group gap="md" align="flex-start">

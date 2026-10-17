@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { describeAbilityStepChains } from './abilities/chains.js';
+import { describeAbilitySpells } from './abilities/spells.js';
 import { describeAbilitySteps } from './abilities/steps.js';
 import { describeCatalog } from './support/catalog-scenario/index.js';
 
@@ -67,5 +68,6 @@ describeCatalog(
 
     describeAbilitySteps(get);
     describeAbilityStepChains(get);
+    describeAbilitySpells(get);
   },
 );

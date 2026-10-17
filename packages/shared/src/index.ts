@@ -13,6 +13,7 @@ export * from './catalogSources.js';
 export * from './abilities.js';
 export * from './effects.js';
 export * from './characterEffects.js';
+export * from './sheetTotals.js';
 export * from './effectDuration.js';
 export * from './effectDurationLabels.js';
 export * from './effectSenses.js';

@@ -1,0 +1,18 @@
+/* Название плашки — обычным регистром и не обрезается: длинное переносится. */
+.badge {
+  text-transform: none;
+  height: auto;
+  min-height: var(--badge-height);
+  max-width: 100%;
+  white-space: normal;
+}
+
+.badge :global(.mantine-Badge-label) {
+  overflow: visible;
+  white-space: normal;
+}
+
+.thumb {
+  border-radius: 3px;
+  overflow: hidden;
+}

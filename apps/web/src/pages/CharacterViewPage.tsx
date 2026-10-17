@@ -151,6 +151,14 @@ function CharacterViewPage() {
                   )
               : undefined
           }
+          onEffectsChange={
+            isAuthor
+              ? (effects) =>
+                  setCharacter((current) =>
+                    current ? { ...current, effects } : current,
+                  )
+              : undefined
+          }
         />
       )}
     </Container>

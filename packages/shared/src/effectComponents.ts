@@ -33,6 +33,12 @@ import {
   type PerTurnDetails,
 } from './effectPerTurn.js';
 import {
+  formatRollBonus,
+  isRollBonusDetails,
+  rollBonusKey,
+  type RollBonusDetails,
+} from './effectRollBonus.js';
+import {
   formatSense,
   isSenseDetails,
   type SenseDetails,
@@ -58,6 +64,7 @@ export const EFFECT_COMPONENT_KINDS = [
   'advantage',
   'auto_fail',
   'armor_class',
+  'roll_bonus',
 ] as const;
 export type EffectComponentKind = (typeof EFFECT_COMPONENT_KINDS)[number];
 
@@ -71,7 +78,7 @@ export const SINGLE_EFFECT_COMPONENT_KINDS: readonly EffectComponentKind[] = [
 // иммунитет — effectDefenses.ts. Запрет лечения полей не имеет: носитель не
 // восстанавливает хиты, как от Chill Touch (docs/dnd/modifiers.md). Скорость —
 // effectSpeed.ts, преимущество и помеха — effectAdvantage.ts, автопровал — effectAutoFail.ts,
-// Класс доспеха — effectArmorClass.ts.
+// Класс доспеха — effectArmorClass.ts, бонус к броску — effectRollBonus.ts.
 export type EffectComponent =
   | ({ kind: 'sense' } & SenseDetails)
   | ({ kind: 'condition' } & ConditionDetails)
@@ -81,7 +88,8 @@ export type EffectComponent =
   | ({ kind: 'speed' } & SpeedDetails)
   | ({ kind: 'advantage' } & AdvantageDetails)
   | ({ kind: 'auto_fail' } & AutoFailDetails)
-  | ({ kind: 'armor_class' } & ArmorClassDetails);
+  | ({ kind: 'armor_class' } & ArmorClassDetails)
+  | ({ kind: 'roll_bonus' } & RollBonusDetails);
 
 // Больше в одном эффекте в книге не встречается; предел защищает форму и базу.
 export const EFFECT_COMPONENTS_MAX = 20;
@@ -96,6 +104,7 @@ export const EFFECT_COMPONENT_LABELS: Record<EffectComponentKind, string> = {
   advantage: 'Преимущество или помеха',
   auto_fail: 'Автопровал',
   armor_class: 'Класс доспеха',
+  roll_bonus: 'Бонус к броску',
 };
 
 function isEffectComponent(value: unknown): value is EffectComponent {
@@ -110,12 +119,14 @@ function isEffectComponent(value: unknown): value is EffectComponent {
   if (kind === 'advantage') return isAdvantageDetails(rest);
   if (kind === 'auto_fail') return isAutoFailDetails(rest);
   if (kind === 'armor_class') return isArmorClassDetails(rest);
+  if (kind === 'roll_bonus') return isRollBonusDetails(rest);
   return false;
 }
 
 // Что в одном эффекте не должно повторяться: вид чувства, состояние, тип урона или
 // состояние на одном уровне защиты, изменение Скорости, особая скорость, одни и те же
-// броски с преимуществом или помехой, с автопровалом, сдвиг КД, «не ниже» и база КД.
+// броски с преимуществом или помехой, с автопровалом, с бонусом, сдвиг КД, «не ниже»
+// и база КД.
 // Урон за ход повторяться может (огонь и холод одновременно) — у него ключей нет.
 function componentKeys(component: EffectComponent): string[] {
   switch (component.kind) {
@@ -137,6 +148,8 @@ function componentKeys(component: EffectComponent): string[] {
       return [`auto_fail:${autoFailKey(component)}`];
     case 'armor_class':
       return [`armor_class:${armorClassKey(component)}`];
+    case 'roll_bonus':
+      return [`roll_bonus:${rollBonusKey(component)}`];
     default:
       return component satisfies never;
   }
@@ -182,6 +195,8 @@ export function formatEffectComponent(component: EffectComponent): string {
       return formatAutoFail(component);
     case 'armor_class':
       return formatArmorClass(component);
+    case 'roll_bonus':
+      return formatRollBonus(component);
     default:
       return component satisfies never;
   }

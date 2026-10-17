@@ -236,6 +236,57 @@ export function describeEffectModifiers(get: () => CatalogContext): void {
       }
     });
 
+    // Благословение (атаки и спасброски), Замедление (−2 к спасброскам Ловкости),
+    // Божественное благоволение (+1d4 урона Излучением).
+    const bless = {
+      kind: 'roll_bonus',
+      mode: 'bonus',
+      roll: 'attack',
+      ability: null,
+      count: 1,
+      die: 4,
+      number: 0,
+      damageType: null,
+    };
+    it('бонус к броску: Благословение, Замедление, урон Излучением', async () => {
+      const { author, url, create } = get();
+      const components = [
+        bless,
+        { ...bless, roll: 'save' },
+        {
+          ...bless,
+          mode: 'penalty',
+          roll: 'save',
+          ability: 'dexterity',
+          count: 0,
+          number: 2,
+        },
+        { ...bless, roll: 'damage', damageType: 'radiant' },
+      ];
+      const { id } = await create({ components });
+      const card = await author.get(url(id)).expect(200);
+      expect(card.body).toMatchObject({ components });
+    });
+
+    it('бонус к броску: пустой, характеристика у атак, тип у вычета, повтор — 400', async () => {
+      const { author, url, body } = get();
+      for (const components of [
+        [{ ...bless, count: 0 }],
+        [{ ...bless, ability: 'strength' }],
+        [{ ...bless, roll: 'damage', mode: 'penalty', damageType: 'fire' }],
+        [{ ...bless, die: 20 }],
+        [bless, { ...bless, mode: 'penalty' }],
+      ]) {
+        const res = await author
+          .post(url())
+          .send(body({ components }))
+          .expect(400);
+        expect(messages(res)[0]).toMatch(
+          /^Составляющие эффекта заданы неверно/,
+        );
+      }
+    });
+
     it('автопровал: характеристика у проверок, повтор — 400', async () => {
       const { author, url, body } = get();
       const save = { kind: 'auto_fail', roll: 'save', ability: 'strength' };

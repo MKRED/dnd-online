@@ -11,6 +11,7 @@ import { armorClassValidate } from './armorClassForm';
 import { autoFailRollError } from './autoFailForm';
 import { defenseDamageTypesError } from './defenseForm';
 import { perTurnValidate, type PerTurnValues } from './perTurnForm';
+import { rollBonusValidate } from './rollBonusForm';
 import { speedValidate } from './speedForm';
 
 type WithEffect = { effect: { components: ComponentValues[] } };
@@ -154,6 +155,29 @@ export const componentRules = {
       const component = componentAt(values, path);
       return component.kind === 'armor_class'
         ? armorClassValidate.value(component.armorClass)
+        : null;
+    },
+  },
+  rollBonus: {
+    // Повтор — у выбора бросков, пустая прибавка — у костей.
+    roll: (_value: unknown, values: WithEffect, path: string) => {
+      const component = componentAt(values, path);
+      if (component.kind !== 'roll_bonus') return null;
+      const earlier = earlierOf(values, path)
+        .filter((c) => c.kind === 'roll_bonus')
+        .map((c) => c.rollBonus);
+      return rollBonusValidate.roll(component.rollBonus, earlier);
+    },
+    count: (_value: unknown, values: WithEffect, path: string) => {
+      const component = componentAt(values, path);
+      return component.kind === 'roll_bonus'
+        ? rollBonusValidate.count(component.rollBonus)
+        : null;
+    },
+    number: (_value: unknown, values: WithEffect, path: string) => {
+      const component = componentAt(values, path);
+      return component.kind === 'roll_bonus'
+        ? rollBonusValidate.number(component.rollBonus)
         : null;
     },
   },

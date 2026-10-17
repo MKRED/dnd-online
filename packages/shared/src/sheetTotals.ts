@@ -10,6 +10,7 @@ import type { EffectComponent } from './effectComponents.js';
 import { CONDITION_LABELS } from './effectConditions.js';
 import type { DefenseLevel } from './effectDefenses.js';
 import { formatPerTurn } from './effectPerTurn.js';
+import { formatRollBonus, rollBonusKey } from './effectRollBonus.js';
 import { formatSense, type SenseKind } from './effectSenses.js';
 import { formatSpeed } from './effectSpeed.js';
 import {
@@ -134,6 +135,14 @@ export function sheetTotals(
         );
       case 'auto_fail':
         return rolls.add(`f:${autoFailKey(c)}`, formatAutoFail(c), from);
+      case 'roll_bonus':
+        // Бонусы разных эффектов складываются (Bless и Guidance к одной проверке — оба),
+        // поэтому строки не сливаются: у каждого эффекта своя.
+        return rolls.add(
+          `b:${from}:${rollBonusKey(c)}`,
+          formatRollBonus(c),
+          from,
+        );
       case 'no_healing':
         if (!noHealing.includes(from)) noHealing.push(from);
         return;

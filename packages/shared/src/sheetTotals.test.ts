@@ -87,6 +87,25 @@ describe('sheetTotals', () => {
     ]);
   });
 
+  it('бонусы к броскам разных эффектов — отдельными строками: они складываются', () => {
+    const plus = {
+      kind: 'roll_bonus',
+      mode: 'bonus',
+      roll: 'attack',
+      ability: null,
+      count: 1,
+      die: 4,
+      number: 0,
+      damageType: null,
+    } as const;
+    const bless = entry('Благословение', [plus]);
+    const other = entry('Боевой гимн', [plus]);
+    expect(totals(bless, other).rolls).toEqual([
+      { text: '+1d4 к своим броскам атаки', from: ['Благословение'] },
+      { text: '+1d4 к своим броскам атаки', from: ['Боевой гимн'] },
+    ]);
+  });
+
   it('скрытый, удалённый и не действующий эффект на лист не влияют', () => {
     const hidden: CharacterEffectEntry = {
       id: 'row-x',

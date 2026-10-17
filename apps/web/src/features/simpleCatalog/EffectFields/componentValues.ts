@@ -35,6 +35,12 @@ import {
   type PerTurnValues,
 } from './perTurnForm';
 import {
+  fromRollBonusValues,
+  NEW_ROLL_BONUS,
+  toRollBonusValues,
+  type RollBonusValues,
+} from './rollBonusForm';
+import {
   fromSpeedValues,
   NEW_SPEED,
   toSpeedValues,
@@ -58,6 +64,7 @@ export interface ComponentValues {
   advantage: AdvantageValues;
   autoFail: AutoFailValues;
   armorClass: ArmorClassValues;
+  rollBonus: RollBonusValues;
 }
 
 export function newComponent(kind: EffectComponentKind): ComponentValues {
@@ -73,6 +80,7 @@ export function newComponent(kind: EffectComponentKind): ComponentValues {
     advantage: NEW_ADVANTAGE,
     autoFail: NEW_AUTO_FAIL,
     armorClass: NEW_ARMOR_CLASS,
+    rollBonus: NEW_ROLL_BONUS,
   };
 }
 export function toComponentValues(component: EffectComponent): ComponentValues {
@@ -112,6 +120,10 @@ export function toComponentValues(component: EffectComponent): ComponentValues {
       const { kind, ...details } = component;
       return { ...values, kind, armorClass: details };
     }
+    case 'roll_bonus': {
+      const { kind, ...details } = component;
+      return { ...values, kind, rollBonus: toRollBonusValues(details) };
+    }
     default:
       return component satisfies never;
   }
@@ -147,6 +159,8 @@ export function fromComponentValues(c: ComponentValues): EffectComponent[] {
       return [{ kind: 'auto_fail', ...fromAutoFailValues(c.autoFail) }];
     case 'armor_class':
       return [{ kind: 'armor_class', ...fromArmorClassValues(c.armorClass) }];
+    case 'roll_bonus':
+      return [{ kind: 'roll_bonus', ...fromRollBonusValues(c.rollBonus) }];
     default:
       return c.kind satisfies never;
   }

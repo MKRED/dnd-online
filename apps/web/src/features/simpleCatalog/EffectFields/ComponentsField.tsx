@@ -26,6 +26,7 @@ import DefenseComponentFields from './DefenseComponentFields';
 import NoHealingComponentFields from './NoHealingComponentFields';
 import { newComponent } from './effectForm';
 import PerTurnComponentFields from './PerTurnComponentFields';
+import RollBonusComponentFields from './RollBonusComponentFields';
 import SenseComponentFields from './SenseComponentFields';
 import SpeedComponentFields from './SpeedComponentFields';
 
@@ -47,6 +48,7 @@ const KIND_FIELDS: Record<
   advantage: AdvantageComponentFields,
   auto_fail: AutoFailComponentFields,
   armor_class: ArmorClassComponentFields,
+  roll_bonus: RollBonusComponentFields,
 };
 
 // Составляющие эффекта списком карточек (docs/plan/effects.md): у каждой свои поля и

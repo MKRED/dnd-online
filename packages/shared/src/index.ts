@@ -26,6 +26,7 @@ export * from './effectAdvantageWhen.js';
 export * from './effectAutoFail.js';
 export * from './effectSpeedTotal.js';
 export * from './effectArmorClass.js';
+export * from './effectRollBonus.js';
 export * from './effectArmorClassTotal.js';
 export * from './abilityModifier.js';
 export * from './conditionComponents.js';

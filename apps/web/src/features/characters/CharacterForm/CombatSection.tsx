@@ -55,7 +55,7 @@ function CombatSection({ form }: CombatSectionProps) {
         </Grid.Col>
         <Grid.Col span={{ base: 6, sm: 3 }}>
           <NumberInput
-            label="Класс доспеха"
+            label="Класс доспеха без эффектов"
             min={0}
             {...form.getInputProps('armorClass')}
           />
@@ -70,7 +70,7 @@ function CombatSection({ form }: CombatSectionProps) {
         </Grid.Col>
         <Grid.Col span={{ base: 6, sm: 3 }}>
           <NumberInput
-            label="Скорость (фут)"
+            label="Скорость без эффектов, фут"
             min={0}
             {...form.getInputProps('speed')}
           />

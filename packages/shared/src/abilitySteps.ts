@@ -1,10 +1,11 @@
+import type { AreaOrigin, AreaSpec } from './abilityStepAreas.js';
 import { ABILITY_SCORES, type AbilityScore } from './character.js';
 import type { DamageDie, DamageType } from './damageTypes.js';
 
 // «Применение» способности — список шагов (docs/plan/abilities.md, docs/dnd/attacks-and-saves.md).
-// Этап 3: один шаг, проверка — бросок атаки, последствия — урон при попадании и при
-// промахе. Спасбросок, области и несколько шагов добавят этапы 4 и 5. Ключи хранятся в
-// базе: добавлять можно, переименовывать — только с миграцией данных.
+// Шаг: цель, проверка (бросок атаки, спасбросок или никакой) и последствия. Несколько
+// шагов добавит этап 5. Ключи хранятся в базе: добавлять можно, переименовывать — только
+// с миграцией данных.
 
 export const ATTACK_KINDS = [
   'melee_weapon',
@@ -35,16 +36,31 @@ export type AttackBonus =
 export const ATTACK_BONUS_MIN = -5;
 export const ATTACK_BONUS_MAX = 30;
 
-// Касание и досягаемость — у ближних атак, дистанция — у дальнобойных. Дальняя
-// дистанция (с помехой) — только у оружия: «Длинный лук» 150/600.
+// Сл спасброска: 8 + модификатор + бонус мастерства, как Сл заклинаний и оружия
+// дыхания (Телосложение), или готовое число.
+export const SAVE_DC_ABILITIES = [...ABILITY_SCORES, 'spellcasting'] as const;
+export type SaveDcAbility = (typeof SAVE_DC_ABILITIES)[number];
+export type SaveDc =
+  | { kind: 'ability'; ability: SaveDcAbility }
+  | { kind: 'fixed'; value: number };
+export const SAVE_DC_MIN = 1;
+export const SAVE_DC_MAX = 30;
+
+// Цель: на себя, касание, досягаемость, дистанция или область. Какие подходят — решает
+// проверка (stepTargets). Дальняя дистанция (с помехой) — только у оружия: «Длинный
+// лук» 150/600.
 export type StepTarget =
+  | { kind: 'self' }
   | { kind: 'touch' }
   | { kind: 'reach'; feet: number }
-  | { kind: 'range'; feet: number; longFeet: number | null };
+  | { kind: 'range'; feet: number; longFeet: number | null }
+  | { kind: 'area'; area: AreaSpec; origin: AreaOrigin };
 export const STEP_TARGET_KINDS = [
+  'self',
   'touch',
   'reach',
   'range',
+  'area',
 ] as const satisfies readonly StepTarget['kind'][];
 export type StepTargetKind = (typeof STEP_TARGET_KINDS)[number];
 
@@ -72,15 +88,26 @@ export interface AttackCheck {
   attack: AttackKind;
   bonus: AttackBonus;
 }
+// Без проверки урон проходит сам, как у «Волшебной стрелы».
+export type AbilityCheck =
+  | AttackCheck
+  | { kind: 'save'; ability: AbilityScore; dc: SaveDc }
+  | { kind: 'none' };
+export type AbilityCheckKind = AbilityCheck['kind'];
+export const ABILITY_CHECK_KINDS = [
+  'attack',
+  'save',
+  'none',
+] as const satisfies readonly AbilityCheckKind[];
 
 // Последствия — два исхода отдельными объектами, чтобы расти без переименований.
-// hit — проверка сработала против цели: попадание атакой, а у спасброска (этап 4) —
-// провал; miss — промах или успех спасброска. Эффекты в последствиях (этап 7) лягут
+// hit — проверка сработала против цели: попадание атакой, провал спасброска, а без
+// проверки — всегда; miss — промах или успех спасброска, без проверки его нет (ничего). Эффекты в последствиях (этап 7) лягут
 // в оба: у «Ошеломляющего удара» свой эффект и при успехе.
 //
 // Урон без строк бывает: «Сеть» только опутывает. addModifier — модификатор той же
 // характеристики, что у атаки, один раз на весь урон: у оружия да, у заклинаний обычно
-// нет. При числовом бонусе его нет: число урона — в строках.
+// нет. Только у атаки с бонусом от характеристики: иначе число урона — в строках.
 export interface HitOutcome {
   damage: DamagePart[];
   addModifier: boolean;
@@ -91,7 +118,7 @@ export interface MissOutcome {
 
 export interface AbilityStep {
   target: StepTarget;
-  check: AttackCheck;
+  check: AbilityCheck;
   hit: HitOutcome;
   miss: MissOutcome;
 }
@@ -114,6 +141,15 @@ export const ATTACK_DEFAULTS: Record<
   },
 };
 
-// Какие цели подходят виду атаки.
-export const attackTargets = (attack: AttackKind): StepTargetKind[] =>
-  isMeleeAttack(attack) ? ['touch', 'reach'] : ['range'];
+// Какие цели подходят проверке. Атака — касание и досягаемость у ближней, дистанция у
+// дальнобойной. Спасбросок — кроме «на себя»: себе его не назначают. Без проверки — все.
+export function stepTargets(check: AbilityCheck): StepTargetKind[] {
+  switch (check.kind) {
+    case 'attack':
+      return isMeleeAttack(check.attack) ? ['touch', 'reach'] : ['range'];
+    case 'save':
+      return ['touch', 'reach', 'range', 'area'];
+    case 'none':
+      return [...STEP_TARGET_KINDS];
+  }
+}

@@ -90,5 +90,58 @@ export function describeAbilitySteps(get: () => CatalogContext): void {
       expect(await read([noModifier])).toEqual([fireBolt]);
       expect(await read([{ target: 1 }])).toEqual([]);
     });
+
+    // Этап 4: «Огненный шар» — спасбросок и сфера в точке; «Волшебная стрела» — без
+    // проверки.
+    it('спасбросок с областью и шаг без проверки сохраняются, неверная область — 400', async () => {
+      const { author, url, body, create } = get();
+      const fireball = {
+        target: {
+          kind: 'area',
+          area: { shape: 'sphere', radius: 20 },
+          origin: { kind: 'point', feet: 150 },
+        },
+        check: {
+          kind: 'save',
+          ability: 'dexterity',
+          dc: { kind: 'ability', ability: 'spellcasting' },
+        },
+        hit: {
+          damage: [{ count: 8, die: 6, number: 0, type: 'fire' }],
+          addModifier: false,
+        },
+        miss: { damage: 'half' },
+      };
+      const missile = {
+        target: { kind: 'range', feet: 120, longFeet: null },
+        check: { kind: 'none' },
+        hit: {
+          damage: [{ count: 3, die: 4, number: 3, type: 'force' }],
+          addModifier: false,
+        },
+        miss: { damage: 'none' },
+      };
+      for (const step of [fireball, missile]) {
+        const { id } = await create({ steps: [step] });
+        const card = await author.get(url(id)).expect(200);
+        expect(card.body).toMatchObject({ steps: [step] });
+      }
+      for (const step of [
+        {
+          ...fireball,
+          target: {
+            ...fireball.target,
+            area: { shape: 'emanation', distance: 15 },
+          },
+        },
+        { ...missile, miss: { damage: 'half' } },
+        { ...fireball, target: { kind: 'self' } },
+      ]) {
+        await author
+          .post(url())
+          .send(body({ steps: [step] }))
+          .expect(400);
+      }
+    });
   });
 }

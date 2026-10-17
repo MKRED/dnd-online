@@ -4,23 +4,28 @@ import {
   ATTACK_BONUS_MAX,
   ATTACK_BONUS_MIN,
   ATTACK_KINDS,
-  attackTargets,
+  SAVE_DC_ABILITIES,
+  SAVE_DC_MAX,
+  SAVE_DC_MIN,
+  stepTargets,
   DAMAGE_DICE_MAX,
   DAMAGE_NUMBER_MAX,
   DAMAGE_PARTS_MAX,
-  FEET_STEP,
   MISS_DAMAGES,
   RANGE_FEET_MAX,
   REACH_FEET_MAX,
+  type AbilityCheck,
   type AbilityStep,
-  type AttackAbility,
-  type AttackBonus,
   type AttackKind,
   type DamagePart,
   type HitOutcome,
   type MissDamage,
   type MissOutcome,
+  type StepTargetKind,
 } from './abilitySteps.js';
+import { isArea } from './abilityStepAreasCheck.js';
+import { isFeet, isIntIn, isObject, keysAre } from './abilityStepGuards.js';
+import { ABILITY_SCORES, type AbilityScore } from './character.js';
 import {
   DAMAGE_DICE,
   DAMAGE_TYPES,
@@ -31,16 +36,7 @@ import {
 // Строгая проверка шагов «Применения» — для запроса. Из базы шаги читаются мягче, с
 // умолчаниями (abilityStepsRead.ts).
 
-const keysAre = (value: object, keys: string) =>
-  Object.keys(value).sort().join(',') === keys;
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-const isIntIn = (value: unknown, min: number, max: number) =>
-  Number.isInteger(value) &&
-  (value as number) >= min &&
-  (value as number) <= max;
-export const isFeet = (value: unknown, max: number) =>
-  isIntIn(value, FEET_STEP, max) && (value as number) % FEET_STEP === 0;
+export { isFeet } from './abilityStepGuards.js';
 
 function isDamagePart(value: unknown): value is DamagePart {
   return (
@@ -55,27 +51,60 @@ function isDamagePart(value: unknown): value is DamagePart {
   );
 }
 
-function isBonus(value: unknown): boolean {
+function isAbilityOrFixed(
+  value: unknown,
+  abilities: readonly string[],
+  min: number,
+  max: number,
+): boolean {
   if (!isObject(value)) return false;
   if (value.kind === 'ability') {
     return (
       keysAre(value, 'ability,kind') &&
-      ATTACK_ABILITIES.includes(value.ability as AttackAbility)
+      abilities.includes(value.ability as string)
     );
   }
   return (
     value.kind === 'fixed' &&
     keysAre(value, 'kind,value') &&
-    isIntIn(value.value, ATTACK_BONUS_MIN, ATTACK_BONUS_MAX)
+    isIntIn(value.value, min, max)
   );
 }
 
-// Цель должна подходить виду атаки: касание и досягаемость — ближней, дистанция —
-// дальнобойной; дальняя дистанция — только у оружия и дальше обычной.
-function isTarget(value: unknown, attack: AttackKind): boolean {
+function isCheck(value: unknown): value is AbilityCheck {
   if (!isObject(value)) return false;
-  if (!attackTargets(attack).includes(value.kind as never)) return false;
   switch (value.kind) {
+    case 'attack':
+      return (
+        keysAre(value, 'attack,bonus,kind') &&
+        ATTACK_KINDS.includes(value.attack as AttackKind) &&
+        isAbilityOrFixed(
+          value.bonus,
+          ATTACK_ABILITIES,
+          ATTACK_BONUS_MIN,
+          ATTACK_BONUS_MAX,
+        )
+      );
+    case 'save':
+      return (
+        keysAre(value, 'ability,dc,kind') &&
+        ABILITY_SCORES.includes(value.ability as AbilityScore) &&
+        isAbilityOrFixed(value.dc, SAVE_DC_ABILITIES, SAVE_DC_MIN, SAVE_DC_MAX)
+      );
+    case 'none':
+      return keysAre(value, 'kind');
+    default:
+      return false;
+  }
+}
+
+// Цель должна подходить проверке (stepTargets); дальняя дистанция — только у
+// дальнобойного оружия и дальше обычной.
+function isTarget(value: unknown, check: AbilityCheck): boolean {
+  if (!isObject(value)) return false;
+  if (!stepTargets(check).includes(value.kind as StepTargetKind)) return false;
+  switch (value.kind) {
+    case 'self':
     case 'touch':
       return keysAre(value, 'kind');
     case 'reach':
@@ -85,16 +114,21 @@ function isTarget(value: unknown, attack: AttackKind): boolean {
         keysAre(value, 'feet,kind,longFeet') &&
         isFeet(value.feet, RANGE_FEET_MAX) &&
         (value.longFeet === null ||
-          (attack === 'ranged_weapon' &&
+          (check.kind === 'attack' &&
+            check.attack === 'ranged_weapon' &&
             isFeet(value.longFeet, RANGE_FEET_MAX) &&
             (value.longFeet as number) > (value.feet as number)))
+      );
+    case 'area':
+      return (
+        keysAre(value, 'area,kind,origin') && isArea(value.area, value.origin)
       );
     default:
       return false;
   }
 }
 
-function isHit(value: unknown, bonus: AttackBonus): value is HitOutcome {
+function isHit(value: unknown, check: AbilityCheck): value is HitOutcome {
   return (
     isObject(value) &&
     keysAre(value, 'addModifier,damage') &&
@@ -102,17 +136,23 @@ function isHit(value: unknown, bonus: AttackBonus): value is HitOutcome {
     value.damage.length <= DAMAGE_PARTS_MAX &&
     value.damage.every(isDamagePart) &&
     typeof value.addModifier === 'boolean' &&
-    (!value.addModifier || bonus.kind === 'ability')
+    (!value.addModifier ||
+      (check.kind === 'attack' && check.bonus.kind === 'ability'))
   );
 }
 
-function isMiss(value: unknown, hit: HitOutcome): value is MissOutcome {
+function isMiss(
+  value: unknown,
+  hit: HitOutcome,
+  check: AbilityCheck,
+): value is MissOutcome {
   return (
     isObject(value) &&
     keysAre(value, 'damage') &&
     MISS_DAMAGES.includes(value.damage as MissDamage) &&
-    // Половина от ничего — ошибка в форме, а не замысел.
-    (value.damage === 'none' || hit.damage.length > 0)
+    // Половина от ничего — ошибка в форме, а не замысел; без проверки промаха нет.
+    (value.damage === 'none' ||
+      (hit.damage.length > 0 && check.kind !== 'none'))
   );
 }
 
@@ -120,20 +160,11 @@ export function isAbilityStep(value: unknown): value is AbilityStep {
   if (!isObject(value)) return false;
   if (!keysAre(value, 'check,hit,miss,target')) return false;
   const { check } = value;
-  if (
-    !isObject(check) ||
-    check.kind !== 'attack' ||
-    !keysAre(check, 'attack,bonus,kind') ||
-    !ATTACK_KINDS.includes(check.attack as AttackKind) ||
-    !isBonus(check.bonus)
-  ) {
-    return false;
-  }
-  const bonus = check.bonus as AttackBonus;
   return (
-    isTarget(value.target, check.attack as AttackKind) &&
-    isHit(value.hit, bonus) &&
-    isMiss(value.miss, value.hit)
+    isCheck(check) &&
+    isTarget(value.target, check) &&
+    isHit(value.hit, check) &&
+    isMiss(value.miss, value.hit, check)
   );
 }
 

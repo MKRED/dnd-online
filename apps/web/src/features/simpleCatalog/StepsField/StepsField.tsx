@@ -10,16 +10,17 @@ import {
 import type { UseFormReturnType } from '@mantine/form';
 import { ABILITY_STEPS_MAX } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
+import CheckFields from './CheckFields';
 import DamageFields from './DamageFields';
 import { newStep } from './stepsForm';
-import AttackFields from './AttackFields';
+import TargetFields from './TargetFields';
 
 interface StepsFieldProps {
   form: UseFormReturnType<SimpleFormValues>;
 }
 
 // «Применение» способности (docs/plan/abilities.md): шаги карточками, как составляющие
-// эффекта. Пока шаг один и это всегда атака; спасбросок и несколько шагов — этапы 4 и 5.
+// эффекта. Пока шаг один; несколько шагов — этап 5.
 function StepsField({ form }: StepsFieldProps) {
   const { steps } = form.getValues();
   const full = steps.length >= ABILITY_STEPS_MAX;
@@ -34,20 +35,21 @@ function StepsField({ form }: StepsFieldProps) {
           <Paper key={step.key} withBorder p="sm" radius="md">
             <Group justify="space-between" mb={4} wrap="nowrap">
               <Text size="sm" fw={500}>
-                Атака
+                Шаг
               </Text>
               <ActionIcon
                 variant="subtle"
                 color="gray"
-                aria-label="Убрать атаку"
-                title="Убрать атаку"
+                aria-label="Убрать шаг"
+                title="Убрать шаг"
                 onClick={() => form.removeListItem('steps', index)}
               >
                 ✕
               </ActionIcon>
             </Group>
             <Stack gap="sm">
-              <AttackFields form={form} index={index} />
+              <CheckFields form={form} index={index} />
+              <TargetFields form={form} index={index} />
               <DamageFields form={form} index={index} />
             </Stack>
           </Paper>
@@ -59,7 +61,7 @@ function StepsField({ form }: StepsFieldProps) {
             w="fit-content"
             onClick={() => form.insertListItem('steps', newStep())}
           >
-            + Атака
+            + Шаг
           </Button>
         )}
       </Stack>

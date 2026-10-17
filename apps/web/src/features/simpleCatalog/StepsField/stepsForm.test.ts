@@ -6,6 +6,7 @@ import {
   newStep,
   toStepValues,
   withAttack,
+  withCheck,
   type StepValues,
 } from './stepsForm';
 import { stepsValidate } from './stepsValidate';
@@ -92,5 +93,103 @@ describe('stepsForm', () => {
     expect(
       stepsValidate.bonusValue(40, formOf(fixed), 'steps.0.bonusValue'),
     ).toBe('От -5 до 30');
+  });
+});
+
+const fireball: AbilityStep = {
+  target: {
+    kind: 'area',
+    area: { shape: 'sphere', radius: 20 },
+    origin: { kind: 'point', feet: 150 },
+  },
+  check: {
+    kind: 'save',
+    ability: 'dexterity',
+    dc: { kind: 'ability', ability: 'spellcasting' },
+  },
+  hit: {
+    damage: [{ count: 8, die: 6, number: 0, type: 'fire' }],
+    addModifier: false,
+  },
+  miss: { damage: 'half' },
+};
+
+describe('stepsForm: спасбросок, область, без проверки', () => {
+  it('шаги этапа 4 читаются в форму и уходят обратно такими же', () => {
+    const cylinder: AbilityStep = {
+      ...fireball,
+      target: {
+        kind: 'area',
+        area: { shape: 'cylinder', radius: 5, height: 40 },
+        origin: { kind: 'self' },
+      },
+      check: { ...fireball.check, dc: { kind: 'fixed', value: 15 } },
+    } as AbilityStep;
+    const missile: AbilityStep = {
+      target: { kind: 'self' },
+      check: { kind: 'none' },
+      hit: fireball.hit,
+      miss: { damage: 'none' },
+    };
+    for (const step of [fireball, cylinder, missile]) {
+      expect(fromStepValues(toStepValues(step))).toEqual(step);
+    }
+  });
+
+  it('смена проверки подбирает цель и убирает модификатор', () => {
+    const bow = toStepValues(longbow);
+    const save = withCheck(bow, 'save');
+    expect(save).toMatchObject({ target: 'range', addModifier: false });
+    // «На себя» есть только без проверки: у спасброска цель сменится.
+    const self = { ...withCheck(bow, 'none'), target: 'self' as const };
+    expect(withCheck(self, 'save').target).toBe('touch');
+    // Назад к атаке — цель и характеристика вида атаки.
+    expect(withCheck(save, 'attack')).toMatchObject({
+      target: 'range',
+      bonusAbility: 'dexterity',
+      addModifier: true,
+    });
+  });
+
+  it('без проверки нет половины, эманация всегда от себя', () => {
+    const none = { ...toStepValues(fireball), check: 'none' as const };
+    expect(fromStepValues(none).miss).toEqual({ damage: 'none' });
+    const aura = { ...toStepValues(fireball), areaShape: 'emanation' as const };
+    expect(fromStepValues(aura).target).toEqual({
+      kind: 'area',
+      area: { shape: 'emanation', distance: 20 },
+      origin: { kind: 'self' },
+    });
+  });
+
+  it('проверки области и Сл — только видимых полей', () => {
+    const step = toStepValues(fireball);
+    expect(stepsValidate.areaSize(3, formOf(step), 'steps.0.areaSize')).toBe(
+      'Кратно 5, от 5 до 1000',
+    );
+    // Высота — только у цилиндра.
+    expect(
+      stepsValidate.areaHeight('', formOf(step), 'steps.0.areaHeight'),
+    ).toBeNull();
+    expect(
+      stepsValidate.areaHeight(
+        '',
+        formOf({ ...step, areaShape: 'cylinder' }),
+        'steps.0.areaHeight',
+      ),
+    ).toBe('Кратно 5, от 5 до 1000');
+    expect(
+      stepsValidate.originFeet(0, formOf(step), 'steps.0.originFeet'),
+    ).toBe('Кратно 5, от 5 до 5280');
+    expect(
+      stepsValidate.dcValue(0, formOf(step), 'steps.0.dcValue'),
+    ).toBeNull();
+    expect(
+      stepsValidate.dcValue(
+        0,
+        formOf({ ...step, dcKind: 'fixed' }),
+        'steps.0.dcValue',
+      ),
+    ).toBe('От 1 до 30');
   });
 });

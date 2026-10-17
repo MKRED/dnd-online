@@ -38,6 +38,7 @@ export * from './effectSaveEnds.js';
 export * from './abilityUsage.js';
 export * from './abilityUsageLabels.js';
 export * from './abilitySteps.js';
+export * from './abilityStepAreas.js';
 export * from './abilityStepsCheck.js';
 export * from './abilityStepsRead.js';
 export * from './abilityStepLabels.js';

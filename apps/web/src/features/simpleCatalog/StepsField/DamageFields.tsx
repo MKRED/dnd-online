@@ -18,6 +18,7 @@ import {
   DAMAGE_PARTS_MAX,
   DAMAGE_TYPE_LABELS,
   DAMAGE_TYPES,
+  type AbilityCheckKind,
 } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import { newDamage } from './stepsForm';
@@ -30,6 +31,16 @@ const TYPE_OPTIONS = DAMAGE_TYPES.map((value) => ({
   value,
   label: DAMAGE_TYPE_LABELS[value],
 }));
+// «При попадании», «При успехе»: исходы атаки и спасброска. Без проверки исход один —
+// просто «Урон».
+const OUTCOME_CASES: Record<
+  AbilityCheckKind,
+  { hit: string; miss: string } | null
+> = {
+  attack: { hit: 'попадании', miss: 'промахе' },
+  save: { hit: 'провале', miss: 'успехе' },
+  none: null,
+};
 const MISS_OPTIONS = [
   { value: 'none', label: 'Ничего' },
   { value: 'half', label: 'Половина урона' },
@@ -40,17 +51,20 @@ interface DamageFieldsProps {
   index: number;
 }
 
-// Последствия атаки: строки урона при попадании (кости + число, тип), модификатор
-// характеристики один раз на весь урон и что бывает при промахе.
+// Последствия шага: строки урона при попадании или провале (кости + число, тип),
+// модификатор характеристики атаки один раз на весь урон и что бывает при промахе или
+// успехе. Без проверки второго исхода нет.
 function DamageFields({ form, index }: DamageFieldsProps) {
   const path = `steps.${index}`;
   const step = form.getValues().steps[index];
   const { damage } = step;
   const lastType = damage.at(-1)?.type;
+  const cases = OUTCOME_CASES[step.check];
+  const modifier = step.check === 'attack' && step.bonusKind === 'ability';
 
   return (
     <Stack gap="xs">
-      <Input.Wrapper label="При попадании">
+      <Input.Wrapper label={cases ? `При ${cases.hit}` : 'Урон'}>
         <Stack gap="xs" mt={4}>
           {damage.length === 0 && (
             <Text size="sm" c="dimmed">
@@ -122,7 +136,7 @@ function DamageFields({ form, index }: DamageFieldsProps) {
               + Урон
             </Button>
           )}
-          {step.bonusKind === 'ability' && (
+          {modifier && (
             <Checkbox
               label="Прибавить модификатор характеристики атаки"
               description="Как у оружия; у заклинаний обычно нет"
@@ -133,11 +147,11 @@ function DamageFields({ form, index }: DamageFieldsProps) {
           )}
         </Stack>
       </Input.Wrapper>
-      {damage.length > 0 && (
-        <Input.Wrapper label="При промахе">
+      {damage.length > 0 && cases && (
+        <Input.Wrapper label={`При ${cases.miss}`}>
           <div>
             <SegmentedControl
-              aria-label="При промахе"
+              aria-label={`При ${cases.miss}`}
               data={MISS_OPTIONS}
               size="xs"
               mt={4}

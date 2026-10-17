@@ -93,6 +93,7 @@ Decided with the user on 2026-10-17 ([plan/abilities.md](../plan/abilities.md), 
 
 - **«Круг», not «уровень».** next.dnd.su 2024 writes «3 уровень», but the app keeps «круг» («Заговор», «3 круг, воплощение»), as in the spell slot cost («Ячейка заклинаний 3 круга»). That way a spell level isn't confused with the character level that cantrips grow with.
 - **The level suggests the slot.** Choosing level N ticks the cost «Ячейка заклинаний N круга или выше»; the tick can be removed (a feat's free casting once per Long Rest: a copy of the spell with uses instead of a slot, until features can link to spells). A cantrip has no slot.
+- **Components are one optional text field**, written as in the book: «В, С, М (бриллиант стоимостью не менее 300 ЗМ, расходуемый заклинанием)». Not split into V/S/M, a cost and consumption for now (decided with the user); the game will need that split later (silence, free hands, a focus or a pouch).
 - **Duration is a field of the spell**, as the line in the book: Concentration belongs to the caster, and Moonbeam or a summon have no effect on a creature to carry it. Effects (stage 8) keep their own duration; for Hold Person both match.
 - **Growth is a separate stage (7)** and lives on a step, not on the spell: Ice Knife grows only in step 2, and the Breath Weapon grows with character level without being a spell.
 

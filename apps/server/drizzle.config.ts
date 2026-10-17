@@ -20,6 +20,7 @@ export default defineConfig({
     './src/database/schema/character-items.ts',
     './src/database/schema/abilities.ts',
     './src/database/schema/effects.ts',
+    './src/database/schema/character-effects.ts',
   ],
   dialect: 'postgresql',
   dbCredentials: {

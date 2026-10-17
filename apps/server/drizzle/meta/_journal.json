@@ -176,6 +176,13 @@
       "when": 1792161712807,
       "tag": "0024_curved_hawkeye",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1792214716949,
+      "tag": "0025_character_effects",
+      "breakpoints": true
     }
   ]
 }

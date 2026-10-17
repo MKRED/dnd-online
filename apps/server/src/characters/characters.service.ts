@@ -5,6 +5,10 @@ import { loadMainImages } from '../character-images/character-image-access.js';
 import { DatabaseService } from '../database/database.service.js';
 import { characters, users } from '../database/schema/index.js';
 import { nicknameOf } from './character-author.js';
+import {
+  loadCharacterEffectLists,
+  loadCharacterEffects,
+} from './effects/index.js';
 import { loadInventories, loadInventory } from './inventory/index.js';
 import {
   toCharacter,
@@ -37,6 +41,7 @@ export class CharactersService {
         mainImage: null,
         authorNickname: await nicknameOf(this.databaseService.db, userId),
         inventory: [],
+        effects: [],
       });
     } catch (err: unknown) {
       this.logger.error(
@@ -65,6 +70,11 @@ export class CharactersService {
         userId,
         ids,
       );
+      const effectLists = await loadCharacterEffectLists(
+        this.databaseService.db,
+        userId,
+        ids,
+      );
       this.logger.debug(
         { durationMs: Date.now() - t0, userId, count: rows.length },
         'Characters listed',
@@ -74,6 +84,7 @@ export class CharactersService {
           mainImage: mainImages.get(row.id) ?? null,
           authorNickname,
           inventory: inventories.get(row.id) ?? [],
+          effects: effectLists.get(row.id) ?? [],
         }),
       );
     } catch (err: unknown) {
@@ -122,6 +133,11 @@ export class CharactersService {
         authorNickname: found.authorNickname,
         // Глазами смотрящего: чужие скрытые от него предметы — строки без карточки.
         inventory: await loadInventory(this.databaseService.db, userId, id),
+        effects: await loadCharacterEffects(
+          this.databaseService.db,
+          userId,
+          id,
+        ),
       });
     } catch (err: unknown) {
       if (err instanceof NotFoundException) {
@@ -177,6 +193,11 @@ export class CharactersService {
         mainImage: await this.mainImageOf(id),
         authorNickname: await nicknameOf(this.databaseService.db, userId),
         inventory: await loadInventory(this.databaseService.db, userId, id),
+        effects: await loadCharacterEffects(
+          this.databaseService.db,
+          userId,
+          id,
+        ),
       });
     } catch (err: unknown) {
       if (err instanceof NotFoundException) {

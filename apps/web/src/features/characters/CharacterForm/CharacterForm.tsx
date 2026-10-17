@@ -1,7 +1,7 @@
 import { Alert, Button, Group, Stack } from '@mantine/core';
 import { useForm, type FormErrors } from '@mantine/form';
 import type { FormEvent } from 'react';
-import { ABILITY_SCORES } from 'shared';
+import { ABILITY_SCORES, HEROIC_INSPIRATION_MAX } from 'shared';
 import type { CharacterFormValues } from '../characterFormValues';
 import AbilityScoresSection from './AbilityScoresSection';
 import CombatSection from './CombatSection';
@@ -68,6 +68,11 @@ function CharacterForm({
         if (value > values.hitPointsMax) return 'Не может превышать максимум';
         return null;
       },
+      // Пустое поле NumberInput отдаёт '', и Number.isInteger его не пропускает.
+      heroicInspiration: (value: number) =>
+        Number.isInteger(value) && value >= 0 && value <= HEROIC_INSPIRATION_MAX
+          ? null
+          : `От 0 до ${HEROIC_INSPIRATION_MAX}`,
     },
   });
 

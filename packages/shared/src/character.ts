@@ -111,6 +111,10 @@ export const SPECIES_WITH_LINEAGE: readonly CharacterSpecies[] = [
 export const HIT_DICE = [6, 8, 10, 12] as const;
 export type HitDie = (typeof HIT_DICE)[number];
 
+// Героическое вдохновение — число, а не «есть или нет»: домашнее правило, по книге 2024
+// оно бывает только одно (docs/dnd/combat-stats.md). Потолок ловит опечатки.
+export const HEROIC_INSPIRATION_MAX = 50;
+
 // Мультикласс — это список: у персонажа может быть больше одного класса+уровня+подкласса одновременно.
 export interface CharacterClassLevel {
   class: CharacterClass;
@@ -223,7 +227,7 @@ export interface Character {
   hitDie: HitDie | null;
   deathSaveSuccesses: number;
   deathSaveFailures: number;
-  heroicInspiration: boolean;
+  heroicInspiration: number;
   proficiencies: CharacterProficiencies;
   weaponMasteries: WeaponMasteries;
   attacks: CharacterAttack[];

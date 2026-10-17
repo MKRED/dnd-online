@@ -22,6 +22,7 @@ const FIELD_ORDER = [
   'hitPointsMax',
   'hitPointsCurrent',
   'hitDie',
+  'heroicInspiration',
 ];
 
 const FIELD_LABELS: Record<string, string> = {
@@ -34,6 +35,7 @@ const FIELD_LABELS: Record<string, string> = {
   hitPointsMax: 'ХП (максимум)',
   hitPointsCurrent: 'ХП (текущие)',
   hitDie: 'Кость хитов',
+  heroicInspiration: 'Героическое вдохновение',
 };
 
 function labelOf(path: string): string {

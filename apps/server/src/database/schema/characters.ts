@@ -3,7 +3,6 @@ import {
   uuid,
   varchar,
   integer,
-  boolean,
   jsonb,
   timestamp,
 } from 'drizzle-orm/pg-core';
@@ -74,7 +73,7 @@ export const characters = pgTable('characters', {
   hitDie: integer('hit_die').$type<HitDie>(),
   deathSaveSuccesses: integer('death_save_successes').notNull().default(0),
   deathSaveFailures: integer('death_save_failures').notNull().default(0),
-  heroicInspiration: boolean('heroic_inspiration').notNull().default(false),
+  heroicInspiration: integer('heroic_inspiration').notNull().default(0),
 
   proficiencies: jsonb('proficiencies')
     .notNull()

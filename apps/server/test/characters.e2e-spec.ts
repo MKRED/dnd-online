@@ -89,12 +89,12 @@ describe('персонажи (e2e)', () => {
       .expect(200);
     const patched = await owner
       .patch(`/api/characters/${id}`)
-      .send({ hitPointsCurrent: 5, heroicInspiration: true })
+      .send({ hitPointsCurrent: 5, heroicInspiration: 3 })
       .expect(200);
     expect(patched.body).toMatchObject({
       name: 'Торин II',
       hitPointsCurrent: 5,
-      heroicInspiration: true,
+      heroicInspiration: 3,
     });
     await owner.delete(`/api/characters/${id}`).expect(204);
     await owner.get(`/api/characters/${id}`).expect(404);
@@ -110,6 +110,17 @@ describe('персонажи (e2e)', () => {
       .post('/api/characters')
       .send(characterBody({ species: 'Эльф' }))
       .expect(400);
+    // Вдохновение — целое от 0 до 50 (домашнее правило, docs/dnd/combat-stats.md).
+    for (const heroicInspiration of [51, -1, 1.5, true]) {
+      await owner
+        .post('/api/characters')
+        .send(characterBody({ heroicInspiration }))
+        .expect(400);
+      await owner
+        .patch(`/api/characters/${id}`)
+        .send({ heroicInspiration })
+        .expect(400);
+    }
     await setAccess(id, 'everyone').expect(400);
     await owner.get('/api/characters/not-a-uuid').expect(400);
   });

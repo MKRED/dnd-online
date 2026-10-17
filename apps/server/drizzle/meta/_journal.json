@@ -183,6 +183,13 @@
       "when": 1792214716949,
       "tag": "0025_character_effects",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1792227086287,
+      "tag": "0026_heroic_inspiration_count",
+      "breakpoints": true
     }
   ]
 }

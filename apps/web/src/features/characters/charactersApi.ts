@@ -31,7 +31,7 @@ export interface CreateCharacterPayload {
   hitPointsMax: number;
   hitPointsCurrent: number;
   hitDie: HitDie;
-  heroicInspiration?: boolean;
+  heroicInspiration?: number;
   proficiencies: CharacterProficiencies;
   weaponMasteries?: string[];
   currency: CharacterCurrency;

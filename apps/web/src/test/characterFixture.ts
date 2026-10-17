@@ -36,7 +36,7 @@ export const sampleCharacter: Character = {
   hitPointsTemp: 5,
   deathSaveSuccesses: 1,
   deathSaveFailures: 0,
-  heroicInspiration: true,
+  heroicInspiration: 2,
   proficiencies: {
     armor: ['light'],
     weapons: ['simple'],

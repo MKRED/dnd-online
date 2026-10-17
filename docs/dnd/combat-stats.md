@@ -28,7 +28,21 @@ For reference, the die per class. The app does not use this table.
 
 **Unverified:** the table comes from the dungeonmister summary, not from each class page. The free rules confirm only the level 1 hit points (Barbarian 12, Fighter, Paladin and Ranger 10) and that Fighter and Paladin share a d10.
 
+## Heroic Inspiration
+
+Researched on 2026-10-17 in the free rules (Playing the Game, the Heroic Inspiration sidebar; Character Origins, Human).
+
+- **Rule:** "If you have Heroic Inspiration, you can expend it to reroll any die immediately after rolling it, and you must use the new roll." "Only One at a Time. You can never have more than one instance of Heroic Inspiration." A second one can be given to a player character in the group who lacks it.
+- **Gaining it:** the DM gives it (usually for something heroic, in character or entertaining), or a rule does. The Human trait Resourceful: "You gain Heroic Inspiration whenever you finish a Long Rest."
+- **In the app (house rule, decided with the user on 2026-10-17):** a count from 0 to 50 instead of "have it or not". The cap only catches typos.
+  - `packages/shared/src/character.ts` — `HEROIC_INSPIRATION_MAX` and `Character.heroicInspiration`.
+  - `apps/server/src/characters/dto/` — both DTOs accept an integer from 0 to 50. Migration `0026_heroic_inspiration_count.sql` turned the old checkbox into 1 or 0.
+  - `CharacterForm/CombatSection.tsx` — the number field «Героическое вдохновение»; `CharacterSheet/SheetHeader.tsx` — the badge «Героическое вдохновение: N» when it is above 0.
+- **Departures from the book:** more than one at a time, by the house rule above. The app does not grant it on its own (Resourceful after a Long Rest) and does not spend it on a reroll; the player changes the number in the form.
+
 ## Links
 
 - [D&D Beyond free rules — Creating a Character](https://www.dndbeyond.com/sources/dnd/free-rules/creating-a-character)
+- [D&D Beyond free rules — Playing the Game](https://www.dndbeyond.com/sources/dnd/free-rules/playing-the-game)
+- [D&D Beyond free rules — Character Origins](https://www.dndbeyond.com/sources/dnd/free-rules/character-origins)
 - [dungeonmister — hit points in D&D 2024](https://dungeonmister.com/guides/rules/hit-points-dnd-2024/)

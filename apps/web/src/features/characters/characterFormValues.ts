@@ -49,7 +49,7 @@ export interface CharacterFormValues {
   hitPointsCurrent: number;
   // Select работает со строками: '' — ещё не выбрана (форма такую не отправит), иначе число граней ('10').
   hitDie: string;
-  heroicInspiration: boolean;
+  heroicInspiration: number;
   armorProficiencies: ArmorTraining[];
   weaponProficiencies: WeaponProficiency[];
   toolProficiencies: string[];
@@ -89,7 +89,7 @@ export function createInitialFormValues(): CharacterFormValues {
     hitPointsMax: 10,
     hitPointsCurrent: 10,
     hitDie: '',
-    heroicInspiration: false,
+    heroicInspiration: 0,
     armorProficiencies: [],
     weaponProficiencies: [],
     toolProficiencies: [],

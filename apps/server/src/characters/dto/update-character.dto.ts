@@ -1,12 +1,6 @@
 import { Type } from 'class-transformer';
-import {
-  IsBoolean,
-  IsInt,
-  IsOptional,
-  Max,
-  Min,
-  ValidateNested,
-} from 'class-validator';
+import { IsInt, IsOptional, Max, Min, ValidateNested } from 'class-validator';
+import { HEROIC_INSPIRATION_MAX } from 'shared';
 import { CurrencyDto } from './nested/equipment.dto.js';
 
 // Узкий DTO точечных апдейтов "в процессе игры" — ради этого схема и сделана
@@ -43,8 +37,10 @@ export class UpdateCharacterDto {
   deathSaveFailures?: number;
 
   @IsOptional()
-  @IsBoolean()
-  heroicInspiration?: boolean;
+  @IsInt()
+  @Min(0)
+  @Max(HEROIC_INSPIRATION_MAX)
+  heroicInspiration?: number;
 
   @IsOptional()
   @ValidateNested()

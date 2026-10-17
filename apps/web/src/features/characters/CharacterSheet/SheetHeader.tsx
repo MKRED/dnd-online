@@ -41,9 +41,9 @@ function SheetHeader({ character, aside }: SheetHeaderProps) {
             {entry.subclass && ` · ${entry.subclass}`}
           </Badge>
         ))}
-        {character.heroicInspiration && (
+        {character.heroicInspiration > 0 && (
           <Badge color="yellow" variant="light">
-            Героическое вдохновение
+            Героическое вдохновение: {character.heroicInspiration}
           </Badge>
         )}
       </Group>

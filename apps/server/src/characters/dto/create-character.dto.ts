@@ -2,7 +2,6 @@ import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
-  IsBoolean,
   IsIn,
   IsInt,
   IsOptional,
@@ -18,6 +17,7 @@ import {
 import {
   ABILITY_SCORES,
   CHARACTER_SPECIES,
+  HEROIC_INSPIRATION_MAX,
   HIT_DICE,
   type CharacterSpecies,
   type HitDie,
@@ -156,8 +156,10 @@ export class CreateCharacterDto {
   deathSaveFailures?: number;
 
   @IsOptional()
-  @IsBoolean()
-  heroicInspiration?: boolean;
+  @IsInt()
+  @Min(0)
+  @Max(HEROIC_INSPIRATION_MAX)
+  heroicInspiration?: number;
 
   @ValidateNested()
   @Type(() => ProficienciesDto)

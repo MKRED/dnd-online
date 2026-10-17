@@ -1,5 +1,4 @@
 import {
-  Checkbox,
   Fieldset,
   Grid,
   NumberInput,
@@ -9,7 +8,7 @@ import {
 } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import { memo, useCallback, useState } from 'react';
-import { HIT_DICE } from 'shared';
+import { HEROIC_INSPIRATION_MAX, HIT_DICE } from 'shared';
 import type { CharacterFormValues } from '../characterFormValues';
 import {
   formatModifier,
@@ -104,10 +103,15 @@ function CombatSection({ form }: CombatSectionProps) {
             Инициатива считается автоматически: это модификатор Ловкости.
           </Text>
         </Grid.Col>
-        <Grid.Col span={12}>
-          <Checkbox
+        <Grid.Col span={{ base: 6, sm: 3 }}>
+          <NumberInput
             label="Героическое вдохновение"
-            {...form.getInputProps('heroicInspiration', { type: 'checkbox' })}
+            description="Тратится на переброс любой кости"
+            min={0}
+            max={HEROIC_INSPIRATION_MAX}
+            allowDecimal={false}
+            allowNegative={false}
+            {...form.getInputProps('heroicInspiration')}
           />
         </Grid.Col>
       </Grid>

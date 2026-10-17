@@ -81,11 +81,20 @@ Targets and areas aren't fields of their own; they are in the text.
   - Shillelagh changes the die size ("levels 5 (d10), 11 (d12), and 17 (2d6)"); Spare the Dying doubles its range.
 - **Not only spells:** the Dragonborn Breath Weapon "damage increases by 1d10 when you reach character levels 5 (2d10), 11 (3d10), and 17 (4d10)".
 
+Checked again on 2026-10-17 for stage 7 (free rules, https://www.dndbeyond.com/sources/dnd/free-rules/spell-descriptions, https://www.dndbeyond.com/sources/dnd/free-rules/character-classes, https://www.dndbeyond.com/sources/dnd/br-2024/character-origins; the pages were read through a fetch model's summary and quotes, not as raw text):
+
+- **Slot growth is always per one slot level** in every spell checked: Spiritual Weapon "1d8 for every slot level above 2", Flame Blade (1d6 above 2), Spirit Guardians (1d8 above 3), Vampiric Touch (1d6 above 3), Moonbeam (1d10 above 2), Call Lightning (1d10 above 3). The 2014 "every two slot levels" is gone from these; the whole spell list wasn't scanned for it.
+- **The level "above X" is the spell's own level** in every quote, so it isn't a separate number.
+- **Flat numbers** grow only in healing and Temporary Hit Points: False Life "5 additional Temporary Hit Points for each spell slot level above 1", Heal "The healing increases by 10 for each spell slot level above 6". Fog Cloud grows its radius ("20 feet for each spell slot level above 1").
+- **Cantrips:** Sacred Flame "increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8)"; no cantrip with other levels was found (Fire Bolt, Eldritch Blast, Sacred Flame checked).
+- **A feature that grows with the slot:** the Warlock invocation Eldritch Smite (Level 5+ Warlock, Pact of the Blade) — "you can expend a Pact Magic spell slot to deal an extra 1d8 Force damage to the target, plus another 1d8 per level of the spell slot". It isn't a spell, so slot growth belongs to the slot cost, not to the spell category.
+- **Class-level growth has its own tables**, not 5/11/17: Sneak Attack "increases as you gain Rogue levels" (1d6 at 1, +1d6 at 3, 5, 7, …, 19 — 10d6), Barbarian Rage Damage +2, +3 at level 9, +4 at level 16.
+
 ### Unverified
 
 - Fireball's header, components and duration lines, Cure Wounds and Hold Person's higher-level lines were read once through a page summary; the rest of the growth quotes are verbatim.
 - The Russian «Cantrip Upgrade» heading and the ritual marker on a ritual spell page weren't read (next.dnd.su's spell list is rendered by a script).
-- Sacred Flame's upgrade line wasn't confirmed.
+- Shadow Blade, Toll the Dead and Armor of Agathys aren't in the free rules and weren't checked against the 2024 book.
 
 ## In the app
 
@@ -96,5 +105,11 @@ Decided with the user on 2026-10-17 ([plan/abilities.md](../plan/abilities.md), 
 - **Components are one optional text field**, written as in the book: «В, С, М (бриллиант стоимостью не менее 300 ЗМ, расходуемый заклинанием)». Not split into V/S/M, a cost and consumption for now (decided with the user); the game will need that split later (silence, free hands, a focus or a pouch).
 - **Duration is a field of the spell**, as the line in the book: Concentration belongs to the caster, and Moonbeam or a summon have no effect on a creature to carry it. Effects (stage 8) keep their own duration; for Hold Person both match.
 - **Growth is a separate stage (7)** and lives on a step, not on the spell: Ice Knife grows only in step 2, and the Breath Weapon grows with character level without being a spell.
+
+Planned for stage 7 (2026-10-17):
+
+- **What a step grows by is not stored; the ability decides it.** With the cost «Ячейка заклинаний N круга или выше» — per slot circle above N (Fireball, Eldritch Smite with a slot of circle 1 and 2d8 as the base). Without it — at character levels 5, 11 and 17 (cantrips, the Breath Weapon). A spell of circle 1+ without a slot (a feat's copy) doesn't grow: it's cast at its own circle. **App rule, not the book:** the book has no ability that grows both ways.
+- **Growth is extra damage rows plus extra repeats per increment**, the rows the same as damage rows (dice, number, type; decided with the user — the type can differ from the base, flat numbers come free).
+- **Left out:** class-level growth (Sneak Attack, Rage Damage — needs the character's class level), more targets (Hold Person), a different die (Shillelagh), range (Spare the Dying), healing and Temporary Hit Points (with effects).
 
 Code: `packages/shared/src/abilitySpell.ts` (`SpellDetails`, `isSpellDetails`, `spellSlotFits`) and `abilitySpellLabels.ts` (school names, «3 круг, воплощение», the duration line); the server checks the slot in `apps/server/src/abilities/dto/spell-slot.validator.ts`; the form is `apps/web/src/features/simpleCatalog/SpellFields/`.

@@ -20,3 +20,4 @@ export type {
   CatalogEntryTable,
   CatalogImageTables,
 } from './catalog-tables.js';
+export * from './bookmarks.js';

@@ -22,6 +22,7 @@ export default defineConfig({
     './src/database/schema/effects.ts',
     './src/database/schema/ability-step-effects.ts',
     './src/database/schema/character-effects.ts',
+    './src/database/schema/bookmarks.ts',
   ],
   dialect: 'postgresql',
   dbCredentials: {

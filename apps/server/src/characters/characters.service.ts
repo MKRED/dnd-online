@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { and, desc, eq, or } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { loadMainImages } from '../character-images/character-image-access.js';
 import { DatabaseService } from '../database/database.service.js';
 import { characters, users } from '../database/schema/index.js';
 import { nicknameOf } from './character-author.js';
+import { characterVisibleTo } from './character-visibility.js';
 import {
   loadCharacterEffectLists,
   loadCharacterEffects,
@@ -105,15 +106,7 @@ export class CharactersService {
         .select({ row: characters, authorNickname: users.nickname })
         .from(characters)
         .innerJoin(users, eq(users.id, characters.userId))
-        .where(
-          and(
-            eq(characters.id, id),
-            or(
-              eq(characters.userId, userId),
-              eq(characters.linkAccess, 'link'),
-            ),
-          ),
-        )
+        .where(and(eq(characters.id, id), characterVisibleTo(userId)))
         .limit(1);
       this.logger.debug(
         {

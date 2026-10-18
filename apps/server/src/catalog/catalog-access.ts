@@ -26,10 +26,12 @@ export function visibleEntry(
   userId: string,
   entryId: string,
 ) {
-  return and(
-    eq(access.id, entryId),
-    or(eq(access.authorId, userId), eq(access.isPublic, true)),
-  );
+  return and(eq(access.id, entryId), entryVisibleTo(access, userId));
+}
+
+// То же правило без id — для join, где запись приходит из другой таблицы (закладки).
+export function entryVisibleTo(access: CatalogAccess, userId: string) {
+  return or(eq(access.authorId, userId), eq(access.isPublic, true));
 }
 
 // Менять и удалять может только автор.

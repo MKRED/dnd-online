@@ -1,4 +1,5 @@
-import { Alert, Container, Loader, Title } from '@mantine/core';
+import { Alert, Container, Group, Loader, Title } from '@mantine/core';
+import type { ReactNode } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import EditPageTitle from '../../components/EditPageTitle';
 import { useAuth } from '../auth';
@@ -11,15 +12,46 @@ interface SimpleFormPageProps {
   def: SimpleCatalogDef;
 }
 
+// Заголовок формы и справа кнопка гайда, если он у раздела есть.
+function FormHeader({
+  def,
+  children,
+}: SimpleFormPageProps & { children: ReactNode }) {
+  const { Guide } = def.extras;
+  return (
+    <Group
+      justify="space-between"
+      align="center"
+      wrap="nowrap"
+      gap="xs"
+      mb="lg"
+    >
+      {children}
+      {Guide && <Guide />}
+    </Group>
+  );
+}
+
 // Создание записи раздела.
 export function SimpleCreatePage({ def }: SimpleFormPageProps) {
   usePageTitle(def.texts.newTitle);
   const navigate = useNavigate();
   return (
     <Container size="lg" py="xl">
-      <Title order={1} mb="lg">
-        {def.texts.newTitle}
-      </Title>
+      <FormHeader def={def}>
+        <Title
+          order={1}
+          miw={0}
+          // Слово «способность» шрифтом h1 и кнопка гайда не помещаются в строку на
+          // экране 360 px — на узком шрифт меньше, как у EditPageTitle.
+          style={{
+            fontSize: 'min(var(--mantine-h1-font-size), 8vw)',
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {def.texts.newTitle}
+        </Title>
+      </FormHeader>
       <SimpleEntryForm
         def={def}
         entry={null}
@@ -49,7 +81,9 @@ export function SimpleEditPage({ def }: SimpleFormPageProps) {
 
   return (
     <Container size="lg" py="xl">
-      <EditPageTitle name={entry?.name} mb="lg" />
+      <FormHeader def={def}>
+        <EditPageTitle name={entry?.name} />
+      </FormHeader>
       {error ? (
         <Alert color="red" title="Ошибка">
           {error}

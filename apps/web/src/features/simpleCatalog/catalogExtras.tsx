@@ -5,18 +5,14 @@ import {
   EFFECT_COMPONENT_LABELS,
   effectComponentKinds,
   formatActivation,
-  formatCosts,
   formatEffectDuration,
   formatEffectDurationShort,
   formatEffectComponent,
   formatSaveEnds,
-  formatSpellDuration,
-  formatSpellHeader,
-  formatStepsWithGrowth,
-  growthBasis,
-  type Ability,
   type Effect,
 } from 'shared';
+import { AbilityGuideButton } from './AbilityGuide';
+import { abilityRows } from './abilityRows';
 import CardLines from './CardLines';
 import { fromDurationValues } from './DurationField';
 import EffectFields, { fromEffectValues } from './EffectFields';
@@ -38,6 +34,8 @@ export interface CatalogExtras {
   rows: (entry: SimpleEntry) => { label: string; value: ReactNode }[];
   // Коротко — для колонки списка.
   listValue: (entry: SimpleEntry) => string | null;
+  // Кнопка гайда по форме — в заголовке страницы создания и правки. Нет — нет и кнопки.
+  Guide?: () => ReactNode;
 }
 
 // Строки по одной на вид составляющей: несколько чувств — в одной строке «Чувство».
@@ -74,22 +72,6 @@ export const EFFECT_EXTRAS: CatalogExtras = {
     'duration' in entry ? formatEffectDurationShort(entry.duration) : null,
 };
 
-// Строки заклинания до активации: «3 круг, воплощение» — как заголовок в книге.
-const spellHeaderRows = (entry: Ability) =>
-  entry.category === 'spell'
-    ? [{ label: 'Заклинание', value: formatSpellHeader(entry.details) }]
-    : [];
-
-// После затрат, как в книге — компоненты и длительность.
-function spellTailRows(entry: Ability) {
-  if (entry.category !== 'spell') return [];
-  const { components, duration } = entry.details;
-  return [
-    ...(components ? [{ label: 'Компоненты', value: components }] : []),
-    { label: 'Длительность', value: formatSpellDuration(duration) },
-  ];
-}
-
 export const ABILITY_EXTRAS: CatalogExtras = {
   Field: AbilityFields,
   toInput: (values) => ({
@@ -97,32 +79,7 @@ export const ABILITY_EXTRAS: CatalogExtras = {
     // Цепочка ещё раз сверяется перед отправкой: правка могла не успеть отрисоваться.
     steps: chainSteps(values.steps).map(fromStepValues),
   }),
-  rows: (entry) => {
-    if (!('activation' in entry)) return [];
-    const costs = formatCosts(entry.costs);
-    const ritual = entry.category === 'spell' && entry.details.ritual;
-    return [
-      ...spellHeaderRows(entry),
-      {
-        label: 'Активация',
-        value: `${formatActivation(entry.activation)}${ritual ? ' или ритуал' : ''}`,
-      },
-      {
-        label: 'Затраты',
-        value:
-          costs.length === 0 ? 'Ничего не тратит' : <CardLines lines={costs} />,
-      },
-      ...spellTailRows(entry),
-      // Подпись — ещё и ключ строки: у нескольких шагов она своя у каждого.
-      ...formatStepsWithGrowth(
-        entry.steps,
-        growthBasis(entry, entry.costs),
-      ).map((lines, index, all) => ({
-        label: all.length > 1 ? `Шаг ${index + 1}` : 'Применение',
-        value: <CardLines lines={lines} />,
-      })),
-    ];
-  },
+  rows: (entry) => ('activation' in entry ? abilityRows(entry) : []),
   // Условие реакции в колонке не поместится — только вид или время.
   listValue: (entry) => {
     if (!('activation' in entry)) return null;
@@ -131,4 +88,5 @@ export const ABILITY_EXTRAS: CatalogExtras = {
       ? formatActivation(activation)
       : ACTIVATION_LABELS[activation.kind];
   },
+  Guide: AbilityGuideButton,
 };

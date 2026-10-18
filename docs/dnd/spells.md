@@ -90,6 +90,17 @@ Checked again on 2026-10-17 for stage 7 (free rules, https://www.dndbeyond.com/s
 - **A feature that grows with the slot:** the Warlock invocation Eldritch Smite (Level 5+ Warlock, Pact of the Blade) — "you can expend a Pact Magic spell slot to deal an extra 1d8 Force damage to the target, plus another 1d8 per level of the spell slot". It isn't a spell, so slot growth belongs to the slot cost, not to the spell category.
 - **Class-level growth has its own tables**, not 5/11/17: Sneak Attack "increases as you gain Rogue levels" (1d6 at 1, +1d6 at 3, 5, 7, …, 19 — 10d6), Barbarian Rage Damage +2, +3 at level 9, +4 at level 16.
 
+Checked on 2026-10-18 for the examples of the ability form guide (free rules, https://www.dndbeyond.com/sources/dnd/free-rules/spell-descriptions and https://www.dndbeyond.com/sources/dnd/free-rules/character-origins; verbatim page text through a fetch agent):
+
+- Fire Bolt: "Evocation Cantrip", Action, 120 feet, V, S, Instantaneous.
+- Fireball: "Level 3 Evocation", Action, 150 feet, Instantaneous.
+- Ice Knife: "Level 1 Conjuration", Action, 60 feet, "S, M (a drop of water or a piece of ice)", Instantaneous.
+- Magic Missile: "Level 1 Evocation", Action, 120 feet, V, S, Instantaneous; "A dart deals 1d4 + 1 Force damage to its target."
+- Scorching Ray: Action, 120 feet, "Make a ranged spell attack for each ray. On a hit, the target takes 2d6 Fire damage."
+- Dragonborn Breath Weapon: as quoted in [attacks-and-saves.md](attacks-and-saves.md); uses "equal to your Proficiency Bonus", regained "when you finish a Long Rest".
+
+The guide's examples live in `apps/web/src/features/simpleCatalog/AbilityGuide/guideExamples.ts`. They leave the components empty: there is no Russian book wording at hand for them.
+
 ### Unverified
 
 - Fireball's header, components and duration lines, Cure Wounds and Hold Person's higher-level lines were read once through a page summary; the rest of the growth quotes are verbatim.

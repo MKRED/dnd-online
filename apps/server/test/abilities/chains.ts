@@ -23,6 +23,7 @@ const burst = {
     addModifier: false,
   },
   miss: { damage: 'none' },
+  growth: { damage: [], times: 0 },
 };
 const noCheck = { ...fireBolt, check: { kind: 'none' } };
 

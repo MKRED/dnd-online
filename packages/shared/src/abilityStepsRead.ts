@@ -4,11 +4,17 @@ import { isAbilityStep } from './abilityStepsCheck.js';
 
 // Поля шага, у которых есть естественное значение по умолчанию, по уровням вложенности.
 // Когда в шаг или исход добавляют поле («когда» и «кого» этапа 5, эффекты этапа 8), его
-// умолчание дописывают сюда: шаги, сохранённые раньше, получат его при чтении, а не
+// умолчание дописывают сюда (рост этапа 7 — так же): шаги, сохранённые раньше, получат его при чтении, а не
 // пропадут. Поле без естественного умолчания так добавлять нельзя — только с миграцией
 // данных. Тот же приём, что у составляющих эффекта (effectComponentsRead.ts).
 export const STEP_STORED_DEFAULTS = {
-  step: { when: 'always', times: 1, miss: { damage: 'none' } },
+  // growth — с этапа 7: шаги этапов 3–6 без него не растут.
+  step: {
+    when: 'always',
+    times: 1,
+    miss: { damage: 'none' },
+    growth: { damage: [], times: 0 },
+  },
   hit: { damage: [], addModifier: false },
   miss: {},
 } satisfies Record<'step' | 'hit' | 'miss', Record<string, unknown>>;

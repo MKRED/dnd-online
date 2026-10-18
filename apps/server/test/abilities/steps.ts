@@ -23,6 +23,7 @@ export const fireBolt = {
     addModifier: false,
   },
   miss: { damage: 'none' },
+  growth: { damage: [], times: 0 },
 };
 
 export function describeAbilitySteps(get: () => CatalogContext): void {
@@ -54,6 +55,7 @@ export function describeAbilitySteps(get: () => CatalogContext): void {
             ...fireBolt,
             hit: { damage: [], addModifier: false },
             miss: { damage: 'half' },
+            growth: { damage: [], times: 0 },
           },
         ],
         [{ ...fireBolt, hit: { ...fireBolt.hit, addModifier: 'yes' } }],
@@ -116,6 +118,7 @@ export function describeAbilitySteps(get: () => CatalogContext): void {
           addModifier: false,
         },
         miss: { damage: 'half' },
+        growth: { damage: [], times: 0 },
       };
       // Три дротика по 1d4 + 1 — «сколько раз» этапа 5.
       const missile = {
@@ -128,6 +131,7 @@ export function describeAbilitySteps(get: () => CatalogContext): void {
           addModifier: false,
         },
         miss: { damage: 'none' },
+        growth: { damage: [], times: 0 },
       };
       for (const step of [fireball, missile]) {
         const { id } = await create({ steps: [step] });

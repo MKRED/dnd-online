@@ -10,12 +10,19 @@ import {
   type AbilityStep,
   type AttackAbility,
   type AttackKind,
-  type DamageDie,
-  type DamagePart,
-  type DamageType,
   type MissDamage,
   type SaveDcAbility,
 } from 'shared';
+import {
+  fromDamageValues,
+  fromGrowthValues,
+  GROWTH_BLANK,
+  newDamage,
+  toDamageValues,
+  toGrowthValues,
+  type DamageValues,
+  type GrowthValues,
+} from './damageForm';
 import {
   fromTargetValues,
   TARGET_BLANK,
@@ -23,19 +30,13 @@ import {
   type TargetValues,
 } from './stepTargetForm';
 
+export { newDamage, type DamageValues };
+
 // Шаги «Применения» в форме способности (shared/abilitySteps.ts) — плоско, с полями всех
 // проверок, целей и бонусов сразу: при переключении введённое не пропадает. key — только
-// для React. Числа — '' пока поле пустое (так отдаёт NumberInput), кость — строка (так
-// отдаёт Select).
-export interface DamageValues {
-  key: string;
-  count: number | string;
-  die: string;
-  number: number | string;
-  type: DamageType;
-}
-
-export interface StepValues extends TargetValues {
+// для React. Числа — '' пока поле пустое (так отдаёт NumberInput). Урон и рост —
+// damageForm.ts.
+export interface StepValues extends TargetValues, GrowthValues {
   key: string;
   when: StepWhen;
   times: number | string;
@@ -52,14 +53,6 @@ export interface StepValues extends TargetValues {
   addModifier: boolean;
   onMiss: MissDamage;
 }
-
-export const newDamage = (type: DamageType = 'fire'): DamageValues => ({
-  key: randomId(),
-  count: 1,
-  die: '6',
-  number: 0,
-  type,
-});
 
 // Чаще всего это заклинание вроде «Огненного снаряда». Цель шага 2 и дальше подберёт
 // цепочка (stepChain.ts): обычно та же, что у прошлого.
@@ -82,6 +75,7 @@ export function newStep(): StepValues {
     damage: [{ ...newDamage(), die: '10' }],
     addModifier: false,
     onMiss: 'none',
+    ...GROWTH_BLANK,
   };
 }
 
@@ -155,13 +149,10 @@ export function toStepValues(step: AbilityStep): StepValues {
     when: step.when,
     times: step.times,
     check: step.check.kind,
-    damage: step.hit.damage.map((part) => ({
-      ...part,
-      key: randomId(),
-      die: String(part.die),
-    })),
+    damage: step.hit.damage.map(toDamageValues),
     addModifier: step.hit.addModifier,
     onMiss: step.miss.damage,
+    ...toGrowthValues(step.growth),
   };
   const { check } = step;
   if (check.kind === 'attack') {
@@ -180,13 +171,6 @@ export function toStepValues(step: AbilityStep): StepValues {
   return values;
 }
 
-const fromDamage = (values: DamageValues): DamagePart => ({
-  count: Number(values.count),
-  die: Number(values.die) as DamageDie,
-  number: Number(values.number),
-  type: values.type,
-});
-
 // Модификатор к урону — только у атаки с бонусом от характеристики, половина — только от
 // урона и при проверке: иначе сервер откажет (abilityStepsCheck.ts). «Когда» и цель
 // против прошлого шага сверяет цепочка (chainSteps) до этого.
@@ -202,7 +186,7 @@ export function fromStepValues(values: StepValues): AbilityStep {
     ),
     check,
     hit: {
-      damage: values.damage.map(fromDamage),
+      damage: values.damage.map(fromDamageValues),
       addModifier: modifier && values.addModifier,
     },
     miss: {
@@ -211,5 +195,6 @@ export function fromStepValues(values: StepValues): AbilityStep {
           ? values.onMiss
           : 'none',
     },
+    growth: fromGrowthValues(values),
   };
 }

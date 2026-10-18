@@ -25,6 +25,7 @@ const longbow: AbilityStep = {
     addModifier: true,
   },
   miss: { damage: 'none' },
+  growth: { damage: [], times: 0 },
 };
 
 const formOf = (step: StepValues) => ({ steps: [step] });
@@ -116,6 +117,7 @@ const fireball: AbilityStep = {
     addModifier: false,
   },
   miss: { damage: 'half' },
+  growth: { damage: [], times: 0 },
 };
 
 describe('stepsForm: спасбросок, область, без проверки', () => {
@@ -136,6 +138,7 @@ describe('stepsForm: спасбросок, область, без проверк
       check: { kind: 'none' },
       hit: fireball.hit,
       miss: { damage: 'none' },
+      growth: { damage: [], times: 0 },
     };
     for (const step of [fireball, cylinder, missile]) {
       expect(fromStepValues(toStepValues(step))).toEqual(step);

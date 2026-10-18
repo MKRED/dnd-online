@@ -21,6 +21,7 @@ const knife: AbilityStep = {
     addModifier: false,
   },
   miss: { damage: 'none' },
+  growth: { damage: [], times: 0 },
 };
 // «Попал или промахнулся» — шаг 2 всегда: цель и все в 5 фт. от неё спасаются.
 const burst: AbilityStep = {
@@ -37,6 +38,7 @@ const burst: AbilityStep = {
     addModifier: false,
   },
   miss: { damage: 'none' },
+  growth: { damage: [], times: 0 },
 };
 const scorchingRay: AbilityStep = {
   ...knife,

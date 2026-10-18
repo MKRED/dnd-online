@@ -12,7 +12,9 @@ import { useEffect } from 'react';
 import { ABILITY_STEPS_MAX } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import CheckFields from './CheckFields';
+import { formGrowthBasis } from '../abilityInput';
 import DamageFields from './DamageFields';
+import GrowthFields from './GrowthFields';
 import { chainLinks, chainSteps } from './stepChain';
 import { newStep } from './stepsForm';
 import TargetFields from './TargetFields';
@@ -29,6 +31,7 @@ function StepsField({ form }: StepsFieldProps) {
   const full = steps.length >= ABILITY_STEPS_MAX;
   const links = chainLinks(steps);
   const numbered = steps.length > 1;
+  const basis = formGrowthBasis(form.getValues());
 
   // Правка одного шага может сделать неверным следующий: прошлый стал без проверки —
   // «при попадании» больше нет; удалили первый — у нового первого нет «той же цели».
@@ -68,6 +71,7 @@ function StepsField({ form }: StepsFieldProps) {
               <CheckFields form={form} index={index} link={links[index]} />
               <TargetFields form={form} index={index} link={links[index]} />
               <DamageFields form={form} index={index} />
+              <GrowthFields form={form} index={index} basis={basis} />
             </Stack>
           </Paper>
         ))}

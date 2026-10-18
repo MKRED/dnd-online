@@ -6,6 +6,7 @@ import {
   ATTACK_BONUS_MIN,
   DAMAGE_DICE_MAX,
   DAMAGE_NUMBER_MAX,
+  GROWTH_TIMES_MAX,
   RANGE_FEET_MAX,
   REACH_FEET_MAX,
   SAVE_DC_MAX,
@@ -29,9 +30,12 @@ const indexes = (path: string) =>
     .filter((part) => /^\d+$/.test(part))
     .map(Number);
 const stepOf = (form: WithSteps, path: string) => form.steps[indexes(path)[0]];
+// Строка урона или роста: «steps.0.damage.1.count», «steps.0.growthDamage.1.count».
 const damageOf = (form: WithSteps, path: string) => {
   const [step, part] = indexes(path);
-  return form.steps[step].damage[part];
+  const list =
+    path.split('.')[2] === 'growthDamage' ? 'growthDamage' : 'damage';
+  return form.steps[step][list][part];
 };
 
 const intIn = (value: number | string, min: number, max: number) => {
@@ -44,6 +48,17 @@ const areaFeet = (value: number | string, shown: boolean) =>
   !shown || isFeet(Number(value), AREA_FEET_MAX)
     ? null
     : feetError(AREA_FEET_MAX);
+
+const damageRules = {
+  count: (value: number | string, form: WithSteps, path: string) => {
+    if (!intIn(value, 0, DAMAGE_DICE_MAX)) return `От 0 до ${DAMAGE_DICE_MAX}`;
+    return Number(value) === 0 && Number(damageOf(form, path).number) === 0
+      ? 'Укажите кости или число'
+      : null;
+  },
+  number: (value: number | string) =>
+    intIn(value, 0, DAMAGE_NUMBER_MAX) ? null : `От 0 до ${DAMAGE_NUMBER_MAX}`,
+};
 
 export const stepsValidate = {
   times: (value: number | string) =>
@@ -104,17 +119,16 @@ export const stepsValidate = {
       ? null
       : feetError(RANGE_FEET_MAX);
   },
-  damage: {
-    count: (value: number | string, form: WithSteps, path: string) => {
-      if (!intIn(value, 0, DAMAGE_DICE_MAX))
-        return `От 0 до ${DAMAGE_DICE_MAX}`;
-      return Number(value) === 0 && Number(damageOf(form, path).number) === 0
-        ? 'Укажите кости или число'
-        : null;
-    },
-    number: (value: number | string) =>
-      intIn(value, 0, DAMAGE_NUMBER_MAX)
-        ? null
-        : `От 0 до ${DAMAGE_NUMBER_MAX}`,
+  damage: damageRules,
+  // Убранный рост не уходит — и не проверяется.
+  growthDamage: {
+    count: (value: number | string, form: WithSteps, path: string) =>
+      stepOf(form, path).growthOn ? damageRules.count(value, form, path) : null,
+    number: (value: number | string, form: WithSteps, path: string) =>
+      stepOf(form, path).growthOn ? damageRules.number(value) : null,
   },
+  growthTimes: (value: number | string, form: WithSteps, path: string) =>
+    !stepOf(form, path).growthOn || intIn(value, 0, GROWTH_TIMES_MAX)
+      ? null
+      : `От 0 до ${GROWTH_TIMES_MAX}`,
 };

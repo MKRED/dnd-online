@@ -4,7 +4,6 @@ import {
   ACTIVATION_LABELS,
   EFFECT_COMPONENT_LABELS,
   effectComponentKinds,
-  formatAbilitySteps,
   formatActivation,
   formatCosts,
   formatEffectDuration,
@@ -13,6 +12,8 @@ import {
   formatSaveEnds,
   formatSpellDuration,
   formatSpellHeader,
+  formatStepsWithGrowth,
+  growthBasis,
   type Ability,
   type Effect,
 } from 'shared';
@@ -22,9 +23,8 @@ import EffectFields, { fromEffectValues } from './EffectFields';
 import type { SimpleFormValues } from './SimpleEntryForm/simpleEntryValues';
 import type { SimpleEntry } from './simpleCatalogs';
 import AbilityFields from './AbilityFields';
-import { fromSpellValues, spellCosts } from './SpellFields';
+import { abilityCategoryInput } from './abilityInput';
 import { chainSteps, fromStepValues } from './StepsField';
-import { fromUsageValues } from './UsageField';
 
 // Свои поля всех записей одного раздела, которых нет у другого: у эффекта — составляющие,
 // длительность и снятие спасброском, у способности — категория, активация и затраты.
@@ -74,20 +74,6 @@ export const EFFECT_EXTRAS: CatalogExtras = {
     'duration' in entry ? formatEffectDurationShort(entry.duration) : null,
 };
 
-// Категория и её поля для запроса: у заклинания ячейка в затратах — его круга.
-function abilityCategoryInput(values: SimpleFormValues) {
-  const usage = fromUsageValues(values.usage);
-  if (values.category !== 'spell')
-    return { category: values.category, details: {}, ...usage };
-  const details = fromSpellValues(values.spell);
-  return {
-    category: 'spell',
-    details,
-    ...usage,
-    costs: spellCosts(usage.costs, details.level),
-  };
-}
-
 // Строки заклинания до активации: «3 круг, воплощение» — как заголовок в книге.
 const spellHeaderRows = (entry: Ability) =>
   entry.category === 'spell'
@@ -128,7 +114,10 @@ export const ABILITY_EXTRAS: CatalogExtras = {
       },
       ...spellTailRows(entry),
       // Подпись — ещё и ключ строки: у нескольких шагов она своя у каждого.
-      ...formatAbilitySteps(entry.steps).map((lines, index, all) => ({
+      ...formatStepsWithGrowth(
+        entry.steps,
+        growthBasis(entry, entry.costs),
+      ).map((lines, index, all) => ({
         label: all.length > 1 ? `Шаг ${index + 1}` : 'Применение',
         value: <CardLines lines={lines} />,
       })),

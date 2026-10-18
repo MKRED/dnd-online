@@ -132,6 +132,17 @@ export type StepWhen = (typeof STEP_WHENS)[number];
 // применении, одну или разные. 9 круг «Волшебной стрелы» — 11 дротиков.
 export const STEP_TIMES_MAX = 20;
 
+// Рост шага (этап 7): строки урона и повторы, прибавляемые на каждую ступень — круг
+// ячейки выше затраты или порог уровня персонажа. С чем растёт, решает способность
+// (abilityStepGrowth.ts). Урон прибавляется к исходу hit, половина при miss — от суммы.
+export interface StepGrowth {
+  damage: DamagePart[];
+  times: number;
+}
+// В книге за ступень всегда +1 повтор; сумма с times не сверяется с STEP_TIMES_MAX —
+// число ступеней зависит от затрат, а не от шага.
+export const GROWTH_TIMES_MAX = 3;
+
 export interface AbilityStep {
   when: StepWhen;
   target: StepTarget;
@@ -139,6 +150,7 @@ export interface AbilityStep {
   check: AbilityCheck;
   hit: HitOutcome;
   miss: MissOutcome;
+  growth: StepGrowth;
 }
 
 // В книге больше двух шагов не нашлось («Ледяной кинжал»), три — с запасом.

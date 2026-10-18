@@ -9,16 +9,12 @@ import {
   SAVE_DC_MIN,
   AROUND_FEET_MAX,
   STEP_TIMES_MAX,
-  DAMAGE_DICE_MAX,
-  DAMAGE_NUMBER_MAX,
-  DAMAGE_PARTS_MAX,
   MISS_DAMAGES,
   RANGE_FEET_MAX,
   REACH_FEET_MAX,
   type AbilityCheck,
   type AbilityStep,
   type AttackKind,
-  type DamagePart,
   type HitOutcome,
   type MissDamage,
   type MissOutcome,
@@ -32,32 +28,14 @@ import {
   type StepLink,
 } from './abilityStepLinks.js';
 import { isArea } from './abilityStepAreasCheck.js';
+import { isDamageParts, isStepGrowth } from './abilityStepDamageCheck.js';
 import { isFeet, isIntIn, isObject, keysAre } from './abilityStepGuards.js';
 import { ABILITY_SCORES, type AbilityScore } from './character.js';
-import {
-  DAMAGE_DICE,
-  DAMAGE_TYPES,
-  type DamageDie,
-  type DamageType,
-} from './damageTypes.js';
 
 // Строгая проверка шагов «Применения» — для запроса. Из базы шаги читаются мягче, с
 // умолчаниями (abilityStepsRead.ts).
 
 export { isFeet } from './abilityStepGuards.js';
-
-function isDamagePart(value: unknown): value is DamagePart {
-  return (
-    isObject(value) &&
-    keysAre(value, 'count,die,number,type') &&
-    isIntIn(value.count, 0, DAMAGE_DICE_MAX) &&
-    DAMAGE_DICE.includes(value.die as DamageDie) &&
-    isIntIn(value.number, 0, DAMAGE_NUMBER_MAX) &&
-    // Пустая строка урона ничего не значит.
-    ((value.count as number) > 0 || (value.number as number) > 0) &&
-    DAMAGE_TYPES.includes(value.type as DamageType)
-  );
-}
 
 function isAbilityOrFixed(
   value: unknown,
@@ -148,9 +126,7 @@ function isHit(value: unknown, check: AbilityCheck): value is HitOutcome {
   return (
     isObject(value) &&
     keysAre(value, 'addModifier,damage') &&
-    Array.isArray(value.damage) &&
-    value.damage.length <= DAMAGE_PARTS_MAX &&
-    value.damage.every(isDamagePart) &&
+    isDamageParts(value.damage) &&
     typeof value.addModifier === 'boolean' &&
     (!value.addModifier ||
       (check.kind === 'attack' && check.bonus.kind === 'ability'))
@@ -178,7 +154,7 @@ export function isAbilityStep(
   link: StepLink | null = null,
 ): value is AbilityStep {
   if (!isObject(value)) return false;
-  if (!keysAre(value, 'check,hit,miss,target,times,when')) return false;
+  if (!keysAre(value, 'check,growth,hit,miss,target,times,when')) return false;
   const { check } = value;
   return (
     stepWhens(link).includes(value.when as StepWhen) &&
@@ -186,7 +162,8 @@ export function isAbilityStep(
     isCheck(check) &&
     isTarget(value.target, check, link) &&
     isHit(value.hit, check) &&
-    isMiss(value.miss, value.hit, check)
+    isMiss(value.miss, value.hit, check) &&
+    isStepGrowth(value.growth)
   );
 }
 

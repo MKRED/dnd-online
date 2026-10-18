@@ -77,6 +77,7 @@ describe('abilities.config', () => {
         addModifier: false,
       },
       miss: { damage: 'none' },
+      growth: { damage: [], times: 0 },
     };
     expect(
       toAbilityVariant('basic', {}, { steps: [bolt, { target: 1 }, bolt] })

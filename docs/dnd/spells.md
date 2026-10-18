@@ -106,10 +106,11 @@ Decided with the user on 2026-10-17 ([plan/abilities.md](../plan/abilities.md), 
 - **Duration is a field of the spell**, as the line in the book: Concentration belongs to the caster, and Moonbeam or a summon have no effect on a creature to carry it. Effects (stage 8) keep their own duration; for Hold Person both match.
 - **Growth is a separate stage (7)** and lives on a step, not on the spell: Ice Knife grows only in step 2, and the Breath Weapon grows with character level without being a spell.
 
-Planned for stage 7 (2026-10-17):
+Stage 7 (planned 2026-10-17, built 2026-10-18):
 
 - **What a step grows by is not stored; the ability decides it.** With the cost «Ячейка заклинаний N круга или выше» — per slot circle above N (Fireball, Eldritch Smite with a slot of circle 1 and 2d8 as the base). Without it — at character levels 5, 11 and 17 (cantrips, the Breath Weapon). A spell of circle 1+ without a slot (a feat's copy) doesn't grow: it's cast at its own circle. **App rule, not the book:** the book has no ability that grows both ways.
 - **Growth is extra damage rows plus extra repeats per increment**, the rows the same as damage rows (dice, number, type; decided with the user — the type can differ from the base, flat numbers come free).
+- **Code:** `packages/shared/src/abilityStepGrowth.ts` (`growthBasis`), `abilityStepGrowthLabels.ts`, the check in `abilityStepDamageCheck.ts`; the form block is `apps/web/src/features/simpleCatalog/StepsField/GrowthFields.tsx`.
 - **Left out:** class-level growth (Sneak Attack, Rage Damage — needs the character's class level), more targets (Hold Person), a different die (Shillelagh), range (Spare the Dying), healing and Temporary Hit Points (with effects).
 
 Code: `packages/shared/src/abilitySpell.ts` (`SpellDetails`, `isSpellDetails`, `spellSlotFits`) and `abilitySpellLabels.ts` (school names, «3 круг, воплощение», the duration line); the server checks the slot in `apps/server/src/abilities/dto/spell-slot.validator.ts`; the form is `apps/web/src/features/simpleCatalog/SpellFields/`.

@@ -26,6 +26,7 @@ const fireball: AbilityStep = {
   },
   hit: { damage: [fire(8, 6)], addModifier: false },
   miss: { damage: 'half' },
+  growth: { damage: [], times: 0 },
 };
 const breath: AbilityStep = {
   ...fireball,
@@ -54,6 +55,7 @@ const sacredFlame: AbilityStep = {
     addModifier: false,
   },
   miss: { damage: 'none' },
+  growth: { damage: [], times: 0 },
 };
 const magicMissile: AbilityStep = {
   when: 'always',
@@ -65,6 +67,7 @@ const magicMissile: AbilityStep = {
     addModifier: false,
   },
   miss: { damage: 'none' },
+  growth: { damage: [], times: 0 },
 };
 const area = (
   shape: object,

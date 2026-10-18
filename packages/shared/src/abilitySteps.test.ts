@@ -19,6 +19,7 @@ const fireBolt: AbilityStep = {
     addModifier: false,
   },
   miss: { damage: 'none' },
+  growth: { damage: [], times: 0 },
 };
 const longbow: AbilityStep = {
   when: 'always',
@@ -34,6 +35,7 @@ const longbow: AbilityStep = {
     addModifier: true,
   },
   miss: { damage: 'none' },
+  growth: { damage: [], times: 0 },
 };
 const flameTongue: AbilityStep = {
   when: 'always',
@@ -52,6 +54,7 @@ const flameTongue: AbilityStep = {
     addModifier: false,
   },
   miss: { damage: 'half' },
+  growth: { damage: [], times: 0 },
 };
 const withDamage = (step: AbilityStep, damage: unknown[]) => ({
   ...step,

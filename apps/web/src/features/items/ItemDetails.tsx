@@ -1,6 +1,7 @@
 import { Grid, Stack, Text, Title } from '@mantine/core';
 import type { ReactNode } from 'react';
 import type { Item } from 'shared';
+import { TitleWithBookmark } from '../bookmarks';
 import { DetailsField, EntryImage, SourcesList } from '../catalog';
 import { ItemBadges } from './ItemCollection';
 import { PackContentsView } from './PackContents';
@@ -27,9 +28,11 @@ function ItemDetails({ item, actions }: ItemDetailsProps) {
       </Grid.Col>
       <Grid.Col span={{ base: 12, sm: 7 }}>
         <Stack gap="sm">
-          <Title order={1} style={{ overflowWrap: 'anywhere' }}>
-            {item.name}
-          </Title>
+          <TitleWithBookmark kind="item" id={item.id}>
+            <Title order={1} style={{ overflowWrap: 'anywhere' }}>
+              {item.name}
+            </Title>
+          </TitleWithBookmark>
           <ItemBadges item={item} showHidden />
           <Stack gap={4}>
             {item.category === 'food' && (

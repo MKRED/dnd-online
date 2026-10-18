@@ -1,6 +1,7 @@
 import { Badge, Group, Stack, Text, Title } from '@mantine/core';
 import type { ReactNode } from 'react';
 import type { Character } from 'shared';
+import { TitleWithBookmark } from '../../bookmarks';
 import { CLASS_LABELS } from '../characterClasses';
 import { SPECIES_LABELS } from '../characterSpecies';
 
@@ -24,15 +25,17 @@ function SheetHeader({ character, aside }: SheetHeaderProps) {
   return (
     <Stack gap="xs">
       {/* Длинное имя переносится, а не раздвигает страницу шире экрана телефона. */}
-      <Title
-        order={1}
-        style={{
-          fontSize: 'min(var(--mantine-h1-font-size), 8vw)',
-          overflowWrap: 'anywhere',
-        }}
-      >
-        {character.name}
-      </Title>
+      <TitleWithBookmark kind="character" id={character.id}>
+        <Title
+          order={1}
+          style={{
+            fontSize: 'min(var(--mantine-h1-font-size), 8vw)',
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {character.name}
+        </Title>
+      </TitleWithBookmark>
       <Text c="dimmed">{origin}</Text>
       <Group gap="xs">
         {character.classes.map((entry) => (

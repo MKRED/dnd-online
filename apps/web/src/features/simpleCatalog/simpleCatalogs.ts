@@ -26,6 +26,8 @@ export type SimpleInput = AbilityInput | EffectInput;
 // (род у способности женский, у эффекта мужской).
 export interface SimpleCatalogDef {
   section: Exclude<CatalogSection, 'items'>;
+  // Вид закладки на записи раздела (docs/plan/bookmarks.md).
+  bookmarkKind: 'ability' | 'effect';
   path: string;
   api: ReturnType<typeof catalogApi<SimpleEntry, SimpleInput>>;
   // Категории способности — выбор в форме. У эффекта категории нет.
@@ -66,6 +68,7 @@ export interface SimpleCatalogDef {
 
 export const ABILITIES: SimpleCatalogDef = {
   section: 'abilities',
+  bookmarkKind: 'ability',
   path: '/abilities',
   api: catalogApi<SimpleEntry, SimpleInput>('/abilities'),
   categories: ABILITY_CATEGORIES,
@@ -108,6 +111,7 @@ export const ABILITIES: SimpleCatalogDef = {
 
 export const EFFECTS: SimpleCatalogDef = {
   section: 'effects',
+  bookmarkKind: 'effect',
   path: '/effects',
   api: catalogApi<SimpleEntry, SimpleInput>('/effects'),
   kinds: {

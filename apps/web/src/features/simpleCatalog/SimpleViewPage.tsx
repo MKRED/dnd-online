@@ -13,6 +13,7 @@ import {
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth';
+import { TitleWithBookmark } from '../bookmarks';
 import {
   DetailsField,
   EntryImage,
@@ -84,9 +85,11 @@ function SimpleViewPage({ def }: SimpleViewPageProps) {
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 7 }}>
             <Stack gap="sm">
-              <Title order={1} style={{ overflowWrap: 'anywhere' }}>
-                {entry.name}
-              </Title>
+              <TitleWithBookmark kind={def.bookmarkKind} id={entry.id}>
+                <Title order={1} style={{ overflowWrap: 'anywhere' }}>
+                  {entry.name}
+                </Title>
+              </TitleWithBookmark>
               <SimpleBadges def={def} entry={entry} showHidden />
               <DetailsField label="Автор">{entry.authorNickname}</DetailsField>
               {def.extras.rows(entry).map(({ label, value }) => (

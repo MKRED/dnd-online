@@ -1,5 +1,5 @@
 export { deleteConfirmText } from './deleteConfirmText';
-export { deleteItem, getItem, listItems } from './itemsApi';
+export { deleteItem, getItem, itemImagePath, listItems } from './itemsApi';
 export { default as ItemCollection } from './ItemCollection';
 export { default as ItemDetails } from './ItemDetails';
 export { default as ItemFilters } from './ItemFilters';

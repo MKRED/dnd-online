@@ -8,10 +8,11 @@ const NAV_LINKS = [
   { to: '/maps', label: 'Карты' },
   // Справочник: предметы, способности, эффекты; ведёт на первый раздел.
   { to: '/items', label: 'Справочник' },
+  { to: '/bookmarks', label: 'Закладки' },
 ];
 
-// Правая часть шапки. На широком экране ссылки лежат в ряд, на узком они в ряд
-// не помещаются (вместе с ником и «Выйти» это шире телефона), поэтому уходят в меню.
+// Правая часть шапки. На широком экране (от md) ссылки лежат в ряд; уже — четыре ссылки
+// вместе с ником и «Выйти» не помещаются, поэтому уходят в меню.
 function HeaderNav() {
   const { user, loading, logout } = useAuth();
   const [menuOpened, setMenuOpened] = useState(false);
@@ -34,7 +35,7 @@ function HeaderNav() {
 
   return (
     <>
-      <Group gap="sm" wrap="nowrap" visibleFrom="sm">
+      <Group gap="sm" wrap="nowrap" visibleFrom="md">
         {NAV_LINKS.map(({ to, label }) => (
           <Button key={to} component={Link} to={to} variant="subtle" size="sm">
             {label}
@@ -68,7 +69,7 @@ function HeaderNav() {
           <Burger
             opened={menuOpened}
             size="sm"
-            hiddenFrom="sm"
+            hiddenFrom="md"
             aria-label="Меню"
           />
         </Menu.Target>

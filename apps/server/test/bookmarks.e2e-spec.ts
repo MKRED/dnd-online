@@ -1,5 +1,6 @@
 import type request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { PNG_FILE, pngImage } from './support/character-fixture.js';
 import { createCharacter } from './support/inventory-fixture.js';
 import { createItem, itemBody } from './support/item-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
@@ -127,6 +128,32 @@ describe('закладки (e2e)', () => {
       expect(await stateOf(reader, kind, id)).toBe(false);
     }
     expect(await listOf(reader)).toEqual([]);
+  });
+
+  it('миниатюры: картинка записи и основная картинка персонажа', async () => {
+    const png = await pngImage();
+    const item = await publicItem('Щит с гербом');
+    await author
+      .put(`/api/items/${item.id}/image`)
+      .attach('file', png, PNG_FILE)
+      .expect(200);
+    const characterId = await createCharacter(author);
+    await setLinkAccess(characterId, 'link');
+    const uploaded = await author
+      .post(`/api/characters/${characterId}/images`)
+      .attach('file', png, PNG_FILE)
+      .expect(201);
+    await reader.put(url('item', item.id)).expect(200);
+    await reader.put(url('character', characterId)).expect(200);
+
+    const [character, withImage] = await listOf(reader);
+    expect(withImage.target?.image).toMatchObject({ version: 1 });
+    expect(character.target?.mainImage).toEqual({
+      id: (uploaded.body as { id: string }).id,
+      thumbVersion: expect.any(Number) as number,
+    });
+    await reader.delete(url('item', item.id)).expect(204);
+    await reader.delete(url('character', characterId)).expect(204);
   });
 
   it('свои скрытые запись и персонажа — можно, и они не плашки', async () => {

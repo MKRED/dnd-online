@@ -151,6 +151,31 @@ export function describeAbilityEffects(get: () => CatalogContext): void {
       });
     });
 
+    // Правка пишет способность и эффекты одной транзакцией: отказ по эффектам не оставит
+    // способность наполовину изменённой.
+    it('публикация правкой со скрытым эффектом — 409, способность не меняется', async () => {
+      const { author, url, body } = get();
+      const poisoned = await createEffect(author, 'Отравлен');
+      const res = await author
+        .post(url())
+        .send(body({ name: 'До правки', steps: [ray([poisoned])] }))
+        .expect(201);
+      const id = (res.body as { id: string }).id;
+      await author
+        .put(url(id))
+        .send(
+          body({
+            name: 'После правки',
+            isPublic: true,
+            steps: [ray([poisoned])],
+          }),
+        )
+        .expect(409);
+      const card = await author.get(url(id)).expect(200);
+      expect(card.body).toMatchObject({ name: 'До правки', isPublic: false });
+      expect(stepsOf(card)[0].hit.effects).toHaveLength(1);
+    });
+
     it('удалённый эффект пропадает, скрытый другим виден как null', async () => {
       const { author, stranger, url, body } = get();
       const gone = await createEffect(author, 'Удаляемый', true);

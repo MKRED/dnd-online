@@ -42,6 +42,8 @@ export const abilityStepEffects = pgTable(
       'ability_step_effects_outcome',
       sql`${table.outcome} in ('hit', 'miss')`,
     ),
+    // Шаги с 0 по ABILITY_STEPS_MAX − 1 (3 шага): поднимут предел шагов — нужна миграция
+    // этой проверки.
     check('ability_step_effects_step', sql`${table.step} between 0 and 2`),
   ],
 );

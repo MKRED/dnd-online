@@ -46,7 +46,7 @@ function SimpleViewPage({ def }: SimpleViewPageProps) {
 
   const handleDelete = () => {
     if (!entry) return;
-    if (!window.confirm(def.texts.deleteConfirm(entry.name))) return;
+    if (!window.confirm(def.texts.deleteConfirm(entry))) return;
     setDeleteError(null);
     setDeleting(true);
     def.api

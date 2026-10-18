@@ -21,8 +21,9 @@ const burst = {
   hit: {
     damage: [{ count: 2, die: 6, number: 0, type: 'cold' }],
     addModifier: false,
+    effects: [],
   },
-  miss: { damage: 'none' },
+  miss: { damage: 'none', effects: [] },
   growth: { damage: [], times: 0 },
 };
 const noCheck = { ...fireBolt, check: { kind: 'none' } };

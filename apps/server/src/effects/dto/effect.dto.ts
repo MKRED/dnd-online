@@ -1,4 +1,4 @@
-import { ValidateBy } from 'class-validator';
+import { IsBoolean, IsOptional, ValidateBy } from 'class-validator';
 import {
   EFFECT_COMPONENTS_MAX,
   isEffectComponents,
@@ -45,4 +45,10 @@ export class EffectDto extends CatalogEntryDto {
     },
   })
   saveEnds: EffectSaveEnds | null;
+
+  // Флаг одного запроса, в эффекте не хранится (docs/plan/abilities.md, этап 8). Скрыть
+  // вместе с эффектом свои опубликованные способности, которые его накладывают.
+  @IsOptional()
+  @IsBoolean({ message: 'Признак «скрыть способности» — да или нет' })
+  hideAbilities?: boolean;
 }

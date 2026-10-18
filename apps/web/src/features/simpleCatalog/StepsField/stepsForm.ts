@@ -12,6 +12,7 @@ import {
   type AttackKind,
   type MissDamage,
   type SaveDcAbility,
+  type StepEffect,
 } from 'shared';
 import {
   fromDamageValues,
@@ -52,6 +53,9 @@ export interface StepValues extends TargetValues, GrowthValues {
   damage: DamageValues[];
   addModifier: boolean;
   onMiss: MissDamage;
+  // Эффекты исходов (этап 8) — с карточкой эффекта, чтобы показать строку без запроса.
+  hitEffects: StepEffect[];
+  missEffects: StepEffect[];
 }
 
 // Чаще всего это заклинание вроде «Огненного снаряда». Цель шага 2 и дальше подберёт
@@ -75,6 +79,8 @@ export function newStep(): StepValues {
     damage: [{ ...newDamage(), die: '10' }],
     addModifier: false,
     onMiss: 'none',
+    hitEffects: [],
+    missEffects: [],
     ...GROWTH_BLANK,
   };
 }
@@ -152,6 +158,8 @@ export function toStepValues(step: AbilityStep): StepValues {
     damage: step.hit.damage.map(toDamageValues),
     addModifier: step.hit.addModifier,
     onMiss: step.miss.damage,
+    hitEffects: step.hit.effects,
+    missEffects: step.miss.effects,
     ...toGrowthValues(step.growth),
   };
   const { check } = step;
@@ -171,6 +179,9 @@ export function toStepValues(step: AbilityStep): StepValues {
   return values;
 }
 
+// В запросе у эффекта только id — карточку строит сервер.
+const toEffectInput = ({ effectId }: StepEffect): StepEffect => ({ effectId });
+
 // Модификатор к урону — только у атаки с бонусом от характеристики, половина — только от
 // урона и при проверке: иначе сервер откажет (abilityStepsCheck.ts). «Когда» и цель
 // против прошлого шага сверяет цепочка (chainSteps) до этого.
@@ -188,12 +199,16 @@ export function fromStepValues(values: StepValues): AbilityStep {
     hit: {
       damage: values.damage.map(fromDamageValues),
       addModifier: modifier && values.addModifier,
+      effects: values.hitEffects.map(toEffectInput),
     },
+    // Без проверки второго исхода нет — ни урона, ни эффектов.
     miss: {
       damage:
         values.damage.length > 0 && check.kind !== 'none'
           ? values.onMiss
           : 'none',
+      effects:
+        check.kind === 'none' ? [] : values.missEffects.map(toEffectInput),
     },
     growth: fromGrowthValues(values),
   };

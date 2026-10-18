@@ -17,8 +17,9 @@ const fireBolt: AbilityStep = {
   hit: {
     damage: [{ count: 1, die: 10, number: 0, type: 'fire' }],
     addModifier: false,
+    effects: [],
   },
-  miss: { damage: 'none' },
+  miss: { damage: 'none', effects: [] },
   growth: { damage: [], times: 0 },
 };
 const longbow: AbilityStep = {
@@ -33,8 +34,9 @@ const longbow: AbilityStep = {
   hit: {
     damage: [{ count: 1, die: 8, number: 0, type: 'piercing' }],
     addModifier: true,
+    effects: [],
   },
-  miss: { damage: 'none' },
+  miss: { damage: 'none', effects: [] },
   growth: { damage: [], times: 0 },
 };
 const flameTongue: AbilityStep = {
@@ -52,8 +54,9 @@ const flameTongue: AbilityStep = {
       { count: 2, die: 6, number: 0, type: 'fire' },
     ],
     addModifier: false,
+    effects: [],
   },
-  miss: { damage: 'half' },
+  miss: { damage: 'half', effects: [] },
   growth: { damage: [], times: 0 },
 };
 const withDamage = (step: AbilityStep, damage: unknown[]) => ({
@@ -84,10 +87,19 @@ describe('шаги «Применения»', () => {
       withDamage(fireBolt, [{ count: 1, die: 10, number: 0, type: 'heat' }]),
       withDamage(fireBolt, [{ count: 1, die: 20, number: 0, type: 'fire' }]),
       // Модификатор к урону при числовом бонусе, половина от пустого урона.
-      { ...flameTongue, hit: { ...flameTongue.hit, addModifier: true } },
-      { ...withDamage(fireBolt, []), miss: { damage: 'half' } },
+      {
+        ...flameTongue,
+        hit: { ...flameTongue.hit, addModifier: true, effects: [] },
+      },
+      { ...withDamage(fireBolt, []), miss: { damage: 'half', effects: [] } },
       // Исходы плоско, как до разделения на попадание и промах.
-      { ...fireBolt, hit: undefined, damage: [], addModifier: false },
+      {
+        ...fireBolt,
+        hit: undefined,
+        damage: [],
+        addModifier: false,
+        effects: [],
+      },
       // Лишнее поле, бонус вне пределов, неизвестная характеристика.
       { ...fireBolt, extra: 1 },
       {

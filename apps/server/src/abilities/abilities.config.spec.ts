@@ -75,8 +75,9 @@ describe('abilities.config', () => {
       hit: {
         damage: [{ count: 1, die: 10, number: 0, type: 'fire' }],
         addModifier: false,
+        effects: [],
       },
-      miss: { damage: 'none' },
+      miss: { damage: 'none', effects: [] },
       growth: { damage: [], times: 0 },
     };
     expect(

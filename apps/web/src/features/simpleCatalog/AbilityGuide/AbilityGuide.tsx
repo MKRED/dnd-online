@@ -14,6 +14,7 @@ import { GUIDE_EXAMPLES } from './guideExamples';
 import {
   CategorySection,
   ChainSection,
+  EffectsSection,
   GrowthSection,
   StepsSection,
   UsageSection,
@@ -55,11 +56,12 @@ export function AbilityGuideButton() {
             <Text>
               Форма идёт сверху вниз: что это за способность, как её применяют и
               что она делает. Обязательно только название. Всё, чего форма пока
-              не умеет — состояния, особые условия, — пишите в описании.
+              не умеет — особые условия, выбор цели, — пишите в описании.
             </Text>
             <CategorySection />
             <UsageSection />
             <StepsSection />
+            <EffectsSection />
             <ChainSection />
             <GrowthSection />
             <Divider />

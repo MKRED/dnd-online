@@ -4,7 +4,6 @@ import { growthBasis, NO_STEP_GROWTH } from './abilityStepGrowth.js';
 import {
   formatGrowthBasis,
   formatStepGrowth,
-  formatStepsWithGrowth,
 } from './abilityStepGrowthLabels.js';
 import type { AbilityStep } from './abilitySteps.js';
 import { isAbilitySteps } from './abilityStepsCheck.js';
@@ -27,8 +26,8 @@ const fireBolt: AbilityStep = {
     attack: 'ranged_spell',
     bonus: { kind: 'ability', ability: 'spellcasting' },
   },
-  hit: { damage: [fire(1, 10)], addModifier: false },
-  miss: { damage: 'none' },
+  hit: { damage: [fire(1, 10)], addModifier: false, effects: [] },
+  miss: { damage: 'none', effects: [] },
   growth: { damage: [fire(1, 10)], times: 0 },
 };
 // «Волшебная стрела»: три дротика, +1 за круг выше 1.
@@ -38,6 +37,7 @@ const magicMissile: AbilityStep = {
   hit: {
     damage: [{ count: 1, die: 4, number: 1, type: 'force' }],
     addModifier: false,
+    effects: [],
   },
   times: 3,
   growth: { damage: [], times: 1 },
@@ -117,9 +117,7 @@ describe('рост шага', () => {
     expect(formatStepGrowth(fireBolt.growth, { kind: 'none' })).toBeNull();
     expect(formatStepGrowth(NO_STEP_GROWTH, { kind: 'level' })).toBeNull();
     expect(
-      formatStepsWithGrowth([magicMissile], { kind: 'slot', above: 1 })[0].at(
-        -1,
-      ),
+      formatStepGrowth(magicMissile.growth, { kind: 'slot', above: 1 }),
     ).toBe('Рост за каждый круг ячейки выше 1: +1 повтор');
   });
 });

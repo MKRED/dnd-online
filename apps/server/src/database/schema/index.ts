@@ -14,6 +14,7 @@ export * from './item-pack-entries.js';
 export * from './character-items.js';
 export * from './abilities.js';
 export * from './effects.js';
+export * from './ability-step-effects.js';
 export * from './character-effects.js';
 export type {
   CatalogEntryTable,

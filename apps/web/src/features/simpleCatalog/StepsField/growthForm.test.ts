@@ -19,8 +19,9 @@ const fireball: AbilityStep = {
   hit: {
     damage: [{ count: 8, die: 6, number: 0, type: 'fire' }],
     addModifier: false,
+    effects: [],
   },
-  miss: { damage: 'half' },
+  miss: { damage: 'half', effects: [] },
   growth: {
     damage: [{ count: 1, die: 6, number: 0, type: 'fire' }],
     times: 0,

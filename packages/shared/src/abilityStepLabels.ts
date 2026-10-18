@@ -144,7 +144,11 @@ export function formatAbilityStep(
       ? `${STEP_WHEN_LABELS[link.check][step.when]} — ${lowerFirst(head)}`
       : head,
     ...(value ? [value] : []),
-    `${labels.hit}: ${parts.length > 0 ? parts.join(' + ') : 'без урона'}`,
+    // Шаг только с эффектами («Ярость») — без строки «без урона»: эффект покажет своя
+    // строка (stepEffectOutcomes).
+    ...(parts.length > 0 || step.hit.effects.length === 0
+      ? [`${labels.hit}: ${parts.length > 0 ? parts.join(' + ') : 'без урона'}`]
+      : []),
     ...(labels.miss && step.miss.damage === 'half'
       ? [`${labels.miss}: половина урона`]
       : []),

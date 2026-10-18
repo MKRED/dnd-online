@@ -4,6 +4,7 @@ import {
   isEffectSaveEnds,
   isSenseDetails,
   readEffectComponents,
+  type EffectAbilities,
   type EffectComponent,
   type EffectFields,
 } from 'shared';
@@ -14,6 +15,9 @@ import { effects, effectImageTables } from '../database/schema/index.js';
 import type { EffectDto } from './dto/effect.dto.js';
 
 // Каталог эффектов на общем коде каталогов (docs/plan/abilities-effects.md).
+
+// abilities — только у автора в карточке: какие способности накладывают эффект.
+export type EffectRecordFields = EffectFields & { abilities?: EffectAbilities };
 export const EFFECT_ACCESS: CatalogAccess = {
   table: effects,
   id: effects.id,
@@ -63,7 +67,10 @@ export function toEffectFields(
   };
 }
 
-export const EFFECTS_CONFIG: CatalogEntriesConfig<EffectFields, EffectDto> = {
+export const EFFECTS_CONFIG: CatalogEntriesConfig<
+  EffectRecordFields,
+  EffectDto
+> = {
   catalog: 'effect',
   table: effects,
   images: effectImageTables,

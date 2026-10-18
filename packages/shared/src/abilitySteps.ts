@@ -1,5 +1,6 @@
 import type { AreaOrigin, AreaSpec } from './abilityStepAreas.js';
 import { ABILITY_SCORES, type AbilityScore } from './character.js';
+import type { StepEffect } from './abilityStepEffects.js';
 import type { DamageDie, DamageType } from './damageTypes.js';
 
 // «Применение» способности — список шагов (docs/plan/abilities.md, docs/dnd/attacks-and-saves.md).
@@ -115,12 +116,17 @@ export const ABILITY_CHECK_KINDS = [
 // Урон без строк бывает: «Сеть» только опутывает. addModifier — модификатор той же
 // характеристики, что у атаки, один раз на весь урон: у оружия да, у заклинаний обычно
 // нет. Только у атаки с бонусом от характеристики: иначе число урона — в строках.
+//
+// effects — эффекты из каталога (этап 8, abilityStepEffects.ts): у hit — на цель при
+// попадании или провале, у miss — при промахе или успехе; без проверки miss пуст.
 export interface HitOutcome {
   damage: DamagePart[];
   addModifier: boolean;
+  effects: StepEffect[];
 }
 export interface MissOutcome {
   damage: MissDamage;
+  effects: StepEffect[];
 }
 
 // Когда шаг срабатывает: всегда или по исходу прошлого шага (hit — попадание или

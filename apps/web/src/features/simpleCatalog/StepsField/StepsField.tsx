@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Alert,
   Button,
   Group,
   Input,
@@ -18,6 +19,7 @@ import GrowthFields from './GrowthFields';
 import { chainLinks, chainSteps } from './stepChain';
 import { newStep } from './stepsForm';
 import TargetFields from './TargetFields';
+import { useEffectCandidates } from './useEffectCandidates';
 import WhenField from './WhenField';
 
 interface StepsFieldProps {
@@ -32,6 +34,8 @@ function StepsField({ form }: StepsFieldProps) {
   const links = chainLinks(steps);
   const numbered = steps.length > 1;
   const basis = formGrowthBasis(form.getValues());
+  // Эффекты для исходов — один запрос на форму, а не в каждом шаге.
+  const { candidates, error } = useEffectCandidates();
 
   // Правка одного шага может сделать неверным следующий: прошлый стал без проверки —
   // «при попадании» больше нет; удалили первый — у нового первого нет «той же цели».
@@ -48,6 +52,11 @@ function StepsField({ form }: StepsFieldProps) {
       description="Как способность действует на цель. Без шагов — всё в описании"
     >
       <Stack gap="xs" mt={6}>
+        {error && (
+          <Alert color="red" variant="light" p="xs">
+            {error}
+          </Alert>
+        )}
         {steps.map((step, index) => (
           <Paper key={step.key} withBorder p="sm" radius="md">
             <Group justify="space-between" mb={4} wrap="nowrap">
@@ -70,7 +79,7 @@ function StepsField({ form }: StepsFieldProps) {
               )}
               <CheckFields form={form} index={index} link={links[index]} />
               <TargetFields form={form} index={index} link={links[index]} />
-              <DamageFields form={form} index={index} />
+              <DamageFields form={form} index={index} candidates={candidates} />
               <GrowthFields form={form} index={index} basis={basis} />
             </Stack>
           </Paper>

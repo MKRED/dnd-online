@@ -1,4 +1,4 @@
-import { IsIn, IsOptional, ValidateBy } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, ValidateBy } from 'class-validator';
 import {
   ABILITY_CATEGORIES,
   isAbilityActivation,
@@ -61,4 +61,10 @@ export class AbilityDto extends CatalogEntryDto {
     },
   })
   steps?: AbilityStep[];
+
+  // Флаг одного запроса, в способности не хранится (docs/plan/abilities.md, этап 8).
+  // Опубликовать вместе со способностью свои скрытые эффекты из её шагов — иначе 409.
+  @IsOptional()
+  @IsBoolean({ message: 'Признак «опубликовать эффекты» — да или нет' })
+  publishEffects?: boolean;
 }

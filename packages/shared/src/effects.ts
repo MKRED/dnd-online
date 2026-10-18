@@ -1,3 +1,4 @@
+import type { EffectAbilities } from './abilityStepEffects.js';
 import type { CatalogEntryFields, CatalogEntryInputFields } from './catalog.js';
 import type { EffectComponent } from './effectComponents.js';
 import type { EffectDuration } from './effectDuration.js';
@@ -12,5 +13,9 @@ export interface EffectFields {
   saveEnds: EffectSaveEnds | null;
 }
 
-export type Effect = EffectFields & CatalogEntryFields;
+export type Effect = EffectFields &
+  CatalogEntryFields & {
+    // Только у автора и только в GET /effects/:id: какие способности его накладывают.
+    abilities?: EffectAbilities;
+  };
 export type EffectInput = EffectFields & CatalogEntryInputFields;

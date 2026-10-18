@@ -3,8 +3,8 @@ import {
   hasGrowth,
   type GrowthBasis,
 } from './abilityStepGrowth.js';
-import { formatAbilitySteps, formatDamagePart } from './abilityStepLabels.js';
-import type { AbilityStep, StepGrowth } from './abilitySteps.js';
+import { formatDamagePart } from './abilityStepLabels.js';
+import type { StepGrowth } from './abilitySteps.js';
 
 // Рост шага для формы и карточки (этап 7).
 
@@ -42,15 +42,4 @@ export function formatStepGrowth(
       ? `за каждый круг ячейки выше ${basis.above}`
       : `на ${L5}, ${L11} и ${L17} уровне`;
   return `Рост ${when}: ${parts.join(', ')}`;
-}
-
-// Строки карточки всех шагов (formatAbilitySteps) с ростом последней строкой.
-export function formatStepsWithGrowth(
-  steps: readonly AbilityStep[],
-  basis: GrowthBasis,
-): string[][] {
-  return formatAbilitySteps(steps).map((lines, index) => {
-    const growth = formatStepGrowth(steps[index].growth, basis);
-    return growth ? [...lines, growth] : lines;
-  });
 }

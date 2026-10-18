@@ -23,8 +23,9 @@ const longbow: AbilityStep = {
   hit: {
     damage: [{ count: 1, die: 8, number: 0, type: 'piercing' }],
     addModifier: true,
+    effects: [],
   },
-  miss: { damage: 'none' },
+  miss: { damage: 'none', effects: [] },
   growth: { damage: [], times: 0 },
 };
 
@@ -52,7 +53,7 @@ describe('stepsForm', () => {
       hit: { addModifier: false },
     });
     const empty = { ...newStep(), damage: [], onMiss: 'half' as const };
-    expect(fromStepValues(empty).miss).toEqual({ damage: 'none' });
+    expect(fromStepValues(empty).miss).toEqual({ damage: 'none', effects: [] });
   });
 
   it('смена вида атаки подставляет цель и характеристику', () => {
@@ -115,8 +116,9 @@ const fireball: AbilityStep = {
   hit: {
     damage: [{ count: 8, die: 6, number: 0, type: 'fire' }],
     addModifier: false,
+    effects: [],
   },
-  miss: { damage: 'half' },
+  miss: { damage: 'half', effects: [] },
   growth: { damage: [], times: 0 },
 };
 
@@ -137,7 +139,7 @@ describe('stepsForm: спасбросок, область, без проверк
       target: { kind: 'self' },
       check: { kind: 'none' },
       hit: fireball.hit,
-      miss: { damage: 'none' },
+      miss: { damage: 'none', effects: [] },
       growth: { damage: [], times: 0 },
     };
     for (const step of [fireball, cylinder, missile]) {
@@ -162,7 +164,7 @@ describe('stepsForm: спасбросок, область, без проверк
 
   it('без проверки нет половины, эманация всегда от себя', () => {
     const none = { ...toStepValues(fireball), check: 'none' as const };
-    expect(fromStepValues(none).miss).toEqual({ damage: 'none' });
+    expect(fromStepValues(none).miss).toEqual({ damage: 'none', effects: [] });
     const aura = { ...toStepValues(fireball), areaShape: 'emanation' as const };
     expect(fromStepValues(aura).target).toEqual({
       kind: 'area',

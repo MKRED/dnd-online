@@ -14,6 +14,11 @@ import {
 import { AbilityGuideButton } from './AbilityGuide';
 import { abilityRows } from './abilityRows';
 import CardLines from './CardLines';
+import {
+  abilitySaveConfirmation,
+  effectSaveConfirmation,
+  type SaveConfirmation,
+} from './SaveConfirm';
 import { fromDurationValues } from './DurationField';
 import EffectFields, { fromEffectValues } from './EffectFields';
 import type { SimpleFormValues } from './SimpleEntryForm/simpleEntryValues';
@@ -34,6 +39,12 @@ export interface CatalogExtras {
   rows: (entry: SimpleEntry) => { label: string; value: ReactNode }[];
   // Коротко — для колонки списка.
   listValue: (entry: SimpleEntry) => string | null;
+  // Вопрос перед сохранением: публикация со скрытыми эффектами, скрытие эффекта, который
+  // стоит в способностях. Нет — форма сохраняет сразу.
+  saveConfirmation?: (
+    values: SimpleFormValues,
+    saved: SimpleEntry | null,
+  ) => SaveConfirmation | null;
   // Кнопка гайда по форме — в заголовке страницы создания и правки. Нет — нет и кнопки.
   Guide?: () => ReactNode;
 }
@@ -70,6 +81,7 @@ export const EFFECT_EXTRAS: CatalogExtras = {
   },
   listValue: (entry) =>
     'duration' in entry ? formatEffectDurationShort(entry.duration) : null,
+  saveConfirmation: effectSaveConfirmation,
 };
 
 export const ABILITY_EXTRAS: CatalogExtras = {
@@ -88,5 +100,6 @@ export const ABILITY_EXTRAS: CatalogExtras = {
       ? formatActivation(activation)
       : ACTIVATION_LABELS[activation.kind];
   },
+  saveConfirmation: abilitySaveConfirmation,
   Guide: AbilityGuideButton,
 };

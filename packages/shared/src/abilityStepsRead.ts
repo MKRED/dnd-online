@@ -12,11 +12,12 @@ export const STEP_STORED_DEFAULTS = {
   step: {
     when: 'always',
     times: 1,
-    miss: { damage: 'none' },
+    miss: { damage: 'none', effects: [] },
     growth: { damage: [], times: 0 },
   },
-  hit: { damage: [], addModifier: false },
-  miss: {},
+  // effects — с этапа 8; в базе шагов их и не бывает: сервер берёт их из таблицы связей.
+  hit: { damage: [], addModifier: false, effects: [] },
+  miss: { effects: [] },
 } satisfies Record<'step' | 'hit' | 'miss', Record<string, unknown>>;
 
 const isObject = (value: unknown): value is Record<string, unknown> =>

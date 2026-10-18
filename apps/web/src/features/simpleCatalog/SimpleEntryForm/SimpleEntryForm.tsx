@@ -19,6 +19,10 @@ import {
   SourcesField,
   useImageDraft,
 } from '../../catalog';
+import SaveConfirm, {
+  type SaveConfirmation,
+  type SaveFlags,
+} from '../SaveConfirm';
 import type { SimpleCatalogDef, SimpleEntry } from '../simpleCatalogs';
 import {
   simpleFormValidate,
@@ -55,11 +59,17 @@ function SimpleEntryForm({
   const [saved, setSaved] = useState(entry);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Вопрос перед сохранением (публикация со скрытыми эффектами, скрытие эффекта) — до
+  // ответа запрос не уходит.
+  const [confirmation, setConfirmation] = useState<SaveConfirmation | null>(
+    null,
+  );
 
-  const handleSubmit = form.onSubmit((values) => {
+  const save = (values: SimpleFormValues, flags: SaveFlags) => {
     setError(null);
     setSubmitting(true);
-    const input = toSimpleInput(def, values);
+    // Флаги ответа на вопрос — только в этом запросе, в записи не хранятся.
+    const input = { ...toSimpleInput(def, values), ...flags };
     const savedId = saved?.id;
     saveWithImage(
       () => (savedId ? def.api.update(savedId, input) : def.api.create(input)),
@@ -82,6 +92,12 @@ function SimpleEntryForm({
         setError(errorMessage(err, def.texts.saveFailed));
       })
       .finally(() => setSubmitting(false));
+  };
+
+  const handleSubmit = form.onSubmit((values) => {
+    const question = def.extras.saveConfirmation?.(values, saved) ?? null;
+    if (question) setConfirmation(question);
+    else save(values, {});
   });
 
   return (
@@ -145,6 +161,16 @@ function SimpleEntryForm({
             </Stack>
           </Grid.Col>
         </Grid>
+        {confirmation && (
+          <SaveConfirm
+            confirmation={confirmation}
+            onConfirm={(flags) => {
+              setConfirmation(null);
+              save(form.getValues(), flags);
+            }}
+            onCancel={() => setConfirmation(null)}
+          />
+        )}
         {error && (
           <Alert color="red" title="Ошибка сохранения">
             {error}

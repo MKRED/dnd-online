@@ -24,8 +24,8 @@ const fireball: AbilityStep = {
     ability: 'dexterity',
     dc: { kind: 'ability', ability: 'spellcasting' },
   },
-  hit: { damage: [fire(8, 6)], addModifier: false },
-  miss: { damage: 'half' },
+  hit: { damage: [fire(8, 6)], addModifier: false, effects: [] },
+  miss: { damage: 'half', effects: [] },
   growth: { damage: [], times: 0 },
 };
 const breath: AbilityStep = {
@@ -53,8 +53,9 @@ const sacredFlame: AbilityStep = {
   hit: {
     damage: [{ count: 1, die: 8, number: 0, type: 'radiant' }],
     addModifier: false,
+    effects: [],
   },
-  miss: { damage: 'none' },
+  miss: { damage: 'none', effects: [] },
   growth: { damage: [], times: 0 },
 };
 const magicMissile: AbilityStep = {
@@ -65,8 +66,9 @@ const magicMissile: AbilityStep = {
   hit: {
     damage: [{ count: 3, die: 4, number: 3, type: 'force' }],
     addModifier: false,
+    effects: [],
   },
-  miss: { damage: 'none' },
+  miss: { damage: 'none', effects: [] },
   growth: { damage: [], times: 0 },
 };
 const area = (
@@ -132,8 +134,8 @@ describe('спасбросок, область, без проверки', () => 
       },
       { ...fireball, check: { ...fireball.check, ability: 'spellcasting' } },
       // Модификатор к урону у спасброска; половина без проверки; лишнее поле у «без проверки».
-      { ...fireball, hit: { ...fireball.hit, addModifier: true } },
-      { ...magicMissile, miss: { damage: 'half' } },
+      { ...fireball, hit: { ...fireball.hit, addModifier: true, effects: [] } },
+      { ...magicMissile, miss: { damage: 'half', effects: [] } },
       { ...magicMissile, check: { kind: 'none', ability: 'dexterity' } },
     ];
     for (const step of bad) expect(isAbilitySteps([step])).toBe(false);

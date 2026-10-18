@@ -21,8 +21,9 @@ export const fireBolt = {
   hit: {
     damage: [{ count: 1, die: 10, number: 0, type: 'fire' }],
     addModifier: false,
+    effects: [],
   },
-  miss: { damage: 'none' },
+  miss: { damage: 'none', effects: [] },
   growth: { damage: [], times: 0 },
 };
 
@@ -53,8 +54,8 @@ export function describeAbilitySteps(get: () => CatalogContext): void {
         [
           {
             ...fireBolt,
-            hit: { damage: [], addModifier: false },
-            miss: { damage: 'half' },
+            hit: { damage: [], addModifier: false, effects: [] },
+            miss: { damage: 'half', effects: [] },
             growth: { damage: [], times: 0 },
           },
         ],
@@ -116,8 +117,9 @@ export function describeAbilitySteps(get: () => CatalogContext): void {
         hit: {
           damage: [{ count: 8, die: 6, number: 0, type: 'fire' }],
           addModifier: false,
+          effects: [],
         },
-        miss: { damage: 'half' },
+        miss: { damage: 'half', effects: [] },
         growth: { damage: [], times: 0 },
       };
       // Три дротика по 1d4 + 1 — «сколько раз» этапа 5.
@@ -129,8 +131,9 @@ export function describeAbilitySteps(get: () => CatalogContext): void {
         hit: {
           damage: [{ count: 1, die: 4, number: 1, type: 'force' }],
           addModifier: false,
+          effects: [],
         },
-        miss: { damage: 'none' },
+        miss: { damage: 'none', effects: [] },
         growth: { damage: [], times: 0 },
       };
       for (const step of [fireball, missile]) {
@@ -146,7 +149,7 @@ export function describeAbilitySteps(get: () => CatalogContext): void {
             area: { shape: 'emanation', distance: 15 },
           },
         },
-        { ...missile, miss: { damage: 'half' } },
+        { ...missile, miss: { damage: 'half', effects: [] } },
         { ...fireball, target: { kind: 'self' } },
       ]) {
         await author

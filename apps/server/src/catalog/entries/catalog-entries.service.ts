@@ -2,7 +2,10 @@ import { HttpException, NotFoundException } from '@nestjs/common';
 import { desc, eq, type SQL } from 'drizzle-orm';
 import type { PinoLogger } from 'nestjs-pino';
 import type { CatalogEntryFields, CatalogListScope } from 'shared';
-import type { DatabaseService } from '../../database/database.service.js';
+import type {
+  DatabaseService,
+  DbTransaction,
+} from '../../database/database.service.js';
 import {
   users,
   type CatalogEntryTable,
@@ -38,6 +41,8 @@ export interface CatalogEntriesConfig<
 
 // CRUD простого каталога (способности, эффекты): доступ как у предметов, без их веса,
 // стоимости и наборов. Каждый каталог наследует класс со своими таблицами и логгером.
+// Связи с другими записями (эффекты в шагах способности) каталог пишет в writeLinks — в
+// той же транзакции, что и саму запись, — и подставляет при чтении в attachLinks.
 export abstract class CatalogEntriesService<
   V,
   D extends CatalogEntryDto = CatalogEntryDto,
@@ -52,10 +57,15 @@ export abstract class CatalogEntriesService<
     const { table, catalog, toStored } = this.config;
     const t0 = Date.now();
     try {
-      const [row] = await this.databaseService.db
-        .insert(table)
-        .values({ authorId: userId, ...toCatalogEntryValues(dto, toStored) })
-        .returning({ id: table.id });
+      // Отказ по связям не оставит записи без них.
+      const row = await this.databaseService.db.transaction(async (tx) => {
+        const [inserted] = await tx
+          .insert(table)
+          .values({ authorId: userId, ...toCatalogEntryValues(dto, toStored) })
+          .returning({ id: table.id });
+        await this.writeLinks?.(tx, userId, inserted.id, dto);
+        return inserted;
+      });
       this.logger.info(
         { durationMs: Date.now() - t0, catalog, userId, entryId: row.id },
         'Catalog entry created',
@@ -96,9 +106,11 @@ export abstract class CatalogEntriesService<
         },
         'Catalog entries listed',
       );
-      return rows.map(({ entry, authorNickname, image }) =>
+      const entries = rows.map(({ entry, authorNickname, image }) =>
         toCatalogEntry(entry, authorNickname, image, this.config.toVariant),
       );
+      await this.attachLinks?.(userId, entries, false);
+      return entries;
     } catch (err: unknown) {
       this.logger.error(
         { err, durationMs: Date.now() - t0, catalog, userId, scope },
@@ -126,12 +138,14 @@ export abstract class CatalogEntriesService<
         'Catalog entry lookup',
       );
       if (!row) throw new NotFoundException(access.notFound);
-      return toCatalogEntry(
+      const entry = toCatalogEntry(
         row.entry,
         row.authorNickname,
         row.image,
         this.config.toVariant,
       );
+      await this.attachLinks?.(userId, [entry], true);
+      return entry;
     } catch (err: unknown) {
       if (err instanceof HttpException) throw err;
       this.logger.error(
@@ -151,12 +165,15 @@ export abstract class CatalogEntriesService<
     const t0 = Date.now();
     const { db } = this.databaseService;
     try {
-      const [row] = await db
-        .update(table)
-        .set(toCatalogEntryValues(dto, toStored))
-        .where(authoredEntry(access, userId, id))
-        .returning({ id: table.id });
-      if (!row) await rejectCatalogEdit(db, access, userId, id);
+      await db.transaction(async (tx) => {
+        const [row] = await tx
+          .update(table)
+          .set(toCatalogEntryValues(dto, toStored))
+          .where(authoredEntry(access, userId, id))
+          .returning({ id: table.id });
+        if (!row) await rejectCatalogEdit(tx, access, userId, id);
+        await this.writeLinks?.(tx, userId, id, dto);
+      });
       this.logger.info(
         { durationMs: Date.now() - t0, catalog, userId, entryId: id },
         'Catalog entry updated',
@@ -196,6 +213,23 @@ export abstract class CatalogEntriesService<
       throw err;
     }
   }
+
+  // Связи записи с другими каталогами; у каталога без связей их нет. Каталог задаёт их
+  // свойством в своём классе. Ошибка в writeLinks откатывает запись целиком.
+  protected writeLinks?: (
+    tx: DbTransaction,
+    userId: string,
+    entryId: string,
+    dto: D,
+  ) => Promise<void>;
+
+  // Подставляет связи в прочитанные записи (меняет их на месте). detail — карточка одной
+  // записи, а не список: туда можно добавить то, что в списке не нужно.
+  protected attachLinks?: (
+    userId: string,
+    entries: (V & CatalogEntryFields)[],
+    detail: boolean,
+  ) => Promise<void>;
 
   // Ник автора и метаданные картинки нужны и в каталоге, и в карточке, поэтому запись
   // всегда читаем с ними.

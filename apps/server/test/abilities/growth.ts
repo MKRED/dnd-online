@@ -22,8 +22,8 @@ const fireball = {
     ability: 'dexterity',
     dc: { kind: 'ability', ability: 'spellcasting' },
   },
-  hit: { damage: [fire(8)], addModifier: false },
-  miss: { damage: 'half' },
+  hit: { damage: [fire(8)], addModifier: false, effects: [] },
+  miss: { damage: 'half', effects: [] },
   growth: { damage: [fire(1)], times: 0 },
 };
 const spell = {

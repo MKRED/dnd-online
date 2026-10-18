@@ -4,6 +4,7 @@ import {
   isAbilityCosts,
   isSpellDetails,
   readAbilitySteps,
+  withoutStepEffects,
   type AbilityFields,
   type AbilityVariant,
 } from 'shared';
@@ -68,7 +69,8 @@ export const ABILITIES_CONFIG: CatalogEntriesConfig<
     extra: {
       activation: dto.activation,
       costs: dto.costs,
-      steps: dto.steps ?? [],
+      // Эффекты шагов — в таблице ability_step_effects (StepEffectsService), не здесь.
+      steps: (dto.steps ?? []).map(withoutStepEffects),
     },
   }),
 };

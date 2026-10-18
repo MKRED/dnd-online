@@ -45,8 +45,8 @@ const fireBolt: AbilityStep = {
   target: { kind: 'range', feet: 120, longFeet: null },
   times: 1,
   check: { kind: 'attack', attack: 'ranged_spell', bonus: bySpellcasting },
-  hit: { damage: [fire(1, 10)], addModifier: false },
-  miss: { damage: 'none' },
+  hit: { damage: [fire(1, 10)], addModifier: false, effects: [] },
+  miss: { damage: 'none', effects: [] },
   growth: { damage: [fire(1, 10)], times: 0 },
 };
 
@@ -59,8 +59,8 @@ const fireball: AbilityStep = {
   },
   times: 1,
   check: { kind: 'save', ability: 'dexterity', dc: bySpellcasting },
-  hit: { damage: [fire(8, 6)], addModifier: false },
-  miss: { damage: 'half' },
+  hit: { damage: [fire(8, 6)], addModifier: false, effects: [] },
+  miss: { damage: 'half', effects: [] },
   growth: { damage: [fire(1, 6)], times: 0 },
 };
 
@@ -73,8 +73,9 @@ const iceKnife: AbilityStep[] = [
     hit: {
       damage: [{ count: 1, die: 10, number: 0, type: 'piercing' }],
       addModifier: false,
+      effects: [],
     },
-    miss: { damage: 'none' },
+    miss: { damage: 'none', effects: [] },
     growth: NO_STEP_GROWTH,
   },
   {
@@ -85,8 +86,9 @@ const iceKnife: AbilityStep[] = [
     hit: {
       damage: [{ count: 2, die: 6, number: 0, type: 'cold' }],
       addModifier: false,
+      effects: [],
     },
-    miss: { damage: 'none' },
+    miss: { damage: 'none', effects: [] },
     growth: {
       damage: [{ count: 1, die: 6, number: 0, type: 'cold' }],
       times: 0,
@@ -102,8 +104,9 @@ const magicMissile: AbilityStep = {
   hit: {
     damage: [{ count: 1, die: 4, number: 1, type: 'force' }],
     addModifier: false,
+    effects: [],
   },
-  miss: { damage: 'none' },
+  miss: { damage: 'none', effects: [] },
   growth: { damage: [], times: 1 },
 };
 
@@ -120,8 +123,8 @@ const breath: AbilityStep = {
     ability: 'dexterity',
     dc: { kind: 'ability', ability: 'constitution' },
   },
-  hit: { damage: [fire(1, 10)], addModifier: false },
-  miss: { damage: 'half' },
+  hit: { damage: [fire(1, 10)], addModifier: false, effects: [] },
+  miss: { damage: 'half', effects: [] },
   growth: { damage: [fire(1, 10)], times: 0 },
 };
 

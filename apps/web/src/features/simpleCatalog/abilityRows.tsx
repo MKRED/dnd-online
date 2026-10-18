@@ -1,15 +1,20 @@
+import { Stack } from '@mantine/core';
 import type { ReactNode } from 'react';
 import {
+  formatAbilitySteps,
   formatActivation,
   formatCosts,
   formatSpellDuration,
   formatSpellHeader,
-  formatStepsWithGrowth,
+  formatStepGrowth,
   growthBasis,
+  stepEffectOutcomes,
   type AbilityFields,
   type AbilityVariant,
+  type GrowthBasis,
 } from 'shared';
 import CardLines from './CardLines';
+import StepEffectsLine from './StepEffectsLine';
 
 // Что карточке нужно от способности — без автора и картинки: так же строит строки и
 // пример гайда (AbilityGuide).
@@ -31,6 +36,27 @@ function spellTailRows(entry: AbilityCard) {
   ];
 }
 
+// Шаг в карточке: его строки, эффекты исходов (ссылками) и последней строкой рост.
+// Подпись — ещё и ключ строки: у нескольких шагов она своя у каждого.
+function stepRows(entry: AbilityCard, basis: GrowthBasis) {
+  const lines = formatAbilitySteps(entry.steps);
+  return entry.steps.map((step, index) => {
+    const growth = formatStepGrowth(step.growth, basis);
+    return {
+      label: entry.steps.length > 1 ? `Шаг ${index + 1}` : 'Применение',
+      value: (
+        <Stack gap={2} component="span">
+          <CardLines lines={lines[index]} />
+          {stepEffectOutcomes(step).map((outcome) => (
+            <StepEffectsLine key={outcome.label} outcome={outcome} />
+          ))}
+          {growth && <CardLines lines={[growth]} />}
+        </Stack>
+      ),
+    };
+  });
+}
+
 // Строки карточки способности: подпись и значение.
 export function abilityRows(
   entry: AbilityCard,
@@ -49,12 +75,6 @@ export function abilityRows(
         costs.length === 0 ? 'Ничего не тратит' : <CardLines lines={costs} />,
     },
     ...spellTailRows(entry),
-    // Подпись — ещё и ключ строки: у нескольких шагов она своя у каждого.
-    ...formatStepsWithGrowth(entry.steps, growthBasis(entry, entry.costs)).map(
-      (lines, index, all) => ({
-        label: all.length > 1 ? `Шаг ${index + 1}` : 'Применение',
-        value: <CardLines lines={lines} />,
-      }),
-    ),
+    ...stepRows(entry, growthBasis(entry, entry.costs)),
   ];
 }

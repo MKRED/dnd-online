@@ -29,6 +29,7 @@ import {
 } from './abilityStepLinks.js';
 import { isArea } from './abilityStepAreasCheck.js';
 import { isDamageParts, isStepGrowth } from './abilityStepDamageCheck.js';
+import { isStepEffects } from './abilityStepEffects.js';
 import { isFeet, isIntIn, isObject, keysAre } from './abilityStepGuards.js';
 import { ABILITY_SCORES, type AbilityScore } from './character.js';
 
@@ -125,8 +126,9 @@ function isTarget(
 function isHit(value: unknown, check: AbilityCheck): value is HitOutcome {
   return (
     isObject(value) &&
-    keysAre(value, 'addModifier,damage') &&
+    keysAre(value, 'addModifier,damage,effects') &&
     isDamageParts(value.damage) &&
+    isStepEffects(value.effects) &&
     typeof value.addModifier === 'boolean' &&
     (!value.addModifier ||
       (check.kind === 'attack' && check.bonus.kind === 'ability'))
@@ -140,11 +142,14 @@ function isMiss(
 ): value is MissOutcome {
   return (
     isObject(value) &&
-    keysAre(value, 'damage') &&
+    keysAre(value, 'damage,effects') &&
     MISS_DAMAGES.includes(value.damage as MissDamage) &&
-    // Половина от ничего — ошибка в форме, а не замысел; без проверки промаха нет.
+    isStepEffects(value.effects) &&
+    // Половина от ничего — ошибка в форме, а не замысел; без проверки промаха нет — ни
+    // урона, ни эффектов.
     (value.damage === 'none' ||
-      (hit.damage.length > 0 && check.kind !== 'none'))
+      (hit.damage.length > 0 && check.kind !== 'none')) &&
+    (value.effects.length === 0 || check.kind !== 'none')
   );
 }
 

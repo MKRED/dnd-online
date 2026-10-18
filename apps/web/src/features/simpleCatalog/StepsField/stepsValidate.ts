@@ -12,6 +12,7 @@ import {
   SAVE_DC_MAX,
   SAVE_DC_MIN,
   isFeet,
+  type StepEffect,
 } from 'shared';
 import type { StepValues } from './stepsForm';
 import { isPointOrigin } from './stepTargetForm';
@@ -48,6 +49,13 @@ const areaFeet = (value: number | string, shown: boolean) =>
   !shown || isFeet(Number(value), AREA_FEET_MAX)
     ? null
     : feetError(AREA_FEET_MAX);
+
+// Чужой эффект, скрытый автором уже после того, как его выбрали, сервер не примет (400) —
+// просим убрать его заранее.
+const hiddenEffects = (effects: StepEffect[]) =>
+  effects.some((item) => item.effect === null)
+    ? 'Эффект скрыт автором — уберите его'
+    : null;
 
 const damageRules = {
   count: (value: number | string, form: WithSteps, path: string) => {
@@ -127,6 +135,10 @@ export const stepsValidate = {
     number: (value: number | string, form: WithSteps, path: string) =>
       stepOf(form, path).growthOn ? damageRules.number(value) : null,
   },
+  hitEffects: hiddenEffects,
+  // Без проверки эффекты при промахе не уходят — и не проверяются.
+  missEffects: (value: StepEffect[], form: WithSteps, path: string) =>
+    stepOf(form, path).check === 'none' ? null : hiddenEffects(value),
   growthTimes: (value: number | string, form: WithSteps, path: string) =>
     !stepOf(form, path).growthOn || intIn(value, 0, GROWTH_TIMES_MAX)
       ? null

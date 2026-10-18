@@ -9,6 +9,7 @@ import {
   type EffectInput,
 } from 'shared';
 import { catalogApi, type CatalogSection } from '../catalog';
+import { effectDeleteConfirmText } from './deleteConfirmText';
 import {
   ABILITY_EXTRAS,
   EFFECT_EXTRAS,
@@ -55,7 +56,7 @@ export interface SimpleCatalogDef {
     deleteFailed: string;
     // «Способность сохранена, а картинка — нет»
     imageNotSaved: string;
-    deleteConfirm: (name: string) => string;
+    deleteConfirm: (entry: SimpleEntry) => string;
     namePlaceholder: string;
     publicHint: string;
     descriptionPlaceholder: string;
@@ -92,7 +93,7 @@ export const ABILITIES: SimpleCatalogDef = {
     saveFailed: 'Не удалось сохранить способность',
     deleteFailed: 'Не удалось удалить способность',
     imageNotSaved: 'Способность сохранена, а картинка — нет',
-    deleteConfirm: (name) => `Удалить способность «${name}» безвозвратно?`,
+    deleteConfirm: ({ name }) => `Удалить способность «${name}» безвозвратно?`,
     namePlaceholder: 'Например, Ядовитый луч',
     publicHint:
       'Скрытую способность видите только вы. Опубликованную видят все, но менять её можете только вы.',
@@ -132,7 +133,7 @@ export const EFFECTS: SimpleCatalogDef = {
     saveFailed: 'Не удалось сохранить эффект',
     deleteFailed: 'Не удалось удалить эффект',
     imageNotSaved: 'Эффект сохранён, а картинка — нет',
-    deleteConfirm: (name) => `Удалить эффект «${name}» безвозвратно?`,
+    deleteConfirm: effectDeleteConfirmText,
     namePlaceholder: 'Например, Горение',
     publicHint:
       'Скрытый эффект видите только вы. Опубликованный видят все, но менять его можете только вы.',

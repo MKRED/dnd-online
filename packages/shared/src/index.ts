@@ -45,6 +45,8 @@ export * from './abilityStepDamageCheck.js';
 export * from './abilityStepGrowth.js';
 export * from './abilityStepGrowthLabels.js';
 export * from './abilityStepsRead.js';
+export * from './abilityStepEffects.js';
+export * from './abilityStepEffectLabels.js';
 export * from './abilityStepLabels.js';
 export * from './abilitySpell.js';
 export * from './abilitySpellLabels.js';

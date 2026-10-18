@@ -3,9 +3,11 @@ import type { UseFormReturnType } from '@mantine/form';
 import type { AbilityCheckKind } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import DamageRows from './DamageRows';
+import type { EffectCandidates } from './effectOptions';
+import EffectRows from './EffectRows';
 
 // «При попадании», «При успехе»: исходы атаки и спасброска. Без проверки исход один —
-// просто «Урон».
+// «Последствия»: урон и эффекты, которые просто случаются.
 const OUTCOME_CASES: Record<
   AbilityCheckKind,
   { hit: string; miss: string } | null
@@ -22,21 +24,28 @@ const MISS_OPTIONS = [
 interface DamageFieldsProps {
   form: UseFormReturnType<SimpleFormValues>;
   index: number;
+  // Эффекты для выбора — одни на всю форму (StepsField).
+  candidates: EffectCandidates | null;
 }
 
 // Последствия шага: строки урона при попадании или провале (кости + число, тип),
-// модификатор характеристики атаки один раз на весь урон и что бывает при промахе или
-// успехе. Без проверки второго исхода нет.
-function DamageFields({ form, index }: DamageFieldsProps) {
+// модификатор характеристики атаки один раз на весь урон, эффекты из каталога (этап 8) и
+// что бывает при промахе или успехе — половина урона и свои эффекты. Без проверки второго
+// исхода нет.
+function DamageFields({ form, index, candidates }: DamageFieldsProps) {
   const path = `steps.${index}`;
   const step = form.getValues().steps[index];
   const { damage } = step;
   const cases = OUTCOME_CASES[step.check];
   const modifier = step.check === 'attack' && step.bonusKind === 'ability';
+  const errorOf = (field: string) => {
+    const error = form.errors[`${path}.${field}`];
+    return typeof error === 'string' ? error : undefined;
+  };
 
   return (
     <Stack gap="xs">
-      <Input.Wrapper label={cases ? `При ${cases.hit}` : 'Урон'}>
+      <Input.Wrapper label={cases ? `При ${cases.hit}` : 'Последствия'}>
         <Stack gap="xs" mt={4}>
           {damage.length === 0 && (
             <Text size="sm" c="dimmed">
@@ -58,19 +67,36 @@ function DamageFields({ form, index }: DamageFieldsProps) {
               })}
             />
           )}
+          <EffectRows
+            form={form}
+            path={`${path}.hitEffects`}
+            rows={step.hitEffects}
+            candidates={candidates}
+            error={errorOf('hitEffects')}
+          />
         </Stack>
       </Input.Wrapper>
-      {damage.length > 0 && cases && (
+      {cases && (
         <Input.Wrapper label={`При ${cases.miss}`}>
-          <div>
-            <SegmentedControl
-              aria-label={`При ${cases.miss}`}
-              data={MISS_OPTIONS}
-              size="xs"
-              mt={4}
-              {...form.getInputProps(`${path}.onMiss`)}
+          <Stack gap="xs" mt={4}>
+            {damage.length > 0 && (
+              <div>
+                <SegmentedControl
+                  aria-label={`При ${cases.miss}`}
+                  data={MISS_OPTIONS}
+                  size="xs"
+                  {...form.getInputProps(`${path}.onMiss`)}
+                />
+              </div>
+            )}
+            <EffectRows
+              form={form}
+              path={`${path}.missEffects`}
+              rows={step.missEffects}
+              candidates={candidates}
+              error={errorOf('missEffects')}
             />
-          </div>
+          </Stack>
         </Input.Wrapper>
       )}
     </Stack>

@@ -6,7 +6,7 @@ import { DatabaseService } from '../database/database.service.js';
 import { characterItems, characters } from '../database/schema/index.js';
 
 // У каких персонажей лежит предмет — автору для подтверждения удаления и скрытия
-// (docs/plan/character-inventory.md, этап 3).
+// (docs/plan/done/character-inventory.md, этап 3).
 @Injectable()
 export class ItemHoldersService {
   constructor(

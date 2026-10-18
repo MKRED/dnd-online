@@ -3,7 +3,7 @@ import type { EffectComponent } from './effectComponents.js';
 import type { ConditionKind } from './effectConditions.js';
 
 // 15 состояний книги 2024 как наборы тех же составляющих, из которых пишут свои эффекты
-// (docs/plan/effects-coverage.md, «Состояния книги движок будет знать сам»; правила —
+// (docs/plan/done/effects-coverage.md, «Состояния книги движок будет знать сам»; правила —
 // docs/dnd/conditions.md). Это проверка на бумаге в коде: что составляющими не выразить,
 // названо в gaps буквой пробела из плана, и тесты сверяют это с планом.
 

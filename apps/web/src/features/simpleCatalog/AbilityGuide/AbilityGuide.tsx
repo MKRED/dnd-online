@@ -24,7 +24,7 @@ const LABEL = 'Как заполнить способность';
 
 // Гайд по форме способности — во весь экран поверх формы, а не отдельной страницей:
 // закрыли — недописанная способность на месте. Меняется форма — обновите и гайд
-// (docs/plan/abilities.md).
+// (docs/plan/done/abilities.md).
 export function AbilityGuideButton() {
   const [opened, { open, close }] = useDisclosure(false);
   return (

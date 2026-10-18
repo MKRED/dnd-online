@@ -19,7 +19,7 @@ type EffectRow = typeof effects.$inferSelect;
 type EffectImageRow = typeof effectImages.$inferSelect;
 
 // Эффект на персонаже глазами смотрящего — по тем же правилам, что предмет в инвентаре
-// (docs/plan/character-inventory.md, «Ссылка, а не копия»):
+// (docs/plan/done/character-inventory.md, «Ссылка, а не копия»):
 // - скрытому от смотрящего не отдаём ничего из карточки;
 // - скрытый от владельца на персонажа не действует: автор эффекта на чужом листе видит
 //   свою карточку, но строка помечена inactive.

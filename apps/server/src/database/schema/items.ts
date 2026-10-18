@@ -15,7 +15,7 @@ import {
 import type { Coin, ItemCategory, ItemRarity } from 'shared';
 import { users } from './users.js';
 
-// Предмет общего каталога (docs/plan/items.md). Общие поля — колонки, поля категории —
+// Предмет общего каталога (docs/plan/done/items.md). Общие поля — колонки, поля категории —
 // jsonb details: новая категория не требует ни таблицы, ни миграции.
 export const items = pgTable(
   'items',

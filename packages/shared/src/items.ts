@@ -1,6 +1,6 @@
 import type { CatalogImage } from './catalogImage.js';
 
-// Предметы (docs/plan/items.md): общий каталог. Общие поля у всех предметов одинаковые,
+// Предметы (docs/plan/done/items.md): общий каталог. Общие поля у всех предметов одинаковые,
 // поля категории лежат в details — у каждой категории свои. Справка по весу, стоимости
 // и монетам с источниками — docs/dnd/items.md.
 
@@ -17,7 +17,7 @@ export const ITEM_CATEGORIES = [
 ] as const;
 export type ItemCategory = (typeof ITEM_CATEGORIES)[number];
 
-// Категории без своих полей: details у них пустой объект (docs/plan/items-filters.md).
+// Категории без своих полей: details у них пустой объект (docs/plan/done/items-filters.md).
 export const PLAIN_ITEM_CATEGORIES = [
   'basic',
   'material',
@@ -50,7 +50,7 @@ export interface ContainerItemDetails {
   capacity: number | null;
 }
 
-// Набор снаряжения (docs/plan/item-packs.md): состав — другие предметы каталога с
+// Набор снаряжения (docs/plan/done/item-packs.md): состав — другие предметы каталога с
 // количеством. В базе состав лежит в отдельной таблице, а в API — в details, как поля
 // других категорий. Количество — в единице самого предмета: масло ×7 фляг, рационы ×10.
 export const ITEM_PACK_MAX_ENTRIES = 50;
@@ -92,7 +92,7 @@ export interface ItemPacks {
 }
 
 // У каких персонажей лежит предмет — автору для подтверждения удаления и скрытия
-// (docs/plan/character-inventory.md). Чужие персонажи — числом.
+// (docs/plan/done/character-inventory.md). Чужие персонажи — числом.
 export interface ItemCharacterRef {
   id: string;
   name: string;

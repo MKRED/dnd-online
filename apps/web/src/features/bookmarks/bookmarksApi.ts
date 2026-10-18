@@ -1,7 +1,7 @@
 import type { Bookmark, BookmarkKind, BookmarkState } from 'shared';
 import { apiRequest } from '../../lib/apiRequest';
 
-// Закладки игрока (docs/plan/bookmarks.md).
+// Закладки игрока (docs/plan/done/bookmarks.md).
 const targetPath = (kind: BookmarkKind, id: string) =>
   `/bookmarks/${kind}/${id}`;
 

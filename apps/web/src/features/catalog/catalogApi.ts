@@ -15,7 +15,7 @@ export type ImagePathFn = (
 ) => string;
 
 // Запросы одного каталога (предметы, способности, эффекты): у всех одинаковые маршруты
-// под своим адресом (docs/plan/abilities-effects.md).
+// под своим адресом (docs/plan/done/abilities-effects.md).
 export function catalogApi<Entry, Input>(base: string) {
   const imageBase = (id: string) => `${base}/${id}/image`;
   const imagePath: ImagePathFn = (id, variant, version) =>

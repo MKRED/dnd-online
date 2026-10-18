@@ -236,7 +236,7 @@ export interface Character {
   // Строки видны так, как смотрящему позволяет доступ к карточкам предметов.
   inventory: InventoryEntry[];
   // Наложенные эффекты — тоже глазами смотрящего. armorClass и speed выше — база без
-  // эффектов, итог считает shared (docs/plan/character-effects.md).
+  // эффектов, итог считает shared (docs/plan/done/character-effects.md).
   effects: CharacterEffectEntry[];
   currency: CharacterCurrency;
   features: CharacterFeature[];

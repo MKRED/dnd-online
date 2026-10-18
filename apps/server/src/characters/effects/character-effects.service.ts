@@ -21,7 +21,7 @@ import {
 } from './character-effects.messages.js';
 import { AddCharacterEffectDto } from './dto/character-effect.dto.js';
 
-// Эффекты на персонаже (docs/plan/character-effects.md). Накладывает и снимает только
+// Эффекты на персонаже (docs/plan/done/character-effects.md). Накладывает и снимает только
 // автор персонажа, отдельно от листа: каждая правка отдаёт список целиком.
 @Injectable()
 export class CharacterEffectsService {

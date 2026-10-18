@@ -8,7 +8,7 @@ import {
   type DamageType,
 } from './damageTypes.js';
 
-// Составляющая эффекта «Бонус к броску» (docs/plan/effects.md, этап 7.5;
+// Составляющая эффекта «Бонус к броску» (docs/plan/done/effects.md, этап 7.5;
 // docs/dnd/modifiers.md): кость или число к броскам носителя или вычет из них. По книге
 // 2024: Bless (+1d4 к атакам и спасброскам — две составляющие), Bane (−1d4), Guidance
 // (+1d4 к проверкам), Warding Bond (+1 к спасброскам), Slow (−2 к спасброскам Ловкости),

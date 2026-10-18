@@ -11,7 +11,7 @@ interface PackChoiceProps {
 }
 
 // Набор кладут целиком или распаковывают в состав — сразу с весом обоих вариантов
-// (набросок в docs/plan/character-inventory.md).
+// (набросок в docs/plan/done/character-inventory.md).
 function PackChoice({ pack, count, unpack, onChange }: PackChoiceProps) {
   const options = packOptions(pack, count);
   const canUnpack = options.unpackedRows > 0;

@@ -1,7 +1,7 @@
 import type { CatalogImage } from './catalogImage.js';
 import type { CharacterMainImage } from './characterImages.js';
 
-// Закладки (docs/plan/bookmarks.md): игрок отмечает персонажей и записи справочника,
+// Закладки (docs/plan/done/bookmarks.md): игрок отмечает персонажей и записи справочника,
 // свои и чужие. Порядок — порядок чипов и разделов на странице «Закладки».
 export const BOOKMARK_KINDS = [
   'character',

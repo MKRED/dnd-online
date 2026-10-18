@@ -6,7 +6,7 @@ import {
   type ComponentValues,
 } from './componentValues';
 
-// Составляющие и снятие спасброском в форме эффекта (docs/plan/effects.md). Значения
+// Составляющие и снятие спасброском в форме эффекта (docs/plan/done/effects.md). Значения
 // составляющих — componentValues.ts, их правила — componentRules.ts.
 export { newComponent, type ComponentValues } from './componentValues';
 

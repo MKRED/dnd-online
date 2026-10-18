@@ -13,7 +13,7 @@ import { effects } from './effects.js';
 import { items } from './items.js';
 import { users } from './users.js';
 
-// Закладки (docs/plan/bookmarks.md): строка — отметка игрока на персонаже или записи
+// Закладки (docs/plan/done/bookmarks.md): строка — отметка игрока на персонаже или записи
 // справочника. Четыре колонки ссылок, а не «вид + id»: удалили цель — каскад сам убирает
 // её закладки, кода уборки не нужно.
 export const bookmarks = pgTable(

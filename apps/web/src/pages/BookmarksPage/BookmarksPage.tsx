@@ -25,7 +25,7 @@ import { SearchField } from '../../features/catalog';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { bookmarkTargetView } from './bookmarkTargetView';
 
-// Закладки игрока (docs/plan/bookmarks.md): чипы по виду, поиск, разделы по виду.
+// Закладки игрока (docs/plan/done/bookmarks.md): чипы по виду, поиск, разделы по виду.
 function BookmarksPage() {
   usePageTitle('Закладки');
   const { user } = useAuth();

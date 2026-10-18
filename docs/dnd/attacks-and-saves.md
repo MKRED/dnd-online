@@ -1,6 +1,6 @@
 # Attacks, saving throws and damage
 
-Reference for how abilities hit their targets (2024 edition): attack rolls, saving throws, damage types, conditions and areas. Researched on 2026-10-16; attack bonus, range and reach added on 2026-10-17. How abilities and effects store this is in [plan/abilities.md](../plan/abilities.md) and [plan/effects.md](../plan/effects.md).
+Reference for how abilities hit their targets (2024 edition): attack rolls, saving throws, damage types, conditions and areas. Researched on 2026-10-16; attack bonus, range and reach added on 2026-10-17. How abilities and effects store this is in [plan/done/abilities.md](../plan/done/abilities.md) and [plan/done/effects.md](../plan/done/effects.md).
 
 ## Sources
 

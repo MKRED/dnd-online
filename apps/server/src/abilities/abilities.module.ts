@@ -7,7 +7,7 @@ import { AbilityImagesController } from './ability-images.controller.js';
 import { AbilityImagesService } from './ability-images.service.js';
 import { StepEffectsService } from './step-effects/index.js';
 
-// Каталог способностей и их картинки (docs/plan/abilities.md).
+// Каталог способностей и их картинки (docs/plan/done/abilities.md).
 @Module({
   imports: [AuthModule],
   controllers: [AbilitiesController, AbilityImagesController],

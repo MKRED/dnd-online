@@ -3,7 +3,7 @@ import { ABILITY_SCORES, type AbilityScore } from './character.js';
 import type { StepEffect } from './abilityStepEffects.js';
 import type { DamageDie, DamageType } from './damageTypes.js';
 
-// «Применение» способности — список шагов (docs/plan/abilities.md, docs/dnd/attacks-and-saves.md).
+// «Применение» способности — список шагов (docs/plan/done/abilities.md, docs/dnd/attacks-and-saves.md).
 // Шаг: когда он срабатывает, цель, проверка (бросок атаки, спасбросок или никакой),
 // сколько раз и последствия. Как шаги связаны в цепочку — abilityStepLinks.ts. Ключи хранятся в базе: добавлять можно, переименовывать — только
 // с миграцией данных.

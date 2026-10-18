@@ -3,7 +3,7 @@ import type { EffectComponent } from './effectComponents.js';
 import type { SpeedDetails } from './effectSpeed.js';
 
 // Итоговая Скорость существа по базе и наложенным эффектам — первый вычислитель движка
-// (docs/plan/effects-coverage.md, пункт 2; правила — docs/dnd/combining-effects.md).
+// (docs/plan/done/effects-coverage.md, пункт 2; правила — docs/dnd/combining-effects.md).
 
 export type SpecialSpeed = 'fly' | 'climb' | 'swim' | 'burrow';
 type SpecialSpeeds = Partial<Record<SpecialSpeed, number>>;

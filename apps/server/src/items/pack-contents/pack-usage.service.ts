@@ -9,7 +9,7 @@ import {
 import { itemPackEntries, items } from '../../database/schema/index.js';
 
 // В каких наборах лежит предмет: для подтверждения удаления и для скрытия своих наборов
-// вместе с предметом (docs/plan/item-packs.md).
+// вместе с предметом (docs/plan/done/item-packs.md).
 @Injectable()
 export class PackUsageService {
   constructor(

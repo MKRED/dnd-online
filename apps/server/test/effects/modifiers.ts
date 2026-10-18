@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CatalogContext } from '../support/catalog-scenario/index.js';
 
-// Составляющие этапа 7 плана эффектов (docs/plan/effects.md): изменение характеристик.
+// Составляющие этапа 7 плана эффектов (docs/plan/done/effects.md): изменение характеристик.
 // Отдельным файлом, чтобы effects.e2e-spec.ts не рос с каждым видом.
 
 // «Палящая кара»: 1d6 огнём в начале хода.

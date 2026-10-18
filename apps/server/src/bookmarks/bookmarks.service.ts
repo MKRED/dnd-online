@@ -9,7 +9,7 @@ import { loadBookmarks } from './bookmarks-loader.js';
 
 export const BOOKMARK_TARGET_NOT_FOUND = 'Не найдено';
 
-// Закладки игрока (docs/plan/bookmarks.md). Видит и меняет их только хозяин.
+// Закладки игрока (docs/plan/done/bookmarks.md). Видит и меняет их только хозяин.
 @Injectable()
 export class BookmarksService {
   constructor(

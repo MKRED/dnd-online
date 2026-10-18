@@ -1,4 +1,4 @@
-// Составляющая эффекта «Скорость» (docs/plan/effects.md, этап 7.3; docs/dnd/modifiers.md):
+// Составляющая эффекта «Скорость» (docs/plan/done/effects.md, этап 7.3; docs/dnd/modifiers.md):
 // изменение обычной Скорости или особая скорость. По книге 2024: Longstrider (+10 фт.),
 // Ray of Frost (−10 фт.), Haste (вдвое), Slow (вдвое меньше), Power Word Stun (0),
 // Fly (полёт 60 фт. и парение), Spider Climb (лазание, равное Скорости).

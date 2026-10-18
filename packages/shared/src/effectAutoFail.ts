@@ -1,7 +1,7 @@
 import { ABILITY_GENITIVE } from './abilityUsageLabels.js';
 import { ABILITY_SCORES, type AbilityScore } from './character.js';
 
-// Составляющая эффекта «Автопровал» (docs/plan/effects-coverage.md, пробел Б;
+// Составляющая эффекта «Автопровал» (docs/plan/done/effects-coverage.md, пробел Б;
 // docs/dnd/modifiers.md). По книге 2024 её дают только состояния: Парализованный,
 // Окаменевший, Ошеломлённый и Бессознательный — спасброски Силы и Ловкости, Ослеплённый —
 // проверки, где нужно зрение, Оглохший — где нужен слух. Ни одно заклинание её не даёт:

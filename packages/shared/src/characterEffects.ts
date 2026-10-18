@@ -1,7 +1,7 @@
 import type { CatalogImage } from './catalogImage.js';
 import type { EffectFields } from './effects.js';
 
-// Эффекты на персонаже (docs/plan/character-effects.md): строка — ссылка на эффект
+// Эффекты на персонаже (docs/plan/done/character-effects.md): строка — ссылка на эффект
 // каталога, а не копия. Правка карточки автором сразу видна у всех, на ком эффект.
 
 // Карточка эффекта на плашке. Составляющие и длительность нужны листу, чтобы считать итог.

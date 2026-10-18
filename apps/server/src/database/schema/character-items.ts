@@ -13,7 +13,7 @@ import type { InventoryLocation } from 'shared';
 import { characters } from './characters.js';
 import { items } from './items.js';
 
-// Инвентарь персонажа (docs/plan/character-inventory.md): строка — ссылка на предмет
+// Инвентарь персонажа (docs/plan/done/character-inventory.md): строка — ссылка на предмет
 // каталога с количеством, а не копия. Отдельная таблица, а не jsonb: внешние ключи
 // держат «удалён автором» и «у кого лежит предмет».
 export const characterItems = pgTable(

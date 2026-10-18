@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config';
 // Отдельный конфиг, а не mergeConfig от vitest.config.ts: mergeConfig склеивает
 // массивы, и include подхватил бы ещё и unit-тесты.
 // e2e поднимает весь AppModule на тестовой базе из TEST_DATABASE_URL
-// (docs/plan/testing.md).
+// (docs/plan/done/testing.md).
 export default defineConfig({
   plugins: [swc.vite({ module: { type: 'es6' } })],
   test: {

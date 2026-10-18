@@ -31,7 +31,7 @@ interface InventorySectionProps {
   onChange?: (inventory: InventoryEntry[]) => void;
 }
 
-// Инвентарь на листе (вариант А из docs/plan/character-inventory.md): «При себе» с грузом,
+// Инвентарь на листе (вариант А из docs/plan/done/character-inventory.md): «При себе» с грузом,
 // под ним свёрнутое «Хранилище»; внизу — деньги.
 function InventorySection({ character, onChange }: InventorySectionProps) {
   const { id, inventory, currency } = character;

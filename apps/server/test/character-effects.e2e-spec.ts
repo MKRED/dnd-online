@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createCharacter } from './support/inventory-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Эффекты на персонаже — docs/plan/character-effects.md.
+// Эффекты на персонаже — docs/plan/done/character-effects.md.
 interface EffectRow {
   id: string;
   effect: { id: string; name: string } | null;

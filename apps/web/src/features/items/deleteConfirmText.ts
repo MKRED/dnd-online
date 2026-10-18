@@ -14,7 +14,7 @@ export function othersCharactersPhrase(count: number): string {
     : `у ${count} чужих персонажей`;
 }
 
-// Удалённый предмет пропадает из всех наборов, своих и чужих (docs/plan/item-packs.md).
+// Удалённый предмет пропадает из всех наборов, своих и чужих (docs/plan/done/item-packs.md).
 function packsNote(item: Item): string | null {
   const mine = item.packs?.mine.map((pack) => `«${pack.name}»`) ?? [];
   const others = item.packs?.othersCount ?? 0;
@@ -29,7 +29,7 @@ function packsNote(item: Item): string | null {
 }
 
 // У персонажей остаётся строка «Предмет удалён автором»
-// (docs/plan/character-inventory.md).
+// (docs/plan/done/character-inventory.md).
 function holdersNote(item: Item): string | null {
   const mine = item.holders?.mine.map((holder) => `«${holder.name}»`) ?? [];
   const others = item.holders?.othersCount ?? 0;

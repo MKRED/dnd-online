@@ -2,7 +2,7 @@ import type { AbilityVariant } from './abilities.js';
 import type { StepGrowth } from './abilitySteps.js';
 import type { AbilityCosts } from './abilityUsage.js';
 
-// С чем растёт шаг (docs/plan/abilities.md, этап 7; правила — docs/dnd/spells.md,
+// С чем растёт шаг (docs/plan/done/abilities.md, этап 7; правила — docs/dnd/spells.md,
 // «Growth»). Не хранится — решает способность, поэтому смена категории, круга или
 // затрат не портит шаг, меняется только подпись:
 // - есть затрата «Ячейка заклинаний N круга или выше» — за каждый круг ячейки выше N

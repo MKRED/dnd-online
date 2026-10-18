@@ -6,7 +6,7 @@ import {
   type AdvantageWhen,
 } from './effectAdvantageWhen.js';
 
-// Составляющая эффекта «Преимущество или помеха» (docs/plan/effects.md, этап 7.4;
+// Составляющая эффекта «Преимущество или помеха» (docs/plan/done/effects.md, этап 7.4;
 // docs/dnd/modifiers.md). По книге 2024: Faerie Fire и Blur — атаки по носителю, Haste —
 // спасброски Ловкости, Hex и Enhance Ability — проверки одной характеристики,
 // Enlarge/Reduce — проверки и спасброски Силы (две составляющие), Foresight — все Тесты к20,

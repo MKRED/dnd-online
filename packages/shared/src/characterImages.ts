@@ -1,4 +1,4 @@
-// Картинки персонажа (docs/plan/character-images.md): галерея, основная картинка и её
+// Картинки персонажа (docs/plan/done/character-images.md): галерея, основная картинка и её
 // миниатюра. Сами байты клиент получает отдельным запросом, здесь только метаданные.
 import { IMAGE_MAX_BYTES, IMAGE_MIME_TYPES, type ThumbCrop } from './images.js';
 

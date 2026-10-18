@@ -9,7 +9,7 @@ function othersAbilitiesPhrase(count: number): string {
 }
 
 // Подтверждение удаления эффекта: удалённый эффект пропадает из всех способностей,
-// своих и чужих (docs/plan/abilities.md, этап 8). Свои — по названию, чужие — числом.
+// своих и чужих (docs/plan/done/abilities.md, этап 8). Свои — по названию, чужие — числом.
 export function effectDeleteConfirmText(entry: SimpleEntry): string {
   const question = `Удалить эффект «${entry.name}» безвозвратно?`;
   const { abilities } = entry as Effect;

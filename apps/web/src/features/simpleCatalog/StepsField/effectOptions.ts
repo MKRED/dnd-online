@@ -1,7 +1,7 @@
 import type { Effect, StepEffect } from 'shared';
 
 // Эффекты, которые можно выбрать в исходе шага: свои (и скрытые) и опубликованные чужие —
-// те же, что примет сервер (docs/plan/abilities.md, этап 8).
+// те же, что примет сервер (docs/plan/done/abilities.md, этап 8).
 export interface EffectCandidates {
   mine: Effect[];
   others: Effect[];

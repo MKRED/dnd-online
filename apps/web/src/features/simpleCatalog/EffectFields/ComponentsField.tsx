@@ -51,7 +51,7 @@ const KIND_FIELDS: Record<
   roll_bonus: RollBonusComponentFields,
 };
 
-// Составляющие эффекта списком карточек (docs/plan/effects.md): у каждой свои поля и
+// Составляющие эффекта списком карточек (docs/plan/done/effects.md): у каждой свои поля и
 // крестик. Новая добавляется из меню видов — оно растёт с каждым этапом плана.
 function ComponentsField({ form }: ComponentsFieldProps) {
   const { components } = form.getValues().effect;

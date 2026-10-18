@@ -71,7 +71,7 @@ interface CombatViewProps {
 
 // Боевые числа плитками: их смотрят чаще всего, поэтому они крупно и сразу под шапкой.
 // Инициатива не хранится — это модификатор Ловкости (docs/dnd/combat-stats.md).
-// Эффекты пересчитывают Класс доспеха и Скорость (docs/plan/character-effects.md).
+// Эффекты пересчитывают Класс доспеха и Скорость (docs/plan/done/character-effects.md).
 function CombatView({ character, totals }: CombatViewProps) {
   const initiative = getAbilityModifier(character.abilityScores.dexterity);
   const armorClass = armorClassTile(character.armorClass, totals);

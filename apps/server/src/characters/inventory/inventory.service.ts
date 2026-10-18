@@ -33,7 +33,7 @@ import {
   type EntryChange,
 } from './inventory.rules.js';
 
-// Инвентарь персонажа (docs/plan/character-inventory.md). Меняет только автор персонажа,
+// Инвентарь персонажа (docs/plan/done/character-inventory.md). Меняет только автор персонажа,
 // отдельно от листа: каждая правка отдаёт инвентарь целиком.
 @Injectable()
 export class InventoryService {

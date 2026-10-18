@@ -61,7 +61,7 @@ Short effects of features and spells end at a turn boundary, not after a number 
 
 ## In the app
 
-Decided with the user on 2026-10-15 ([plan/effects.md](../plan/effects.md)). Duration is a field of every effect in the catalog. It is the template's duration: the time left will belong to an effect applied to a character.
+Decided with the user on 2026-10-15 ([plan/done/effects.md](../plan/done/effects.md)). Duration is a field of every effect in the catalog. It is the template's duration: the time left will belong to an effect applied to a character.
 
 - **Бессрочно** (`permanent`) — until removed. Covers "Until dispelled" and permanent traits: the user adds «Тёмное зрение» to their elf by hand, there is no species → effect link. Effects saved before the field existed read as this.
 - **Время** (`time`) — 1–999 rounds, minutes, hours or days, with an optional «Концентрация» flag (only here, as in the book: "Concentration, up to …").

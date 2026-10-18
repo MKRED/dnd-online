@@ -46,7 +46,7 @@ Goliath, Halfling and Human have no darkvision. Not checked: the Aasimar (not in
 
 ## In the app
 
-Decided with the user on 2026-10-15 ([plan/effects.md](../plan/effects.md)).
+Decided with the user on 2026-10-15 ([plan/done/effects.md](../plan/done/effects.md)).
 
 - The effect component «Чувство» (`kind: 'sense'`) has the kind and the range: `{ kind: 'sense', sense, range }` in the effect's `components`. An effect can carry several senses, each kind at most once. Effects saved before components, with category `sense` and `{ sense, range }` in `details`, read as one such component.
 - **Six kinds:** the four of the glossary plus «Дьявольское зрение» and «Видение невидимого». The last two are the app's addition: the book doesn't list them as senses.

@@ -8,7 +8,7 @@ import {
 } from './support/item-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Правила состава наборов — docs/plan/item-packs.md.
+// Правила состава наборов — docs/plan/done/item-packs.md.
 describe('наборы снаряжения: состав (e2e)', () => {
   let t: TestApp;
   let author: request.Agent;

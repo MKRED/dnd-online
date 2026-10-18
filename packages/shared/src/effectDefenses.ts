@@ -9,7 +9,7 @@ import {
   type DamageType,
 } from './damageTypes.js';
 
-// Составляющая эффекта «Сопротивление и иммунитет» (docs/plan/effects.md, этап 7.1;
+// Составляющая эффекта «Сопротивление и иммунитет» (docs/plan/done/effects.md, этап 7.1;
 // docs/dnd/modifiers.md): сопротивление, уязвимость или иммунитет к типам урона, а у
 // иммунитета ещё и к состояниям. Так в книге у Protection from Energy (сопротивление к
 // одному типу), Stoneskin (к трём), Heroism (иммунитет к «Испуганному»), Mind Blank

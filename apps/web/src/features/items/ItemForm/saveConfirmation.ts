@@ -1,7 +1,7 @@
 import type { Item } from 'shared';
 import type { ItemFormValues } from './itemFormValues';
 
-// Что спросить перед сохранением (docs/plan/item-packs.md). Сервер без флагов ответил бы
+// Что спросить перед сохранением (docs/plan/done/item-packs.md). Сервер без флагов ответил бы
 // 409 на публикацию или скрыл бы предмет молча — форма спрашивает заранее.
 export type SaveConfirmation =
   // Публикуем набор, а в составе свои скрытые предметы: опубликовать их вместе с ним.
@@ -12,7 +12,7 @@ export type SaveConfirmation =
       ownPackNames: string[];
       othersCount: number;
       // У чужих персонажей скрытый предмет перестанет действовать
-      // (docs/plan/character-inventory.md); у своих он виден автору и действует дальше.
+      // (docs/plan/done/character-inventory.md); у своих он виден автору и действует дальше.
       othersCharactersCount: number;
     };
 

@@ -5,7 +5,7 @@ import { abilities } from '../../src/database/schema/index.js';
 import type { CatalogContext } from '../support/catalog-scenario/index.js';
 import { fireBolt } from './steps.js';
 
-// Рост шага (docs/plan/abilities.md, этап 7): строки урона и повторы на ступень. С чем
+// Рост шага (docs/plan/done/abilities.md, этап 7): строки урона и повторы на ступень. С чем
 // растёт, решает способность, поэтому сервер рост с категорией и затратами не сверяет.
 
 const fire = (count: number) => ({ count, die: 6, number: 0, type: 'fire' });

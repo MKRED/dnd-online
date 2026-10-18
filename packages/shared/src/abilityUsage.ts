@@ -2,7 +2,7 @@ import type { AbilityStep } from './abilitySteps.js';
 import { ABILITY_SCORES, type AbilityScore } from './character.js';
 
 // Как способность применяют и что она тратит — общие поля всех способностей
-// (docs/plan/abilities.md), по книге 2024 (docs/dnd/ability-usage.md). Активация — ровно
+// (docs/plan/done/abilities.md), по книге 2024 (docs/dnd/ability-usage.md). Активация — ровно
 // одна, затраты складываются и могут отсутствовать.
 
 export const ACTIVATION_TIME_UNITS = ['minute', 'hour'] as const;

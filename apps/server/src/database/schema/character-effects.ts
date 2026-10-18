@@ -2,7 +2,7 @@ import { index, pgTable, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { characters } from './characters.js';
 import { effects } from './effects.js';
 
-// Эффекты на персонаже (docs/plan/character-effects.md): строка — ссылка на эффект
+// Эффекты на персонаже (docs/plan/done/character-effects.md): строка — ссылка на эффект
 // каталога, как строка инвентаря. Оставшееся время не хранится: ходов в приложении ещё
 // нет, эффект снимает игрок.
 export const characterEffects = pgTable(

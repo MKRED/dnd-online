@@ -5,7 +5,7 @@ import {
 } from './effectDuration.js';
 import { SPELL_SLOT_LEVEL_MAX, type AbilityCosts } from './abilityUsage.js';
 
-// Поля категории «Заклинание» (docs/plan/abilities.md, этап 6; правила —
+// Поля категории «Заклинание» (docs/plan/done/abilities.md, этап 6; правила —
 // docs/dnd/spells.md). Механика — общий блок «Применение», время накладывания — общая
 // «Активация»; здесь только то, чего нет у других способностей.
 

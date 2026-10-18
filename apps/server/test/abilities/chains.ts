@@ -5,7 +5,7 @@ import { abilities } from '../../src/database/schema/index.js';
 import type { CatalogContext } from '../support/catalog-scenario/index.js';
 import { fireBolt } from './steps.js';
 
-// Несколько шагов «Применения» (docs/plan/abilities.md, этап 5): «когда», цели прошлого
+// Несколько шагов «Применения» (docs/plan/done/abilities.md, этап 5): «когда», цели прошлого
 // шага и «сколько раз». Шаги проверяются цепочкой — каждый против прошлого.
 
 // «Ледяной кинжал»: попал или нет, цель и все в 5 фт. от неё спасаются Ловкостью.

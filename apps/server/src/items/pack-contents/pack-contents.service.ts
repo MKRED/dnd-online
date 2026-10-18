@@ -23,7 +23,7 @@ import {
   packContentsError,
 } from './pack-contents.rules.js';
 
-// Состав наборов снаряжения (docs/plan/item-packs.md): запись строк вместе с предметом,
+// Состав наборов снаряжения (docs/plan/done/item-packs.md): запись строк вместе с предметом,
 // проверка ссылок и сборка состава для читателя.
 @Injectable()
 export class PackContentsService {

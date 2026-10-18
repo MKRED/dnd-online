@@ -36,7 +36,7 @@ export function entryName(entry: InventoryEntry): string {
 }
 
 // Что можно положить: свои (и скрытые) и опубликованные чужие. Наборы тоже — пока целиком
-// (распаковка — этап 3 docs/plan/character-inventory.md). Свои опубликованные есть в обоих
+// (распаковка — этап 3 docs/plan/done/character-inventory.md). Свои опубликованные есть в обоих
 // списках, поэтому чужие берём из каталога по автору.
 export function inventoryCandidates(
   mine: Item[],
@@ -71,7 +71,7 @@ export interface PackOptions {
   hiddenCount: number;
 }
 
-// Что даст набор при добавлении count штук (docs/plan/character-inventory.md). Вес — в
+// Что даст набор при добавлении count штук (docs/plan/done/character-inventory.md). Вес — в
 // сотых, как груз.
 export function packOptions(
   pack: Extract<Item, { category: 'pack' }>,

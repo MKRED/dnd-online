@@ -20,7 +20,7 @@ describe('CONDITION_RULES', () => {
     }
   });
 
-  // Тот же список, что в docs/plan/effects-coverage.md («целиком ложатся»): расхождение
+  // Тот же список, что в docs/plan/done/effects-coverage.md («целиком ложатся»): расхождение
   // плана и кода краснит тест.
   it('целиком составляющими — те же состояния, что в плане', () => {
     const whole = CONDITION_KINDS.filter(

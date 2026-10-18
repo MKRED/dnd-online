@@ -2,7 +2,7 @@ import type { Effect } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import type { SimpleEntry } from '../simpleCatalogs';
 
-// Вопрос перед сохранением записи простого каталога (docs/plan/abilities.md, этап 8) —
+// Вопрос перед сохранением записи простого каталога (docs/plan/done/abilities.md, этап 8) —
 // как у наборов (items/ItemForm/saveConfirmation.ts). Сервер без флагов ответил бы 409
 // на публикацию или скрыл бы запись молча — форма спрашивает заранее.
 export interface SaveConfirmation {

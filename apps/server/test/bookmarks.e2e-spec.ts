@@ -5,7 +5,7 @@ import { createCharacter } from './support/inventory-fixture.js';
 import { createItem, itemBody } from './support/item-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Закладки — docs/plan/bookmarks.md.
+// Закладки — docs/plan/done/bookmarks.md.
 interface BookmarkRow {
   kind: string;
   targetId: string;

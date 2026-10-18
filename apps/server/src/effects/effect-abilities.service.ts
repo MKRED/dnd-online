@@ -9,7 +9,7 @@ import {
 import { abilities, abilityStepEffects } from '../database/schema/index.js';
 
 // Какие способности накладывают эффект: для подтверждения удаления и для скрытия своих
-// способностей вместе с эффектом (docs/plan/abilities.md, этап 8). Образец — наборы, где
+// способностей вместе с эффектом (docs/plan/done/abilities.md, этап 8). Образец — наборы, где
 // лежит предмет (items/pack-contents/pack-usage.service.ts).
 @Injectable()
 export class EffectAbilitiesService {

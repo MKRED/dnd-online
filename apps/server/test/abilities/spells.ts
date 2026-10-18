@@ -4,7 +4,7 @@ import { DatabaseService } from '../../src/database/database.service.js';
 import { abilities } from '../../src/database/schema/index.js';
 import type { CatalogContext } from '../support/catalog-scenario/index.js';
 
-// Категория «Заклинание» (docs/plan/abilities.md, этап 6): круг, школа, компоненты,
+// Категория «Заклинание» (docs/plan/done/abilities.md, этап 6): круг, школа, компоненты,
 // ритуал, длительность и затрата «Ячейка заклинаний» по кругу.
 
 const fireball = {

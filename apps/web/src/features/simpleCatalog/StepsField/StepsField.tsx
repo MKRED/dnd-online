@@ -26,7 +26,7 @@ interface StepsFieldProps {
   form: UseFormReturnType<SimpleFormValues>;
 }
 
-// «Применение» способности (docs/plan/abilities.md): шаги карточками, как составляющие
+// «Применение» способности (docs/plan/done/abilities.md): шаги карточками, как составляющие
 // эффекта. Шаг 2 и дальше опирается на прошлый: «когда» и его цели (stepChain.ts).
 function StepsField({ form }: StepsFieldProps) {
   const { steps } = form.getValues();

@@ -6,7 +6,7 @@ export function testDatabaseUrl(): string {
   const url = process.env.TEST_DATABASE_URL;
   if (!url) {
     throw new Error(
-      'Нет TEST_DATABASE_URL: интеграционным тестам нужна отдельная база (docs/plan/testing.md)',
+      'Нет TEST_DATABASE_URL: интеграционным тестам нужна отдельная база (docs/plan/done/testing.md)',
     );
   }
   assertTestDatabaseName(new URL(url).pathname.slice(1));

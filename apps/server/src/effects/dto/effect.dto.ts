@@ -46,7 +46,7 @@ export class EffectDto extends CatalogEntryDto {
   })
   saveEnds: EffectSaveEnds | null;
 
-  // Флаг одного запроса, в эффекте не хранится (docs/plan/abilities.md, этап 8). Скрыть
+  // Флаг одного запроса, в эффекте не хранится (docs/plan/done/abilities.md, этап 8). Скрыть
   // вместе с эффектом свои опубликованные способности, которые его накладывают.
   @IsOptional()
   @IsBoolean({ message: 'Признак «скрыть способности» — да или нет' })

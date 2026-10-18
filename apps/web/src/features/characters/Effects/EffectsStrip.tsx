@@ -12,7 +12,7 @@ interface EffectsStripProps {
   onChange?: (effects: CharacterEffectEntry[]) => void;
 }
 
-// Полоса плашек наложенных эффектов вверху листа (docs/plan/character-effects.md):
+// Полоса плашек наложенных эффектов вверху листа (docs/plan/done/character-effects.md):
 // эффект меняет броски на любой части листа, поэтому он виден сразу, а не в разделе.
 // Правки идут по одной: пока запрос в пути, плашка (или «Наложить») занята.
 function EffectsStrip({ character, onChange }: EffectsStripProps) {

@@ -8,7 +8,7 @@ import {
 import { createItem, itemBody } from './support/item-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Что видно и кому можно менять — docs/plan/character-inventory.md.
+// Что видно и кому можно менять — docs/plan/done/character-inventory.md.
 describe('инвентарь: скрытое, удалённое и чужие (e2e)', () => {
   let t: TestApp;
   let owner: request.Agent;

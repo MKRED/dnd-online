@@ -1,7 +1,7 @@
 import type { CatalogImage } from './catalogImage.js';
 import type { ItemCategory, ItemRarity } from './items.js';
 
-// Инвентарь персонажа (docs/plan/character-inventory.md): строки ссылаются на предметы
+// Инвентарь персонажа (docs/plan/done/character-inventory.md): строки ссылаются на предметы
 // каталога. «При себе» входит в груз, «Хранилище» — без лимита и в груз не входит.
 export const INVENTORY_LOCATIONS = ['carried', 'stash'] as const;
 export type InventoryLocation = (typeof INVENTORY_LOCATIONS)[number];

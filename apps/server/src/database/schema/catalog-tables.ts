@@ -16,7 +16,7 @@ import type { CatalogImageVariant, ThumbCrop } from 'shared';
 import { bytea } from './bytea.js';
 import { users } from './users.js';
 
-// Заготовки таблиц для каталогов, устроенных как предметы (docs/plan/abilities-effects.md).
+// Заготовки таблиц для каталогов, устроенных как предметы (docs/plan/done/abilities-effects.md).
 // Имя таблицы передаётся строкой, поэтому все таблицы одной заготовки — одного типа, и
 // общий код каталогов (доступ, картинки, CRUD) работает с любой из них.
 
@@ -73,7 +73,7 @@ export type CatalogEntryTable = ReturnType<typeof catalogEntryTable>;
 // Картинка записи — одна, поэтому ключ таблицы метаданных — сама запись. Байты лежат
 // отдельно (<prefix>_image_files), чтобы список, которому нужны только метаданные, не
 // тащил мегабайты. В базе, а не на диске — как у персонажей
-// (docs/plan/character-images.md). ownerColumn — имя колонки в базе: у предметов
+// (docs/plan/done/character-images.md). ownerColumn — имя колонки в базе: у предметов
 // таблицы уже есть с item_id.
 export function catalogImageTables(
   prefix: string,

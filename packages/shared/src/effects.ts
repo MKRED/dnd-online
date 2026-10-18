@@ -4,7 +4,7 @@ import type { EffectComponent } from './effectComponents.js';
 import type { EffectDuration } from './effectDuration.js';
 import type { EffectSaveEnds } from './effectSaveEnds.js';
 
-// Эффекты (docs/plan/effects.md): общий каталог того, что действует на существо, —
+// Эффекты (docs/plan/done/effects.md): общий каталог того, что действует на существо, —
 // образцы; наложенный экземпляр появится со связью с персонажем. Категории у эффекта нет:
 // он — список составляющих (effectComponents.ts), пустой список — «Базовый».
 export interface EffectFields {

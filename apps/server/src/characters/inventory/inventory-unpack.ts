@@ -13,7 +13,7 @@ export interface RowToAdd {
 }
 
 // Что положить при добавлении: сам предмет или, при распаковке, состав набора с
-// количеством × число наборов (docs/plan/character-inventory.md). Скрытые от игрока
+// количеством × число наборов (docs/plan/done/character-inventory.md). Скрытые от игрока
 // предметы состава не кладём: он их не видит — значит, и положить не может.
 export async function rowsToAdd(
   tx: DbTransaction,

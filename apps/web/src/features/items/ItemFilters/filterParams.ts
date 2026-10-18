@@ -5,7 +5,7 @@ import {
   type ItemRarity,
 } from 'shared';
 
-// Фильтры списка предметов (docs/plan/items-filters.md). Живут в адресе страницы, чтобы
+// Фильтры списка предметов (docs/plan/done/items-filters.md). Живут в адресе страницы, чтобы
 // «Назад» с карточки возвращал тот же отфильтрованный список.
 
 export const ITEM_SORTS = ['recent', 'name', 'weight', 'cost'] as const;

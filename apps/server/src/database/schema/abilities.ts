@@ -1,6 +1,6 @@
 import { catalogEntryTable, catalogImageTables } from './catalog-tables.js';
 
-// Каталог способностей (docs/plan/abilities.md) и картинки способностей.
+// Каталог способностей (docs/plan/done/abilities.md) и картинки способностей.
 export const abilities = catalogEntryTable('abilities');
 export const abilityImageTables = catalogImageTables(
   'ability',

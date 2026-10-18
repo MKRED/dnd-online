@@ -1,6 +1,6 @@
 import { catalogEntryTable, catalogImageTables } from './catalog-tables.js';
 
-// Каталог эффектов (docs/plan/effects.md) и картинки эффектов.
+// Каталог эффектов (docs/plan/done/effects.md) и картинки эффектов.
 export const effects = catalogEntryTable('effects');
 export const effectImageTables = catalogImageTables(
   'effect',

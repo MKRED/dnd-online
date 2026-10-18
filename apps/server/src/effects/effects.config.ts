@@ -14,7 +14,7 @@ import type { CatalogImageConfig } from '../catalog/images/catalog-image.config.
 import { effects, effectImageTables } from '../database/schema/index.js';
 import type { EffectDto } from './dto/effect.dto.js';
 
-// Каталог эффектов на общем коде каталогов (docs/plan/abilities-effects.md).
+// Каталог эффектов на общем коде каталогов (docs/plan/done/abilities-effects.md).
 
 // abilities — только у автора в карточке: какие способности накладывают эффект.
 export type EffectRecordFields = EffectFields & { abilities?: EffectAbilities };

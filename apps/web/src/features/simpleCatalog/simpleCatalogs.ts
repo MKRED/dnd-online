@@ -16,7 +16,7 @@ import {
   type CatalogExtras,
 } from './catalogExtras';
 
-// Запись простого каталога — способность или эффект (docs/plan/abilities-effects.md).
+// Запись простого каталога — способность или эффект (docs/plan/done/abilities-effects.md).
 // Страницы у них одни; чем разделы отличаются — виды записей для чипов и бейджей (kinds)
 // и свои поля раздела (extras).
 export type SimpleEntry = Ability | Effect;
@@ -26,7 +26,7 @@ export type SimpleInput = AbilityInput | EffectInput;
 // (род у способности женский, у эффекта мужской).
 export interface SimpleCatalogDef {
   section: Exclude<CatalogSection, 'items'>;
-  // Вид закладки на записи раздела (docs/plan/bookmarks.md).
+  // Вид закладки на записи раздела (docs/plan/done/bookmarks.md).
   bookmarkKind: 'ability' | 'effect';
   path: string;
   api: ReturnType<typeof catalogApi<SimpleEntry, SimpleInput>>;

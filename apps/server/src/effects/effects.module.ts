@@ -7,7 +7,7 @@ import { EffectImageEditService } from './effect-image-edit.service.js';
 import { EffectImagesController } from './effect-images.controller.js';
 import { EffectImagesService } from './effect-images.service.js';
 
-// Каталог эффектов и их картинки (docs/plan/effects.md).
+// Каталог эффектов и их картинки (docs/plan/done/effects.md).
 @Module({
   imports: [AuthModule],
   controllers: [EffectsController, EffectImagesController],

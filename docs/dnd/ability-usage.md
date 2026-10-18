@@ -38,7 +38,7 @@ Several can apply at once, or none (Cunning Action, Uncanny Dodge have no use li
 
 ## In the app
 
-Decided with the user on 2026-10-15 ([plan/abilities.md](../plan/abilities.md)).
+Decided with the user on 2026-10-15 ([plan/done/abilities.md](../plan/done/abilities.md)).
 
 - **Activation and costs are fields of every ability**, not of one category: attacks and spells have them too. There is no «Умение» category.
 - **Activation** is exactly one of: «Действие», «Бонусное действие», «Реакция» and «Без действия» (both with an optional condition, «когда…», up to 200 characters), «Вместо одной атаки», «Время» (1–99 minutes or hours). The action is not split into Magic, Attack and so on yet.

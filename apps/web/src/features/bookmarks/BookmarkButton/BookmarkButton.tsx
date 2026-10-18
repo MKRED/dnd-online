@@ -11,7 +11,7 @@ interface BookmarkButtonProps {
 const STAR =
   'M12 2.5l2.94 5.96 6.56.95-4.75 4.63 1.12 6.54L12 17.5l-5.87 3.08 1.12-6.54L2.5 9.41l6.56-.95L12 2.5z';
 
-// Звёздочка закладки у названия на странице просмотра (docs/plan/bookmarks.md).
+// Звёздочка закладки у названия на странице просмотра (docs/plan/done/bookmarks.md).
 function BookmarkButton({ kind, id }: BookmarkButtonProps) {
   const { bookmarked, busy, error, toggle } = useBookmark(kind, id);
   const label = bookmarked ? 'Убрать из закладок' : 'Добавить в закладки';

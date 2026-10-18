@@ -25,7 +25,7 @@ interface SaveEndsFieldProps {
 }
 
 // «Снимается спасброском»: носитель повторяет спасбросок каждый свой ход, успех снимает
-// эффект. Сл здесь нет — её даёт то, что наложило эффект (docs/plan/effects.md).
+// эффект. Сл здесь нет — её даёт то, что наложило эффект (docs/plan/done/effects.md).
 function SaveEndsField({ form }: SaveEndsFieldProps) {
   const { on } = form.getValues().effect.saveEnds;
 

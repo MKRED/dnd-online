@@ -23,7 +23,7 @@ Source: D&D Beyond, Free Rules (2024), Rules Glossary, «Carrying Capacity» (ht
 
 ## In the app
 
-Decided with the user on 2026-10-15 ([plan/character-inventory.md](../plan/character-inventory.md)).
+Decided with the user on 2026-10-15 ([plan/done/character-inventory.md](../plan/done/character-inventory.md)).
 
 - Capacity is Strength × 15 to carry and Strength × 30 to drag, lift or push, for every character.
 - **Departure from the book:** the Goliath's Powerful Build is not applied. Species and class traits will later be attached to the character and change its numbers themselves.

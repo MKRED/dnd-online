@@ -109,7 +109,7 @@ The guide's examples live in `apps/web/src/features/simpleCatalog/AbilityGuide/g
 
 ## In the app
 
-Decided with the user on 2026-10-17 ([plan/abilities.md](../plan/abilities.md), stage 6):
+Decided with the user on 2026-10-17 ([plan/done/abilities.md](../plan/done/abilities.md), stage 6):
 
 - **«Круг», not «уровень».** next.dnd.su 2024 writes «3 уровень», but the app keeps «круг» («Заговор», «3 круг, воплощение»), as in the spell slot cost («Ячейка заклинаний 3 круга»). That way a spell level isn't confused with the character level that cantrips grow with.
 - **The level suggests the slot.** Choosing level N ticks the cost «Ячейка заклинаний N круга или выше»; the tick can be removed (a feat's free casting once per Long Rest: a copy of the spell with uses instead of a slot, until features can link to spells). A cantrip has no slot.

@@ -122,7 +122,7 @@ function SimpleEntryForm({
                 {...form.getInputProps('name')}
               />
               {/* Категория — только у способностей; пока она одна, поле всё равно
-                  есть: «Заклинание» добавится сюда (docs/plan/abilities.md). */}
+                  есть: «Заклинание» добавится сюда (docs/plan/done/abilities.md). */}
               {def.categories && (
                 <Select
                   label="Категория"

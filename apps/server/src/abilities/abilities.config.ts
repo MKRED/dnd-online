@@ -14,7 +14,7 @@ import type { CatalogImageConfig } from '../catalog/images/catalog-image.config.
 import { abilities, abilityImageTables } from '../database/schema/index.js';
 import type { AbilityDto } from './dto/ability.dto.js';
 
-// Каталог способностей на общем коде каталогов (docs/plan/abilities-effects.md).
+// Каталог способностей на общем коде каталогов (docs/plan/done/abilities-effects.md).
 export const ABILITY_ACCESS: CatalogAccess = {
   table: abilities,
   id: abilities.id,

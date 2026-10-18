@@ -6,7 +6,7 @@ import { abilities } from '../../src/database/schema/index.js';
 import type { CatalogContext } from '../support/catalog-scenario/index.js';
 import { fireBolt } from './steps.js';
 
-// Эффекты в исходах шагов (docs/plan/abilities.md, этап 8): ссылки на каталог эффектов с
+// Эффекты в исходах шагов (docs/plan/done/abilities.md, этап 8): ссылки на каталог эффектов с
 // правилами состава набора — видимость, публикация только с опубликованными, удаление и
 // скрытие эффекта.
 

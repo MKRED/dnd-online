@@ -8,7 +8,7 @@ import {
 import { createItem, itemBody, packBody } from './support/item-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Стопки, переносы и распаковка — docs/plan/character-inventory.md.
+// Стопки, переносы и распаковка — docs/plan/done/character-inventory.md.
 describe('инвентарь персонажа (e2e)', () => {
   let t: TestApp;
   let owner: request.Agent;

@@ -32,7 +32,7 @@ interface DurationFieldProps {
   form: UseFormReturnType<SimpleFormValues>;
 }
 
-// Длительность эффекта: вид и поля этого вида (docs/plan/effects.md). Под полями — как
+// Длительность эффекта: вид и поля этого вида (docs/plan/done/effects.md). Под полями — как
 // длительность прочитается на карточке.
 function DurationField({ form }: DurationFieldProps) {
   const values = form.getValues().duration;

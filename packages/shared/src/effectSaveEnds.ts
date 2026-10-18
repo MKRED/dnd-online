@@ -1,7 +1,7 @@
 import { ABILITY_SCORES, type AbilityScore } from './character.js';
 import { ABILITY_GENITIVE } from './abilityUsageLabels.js';
 
-// «Снимается спасброском» — общее поле эффекта, как длительность (docs/plan/effects.md):
+// «Снимается спасброском» — общее поле эффекта, как длительность (docs/plan/done/effects.md):
 // носитель повторяет спасбросок в начале или в конце каждого своего хода, успех снимает
 // эффект. Так в книге у «Удержания личности» (конец хода) и «Палящей кары» (начало хода),
 // docs/dnd/attacks-and-saves.md. Сл здесь нет: её даёт способность, наложившая эффект,

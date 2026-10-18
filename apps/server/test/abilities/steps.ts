@@ -4,7 +4,7 @@ import { DatabaseService } from '../../src/database/database.service.js';
 import { abilities } from '../../src/database/schema/index.js';
 import type { CatalogContext } from '../support/catalog-scenario/index.js';
 
-// «Применение» способности: шаги с атакой и уроном (docs/plan/abilities.md, этапы 3 и 4;
+// «Применение» способности: шаги с атакой и уроном (docs/plan/done/abilities.md, этапы 3 и 4;
 // цепочки шагов этапа 5 — chains.ts).
 // Отдельным файлом, чтобы abilities.e2e-spec.ts не рос с каждым этапом.
 

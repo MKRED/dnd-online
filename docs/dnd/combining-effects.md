@@ -1,6 +1,6 @@
 # Combining effects
 
-How the 2024 rules combine several effects on one creature: different spells, the same spell twice, conditions, and things that happen at the same time. Needed for the rules engine that will compute effects on the map ([plan/effects-coverage.md](../plan/effects-coverage.md)). Researched on 2026-10-16.
+How the 2024 rules combine several effects on one creature: different spells, the same spell twice, conditions, and things that happen at the same time. Needed for the rules engine that will compute effects on the map ([plan/done/effects-coverage.md](../plan/done/effects-coverage.md)). Researched on 2026-10-16.
 
 ## Sources
 
@@ -20,7 +20,7 @@ How the 2024 rules combine several effects on one creature: different spells, th
 
 ## How the app uses it
 
-The first evaluator was the total Speed (the second is the Armor Class, below): `totalSpeed` in `packages/shared/src/effectSpeedTotal.ts`, with its tests next to it. It expands conditions first (`expandConditions`, [conditions.md](conditions.md)): a condition from several effects counts once, Exhaustion adds up, and immunity to a condition cancels it. The character sheet uses it through `sheetTotals` (`packages/shared/src/sheetTotals.ts`, [plan/character-effects.md](../plan/character-effects.md)): the Speed is recomputed, the other components are gathered into lists with the effects or conditions each line came from. What this means for the engine is written in [plan/effects-coverage.md](../plan/effects-coverage.md):
+The first evaluator was the total Speed (the second is the Armor Class, below): `totalSpeed` in `packages/shared/src/effectSpeedTotal.ts`, with its tests next to it. It expands conditions first (`expandConditions`, [conditions.md](conditions.md)): a condition from several effects counts once, Exhaustion adds up, and immunity to a condition cancels it. The character sheet uses it through `sheetTotals` (`packages/shared/src/sheetTotals.ts`, [plan/done/character-effects.md](../plan/done/character-effects.md)): the Speed is recomputed, the other components are gathered into lists with the effects or conditions each line came from. What this means for the engine is written in [plan/done/effects-coverage.md](../plan/done/effects-coverage.md):
 
 - an applied effect remembers which catalog entry (spell) it came from (`source`), so that the same entry twice doesn't add up. Today two instances of one entry are identical, so the evaluator keeps the latest one;
 - «the most potent» will need a way to compare two instances of one entry (a bonus, a die) once effects grow with the spell slot;

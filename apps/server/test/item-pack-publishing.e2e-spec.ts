@@ -9,7 +9,7 @@ import {
 } from './support/item-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Публикация наборов и скрытие их предметов — docs/plan/item-packs.md.
+// Публикация наборов и скрытие их предметов — docs/plan/done/item-packs.md.
 describe('наборы снаряжения: публикация и скрытие (e2e)', () => {
   let t: TestApp;
   let author: request.Agent;

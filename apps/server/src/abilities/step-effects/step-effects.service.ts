@@ -26,7 +26,7 @@ import {
   type StepEffectsPublication,
 } from './step-effects.rules.js';
 
-// Эффекты в исходах шагов способности (docs/plan/abilities.md, этап 8): запись строк
+// Эффекты в исходах шагов способности (docs/plan/done/abilities.md, этап 8): запись строк
 // вместе со способностью, проверка ссылок и подстановка эффектов в шаги для читателя.
 // Образец — состав набора (items/pack-contents).
 @Injectable()

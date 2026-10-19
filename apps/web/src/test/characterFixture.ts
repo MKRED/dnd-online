@@ -66,6 +66,7 @@ export const sampleCharacter: Character = {
     },
   ],
   effects: [],
+  abilities: [],
   currency: { cp: 1, sp: 2, ep: 0, gp: 30, pp: 0 },
   features: [],
   personality: { traits: 'Молчалив', backstory: 'Долгая история' },

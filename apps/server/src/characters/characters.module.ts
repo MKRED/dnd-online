@@ -1,5 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
+import {
+  CharacterAbilitiesController,
+  CharacterAbilitiesService,
+} from './abilities/index.js';
 import { CharacterAccessService } from './character-access.service.js';
 import { CharactersController } from './characters.controller.js';
 import { CharactersService } from './characters.service.js';
@@ -15,12 +19,14 @@ import { InventoryController, InventoryService } from './inventory/index.js';
     CharactersController,
     InventoryController,
     CharacterEffectsController,
+    CharacterAbilitiesController,
   ],
   providers: [
     CharactersService,
     CharacterAccessService,
     InventoryService,
     CharacterEffectsService,
+    CharacterAbilitiesService,
   ],
 })
 export class CharactersModule {}

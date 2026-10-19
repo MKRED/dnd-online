@@ -1,6 +1,7 @@
 import type {
   AbilityScore,
   Character,
+  CharacterAbilityEntry,
   CharacterFeature,
   CharacterEffectEntry,
   CharacterMainImage,
@@ -17,7 +18,7 @@ type NewCharacterRow = typeof characters.$inferInsert;
 // группирует их в abilityScores — маппинг в обе стороны неизбежен, это не лишний слой.
 // mainImage приходит отдельным запросом к галерее (loadMainImages), инвентарь — из
 // character_items глазами смотрящего (loadInventories), эффекты — из character_effects так же
-// (loadCharacterEffectLists), ник автора — из users: в строке
+// (loadCharacterEffectLists), способности — из character_abilities так же, ник автора — из users: в строке
 // персонажа их нет.
 export function toCharacter(
   row: CharacterRow,
@@ -26,11 +27,13 @@ export function toCharacter(
     authorNickname,
     inventory,
     effects,
+    abilities,
   }: {
     mainImage: CharacterMainImage | null;
     authorNickname: string;
     inventory: InventoryEntry[];
     effects: CharacterEffectEntry[];
+    abilities: CharacterAbilityEntry[];
   },
 ): Character {
   return {
@@ -70,6 +73,7 @@ export function toCharacter(
     spellsKnown: row.spellsKnown,
     inventory,
     effects,
+    abilities,
     currency: row.currency,
     features: row.features,
     personality: row.personality,

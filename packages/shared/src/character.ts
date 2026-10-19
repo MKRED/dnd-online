@@ -1,5 +1,6 @@
 // Общие типы чарника DnD 5e (редакция 2024) — используются и на сервере (Drizzle jsonb-колонки), и на фронте (форма создания).
 
+import type { CharacterAbilityEntry } from './characterAbilities.js';
 import type { CharacterEffectEntry } from './characterEffects.js';
 import type { CharacterMainImage } from './characterImages.js';
 import type { InventoryEntry } from './inventory.js';
@@ -238,6 +239,8 @@ export interface Character {
   // Наложенные эффекты — тоже глазами смотрящего. armorClass и speed выше — база без
   // эффектов, итог считает shared (docs/plan/done/character-effects.md).
   effects: CharacterEffectEntry[];
+  // Способности из каталога — тоже глазами смотрящего (docs/plan/character-abilities.md).
+  abilities: CharacterAbilityEntry[];
   currency: CharacterCurrency;
   features: CharacterFeature[];
   personality: CharacterPersonality;

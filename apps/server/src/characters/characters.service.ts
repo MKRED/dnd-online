@@ -4,6 +4,10 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { loadMainImages } from '../character-images/character-image-access.js';
 import { DatabaseService } from '../database/database.service.js';
 import { characters, users } from '../database/schema/index.js';
+import {
+  loadCharacterAbilities,
+  loadCharacterAbilityLists,
+} from './abilities/index.js';
 import { nicknameOf } from './character-author.js';
 import { spentSpellSlots } from './character-spell-slots.js';
 import { characterVisibleTo } from './character-visibility.js';
@@ -44,6 +48,7 @@ export class CharactersService {
         authorNickname: await nicknameOf(this.databaseService.db, userId),
         inventory: [],
         effects: [],
+        abilities: [],
       });
     } catch (err: unknown) {
       this.logger.error(
@@ -77,6 +82,11 @@ export class CharactersService {
         userId,
         ids,
       );
+      const abilityLists = await loadCharacterAbilityLists(
+        this.databaseService.db,
+        userId,
+        ids,
+      );
       this.logger.debug(
         { durationMs: Date.now() - t0, userId, count: rows.length },
         'Characters listed',
@@ -87,6 +97,7 @@ export class CharactersService {
           authorNickname,
           inventory: inventories.get(row.id) ?? [],
           effects: effectLists.get(row.id) ?? [],
+          abilities: abilityLists.get(row.id) ?? [],
         }),
       );
     } catch (err: unknown) {
@@ -128,6 +139,11 @@ export class CharactersService {
         // Глазами смотрящего: чужие скрытые от него предметы — строки без карточки.
         inventory: await loadInventory(this.databaseService.db, userId, id),
         effects: await loadCharacterEffects(
+          this.databaseService.db,
+          userId,
+          id,
+        ),
+        abilities: await loadCharacterAbilities(
           this.databaseService.db,
           userId,
           id,
@@ -217,6 +233,11 @@ export class CharactersService {
         authorNickname: await nicknameOf(this.databaseService.db, userId),
         inventory: await loadInventory(this.databaseService.db, userId, id),
         effects: await loadCharacterEffects(
+          this.databaseService.db,
+          userId,
+          id,
+        ),
+        abilities: await loadCharacterAbilities(
           this.databaseService.db,
           userId,
           id,

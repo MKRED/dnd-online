@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { sampleCharacter } from '../../test/characterFixture';
-import { fromCharacter, toCreatePayload } from './characterFormValues';
+import {
+  createInitialFormValues,
+  fromCharacter,
+  toCreatePayload,
+} from './characterFormValues';
 
 describe('fromCharacter', () => {
   it('после toCreatePayload даёт те же поля чарника', () => {
     const payload = toCreatePayload(fromCharacter(sampleCharacter));
     const c = sampleCharacter;
     expect(payload).toEqual({
+      kind: c.kind,
       name: c.name,
       species: c.species,
       speciesLineage: undefined,
@@ -46,6 +51,11 @@ describe('fromCharacter', () => {
     expect(payload.skillProficiencies).toHaveLength(2);
   });
 
+  it('сохраняет тип НПС', () => {
+    const values = fromCharacter({ ...sampleCharacter, kind: 'npc' });
+    expect(toCreatePayload(values).kind).toBe('npc');
+  });
+
   it('даёт строкам классов разные id, а пустое мировоззрение — пустой строкой', () => {
     const values = fromCharacter(sampleCharacter);
     expect(values.alignment).toBe('');
@@ -58,6 +68,13 @@ describe('fromCharacter', () => {
     values.languages.push('Дварфийский');
     expect(sampleCharacter.currency.gp).toBe(30);
     expect(sampleCharacter.proficiencies.languages).toHaveLength(2);
+  });
+});
+
+describe('createInitialFormValues', () => {
+  it('новый персонаж — игровой, если тип не задан', () => {
+    expect(createInitialFormValues().kind).toBe('pc');
+    expect(createInitialFormValues('npc').kind).toBe('npc');
   });
 });
 

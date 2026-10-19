@@ -11,7 +11,7 @@ interface SheetHeaderProps {
   aside: ReactNode;
 }
 
-// Кто это: имя, раса, предыстория, мировоззрение, классы, опыт.
+// Кто это: имя, раса, предыстория, мировоззрение, пометка НПС, классы, опыт.
 function SheetHeader({ character, aside }: SheetHeaderProps) {
   const origin = [
     SPECIES_LABELS[character.species] +
@@ -38,6 +38,11 @@ function SheetHeader({ character, aside }: SheetHeaderProps) {
       </TitleWithBookmark>
       <Text c="dimmed">{origin}</Text>
       <Group gap="xs">
+        {character.kind === 'npc' && (
+          <Badge color="grape" variant="filled">
+            НПС
+          </Badge>
+        )}
         {character.classes.map((entry) => (
           <Badge key={`${entry.class}-${entry.level}`} variant="light">
             {CLASS_LABELS[entry.class]} {entry.level}

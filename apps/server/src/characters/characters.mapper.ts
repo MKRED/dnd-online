@@ -39,6 +39,7 @@ export function toCharacter(
   return {
     id: row.id,
     userId: row.userId,
+    kind: row.kind,
     name: row.name,
     species: row.species,
     speciesLineage: row.speciesLineage,
@@ -101,6 +102,7 @@ export function toSheetValues(
   dto: CreateCharacterDto,
 ): Omit<NewCharacterRow, 'userId'> {
   return {
+    kind: dto.kind,
     name: dto.name,
     species: dto.species,
     // null, а не undefined: при смене вида прежний род должен стереться.

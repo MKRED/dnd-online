@@ -10,6 +10,7 @@ import {
   type Character,
   type CharacterClass,
   type CharacterCurrency,
+  type CharacterKind,
   type CharacterPersonality,
   type CharacterSpecies,
   type HitDie,
@@ -40,6 +41,7 @@ export interface CharacterFormClassEntry {
 }
 
 export interface CharacterFormValues {
+  kind: CharacterKind;
   name: string;
   species: CharacterSpecies | '';
   speciesLineage: string;
@@ -77,8 +79,12 @@ function emptyAbilityRecord<T>(value: T): Record<AbilityScore, T> {
   ) as Record<AbilityScore, T>;
 }
 
-export function createInitialFormValues(): CharacterFormValues {
+// Тип нового персонажа — от выбранного чипа списка (?kind=npc), в форме его можно сменить.
+export function createInitialFormValues(
+  kind: CharacterKind = 'pc',
+): CharacterFormValues {
   return {
+    kind,
     name: '',
     species: '',
     speciesLineage: '',
@@ -125,6 +131,7 @@ export function fromCharacter(character: Character): CharacterFormValues {
   }
   return {
     ...base,
+    kind: character.kind,
     name: character.name,
     species: character.species,
     speciesLineage: character.speciesLineage ?? '',
@@ -168,6 +175,7 @@ export function toCreatePayload(
   values: CharacterFormValues,
 ): CreateCharacterPayload {
   return {
+    kind: values.kind,
     name: values.name.trim(),
     species: values.species as CharacterSpecies,
     speciesLineage: SPECIES_WITH_LINEAGE.includes(

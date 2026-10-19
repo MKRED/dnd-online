@@ -15,6 +15,21 @@ describe('SheetHeader', () => {
     expect(screen.getByText('Героическое вдохновение: 3')).toBeInTheDocument();
   });
 
+  it('помечает НПС, а игрового — нет', () => {
+    const { unmount } = renderWithProviders(
+      <SheetHeader
+        character={{ ...sampleCharacter, kind: 'npc' }}
+        aside={null}
+      />,
+    );
+    expect(screen.getByText('НПС')).toBeInTheDocument();
+    unmount();
+    renderWithProviders(
+      <SheetHeader character={sampleCharacter} aside={null} />,
+    );
+    expect(screen.queryByText('НПС')).not.toBeInTheDocument();
+  });
+
   it('без вдохновения значка нет', () => {
     renderWithProviders(
       <SheetHeader

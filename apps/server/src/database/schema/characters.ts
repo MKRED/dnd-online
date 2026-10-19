@@ -12,6 +12,7 @@ import type {
   CharacterClassLevel,
   CharacterCurrency,
   CharacterFeature,
+  CharacterKind,
   CharacterLinkAccess,
   CharacterPersonality,
   CharacterProficiencies,
@@ -35,6 +36,12 @@ export const characters = pgTable('characters', {
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
 
+  // Игровой или НПС (CHARACTER_KINDS из shared); список проверяет DTO. Строка, а не boolean:
+  // позже могут появиться другие типы (например, компаньон со своими правилами).
+  kind: varchar('kind', { length: 10 })
+    .$type<CharacterKind>()
+    .notNull()
+    .default('pc'),
   name: varchar('name', { length: 100 }).notNull(),
   // Ключ вида из справочника shared (CHARACTER_SPECIES); список проверяет DTO.
   species: varchar('species', { length: 50 })

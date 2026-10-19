@@ -16,9 +16,11 @@ import {
 } from 'class-validator';
 import {
   ABILITY_SCORES,
+  CHARACTER_KINDS,
   CHARACTER_SPECIES,
   HEROIC_INSPIRATION_MAX,
   HIT_DICE,
+  type CharacterKind,
   type CharacterSpecies,
   type HitDie,
 } from 'shared';
@@ -66,6 +68,11 @@ function MaxOf(property: string, validationOptions?: ValidationOptions) {
 // одного декоратора будет молча вырезано из payload ещё до контроллера, поэтому
 // у каждого принимаемого поля, включая вложенные jsonb-блоки, обязателен декоратор.
 export class CreateCharacterDto {
+  // Без типа создаётся игровой (умолчание колонки), а PUT без типа его не меняет.
+  @IsOptional()
+  @IsIn(CHARACTER_KINDS, { message: 'Персонаж бывает только игровым или НПС' })
+  kind?: CharacterKind;
+
   @IsString()
   @Length(1, 100)
   name: string;

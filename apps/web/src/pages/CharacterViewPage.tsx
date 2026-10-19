@@ -15,6 +15,7 @@ import type { Character } from 'shared';
 import { useAuth } from '../features/auth';
 import {
   CharacterSheet,
+  characterKindQuery,
   deleteCharacter,
   getCharacter,
   ShareDialog,
@@ -58,7 +59,7 @@ function CharacterViewPage() {
     setDeleteError(null);
     setDeleting(true);
     deleteCharacter(character.id)
-      .then(() => navigate('/characters'))
+      .then(() => navigate(`/characters${characterKindQuery(character.kind)}`))
       .catch((err: unknown) => {
         console.error('Failed to delete character', err);
         setDeleteError(errorMessage(err, 'Не удалось удалить персонажа'));
@@ -125,7 +126,8 @@ function CharacterViewPage() {
       {(!character || isAuthor) && (
         <Anchor
           component={Link}
-          to="/characters"
+          // НПС возвращается к чипу «НПС», а не к игровым.
+          to={`/characters${character ? characterKindQuery(character.kind) : ''}`}
           size="sm"
           mb="md"
           display="inline-block"

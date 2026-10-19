@@ -11,6 +11,11 @@ export { ABILITY_LABELS, SKILL_LABELS } from './characterLabels';
 export { CLASS_LABELS } from './characterClasses';
 export { SPECIES_LABELS } from './characterSpecies';
 export {
+  CHARACTER_KIND_CHIPS,
+  characterKindQuery,
+  readCharacterKind,
+} from './characterKinds';
+export {
   createInitialFormValues,
   fromCharacter,
   toCreatePayload,

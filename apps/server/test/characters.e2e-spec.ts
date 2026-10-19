@@ -124,4 +124,42 @@ describe('персонажи (e2e)', () => {
     await setAccess(id, 'everyone').expect(400);
     await owner.get('/api/characters/not-a-uuid').expect(400);
   });
+
+  it('тип: без него — игровой, НПС держится при правке без типа, меняется явно', async () => {
+    const pc = await create();
+    expect(
+      (await owner.get(`/api/characters/${pc}`).expect(200)).body,
+    ).toMatchObject({ kind: 'pc' });
+
+    const created = await owner
+      .post('/api/characters')
+      .send(characterBody({ kind: 'npc', name: 'Трактирщик' }))
+      .expect(201);
+    const npc = (created.body as { id: string; kind: string }).id;
+    expect(created.body).toMatchObject({ kind: 'npc' });
+
+    // Список отдаёт оба типа: делит их браузер.
+    const list = await owner.get('/api/characters').expect(200);
+    expect(ids(list)).toEqual(expect.arrayContaining([pc, npc]));
+
+    const kept = await owner
+      .put(`/api/characters/${npc}`)
+      .send(characterBody({ name: 'Трактирщик II' }))
+      .expect(200);
+    expect(kept.body).toMatchObject({ kind: 'npc', name: 'Трактирщик II' });
+
+    const changed = await owner
+      .put(`/api/characters/${npc}`)
+      .send(characterBody({ kind: 'pc' }))
+      .expect(200);
+    expect(changed.body).toMatchObject({ kind: 'pc' });
+
+    const wrong = await owner
+      .post('/api/characters')
+      .send(characterBody({ kind: 'boss' }))
+      .expect(400);
+    expect(JSON.stringify(wrong.body)).toContain(
+      'Персонаж бывает только игровым или НПС',
+    );
+  });
 });

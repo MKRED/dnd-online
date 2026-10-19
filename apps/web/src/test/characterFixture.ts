@@ -4,6 +4,7 @@ import type { Character } from 'shared';
 export const sampleCharacter: Character = {
   id: '11111111-1111-4111-8111-111111111111',
   userId: 'user-1',
+  kind: 'pc',
   name: 'Арагорн',
   species: 'human',
   speciesLineage: null,

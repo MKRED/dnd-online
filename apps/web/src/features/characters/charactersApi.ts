@@ -4,6 +4,7 @@ import type {
   CharacterLinkAccess,
   CharacterClassLevel,
   CharacterCurrency,
+  CharacterKind,
   CharacterPersonality,
   CharacterProficiencies,
   CharacterSpecies,
@@ -17,6 +18,7 @@ import { apiRequest as request } from '../../lib/apiRequest';
 // Полезная нагрузка создания чарника: подмножество Character без серверных полей
 // (id/userId/createdAt) — форма присылает только то, что валидирует CreateCharacterDto.
 export interface CreateCharacterPayload {
+  kind: CharacterKind;
   name: string;
   species: CharacterSpecies;
   speciesLineage?: string;

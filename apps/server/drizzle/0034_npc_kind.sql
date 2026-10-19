@@ -1,0 +1,1 @@
+ALTER TABLE "characters" ADD COLUMN "kind" varchar(10) DEFAULT 'pc' NOT NULL;

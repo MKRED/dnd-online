@@ -41,6 +41,8 @@ describe('toSheetValues', () => {
   it('leaves fields absent from the payload undefined', () => {
     const values = toSheetValues(dto);
     for (const key of [
+      // Без типа PUT оставляет прежний (игровой или НПС).
+      'kind',
       'hitPointsTemp',
       'deathSaveSuccesses',
       'deathSaveFailures',

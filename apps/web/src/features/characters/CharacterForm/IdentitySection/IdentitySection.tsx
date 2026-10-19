@@ -1,7 +1,9 @@
 import {
   Fieldset,
   Grid,
+  Input,
   NumberInput,
+  SegmentedControl,
   Select,
   Stack,
   TextInput,
@@ -9,6 +11,7 @@ import {
 import type { UseFormReturnType } from '@mantine/form';
 import { memo } from 'react';
 import type { CharacterFormValues } from '../../characterFormValues';
+import { CHARACTER_KIND_OPTIONS } from '../../characterKinds';
 import { formErrorsEqual } from '../../../../components/form';
 import ClassesList from './ClassesList';
 import SpeciesFields from './SpeciesFields';
@@ -33,6 +36,20 @@ function IdentitySection({ form }: IdentitySectionProps) {
   return (
     <Fieldset legend="Основное">
       <Stack>
+        {/* Тип первым: он решает, в каком списке окажется лист. Uncontrolled-форма даёт
+            defaultValue, поэтому переключатель не перерисовывает секцию. */}
+        <Input.Wrapper
+          label="Тип"
+          description="НПС — персонаж мастера: торговец, сюжетный герой, компаньон"
+        >
+          <div>
+            <SegmentedControl
+              data={CHARACTER_KIND_OPTIONS}
+              aria-label="Тип"
+              {...form.getInputProps('kind')}
+            />
+          </div>
+        </Input.Wrapper>
         <Grid>
           <Grid.Col span={{ base: 12, sm: 4 }}>
             <TextInput

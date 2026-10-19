@@ -1,10 +1,12 @@
 import { Anchor, Container, Group, Text, Title } from '@mantine/core';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   CharacterForm,
+  characterKindQuery,
   createCharacter,
   createInitialFormValues,
+  readCharacterKind,
   toCreatePayload,
   type CharacterFormValues,
 } from '../features/characters';
@@ -12,12 +14,15 @@ import { ApiError } from '../lib/apiRequest';
 import { usePageTitle } from '../lib/usePageTitle';
 
 function CharacterCreatePage() {
-  usePageTitle('Новый персонаж');
   const navigate = useNavigate();
+  // Тип — от чипа списка, с которого пришли; в форме его можно сменить.
+  const kind = readCharacterKind(useSearchParams()[0]);
+  const title = kind === 'npc' ? 'Новый НПС' : 'Новый персонаж';
+  usePageTitle(title);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   // Ленивая инициализация: иначе на каждом рендере генерировались бы новые id строк классов.
-  const [initialValues] = useState(createInitialFormValues);
+  const [initialValues] = useState(() => createInitialFormValues(kind));
 
   const handleSubmit = (values: CharacterFormValues) => {
     setSubmitError(null);
@@ -44,8 +49,12 @@ function CharacterCreatePage() {
   return (
     <Container size="md" py="xl">
       <Group justify="space-between" align="center" mb="lg">
-        <Title order={1}>Новый персонаж</Title>
-        <Anchor component={Link} to="/characters" size="sm">
+        <Title order={1}>{title}</Title>
+        <Anchor
+          component={Link}
+          to={`/characters${characterKindQuery(kind)}`}
+          size="sm"
+        >
           Назад к списку
         </Anchor>
       </Group>

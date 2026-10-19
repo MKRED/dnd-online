@@ -11,10 +11,11 @@ import { abilities } from './abilities.js';
 import { characters } from './characters.js';
 import { effects } from './effects.js';
 import { items } from './items.js';
+import { monsters } from './monsters.js';
 import { users } from './users.js';
 
 // Закладки (docs/plan/done/bookmarks.md): строка — отметка игрока на персонаже или записи
-// справочника. Четыре колонки ссылок, а не «вид + id»: удалили цель — каскад сам убирает
+// справочника. По колонке ссылки на вид, а не «вид + id»: удалили цель — каскад сам убирает
 // её закладки, кода уборки не нужно.
 export const bookmarks = pgTable(
   'bookmarks',
@@ -33,6 +34,9 @@ export const bookmarks = pgTable(
     effectId: uuid('effect_id').references(() => effects.id, {
       onDelete: 'cascade',
     }),
+    monsterId: uuid('monster_id').references(() => monsters.id, {
+      onDelete: 'cascade',
+    }),
     // Порядок на странице — новые сверху.
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -41,7 +45,7 @@ export const bookmarks = pgTable(
   (table) => [
     check(
       'bookmarks_one_target',
-      sql`num_nonnulls(${table.characterId}, ${table.itemId}, ${table.abilityId}, ${table.effectId}) = 1`,
+      sql`num_nonnulls(${table.characterId}, ${table.itemId}, ${table.abilityId}, ${table.effectId}, ${table.monsterId}) = 1`,
     ),
     // Одна цель — одна закладка игрока. null в unique различны, так что строки других
     // видов не мешают друг другу. Первая колонка — хозяин: по ней же читается список.
@@ -49,10 +53,12 @@ export const bookmarks = pgTable(
     unique('bookmarks_item_once').on(table.userId, table.itemId),
     unique('bookmarks_ability_once').on(table.userId, table.abilityId),
     unique('bookmarks_effect_once').on(table.userId, table.effectId),
+    unique('bookmarks_monster_once').on(table.userId, table.monsterId),
     // Каскад при удалении цели ищет строки по её колонке.
     index('bookmarks_character_idx').on(table.characterId),
     index('bookmarks_item_idx').on(table.itemId),
     index('bookmarks_ability_idx').on(table.abilityId),
     index('bookmarks_effect_idx').on(table.effectId),
+    index('bookmarks_monster_idx').on(table.monsterId),
   ],
 );

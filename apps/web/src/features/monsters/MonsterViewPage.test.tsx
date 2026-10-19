@@ -11,12 +11,15 @@ function renderPage(
   body: unknown = sampleMonster,
   status = 200,
 ) {
-  vi.stubGlobal(
-    'fetch',
-    vi
-      .fn<typeof fetch>()
-      .mockResolvedValue(new Response(JSON.stringify(body), { status })),
+  // Звёздочка спрашивает своё состояние отдельно от карточки.
+  const fetchMock = vi.fn<typeof fetch>((url) =>
+    Promise.resolve(
+      typeof url === 'string' && url.includes('/bookmarks/')
+        ? new Response(JSON.stringify({ bookmarked: false }))
+        : new Response(JSON.stringify(body), { status }),
+    ),
   );
+  vi.stubGlobal('fetch', fetchMock);
   return renderWithProviders(
     <Routes>
       <Route path="/monsters/:id" element={<MonsterViewPage />} />
@@ -72,6 +75,19 @@ describe('MonsterViewPage', () => {
       screen.queryByRole('link', { name: 'Редактировать' }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('group', { name: 'Умения' })).toBeNull();
+    // Закладку на чужого монстра ставит любой, кто его видит.
+    expect(
+      await screen.findByRole('button', { name: 'Добавить в закладки' }),
+    ).toBeEnabled();
+    expect(
+      vi
+        .mocked(fetch)
+        .mock.calls.some(
+          ([url]) =>
+            typeof url === 'string' &&
+            url.endsWith(`/bookmarks/monster/${sampleMonster.id}`),
+        ),
+    ).toBe(true);
     expect(screen.getByRole('link', { name: '← К монстрам' })).toHaveAttribute(
       'href',
       '/monsters?tab=catalog',

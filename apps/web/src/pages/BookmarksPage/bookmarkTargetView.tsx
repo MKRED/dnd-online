@@ -3,6 +3,7 @@ import type { Bookmark } from 'shared';
 import { CatalogThumb, type ImagePathFn } from '../../features/catalog';
 import { CharacterAvatar } from '../../features/characters';
 import { itemImagePath } from '../../features/items';
+import { monstersApi } from '../../features/monsters';
 import { ABILITIES, EFFECTS } from '../../features/simpleCatalog';
 
 // Адрес и миниатюра цели закладки. Здесь, а не в features/bookmarks: страницы целей сами
@@ -14,6 +15,7 @@ const CATALOG: Record<
   item: { path: '/items', imagePath: itemImagePath },
   ability: { path: ABILITIES.path, imagePath: ABILITIES.api.imagePath },
   effect: { path: EFFECTS.path, imagePath: EFFECTS.api.imagePath },
+  monster: { path: '/monsters', imagePath: monstersApi.imagePath },
 };
 
 export function bookmarkTargetView(bookmark: Bookmark): {

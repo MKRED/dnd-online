@@ -232,6 +232,13 @@
       "when": 1792397588365,
       "tag": "0032_monster_items_effects",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1792403810142,
+      "tag": "0033_monster_bookmarks",
+      "breakpoints": true
     }
   ]
 }

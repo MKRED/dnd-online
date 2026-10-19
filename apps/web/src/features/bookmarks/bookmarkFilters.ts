@@ -7,6 +7,7 @@ export const BOOKMARK_KIND_LABELS: Record<BookmarkKind, string> = {
   item: 'Предметы',
   ability: 'Способности',
   effect: 'Эффекты',
+  monster: 'Монстры',
 };
 
 // Вид и поиск — в адресе (?kind=item&q=меч), как фильтры каталога: «Назад» с карточки
@@ -54,7 +55,7 @@ export function filterBookmarks(
 export function countBookmarks(
   bookmarks: Bookmark[],
 ): Record<BookmarkKind, number> {
-  const counts = { character: 0, item: 0, ability: 0, effect: 0 };
+  const counts = { character: 0, item: 0, ability: 0, effect: 0, monster: 0 };
   for (const bookmark of bookmarks) counts[bookmark.kind] += 1;
   return counts;
 }

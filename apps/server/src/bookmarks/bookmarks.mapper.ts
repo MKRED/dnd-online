@@ -11,6 +11,7 @@ export interface BookmarkRow {
   itemId: string | null;
   abilityId: string | null;
   effectId: string | null;
+  monsterId: string | null;
   createdAt: Date;
   name: string | null;
   authorId: string | null;
@@ -19,6 +20,7 @@ export interface BookmarkRow {
   itemImage: CatalogImageRow | null;
   abilityImage: CatalogImageRow | null;
   effectImage: CatalogImageRow | null;
+  monsterImage: CatalogImageRow | null;
 }
 
 export function toBookmark(row: BookmarkRow): Bookmark {
@@ -40,7 +42,7 @@ export function toBookmark(row: BookmarkRow): Bookmark {
     };
   }
   const catalog = (
-    kind: 'item' | 'ability' | 'effect',
+    kind: Exclude<Bookmark['kind'], 'character'>,
     targetId: string,
     image: CatalogImageRow | null,
   ): Bookmark => ({
@@ -52,6 +54,9 @@ export function toBookmark(row: BookmarkRow): Bookmark {
   if (row.itemId) return catalog('item', row.itemId, row.itemImage);
   if (row.abilityId) return catalog('ability', row.abilityId, row.abilityImage);
   if (row.effectId) return catalog('effect', row.effectId, row.effectImage);
+  if (row.monsterId) {
+    return catalog('monster', row.monsterId, row.monsterImage);
+  }
   // Проверка bookmarks_one_target в базе не даёт строке остаться без цели.
   throw new Error('Bookmark row has no target');
 }

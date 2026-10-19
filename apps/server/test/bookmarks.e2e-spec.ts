@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { PNG_FILE, pngImage } from './support/character-fixture.js';
 import { createCharacter } from './support/inventory-fixture.js';
 import { createItem, itemBody } from './support/item-fixture.js';
+import { createMonster, monsterBody } from './support/monster-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
 // Закладки — docs/plan/done/bookmarks.md.
@@ -80,7 +81,7 @@ describe('закладки (e2e)', () => {
     await anon.delete(url('item', MISSING_ID)).expect(401);
   });
 
-  it('все четыре вида: поставить, увидеть в списке, снять', async () => {
+  it('все пять видов: поставить, увидеть в списке, снять', async () => {
     const characterId = await createCharacter(author);
     await setLinkAccess(characterId, 'link');
     const item = await publicItem();
@@ -92,11 +93,13 @@ describe('закладки (e2e)', () => {
       .post('/api/effects')
       .send(effectBody)
       .expect(201);
+    const monsterId = await createMonster(author, true);
     const targets = [
       ['character', characterId],
       ['item', item.id],
       ['ability', (ability.body as { id: string }).id],
       ['effect', (effect.body as { id: string }).id],
+      ['monster', monsterId],
     ] as const;
 
     for (const [kind, id] of targets) {
@@ -107,6 +110,7 @@ describe('закладки (e2e)', () => {
     const list = await listOf(reader);
     // Новые сверху.
     expect(list.map((b) => b.kind)).toEqual([
+      'monster',
       'effect',
       'ability',
       'item',
@@ -119,6 +123,11 @@ describe('закладки (e2e)', () => {
     });
     expect(list.find((b) => b.kind === 'item')?.target).toMatchObject({
       name: 'Длинный меч',
+      authorNickname: 'author',
+      image: null,
+    });
+    expect(list.find((b) => b.kind === 'monster')?.target).toMatchObject({
+      name: 'Аболет',
       authorNickname: 'author',
       image: null,
     });
@@ -170,8 +179,10 @@ describe('закладки (e2e)', () => {
   it('чужие скрытая запись и закрытый персонаж — 404, как несуществующие', async () => {
     const item = await createItem(author, { name: 'Тайный' });
     const characterId = await createCharacter(author);
+    const monsterId = await createMonster(author);
     await reader.put(url('item', item.id)).expect(404);
     await reader.put(url('character', characterId)).expect(404);
+    await reader.put(url('monster', monsterId)).expect(404);
     await reader.put(url('effect', MISSING_ID)).expect(404);
     expect(await listOf(reader)).toEqual([]);
   });
@@ -202,6 +213,20 @@ describe('закладки (e2e)', () => {
     const [back] = await listOf(reader);
     expect(back.target?.name).toBe('Длинный меч');
     await reader.delete(url('item', item.id)).expect(204);
+  });
+
+  it('монстр: скрыт автором — плашка, удалён — закладка пропадает', async () => {
+    const monsterId = await createMonster(author, true);
+    await reader.put(url('monster', monsterId)).expect(200);
+    await author
+      .put(`/api/monsters/${monsterId}`)
+      .send(monsterBody(false))
+      .expect(200);
+    expect(await listOf(reader)).toEqual([
+      expect.objectContaining({ kind: 'monster', target: null }),
+    ]);
+    await author.delete(`/api/monsters/${monsterId}`).expect(204);
+    expect(await listOf(reader)).toEqual([]);
   });
 
   it('персонаж стал «Только я» — плашка, её можно убрать', async () => {

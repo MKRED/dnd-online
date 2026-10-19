@@ -13,10 +13,13 @@ import {
   effects,
   itemImages,
   items,
+  monsterImages,
+  monsters,
   users,
 } from '../database/schema/index.js';
 import { EFFECT_ACCESS } from '../effects/effects.config.js';
 import { ITEM_ACCESS } from '../items/item-access.js';
+import { MONSTER_ACCESS } from '../monsters/monsters.config.js';
 import { toBookmark } from './bookmarks.mapper.js';
 
 // Все закладки игрока одним запросом, новые сверху. Проверка доступа к цели — в условии
@@ -28,16 +31,17 @@ export async function loadBookmarks(
 ): Promise<Bookmark[]> {
   const authorId = sql<string | null>`coalesce(${characters.userId}, ${
     items.authorId
-  }, ${abilities.authorId}, ${effects.authorId})`;
+  }, ${abilities.authorId}, ${effects.authorId}, ${monsters.authorId})`;
   const name = sql<string | null>`coalesce(${characters.name}, ${
     items.name
-  }, ${abilities.name}, ${effects.name})`;
+  }, ${abilities.name}, ${effects.name}, ${monsters.name})`;
   const rows = await db
     .select({
       characterId: bookmarks.characterId,
       itemId: bookmarks.itemId,
       abilityId: bookmarks.abilityId,
       effectId: bookmarks.effectId,
+      monsterId: bookmarks.monsterId,
       createdAt: bookmarks.createdAt,
       name,
       authorId,
@@ -49,6 +53,7 @@ export async function loadBookmarks(
       itemImage: itemImages,
       abilityImage: abilityImages,
       effectImage: effectImages,
+      monsterImage: monsterImages,
     })
     .from(bookmarks)
     .leftJoin(
@@ -73,6 +78,13 @@ export async function loadBookmarks(
         entryVisibleTo(EFFECT_ACCESS, userId),
       ),
     )
+    .leftJoin(
+      monsters,
+      and(
+        eq(monsters.id, bookmarks.monsterId),
+        entryVisibleTo(MONSTER_ACCESS, userId),
+      ),
+    )
     .leftJoin(users, eq(users.id, authorId))
     .leftJoin(
       characterImages,
@@ -84,6 +96,7 @@ export async function loadBookmarks(
     .leftJoin(itemImages, eq(itemImages.ownerId, items.id))
     .leftJoin(abilityImages, eq(abilityImages.ownerId, abilities.id))
     .leftJoin(effectImages, eq(effectImages.ownerId, effects.id))
+    .leftJoin(monsterImages, eq(monsterImages.ownerId, monsters.id))
     .where(eq(bookmarks.userId, userId))
     .orderBy(desc(bookmarks.createdAt), desc(bookmarks.id));
   return rows.map(toBookmark);

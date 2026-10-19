@@ -1,13 +1,14 @@
 import type { CatalogImage } from './catalogImage.js';
 import type { CharacterMainImage } from './characterImages.js';
 
-// Закладки (docs/plan/done/bookmarks.md): игрок отмечает персонажей и записи справочника,
-// свои и чужие. Порядок — порядок чипов и разделов на странице «Закладки».
+// Закладки (docs/plan/done/bookmarks.md): игрок отмечает персонажей и записи справочника
+// (с монстрами — docs/plan/monsters-npcs.md, этап 7), свои и чужие. Порядок — порядок чипов и разделов на странице «Закладки».
 export const BOOKMARK_KINDS = [
   'character',
   'item',
   'ability',
   'effect',
+  'monster',
 ] as const;
 export type BookmarkKind = (typeof BOOKMARK_KINDS)[number];
 

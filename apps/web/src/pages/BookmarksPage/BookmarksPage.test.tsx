@@ -21,6 +21,17 @@ const bookmarks: Bookmark[] = [
   },
   { kind: 'item', targetId: 'i2', createdAt, target: null },
   {
+    kind: 'monster',
+    targetId: 'm1',
+    createdAt,
+    target: {
+      name: 'Аболет',
+      authorId: 'u2',
+      authorNickname: 'Аня',
+      image: null,
+    },
+  },
+  {
     kind: 'character',
     targetId: 'c1',
     createdAt,
@@ -64,7 +75,14 @@ describe('BookmarksPage', () => {
       'href',
       '/items/i1',
     );
-    expect(screen.getByText('Аня')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Аболет' })).toHaveAttribute(
+      'href',
+      '/monsters/m1',
+    );
+    expect(screen.getAllByText('Аня')).toHaveLength(2);
+    expect(
+      screen.getByRole('heading', { name: 'Монстры' }),
+    ).toBeInTheDocument();
 
     await userEvent
       .setup()

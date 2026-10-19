@@ -5,6 +5,7 @@ import {
   formatChallengeXp,
   type Monster,
 } from 'shared';
+import { TitleWithBookmark } from '../../bookmarks';
 import { formatMonsterKind } from '../monsterKind';
 import { formatLairXp } from './monsterCardText';
 
@@ -16,22 +17,24 @@ interface MonsterHeaderProps {
   aside: ReactNode;
 }
 
-// Кто это: название, размер и тип, роль, ПО с опытом и бонусом мастерства, автор.
-// Звёздочки закладки пока нет — закладки монстров на этапе 7 плана.
+// Кто это: название со звёздочкой закладки, размер и тип, роль, ПО с опытом и бонусом
+// мастерства, автор.
 function MonsterHeader({ monster, showHidden, aside }: MonsterHeaderProps) {
   const { statBlock } = monster;
   const { challenge } = statBlock;
   return (
     <Stack gap="xs">
-      <Title
-        order={1}
-        style={{
-          fontSize: 'min(var(--mantine-h1-font-size), 8vw)',
-          overflowWrap: 'anywhere',
-        }}
-      >
-        {monster.name}
-      </Title>
+      <TitleWithBookmark kind="monster" id={monster.id}>
+        <Title
+          order={1}
+          style={{
+            fontSize: 'min(var(--mantine-h1-font-size), 8vw)',
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {monster.name}
+        </Title>
+      </TitleWithBookmark>
       <Text c="dimmed" style={{ overflowWrap: 'anywhere' }}>
         {formatMonsterKind(monster.category, statBlock)}
       </Text>

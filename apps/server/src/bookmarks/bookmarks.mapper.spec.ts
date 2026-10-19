@@ -7,6 +7,7 @@ const empty: BookmarkRow = {
   itemId: null,
   abilityId: null,
   effectId: null,
+  monsterId: null,
   createdAt,
   name: null,
   authorId: null,
@@ -15,6 +16,7 @@ const empty: BookmarkRow = {
   itemImage: null,
   abilityImage: null,
   effectImage: null,
+  monsterImage: null,
 };
 const seen = { name: 'Меч', authorId: 'u1', authorNickname: 'Аня' };
 const imageRow = {
@@ -52,6 +54,21 @@ describe('toBookmark', () => {
     expect(
       toBookmark({ ...empty, ...seen, characterId: 'c1', mainImage }).target,
     ).toEqual({ ...seen, mainImage });
+  });
+
+  it('монстр — с картинкой своего каталога', () => {
+    expect(
+      toBookmark({
+        ...empty,
+        ...seen,
+        monsterId: 'm1',
+        monsterImage: imageRow,
+      }),
+    ).toMatchObject({
+      kind: 'monster',
+      targetId: 'm1',
+      target: { ...seen, image: { version: 3 } },
+    });
   });
 
   it('цель скрыта (автора нет) — плашка без полей цели', () => {

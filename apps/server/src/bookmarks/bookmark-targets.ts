@@ -7,11 +7,12 @@ import { characterVisibleTo } from '../characters/character-visibility.js';
 import { bookmarks, characters } from '../database/schema/index.js';
 import { EFFECT_ACCESS } from '../effects/effects.config.js';
 import { ITEM_ACCESS } from '../items/item-access.js';
+import { MONSTER_ACCESS } from '../monsters/monsters.config.js';
 
 // Для каждого вида закладки: колонка ссылки в bookmarks и проверка «цель видна этому
 // игроку» — та же, что у страницы самой цели.
 interface BookmarkTargetDef {
-  field: 'characterId' | 'itemId' | 'abilityId' | 'effectId';
+  field: 'characterId' | 'itemId' | 'abilityId' | 'effectId' | 'monsterId';
   column: PgColumn;
   table: PgTable;
   id: PgColumn;
@@ -50,5 +51,13 @@ export const BOOKMARK_TARGETS: Record<BookmarkKind, BookmarkTargetDef> = {
     id: EFFECT_ACCESS.id,
     visible: (userId: string, id: string) =>
       visibleEntry(EFFECT_ACCESS, userId, id),
+  },
+  monster: {
+    field: 'monsterId',
+    column: bookmarks.monsterId,
+    table: MONSTER_ACCESS.table,
+    id: MONSTER_ACCESS.id,
+    visible: (userId: string, id: string) =>
+      visibleEntry(MONSTER_ACCESS, userId, id),
   },
 };

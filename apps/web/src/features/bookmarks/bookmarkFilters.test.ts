@@ -55,6 +55,7 @@ describe('фильтры закладок', () => {
       item: 2,
       ability: 0,
       effect: 1,
+      monster: 0,
     });
   });
 

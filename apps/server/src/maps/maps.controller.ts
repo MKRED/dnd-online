@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import { SessionOrApiTokenGuard } from '../api-tokens/session-or-api-token.guard.js';
+import { CreateMapDto } from './dto/create-map.dto.js';
 import { MapNameDto } from './dto/map-name.dto.js';
 import { MapsService } from './maps.service.js';
 
@@ -22,8 +23,8 @@ export class MapsController {
   constructor(private readonly mapsService: MapsService) {}
 
   @Post()
-  create(@Req() req: AuthenticatedRequest, @Body() dto: MapNameDto) {
-    return this.mapsService.create(req.user.sub, dto.name);
+  create(@Req() req: AuthenticatedRequest, @Body() dto: CreateMapDto) {
+    return this.mapsService.create(req.user.sub, dto);
   }
 
   @Get()

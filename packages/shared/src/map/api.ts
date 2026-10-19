@@ -1,6 +1,7 @@
 import type { SectionAxis } from './asciiSection.js';
 import type { PackedChangeset } from './changesetPacking.js';
 import type { Box3 } from './coords.js';
+import type { MapSize } from './mapSize.js';
 import type { Palette } from './palette.js';
 
 // Ответы HTTP API карт — общие для сервера и веба.
@@ -10,6 +11,9 @@ export interface MapInfo {
   name: string;
   // Номер последней записи журнала изменений.
   seq: number;
+  // Размер карты в клетках (mapSize.ts); высота общая для всех карт.
+  width: number;
+  depth: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -49,6 +53,9 @@ export interface MapSliceResponse {
 
 export interface MapSummaryResponse {
   seq: number;
+  // Размер карты и предел высоты — где можно строить. bounds — где уже построено.
+  size: MapSize;
+  maxHeight: number;
   bounds: Box3 | null;
   blockCounts: Record<string, number>;
   chunkCount: number;

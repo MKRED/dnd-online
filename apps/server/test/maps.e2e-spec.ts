@@ -99,17 +99,120 @@ describe('карты (e2e)', () => {
     ]) {
       await ops(id, list).expect(400);
     }
-    // Размер карты появится в базе на этапе 2, до тех пор resize отклоняется.
-    const resize = await ops(id, [{ op: 'resize', grow: { east: 4 } }]).expect(
-      400,
+    // За шириной этой карты (32 × 32) — отказ с понятным сообщением.
+    const outside = await ops(id, [
+      { op: 'setBlock', at: [32, 0, 0], block: 'stone' },
+    ]).expect(400);
+    expect(JSON.stringify(outside.body)).toContain(
+      'Клетка [32, 0, 0] за границей карты 32 × 32',
     );
-    expect(JSON.stringify(resize.body)).toContain(
-      'Размер карты пока нельзя менять',
-    );
+    for (const grow of [{ west: -32 }, { east: 300 }, { up: 1 }]) {
+      await ops(id, [{ op: 'resize', grow }]).expect(400);
+    }
     await owner.post(`/api/maps/${id}/ops`).send({ ops: 'x' }).expect(400);
     await owner.get(`/api/maps/${id}/slice`).expect(400);
     const summary = await owner.get(`/api/maps/${id}/summary`).expect(200);
     expect(summary.body).toMatchObject({ seq: 0, bounds: null });
+  });
+
+  it('размер при создании: по умолчанию 32 × 32, свой — в пределах', async () => {
+    const plain = await owner.post('/api/maps').send({ name: 'Поле' });
+    expect(plain.body).toMatchObject({ width: 32, depth: 32 });
+    const sized = await owner
+      .post('/api/maps')
+      .send({ name: 'Двор', width: 10, depth: 256 })
+      .expect(201);
+    expect(sized.body).toMatchObject({ width: 10, depth: 256 });
+    const id = (sized.body as { id: string }).id;
+    const card = await owner.get(`/api/maps/${id}`).expect(200);
+    expect(card.body).toMatchObject({ width: 10, depth: 256 });
+    const summary = await owner.get(`/api/maps/${id}/summary`).expect(200);
+    expect(summary.body).toMatchObject({
+      size: { width: 10, depth: 256 },
+      maxHeight: 64,
+    });
+
+    for (const size of [
+      { width: 0 },
+      { depth: 1.5 },
+      { width: 257 },
+      { depth: '10' },
+    ]) {
+      await owner
+        .post('/api/maps')
+        .send({ name: 'Плохая', ...size })
+        .expect(400);
+    }
+  });
+
+  it('resize сдвигает блоки и меняет размер; отмена и возврат — вместе с размером', async () => {
+    const res = await owner
+      .post('/api/maps')
+      .send({ name: 'Подвал', width: 8, depth: 8 })
+      .expect(201);
+    const id = (res.body as { id: string }).id;
+    await ops(id, [
+      { op: 'fillBox', from: [0, 0, 0], to: [7, 0, 7], block: 'grass' },
+    ]).expect(200);
+
+    // Подвал: три уровня снизу, две клетки на западе, восток срезан с удалением.
+    const resized = await ops(id, [
+      { op: 'resize', grow: { down: 3, west: 2, east: -1 }, cut: 'delete' },
+    ]).expect(200);
+    expect(resized.body).toMatchObject({
+      changes: {
+        size: { before: { width: 8, depth: 8 }, after: { width: 9, depth: 8 } },
+      },
+    });
+    const sizeAndBounds = async () => {
+      const card = await owner.get(`/api/maps/${id}`).expect(200);
+      const summary = await owner.get(`/api/maps/${id}/summary`).expect(200);
+      const { width, depth } = card.body as { width: number; depth: number };
+      const { bounds, blockCounts } = summary.body as {
+        bounds: unknown;
+        blockCounts: unknown;
+      };
+      return { width, depth, bounds, blockCounts };
+    };
+    expect(await sizeAndBounds()).toEqual({
+      width: 9,
+      depth: 8,
+      bounds: { min: [2, 3, 0], max: [8, 3, 7] },
+      blockCounts: { grass: 56 },
+    });
+    // Новое место на западе уже доступно для правки.
+    await ops(id, [{ op: 'setBlock', at: [0, 0, 0], block: 'stone' }]).expect(
+      200,
+    );
+    await owner.post(`/api/maps/${id}/undo`).expect(200);
+
+    await owner.post(`/api/maps/${id}/undo`).expect(200);
+    expect(await sizeAndBounds()).toEqual({
+      width: 8,
+      depth: 8,
+      bounds: { min: [0, 0, 0], max: [7, 0, 7] },
+      blockCounts: { grass: 64 },
+    });
+    await owner.post(`/api/maps/${id}/redo`).expect(200);
+    expect(await sizeAndBounds()).toMatchObject({ width: 9, depth: 8 });
+  });
+
+  it('срез и разрез без области берут размер карты', async () => {
+    const res = await owner
+      .post('/api/maps')
+      .send({ name: 'Двор', width: 3, depth: 2 })
+      .expect(201);
+    const id = (res.body as { id: string }).id;
+    const empty = await owner.get(`/api/maps/${id}/slice?y=0`).expect(200);
+    expect((empty.body as { text: string }).text).toContain('x=0..2');
+    await ops(id, [{ op: 'setBlock', at: [1, 2, 1], block: 'stone' }]).expect(
+      200,
+    );
+    const section = await owner
+      .get(`/api/maps/${id}/section?axis=z&at=1`)
+      .expect(200);
+    expect((section.body as { text: string }).text).toContain('x=0..2');
+    expect((section.body as { text: string }).text).toContain('y=2..0');
   });
 
   it('чужая карта неотличима от несуществующей', async () => {
@@ -123,9 +226,20 @@ describe('карты (e2e)', () => {
       .post(`/api/maps/${id}/ops`)
       .send({ ops: [{ op: 'setBlock', at: [0, 0, 0], block: 'stone' }] })
       .expect(404);
+    await stranger
+      .post(`/api/maps/${id}/ops`)
+      .send({ ops: [{ op: 'resize', grow: { east: 1 } }] })
+      .expect(404);
     await stranger.post(`/api/maps/${id}/undo`).expect(404);
     await stranger.patch(`/api/maps/${id}`).send({ name: 'Моя' }).expect(404);
     await stranger.delete(`/api/maps/${id}`).expect(404);
     await t.anonymous().get('/api/maps').expect(401);
+    await t
+      .anonymous()
+      .post(`/api/maps/${id}/ops`)
+      .send({ ops: [{ op: 'resize', grow: { east: 1 } }] })
+      .expect(401);
+    const card = await owner.get(`/api/maps/${id}`).expect(200);
+    expect(card.body).toMatchObject({ width: 32, depth: 32 });
   });
 });

@@ -4,7 +4,7 @@ import { SECTION_AXES, type SectionAxis } from 'shared';
 
 // Вертикальный разрез: плоскость x = at или z = at. Диапазоны задаются парами
 // (min+max — вдоль второй горизонтальной оси, minY+maxY — по высоте) или не задаются
-// (тогда — границы карты).
+// (тогда — вся карта по горизонтали и от земли до верхнего блока по высоте).
 export class SectionQueryDto {
   @IsIn(SECTION_AXES, { message: 'axis — x или z' })
   axis: SectionAxis;

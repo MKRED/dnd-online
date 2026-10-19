@@ -12,7 +12,6 @@ import {
   renderAsciiSection,
   renderAsciiSlice,
   summarizeMap,
-  type Box3,
   type MapChunksResponse,
   type MapSectionResponse,
   type MapSliceResponse,
@@ -26,7 +25,9 @@ import type { maps } from '../database/schema/index.js';
 import { SectionQueryDto } from './dto/section-query.dto.js';
 import { SliceQueryDto } from './dto/slice-query.dto.js';
 import { findOwnedMap } from './map-access.js';
+import { MapLimitsConfig } from './map-limits.js';
 import { loadChunks } from './map-storage.js';
+import { sizeOf } from './maps.mapper.js';
 import {
   sectionBox,
   sectionRanges,
@@ -42,6 +43,7 @@ type MapRow = typeof maps.$inferSelect;
 export class MapReadService {
   constructor(
     private readonly databaseService: DatabaseService,
+    private readonly limits: MapLimitsConfig,
     @InjectPinoLogger(MapReadService.name) private readonly logger: PinoLogger,
   ) {}
 
@@ -63,6 +65,8 @@ export class MapReadService {
       const summary = summarizeMap({ store, palette: map.palette });
       return {
         seq: map.seq,
+        size: sizeOf(map),
+        maxHeight: this.limits.maxHeight,
         ...summary,
         chunkCount: [...store.keys()].length,
         palette: map.palette,
@@ -77,13 +81,7 @@ export class MapReadService {
   ): Promise<MapSliceResponse> {
     return this.read(ownerId, mapId, 'slice', async (tx, map) => {
       const { y } = query;
-      const ranges = sliceRanges(query);
-      let bounds: Box3 | null = null;
-      if (!ranges.x) {
-        bounds = await this.loadBounds(tx, map);
-        if (!bounds) return { seq: map.seq, y, text: 'Карта пустая' };
-      }
-      const region = sliceRegion(ranges, bounds);
+      const region = sliceRegion(sliceRanges(query), sizeOf(map));
       const store = await loadChunks(
         tx,
         mapId,
@@ -105,12 +103,15 @@ export class MapReadService {
     return this.read(ownerId, mapId, 'section', async (tx, map) => {
       const { axis, at } = query;
       const ranges = sectionRanges(query);
-      let bounds: Box3 | null = null;
-      if (!ranges.across || !ranges.height) {
-        bounds = await this.loadBounds(tx, map);
-        if (!bounds) return { seq: map.seq, axis, at, text: 'Карта пустая' };
+      // Без высоты разрез идёт от земли до верхнего блока: высота у карты не хранится.
+      let top: number | null = null;
+      if (!ranges.height) {
+        top = (await this.loadBounds(tx, map))?.max[1] ?? null;
+        if (top === null) {
+          return { seq: map.seq, axis, at, text: 'Карта пустая' };
+        }
       }
-      const region = sectionRegion(query, ranges, bounds);
+      const region = sectionRegion(query, ranges, sizeOf(map), top);
       const store = await loadChunks(
         tx,
         mapId,
@@ -126,7 +127,7 @@ export class MapReadService {
     });
   }
 
-  // Границы всей карты — для срезов, у которых прямоугольник не задан.
+  // Границы построенного — для разреза, у которого не задана высота.
   private async loadBounds(tx: DbTransaction, map: MapRow) {
     const store = await loadChunks(tx, map.id, 'all');
     return mapBounds(store);

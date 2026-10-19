@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import type { Box3 } from 'shared';
+import type { MapSize } from 'shared';
 import { describe, expect, it } from 'vitest';
 import type { SectionQueryDto } from './dto/section-query.dto.js';
 import {
@@ -7,33 +7,36 @@ import {
   sectionRanges,
   sectionRegion,
   sliceRanges,
+  sliceRegion,
 } from './slice-region.js';
 
-const BOUNDS: Box3 = { min: [-2, 0, 5], max: [10, 12, 20] };
+const SIZE: MapSize = { width: 11, depth: 21 };
+// Верхний занятый уровень карты.
+const TOP = 12;
 
 function region(query: SectionQueryDto) {
-  return sectionRegion(query, sectionRanges(query), BOUNDS);
+  return sectionRegion(query, sectionRanges(query), SIZE, TOP);
 }
 
 describe('sectionRegion', () => {
-  it('без диапазонов берёт границы карты по нужной оси', () => {
+  it('без диапазонов берёт размер карты по нужной оси и высоту до верхнего блока', () => {
     expect(region({ axis: 'x', at: 3 })).toEqual({
-      min: 5,
+      min: 0,
       max: 20,
       minY: 0,
       maxY: 12,
     });
     expect(region({ axis: 'z', at: 7 })).toEqual({
-      min: -2,
+      min: 0,
       max: 10,
       minY: 0,
       maxY: 12,
     });
   });
 
-  it('заданная высота важнее границ, горизонталь — из границ', () => {
+  it('заданная высота важнее верхнего блока, горизонталь — из размера', () => {
     expect(region({ axis: 'z', at: 7, minY: 1, maxY: 4 })).toEqual({
-      min: -2,
+      min: 0,
       max: 10,
       minY: 1,
       maxY: 4,
@@ -55,8 +58,19 @@ describe('sectionRegion', () => {
   it('ящик разреза лежит в плоскости at', () => {
     const query: SectionQueryDto = { axis: 'x', at: 3 };
     expect(sectionBox(query, region(query))).toEqual({
-      min: [3, 0, 5],
+      min: [3, 0, 0],
       max: [3, 12, 20],
+    });
+  });
+});
+
+describe('sliceRegion', () => {
+  it('без прямоугольника берёт всю карту', () => {
+    expect(sliceRegion(sliceRanges({ y: 0 }), SIZE)).toEqual({
+      minX: 0,
+      maxX: 10,
+      minZ: 0,
+      maxZ: 20,
     });
   });
 });

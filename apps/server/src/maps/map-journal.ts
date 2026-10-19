@@ -7,6 +7,7 @@ import {
   type ChunkStore,
   type MapEditResult,
   type MapOp,
+  type MapSize,
   type Palette,
 } from 'shared';
 import type { DbTransaction } from '../database/database.service.js';
@@ -31,6 +32,8 @@ export interface CommitInput {
   // seq карты до этой записи (строка карты заблокирована FOR UPDATE).
   currentSeq: number;
   palette: Palette;
+  // Размер карты после правки: меняет его только resize и его отмена.
+  size: MapSize;
   store: ChunkStore;
   // Чанки, которые были в БД до применения: по ним считаются созданные и удалённые.
   loadedKeys: Set<string>;
@@ -78,7 +81,12 @@ export async function commitEdit(
   });
   await tx
     .update(maps)
-    .set({ seq, palette: input.palette })
+    .set({
+      seq,
+      palette: input.palette,
+      width: input.size.width,
+      depth: input.size.depth,
+    })
     .where(eq(maps.id, mapId));
 
   return {

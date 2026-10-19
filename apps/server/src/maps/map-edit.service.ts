@@ -6,14 +6,13 @@ import {
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   applyChangeset,
-  applyOps,
   chunkKeysInBox,
+  editMap,
   isBlockOp,
   MapOpError,
   opRegion,
   parseMapOpBatch,
   unpackChangeset,
-  type BlockOp,
   type Changeset,
   type MapEditResult,
   type MapOp,
@@ -33,6 +32,7 @@ import {
 } from './map-journal.js';
 import { MapLimitsConfig } from './map-limits.js';
 import { loadChunks } from './map-storage.js';
+import { sizeOf } from './maps.mapper.js';
 
 type MapRow = typeof maps.$inferSelect;
 type EditKind = 'op' | 'undo' | 'redo';
@@ -50,13 +50,16 @@ export class MapEditService {
   applyBatch(ownerId: string, mapId: string, rawOps: unknown[]) {
     const ops = this.parse(rawOps);
     return this.edit(ownerId, mapId, 'op', async (tx, map) => {
-      const keys = new Set(ops.flatMap((op) => chunkKeysInBox(opRegion(op))));
-      const store = await loadChunks(tx, mapId, [...keys]);
+      // resize сдвигает и срезает все блоки карты — ему нужны все её чанки.
+      const keys = ops.every(isBlockOp)
+        ? [...new Set(ops.flatMap((op) => chunkKeysInBox(opRegion(op))))]
+        : 'all';
+      const store = await loadChunks(tx, mapId, keys);
       const loadedKeys = new Set(store.keys());
-      const palette = [...map.palette];
-      const applied = applyOps({ store, palette }, ops);
+      const state = { store, palette: [...map.palette], size: sizeOf(map) };
+      const applied = editMap(state, ops, this.limits);
       // Ничего не изменилось — запись в журнал не нужна, seq не двигается.
-      if (applied.cells.length === 0) {
+      if (applied.cells.length === 0 && !applied.size) {
         return {
           seq: map.seq,
           changedCells: 0,
@@ -67,8 +70,7 @@ export class MapEditService {
       }
       return commitEdit(tx, {
         ...this.commitBase(ownerId, map),
-        palette,
-        store,
+        ...state,
         loadedKeys,
         applied,
         entry: { kind: 'op', ops },
@@ -119,18 +121,13 @@ export class MapEditService {
       ...chunkKeysOfChangeset(changeset),
     ]);
     const loadedKeys = new Set(store.keys());
-    const palette = [...map.palette];
-    const { conflicts, applied } = applyChangeset(
-      { store, palette },
-      changeset,
-      'backward',
-    );
+    const state = { store, palette: [...map.palette], size: sizeOf(map) };
+    const { conflicts, applied } = applyChangeset(state, changeset, 'backward');
     // Запись пишется даже без изменений (всё в конфликтах): иначе флаг undone
     // разошёлся бы с журналом.
     const result = await commitEdit(tx, {
       ...this.commitBase(ownerId, map),
-      palette,
-      store,
+      ...state,
       loadedKeys,
       applied,
       entry,
@@ -147,20 +144,13 @@ export class MapEditService {
     };
   }
 
-  private parse(rawOps: unknown[]): BlockOp[] {
-    let ops: MapOp[];
+  private parse(rawOps: unknown[]): MapOp[] {
     try {
-      ops = parseMapOpBatch(rawOps, this.limits);
+      return parseMapOpBatch(rawOps, this.limits);
     } catch (err) {
       if (err instanceof MapOpError) throw new BadRequestException(err.message);
       throw err;
     }
-    // Размера у карт в базе пока нет — resize появится вместе с ним
-    // (docs/plan/map-editor.md, этап 2).
-    if (!ops.every(isBlockOp)) {
-      throw new BadRequestException('Размер карты пока нельзя менять');
-    }
-    return ops;
   }
 
   private async edit(

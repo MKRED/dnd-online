@@ -1,10 +1,13 @@
 import type { Character } from './character.js';
-import type { CharacterEffectEntry } from './characterEffects.js';
+import type { CharacterEffectEntry, EffectLink } from './characterEffects.js';
 import { expandConditions } from './conditionsExpand.js';
 import { DAMAGE_TYPE_LABELS } from './damageTypes.js';
 import { advantageKey, formatAdvantage } from './effectAdvantage.js';
 import { formatArmorClass } from './effectArmorClass.js';
-import { totalArmorClass } from './effectArmorClassTotal.js';
+import {
+  totalArmorClass,
+  type ArmorClassBase,
+} from './effectArmorClassTotal.js';
 import { autoFailKey, formatAutoFail } from './effectAutoFail.js';
 import type { EffectComponent } from './effectComponents.js';
 import { CONDITION_LABELS } from './effectConditions.js';
@@ -16,16 +19,19 @@ import { formatSpeed } from './effectSpeed.js';
 import {
   totalSpeed,
   type AppliedEffect,
+  type SpeedBase,
   type SpeedTotal,
 } from './effectSpeedTotal.js';
 import { conditionOf, sheetConditions } from './sheetConditions.js';
 
-// Итог листа персонажа: база из формы плюс наложенные эффекты
-// (docs/plan/done/character-effects.md). Числа пересчитываются там, где движок это умеет
+// Итог листа персонажа или карточки монстра: база из формы плюс наложенные эффекты
+// (docs/plan/done/character-effects.md, docs/plan/monsters-npcs.md). Числа пересчитываются там, где движок это умеет
 // (Скорость и Класс доспеха), остальное собирается в списки. У каждой строки — откуда она: названия
 // эффектов или состояний, для подсказки на листе.
 
 export type TotalLine = { text: string; from: string[] };
+
+type EffectLinkEntry = { id: string } & EffectLink;
 
 export type SheetTotals = {
   speed: SpeedTotal;
@@ -45,7 +51,7 @@ export type SheetTotals = {
 // На персонажа действует эффект, который видит его владелец: скрытый или удалённый
 // автором — нет (как предмет в инвентаре).
 export function activeEffects(
-  entries: readonly CharacterEffectEntry[],
+  entries: readonly EffectLinkEntry[],
 ): AppliedEffect[] {
   return entries.flatMap((entry) =>
     entry.effect && !entry.inactive
@@ -67,12 +73,30 @@ function collect() {
   };
 }
 
+// Существо без эффектов — то, что итог пересчитывает. У монстра есть и особые скорости,
+// у персонажа в форме — только обычная.
+export type CreatureBase = { speed: SpeedBase } & ArmorClassBase;
+
 export function sheetTotals(
   character: Pick<
     Character,
     'speed' | 'armorClass' | 'abilityScores' | 'effects'
   >,
   entries: readonly CharacterEffectEntry[] = character.effects,
+): SheetTotals {
+  return creatureTotals(
+    {
+      speed: { speed: character.speed },
+      armorClass: character.armorClass,
+      dexterity: character.abilityScores.dexterity,
+    },
+    entries,
+  );
+}
+
+export function creatureTotals(
+  base: CreatureBase,
+  entries: readonly EffectLinkEntry[],
 ): SheetTotals {
   const applied = activeEffects(entries);
   const names = new Map(
@@ -159,15 +183,9 @@ export function sheetTotals(
   }
 
   return {
-    speed: totalSpeed({ speed: character.speed }, applied),
+    speed: totalSpeed(base.speed, applied),
     speedChanges: speedLines.list(),
-    armorClass: totalArmorClass(
-      {
-        armorClass: character.armorClass,
-        dexterity: character.abilityScores.dexterity,
-      },
-      applied,
-    ),
+    armorClass: totalArmorClass(base, applied),
     armorClassChanges: armorClassLines.list(),
     conditions: sheetConditions(applied, expanded, nameOf),
     defenses: [...defenses.values()],

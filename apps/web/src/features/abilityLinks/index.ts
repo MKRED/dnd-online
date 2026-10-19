@@ -9,6 +9,6 @@ export type {
   AbilityLinkEntry,
   CardEntry,
 } from './abilityLinkView';
-export { useAbilityLinksEditor } from './useAbilityLinksEditor';
-export type { AbilityLinksEditor } from './useAbilityLinksEditor';
+export { useLinkEditor } from './useLinkEditor';
+export type { LinkEditor } from './useLinkEditor';
 export { default as GroupEntries } from './GroupEntries';

@@ -1,13 +1,17 @@
 import { Anchor, Badge, Box, CloseButton, Text, Tooltip } from '@mantine/core';
 import { Link } from 'react-router-dom';
-import type { CharacterEffectEntry } from 'shared';
 import { CatalogThumb } from '../../catalog';
-import { effectsCatalog } from './effectsApi';
-import { effectEntryHint, effectEntryName } from './effectsView';
+import { effectsCatalog, type EffectLinkEntry } from './effectsApi';
+import {
+  effectEntryHint,
+  effectEntryName,
+  type EffectOwnerKind,
+} from './effectsView';
 import classes from './Effects.module.css';
 
 interface EffectBadgeProps {
-  entry: CharacterEffectEntry;
+  entry: EffectLinkEntry;
+  owner: EffectOwnerKind;
   // Есть — автор может снять эффект; нет — лист только для чтения.
   onRemove?: () => void;
   busy: boolean;
@@ -16,7 +20,7 @@ interface EffectBadgeProps {
 // Плашка эффекта: миниатюра, название — ссылка на карточку, у автора крестик «Снять».
 // Подсказка — длительность из карточки. Скрытый, удалённый или не действующий эффект —
 // серая плашка: на лист он не влияет.
-function EffectBadge({ entry, onRemove, busy }: EffectBadgeProps) {
+function EffectBadge({ entry, owner, onRemove, busy }: EffectBadgeProps) {
   const { effect } = entry;
   const name = effectEntryName(entry);
   const acting = effect !== null && !entry.inactive;
@@ -51,7 +55,12 @@ function EffectBadge({ entry, onRemove, busy }: EffectBadgeProps) {
         )
       }
     >
-      <Tooltip label={effectEntryHint(entry)} multiline maw={260} withArrow>
+      <Tooltip
+        label={effectEntryHint(entry, owner)}
+        multiline
+        maw={260}
+        withArrow
+      >
         {effect ? (
           <Anchor
             component={Link}

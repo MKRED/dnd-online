@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   ConflictException,
-  HttpException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,14 +8,11 @@ import { and, eq } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { perDayFits, type MonsterAbilityEntry } from 'shared';
 import { ABILITY_ACCESS } from '../../abilities/abilities.config.js';
-import {
-  lockAuthoredEntry,
-  visibleEntry,
-} from '../../catalog/catalog-access.js';
+import { visibleEntry } from '../../catalog/catalog-access.js';
 import type { DbTransaction } from '../../database/database.service.js';
 import { DatabaseService } from '../../database/database.service.js';
 import { abilities, monsterAbilities } from '../../database/schema/index.js';
-import { MONSTER_ACCESS } from '../monsters.config.js';
+import { changeMonsterLinks } from '../monster-link-change.js';
 import { loadMonsterAbilities } from './monster-abilities-loader.js';
 import {
   MONSTER_ABILITY_ALREADY,
@@ -29,9 +25,8 @@ import {
   UpdateMonsterAbilityDto,
 } from './dto/monster-ability.dto.js';
 
-// Способности у монстра (docs/plan/monsters-npcs.md, этап 5). Меняет только автор монстра:
-// чужой опубликованный — 403, скрытый — 404, как правка записи каталога. Каждая правка
-// отдаёт список целиком.
+// Способности у монстра (docs/plan/monsters-npcs.md, этап 5). Права и ответ — общие для
+// связей монстра (changeMonsterLinks).
 @Injectable()
 export class MonsterAbilitiesService {
   constructor(
@@ -115,37 +110,19 @@ export class MonsterAbilitiesService {
     );
   }
 
-  // Правка в транзакции под блокировкой монстра автора; ответ — список целиком.
-  private async change(
+  private change(
     kind: 'add' | 'update' | 'remove',
     log: { userId: string; monsterId: string } & Record<string, unknown>,
     apply: (tx: DbTransaction) => Promise<void>,
   ): Promise<MonsterAbilityEntry[]> {
-    const t0 = Date.now();
-    const { userId, monsterId } = log;
-    try {
-      await this.databaseService.db.transaction(async (tx) => {
-        await lockAuthoredEntry(tx, MONSTER_ACCESS, userId, monsterId);
-        await apply(tx);
-      });
-      const list = await loadMonsterAbilities(
-        this.databaseService.db,
-        userId,
-        monsterId,
-      );
-      this.logger.info(
-        { ...log, kind, count: list.length, durationMs: Date.now() - t0 },
-        'Monster abilities changed',
-      );
-      return list;
-    } catch (err: unknown) {
-      // 400, 403, 404 и 409 — ответ клиенту, а не сбой.
-      if (err instanceof HttpException) throw err;
-      this.logger.error(
-        { err, ...log, kind, durationMs: Date.now() - t0 },
-        'Monster abilities change failed',
-      );
-      throw err;
-    }
+    return changeMonsterLinks({
+      databaseService: this.databaseService,
+      logger: this.logger,
+      links: 'abilities',
+      kind,
+      log,
+      apply,
+      load: loadMonsterAbilities,
+    });
   }
 }

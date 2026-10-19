@@ -1,6 +1,5 @@
 import { asc, eq, inArray } from 'drizzle-orm';
 import type { CharacterEffectEntry } from 'shared';
-import { toCatalogImage } from '../../catalog/catalog-image.mapper.js';
 import type {
   DatabaseService,
   DbTransaction,
@@ -11,18 +10,15 @@ import {
   effectImages,
   effects,
 } from '../../database/schema/index.js';
-import { toEffectFields } from '../../effects/effects.config.js';
+import { toEffectLink } from '../../effects/effect-link.js';
 
 type Db = DatabaseService['db'] | DbTransaction;
 type EntryRow = typeof characterEffects.$inferSelect;
 type EffectRow = typeof effects.$inferSelect;
 type EffectImageRow = typeof effectImages.$inferSelect;
 
-// Эффект на персонаже глазами смотрящего — по тем же правилам, что предмет в инвентаре
-// (docs/plan/done/character-inventory.md, «Ссылка, а не копия»):
-// - скрытому от смотрящего не отдаём ничего из карточки;
-// - скрытый от владельца на персонажа не действует: автор эффекта на чужом листе видит
-//   свою карточку, но строка помечена inactive.
+// Эффект на персонаже глазами смотрящего — по общим правилам эффекта на существе
+// (toEffectLink).
 export function toCharacterEffectEntry(
   entry: EntryRow,
   effect: EffectRow | null,
@@ -30,22 +26,7 @@ export function toCharacterEffectEntry(
   viewerId: string,
   ownerId: string,
 ): CharacterEffectEntry {
-  if (!effect) return { id: entry.id, effect: null, missing: 'deleted' };
-  const sees = (userId: string) =>
-    effect.authorId === userId || effect.isPublic;
-  if (!sees(viewerId)) return { id: entry.id, effect: null, missing: 'hidden' };
-  return {
-    id: entry.id,
-    effect: {
-      id: effect.id,
-      name: effect.name,
-      isPublic: effect.isPublic,
-      image: toCatalogImage(image),
-      ...toEffectFields(effect.category, effect.details, effect.extra),
-    },
-    missing: null,
-    inactive: !sees(ownerId),
-  };
+  return { id: entry.id, ...toEffectLink(effect, image, viewerId, ownerId) };
 }
 
 // Эффекты нескольких персонажей одним запросом — для списка и листа.

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CharacterEffectEntry } from './characterEffects.js';
 import type { EffectComponent } from './effectComponents.js';
-import { sheetTotals } from './sheetTotals.js';
+import { creatureTotals, sheetTotals } from './sheetTotals.js';
 
 const entry = (
   name: string,
@@ -221,5 +221,29 @@ describe('sheetTotals', () => {
       },
     ]);
     expect(totals(a, b).rolls.map((l) => l.from)).toEqual([['А'], ['Б']]);
+  });
+});
+
+// docs/plan/monsters-npcs.md, этап 6: у монстра особые скорости есть без эффектов.
+describe('creatureTotals', () => {
+  const base = {
+    speed: { speed: 10, special: { swim: 40 }, hover: false },
+    armorClass: 17,
+    dexterity: 9,
+  };
+
+  it('особые скорости базы остаются и меняются вместе со Скоростью', () => {
+    const shield = entry('Щит веры', [
+      { kind: 'armor_class', change: 'bonus', value: 2 },
+    ]);
+    expect(creatureTotals(base, [shield])).toMatchObject({
+      speed: { speed: 10, special: { swim: 40 }, hover: false },
+      armorClass: 19,
+    });
+    expect(creatureTotals(base, [haste]).speed).toEqual({
+      speed: 20,
+      special: { swim: 80 },
+      hover: false,
+    });
   });
 });

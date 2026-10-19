@@ -24,21 +24,24 @@ export interface InventoryItemCard {
 // Такую строку можно только убрать; данные карточки (даже вес) не раскрываются.
 export type InventoryMissing = 'hidden' | 'deleted';
 
+// Предмет каталога на существе глазами смотрящего — в инвентаре персонажа и в снаряжении
+// монстра.
+export type ItemLink =
+  | {
+      item: InventoryItemCard;
+      missing: null;
+      // Предмет скрыт от владельца существа, но виден смотрящему — его автору на чужом
+      // листе. Свои предметы автор видит всегда, а на существо скрытый не действует:
+      // карточка есть, в груз строка не входит (вариант Б, решено с пользователем).
+      inactive: boolean;
+    }
+  | { item: null; missing: InventoryMissing };
+
 export type InventoryEntry = {
   id: string;
   location: InventoryLocation;
   quantity: number;
-} & (
-  | {
-      item: InventoryItemCard;
-      missing: null;
-      // Предмет скрыт от владельца персонажа, но виден смотрящему — его автору на чужом
-      // листе. Свои предметы автор видит всегда, а на персонажа скрытый не действует:
-      // карточка есть, в груз строка не входит (вариант Б, решено с пользователем).
-      inactive: boolean;
-    }
-  | { item: null; missing: InventoryMissing }
-);
+} & ItemLink;
 
 // Добавить предмет каталога; тот же предмет в том же месте прибавляется к количеству.
 // unpack — набор кладётся не целиком, а своим составом × quantity; скрытые от игрока

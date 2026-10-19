@@ -6,7 +6,6 @@ import {
   formatHitDice,
   formatInitiative,
   formatSkills,
-  formatSpecialSpeeds,
   monsterTraitRows,
 } from './monsterCardText';
 
@@ -28,7 +27,7 @@ describe('тексты карточки монстра', () => {
     ).toBe('Огромный дракон');
   });
 
-  it('инициатива, хиты и скорости — как в книге', () => {
+  it('инициатива и хиты — как в книге', () => {
     expect(formatInitiative(7)).toBe('+7 (17)');
     expect(formatInitiative(-1)).toBe('−1 (9)');
     expect(formatHitDice(sampleMonster.statBlock.hitPoints)).toBe('20к10 + 40');
@@ -36,17 +35,6 @@ describe('тексты карточки монстра', () => {
       formatHitDice({ average: 1, dice: { count: 1, die: 4, bonus: -1 } }),
     ).toBe('1к4 − 1');
     expect(formatHitDice(DEFAULT_MONSTER_STAT_BLOCK.hitPoints)).toBe('1к8');
-    expect(
-      formatSpecialSpeeds({
-        ...DEFAULT_MONSTER_STAT_BLOCK.speed,
-        fly: 60,
-        hover: true,
-        swim: 40,
-      }),
-    ).toBe('полёт 60 фт (парит), плавание 40 фт');
-    expect(
-      formatSpecialSpeeds(DEFAULT_MONSTER_STAT_BLOCK.speed),
-    ).toBeUndefined();
   });
 
   it('строки защиты и чувств; пустые не показываются', () => {

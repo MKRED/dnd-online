@@ -10,20 +10,15 @@ import {
   itemImages,
   items,
 } from '../../database/schema/index.js';
-import { toCatalogImage } from '../../catalog/catalog-image.mapper.js';
+import { toItemLink } from '../../items/item-link.js';
 
 type Db = DatabaseService['db'] | DbTransaction;
 type EntryRow = typeof characterItems.$inferSelect;
 type ItemRow = typeof items.$inferSelect;
 type ItemImageRow = typeof itemImages.$inferSelect;
 
-// Строка инвентаря глазами смотрящего. Предмет видит его автор или любой — у
-// опубликованного:
-// - скрытому от смотрящего не отдаём ничего из карточки, даже id и вес (решено с
-//   пользователем);
-// - скрытый от владельца на персонажа не действует. Автор предмета на чужом листе видит
-//   свою карточку (свои предметы видны всегда), но строка помечена inactive и в груз не
-//   входит — вариант Б, решено с пользователем.
+// Строка инвентаря глазами смотрящего — по общим правилам предмета на существе
+// (toItemLink).
 export function toInventoryEntry(
   entry: EntryRow,
   item: ItemRow | null,
@@ -31,27 +26,11 @@ export function toInventoryEntry(
   viewerId: string,
   ownerId: string,
 ): InventoryEntry {
-  const base = {
+  return {
     id: entry.id,
     location: entry.location,
     quantity: entry.quantity,
-  };
-  if (!item) return { ...base, item: null, missing: 'deleted' };
-  const sees = (userId: string) => item.authorId === userId || item.isPublic;
-  if (!sees(viewerId)) return { ...base, item: null, missing: 'hidden' };
-  return {
-    ...base,
-    item: {
-      id: item.id,
-      name: item.name,
-      category: item.category,
-      rarity: item.rarity,
-      weight: item.weight,
-      isPublic: item.isPublic,
-      image: toCatalogImage(image),
-    },
-    missing: null,
-    inactive: !sees(ownerId),
+    ...toItemLink(item, image, viewerId, ownerId),
   };
 }
 

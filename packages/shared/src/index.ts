@@ -59,5 +59,6 @@ export * from './returnPath.js';
 export * from './bookmarks.js';
 export * from './monsters.js';
 export * from './monsterAbilities.js';
+export * from './monsterLinks.js';
 export * from './monsterChallenge.js';
 export * from './monsterStatBlockCheck.js';

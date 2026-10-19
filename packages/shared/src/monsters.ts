@@ -5,6 +5,7 @@ import type { ConditionKind } from './effectConditions.js';
 import type { SenseDetails } from './effectSenses.js';
 import type { MonsterAbilityEntry } from './monsterAbilities.js';
 import type { MonsterChallenge } from './monsterChallenge.js';
+import type { MonsterEffectEntry, MonsterItemEntry } from './monsterLinks.js';
 
 // Каталог монстров (docs/plan/monsters-npcs.md). Категория записи — тип существа, остальной
 // стат-блок мастер вводит готовыми числами, как в книге: приложение их не выводит. Размеры,
@@ -142,9 +143,11 @@ export interface MonsterFields {
   role: MonsterRole;
 }
 
-// Способности приходят только в карточке монстра, не в списке.
+// Способности, снаряжение и эффекты приходят только в карточке монстра, не в списке.
 export type MonsterRecordFields = MonsterFields & {
   abilities?: MonsterAbilityEntry[];
+  items?: MonsterItemEntry[];
+  effects?: MonsterEffectEntry[];
 };
 
 export type Monster = MonsterRecordFields & CatalogEntryFields;

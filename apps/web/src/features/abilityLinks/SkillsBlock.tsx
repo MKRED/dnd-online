@@ -4,14 +4,14 @@ import type { AbilityGroup, AbilityLinkEntry } from './abilityLinkView';
 import AddAbilityDialog from './AddAbilityDialog';
 import GroupEntries from './GroupEntries';
 import type { AbilityOwnerKind } from './useAbilityCandidates';
-import type { AbilityLinksEditor } from './useAbilityLinksEditor';
+import type { LinkEditor } from './useLinkEditor';
 
 interface SkillsBlockProps<E extends AbilityLinkEntry> {
   entries: E[];
   // Группы без заклинаний: те стоят в своём блоке.
   groups: AbilityGroup<E>[];
   owner: AbilityOwnerKind;
-  editor: AbilityLinksEditor<E>;
+  editor: LinkEditor<E>;
   // Есть — владелец добавляет способности; нет — только чтение.
   onAdd?: (abilityId: string, perDay: number | null) => Promise<E[]>;
   renderRow: (entry: E) => ReactNode;

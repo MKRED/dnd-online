@@ -4,7 +4,6 @@ import {
   formatSense,
   formatXp,
   type MonsterHitPoints,
-  type MonsterSpeed,
   type MonsterStatBlock,
 } from 'shared';
 import { ABILITY_LABELS, SKILL_LABELS, formatModifier } from '../../characters';
@@ -24,24 +23,6 @@ export function formatHitDice({ dice }: MonsterHitPoints): string {
   const base = `${dice.count}к${dice.die}`;
   if (dice.bonus === 0) return base;
   return `${base} ${dice.bonus > 0 ? '+' : '−'} ${Math.abs(dice.bonus)}`;
-}
-
-const SPECIAL_SPEEDS = [
-  ['burrow', 'копание'],
-  ['climb', 'лазание'],
-  ['fly', 'полёт'],
-  ['swim', 'плавание'],
-] as const;
-
-// Особые скорости строкой под ходьбой: «полёт 60 фт (парит), плавание 40 фт».
-export function formatSpecialSpeeds(speed: MonsterSpeed): string | undefined {
-  const parts = SPECIAL_SPEEDS.flatMap(([kind, label]) => {
-    const feet = speed[kind];
-    if (feet === null) return [];
-    const hover = kind === 'fly' && speed.hover ? ' (парит)' : '';
-    return [`${label} ${feet} фт${hover}`];
-  });
-  return parts.length > 0 ? parts.join(', ') : undefined;
 }
 
 // «ПО 10 · Опыт 5 900 (7 200 в логове) · БМ +4» собирает шапка; здесь — опыт в логове.

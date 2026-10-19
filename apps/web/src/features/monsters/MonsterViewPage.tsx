@@ -86,9 +86,9 @@ function MonsterViewPage() {
           monster={monster}
           showHidden={isAuthor}
           aside={authorActions}
-          onAbilitiesChange={
+          onLinksChange={
             isAuthor
-              ? (abilities) => update((prev) => ({ ...prev, abilities }))
+              ? (patch) => update((prev) => ({ ...prev, ...patch }))
               : undefined
           }
         />

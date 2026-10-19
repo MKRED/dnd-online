@@ -8,11 +8,12 @@ import {
   Text,
 } from '@mantine/core';
 import { useState } from 'react';
-import { formatEffectDuration, type CharacterEffectEntry } from 'shared';
+import { formatEffectDuration } from 'shared';
+import type { EffectLinkEntry } from './effectsApi';
 import { useEffectCandidates } from './useEffectCandidates';
 
 interface AddEffectDialogProps {
-  applied: readonly CharacterEffectEntry[];
+  applied: readonly EffectLinkEntry[];
   busy: boolean;
   error: string | null;
   onApply: (effectId: string) => Promise<boolean>;

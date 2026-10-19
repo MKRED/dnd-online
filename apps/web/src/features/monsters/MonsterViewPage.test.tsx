@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { sampleMonster } from '../../test/monsterFixture';
@@ -48,7 +49,7 @@ describe('MonsterViewPage', () => {
       '+7 (17)',
     );
     expect(screen.getByText('20к10 + 40')).toBeInTheDocument();
-    expect(screen.getByText('плавание 40 фт')).toBeInTheDocument();
+    expect(screen.getByText('Плавание 40 фт')).toBeInTheDocument();
     // Спасбросок Ловкости +3 при модификаторе −1 — владение.
     expect(screen.getByText('Спасбросок +3')).toBeInTheDocument();
     expect(screen.getByText('История +12, Восприятие +10')).toBeInTheDocument();
@@ -74,6 +75,39 @@ describe('MonsterViewPage', () => {
     expect(screen.getByRole('link', { name: '← К монстрам' })).toHaveAttribute(
       'href',
       '/monsters?tab=catalog',
+    );
+  });
+
+  it('с эффектом — итог КД и скорости, переключатель показывает стат-блок', async () => {
+    renderPage('someone-else', {
+      ...sampleMonster,
+      effects: [
+        {
+          id: 'row-skin',
+          effect: {
+            id: 'skin',
+            name: 'Каменная кожа',
+            isPublic: true,
+            image: null,
+            components: [{ kind: 'armor_class', change: 'bonus', value: 2 }],
+            duration: { kind: 'permanent' },
+            saveEnds: null,
+          },
+          missing: null,
+          inactive: false,
+        },
+      ],
+    });
+    await screen.findByRole('heading', { name: 'Аболет' });
+    expect(
+      screen.getByRole('link', { name: 'Каменная кожа' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/^Класс доспеха: 19\. Без эффектов 17\./),
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByText('Без эффектов'));
+    expect(screen.getByText('Класс доспеха').nextSibling).toHaveTextContent(
+      '17',
     );
   });
 

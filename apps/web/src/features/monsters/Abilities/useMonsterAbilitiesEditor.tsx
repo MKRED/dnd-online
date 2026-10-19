@@ -4,7 +4,7 @@ import {
   AbilityRow,
   abilitySummary,
   PerDaySelect,
-  useAbilityLinksEditor,
+  useLinkEditor,
 } from '../../abilityLinks';
 import { monsterAbilitiesApi } from './monsterAbilitiesApi';
 
@@ -14,7 +14,7 @@ export function useMonsterAbilitiesEditor(
   monsterId: string,
   onChange: ((abilities: MonsterAbilityEntry[]) => void) | undefined,
 ) {
-  const editor = useAbilityLinksEditor(onChange);
+  const editor = useLinkEditor(onChange);
   const api = monsterAbilitiesApi(monsterId);
   const { busyId, run } = editor;
 

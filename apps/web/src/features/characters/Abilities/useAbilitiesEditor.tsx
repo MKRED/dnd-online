@@ -2,7 +2,7 @@ import { canBePrepared, type CharacterAbilityEntry } from 'shared';
 import {
   abilityEntryName,
   AbilityRow,
-  useAbilityLinksEditor,
+  useLinkEditor,
 } from '../../abilityLinks';
 import { characterAbilitiesApi } from './abilitiesApi';
 import PreparedMark from './PreparedMark';
@@ -13,7 +13,7 @@ export function useAbilitiesEditor(
   characterId: string,
   onChange: ((abilities: CharacterAbilityEntry[]) => void) | undefined,
 ) {
-  const editor = useAbilityLinksEditor(onChange);
+  const editor = useLinkEditor(onChange);
   const api = characterAbilitiesApi(characterId);
   const { busyId, run } = editor;
 

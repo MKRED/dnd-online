@@ -225,6 +225,13 @@
       "when": 1792395061077,
       "tag": "0031_monster_abilities",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1792397588365,
+      "tag": "0032_monster_items_effects",
+      "breakpoints": true
     }
   ]
 }

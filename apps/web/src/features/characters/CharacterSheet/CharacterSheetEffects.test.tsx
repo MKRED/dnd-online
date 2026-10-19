@@ -121,4 +121,38 @@ describe('speedTile', () => {
     expect(speedTile(30, null)).toEqual({ value: '30 фт' });
     expect(armorClassTile(15, totals)).toEqual({ value: '15' });
   });
+
+  // У монстра особые скорости есть и без эффектов (docs/plan/monsters-npcs.md, этап 6).
+  it('свои особые скорости — не изменение', () => {
+    const swim = { special: { swim: 40 }, hover: false };
+    const totals = (speed: number, special: { swim: number }) => ({
+      speed: { speed, special, hover: false },
+      speedChanges:
+        speed === 10
+          ? []
+          : [{ text: 'Скорость вдвое больше', from: ['Ускорение'] }],
+      armorClass: 17,
+      armorClassChanges: [],
+      conditions: [],
+      defenses: [],
+      senses: [],
+      rolls: [],
+      noHealing: [],
+      perTurn: [],
+    });
+    expect(speedTile(10, null, swim)).toEqual({
+      value: '10 фт',
+      hint: 'Плавание 40 фт',
+    });
+    expect(speedTile(10, totals(10, { swim: 40 }), swim)).toEqual({
+      value: '10 фт',
+      hint: 'Плавание 40 фт',
+    });
+    expect(speedTile(10, totals(20, { swim: 80 }), swim)).toEqual({
+      value: '20 фт',
+      hint: 'Плавание 80 фт',
+      changedBy:
+        'Без эффектов 10 фт, Плавание 40 фт.\nУскорение: Скорость вдвое больше.',
+    });
+  });
 });

@@ -1,18 +1,24 @@
 import { SimpleGrid } from '@mantine/core';
-import type { MonsterStatBlock } from 'shared';
-import { StatTile } from '../../characters';
-import {
-  formatHitDice,
-  formatInitiative,
-  formatSpecialSpeeds,
-} from './monsterCardText';
+import type { MonsterStatBlock, SheetTotals } from 'shared';
+import { armorClassTile, speedTile, StatTile } from '../../characters';
+import { formatHitDice, formatInitiative } from './monsterCardText';
+import { monsterSpecials } from './monsterTotals';
 
-// Боевые числа плитками, как на листе персонажа. Эффектов у монстра пока нет — числа из
-// формы (итог с эффектами — этап 6 плана).
-function MonsterStats({ block }: { block: MonsterStatBlock }) {
+interface MonsterStatsProps {
+  block: MonsterStatBlock;
+  // Итог с эффектами; null — числа стат-блока, как их ввёл мастер.
+  totals: SheetTotals | null;
+}
+
+// Боевые числа плитками, как на листе персонажа. Эффекты пересчитывают КД и скорости,
+// изменённое выделено, подсказка объясняет почему.
+function MonsterStats({ block, totals }: MonsterStatsProps) {
   return (
     <SimpleGrid cols={{ base: 2, xs: 4 }} spacing="xs">
-      <StatTile label="Класс доспеха" value={String(block.armorClass)} />
+      <StatTile
+        label="Класс доспеха"
+        {...armorClassTile(block.armorClass, totals)}
+      />
       <StatTile label="Инициатива" value={formatInitiative(block.initiative)} />
       <StatTile
         label="Хиты"
@@ -21,8 +27,7 @@ function MonsterStats({ block }: { block: MonsterStatBlock }) {
       />
       <StatTile
         label="Скорость"
-        value={`${block.speed.walk} фт`}
-        hint={formatSpecialSpeeds(block.speed)}
+        {...speedTile(block.speed.walk, totals, monsterSpecials(block.speed))}
       />
     </SimpleGrid>
   );

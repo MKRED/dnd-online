@@ -1,15 +1,15 @@
 import { useMemo } from 'react';
-import type { CharacterEffectEntry, Effect } from 'shared';
+import type { Effect } from 'shared';
 import { useAuth } from '../../auth';
 import { useCatalogList } from '../../catalog';
-import { effectsCatalog } from './effectsApi';
+import { effectsCatalog, type EffectLinkEntry } from './effectsApi';
 import { effectCandidates } from './effectsView';
 
 const FAILED = 'Не удалось загрузить эффекты';
 
 // Варианты для поиска в окне «Наложить эффект»: «Мои эффекты» и «Каталог». Уже
 // наложенные видны, но выбрать их нельзя: эффект на персонаже — один раз.
-export function useEffectCandidates(applied: readonly CharacterEffectEntry[]) {
+export function useEffectCandidates(applied: readonly EffectLinkEntry[]) {
   const { user } = useAuth();
   const mine = useCatalogList(effectsCatalog.list, 'mine', FAILED);
   const catalog = useCatalogList(effectsCatalog.list, 'catalog', FAILED);

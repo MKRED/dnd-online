@@ -15,17 +15,19 @@ export type CharacterEffectCard = EffectFields & {
 // Почему у строки нет карточки — как у инвентаря: эффект скрыт от смотрящего или удалён.
 export type CharacterEffectMissing = 'hidden' | 'deleted';
 
-export type CharacterEffectEntry = { id: string } & (
+// Эффект каталога на существе глазами смотрящего — на персонаже и на монстре.
+export type EffectLink =
   | {
       effect: CharacterEffectCard;
       missing: null;
-      // Эффект скрыт от владельца персонажа, но виден смотрящему — его автору на чужом
-      // листе: карточка есть, но на персонажа эффект не действует (как предмет в
+      // Эффект скрыт от владельца существа, но виден смотрящему — его автору на чужом
+      // листе: карточка есть, но на существо эффект не действует (как предмет в
       // инвентаре).
       inactive: boolean;
     }
-  | { effect: null; missing: CharacterEffectMissing }
-);
+  | { effect: null; missing: CharacterEffectMissing };
+
+export type CharacterEffectEntry = { id: string } & EffectLink;
 
 // Наложить эффект каталога. Один эффект на персонаже — один раз: одно и то же
 // заклинание по книге не складывается.

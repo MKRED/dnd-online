@@ -1,10 +1,14 @@
-import {
-  formatEffectDuration,
-  type CharacterEffectEntry,
-  type Effect,
-} from 'shared';
+import { formatEffectDuration, type Effect } from 'shared';
+import type { EffectLinkEntry } from './effectsApi';
 
-export function effectEntryName(entry: CharacterEffectEntry): string {
+// На ком эффект — для подсказок плашки.
+export type EffectOwnerKind = 'character' | 'monster';
+const ON_OWNER: Record<EffectOwnerKind, string> = {
+  character: 'на персонажа',
+  monster: 'на монстра',
+};
+
+export function effectEntryName(entry: EffectLinkEntry): string {
   if (entry.effect) return entry.effect.name;
   return entry.missing === 'hidden'
     ? 'Эффект скрыт автором'
@@ -12,11 +16,14 @@ export function effectEntryName(entry: CharacterEffectEntry): string {
 }
 
 // Подсказка плашки: длительность из карточки или почему эффект не действует.
-export function effectEntryHint(entry: CharacterEffectEntry): string {
+export function effectEntryHint(
+  entry: EffectLinkEntry,
+  owner: EffectOwnerKind,
+): string {
   if (!entry.effect)
-    return 'Не действует на персонажа. Плашку можно только снять';
+    return `Не действует ${ON_OWNER[owner]}. Плашку можно только снять`;
   if (entry.inactive) {
-    return 'Вы скрыли этот эффект: на персонажа он не действует';
+    return `Вы скрыли этот эффект: ${ON_OWNER[owner]} он не действует`;
   }
   return formatEffectDuration(entry.effect.duration);
 }

@@ -4,13 +4,16 @@ import {
   cellTypeId,
   insideMap,
   readCell,
+  ROTATIONS,
   type MapOp,
   type SizedMapState,
   type Rotation,
   type Vec3,
 } from 'shared';
+import { useKeyCodes } from '../useKeyCodes';
 import {
   cellOp,
+  EDITOR_TOOLS,
   isRegionTool,
   regionOp,
   toolCell,
@@ -33,7 +36,18 @@ interface MapEditorOptions {
   redo: () => void;
   // Проверка хода: клики инструмента «Ход» уходят ей, а не в операции карты.
   walk: Pick<WalkTest, 'pick' | 'preview'>;
+  // false — инструменты спрятаны (открыта панель размера): клавиши 1–7 и R молчат.
+  keysActive: boolean;
 }
+
+// Клавиши 1–7 (и на цифровом блоке) — инструменты в порядке полосы.
+const toolKeys = (setTool: (tool: EditorTool) => void) =>
+  Object.fromEntries(
+    EDITOR_TOOLS.flatMap((tool, index) => [
+      [`Digit${index + 1}`, () => setTool(tool)],
+      [`Numpad${index + 1}`, () => setTool(tool)],
+    ]),
+  );
 
 // Состояние инструментов редактора мастера и превращение кликов по сцене в операции.
 export function useMapEditor({
@@ -42,6 +56,7 @@ export function useMapEditor({
   undo,
   redo,
   walk,
+  keysActive,
 }: MapEditorOptions) {
   const [tool, setToolState] = useState<EditorTool>('view');
   const [block, setBlock] = useState('stone');
@@ -62,6 +77,17 @@ export function useMapEditor({
     ['mod+Y', redo],
     ['Escape', () => setAnchor(null)],
   ]);
+  // Цифры и R — по месту клавиши (useKeyCodes): R в русской раскладке — это К.
+  useKeyCodes(
+    {
+      ...toolKeys(setTool),
+      KeyR: () =>
+        setRotation(
+          (r) => ROTATIONS[(ROTATIONS.indexOf(r) + 1) % ROTATIONS.length],
+        ),
+    },
+    keysActive,
+  );
 
   const { pick: walkPick, preview: walkPreview } = walk;
   const sceneEditor = useMemo<SceneEditor | null>(() => {

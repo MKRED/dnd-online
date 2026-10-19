@@ -1,0 +1,21 @@
+/* Полоса инструментов: столбец у левого края сцены, под отменой и возвратом. */
+.tools {
+  position: absolute;
+  top: calc(var(--mantine-spacing-xs) * 2 + 2.75rem);
+  left: var(--mantine-spacing-xs);
+}
+
+/* Отмена и возврат — в верхнем левом углу сцены. */
+.history {
+  position: absolute;
+  top: var(--mantine-spacing-xs);
+  left: var(--mantine-spacing-xs);
+}
+
+/* На телефоне полоса — строкой у нижнего края, ближе к большому пальцу. */
+@media (max-width: 48em) {
+  .tools {
+    top: auto;
+    bottom: var(--mantine-spacing-xs);
+  }
+}

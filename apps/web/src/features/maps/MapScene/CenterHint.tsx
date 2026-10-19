@@ -1,4 +1,5 @@
 import { ActionIcon, Group, Paper, Text, Tooltip } from '@mantine/core';
+import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import classes from './MapScene.module.css';
 
 interface CenterHintProps {
@@ -28,7 +29,7 @@ function CenterHint({ level, onShift }: CenterHintProps) {
             aria-label="Поднять центр"
             onClick={() => onShift(1)}
           >
-            ▲
+            <IconChevronUp size={16} stroke={2} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="Опустить центр (Q)" withArrow>
@@ -38,7 +39,7 @@ function CenterHint({ level, onShift }: CenterHintProps) {
             aria-label="Опустить центр"
             onClick={() => onShift(-1)}
           >
-            ▼
+            <IconChevronDown size={16} stroke={2} />
           </ActionIcon>
         </Tooltip>
       </Group>

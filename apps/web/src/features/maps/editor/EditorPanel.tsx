@@ -4,7 +4,6 @@ import {
   NumberInput,
   SegmentedControl,
   Select,
-  SimpleGrid,
   Stack,
   Text,
 } from '@mantine/core';
@@ -16,12 +15,7 @@ import {
   MATERIALS,
   ROTATIONS,
 } from 'shared';
-import {
-  EDITOR_TOOLS,
-  isRegionTool,
-  TOOL_LABELS,
-  type EditorTool,
-} from './editorTools';
+import { isRegionTool, type EditorTool } from './editorTools';
 import type { MapEditor } from './useMapEditor';
 
 // Каталог блоков, сгруппированный по материалу.
@@ -46,40 +40,18 @@ const HINTS: Record<EditorTool, string> = {
 
 interface EditorPanelProps {
   editor: MapEditor;
-  busy: boolean;
-  onUndo: () => void;
-  onRedo: () => void;
   // Настройки проверки хода — показываются при инструменте «Ход».
   walkPanel: ReactNode;
 }
 
-// Инструменты редактора мастера в правой панели страницы карты.
-function EditorPanel({
-  editor,
-  busy,
-  onUndo,
-  onRedo,
-  walkPanel,
-}: EditorPanelProps) {
+// Свойства выбранного инструмента в правой панели страницы карты; сами инструменты,
+// отмена и возврат — на сцене (SceneToolbar).
+function EditorPanel({ editor, walkPanel }: EditorPanelProps) {
   const { tool, anchor } = editor;
   const builds = tool !== 'view' && tool !== 'erase' && tool !== 'walk';
 
   return (
     <Stack gap="sm">
-      <SimpleGrid cols={3} spacing={6}>
-        {EDITOR_TOOLS.map((value) => (
-          <Button
-            key={value}
-            size="xs"
-            variant={tool === value ? 'filled' : 'default'}
-            aria-pressed={tool === value}
-            onClick={() => editor.setTool(value)}
-          >
-            {TOOL_LABELS[value]}
-          </Button>
-        ))}
-      </SimpleGrid>
-
       {builds && (
         <Select
           label="Блок"
@@ -94,7 +66,7 @@ function EditorPanel({
 
       {builds && getBlock(editor.block)?.shape !== 'cube' && (
         <Stack gap={4}>
-          <Text size="sm">Поворот (по часовой, 0° — к северу)</Text>
+          <Text size="sm">Поворот (R) — по часовой, 0° — к северу</Text>
           <SegmentedControl
             size="xs"
             data={ROTATIONS.map((r) => ({ value: String(r), label: `${r}°` }))}
@@ -144,19 +116,10 @@ function EditorPanel({
             flex="none"
             onClick={editor.cancelRegion}
           >
-            Сбросить
+            Сбросить (Esc)
           </Button>
         </Group>
       )}
-
-      <Group gap="xs" grow>
-        <Button variant="default" size="xs" disabled={busy} onClick={onUndo}>
-          Отменить
-        </Button>
-        <Button variant="default" size="xs" disabled={busy} onClick={onRedo}>
-          Вернуть
-        </Button>
-      </Group>
     </Stack>
   );
 }

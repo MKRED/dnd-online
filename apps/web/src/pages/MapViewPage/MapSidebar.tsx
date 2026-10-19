@@ -1,14 +1,16 @@
 import {
+  ActionIcon,
   Alert,
   Anchor,
-  Button,
   Divider,
   Group,
   Slider,
   Stack,
   Text,
   Title,
+  Tooltip,
 } from '@mantine/core';
+import { IconSettings } from '@tabler/icons-react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { MapSize } from 'shared';
@@ -21,7 +23,7 @@ interface MapSidebarProps {
   size: MapSize | null;
   // Открыть панель «Размер карты»; null — она уже открыта.
   onEditSize: (() => void) | null;
-  // Заголовок над панелью: «Редактор» или «Размер карты».
+  // Заголовок над панелью: название инструмента или «Размер карты».
   panelTitle: string;
   // Карта не загрузилась — сцены нет.
   loadError: string | null;
@@ -38,7 +40,8 @@ interface MapSidebarProps {
   children: ReactNode;
 }
 
-// Правая панель страницы карты: всё управление, чтобы сцена занимала остальной экран.
+// Правая панель страницы карты: карта, свойства инструмента и срез. Сами инструменты —
+// на сцене (SceneToolbar), чтобы до них было ближе от того, что правишь.
 function MapSidebar({
   name,
   size,
@@ -67,9 +70,15 @@ function MapSidebar({
           <Group justify="space-between" gap="xs" wrap="nowrap">
             <Text size="sm">{mapSizeLabel(size)}</Text>
             {onEditSize && (
-              <Button size="compact-xs" variant="subtle" onClick={onEditSize}>
-                Изменить
-              </Button>
+              <Tooltip label="Изменить размер карты" withArrow>
+                <ActionIcon
+                  variant="subtle"
+                  aria-label="Изменить размер карты"
+                  onClick={onEditSize}
+                >
+                  <IconSettings size={18} stroke={1.75} />
+                </ActionIcon>
+              </Tooltip>
             )}
           </Group>
         )}
@@ -89,10 +98,20 @@ function MapSidebar({
 
         {empty && (
           <Text c="dimmed" size="sm">
-            Карта пустая. Выберите инструмент «Блок» и кликните по сетке.
+            Карта пустая. Выберите инструмент «Блок» (клавиша 2) и кликните по
+            сетке.
           </Text>
         )}
 
+        {loaded && (
+          <>
+            <Divider label={panelTitle} labelPosition="left" />
+            {editError && <Alert color="red">{editError}</Alert>}
+            {children}
+          </>
+        )}
+
+        {/* Срез — внизу, под свойствами инструмента: его трогают реже, чем блок и поворот. */}
         {cut && (
           <Stack gap={4}>
             <Text size="sm">Срез по высоте: {cut.value}</Text>
@@ -105,14 +124,6 @@ function MapSidebar({
               thumbLabel="Срез по высоте"
             />
           </Stack>
-        )}
-
-        {loaded && (
-          <>
-            <Divider label={panelTitle} labelPosition="left" />
-            {editError && <Alert color="red">{editError}</Alert>}
-            {children}
-          </>
         )}
       </Stack>
     </aside>

@@ -13,7 +13,12 @@ import {
   parseCutY,
   placeCamera,
 } from '../../features/maps/cameraView';
-import { EditorPanel, useMapEditor } from '../../features/maps/editor';
+import {
+  EditorPanel,
+  SceneToolbar,
+  TOOL_LABELS,
+  useMapEditor,
+} from '../../features/maps/editor';
 import { useWalkTest, WalkTestPanel } from '../../features/maps/walkTest';
 import MapSidebar from './MapSidebar';
 import classes from './MapViewPage.module.css';
@@ -28,18 +33,19 @@ function MapViewPage() {
     useMapData(id);
   usePageTitle(map?.info.name ?? 'Карта');
   const walk = useWalkTest(map?.state ?? null);
+  // Открытая панель «Размер карты» с набранным изменением; null — панель закрыта.
+  const [sizeDraft, setSizeDraft] = useState<ResizeDraft | null>(null);
   const editor = useMapEditor({
     state: map?.state ?? null,
     applyOps,
     undo,
     redo,
     walk,
+    keysActive: sizeDraft === null,
   });
   // Сцена монтируется заново только при смене карты, и первый кадр (FirstFrame)
   // приходит один раз на монтирование — поэтому готовность помним по id карты.
   const [readyMapId, setReadyMapId] = useState<string | null>(null);
-  // Открытая панель «Размер карты» с набранным изменением; null — панель закрыта.
-  const [sizeDraft, setSizeDraft] = useState<ResizeDraft | null>(null);
   // Срез и камера живут в адресе страницы (?y=3&view=north), чтобы одна ссылка
   // всегда давала одну и ту же картинку — см. cameraView.ts.
   const [searchParams, setSearchParams] = useSearchParams();
@@ -119,13 +125,23 @@ function MapViewPage() {
             />
           </Suspense>
         )}
+        {/* Пока открыта панель размера, инструменты спрятаны: сцена ничего не правит. */}
+        {map && !sizeDraft && (
+          <SceneToolbar
+            tool={editor.tool}
+            onTool={editor.setTool}
+            busy={busy}
+            onUndo={undo}
+            onRedo={redo}
+          />
+        )}
       </div>
 
       <MapSidebar
         name={map?.info.name ?? 'Карта'}
         size={map?.state.size ?? null}
         onEditSize={sizeDraft ? null : () => setSizeDraft(EMPTY_DRAFT)}
-        panelTitle={sizeDraft ? 'Размер карты' : 'Редактор'}
+        panelTitle={sizeDraft ? 'Размер карты' : TOOL_LABELS[editor.tool]}
         loadError={loadError}
         editError={editError}
         cut={
@@ -154,9 +170,6 @@ function MapViewPage() {
         ) : (
           <EditorPanel
             editor={editor}
-            busy={busy}
-            onUndo={undo}
-            onRedo={redo}
             walkPanel={<WalkTestPanel walk={walk} />}
           />
         )}

@@ -249,7 +249,9 @@ describe('MapViewPage', () => {
     expect(
       await screen.findByText('32 × 32 клеток (160 × 160 фт)'),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Изменить' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Изменить размер карты' }),
+    );
     const apply = screen.getByRole('button', { name: 'Применить' });
     expect(apply).toBeDisabled();
     // Пока панель открыта, инструменты спрятаны и сцена ничего не правит.
@@ -284,13 +286,43 @@ describe('MapViewPage', () => {
     renderPage();
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole('button', { name: 'Изменить' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Изменить размер карты' }),
+    );
     await user.clear(screen.getByRole('textbox', { name: 'Запад' }));
     await user.type(screen.getByRole('textbox', { name: 'Запад' }), '-1');
 
     expect(screen.getByText(/Удалится блоков: 5/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Отмена' }));
     expect(screen.getByRole('button', { name: 'Блок' })).toBeInTheDocument();
+  });
+
+  it('клавиши 1–7 выбирают инструмент, пока не открыта панель размера', async () => {
+    stubFetch([
+      { status: 200, body: info },
+      { status: 200, body: towerChunks() },
+    ]);
+    renderPage();
+    const user = userEvent.setup();
+    const pressed = (name: string) =>
+      screen.getByRole('button', { name }).getAttribute('aria-pressed');
+
+    await screen.findByRole('button', { name: 'Ластик' });
+    expect(screen.getByRole('separator')).toHaveTextContent('Просмотр');
+    // По месту клавиши: цифры на основном ряду и на цифровом блоке.
+    await user.keyboard('[Digit3]');
+    expect(pressed('Ластик')).toBe('true');
+    expect(screen.getByRole('separator')).toHaveTextContent('Ластик');
+    await user.keyboard('[Numpad2]');
+    expect(pressed('Блок')).toBe('true');
+
+    await user.click(
+      screen.getByRole('button', { name: 'Изменить размер карты' }),
+    );
+    expect(screen.queryByRole('button', { name: 'Ластик' })).toBeNull();
+    await user.keyboard('[Digit3]');
+    await user.click(screen.getByRole('button', { name: 'Отмена' }));
+    expect(pressed('Блок')).toBe('true');
   });
 
   it('показывает «Карта не найдена» на 404', async () => {

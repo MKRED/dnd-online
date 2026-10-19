@@ -5,6 +5,9 @@
   height: 100%;
 }
 
+/* Подписи поверх сцены. Полоса инструментов страницы занимает левый край на компьютере
+   и нижний на телефоне — подписи их обходят (см. editor/SceneToolbar). */
+
 /* «Центр: y = N» в правом верхнем углу сцены. */
 .centerHint {
   position: absolute;
@@ -23,4 +26,19 @@
   font-weight: 600;
   color: #fff;
   background: rgb(0 0 0 / 65%);
+}
+
+/* Клетка под курсором и размер области — внизу сцены, правее полосы инструментов. */
+.readout {
+  position: absolute;
+  bottom: var(--mantine-spacing-xs);
+  left: calc(var(--mantine-spacing-xs) * 2 + 2.75rem);
+}
+
+/* На телефоне полоса — строкой внизу, подпись поднимается над ней. */
+@media (max-width: 48em) {
+  .readout {
+    left: var(--mantine-spacing-xs);
+    bottom: calc(var(--mantine-spacing-xs) * 2 + 2.75rem);
+  }
 }

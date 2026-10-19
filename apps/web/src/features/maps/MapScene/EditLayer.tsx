@@ -2,6 +2,7 @@ import type { ThreeEvent } from '@react-three/fiber';
 import { useState, type ReactNode } from 'react';
 import { insideMap, type Box3, type MapSize, type Vec3 } from 'shared';
 import type { Point } from '../cameraView';
+import { readoutCell } from '../editor/cellReadout';
 import {
   cellsFromHit,
   regionBox,
@@ -11,6 +12,7 @@ import {
 } from '../editor/editorTools';
 import FrameBox from './FrameBox';
 import GroundGrid from './GroundGrid';
+import type { HoverStore } from './hoverStore';
 import WalkHoverMesh from './WalkHoverMesh';
 
 interface EditLayerProps {
@@ -21,6 +23,8 @@ interface EditLayerProps {
   children: ReactNode;
   // Перенести центр камеры в точку: двойной клик в «Просмотре», Alt+клик в любом инструменте.
   onFocus: (point: Point) => void;
+  // Клетка под курсором для строки координат — при любом инструменте, и в «Просмотре».
+  readout: HoverStore;
 }
 
 // Сдвиг мыши (px) между нажатием и отпусканием, после которого клик считается
@@ -88,7 +92,13 @@ function CellHighlight({
 // Слой редактора: клики по блокам и земле превращаются в выбор клеток.
 // Наведение живёт здесь, а не на странице: иначе каждое движение мыши
 // перерисовывало бы всю страницу с панелью.
-function EditLayer({ editor, size, children, onFocus }: EditLayerProps) {
+function EditLayer({
+  editor,
+  size,
+  children,
+  onFocus,
+  readout,
+}: EditLayerProps) {
   const [hover, setHover] = useState<PickedCells | null>(null);
 
   const updateHover = (pick: PickedCells | null) =>
@@ -98,15 +108,17 @@ function EditLayer({ editor, size, children, onFocus }: EditLayerProps) {
     <>
       {/* Группа одна и та же в обоих режимах: смена инструмента не пересоздаёт меши чанков. */}
       <group
-        onPointerMove={
-          editor
-            ? (event) => {
-                event.stopPropagation();
-                updateHover(pickFrom(event));
-              }
-            : undefined
-        }
-        onPointerOut={editor ? () => updateHover(null) : undefined}
+        onPointerMove={(event) => {
+          event.stopPropagation();
+          const pick = pickFrom(event);
+          const cell = readoutCell(editor?.tool ?? 'view', pick);
+          readout.set(cell && insideMap(cell, size) ? cell : null);
+          if (editor) updateHover(pick);
+        }}
+        onPointerOut={() => {
+          readout.set(null);
+          if (editor) updateHover(null);
+        }}
         onClick={(event) => {
           event.stopPropagation();
           if (event.delta > DRAG_THRESHOLD) return;

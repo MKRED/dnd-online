@@ -5,16 +5,18 @@ import { useCallback, useRef, useState } from 'react';
 import type { ResizeOp, SizedMapState } from 'shared';
 import type { CameraPlacement, Point } from '../cameraView';
 import type { SceneEditor } from '../editor/editorTools';
+import { useKeyCodes } from '../useKeyCodes';
 import type { WalkScene } from '../walkTest';
 import WalkLayer from './WalkLayer';
 import CameraFocus, { type CameraFocusApi } from './CameraFocus';
 import CameraRig from './CameraRig';
 import CenterHint from './CenterHint';
+import CursorReadout from './CursorReadout';
+import { createHoverStore } from './hoverStore';
 import EditLayer from './EditLayer';
 import FirstFrame from './FirstFrame';
 import ResizePreview from './ResizePreview';
 import ChunkMesh from './ChunkMesh';
-import { useCameraKeys } from './useCameraKeys';
 import { useChunkMeshes } from './useChunkMeshes';
 import classes from './MapScene.module.css';
 
@@ -54,6 +56,7 @@ function MapScene({
   // Q/E — снаружи, в обычном DOM; связывает их этот ref.
   const focus = useRef<CameraFocusApi | null>(null);
   const [centerLevel, setCenterLevel] = useState<number | null>(null);
+  const [hover] = useState(createHoverStore);
   const shiftLevel = useCallback(
     (dy: number) => focus.current?.shiftLevel(dy),
     [],
@@ -62,7 +65,8 @@ function MapScene({
     (point: Point) => focus.current?.focusOn(point),
     [],
   );
-  useCameraKeys(shiftLevel);
+  // Q опускает центр камеры, E поднимает (docs/plan/map-editor.md, «Камера»).
+  useKeyCodes({ KeyQ: () => shiftLevel(-1), KeyE: () => shiftLevel(1) });
 
   return (
     <div className={classes.canvas}>
@@ -73,7 +77,12 @@ function MapScene({
         <color attach="background" args={[SCENE_BACKGROUND[scheme]]} />
         <hemisphereLight args={['#ffffff', '#3a3530', 0.9]} />
         <directionalLight position={[40, 80, 30]} intensity={1.6} />
-        <EditLayer editor={editor} size={map.size} onFocus={focusOn}>
+        <EditLayer
+          editor={editor}
+          size={map.size}
+          onFocus={focusOn}
+          readout={hover}
+        >
           {[...chunks].map(([key, { meshes }]) => (
             <group key={key}>
               {meshes.opaque && (
@@ -98,6 +107,7 @@ function MapScene({
         <FirstFrame onReady={onReady} />
       </Canvas>
       <CenterHint level={centerLevel} onShift={shiftLevel} />
+      <CursorReadout hover={hover} editor={editor} />
     </div>
   );
 }

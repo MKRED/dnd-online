@@ -1,4 +1,4 @@
-import { Loader } from '@mantine/core';
+import { Loader, VisuallyHidden } from '@mantine/core';
 import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { mapBounds } from 'shared';
@@ -135,12 +135,20 @@ function MapViewPage() {
             onRedo={redo}
           />
         )}
+        {/* Готовность сцены не видна глазу, но её ждёт агент в браузере перед снимком
+            (docs/mcp.md), а скринридер читает её как статус. */}
+        {map && (
+          <VisuallyHidden role="status">
+            {readyMapId === id ? 'Сцена готова' : 'Загрузка сцены…'}
+          </VisuallyHidden>
+        )}
       </div>
 
       <MapSidebar
         name={map?.info.name ?? 'Карта'}
         size={map?.state.size ?? null}
         onEditSize={sizeDraft ? null : () => setSizeDraft(EMPTY_DRAFT)}
+        showInfo={editor.tool === 'view'}
         panelTitle={sizeDraft ? 'Размер карты' : TOOL_LABELS[editor.tool]}
         loadError={loadError}
         editError={editError}
@@ -152,7 +160,6 @@ function MapViewPage() {
         onCutChange={handleCutChange}
         loaded={map !== null}
         empty={map !== null && bounds === null}
-        sceneReady={readyMapId === id}
       >
         {map && sizeDraft ? (
           <MapSizePanel

@@ -23,6 +23,9 @@ interface MapSidebarProps {
   size: MapSize | null;
   // Открыть панель «Размер карты»; null — она уже открыта.
   onEditSize: (() => void) | null;
+  // Название и размер карты — только в «Просмотре»: с инструментом правки панель
+  // отдана его свойствам, а название и так в заголовке вкладки.
+  showInfo: boolean;
   // Заголовок над панелью: название инструмента или «Размер карты».
   panelTitle: string;
   // Карта не загрузилась — сцены нет.
@@ -35,7 +38,6 @@ interface MapSidebarProps {
   loaded: boolean;
   // Карта загружена, но в ней нет ни одного блока.
   empty: boolean;
-  sceneReady: boolean;
   // Инструменты редактора.
   children: ReactNode;
 }
@@ -46,6 +48,7 @@ function MapSidebar({
   name,
   size,
   onEditSize,
+  showInfo,
   panelTitle,
   loadError,
   editError,
@@ -53,20 +56,21 @@ function MapSidebar({
   onCutChange,
   loaded,
   empty,
-  sceneReady,
   children,
 }: MapSidebarProps) {
   return (
     <aside className={classes.sidebar}>
       <Stack gap="md">
-        <Group justify="space-between" align="baseline" wrap="nowrap">
-          <Title order={3}>{name}</Title>
-          <Anchor component={Link} to="/maps" size="sm">
-            Все карты
-          </Anchor>
-        </Group>
+        {showInfo && (
+          <Group justify="space-between" align="baseline" wrap="nowrap">
+            <Title order={3}>{name}</Title>
+            <Anchor component={Link} to="/maps" size="sm">
+              Все карты
+            </Anchor>
+          </Group>
+        )}
 
-        {size && (
+        {showInfo && size && (
           <Group justify="space-between" gap="xs" wrap="nowrap">
             <Text size="sm">{mapSizeLabel(size)}</Text>
             {onEditSize && (
@@ -87,13 +91,6 @@ function MapSidebar({
           <Alert color="red" title="Ошибка">
             {loadError}
           </Alert>
-        )}
-
-        {/* «Сцена готова» — сигнал для агента в браузере, что снимок можно делать. */}
-        {loaded && (
-          <Text size="xs" c="dimmed">
-            {sceneReady ? 'Сцена готова.' : 'Загрузка сцены…'}
-          </Text>
         )}
 
         {empty && (

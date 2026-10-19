@@ -126,7 +126,26 @@ describe('MapViewPage', () => {
     expect(await screen.findByText('Сцена, срез Infinity')).toBeInTheDocument();
     expect(screen.getByText('Срез по высоте: 4')).toBeInTheDocument();
     expect(screen.getByText('Подземелье')).toBeInTheDocument();
-    expect(await screen.findByText(/^Сцена готова/)).toBeInTheDocument();
+    // Готовность — невидимый статус для агента в браузере, не текст на панели.
+    expect(await screen.findByRole('status')).toHaveTextContent('Сцена готова');
+  });
+
+  it('название и размер карты — только в «Просмотре»', async () => {
+    stubFetch([
+      { status: 200, body: info },
+      { status: 200, body: towerChunks() },
+    ]);
+    renderPage();
+    const user = userEvent.setup();
+
+    expect(await screen.findByText('Подземелье')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Блок' }));
+    expect(screen.queryByText('Подземелье')).toBeNull();
+    expect(screen.queryByText('32 × 32 клеток (160 × 160 фт)')).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Просмотр' }));
+    expect(
+      screen.getByText('32 × 32 клеток (160 × 160 фт)'),
+    ).toBeInTheDocument();
   });
 
   it('берёт срез из адреса страницы и прижимает его к границам', async () => {
@@ -177,7 +196,7 @@ describe('MapViewPage', () => {
       ops: [{ op: 'setBlock', at: [1, 0, 1], block: 'stone', rotation: 0 }],
     });
     // Сцена не перемонтировалась — «Сцена готова» остаётся.
-    expect(screen.getByText('Сцена готова.')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Сцена готова');
   });
 
   it('перечитывает карту, если между правками были чужие', async () => {
@@ -315,6 +334,8 @@ describe('MapViewPage', () => {
     expect(screen.getByRole('separator')).toHaveTextContent('Ластик');
     await user.keyboard('[Numpad2]');
     expect(pressed('Блок')).toBe('true');
+    // Размер карты меняется из «Просмотра»: только там видна ⚙.
+    await user.keyboard('[Digit1]');
 
     await user.click(
       screen.getByRole('button', { name: 'Изменить размер карты' }),
@@ -322,7 +343,7 @@ describe('MapViewPage', () => {
     expect(screen.queryByRole('button', { name: 'Ластик' })).toBeNull();
     await user.keyboard('[Digit3]');
     await user.click(screen.getByRole('button', { name: 'Отмена' }));
-    expect(pressed('Блок')).toBe('true');
+    expect(pressed('Просмотр')).toBe('true');
   });
 
   it('показывает «Карта не найдена» на 404', async () => {

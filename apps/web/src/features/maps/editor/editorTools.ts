@@ -2,7 +2,7 @@ import {
   AIR_NAME,
   boxFromCorners,
   type Box3,
-  type MapOp,
+  type BlockOp,
   type Point3,
   type Rotation,
   type Vec3,
@@ -94,7 +94,7 @@ export function cellOp(
   tool: 'place' | 'erase',
   at: Vec3,
   { block, rotation }: ToolSettings,
-): MapOp {
+): BlockOp {
   return tool === 'place'
     ? { op: 'setBlock', at, block, rotation }
     : { op: 'setBlock', at, block: AIR_NAME };
@@ -107,7 +107,7 @@ export function regionOp(
   b: Vec3,
   { block, rotation, height }: ToolSettings,
   match: string | null,
-): MapOp {
+): BlockOp {
   const { min: from, max: to } = regionBox(a, b, height);
   switch (tool) {
     case 'fill':

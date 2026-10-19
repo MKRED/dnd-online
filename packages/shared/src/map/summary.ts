@@ -5,7 +5,7 @@ import { blockNameOf } from './palette.js';
 import type { MapState } from './mapState.js';
 
 // Перебирает все непустые клетки карты (воздух пропускается).
-function* solidCells(store: ChunkStore) {
+export function* solidCells(store: ChunkStore) {
   for (const key of store.keys()) {
     const chunk = store.get(key);
     if (!chunk) continue;
@@ -18,8 +18,8 @@ function* solidCells(store: ChunkStore) {
   }
 }
 
-// Точные границы карты по непустым клеткам; null — карта пустая. Карта растущая,
-// поэтому границы не хранятся, а вычисляются.
+// Точные границы непустых клеток; null — карта пустая. Это габарит построенного,
+// а не размер карты (mapSize.ts): он вычисляется, а не хранится.
 export function mapBounds(store: ChunkStore): Box3 | null {
   let bounds: { min: number[]; max: number[] } | null = null;
   for (const { cell } of solidCells(store)) {

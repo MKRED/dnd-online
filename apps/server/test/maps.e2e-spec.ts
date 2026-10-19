@@ -92,9 +92,20 @@ describe('карты (e2e)', () => {
       [{ op: 'setBlock', at: [0, 0, 0], block: 'cheese' }],
       [{ op: 'explode', at: [0, 0, 0] }],
       [{ op: 'setBlock', at: [0.5, 0, 0], block: 'stone' }],
+      // Координаты от нуля и до общих пределов (docs/plan/map-editor.md).
+      [{ op: 'setBlock', at: [-1, 0, 0], block: 'stone' }],
+      [{ op: 'setBlock', at: [0, 64, 0], block: 'stone' }],
+      [{ op: 'setBlock', at: [256, 0, 0], block: 'stone' }],
     ]) {
       await ops(id, list).expect(400);
     }
+    // Размер карты появится в базе на этапе 2, до тех пор resize отклоняется.
+    const resize = await ops(id, [{ op: 'resize', grow: { east: 4 } }]).expect(
+      400,
+    );
+    expect(JSON.stringify(resize.body)).toContain(
+      'Размер карты пока нельзя менять',
+    );
     await owner.post(`/api/maps/${id}/ops`).send({ ops: 'x' }).expect(400);
     await owner.get(`/api/maps/${id}/slice`).expect(400);
     const summary = await owner.get(`/api/maps/${id}/summary`).expect(200);

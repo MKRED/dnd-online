@@ -3,14 +3,14 @@ import {
   cellLocation,
   createPalette,
   MemoryChunkStore,
-  type MapOp,
+  type BlockOp,
   type MapState,
 } from 'shared';
 import { describe, expect, it } from 'vitest';
 import { createBlockLookup } from './blockLookup';
 import { buildChunkMesh, type MeshBuffers } from './buildChunkMesh';
 
-function mapWith(ops: MapOp[]): MapState {
+function mapWith(ops: BlockOp[]): MapState {
   const map: MapState = {
     store: new MemoryChunkStore(),
     palette: createPalette(),
@@ -40,7 +40,7 @@ function topFaces(buffers: MeshBuffers): number {
   return count;
 }
 
-const set = (at: [number, number, number], block: string): MapOp => ({
+const set = (at: [number, number, number], block: string): BlockOp => ({
   op: 'setBlock',
   at,
   block,

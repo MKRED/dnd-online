@@ -1,11 +1,14 @@
 import { applyOp } from './applyOp.js';
-import type { CellChange, Changeset } from './changeset.js';
-import { boxVolume, type Vec3 } from './coords.js';
+import type { Changeset } from './changeset.js';
+import { mergeChangesets } from './changesetMerge.js';
+import { boxVolume } from './coords.js';
 import type { MapState } from './mapState.js';
 import {
+  isBlockOp,
   MapOpError,
   opRegion,
   parseMapOp,
+  type BlockOp,
   type MapLimits,
   type MapOp,
 } from './ops.js';
@@ -31,17 +34,12 @@ export function parseMapOpBatch(
       `В пачке ${input.length} операций, максимум — ${limits.maxOpsPerBatch}`,
     );
   }
-  const ops = input.map((item, index) => {
-    try {
-      return parseMapOp(item, limits);
-    } catch (err) {
-      if (err instanceof MapOpError) {
-        throw new MapOpError(`Операция №${index + 1}: ${err.message}`);
-      }
-      throw err;
-    }
-  });
-  const volume = ops.reduce((sum, op) => sum + boxVolume(opRegion(op)), 0);
+  const ops = input.map((item, index) =>
+    numbered(index, () => parseMapOp(item, limits)),
+  );
+  const volume = ops
+    .filter(isBlockOp)
+    .reduce((sum, op) => sum + boxVolume(opRegion(op)), 0);
   if (volume > limits.maxBatchVolume) {
     throw new MapOpError(
       `Пачка затрагивает ${volume} клеток, максимум — ${limits.maxBatchVolume}`,
@@ -50,24 +48,20 @@ export function parseMapOpBatch(
   return ops;
 }
 
-// Применяет пачку как одну единицу undo: по каждой клетке остаётся первое «до» и
-// последнее «после», клетки, вернувшиеся к исходному значению, выпадают.
-export function applyOps(state: MapState, ops: MapOp[]): Changeset {
-  const merged = new Map<string, CellChange>();
-  const paletteAdded: Changeset['paletteAdded'] = [];
-  for (const op of ops) {
-    const changes = applyOp(state, op);
-    paletteAdded.push(...changes.paletteAdded);
-    for (const change of changes.cells) {
-      const id = cellId(change.at);
-      const previous = merged.get(id);
-      merged.set(id, previous ? { ...previous, after: change.after } : change);
+// Ошибка операции из пачки называет её номер: в пачке их может быть сотня.
+export function numbered<T>(index: number, run: () => T): T {
+  try {
+    return run();
+  } catch (err) {
+    if (err instanceof MapOpError) {
+      throw new MapOpError(`Операция №${index + 1}: ${err.message}`);
     }
+    throw err;
   }
-  const cells = [...merged.values()].filter((c) => c.before !== c.after);
-  return { cells, paletteAdded };
 }
 
-function cellId([x, y, z]: Vec3): string {
-  return `${x},${y},${z}`;
+// Применяет пачку операций над блоками как одну единицу undo, не глядя на размер
+// карты: так строятся карты в тестах и правилах. Настоящую карту правит editMap.
+export function applyOps(state: MapState, ops: BlockOp[]): Changeset {
+  return mergeChangesets(ops.map((op) => applyOp(state, op)));
 }

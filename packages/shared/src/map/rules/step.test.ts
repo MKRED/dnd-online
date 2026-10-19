@@ -3,12 +3,12 @@ import { applyOp } from '../applyOp.js';
 import { MemoryChunkStore } from '../chunkStore.js';
 import type { Vec3 } from '../coords.js';
 import type { MapState } from '../mapState.js';
-import type { MapOp } from '../ops.js';
+import type { BlockOp } from '../ops.js';
 import { createPalette } from '../palette.js';
 import { stepCost } from './step.js';
 
 // Пол из земли под y = 0 и операции поверх него.
-function floorWith(...ops: MapOp[]): MapState {
+function floorWith(...ops: BlockOp[]): MapState {
   const map = { store: new MemoryChunkStore(), palette: createPalette() };
   applyOp(map, {
     op: 'fillBox',

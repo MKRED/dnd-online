@@ -3,7 +3,7 @@ import type { Changeset, CellChange, PaletteAddition } from './changeset.js';
 import { cellsInBox, chunkKeysInBox, type Box3, type Vec3 } from './coords.js';
 import { pruneEmptyChunks, readCell, writeCell } from './chunkStore.js';
 import type { MapState } from './mapState.js';
-import { opRegion, type MapOp } from './ops.js';
+import { opRegion, type BlockOp } from './ops.js';
 import { resolveBlockId } from './palette.js';
 
 function isOnBoxShell([x, y, z]: Vec3, { min, max }: Box3): boolean {
@@ -19,7 +19,7 @@ function isOnBoxShell([x, y, z]: Vec3, { min, max }: Box3): boolean {
 
 // Значение клетки после операции; null — операция клетку не трогает.
 function targetValue(
-  op: MapOp,
+  op: BlockOp,
   cell: Vec3,
   region: Box3,
   current: number,
@@ -38,7 +38,8 @@ function targetValue(
 }
 
 // Применяет уже проверенную (parseMapOp) операцию. Без I/O: всё через MapState.
-export function applyOp(state: MapState, op: MapOp): Changeset {
+// Размер карты здесь не проверяется — это делает editMap.
+export function applyOp(state: MapState, op: BlockOp): Changeset {
   const paletteAdded: PaletteAddition[] = [];
   // Блок дописывается в палитру при первой реальной записи: replace, ничего не
   // нашедший, не должен раздувать палитру, которая никогда не сжимается.

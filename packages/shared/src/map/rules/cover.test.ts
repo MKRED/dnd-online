@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { applyOp } from '../applyOp.js';
 import { MemoryChunkStore } from '../chunkStore.js';
 import type { MapState } from '../mapState.js';
-import type { MapOp } from '../ops.js';
+import type { BlockOp } from '../ops.js';
 import { createPalette } from '../palette.js';
 import {
   attackCover,
@@ -14,14 +14,14 @@ import { creatureBody, type CreatureSize } from './creature.js';
 
 // Стена в 1 блок по линии x = 5; цель стоит за ней вплотную (x = 6), стрелок —
 // на `gap` клеток перед стеной (gap = 1 — вплотную к стене).
-const LOW_WALL: MapOp = {
+const LOW_WALL: BlockOp = {
   op: 'fillBox',
   from: [5, 0, -3],
   to: [5, 0, 3],
   block: 'stone',
 };
 
-function mapWith(...ops: MapOp[]): MapState {
+function mapWith(...ops: BlockOp[]): MapState {
   const map = { store: new MemoryChunkStore(), palette: createPalette() };
   for (const op of ops) applyOp(map, op);
   return map;

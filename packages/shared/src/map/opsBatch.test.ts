@@ -8,7 +8,8 @@ import { createPalette } from './palette.js';
 
 const limits = {
   maxOpVolume: 100,
-  maxCoordinate: 1000,
+  maxSize: 1000,
+  maxHeight: 64,
   maxOpsPerBatch: 3,
   maxBatchVolume: 150,
 };

@@ -2,8 +2,8 @@ import { AIR, cellRotation, cellTypeId } from './cell.js';
 import { MapOpError } from './ops.js';
 import { blockNameOf, type Palette } from './palette.js';
 
-// Карта растущая: два блока далеко друг от друга дают огромные границы, и срез «по
-// границам карты» повесил бы сервер. Больше этого нейросеть всё равно не прочитает.
+// Срез 256 × 256 «по границам карты» — уже 65 тыс. клеток, а прямоугольник из запроса
+// может быть любым. Больше этого нейросеть всё равно не прочитает.
 export const MAX_SLICE_CELLS = 100_000;
 
 const AIR_SYMBOL = '.';

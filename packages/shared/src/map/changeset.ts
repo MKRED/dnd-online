@@ -1,7 +1,8 @@
 import { chunkKeysInBox, type Vec3 } from './coords.js';
 import { pruneEmptyChunks, readCell, writeCell } from './chunkStore.js';
+import { MapOpError } from './mapOpError.js';
+import { sameSize, sizeLabel, type MapSize } from './mapSize.js';
 import type { MapState } from './mapState.js';
-import { MapOpError } from './ops.js';
 
 export interface CellChange {
   at: Vec3;
@@ -21,6 +22,8 @@ export interface Changeset {
   // Типы, дописанные в палитру этой операцией, с их id: получатель проверяет, что его
   // палитра совпадает, а не полагается на порядок. Undo их не убирает — палитра только растёт.
   paletteAdded: PaletteAddition[];
+  // Размер карты до и после — только у правок с resize.
+  size?: { before: MapSize; after: MapSize };
 }
 
 export type ChangesetDirection = 'forward' | 'backward';
@@ -45,13 +48,33 @@ function syncPalette(state: MapState, added: PaletteAddition[]) {
 // возвращаются как конфликты — чужие правки не затираются.
 // applied — что реально изменилось, всегда в прямом виде (для undo «до» и «после»
 // переставлены): это и пишется в журнал, и рассылается клиентам.
+// Размер, в отличие от клеток, конфликтом не пропускается: блоки resize сдвинуты
+// под новый размер, а другой размер карты значит, что правки пропущены.
+function applySize(
+  state: MapState & { size?: MapSize },
+  size: NonNullable<Changeset['size']>,
+  forward: boolean,
+): Changeset['size'] {
+  const [expected, target] = forward
+    ? [size.before, size.after]
+    : [size.after, size.before];
+  if (!state.size || !sameSize(state.size, expected)) {
+    throw new MapOpError(
+      `Размер карты расходится с изменениями (ожидался ${sizeLabel(expected)}) — нужна досинхронизация`,
+    );
+  }
+  state.size = { ...target };
+  return { before: expected, after: target };
+}
+
 export function applyChangeset(
-  state: MapState,
+  state: MapState & { size?: MapSize },
   changeset: Changeset,
   direction: ChangesetDirection,
 ): { conflicts: Vec3[]; applied: Changeset } {
   const forward = direction === 'forward';
   if (forward) syncPalette(state, changeset.paletteAdded);
+  const size = changeset.size && applySize(state, changeset.size, forward);
   const ordered = forward ? changeset.cells : [...changeset.cells].reverse();
   const conflicts: Vec3[] = [];
   const appliedCells: CellChange[] = [];
@@ -72,6 +95,7 @@ export function applyChangeset(
     applied: {
       cells: appliedCells,
       paletteAdded: forward ? changeset.paletteAdded : [],
+      ...(size && { size }),
     },
   };
 }

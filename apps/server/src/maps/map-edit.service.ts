@@ -8,10 +8,12 @@ import {
   applyChangeset,
   applyOps,
   chunkKeysInBox,
+  isBlockOp,
   MapOpError,
   opRegion,
   parseMapOpBatch,
   unpackChangeset,
+  type BlockOp,
   type Changeset,
   type MapEditResult,
   type MapOp,
@@ -145,13 +147,20 @@ export class MapEditService {
     };
   }
 
-  private parse(rawOps: unknown[]): MapOp[] {
+  private parse(rawOps: unknown[]): BlockOp[] {
+    let ops: MapOp[];
     try {
-      return parseMapOpBatch(rawOps, this.limits);
+      ops = parseMapOpBatch(rawOps, this.limits);
     } catch (err) {
       if (err instanceof MapOpError) throw new BadRequestException(err.message);
       throw err;
     }
+    // Размера у карт в базе пока нет — resize появится вместе с ним
+    // (docs/plan/map-editor.md, этап 2).
+    if (!ops.every(isBlockOp)) {
+      throw new BadRequestException('Размер карты пока нельзя менять');
+    }
+    return ops;
   }
 
   private async edit(

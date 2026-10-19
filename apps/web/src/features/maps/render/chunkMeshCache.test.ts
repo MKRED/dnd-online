@@ -4,7 +4,7 @@ import {
   createPalette,
   MemoryChunkStore,
   packChangeset,
-  type MapOp,
+  type BlockOp,
   type MapState,
 } from 'shared';
 import { describe, expect, it } from 'vitest';
@@ -25,7 +25,7 @@ function threeChunks(): MapState {
   return map;
 }
 
-function edit(map: MapState, ops: MapOp[]) {
+function edit(map: MapState, ops: BlockOp[]) {
   // Сервер применяет пачку к своей, полностью отдельной копии карты.
   const server: MapState = {
     store: new MemoryChunkStore(),

@@ -18,14 +18,18 @@ function readPositiveInt(
   return value;
 }
 
-// Лимиты карт из конфига, а не размер карты: карта растущая, а защищаться нужно от
-// случайного раздувания (в том числе ошибкой нейросети). Меняются без миграций.
+// Лимиты карт из конфига: защита от случайного раздувания (в том числе ошибкой
+// нейросети) и общие для всех карт пределы размера и высоты
+// (docs/plan/map-editor.md, «Размер карты»). Меняются без миграций.
 @Injectable()
 export class MapLimitsConfig implements MapBatchLimits {
   readonly maxOpVolume: number;
   readonly maxBatchVolume: number;
   readonly maxOpsPerBatch: number;
-  readonly maxCoordinate: number;
+  // Наибольшие ширина и глубина карты; координаты x и z — меньше этого числа.
+  readonly maxSize: number;
+  // Уровней по высоте у любой карты: y от 0 до maxHeight − 1.
+  readonly maxHeight: number;
   // Чанк — 8 КБ, 4096 чанков — 32 МБ на карту.
   readonly maxChunks: number;
 
@@ -45,11 +49,8 @@ export class MapLimitsConfig implements MapBatchLimits {
       'MAP_MAX_OPS_PER_BATCH',
       100,
     );
-    this.maxCoordinate = readPositiveInt(
-      configService,
-      'MAP_MAX_COORDINATE',
-      100_000,
-    );
+    this.maxSize = readPositiveInt(configService, 'MAP_MAX_SIZE', 256);
+    this.maxHeight = readPositiveInt(configService, 'MAP_MAX_HEIGHT', 64);
     this.maxChunks = readPositiveInt(configService, 'MAP_MAX_CHUNKS', 4096);
   }
 }

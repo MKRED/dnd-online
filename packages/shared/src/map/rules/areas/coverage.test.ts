@@ -3,12 +3,12 @@ import { applyOp } from '../../applyOp.js';
 import { MemoryChunkStore } from '../../chunkStore.js';
 import type { Vec3 } from '../../coords.js';
 import type { MapState } from '../../mapState.js';
-import type { MapOp } from '../../ops.js';
+import type { BlockOp } from '../../ops.js';
 import { createPalette } from '../../palette.js';
 import { areaAffectsBody, areaCells } from './coverage.js';
 import { prepareArea, type AreaShape } from './shapes.js';
 
-function mapWith(...ops: MapOp[]): MapState {
+function mapWith(...ops: BlockOp[]): MapState {
   const map = { store: new MemoryChunkStore(), palette: createPalette() };
   for (const op of ops) applyOp(map, op);
   return map;

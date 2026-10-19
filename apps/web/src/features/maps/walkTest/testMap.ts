@@ -2,12 +2,12 @@ import {
   applyOp,
   createPalette,
   MemoryChunkStore,
-  type MapOp,
+  type BlockOp,
   type MapState,
 } from 'shared';
 
 // Для тестов: пол из земли под y = 0 (x и z от −6 до 6) и операции поверх него.
-export function floorWith(...ops: MapOp[]): MapState {
+export function floorWith(...ops: BlockOp[]): MapState {
   const map = { store: new MemoryChunkStore(), palette: createPalette() };
   applyOp(map, {
     op: 'fillBox',

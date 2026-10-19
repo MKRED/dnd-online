@@ -148,6 +148,34 @@ The decisions are in [plan/monsters-npcs.md](../plan/monsters-npcs.md) («Реш
 - **A character can't take a «Монстра» ability:** the add dialog doesn't offer one, and the server answers 400. An ability that becomes «Монстра» after it was added stays on the sheet, grouped by its activation.
 - Code: `packages/shared/src/abilityMonster.ts` (category fields, the category check, the recharge label); the activations are in `abilityUsage.ts` and `abilityUsageLabels.ts`. The form fields are in `apps/web/src/features/simpleCatalog/MonsterAbilityFields.tsx` and `UsageField/ActivationFields.tsx`.
 
+**Built (stage 3, 2026-10-19): the monster catalog on the server** (`/monsters`).
+
+- **Category** is the creature type, one of the 14 above (`MONSTER_TYPES`). **Role** is `regular` or `unique`.
+- **The stat block** (`MonsterStatBlock`) holds the parts of the book's block as the GM enters them:
+  - size, tags and alignment as text;
+  - AC, the Initiative modifier;
+  - Hit Points as the average and the dice `{ count, die, bonus }`;
+  - speeds: walk, plus burrow, climb, fly and swim (`null` when absent), and hover, allowed only with a fly speed;
+  - each ability as `{ score, save }`;
+  - skills with their bonus, each skill once;
+  - vulnerabilities, resistances and immunities from the 13 damage types, condition immunities from the 15 conditions, each unique within its list;
+  - senses from the effect sense kinds, each once, and Passive Perception;
+  - languages as text;
+  - CR as a string key (`'0'`, `'1/8'`, `'1/4'`, `'1/2'`, `'1'`…`'30'`);
+  - optional in-lair XP, Legendary Action uses and in-lair uses (the in-lair count only with the regular one);
+  - spellcasting `{ ability, saveDc, attackBonus }`, each optional.
+- **XP and PB come from the CR table** (`challengeXp`, `challengeProficiencyBonus`). For CR 0 the book gives «0 or 10» (10 when the monster has an effective attack); the table holds 0 until the card decides how to show it.
+- **The limits are the app's, not the book's**, set with room above the largest 2024 monsters:
+  - AC 1–50;
+  - bonuses (initiative, saves, skills, spell attack) −10…+30;
+  - ability scores 1–30;
+  - HP average 1–9999, up to 999 dice of d4/d6/d8/d10/d12/d20;
+  - speeds up to 300 ft in steps of 5;
+  - Passive Perception 0–50, save DC 1–40;
+  - Legendary Action uses 1–10;
+  - tags up to 100 characters, alignment up to 30, languages up to 300.
+- Code: `packages/shared/src/monsters.ts` (types, sizes, roles, the default stat block), `monsterChallenge.ts`, `monsterStatBlockCheck.ts`; server `apps/server/src/monsters/`.
+
 Planned for the next stages:
 
 - **The GM enters every number by hand**, as in the book, including the saves, skills, initiative and the average HP. The app doesn't derive them. XP and PB are read from the CR table above.

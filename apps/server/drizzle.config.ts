@@ -24,6 +24,7 @@ export default defineConfig({
     './src/database/schema/character-effects.ts',
     './src/database/schema/bookmarks.ts',
     './src/database/schema/character-abilities.ts',
+    './src/database/schema/monsters.ts',
   ],
   dialect: 'postgresql',
   dbCredentials: {

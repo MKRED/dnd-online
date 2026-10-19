@@ -56,3 +56,6 @@ export * from './abilityMonster.js';
 export * from './pluralRu.js';
 export * from './returnPath.js';
 export * from './bookmarks.js';
+export * from './monsters.js';
+export * from './monsterChallenge.js';
+export * from './monsterStatBlockCheck.js';

@@ -1,6 +1,7 @@
 import type { ThreeEvent } from '@react-three/fiber';
 import { useState, type ReactNode } from 'react';
 import { insideMap, type Box3, type MapSize, type Vec3 } from 'shared';
+import type { Point } from '../cameraView';
 import {
   cellsFromHit,
   regionBox,
@@ -18,6 +19,8 @@ interface EditLayerProps {
   size: MapSize;
   // Меши чанков — по ним идёт выбор клеток.
   children: ReactNode;
+  // Перенести центр камеры в точку: двойной клик в «Просмотре», Alt+клик в любом инструменте.
+  onFocus: (point: Point) => void;
 }
 
 // Сдвиг мыши (px) между нажатием и отпусканием, после которого клик считается
@@ -85,7 +88,7 @@ function CellHighlight({
 // Слой редактора: клики по блокам и земле превращаются в выбор клеток.
 // Наведение живёт здесь, а не на странице: иначе каждое движение мыши
 // перерисовывало бы всю страницу с панелью.
-function EditLayer({ editor, size, children }: EditLayerProps) {
+function EditLayer({ editor, size, children, onFocus }: EditLayerProps) {
   const [hover, setHover] = useState<PickedCells | null>(null);
 
   const updateHover = (pick: PickedCells | null) =>
@@ -104,27 +107,30 @@ function EditLayer({ editor, size, children }: EditLayerProps) {
             : undefined
         }
         onPointerOut={editor ? () => updateHover(null) : undefined}
-        onClick={
-          editor
-            ? (event) => {
-                event.stopPropagation();
-                if (event.delta > DRAG_THRESHOLD) return;
-                editor.onPick(pickFrom(event));
-              }
-            : undefined
-        }
+        onClick={(event) => {
+          event.stopPropagation();
+          if (event.delta > DRAG_THRESHOLD) return;
+          // Alt+клик только переносит центр и ничего не правит: первый клик двойного
+          // в инструменте уже поставил бы блок, поэтому там центр — на Alt
+          // (docs/plan/map-editor.md, «Камера: двойной клик и Q/E»).
+          if (event.altKey) onFocus(event.point.toArray());
+          else editor?.onPick(pickFrom(event));
+        }}
+        onDoubleClick={(event) => {
+          event.stopPropagation();
+          if (!editor) onFocus(event.point.toArray());
+        }}
       >
         {children}
-        {editor && (
-          <mesh
-            visible={false}
-            rotation={[-Math.PI / 2, 0, 0]}
-            position={[size.width / 2, 0, size.depth / 2]}
-            userData={{ ground: true }}
-          >
-            <planeGeometry args={[size.width, size.depth]} />
-          </mesh>
-        )}
+        {/* Земля нужна и в «Просмотре»: двойной клик по ней переносит центр на пустую клетку. */}
+        <mesh
+          visible={false}
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[size.width / 2, 0, size.depth / 2]}
+          userData={{ ground: true }}
+        >
+          <planeGeometry args={[size.width, size.depth]} />
+        </mesh>
       </group>
       <GroundGrid size={size} showGrid={editor !== null} />
       {editor &&

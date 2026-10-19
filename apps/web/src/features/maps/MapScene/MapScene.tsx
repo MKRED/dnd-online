@@ -1,16 +1,20 @@
 import { useComputedColorScheme } from '@mantine/core';
 import { MapControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
+import { useCallback, useRef, useState } from 'react';
 import type { ResizeOp, SizedMapState } from 'shared';
-import type { CameraPlacement } from '../cameraView';
+import type { CameraPlacement, Point } from '../cameraView';
 import type { SceneEditor } from '../editor/editorTools';
 import type { WalkScene } from '../walkTest';
 import WalkLayer from './WalkLayer';
+import CameraFocus, { type CameraFocusApi } from './CameraFocus';
 import CameraRig from './CameraRig';
+import CenterHint from './CenterHint';
 import EditLayer from './EditLayer';
 import FirstFrame from './FirstFrame';
 import ResizePreview from './ResizePreview';
 import ChunkMesh from './ChunkMesh';
+import { useCameraKeys } from './useCameraKeys';
 import { useChunkMeshes } from './useChunkMeshes';
 import classes from './MapScene.module.css';
 
@@ -46,6 +50,19 @@ function MapScene({
 }: MapSceneProps) {
   const chunks = useChunkMeshes(map, cutY);
   const scheme = useComputedColorScheme('dark');
+  // Центр камеры живёт внутри Canvas (CameraFocus), а подсказка с кнопками и клавиши
+  // Q/E — снаружи, в обычном DOM; связывает их этот ref.
+  const focus = useRef<CameraFocusApi | null>(null);
+  const [centerLevel, setCenterLevel] = useState<number | null>(null);
+  const shiftLevel = useCallback(
+    (dy: number) => focus.current?.shiftLevel(dy),
+    [],
+  );
+  const focusOn = useCallback(
+    (point: Point) => focus.current?.focusOn(point),
+    [],
+  );
+  useCameraKeys(shiftLevel);
 
   return (
     <div className={classes.canvas}>
@@ -56,7 +73,7 @@ function MapScene({
         <color attach="background" args={[SCENE_BACKGROUND[scheme]]} />
         <hemisphereLight args={['#ffffff', '#3a3530', 0.9]} />
         <directionalLight position={[40, 80, 30]} intensity={1.6} />
-        <EditLayer editor={editor} size={map.size}>
+        <EditLayer editor={editor} size={map.size} onFocus={focusOn}>
           {[...chunks].map(([key, { meshes }]) => (
             <group key={key}>
               {meshes.opaque && (
@@ -72,10 +89,15 @@ function MapScene({
         {resizePreview && (
           <ResizePreview size={map.size} grow={resizePreview} />
         )}
-        <MapControls makeDefault />
+        {/* Колесо приближает к точке под курсором: в редакторе приближаются к тому,
+            что собираются править. Высота центра при этом не меняется. */}
+        <MapControls makeDefault zoomToCursor />
         <CameraRig placement={camera} />
+        {/* После CameraRig: первый уровень для подсказки берётся из уже поставленной камеры. */}
+        <CameraFocus apiRef={focus} onLevel={setCenterLevel} />
         <FirstFrame onReady={onReady} />
       </Canvas>
+      <CenterHint level={centerLevel} onShift={shiftLevel} />
     </div>
   );
 }

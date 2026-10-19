@@ -67,4 +67,17 @@ describe('placeCamera', () => {
       placeCamera(bounds, params('view=top&cam=1,2,3&target=4,5,6')),
     ).toEqual({ position: [1, 2, 3], target: [4, 5, 6] });
   });
+
+  // Центр камеры можно двигать (двойной клик, Q/E), но ссылка от этого не меняется:
+  // одна ссылка — одна картинка, а высота центра — из ?target=.
+  it('?target= задаёт и высоту центра, ракурс сохраняет расстояние', () => {
+    const view = placeCamera(bounds, params('view=north&target=5,7,5'));
+    expect(view.target).toEqual([5, 7, 5]);
+    expect(view.position[1] - view.target[1]).toBeCloseTo(
+      view.target[2] - view.position[2],
+    );
+    expect(placeCamera(bounds, params('view=north&target=5,7,5'))).toEqual(
+      view,
+    );
+  });
 });

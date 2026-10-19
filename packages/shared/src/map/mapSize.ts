@@ -2,7 +2,7 @@ import type { Box3 } from './coords.js';
 import { MapOpError } from './mapOpError.js';
 import type { MapState } from './mapState.js';
 
-// Размер карты (docs/plan/map-editor.md, «Размер карты»): клетки 0 ≤ x < width,
+// Размер карты (docs/plan/done/map-editor.md, «Размер карты»): клетки 0 ≤ x < width,
 // 0 ≤ z < depth, y ≥ 0. Высота у всех карт общая — предел maxHeight из конфига сервера.
 export interface MapSize {
   width: number;

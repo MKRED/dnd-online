@@ -20,7 +20,7 @@ function readPositiveInt(
 
 // Лимиты карт из конфига: защита от случайного раздувания (в том числе ошибкой
 // нейросети) и общие для всех карт пределы размера и высоты
-// (docs/plan/map-editor.md, «Размер карты»). Меняются без миграций.
+// (docs/plan/done/map-editor.md, «Размер карты»). Меняются без миграций.
 @Injectable()
 export class MapLimitsConfig implements MapBatchLimits {
   readonly maxOpVolume: number;

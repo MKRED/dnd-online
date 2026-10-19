@@ -19,7 +19,7 @@ export const maps = pgTable('maps', {
   name: varchar('name', { length: 100 }).notNull(),
   // Индекс = id типа в клетках чанков. Только растёт (см. shared/map/palette.ts).
   palette: jsonb('palette').notNull().$type<Palette>(),
-  // Размер карты в клетках: 0 ≤ x < width, 0 ≤ z < depth (docs/plan/map-editor.md).
+  // Размер карты в клетках: 0 ≤ x < width, 0 ≤ z < depth (docs/plan/done/map-editor.md).
   // Высота не хранится — она общая для всех карт (MAP_MAX_HEIGHT).
   width: integer('width').notNull().default(32),
   depth: integer('depth').notNull().default(32),

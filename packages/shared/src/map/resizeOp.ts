@@ -10,7 +10,7 @@ export type ResizeSide = (typeof RESIZE_SIDES)[number];
 // Что делать с блоками, оказавшимися за новой границей на востоке или юге: удалить
 // или оставить скрытыми (вернутся, если карту снова расширить). С запада, севера и
 // снизу срезанное удаляется всегда — оставить его можно было бы только в
-// отрицательных координатах (docs/plan/map-editor.md, «Размер карты»).
+// отрицательных координатах (docs/plan/done/map-editor.md, «Размер карты»).
 export const RESIZE_CUTS = ['delete', 'keep'] as const;
 export type ResizeCut = (typeof RESIZE_CUTS)[number];
 

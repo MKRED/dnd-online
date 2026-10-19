@@ -93,7 +93,7 @@ describe('карты (e2e)', () => {
       [{ op: 'setBlock', at: [0, 0, 0], block: 'cheese' }],
       [{ op: 'explode', at: [0, 0, 0] }],
       [{ op: 'setBlock', at: [0.5, 0, 0], block: 'stone' }],
-      // Координаты от нуля и до общих пределов (docs/plan/map-editor.md).
+      // Координаты от нуля и до общих пределов (docs/plan/done/map-editor.md).
       [{ op: 'setBlock', at: [-1, 0, 0], block: 'stone' }],
       [{ op: 'setBlock', at: [0, 64, 0], block: 'stone' }],
       [{ op: 'setBlock', at: [256, 0, 0], block: 'stone' }],

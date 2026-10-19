@@ -19,7 +19,7 @@ import { solidCells } from './summary.js';
 
 // Меняет размер карты. Координаты карты начинаются с нуля, поэтому место на западе,
 // севере и снизу появляется только сдвигом всех блоков: добавить три уровня снизу —
-// поднять всё на три блока (docs/plan/map-editor.md, «Размер карты»).
+// поднять всё на три блока (docs/plan/done/map-editor.md, «Размер карты»).
 export function applyResize(
   map: SizedMapState,
   op: ResizeOp,

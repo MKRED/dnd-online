@@ -51,7 +51,7 @@ const COMPASS: (ResizeSide | null)[] = [
 ];
 
 // Панель «Размер карты» вместо инструментов: сцена рядом показывает новую границу,
-// пока не нажато «Применить» (docs/plan/map-editor.md, «Размер карты»).
+// пока не нажато «Применить» (docs/plan/done/map-editor.md, «Размер карты»).
 function MapSizePanel({
   state,
   draft,

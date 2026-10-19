@@ -1,7 +1,7 @@
 import type { Point } from '../cameraView';
 
 // Перенос точки вращения: камера едет вместе с ней на тот же сдвиг, поэтому
-// расстояние и угол обзора не меняются (docs/plan/map-editor.md, «Камера»).
+// расстояние и угол обзора не меняются (docs/plan/done/map-editor.md, «Камера»).
 
 export interface FocusMove {
   fromTarget: Point;

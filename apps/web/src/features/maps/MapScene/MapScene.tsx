@@ -65,7 +65,7 @@ function MapScene({
     (point: Point) => focus.current?.focusOn(point),
     [],
   );
-  // Q опускает центр камеры, E поднимает (docs/plan/map-editor.md, «Камера»).
+  // Q опускает центр камеры, E поднимает (docs/plan/done/map-editor.md, «Камера»).
   useKeyCodes({ KeyQ: () => shiftLevel(-1), KeyE: () => shiftLevel(1) });
 
   return (

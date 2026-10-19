@@ -124,7 +124,7 @@ function EditLayer({
           if (event.delta > DRAG_THRESHOLD) return;
           // Alt+клик только переносит центр и ничего не правит: первый клик двойного
           // в инструменте уже поставил бы блок, поэтому там центр — на Alt
-          // (docs/plan/map-editor.md, «Камера: двойной клик и Q/E»).
+          // (docs/plan/done/map-editor.md, «Камера: двойной клик и Q/E»).
           if (event.altKey) onFocus(event.point.toArray());
           else editor?.onPick(pickFrom(event));
         }}

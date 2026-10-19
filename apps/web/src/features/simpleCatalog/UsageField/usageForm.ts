@@ -26,6 +26,8 @@ export interface UsageValues {
   trigger: string;
   amount: number | string;
   unit: ActivationTimeUnit;
+  // Цена легендарного действия, строкой — как отдаёт SegmentedControl.
+  legendaryCost: string;
   usesOn: boolean;
   usesCount: UsesCount['kind'];
   usesAmount: number | string;
@@ -44,6 +46,7 @@ const BLANK: UsageValues = {
   trigger: '',
   amount: 1,
   unit: 'minute',
+  legendaryCost: '1',
   usesOn: false,
   usesCount: 'fixed',
   usesAmount: 1,
@@ -67,6 +70,8 @@ export function toUsageValues(
     values.amount = activation.amount;
     values.unit = activation.unit;
   }
+  if (activation.kind === 'legendary')
+    values.legendaryCost = String(activation.cost);
   if (costs.uses) {
     const { count, recovery } = costs.uses;
     values.usesOn = true;
@@ -96,6 +101,8 @@ function toActivation(values: UsageValues): AbilityActivation {
       return { kind: values.kind, trigger: values.trigger.trim() };
     case 'time':
       return { kind: 'time', amount: Number(values.amount), unit: values.unit };
+    case 'legendary':
+      return { kind: 'legendary', cost: Number(values.legendaryCost) };
     default:
       return { kind: values.kind };
   }

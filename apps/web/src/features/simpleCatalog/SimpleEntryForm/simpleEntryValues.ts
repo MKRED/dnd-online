@@ -13,6 +13,10 @@ import {
   toEffectValues,
   type EffectValues,
 } from '../EffectFields';
+import {
+  toMonsterAbilityValues,
+  type MonsterAbilityValues,
+} from '../monsterAbilityForm';
 import { spellValidate, toSpellValues, type SpellValues } from '../SpellFields';
 import { stepsValidate, toStepValues, type StepValues } from '../StepsField';
 import { toUsageValues, usageValidate, type UsageValues } from '../UsageField';
@@ -37,6 +41,8 @@ export interface SimpleFormValues {
   steps: StepValues[];
   // Поля категории «Заклинание»; у других категорий не уходят в запрос.
   spell: SpellValues;
+  // Поля категории «Монстра» — так же.
+  monster: MonsterAbilityValues;
 }
 
 // Те же правила и тексты, что у сервера (CatalogEntryDto, EffectDto, AbilityDto).
@@ -79,6 +85,11 @@ export function toSimpleFormValues(
     steps: entry && 'steps' in entry ? entry.steps.map(toStepValues) : [],
     spell: toSpellValues(
       entry && 'category' in entry && entry.category === 'spell'
+        ? entry.details
+        : undefined,
+    ),
+    monster: toMonsterAbilityValues(
+      entry && 'category' in entry && entry.category === 'monster'
         ? entry.details
         : undefined,
     ),

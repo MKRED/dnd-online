@@ -35,6 +35,24 @@ describe('abilities.config', () => {
     ).toMatchObject({ category: 'basic', details: {} });
   });
 
+  it('читает поля «Монстра», черта не у монстра — действие', () => {
+    const trait = { kind: 'trait' };
+    expect(
+      toAbilityVariant('monster', { recharge: 5 }, { activation: trait }),
+    ).toMatchObject({
+      category: 'monster',
+      details: { recharge: 5 },
+      activation: trait,
+    });
+    expect(
+      toAbilityVariant('monster', { recharge: 1 }, { activation: trait }),
+    ).toMatchObject({
+      category: 'basic',
+      details: {},
+      activation: { kind: 'action' },
+    });
+  });
+
   // Записи без этих полей и испорченный jsonb не ломают каталог.
   it('без полей или с неверными — действие без затрат', () => {
     const fallback = {

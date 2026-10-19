@@ -42,6 +42,7 @@ Decided with the user on 2026-10-15 ([plan/done/abilities.md](../plan/done/abili
 
 - **Activation and costs are fields of every ability**, not of one category: attacks and spells have them too. There is no «Умение» category.
 - **Activation** is exactly one of: «Действие», «Бонусное действие», «Реакция» and «Без действия» (both with an optional condition, «когда…», up to 200 characters), «Вместо одной атаки», «Время» (1–99 minutes or hours). The action is not split into Magic, Attack and so on yet.
+  - Only the «Монстра» category adds «Черта» and «Легендарное действие» with a cost of 1–3 (added 2026-10-19, [monsters.md](monsters.md), «In the app»).
 - **Costs** are four optional kinds, each at most once:
   - **Заряды** — a number 1–99, the proficiency bonus or an ability modifier (minimum 1), with one of the three recoveries above;
   - **Ячейка заклинаний** of at least level N (1 — any);

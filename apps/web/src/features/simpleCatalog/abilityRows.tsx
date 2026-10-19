@@ -4,6 +4,7 @@ import {
   formatAbilitySteps,
   formatActivation,
   formatCosts,
+  formatRecharge,
   formatSpellDuration,
   formatSpellHeader,
   formatStepGrowth,
@@ -61,7 +62,12 @@ function stepRows(entry: AbilityCard, basis: GrowthBasis) {
 export function abilityRows(
   entry: AbilityCard,
 ): { label: string; value: ReactNode }[] {
-  const costs = formatCosts(entry.costs);
+  // Перезарядка — поле категории «Монстра», но в книге стоит рядом с затратами.
+  const recharge =
+    entry.category === 'monster' && entry.details.recharge !== null
+      ? [formatRecharge(entry.details.recharge)]
+      : [];
+  const costs = [...recharge, ...formatCosts(entry.costs)];
   const ritual = entry.category === 'spell' && entry.details.ritual;
   return [
     ...spellHeaderRows(entry),

@@ -1,5 +1,7 @@
 // Ошибки способностей на персонаже; интерфейс показывает их как есть.
 export const CHARACTER_ABILITY_NOT_FOUND = 'Способность не найдена';
+export const CHARACTER_ABILITY_MONSTER =
+  'Способности монстров персонажу не добавляются';
 export const CHARACTER_ABILITY_ALREADY = 'Способность уже добавлена';
 export const CHARACTER_ABILITY_ENTRY_NOT_FOUND =
   'Способность на персонаже не найдена';

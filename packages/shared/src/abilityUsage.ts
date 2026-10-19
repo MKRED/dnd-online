@@ -10,6 +10,9 @@ export type ActivationTimeUnit = (typeof ACTIVATION_TIME_UNITS)[number];
 
 export const ABILITY_TRIGGER_MAX_LENGTH = 200;
 export const ACTIVATION_AMOUNT_MAX = 99;
+// Цена легендарного действия в использованиях. В книге 2024 всегда 1, у монстров из книг
+// 2014 года бывает «стоит 2 действия» — цену храним, чтобы их переносить без правок.
+export const LEGENDARY_COST_MAX = 3;
 
 export type AbilityActivation =
   | { kind: 'action' }
@@ -21,7 +24,11 @@ export type AbilityActivation =
   // Вместо одной из атак действия «Атака» — как оружие дыхания драконорождённого.
   | { kind: 'attack' }
   // Долгое применение: 1 минута, 10 минут, 1 час…
-  | { kind: 'time'; amount: number; unit: ActivationTimeUnit };
+  | { kind: 'time'; amount: number; unit: ActivationTimeUnit }
+  // Только у категории «Монстра» (abilityMonster.ts): черта действует всегда или в
+  // своих условиях, легендарное действие стоит cost использований из запаса на раунд.
+  | { kind: 'trait' }
+  | { kind: 'legendary'; cost: number };
 
 export type AbilityActivationKind = AbilityActivation['kind'];
 export const ABILITY_ACTIVATION_KINDS = [
@@ -31,6 +38,8 @@ export const ABILITY_ACTIVATION_KINDS = [
   'free',
   'attack',
   'time',
+  'trait',
+  'legendary',
 ] as const satisfies readonly AbilityActivationKind[];
 
 // Сколько зарядов. Число зарядов, растущее с уровнем, — свойство персонажа, а не
@@ -116,7 +125,13 @@ export function isAbilityActivation(
     case 'action':
     case 'bonus_action':
     case 'attack':
+    case 'trait':
       return keysAre(value, 'kind');
+    case 'legendary':
+      return (
+        keysAre(value, 'cost,kind') &&
+        isIntIn(value.cost, 1, LEGENDARY_COST_MAX)
+      );
     case 'reaction':
     case 'free':
       return keysAre(value, 'kind,trigger') && isTrigger(value.trigger);

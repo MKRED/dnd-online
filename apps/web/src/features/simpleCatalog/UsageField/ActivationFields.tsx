@@ -1,19 +1,41 @@
-import { Group, NumberInput, Select, Stack, TextInput } from '@mantine/core';
+import {
+  Group,
+  Input,
+  NumberInput,
+  SegmentedControl,
+  Select,
+  Stack,
+  TextInput,
+} from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import {
   ABILITY_ACTIVATION_KINDS,
   ABILITY_TRIGGER_MAX_LENGTH,
   ACTIVATION_AMOUNT_MAX,
   ACTIVATION_LABELS,
+  LEGENDARY_COST_MAX,
+  MONSTER_ACTIVATION_KINDS,
   pluralRu,
   type AbilityActivationKind,
 } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 
-const KIND_OPTIONS = ABILITY_ACTIVATION_KINDS.map((value) => ({
+const monsterOnly: readonly AbilityActivationKind[] = MONSTER_ACTIVATION_KINDS;
+
+const kindOption = (value: AbilityActivationKind) => ({
   value,
   label: ACTIVATION_LABELS[value],
-}));
+});
+
+// Черта и легендарное действие — только у способности монстра (shared/abilityMonster.ts).
+const ALL_OPTIONS = ABILITY_ACTIVATION_KINDS.map(kindOption);
+const COMMON_OPTIONS = ABILITY_ACTIVATION_KINDS.filter(
+  (kind) => !monsterOnly.includes(kind),
+).map(kindOption);
+
+const COST_OPTIONS = Array.from({ length: LEGENDARY_COST_MAX }, (_, i) =>
+  String(i + 1),
+);
 
 // Подсказка под видом: пример из книги (docs/dnd/ability-usage.md).
 const KIND_HINTS: Record<AbilityActivationKind, string> = {
@@ -23,6 +45,10 @@ const KIND_HINTS: Record<AbilityActivationKind, string> = {
   free: 'Не тратит ни действия, ни реакции: «Удача» полурослика',
   attack: 'Заменяет одну из атак действия «Атака», как оружие дыхания',
   time: 'Дольше одного хода: 1 минута, 10 минут, 1 час',
+  trait:
+    'Действует всегда или в своих условиях: «Амфибия», «Легендарное сопротивление»',
+  legendary:
+    'Сразу после хода другого существа, из запаса легендарных действий на раунд',
 };
 
 interface ActivationFieldsProps {
@@ -31,7 +57,8 @@ interface ActivationFieldsProps {
 
 // Как применяют способность: вид и поля этого вида.
 function ActivationFields({ form }: ActivationFieldsProps) {
-  const { kind, amount } = form.getValues().usage;
+  const { category, usage } = form.getValues();
+  const { kind, amount } = usage;
   const count = Number(amount) || 1;
 
   return (
@@ -39,7 +66,7 @@ function ActivationFields({ form }: ActivationFieldsProps) {
       <Select
         label="Активация"
         description={KIND_HINTS[kind]}
-        data={KIND_OPTIONS}
+        data={category === 'monster' ? ALL_OPTIONS : COMMON_OPTIONS}
         allowDeselect={false}
         maw={320}
         {...form.getInputProps('usage.kind')}
@@ -55,6 +82,19 @@ function ActivationFields({ form }: ActivationFieldsProps) {
           maxLength={ABILITY_TRIGGER_MAX_LENGTH}
           {...form.getInputProps('usage.trigger')}
         />
+      )}
+      {kind === 'legendary' && (
+        <Input.Wrapper
+          label="Цена"
+          description="Сколько легендарных действий тратит. По книге 2024 — всегда 1, больше бывает у монстров из книг 2014 года"
+        >
+          <SegmentedControl
+            aria-label="Цена"
+            data={COST_OPTIONS}
+            mt={4}
+            {...form.getInputProps('usage.legendaryCost')}
+          />
+        </Input.Wrapper>
       )}
       {kind === 'time' && (
         <Group gap="xs" align="flex-start" wrap="nowrap">

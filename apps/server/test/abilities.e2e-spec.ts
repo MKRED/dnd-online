@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { describeAbilityStepChains } from './abilities/chains.js';
 import { describeAbilityEffects } from './abilities/effects.js';
 import { describeAbilityGrowth } from './abilities/growth.js';
+import { describeAbilityMonster } from './abilities/monster.js';
 import { describeAbilitySpells } from './abilities/spells.js';
 import { describeAbilitySteps } from './abilities/steps.js';
 import { describeCatalog } from './support/catalog-scenario/index.js';
@@ -72,6 +73,7 @@ describeCatalog(
     describeAbilityStepChains(get);
     describeAbilitySpells(get);
     describeAbilityGrowth(get);
+    describeAbilityMonster(get);
     describeAbilityEffects(get);
   },
 );

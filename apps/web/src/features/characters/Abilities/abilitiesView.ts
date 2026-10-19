@@ -32,10 +32,12 @@ const GROUP_TITLES: Record<AbilityActivationKind, string> = {
 
 // «Умения» — по активации в порядке ABILITY_ACTIVATION_KINDS, пустые группы не
 // показываются. Скрытые и удалённые — отдельной группой в конце: их категория не видна.
+// Способность «Монстра» персонажу не добавить, но она бывает, если автор сменил
+// категорию уже добавленной, — тогда она тоже в «Умениях», по своей активации.
 export function skillGroups(entries: readonly CharacterAbilityEntry[]) {
   const skills = entries
     .filter(hasCard)
-    .filter((e) => e.ability.category === 'basic');
+    .filter((e) => e.ability.category !== 'spell');
   const groups: SkillGroup[] = ABILITY_ACTIVATION_KINDS.map((kind) => ({
     key: kind,
     title: GROUP_TITLES[kind],

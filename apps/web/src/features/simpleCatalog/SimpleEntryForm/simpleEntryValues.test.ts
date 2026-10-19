@@ -1,4 +1,4 @@
-import type { Effect } from 'shared';
+import type { Ability, Effect } from 'shared';
 import { describe, expect, it } from 'vitest';
 import { ABILITIES, EFFECTS } from '../simpleCatalogs';
 import { toSimpleFormValues, toSimpleInput } from './simpleEntryValues';
@@ -47,6 +47,36 @@ describe('simpleEntryValues', () => {
       activation: { kind: 'action' },
       costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
       steps: [],
+    });
+  });
+
+  it('способность монстра отправляет перезарядку и цену легендарного действия', () => {
+    const ability: Ability = {
+      id: 'a1',
+      authorId: 'u1',
+      authorNickname: 'Арвен',
+      isPublic: false,
+      name: 'Хлестнуть',
+      category: 'monster',
+      details: { recharge: 5 },
+      activation: { kind: 'legendary', cost: 2 },
+      costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
+      steps: [],
+      description: '',
+      sources: [],
+      image: null,
+      createdAt: '',
+      updatedAt: '',
+    };
+    const values = toSimpleFormValues(ABILITIES, ability);
+    expect(toSimpleInput(ABILITIES, values)).toMatchObject({
+      category: 'monster',
+      details: { recharge: 5 },
+      activation: { kind: 'legendary', cost: 2 },
+    });
+    const none = { ...values, monster: { recharge: 'none' } };
+    expect(toSimpleInput(ABILITIES, none)).toMatchObject({
+      details: { recharge: null },
     });
   });
 });

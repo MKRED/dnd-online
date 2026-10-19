@@ -20,6 +20,8 @@ export const ACTIVATION_LABELS: Record<AbilityActivation['kind'], string> = {
   free: 'Без действия',
   attack: 'Вместо одной атаки',
   time: 'Время',
+  trait: 'Черта',
+  legendary: 'Легендарное действие',
 };
 
 // «модификатор Силы».
@@ -47,6 +49,11 @@ export function formatActivation(activation: AbilityActivation): string {
     }
     case 'time':
       return `${activation.amount} ${pluralRu(activation.amount, TIME_FORMS[activation.unit])}`;
+    // Цена 1 — как в книге 2024, без оговорки.
+    case 'legendary':
+      return activation.cost === 1
+        ? ACTIVATION_LABELS.legendary
+        : `${ACTIVATION_LABELS.legendary}, стоит ${activation.cost} ${pluralRu(activation.cost, ['действие', 'действия', 'действий'])}`;
     default:
       return ACTIVATION_LABELS[activation.kind];
   }

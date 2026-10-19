@@ -137,10 +137,20 @@ CR runs from 0 to 30, with the fractions 1/8, 1/4 and 1/2. The glossary describe
 
 ## In the app
 
-The decisions are in [plan/monsters-npcs.md](../plan/monsters-npcs.md) («Решения»). Code doesn't exist yet. When it lands, this section will say where the data lives and where the app departs from the book. Planned so far:
+The decisions are in [plan/monsters-npcs.md](../plan/monsters-npcs.md) («Решения»).
+
+**Built (stage 2, 2026-10-19): the «Монстра» ability category.**
+
+- The category `monster` sits next to «Базовая» and «Заклинание» in the shared ability catalog.
+- Only it may use the activations **«Черта»** (`{ kind: 'trait' }`, no fields; conditions go in the description) and **«Легендарное действие»** (`{ kind: 'legendary', cost }`, cost 1–3). Any other category with them gets 400. A stored record that breaks this reads as «Действие».
+- **Recharge** is the category's own field in `details`: `{ recharge: X | null }`, X from 2 to 6, shown as «Перезарядка 5–6» or «Перезарядка 6» in the costs row. It isn't one of the shared costs: their key set is strict, and a new key would make every stored ability fail the check.
+- **X/Day** and **Recharge after a rest** need no new fields: they are uses that come back after a Long Rest, or one use that comes back after a Short or Long Rest.
+- **A character can't take a «Монстра» ability:** the add dialog doesn't offer one, and the server answers 400. An ability that becomes «Монстра» after it was added stays on the sheet, grouped by its activation.
+- Code: `packages/shared/src/abilityMonster.ts` (category fields, the category check, the recharge label); the activations are in `abilityUsage.ts` and `abilityUsageLabels.ts`. The form fields are in `apps/web/src/features/simpleCatalog/MonsterAbilityFields.tsx` and `UsageField/ActivationFields.tsx`.
+
+Planned for the next stages:
 
 - **The GM enters every number by hand**, as in the book, including the saves, skills, initiative and the average HP. The app doesn't derive them. XP and PB are read from the CR table above.
-- **A «Монстра» ability category** carries the Trait and Legendary Action activations and the Recharge cost.
 - **Monster spells** have a per-day limit stored on the monster's link to the spell. Monsters don't get spell slots. Spellcasting is not an ability: the monster has optional spellcasting ability, save DC and spell attack fields, shown in the «Заклинания» header.
-- **A legendary action has a cost of 1–3**, default 1. The 2024 book always costs 1. The cost is kept for monsters taken from 2014 books.
+- **A legendary action has a cost of 1–3**, default 1 (built in stage 2). The 2024 book always costs 1. The cost is kept for monsters taken from 2014 books.
 - **The "unique" role is the app's own idea**, not the book's: only one copy of such a monster can be on a scene.

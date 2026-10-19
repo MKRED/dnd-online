@@ -35,18 +35,21 @@ export function useAbilityCandidates(added: readonly CharacterAbilityEntry[]) {
       label: taken.has(ability.id) ? `${label} · уже добавлена` : label,
       disabled: taken.has(ability.id),
     });
+    // Способности «Монстра» персонажу не добавляются (сервер ответит 400).
+    const fits = (a: Ability) => a.category !== 'monster';
     // Свои опубликованные есть в обоих списках, поэтому чужие берём по автору.
     return [
       {
         group: 'Мои способности',
-        items: [...mine.entries]
+        items: mine.entries
+          .filter(fits)
           .sort(byName)
           .map((a) => option(a, optionLabel(a))),
       },
       {
         group: 'Каталог',
         items: catalog.entries
-          .filter((a) => a.authorId !== user.id)
+          .filter((a) => fits(a) && a.authorId !== user.id)
           .sort(byName)
           .map((a) => option(a, `${optionLabel(a)} · ${a.authorNickname}`)),
       },

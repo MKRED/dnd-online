@@ -74,7 +74,7 @@ export const ABILITIES: SimpleCatalogDef = {
   categories: ABILITY_CATEGORIES,
   kinds: {
     values: ABILITY_CATEGORIES,
-    labels: { basic: 'Базовая', spell: 'Заклинание' },
+    labels: { basic: 'Базовая', spell: 'Заклинание', monster: 'Монстра' },
     of: (entry) => ['category' in entry ? entry.category : 'basic'],
   },
   levelOf: (entry) =>

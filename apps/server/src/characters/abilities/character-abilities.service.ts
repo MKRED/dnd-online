@@ -21,6 +21,7 @@ import { loadCharacterAbilities } from './character-abilities-loader.js';
 import {
   CHARACTER_ABILITY_ALREADY,
   CHARACTER_ABILITY_ENTRY_NOT_FOUND,
+  CHARACTER_ABILITY_MONSTER,
   CHARACTER_ABILITY_NOT_FOUND,
   CHARACTER_ABILITY_NOT_PREPARABLE,
 } from './character-abilities.messages.js';
@@ -44,11 +45,17 @@ export class CharacterAbilitiesService {
       // Добавить можно только то, что видишь сам: чужая скрытая неотличима от
       // несуществующей. 400, а не 404: не найдена способность из тела, а не адрес.
       const [ability] = await tx
-        .select({ id: abilities.id })
+        .select({ id: abilities.id, category: abilities.category })
         .from(abilities)
         .where(visibleEntry(ABILITY_ACCESS, userId, dto.abilityId))
         .limit(1);
       if (!ability) throw new BadRequestException(CHARACTER_ABILITY_NOT_FOUND);
+      // Черты и легендарные действия у игрока не к месту. Если автор потом сменит
+      // категорию уже добавленной способности, строка останется: убрать её — дело
+      // владельца персонажа.
+      if (ability.category === 'monster') {
+        throw new BadRequestException(CHARACTER_ABILITY_MONSTER);
+      }
       // Повтор упирается в уникальность и не вставляет строку — и при двух быстрых
       // кликах тоже.
       const inserted = await tx

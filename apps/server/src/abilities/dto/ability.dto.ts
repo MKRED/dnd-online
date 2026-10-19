@@ -1,9 +1,11 @@
 import { IsBoolean, IsIn, IsOptional, ValidateBy } from 'class-validator';
 import {
   ABILITY_CATEGORIES,
+  activationFitsCategory,
   isAbilityActivation,
   isAbilityCosts,
   isAbilitySteps,
+  isMonsterAbilityDetails,
   isSpellDetails,
   type AbilityActivation,
   type AbilityCategory,
@@ -23,8 +25,15 @@ export class AbilityDto extends CatalogEntryDto {
   category: AbilityCategory;
 
   @CategoryDetails<AbilityCategory>(
-    { basic: isEmptyDetails, spell: isSpellDetails },
-    { spell: 'Поля заклинания заданы неверно' },
+    {
+      basic: isEmptyDetails,
+      spell: isSpellDetails,
+      monster: isMonsterAbilityDetails,
+    },
+    {
+      spell: 'Поля заклинания заданы неверно',
+      monster: 'Поля способности монстра заданы неверно',
+    },
     'Поля способности не подходят к её категории',
   )
   details: object;
@@ -36,6 +45,22 @@ export class AbilityDto extends CatalogEntryDto {
     validator: {
       validate: isAbilityActivation,
       defaultMessage: () => 'Активация способности задана неверно',
+    },
+  })
+  // Черта и легендарное действие — только у способности монстра (shared/abilityMonster.ts).
+  // Неверную активацию или категорию отклоняют их собственные проверки.
+  @ValidateBy({
+    name: 'activationFitsCategory',
+    validator: {
+      validate: (value: unknown, args) => {
+        const { category } = args?.object as { category?: unknown };
+        if (!ABILITY_CATEGORIES.includes(category as AbilityCategory))
+          return true;
+        if (!isAbilityActivation(value)) return true;
+        return activationFitsCategory(category as AbilityCategory, value);
+      },
+      defaultMessage: () =>
+        'Черта и легендарное действие бывают только у способности монстра',
     },
   })
   activation: AbilityActivation;

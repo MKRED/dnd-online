@@ -172,7 +172,7 @@ describe('CharacterAbilities', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('добавить: уже добавленную выбрать нельзя, окно остаётся открытым, 409 — в окне', async () => {
+  it('добавить: уже добавленную выбрать нельзя, монстровых нет, окно остаётся открытым, 409 — в окне', async () => {
     const catalogAbility = (
       id: string,
       name: string,
@@ -197,7 +197,15 @@ describe('CharacterAbilities', () => {
     const mine = [
       catalogAbility('ability-Всплеск действий', 'Всплеск действий', 'me'),
     ];
-    const catalog = [catalogAbility('a-rage', 'Ярость', 'gm')];
+    const catalog = [
+      catalogAbility('a-rage', 'Ярость', 'gm'),
+      {
+        ...catalogAbility('a-lash', 'Хлестнуть', 'gm'),
+        category: 'monster',
+        details: { recharge: null },
+        activation: { kind: 'legendary', cost: 1 },
+      } satisfies Ability,
+    ];
     let posts = 0;
     const fetchMock = vi.fn<typeof fetch>((input, init) => {
       const url = typeof input === 'string' ? input : '';
@@ -230,6 +238,9 @@ describe('CharacterAbilities', () => {
         name: 'Всплеск действий · уже добавлена',
       }),
     ).toHaveAttribute('data-combobox-disabled', 'true');
+    expect(
+      screen.queryByRole('option', { name: /Хлестнуть/ }),
+    ).not.toBeInTheDocument();
     await userEvent.click(
       screen.getByRole('option', { name: 'Ярость · Мастер' }),
     );

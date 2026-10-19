@@ -52,6 +52,7 @@ export * from './abilityStepEffectLabels.js';
 export * from './abilityStepLabels.js';
 export * from './abilitySpell.js';
 export * from './abilitySpellLabels.js';
+export * from './abilityMonster.js';
 export * from './pluralRu.js';
 export * from './returnPath.js';
 export * from './bookmarks.js';

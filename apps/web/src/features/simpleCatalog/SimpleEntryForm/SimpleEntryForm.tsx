@@ -121,8 +121,7 @@ function SimpleEntryForm({
                 placeholder={def.texts.namePlaceholder}
                 {...form.getInputProps('name')}
               />
-              {/* Категория — только у способностей; пока она одна, поле всё равно
-                  есть: «Заклинание» добавится сюда (docs/plan/done/abilities.md). */}
+              {/* Категория — только у способностей (docs/plan/done/abilities.md). */}
               {def.categories && (
                 <Select
                   label="Категория"

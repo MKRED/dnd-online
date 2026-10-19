@@ -137,6 +137,34 @@ describe('способности у персонажа (e2e)', () => {
     await owner.post(url(id)).send({ abilityId }).expect(201);
   });
 
+  // docs/plan/monsters-npcs.md, этап 2.
+  it('способность «Монстра» — 400, ставшая ею после добавления остаётся', async () => {
+    const id = await createCharacter(owner);
+    const monster = {
+      category: 'monster',
+      details: { recharge: 5 },
+      activation: { kind: 'trait' },
+    };
+    const monsterId = await createAbility(owner, basicBody(monster));
+    const res = await owner
+      .post(url(id))
+      .send({ abilityId: monsterId })
+      .expect(400);
+    expect((res.body as { message: string }).message).toBe(
+      'Способности монстров персонажу не добавляются',
+    );
+    expect(await abilitiesOf(owner, id)).toEqual([]);
+
+    const abilityId = await createAbility(owner, basicBody());
+    await add(id, abilityId);
+    await owner
+      .put(`/api/abilities/${abilityId}`)
+      .send(basicBody(monster))
+      .expect(200);
+    const [row] = await abilitiesOf(owner, id);
+    expect(row.ability).toMatchObject({ id: abilityId, category: 'monster' });
+  });
+
   it('подготовить заклинание 1 круга; умение и заговор — 400', async () => {
     const id = await createCharacter(owner);
     const shield = await add(id, await createAbility(owner, spellBody(1)));

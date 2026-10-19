@@ -31,6 +31,7 @@ function row(
       level,
       activation,
       costs: NO_ABILITY_COSTS,
+      recharge: null,
     },
     missing: null,
     inactive: false,

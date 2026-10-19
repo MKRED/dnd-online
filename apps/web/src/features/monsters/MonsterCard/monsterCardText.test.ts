@@ -59,6 +59,13 @@ describe('тексты карточки монстра', () => {
       ['Легендарные действия', '3 за раунд, 4 в логове'],
       ['Колдовство', 'Интеллект, СЛ 16'],
     ]);
+    // Когда на карточке есть группы легендарных действий и заклинаний — только там.
+    expect(
+      monsterTraitRows(sampleMonster.statBlock, {
+        legendary: true,
+        spellcasting: true,
+      }).map(([label]) => label),
+    ).toEqual(['Чувства', 'Языки']);
     expect(
       monsterTraitRows({
         ...DEFAULT_MONSTER_STAT_BLOCK,

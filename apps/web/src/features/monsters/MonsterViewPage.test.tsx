@@ -53,6 +53,8 @@ describe('MonsterViewPage', () => {
     expect(screen.getByText('Спасбросок +3')).toBeInTheDocument();
     expect(screen.getByText('История +12, Восприятие +10')).toBeInTheDocument();
     expect(screen.getByText('3 за раунд, 4 в логове')).toBeInTheDocument();
+    // Способности автор меняет прямо на карточке.
+    expect(screen.getByRole('button', { name: '+ Способность' }));
     expect(screen.getByRole('link', { name: 'Редактировать' })).toHaveAttribute(
       'href',
       `/monsters/${sampleMonster.id}/edit`,
@@ -68,6 +70,7 @@ describe('MonsterViewPage', () => {
     expect(
       screen.queryByRole('link', { name: 'Редактировать' }),
     ).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Умения' })).toBeNull();
     expect(screen.getByRole('link', { name: '← К монстрам' })).toHaveAttribute(
       'href',
       '/monsters?tab=catalog',

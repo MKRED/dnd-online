@@ -1,10 +1,16 @@
 import { Fieldset, Grid, Stack, Text } from '@mantine/core';
 import type { ReactNode } from 'react';
-import type { Monster } from 'shared';
+import type { Monster, MonsterAbilityEntry } from 'shared';
 import { EntryImage, SourcesList } from '../../catalog';
 import { SheetField } from '../../characters';
+import {
+  MonsterSkills,
+  MonsterSpells,
+  monsterSkillGroups,
+  monsterSpellGroups,
+} from '../Abilities';
 import { monstersApi } from '../monstersApi';
-import MonsterAbilities from './MonsterAbilities';
+import MonsterAbilityScores from './MonsterAbilityScores';
 import MonsterHeader from './MonsterHeader';
 import MonsterStats from './MonsterStats';
 import { monsterTraitRows } from './monsterCardText';
@@ -13,12 +19,28 @@ interface MonsterCardProps {
   monster: Monster;
   showHidden: boolean;
   aside: ReactNode;
+  // Есть — автор меняет способности на карточке; нет — только чтение.
+  onAbilitiesChange?: (abilities: MonsterAbilityEntry[]) => void;
 }
 
 // Карточка монстра блоками, как лист персонажа (docs/plan/monsters-npcs.md, «Карточка —
-// как лист персонажа»). Способности, снаряжение и эффекты появятся на этапах 5–6.
-function MonsterCard({ monster, showHidden, aside }: MonsterCardProps) {
+// как лист персонажа»). Снаряжение и эффекты появятся на этапе 6.
+function MonsterCard({
+  monster,
+  showHidden,
+  aside,
+  onAbilitiesChange,
+}: MonsterCardProps) {
   const { statBlock } = monster;
+  const abilities = monster.abilities ?? [];
+  // Запас легендарных действий и колдовство стоят в заголовках своих групп, а пока групп
+  // нет — в «Защите, чувствах, языках».
+  const shown = {
+    legendary: monsterSkillGroups(abilities, statBlock).some(
+      (group) => group.key === 'legendary',
+    ),
+    spellcasting: monsterSpellGroups(abilities).length > 0,
+  };
   return (
     <Stack gap="lg">
       <Grid gap="xl">
@@ -36,16 +58,28 @@ function MonsterCard({ monster, showHidden, aside }: MonsterCardProps) {
           </Stack>
         </Grid.Col>
       </Grid>
-      <MonsterAbilities block={statBlock} />
+      <MonsterAbilityScores block={statBlock} />
       <Fieldset legend="Защита, чувства, языки">
         <Stack gap={6}>
-          {monsterTraitRows(statBlock).map(([label, value]) => (
+          {monsterTraitRows(statBlock, shown).map(([label, value]) => (
             <SheetField key={label} label={label}>
               {value}
             </SheetField>
           ))}
         </Stack>
       </Fieldset>
+      <MonsterSkills
+        monsterId={monster.id}
+        abilities={abilities}
+        block={statBlock}
+        onChange={onAbilitiesChange}
+      />
+      <MonsterSpells
+        monsterId={monster.id}
+        abilities={abilities}
+        block={statBlock}
+        onChange={onAbilitiesChange}
+      />
       {monster.description && (
         <Fieldset legend="Описание">
           <Text style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>

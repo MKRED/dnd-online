@@ -3,6 +3,7 @@ import type { CatalogEntryFields, CatalogEntryInputFields } from './catalog.js';
 import type { DamageType } from './damageTypes.js';
 import type { ConditionKind } from './effectConditions.js';
 import type { SenseDetails } from './effectSenses.js';
+import type { MonsterAbilityEntry } from './monsterAbilities.js';
 import type { MonsterChallenge } from './monsterChallenge.js';
 
 // Каталог монстров (docs/plan/monsters-npcs.md). Категория записи — тип существа, остальной
@@ -141,7 +142,12 @@ export interface MonsterFields {
   role: MonsterRole;
 }
 
-export type Monster = MonsterFields & CatalogEntryFields;
+// Способности приходят только в карточке монстра, не в списке.
+export type MonsterRecordFields = MonsterFields & {
+  abilities?: MonsterAbilityEntry[];
+};
+
+export type Monster = MonsterRecordFields & CatalogEntryFields;
 export type MonsterInput = MonsterFields & CatalogEntryInputFields;
 
 // Стат-блок записи, у которой он испорчен, и начальные значения формы: Средний, всё по 10,

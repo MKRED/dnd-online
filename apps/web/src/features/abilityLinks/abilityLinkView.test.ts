@@ -1,8 +1,8 @@
-import { NO_ABILITY_COSTS, type CharacterAbilityCard } from 'shared';
+import { NO_ABILITY_COSTS, type AbilityLinkCard } from 'shared';
 import { describe, expect, it } from 'vitest';
-import { abilitySummary } from './abilitiesView';
+import { abilitySummary } from './abilityLinkView';
 
-const card = (over: Partial<CharacterAbilityCard>): CharacterAbilityCard => ({
+const card = (over: Partial<AbilityLinkCard>): AbilityLinkCard => ({
   id: 'a',
   name: 'Способность',
   isPublic: true,
@@ -11,6 +11,7 @@ const card = (over: Partial<CharacterAbilityCard>): CharacterAbilityCard => ({
   level: null,
   activation: { kind: 'action' },
   costs: NO_ABILITY_COSTS,
+  recharge: null,
   ...over,
 });
 
@@ -52,5 +53,27 @@ describe('abilitySummary', () => {
         }),
       ),
     ).toBe('Действие');
+  });
+
+  it('у способности монстра — цена легендарного действия и перезарядка', () => {
+    expect(
+      abilitySummary(
+        card({
+          category: 'monster',
+          activation: { kind: 'legendary', cost: 2 },
+        }),
+      ),
+    ).toBe('стоит 2 действия');
+    expect(
+      abilitySummary(
+        card({
+          category: 'monster',
+          activation: { kind: 'legendary', cost: 1 },
+        }),
+      ),
+    ).toBe('');
+    expect(abilitySummary(card({ category: 'monster', recharge: 5 }))).toBe(
+      'Перезарядка 5–6',
+    );
   });
 });

@@ -54,29 +54,45 @@ export const formatSkills = (block: MonsterStatBlock) =>
     .map(({ skill, bonus }) => `${SKILL_LABELS[skill]} ${formatSigned(bonus)}`)
     .join(', ');
 
-// Строки «Защита, чувства, языки» в порядке книги; пустые не показываются.
-export function monsterTraitRows(block: MonsterStatBlock) {
-  const damage = (list: MonsterStatBlock['immunities']) =>
-    list.map((type) => DAMAGE_TYPE_LABELS[type].toLowerCase()).join(', ');
-  const senses = [
-    ...block.senses.map(formatSense),
-    `пассивное Восприятие ${block.passivePerception}`,
-  ].join('; ');
-  const { ability, saveDc, attackBonus } = block.spellcasting;
-  const spellcasting = [
+// «3 за раунд, 4 в логове» — запас легендарных действий; пусто, если их нет.
+export const formatLegendaryCount = (block: MonsterStatBlock) =>
+  block.legendaryActions === null
+    ? ''
+    : `${block.legendaryActions} за раунд` +
+      (block.legendaryActionsLair === null
+        ? ''
+        : `, ${block.legendaryActionsLair} в логове`);
+
+// «Интеллект, СЛ 16, атака +8»; пусто, если поля колдовства не заданы.
+export function formatSpellcasting({ spellcasting }: MonsterStatBlock) {
+  const { ability, saveDc, attackBonus } = spellcasting;
+  return [
     ability && ABILITY_LABELS[ability],
     saveDc !== null && `СЛ ${saveDc}`,
     attackBonus !== null && `атака ${formatSigned(attackBonus)}`,
   ]
     .filter(Boolean)
     .join(', ');
-  const legendary =
-    block.legendaryActions === null
-      ? ''
-      : `${block.legendaryActions} за раунд` +
-        (block.legendaryActionsLair === null
-          ? ''
-          : `, ${block.legendaryActionsLair} в логове`);
+}
+
+// Что уже стоит в заголовках «Умений» и «Заклинаний» — там и показываем, а не дважды.
+export interface ShownWithAbilities {
+  legendary: boolean;
+  spellcasting: boolean;
+}
+
+// Строки «Защита, чувства, языки» в порядке книги; пустые не показываются. Запас
+// легендарных действий и колдовство — здесь, только пока на карточке нет их групп.
+export function monsterTraitRows(
+  block: MonsterStatBlock,
+  shown: ShownWithAbilities = { legendary: false, spellcasting: false },
+) {
+  const damage = (list: MonsterStatBlock['immunities']) =>
+    list.map((type) => DAMAGE_TYPE_LABELS[type].toLowerCase()).join(', ');
+  const senses = [
+    ...block.senses.map(formatSense),
+    `пассивное Восприятие ${block.passivePerception}`,
+  ].join('; ');
 
   return [
     ['Уязвимости', damage(block.vulnerabilities)],
@@ -90,7 +106,10 @@ export function monsterTraitRows(block: MonsterStatBlock) {
     ],
     ['Чувства', senses],
     ['Языки', block.languages || '—'],
-    ['Легендарные действия', legendary],
-    ['Колдовство', spellcasting],
+    [
+      'Легендарные действия',
+      shown.legendary ? '' : formatLegendaryCount(block),
+    ],
+    ['Колдовство', shown.spellcasting ? '' : formatSpellcasting(block)],
   ].filter(([, value]) => value) as [string, string][];
 }

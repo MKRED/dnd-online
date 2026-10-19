@@ -54,43 +54,6 @@
   visibility: hidden;
 }
 
-/* Строка способности: отметка, название с затратами, крестик. На узком экране затраты
-   уходят под название, а не сжимают его. */
-.abilityRow {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--mantine-spacing-xs);
-  min-height: 28px;
-}
-
-.abilityRow[data-busy] {
-  opacity: 0.6;
-}
-
-.abilityText {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: var(--mantine-spacing-sm);
-  padding-top: 3px;
-  overflow-wrap: anywhere;
-}
-
-.abilitySummary {
-  margin-left: auto;
-  text-align: right;
-}
-
-@media (max-width: 36em) {
-  .abilitySummary {
-    flex-basis: 100%;
-    margin-left: 0;
-    text-align: left;
-  }
-}
-
 .preparedButton,
 .preparedCell {
   flex: none;
@@ -120,9 +83,4 @@
 
 .preparedDot[data-full] {
   background: var(--mantine-primary-color-filled);
-}
-
-/* Строки под заголовком группы или круга — с отступом, чтобы группы читались. */
-.groupEntries {
-  padding-left: var(--mantine-spacing-sm);
 }

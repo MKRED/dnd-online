@@ -8,9 +8,9 @@ import {
   type SpellSlotCircle,
   type SpellSlots,
 } from 'shared';
+import { GroupEntries } from '../../abilityLinks';
 import classes from './Abilities.module.css';
 import { spellCircles } from './abilitiesView';
-import AbilityRow from './AbilityRow';
 import SpellSlotPips from './SpellSlotPips';
 import { useAbilitiesEditor } from './useAbilitiesEditor';
 import { useSpellSlotsEditor } from './useSpellSlotsEditor';
@@ -36,7 +36,10 @@ function SpellsSection({
   onAbilitiesChange,
 }: SpellsSectionProps) {
   const slots = useSpellSlotsEditor(characterId, onSlotsChange);
-  const rows = useAbilitiesEditor(characterId, onAbilitiesChange);
+  const { editor: rows, renderRow } = useAbilitiesEditor(
+    characterId,
+    onAbilitiesChange,
+  );
 
   const circles = spellCircles(abilities, spellSlots);
   if (circles.length === 0) return null;
@@ -112,15 +115,7 @@ function SpellsSection({
                 {level === withSlots[0] && longRest}
               </div>
               {entries.length > 0 && (
-                <Stack gap={2} className={classes.groupEntries}>
-                  {entries.map((entry) => (
-                    <AbilityRow
-                      key={entry.id}
-                      entry={entry}
-                      {...rows.handlers}
-                    />
-                  ))}
-                </Stack>
+                <GroupEntries>{entries.map(renderRow)}</GroupEntries>
               )}
             </div>
           );

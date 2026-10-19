@@ -11,7 +11,7 @@ import {
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { CatalogEntriesController } from '../catalog/entries/catalog-entries.controller.js';
-import type { MonsterFields } from 'shared';
+import type { MonsterRecordFields } from 'shared';
 import { MonsterDto } from './dto/monster.dto.js';
 import { MonstersService } from './monsters.service.js';
 
@@ -19,7 +19,7 @@ import { MonstersService } from './monsters.service.js';
 @Controller('monsters')
 @UseGuards(AuthGuard)
 export class MonstersController extends CatalogEntriesController<
-  MonsterFields,
+  MonsterRecordFields,
   MonsterDto
 > {
   constructor(service: MonstersService) {

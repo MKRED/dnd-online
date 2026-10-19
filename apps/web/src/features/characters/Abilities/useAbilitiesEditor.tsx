@@ -1,0 +1,61 @@
+import { canBePrepared, type CharacterAbilityEntry } from 'shared';
+import {
+  abilityEntryName,
+  AbilityRow,
+  useAbilityLinksEditor,
+} from '../../abilityLinks';
+import { characterAbilitiesApi } from './abilitiesApi';
+import PreparedMark from './PreparedMark';
+
+// Правки способностей персонажа и его строка: у заклинания 1 круга и выше слева отметка
+// «подготовлено». Без onChange — только чтение.
+export function useAbilitiesEditor(
+  characterId: string,
+  onChange: ((abilities: CharacterAbilityEntry[]) => void) | undefined,
+) {
+  const editor = useAbilityLinksEditor(onChange);
+  const api = characterAbilitiesApi(characterId);
+  const { busyId, run } = editor;
+
+  const renderRow = (entry: CharacterAbilityEntry) => {
+    const busy = busyId === entry.id;
+    const name = abilityEntryName(entry);
+    const preparable = entry.ability !== null && canBePrepared(entry.ability);
+    const prepare = () =>
+      void run(
+        entry.id,
+        () => api.update(entry.id, { prepared: !entry.prepared }),
+        'Не удалось отметить подготовку',
+      );
+    return (
+      <AbilityRow
+        key={entry.id}
+        entry={entry}
+        busy={busy}
+        inactiveHint="Вы скрыли эту способность: у персонажа её нет"
+        leading={
+          preparable && (
+            <PreparedMark
+              prepared={entry.prepared}
+              name={name}
+              busy={busy}
+              onToggle={onChange && prepare}
+            />
+          )
+        }
+        // Убираем без подтверждения: вернуть способность — пара кликов в окне добавления.
+        onRemove={
+          onChange &&
+          (() =>
+            void run(
+              entry.id,
+              () => api.remove(entry.id),
+              'Не удалось убрать способность',
+            ))
+        }
+      />
+    );
+  };
+
+  return { editor, api, renderRow };
+}

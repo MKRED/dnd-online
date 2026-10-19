@@ -112,6 +112,7 @@ describe('способности у персонажа (e2e)', () => {
             ...noCosts,
             uses: { count: { kind: 'fixed', amount: 1 }, recovery: 'short' },
           },
+          recharge: null,
         },
         missing: null,
         inactive: false,

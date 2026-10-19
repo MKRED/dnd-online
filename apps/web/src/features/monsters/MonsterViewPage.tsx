@@ -13,11 +13,11 @@ function MonsterViewPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { entry: monster, error: loadError } = useCatalogEntry(
-    monstersApi.get,
-    id,
-    MONSTER_LOAD_TEXTS,
-  );
+  const {
+    entry: monster,
+    error: loadError,
+    update,
+  } = useCatalogEntry(monstersApi.get, id, MONSTER_LOAD_TEXTS);
   usePageTitle(monster?.name ?? 'Монстры');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -86,6 +86,11 @@ function MonsterViewPage() {
           monster={monster}
           showHidden={isAuthor}
           aside={authorActions}
+          onAbilitiesChange={
+            isAuthor
+              ? (abilities) => update((prev) => ({ ...prev, abilities }))
+              : undefined
+          }
         />
       )}
     </Container>

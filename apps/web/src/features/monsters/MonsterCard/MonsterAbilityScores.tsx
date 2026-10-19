@@ -9,7 +9,7 @@ import { formatSigned, formatSkills } from './monsterCardText';
 
 // Характеристики плитками: значение, модификатор и спасбросок, как ввёл мастер. Спасбросок
 // выше модификатора — владение, он выделен, как владение на листе персонажа.
-function MonsterAbilities({ block }: { block: MonsterStatBlock }) {
+function MonsterAbilityScores({ block }: { block: MonsterStatBlock }) {
   const skills = formatSkills(block);
   return (
     <Fieldset legend="Характеристики">
@@ -50,4 +50,4 @@ function MonsterAbilities({ block }: { block: MonsterStatBlock }) {
   );
 }
 
-export default MonsterAbilities;
+export default MonsterAbilityScores;

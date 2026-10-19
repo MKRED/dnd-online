@@ -8,39 +8,63 @@ import {
   Text,
 } from '@mantine/core';
 import { useState } from 'react';
-import type { CharacterAbilityEntry } from 'shared';
-import { useAbilityCandidates } from './useAbilityCandidates';
+import PerDaySelect from './PerDaySelect';
+import type { AbilityLinkEntry } from './abilityLinkView';
+import {
+  useAbilityCandidates,
+  type AbilityOwnerKind,
+} from './useAbilityCandidates';
 
 interface AddAbilityDialogProps {
-  added: readonly CharacterAbilityEntry[];
+  added: readonly AbilityLinkEntry[];
+  owner: AbilityOwnerKind;
   busy: boolean;
   error: string | null;
-  onAdd: (abilityId: string) => Promise<boolean>;
+  // perDay — «N/день» заклинания монстра; у остального всегда null.
+  onAdd: (abilityId: string, perDay: number | null) => Promise<boolean>;
   onClose: () => void;
 }
+
+const DESCRIPTIONS: Record<AbilityOwnerKind, string> = {
+  character: 'Умения и заклинания — свои и из каталога',
+  monster: 'Способности монстров, умения и заклинания — свои и из каталога',
+};
 
 // Добавить способность из своих и каталога. Монтируется только на время показа — списки
 // грузятся при открытии. После добавления окно остаётся открытым: способности обычно
 // вносят пачкой (все заклинания класса), а добавленная тут же становится недоступной.
 function AddAbilityDialog({
   added,
+  owner,
   busy,
   error,
   onAdd,
   onClose,
 }: AddAbilityDialogProps) {
-  const { loaded, options, error: loadError } = useAbilityCandidates(added);
+  const {
+    loaded,
+    options,
+    categoryOf,
+    error: loadError,
+  } = useAbilityCandidates(added, owner);
   const [abilityId, setAbilityId] = useState<string | null>(null);
+  const [perDay, setPerDay] = useState<number | null>(null);
   const [lastAdded, setLastAdded] = useState<string | null>(null);
+  // Частоту задают только заклинанию монстра (docs/plan/monsters-npcs.md).
+  const withPerDay =
+    owner === 'monster' &&
+    abilityId !== null &&
+    categoryOf(abilityId) === 'spell';
 
   const handleSubmit = async () => {
     if (!abilityId) return;
     const label = options
       .flatMap((group) => group.items)
       .find((item) => item.value === abilityId)?.label;
-    if (await onAdd(abilityId)) {
+    if (await onAdd(abilityId, withPerDay ? perDay : null)) {
       setLastAdded(label ?? null);
       setAbilityId(null);
+      setPerDay(null);
     }
   };
 
@@ -60,7 +84,7 @@ function AddAbilityDialog({
           )}
           <Select
             label="Способность"
-            description="Умения и заклинания — свои и из каталога"
+            description={DESCRIPTIONS[owner]}
             placeholder={
               loaded ? 'Найти по названию' : 'Загружаем способности…'
             }
@@ -77,6 +101,14 @@ function AddAbilityDialog({
             limit={50}
             data-autofocus
           />
+          {withPerDay && (
+            <PerDaySelect
+              label="В день"
+              description="Как часто монстр накладывает это заклинание"
+              value={perDay}
+              onChange={setPerDay}
+            />
+          )}
           {lastAdded && !error && (
             <Text size="sm" c="teal" role="status">
               Добавлено: {lastAdded}

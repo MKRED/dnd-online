@@ -184,9 +184,15 @@ The decisions are in [plan/monsters-npcs.md](../plan/monsters-npcs.md) («Реш
 - **The form suggests, never derives.** A save bonus follows the ability modifier until the GM types a different one. A newly picked skill gets the modifier + the CR's proficiency bonus, which the GM may change. Neither is recomputed later.
 - Code: `apps/web/src/features/monsters/`: the header line in `monsterKind.ts`, the card texts in `MonsterCard/monsterCardText.ts`.
 
+**Built (stage 5, 2026-10-19): abilities on a monster.**
+
+- **Card groups follow the 2024 stat block sections:** Traits, Actions, Bonus Actions, Reactions, Legendary Actions. The app's activations without a section of their own go where the book puts such text: «Без действия» among the traits, «Вместо одной атаки» and a long casting time among the actions.
+- **Spells by frequency**, as the book lists them: «Неограниченно» (At Will), then «N/день» from the highest. The per-day limit is on the monster's link to the spell, 1 to 9. The books use 1–3; the rest is room for homebrew (the app's own limit).
+- Code: `packages/shared/src/monsterAbilities.ts`, `apps/web/src/features/monsters/Abilities/monsterAbilitiesView.ts`.
+
 Planned for the next stages:
 
 - **The GM enters every number by hand**, as in the book, including the saves, skills, initiative and the average HP. The app doesn't derive them. XP and PB are read from the CR table above.
-- **Monster spells** have a per-day limit stored on the monster's link to the spell. Monsters don't get spell slots. Spellcasting is not an ability: the monster has optional spellcasting ability, save DC and spell attack fields, shown in the «Заклинания» header.
+- **Monsters don't get spell slots.** Spellcasting is not an ability: the monster has optional spellcasting ability, save DC and spell attack fields, shown in the «Заклинания» header (built in stage 5).
 - **A legendary action has a cost of 1–3**, default 1 (built in stage 2). The 2024 book always costs 1. The cost is kept for monsters taken from 2014 books.
 - **The "unique" role is the app's own idea**, not the book's: only one copy of such a monster can be on a scene.

@@ -4,6 +4,7 @@ import {
   MONSTER_TYPES,
   isMonsterStatBlock,
   type MonsterFields,
+  type MonsterRecordFields,
   type MonsterRole,
   type MonsterType,
 } from 'shared';
@@ -47,19 +48,21 @@ export function toMonsterFields(
   };
 }
 
-export const MONSTERS_CONFIG: CatalogEntriesConfig<MonsterFields, MonsterDto> =
-  {
-    catalog: 'monster',
-    table: monsters,
-    images: monsterImageTables,
-    access: MONSTER_ACCESS,
-    toVariant: toMonsterFields,
-    toStored: (dto) => ({
-      category: dto.category,
-      details: {},
-      extra: { statBlock: dto.statBlock, role: dto.role },
-    }),
-  };
+export const MONSTERS_CONFIG: CatalogEntriesConfig<
+  MonsterRecordFields,
+  MonsterDto
+> = {
+  catalog: 'monster',
+  table: monsters,
+  images: monsterImageTables,
+  access: MONSTER_ACCESS,
+  toVariant: toMonsterFields,
+  toStored: (dto) => ({
+    category: dto.category,
+    details: {},
+    extra: { statBlock: dto.statBlock, role: dto.role },
+  }),
+};
 
 export const MONSTER_IMAGE_CONFIG: CatalogImageConfig = {
   catalog: 'monster',

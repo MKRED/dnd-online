@@ -18,6 +18,7 @@ export * from './monsters.js';
 export * from './ability-step-effects.js';
 export * from './character-effects.js';
 export * from './character-abilities.js';
+export * from './monster-abilities.js';
 export type {
   CatalogEntryTable,
   CatalogImageTables,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../../lib/apiRequest';
 
 interface Texts {
@@ -49,6 +49,20 @@ export function useCatalogEntry<Entry>(
     };
   }, [load, id, texts]);
 
+  // Правка на месте без перезагрузки: строки, которые сервер отдал после изменения
+  // (способности монстра).
+  const update = useCallback(
+    (change: (entry: Entry) => Entry) =>
+      setLoaded((prev) =>
+        prev?.entry ? { ...prev, entry: change(prev.entry) } : prev,
+      ),
+    [],
+  );
+
   const current = loaded?.id === id ? loaded : null;
-  return { entry: current?.entry ?? null, error: current?.error ?? null };
+  return {
+    entry: current?.entry ?? null,
+    error: current?.error ?? null,
+    update,
+  };
 }

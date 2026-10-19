@@ -159,6 +159,14 @@ function CharacterViewPage() {
                   )
               : undefined
           }
+          onAbilitiesChange={
+            isAuthor
+              ? (abilities) =>
+                  setCharacter((current) =>
+                    current ? { ...current, abilities } : current,
+                  )
+              : undefined
+          }
           onSpellSlotsChange={
             isAuthor
               ? (spellSlots) =>

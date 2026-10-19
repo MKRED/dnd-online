@@ -1,1 +1,1 @@
-export { default } from './SpellsSection';
+export { default } from './CharacterAbilities';

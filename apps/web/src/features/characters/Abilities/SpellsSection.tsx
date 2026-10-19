@@ -1,54 +1,67 @@
 import { Alert, Button, Fieldset, Stack, Text } from '@mantine/core';
-import { useState } from 'react';
 import {
+  canBePrepared,
+  formatSpellLevel,
   longRestExpended,
   SPELL_SLOT_CIRCLES,
-  type Character,
+  type CharacterAbilityEntry,
+  type SpellSlotCircle,
   type SpellSlots,
-  type SpellSlotsExpended,
 } from 'shared';
-import { errorMessage } from '../../../lib/apiRequest';
-import { spendSpellSlots } from '../charactersApi';
 import classes from './Abilities.module.css';
+import { spellCircles } from './abilitiesView';
+import AbilityRow from './AbilityRow';
 import SpellSlotPips from './SpellSlotPips';
+import { useAbilitiesEditor } from './useAbilitiesEditor';
+import { useSpellSlotsEditor } from './useSpellSlotsEditor';
 
 interface SpellsSectionProps {
-  character: Character;
-  // Есть — автор тратит ячейки на листе; нет — лист только для чтения.
-  onChange?: (spellSlots: SpellSlots) => void;
+  characterId: string;
+  abilities: CharacterAbilityEntry[];
+  spellSlots: SpellSlots;
+  // Есть — автор тратит ячейки на листе; нет — только чтение.
+  onSlotsChange?: (spellSlots: SpellSlots) => void;
+  // Есть — автор отмечает подготовку и убирает заклинания.
+  onAbilitiesChange?: (abilities: CharacterAbilityEntry[]) => void;
 }
 
-// Блок «Заклинания» на листе (docs/plan/character-abilities.md): круги с ячейками.
-// Заклинания по кругам появятся здесь же на этапе 4. Правки идут по одной: пока
-// запрос в пути, кружки заняты — иначе два быстрых клика прислали бы одно и то же число.
-function SpellsSection({ character, onChange }: SpellsSectionProps) {
-  const { id, spellSlots } = character;
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+// Блок «Заклинания» (docs/plan/character-abilities.md): заговоры, затем круги 1–9. Ячейки
+// стоят в заголовке круга, рядом с тем, на что они тратятся. Добавляют заклинания
+// кнопкой «+ Способность» в «Умениях».
+function SpellsSection({
+  characterId,
+  abilities,
+  spellSlots,
+  onSlotsChange,
+  onAbilitiesChange,
+}: SpellsSectionProps) {
+  const slots = useSpellSlotsEditor(characterId, onSlotsChange);
+  const rows = useAbilitiesEditor(characterId, onAbilitiesChange);
 
-  const circles = SPELL_SLOT_CIRCLES.filter(
+  const circles = spellCircles(abilities, spellSlots);
+  if (circles.length === 0) return null;
+  const withSlots = SPELL_SLOT_CIRCLES.filter(
     (level) => (spellSlots[level]?.total ?? 0) > 0,
   );
-  if (circles.length === 0) return null;
-  const anySpent = circles.some((level) => spellSlots[level]!.expended > 0);
+  const anySpent = withSlots.some((level) => spellSlots[level]!.expended > 0);
+  const anyPreparable = circles.some(({ entries }) =>
+    entries.some((e) => canBePrepared(e.ability)),
+  );
+  const error = slots.error ?? rows.error;
+  const legend = [
+    withSlots.length > 0 && '● ○ у круга — ячейки: есть и потрачена.',
+    anyPreparable && '● у заклинания — подготовлено.',
+    onSlotsChange &&
+      withSlots.length > 0 &&
+      'Нажмите на кружок, чтобы потратить или вернуть ячейку.',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
-  const save = async (expended: SpellSlotsExpended, failure: string) => {
-    setBusy(true);
-    setError(null);
-    try {
-      onChange?.((await spendSpellSlots(id, expended)).spellSlots);
-    } catch (err: unknown) {
-      console.error('Spell slot change failed', err);
-      setError(errorMessage(err, failure));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  // Кнопка — в первой строке круга, а не своей строкой. Когда тратить нечего, она
-  // скрыта, но место держит (см. .longRest). Подтверждения нет: вернуть потраченные
-  // можно кликами по кружкам.
-  const longRest = onChange && (
+  // Кнопка — в строке первого круга с ячейками, а не своей строкой. Когда тратить
+  // нечего, она скрыта, но место держит (см. .longRest): появляясь после первой траты,
+  // она иначе сдвигала бы кружки под курсором. Подтверждения нет: вернуть можно кликами.
+  const longRest = onSlotsChange && withSlots.length > 0 && (
     <Button
       size="compact-sm"
       variant="light"
@@ -57,10 +70,13 @@ function SpellsSection({ character, onChange }: SpellsSectionProps) {
       data-hidden={!anySpent || undefined}
       aria-hidden={!anySpent || undefined}
       tabIndex={anySpent ? undefined : -1}
-      disabled={busy}
+      disabled={slots.busy}
       title="Вернуть все потраченные ячейки"
       onClick={() =>
-        void save(longRestExpended(spellSlots), 'Не удалось вернуть ячейки')
+        void slots.save(
+          longRestExpended(spellSlots),
+          'Не удалось вернуть ячейки',
+        )
       }
     >
       Долгий отдых
@@ -70,44 +86,65 @@ function SpellsSection({ character, onChange }: SpellsSectionProps) {
   return (
     <Fieldset legend="Заклинания">
       <Stack gap="xs">
-        {circles.map((level, i) => (
-          <div key={level} className={classes.circleRow}>
-            <Text size="sm" fw={600} className={classes.circleLabel}>
-              {level} круг
-            </Text>
-            <SpellSlotPips
-              level={level}
-              slots={spellSlots[level]!}
-              busy={busy}
-              onSpend={
-                onChange &&
-                ((expended) =>
-                  void save(
-                    { [level]: expended },
-                    'Не удалось сохранить ячейки',
-                  ))
-              }
-            />
-            {i === 0 && longRest}
-          </div>
-        ))}
-        {/* Ошибка — под кругами, чтобы не сдвигать кружки. */}
+        {circles.map(({ level, entries }) => {
+          const circleSlots = spellSlots[level as SpellSlotCircle];
+          return (
+            <div key={level}>
+              <div className={classes.circleRow}>
+                <Text size="sm" fw={600} className={classes.circleLabel}>
+                  {level === 0 ? 'Заговоры' : formatSpellLevel(level)}
+                </Text>
+                {circleSlots && circleSlots.total > 0 && (
+                  <SpellSlotPips
+                    level={level as SpellSlotCircle}
+                    slots={circleSlots}
+                    busy={slots.busy}
+                    onSpend={
+                      onSlotsChange &&
+                      ((expended) =>
+                        void slots.save(
+                          { [level]: expended },
+                          'Не удалось сохранить ячейки',
+                        ))
+                    }
+                  />
+                )}
+                {level === withSlots[0] && longRest}
+              </div>
+              {entries.length > 0 && (
+                <Stack gap={2} className={classes.groupEntries}>
+                  {entries.map((entry) => (
+                    <AbilityRow
+                      key={entry.id}
+                      entry={entry}
+                      {...rows.handlers}
+                    />
+                  ))}
+                </Stack>
+              )}
+            </div>
+          );
+        })}
+        {/* Ошибка — под кругами, чтобы не сдвигать кружки и строки. */}
         {error && (
           <Alert
             color="red"
             variant="light"
             p="xs"
             withCloseButton
-            onClose={() => setError(null)}
+            onClose={() => {
+              slots.setError(null);
+              rows.setError(null);
+            }}
           >
             {error}
           </Alert>
         )}
-        <Text size="xs" c="dimmed">
-          {onChange
-            ? '● — ячейка есть, ○ — потрачена. Нажмите на кружок, чтобы потратить или вернуть ячейку.'
-            : '● — ячейка есть, ○ — потрачена.'}
-        </Text>
+        {legend && (
+          <Text size="xs" c="dimmed">
+            {legend}
+          </Text>
+        )}
       </Stack>
     </Fieldset>
   );

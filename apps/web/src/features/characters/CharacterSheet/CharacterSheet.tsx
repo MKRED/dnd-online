@@ -3,6 +3,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import {
   sheetTotals,
   type Character,
+  type CharacterAbilityEntry,
   type CharacterEffectEntry,
   type InventoryEntry,
   type SpellSlots,
@@ -11,7 +12,7 @@ import AbilitiesView from './AbilitiesView';
 import CombatView from './CombatView';
 import EffectSummary from './EffectSummary';
 import EffectsStrip from '../Effects';
-import SpellsSection from '../Abilities';
+import CharacterAbilities from '../Abilities';
 import InventorySection from '../Inventory';
 import PersonalityView from './PersonalityView';
 import ProficienciesView from './ProficienciesView';
@@ -27,10 +28,13 @@ interface CharacterSheetProps {
   onEffectsChange?: (effects: CharacterEffectEntry[]) => void;
   // Есть — автор тратит и возвращает ячейки заклинаний на листе.
   onSpellSlotsChange?: (spellSlots: SpellSlots) => void;
+  // Есть — автор добавляет, отмечает и убирает способности на листе.
+  onAbilitiesChange?: (abilities: CharacterAbilityEntry[]) => void;
 }
 
 // Лист персонажа — так его видят и автор, и зритель по ссылке. Менять на листе можно
-// только инвентарь, наложенные эффекты и потраченные ячейки (у автора); остальное — формой.
+// только инвентарь, наложенные эффекты, способности и потраченные ячейки (у автора);
+// остальное — формой.
 // Разделы идут в порядке формы, пустые не показываются.
 function CharacterSheet({
   character,
@@ -38,6 +42,7 @@ function CharacterSheet({
   onInventoryChange,
   onEffectsChange,
   onSpellSlotsChange,
+  onAbilitiesChange,
 }: CharacterSheetProps) {
   // Вид листа: итог с эффектами или база из формы. Не запоминается — лист всегда
   // открывается итогом, в игре нужен он (решено с пользователем 2026-10-17).
@@ -77,7 +82,11 @@ function CharacterSheet({
         </Grid.Col>
       </Grid>
       <AbilitiesView character={character} />
-      <SpellsSection character={character} onChange={onSpellSlotsChange} />
+      <CharacterAbilities
+        character={character}
+        onAbilitiesChange={onAbilitiesChange}
+        onSpellSlotsChange={onSpellSlotsChange}
+      />
       <ProficienciesView character={character} />
       <InventorySection character={character} onChange={onInventoryChange} />
       <PersonalityView character={character} />

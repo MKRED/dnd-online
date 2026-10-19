@@ -11,6 +11,12 @@ const character = (spellSlots: SpellSlots): Character => ({
   spellSlots,
 });
 
+const props = (c: Character) => ({
+  characterId: c.id,
+  abilities: c.abilities,
+  spellSlots: c.spellSlots,
+});
+
 const slots: SpellSlots = {
   1: { total: 4, expended: 1 },
   2: { total: 2, expended: 0 },
@@ -37,13 +43,13 @@ afterEach(() => {
 describe('SpellsSection', () => {
   it('без ячеек блока нет', () => {
     renderWithProviders(
-      <SpellsSection character={character({})} onChange={vi.fn()} />,
+      <SpellsSection {...props(character({}))} onSlotsChange={vi.fn()} />,
     );
     expect(screen.queryByText('Заклинания')).toBeNull();
   });
 
   it('зритель видит кружки без кнопок и без «Долгого отдыха»', () => {
-    renderWithProviders(<SpellsSection character={character(slots)} />);
+    renderWithProviders(<SpellsSection {...props(character(slots))} />);
     expect(
       screen.getByRole('group', {
         name: 'Ячейки 1 круга: осталось 3 из 4',
@@ -57,7 +63,7 @@ describe('SpellsSection', () => {
     const next = { ...slots, 1: { total: 4, expended: 2 } };
     const sent = stubPatch(next);
     renderWithProviders(
-      <SpellsSection character={character(slots)} onChange={onChange} />,
+      <SpellsSection {...props(character(slots))} onSlotsChange={onChange} />,
     );
     const first = screen.getByRole('group', { name: /1 круга/ });
     expect(
@@ -75,7 +81,7 @@ describe('SpellsSection', () => {
   it('возврат ячейки шлёт на одну меньше', async () => {
     const sent = stubPatch({ ...slots, 1: { total: 4, expended: 0 } });
     renderWithProviders(
-      <SpellsSection character={character(slots)} onChange={vi.fn()} />,
+      <SpellsSection {...props(character(slots))} onSlotsChange={vi.fn()} />,
     );
     await userEvent.click(
       screen.getByRole('button', { name: 'Вернуть ячейку 1 круга' }),
@@ -87,15 +93,15 @@ describe('SpellsSection', () => {
     const onChange = vi.fn();
     const sent = stubPatch({ ...slots, 1: { total: 4, expended: 0 } });
     renderWithProviders(
-      <SpellsSection character={character(slots)} onChange={onChange} />,
+      <SpellsSection {...props(character(slots))} onSlotsChange={onChange} />,
     );
     await userEvent.click(screen.getByRole('button', { name: 'Долгий отдых' }));
     expect(sent()).toEqual({ spellSlotsExpended: { 1: 0, 2: 0 } });
 
     renderWithProviders(
       <SpellsSection
-        character={character({ 2: { total: 2, expended: 0 } })}
-        onChange={vi.fn()}
+        {...props(character({ 2: { total: 2, expended: 0 } }))}
+        onSlotsChange={vi.fn()}
       />,
     );
     expect(
@@ -107,7 +113,7 @@ describe('SpellsSection', () => {
     const onChange = vi.fn();
     stubPatch({}, 400);
     renderWithProviders(
-      <SpellsSection character={character(slots)} onChange={onChange} />,
+      <SpellsSection {...props(character(slots))} onSlotsChange={onChange} />,
     );
     await userEvent.click(
       screen.getByRole('button', { name: 'Вернуть ячейку 1 круга' }),

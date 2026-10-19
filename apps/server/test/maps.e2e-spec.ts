@@ -67,6 +67,7 @@ describe('карты (e2e)', () => {
     await owner.get(`/api/maps/${id}/section?axis=x&at=1`).expect(200);
     const chunks = await owner.get(`/api/maps/${id}/chunks`).expect(200);
     expect((chunks.body as { chunks: unknown[] }).chunks).toHaveLength(1);
+    expect(chunks.body).toMatchObject({ size: { width: 32, depth: 32 } });
   });
 
   it('отмена и возврат', async () => {
@@ -195,6 +196,8 @@ describe('карты (e2e)', () => {
     });
     await owner.post(`/api/maps/${id}/redo`).expect(200);
     expect(await sizeAndBounds()).toMatchObject({ width: 9, depth: 8 });
+    const chunks = await owner.get(`/api/maps/${id}/chunks`).expect(200);
+    expect(chunks.body).toMatchObject({ size: { width: 9, depth: 8 } });
   });
 
   it('срез и разрез без области берут размер карты', async () => {

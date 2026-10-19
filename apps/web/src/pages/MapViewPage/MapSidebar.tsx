@@ -1,6 +1,7 @@
 import {
   Alert,
   Anchor,
+  Button,
   Divider,
   Group,
   Slider,
@@ -10,10 +11,18 @@ import {
 } from '@mantine/core';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import type { MapSize } from 'shared';
+import { mapSizeLabel } from '../../features/maps';
 import classes from './MapViewPage.module.css';
 
 interface MapSidebarProps {
   name: string;
+  // Размер карты; null — карта ещё не загружена.
+  size: MapSize | null;
+  // Открыть панель «Размер карты»; null — она уже открыта.
+  onEditSize: (() => void) | null;
+  // Заголовок над панелью: «Редактор» или «Размер карты».
+  panelTitle: string;
   // Карта не загрузилась — сцены нет.
   loadError: string | null;
   // Правка не прошла; сцена остаётся на месте.
@@ -32,6 +41,9 @@ interface MapSidebarProps {
 // Правая панель страницы карты: всё управление, чтобы сцена занимала остальной экран.
 function MapSidebar({
   name,
+  size,
+  onEditSize,
+  panelTitle,
   loadError,
   editError,
   cut,
@@ -50,6 +62,17 @@ function MapSidebar({
             Все карты
           </Anchor>
         </Group>
+
+        {size && (
+          <Group justify="space-between" gap="xs" wrap="nowrap">
+            <Text size="sm">{mapSizeLabel(size)}</Text>
+            {onEditSize && (
+              <Button size="compact-xs" variant="subtle" onClick={onEditSize}>
+                Изменить
+              </Button>
+            )}
+          </Group>
+        )}
 
         {loadError && (
           <Alert color="red" title="Ошибка">
@@ -86,7 +109,7 @@ function MapSidebar({
 
         {loaded && (
           <>
-            <Divider label="Редактор" labelPosition="left" />
+            <Divider label={panelTitle} labelPosition="left" />
             {editError && <Alert color="red">{editError}</Alert>}
             {children}
           </>

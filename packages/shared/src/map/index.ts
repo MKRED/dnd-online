@@ -9,6 +9,7 @@ export * from './ops.js';
 export * from './mapSize.js';
 export * from './resizeOp.js';
 export * from './applyResize.js';
+export * from './resizeLoss.js';
 export * from './changesetMerge.js';
 export * from './mapEdit.js';
 export * from './applyOp.js';

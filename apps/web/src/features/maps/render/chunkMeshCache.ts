@@ -1,7 +1,9 @@
 import {
   chunkKey,
   parseChunkKey,
+  sameSize,
   type ChunkStore,
+  type MapSize,
   type MapState,
 } from 'shared';
 import { createBlockLookup } from './blockLookup';
@@ -16,6 +18,7 @@ interface CachedChunk {
 
 export interface ChunkMeshCache {
   cutY: number;
+  size: MapSize | undefined;
   chunks: Map<string, CachedChunk>;
 }
 
@@ -38,13 +41,18 @@ function meshInputs(store: ChunkStore, key: string) {
 
 // Геометрия всех чанков карты с переиспользованием прошлой сборки. Правка меняет
 // массивы только затронутых чанков (см. applyMapChanges), поэтому пересобираются
-// они и их соседи, а не вся карта. Смена среза пересобирает всё.
+// они и их соседи, а не вся карта. Смена среза или размера пересобирает всё: сужение
+// с cut «keep» скрывает блоки, не трогая ни одного массива чанка.
 export function updateChunkMeshes(
   prev: ChunkMeshCache | null,
-  map: MapState,
+  map: MapState & { size?: MapSize },
   cutY: number,
 ): ChunkMeshCache {
-  const reuse = prev?.cutY === cutY ? prev.chunks : null;
+  const { size } = map;
+  const sameMapSize =
+    prev &&
+    (prev.size && size ? sameSize(prev.size, size) : prev.size === size);
+  const reuse = prev?.cutY === cutY && sameMapSize ? prev.chunks : null;
   const lookup = createBlockLookup(map.palette);
   const chunks = new Map<string, CachedChunk>();
   for (const key of map.store.keys()) {
@@ -56,8 +64,11 @@ export function updateChunkMeshes(
       key,
       unchanged
         ? cached
-        : { inputs, meshes: buildChunkMesh(map.store, key, lookup, { cutY }) },
+        : {
+            inputs,
+            meshes: buildChunkMesh(map.store, key, lookup, { cutY, size }),
+          },
     );
   }
-  return { cutY, chunks };
+  return { cutY, size, chunks };
 }

@@ -9,7 +9,12 @@ import {
   type MapBoundsLimits,
   type SizedMapState,
 } from './mapSize.js';
-import { resizedSize, type ResizeOp } from './resizeOp.js';
+import {
+  resizedSize,
+  resizeFate,
+  resizeShift,
+  type ResizeOp,
+} from './resizeOp.js';
 import { solidCells } from './summary.js';
 
 // Меняет размер карты. Координаты карты начинаются с нуля, поэтому место на западе,
@@ -33,11 +38,7 @@ export function applyResize(
     );
   }
 
-  const shift: Vec3 = [
-    op.grow.west ?? 0,
-    op.grow.down ?? 0,
-    op.grow.north ?? 0,
-  ];
+  const shift = resizeShift(op.grow);
   // «delete» удаляет всё, что окажется за восточной и южной границей, в том числе
   // блоки, скрытые прошлыми сужениями.
   const keepHidden = op.cut !== 'delete';
@@ -55,9 +56,8 @@ export function applyResize(
       cell[2] + shift[2],
     ];
     // Срезано с запада, севера или снизу — удаляется всегда.
-    if (at.some((v) => v < 0)) continue;
-    const outside = at[0] >= after.width || at[2] >= after.depth;
-    if (outside && !keepHidden) continue;
+    const fate = resizeFate(at, after);
+    if (fate === 'cut' || (fate === 'outside' && !keepHidden)) continue;
     if (at[1] >= limits.maxHeight) {
       throw new MapOpError(
         `Блоки поднимутся выше предела высоты: ${limits.maxHeight} уровней`,

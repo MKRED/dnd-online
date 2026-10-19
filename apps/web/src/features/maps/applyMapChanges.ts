@@ -3,6 +3,7 @@ import {
   cellLocation,
   MemoryChunkStore,
   unpackChangeset,
+  type MapSize,
   type MapState,
   type PackedChangeset,
 } from 'shared';
@@ -11,12 +12,13 @@ import {
 // сцена пересобирает геометрию по смене ссылок, поэтому чанки копируются только
 // затронутые (copy-on-write), а нетронутые остаются теми же массивами — по ним
 // сцена понимает, что чанк пересобирать не нужно.
-// Бросает, если изменения не ложатся на нашу копию (конфликт или чужая палитра):
-// значит, копия разошлась с сервером и карту нужно перечитать.
-export function applyMapChanges(
-  state: MapState,
+// Бросает, если изменения не ложатся на нашу копию (конфликт, чужая палитра или
+// другой размер): значит, копия разошлась с сервером и карту нужно перечитать.
+// Размер копируется: resize меняет его в той же правке, что и блоки.
+export function applyMapChanges<S extends MapState & { size?: MapSize }>(
+  state: S,
   packed: PackedChangeset,
-): MapState {
+): S {
   const changeset = unpackChangeset(packed);
   const store = new MemoryChunkStore();
   for (const key of state.store.keys()) store.set(key, state.store.get(key)!);
@@ -29,7 +31,12 @@ export function applyMapChanges(
       copied.add(key);
     }
   }
-  const next: MapState = { store, palette: [...state.palette] };
+  const next: S = {
+    ...state,
+    store,
+    palette: [...state.palette],
+    ...(state.size && { size: { ...state.size } }),
+  };
   const { conflicts } = applyChangeset(next, changeset, 'forward');
   if (conflicts.length > 0) {
     throw new Error(`Map copy diverged: ${conflicts.length} conflicting cells`);

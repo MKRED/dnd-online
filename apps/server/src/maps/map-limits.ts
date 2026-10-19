@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { MapBatchLimits } from 'shared';
+import { DEFAULT_MAP_LIMITS, type MapBatchLimits } from 'shared';
 
 function readPositiveInt(
   configService: ConfigService,
@@ -49,8 +49,16 @@ export class MapLimitsConfig implements MapBatchLimits {
       'MAP_MAX_OPS_PER_BATCH',
       100,
     );
-    this.maxSize = readPositiveInt(configService, 'MAP_MAX_SIZE', 256);
-    this.maxHeight = readPositiveInt(configService, 'MAP_MAX_HEIGHT', 64);
+    this.maxSize = readPositiveInt(
+      configService,
+      'MAP_MAX_SIZE',
+      DEFAULT_MAP_LIMITS.maxSize,
+    );
+    this.maxHeight = readPositiveInt(
+      configService,
+      'MAP_MAX_HEIGHT',
+      DEFAULT_MAP_LIMITS.maxHeight,
+    );
     this.maxChunks = readPositiveInt(configService, 'MAP_MAX_CHUNKS', 4096);
   }
 }

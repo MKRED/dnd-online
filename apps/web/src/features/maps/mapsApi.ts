@@ -1,12 +1,21 @@
-import type { MapChunksResponse, MapEditResult, MapInfo, MapOp } from 'shared';
+import type {
+  MapChunksResponse,
+  MapEditResult,
+  MapInfo,
+  MapOp,
+  MapSize,
+} from 'shared';
 import { apiRequest as request } from '../../lib/apiRequest';
 
 export function listMaps(): Promise<MapInfo[]> {
   return request('/maps');
 }
 
-export function createMap(name: string): Promise<MapInfo> {
-  return request('/maps', { method: 'POST', body: JSON.stringify({ name }) });
+export function createMap(name: string, size: MapSize): Promise<MapInfo> {
+  return request('/maps', {
+    method: 'POST',
+    body: JSON.stringify({ name, ...size }),
+  });
 }
 
 export function getMap(id: string): Promise<MapInfo> {

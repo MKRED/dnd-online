@@ -1,6 +1,6 @@
 import type { ThreeEvent } from '@react-three/fiber';
 import { useState, type ReactNode } from 'react';
-import type { Box3, Vec3 } from 'shared';
+import { insideMap, type Box3, type MapSize, type Vec3 } from 'shared';
 import {
   cellsFromHit,
   regionBox,
@@ -9,12 +9,13 @@ import {
   type SceneEditor,
 } from '../editor/editorTools';
 import FrameBox from './FrameBox';
+import GroundGrid from './GroundGrid';
 import WalkHoverMesh from './WalkHoverMesh';
 
 interface EditLayerProps {
   editor: SceneEditor | null;
-  // Кадр карты: вокруг него рисуется сетка земли.
-  frame: Box3;
+  // Размер карты: по нему земля, сетка и граница.
+  size: MapSize;
   // Меши чанков — по ним идёт выбор клеток.
   children: ReactNode;
 }
@@ -56,15 +57,19 @@ const samePick = (a: PickedCells | null, b: PickedCells | null) =>
     sameHalf(a, b));
 
 // Подсветка клеток инструмента: область от первого угла или одна клетка.
+// Клетку за границей карты (боковая грань у края, низ блока на земле) не подсвечиваем:
+// правку туда редактор и не отправит.
 function CellHighlight({
   editor,
   pick,
+  size,
 }: {
   editor: SceneEditor;
   pick: PickedCells;
+  size: MapSize;
 }) {
   const cell = toolCell(editor.tool, pick);
-  if (!cell) return null;
+  if (!cell || !insideMap(cell, size)) return null;
   const box: Box3 = editor.anchor
     ? regionBox(editor.anchor, cell, editor.height)
     : { min: cell, max: cell };
@@ -80,18 +85,11 @@ function CellHighlight({
 // Слой редактора: клики по блокам и земле превращаются в выбор клеток.
 // Наведение живёт здесь, а не на странице: иначе каждое движение мыши
 // перерисовывало бы всю страницу с панелью.
-function EditLayer({ editor, frame, children }: EditLayerProps) {
+function EditLayer({ editor, size, children }: EditLayerProps) {
   const [hover, setHover] = useState<PickedCells | null>(null);
 
   const updateHover = (pick: PickedCells | null) =>
     setHover((prev) => (samePick(prev, pick) ? prev : pick));
-
-  // Сетка земли: чётный размер и целый центр — линии лягут по границам клеток.
-  const half = Math.ceil(
-    Math.max(frame.max[0] - frame.min[0], frame.max[2] - frame.min[2]) / 2 + 16,
-  );
-  const cx = Math.round((frame.min[0] + frame.max[0] + 1) / 2);
-  const cz = Math.round((frame.min[2] + frame.max[2] + 1) / 2);
 
   return (
     <>
@@ -121,26 +119,20 @@ function EditLayer({ editor, frame, children }: EditLayerProps) {
           <mesh
             visible={false}
             rotation={[-Math.PI / 2, 0, 0]}
-            position={[cx, 0, cz]}
+            position={[size.width / 2, 0, size.depth / 2]}
             userData={{ ground: true }}
           >
-            <planeGeometry args={[half * 2, half * 2]} />
+            <planeGeometry args={[size.width, size.depth]} />
           </mesh>
         )}
       </group>
-      {editor && (
-        <gridHelper
-          args={[half * 2, half * 2, '#5a5f6a', '#363a42']}
-          position={[cx, 0.002, cz]}
-          raycast={() => null}
-        />
-      )}
+      <GroundGrid size={size} showGrid={editor !== null} />
       {editor &&
         hover &&
         (editor.preview ? (
           <WalkHoverMesh hover={editor.preview(hover)} />
         ) : (
-          <CellHighlight editor={editor} pick={hover} />
+          <CellHighlight editor={editor} pick={hover} size={size} />
         ))}
     </>
   );

@@ -1,7 +1,7 @@
 import { useComputedColorScheme } from '@mantine/core';
 import { MapControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import type { Box3, MapState } from 'shared';
+import type { ResizeOp, SizedMapState } from 'shared';
 import type { CameraPlacement } from '../cameraView';
 import type { SceneEditor } from '../editor/editorTools';
 import type { WalkScene } from '../walkTest';
@@ -9,6 +9,7 @@ import WalkLayer from './WalkLayer';
 import CameraRig from './CameraRig';
 import EditLayer from './EditLayer';
 import FirstFrame from './FirstFrame';
+import ResizePreview from './ResizePreview';
 import ChunkMesh from './ChunkMesh';
 import { useChunkMeshes } from './useChunkMeshes';
 import classes from './MapScene.module.css';
@@ -18,13 +19,13 @@ import classes from './MapScene.module.css';
 const SCENE_BACKGROUND = { light: '#d8ccb2', dark: '#191613' };
 
 interface MapSceneProps {
-  map: MapState;
+  map: SizedMapState;
   // Срез по высоте: клетки выше не рисуются.
   cutY: number;
   // Начальная камера (из адреса страницы); дальше ей управляет пользователь.
   camera: CameraPlacement;
-  // Границы карты на момент открытия: вокруг них сетка земли в редакторе.
-  frame: Box3;
+  // Набираемое изменение размера: новая граница видна до «Применить».
+  resizePreview: ResizeOp['grow'] | null;
   // Инструмент редактора; null — только просмотр.
   editor: SceneEditor | null;
   // Проверка хода (фигурка и куда она дойдёт): видна при любом инструменте,
@@ -38,7 +39,7 @@ function MapScene({
   map,
   cutY,
   camera,
-  frame,
+  resizePreview,
   editor,
   walk,
   onReady,
@@ -55,7 +56,7 @@ function MapScene({
         <color attach="background" args={[SCENE_BACKGROUND[scheme]]} />
         <hemisphereLight args={['#ffffff', '#3a3530', 0.9]} />
         <directionalLight position={[40, 80, 30]} intensity={1.6} />
-        <EditLayer editor={editor} frame={frame}>
+        <EditLayer editor={editor} size={map.size}>
           {[...chunks].map(([key, { meshes }]) => (
             <group key={key}>
               {meshes.opaque && (
@@ -68,6 +69,9 @@ function MapScene({
           ))}
         </EditLayer>
         {walk && <WalkLayer walk={walk} />}
+        {resizePreview && (
+          <ResizePreview size={map.size} grow={resizePreview} />
+        )}
         <MapControls makeDefault />
         <CameraRig placement={camera} />
         <FirstFrame onReady={onReady} />

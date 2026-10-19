@@ -116,6 +116,26 @@ describe('buildChunkMesh', () => {
     expect(Math.max(...cut.positions.filter((_, i) => i % 3 === 1))).toBe(2);
   });
 
+  it('блоки за восточной и южной границей карты не рисуются и не прячут грани', () => {
+    const map = mapWith([
+      { op: 'fillBox', from: [0, 0, 0], to: [2, 0, 0], block: 'stone' },
+      set([0, 0, 1], 'stone'),
+    ]);
+    const { opaque } = buildChunkMesh(
+      map.store,
+      cellLocation([0, 0, 0]).key,
+      createBlockLookup(map.palette),
+      { size: { width: 2, depth: 1 } },
+    );
+
+    // Остались кубы [0, 0, 0] и [1, 0, 0]: 6 + 6 − 2 общие. Восточная грань второго
+    // видна, хотя за ней — скрытый куб; южная грань первого — тоже.
+    expect(faceCount(opaque)).toBe(10);
+    expect(Math.max(...opaque!.positions.filter((_, i) => i % 3 === 0))).toBe(
+      2,
+    );
+  });
+
   it('пустой чанк не даёт геометрии', () => {
     const map = mapWith([]);
     expect(mesh(map, [0, 0, 0])).toEqual({ opaque: null, transparent: null });

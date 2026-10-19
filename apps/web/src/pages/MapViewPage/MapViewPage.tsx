@@ -4,6 +4,11 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { mapBounds } from 'shared';
 import { useMapData } from '../../features/maps';
 import {
+  EMPTY_DRAFT,
+  MapSizePanel,
+  type ResizeDraft,
+} from '../../features/maps/resize';
+import {
   parseCameraParams,
   parseCutY,
   placeCamera,
@@ -19,7 +24,7 @@ const MapScene = lazy(() => import('../../features/maps/MapScene'));
 
 function MapViewPage() {
   const { id = '' } = useParams();
-  const { map, loadError, editError, busy, applyOps, undo, redo } =
+  const { map, loadError, editError, busy, applyOps, editOps, undo, redo } =
     useMapData(id);
   usePageTitle(map?.info.name ?? 'Карта');
   const walk = useWalkTest(map?.state ?? null);
@@ -33,6 +38,8 @@ function MapViewPage() {
   // Сцена монтируется заново только при смене карты, и первый кадр (FirstFrame)
   // приходит один раз на монтирование — поэтому готовность помним по id карты.
   const [readyMapId, setReadyMapId] = useState<string | null>(null);
+  // Открытая панель «Размер карты» с набранным изменением; null — панель закрыта.
+  const [sizeDraft, setSizeDraft] = useState<ResizeDraft | null>(null);
   // Срез и камера живут в адресе страницы (?y=3&view=north), чтобы одна ссылка
   // всегда давала одну и ту же картинку — см. cameraView.ts.
   const [searchParams, setSearchParams] = useSearchParams();
@@ -80,6 +87,12 @@ function MapViewPage() {
     );
 
   const handleSceneReady = useCallback(() => setReadyMapId(id), [id]);
+  // Пока открыта панель размера, клики по сцене ничего не правят: на сцене — новая
+  // граница, а инструмент спрятан вместе со своей панелью.
+  const resizePreview =
+    sizeDraft && Object.values(sizeDraft.grow).some((v) => v !== 0)
+      ? sizeDraft.grow
+      : null;
 
   const loader = (
     <div className={classes.placeholder}>
@@ -99,8 +112,8 @@ function MapViewPage() {
               map={map.state}
               cutY={cutY}
               camera={camera}
-              frame={map.frame}
-              editor={editor.sceneEditor}
+              resizePreview={resizePreview}
+              editor={sizeDraft ? null : editor.sceneEditor}
               walk={walk.scene}
               onReady={handleSceneReady}
             />
@@ -110,6 +123,9 @@ function MapViewPage() {
 
       <MapSidebar
         name={map?.info.name ?? 'Карта'}
+        size={map?.state.size ?? null}
+        onEditSize={sizeDraft ? null : () => setSizeDraft(EMPTY_DRAFT)}
+        panelTitle={sizeDraft ? 'Размер карты' : 'Редактор'}
         loadError={loadError}
         editError={editError}
         cut={
@@ -122,13 +138,28 @@ function MapViewPage() {
         empty={map !== null && bounds === null}
         sceneReady={readyMapId === id}
       >
-        <EditorPanel
-          editor={editor}
-          busy={busy}
-          onUndo={undo}
-          onRedo={redo}
-          walkPanel={<WalkTestPanel walk={walk} />}
-        />
+        {map && sizeDraft ? (
+          <MapSizePanel
+            state={map.state}
+            draft={sizeDraft}
+            onChange={setSizeDraft}
+            onApply={(op) =>
+              void editOps([op]).then((applied) => {
+                if (applied) setSizeDraft(null);
+              })
+            }
+            onCancel={() => setSizeDraft(null)}
+            busy={busy}
+          />
+        ) : (
+          <EditorPanel
+            editor={editor}
+            busy={busy}
+            onUndo={undo}
+            onRedo={redo}
+            walkPanel={<WalkTestPanel walk={walk} />}
+          />
+        )}
       </MapSidebar>
     </div>
   );

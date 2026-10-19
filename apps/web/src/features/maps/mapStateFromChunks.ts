@@ -3,7 +3,7 @@ import {
   decodeChunk,
   MemoryChunkStore,
   type MapChunksResponse,
-  type MapState,
+  type SizedMapState,
 } from 'shared';
 
 function base64ToBytes(base64: string): Uint8Array {
@@ -13,11 +13,11 @@ function base64ToBytes(base64: string): Uint8Array {
   return bytes;
 }
 
-// Ответ /maps/:id/chunks → MapState, с которым работают общие функции из shared.
-export function mapStateFromChunks(response: MapChunksResponse): MapState {
+// Ответ /maps/:id/chunks → карта с размером, с которой работают общие функции из shared.
+export function mapStateFromChunks(response: MapChunksResponse): SizedMapState {
   const store = new MemoryChunkStore();
   for (const { cx, cy, cz, data } of response.chunks) {
     store.set(chunkKey(cx, cy, cz), decodeChunk(base64ToBytes(data)));
   }
-  return { store, palette: [...response.palette] };
+  return { store, palette: [...response.palette], size: { ...response.size } };
 }

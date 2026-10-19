@@ -17,6 +17,13 @@ export interface MapBoundsLimits {
   maxHeight: number;
 }
 
+// Пределы по умолчанию: сервер берёт их, если MAP_MAX_SIZE и MAP_MAX_HEIGHT не заданы,
+// веб — как подсказку в полях размера (окончательно проверяет сервер).
+export const DEFAULT_MAP_LIMITS: MapBoundsLimits = {
+  maxSize: 256,
+  maxHeight: 64,
+};
+
 // Карта, которую правят операциями: к блокам добавлен её размер.
 export interface SizedMapState extends MapState {
   size: MapSize;
@@ -24,6 +31,11 @@ export interface SizedMapState extends MapState {
 
 export function sizeLabel({ width, depth }: MapSize): string {
   return `${width} × ${depth}`;
+}
+
+// Клетка внутри карты (по высоте — только снизу: верх у карты динамический).
+export function insideMap([x, y, z]: readonly number[], size: MapSize) {
+  return x >= 0 && y >= 0 && z >= 0 && x < size.width && z < size.depth;
 }
 
 export function sameSize(a: MapSize, b: MapSize): boolean {

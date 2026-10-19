@@ -5,6 +5,7 @@ import {
   readCell,
   shapeBoxes,
   type ChunkStore,
+  type MapSize,
   type ShapeBox,
   type Vec3,
 } from 'shared';
@@ -28,6 +29,9 @@ export interface MeshOptions {
   // Срез по высоте: клетки выше cutY считаются воздухом. Именно пересборка, а не
   // плоскость отсечения — так у срезанных стен появляются верхние грани.
   cutY?: number;
+  // Размер карты: блоки за восточной и южной границей (скрытые сужением карты) не
+  // рисуются и не закрывают грани соседей — у края карты видна стена, а не дыра.
+  size?: MapSize;
 }
 
 class BufferBuilder {
@@ -97,16 +101,18 @@ export function buildChunkMesh(
   store: ChunkStore,
   key: string,
   lookup: BlockLookup,
-  { cutY }: MeshOptions = {},
+  { cutY, size }: MeshOptions = {},
 ): ChunkMeshes {
   const chunk = store.get(key);
   const opaque = new BufferBuilder();
   const transparent = new BufferBuilder();
   if (!chunk) return { opaque: null, transparent: null };
 
-  const isCut = (y: number) => cutY !== undefined && y > cutY;
+  const isHidden = ([x, y, z]: Vec3) =>
+    (cutY !== undefined && y > cutY) ||
+    (size !== undefined && (x >= size.width || z >= size.depth));
   const blockAt = (cell: Vec3) =>
-    isCut(cell[1]) ? null : lookup(readCell(store, cell));
+    isHidden(cell) ? null : lookup(readCell(store, cell));
   const chunkCoord = parseChunkKey(key);
 
   for (let index = 0; index < chunk.length; index++) {
@@ -114,7 +120,7 @@ export function buildChunkMesh(
     const self = lookup(value);
     if (!self) continue;
     const cell = cellFromChunk(chunkCoord, index);
-    if (isCut(cell[1])) continue;
+    if (isHidden(cell)) continue;
     const target = self.material.opaque ? opaque : transparent;
 
     for (const box of shapeBoxes(self.shape, cellRotation(value))) {

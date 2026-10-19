@@ -58,6 +58,8 @@ const info = {
   id: MAP_ID,
   name: 'Подземелье',
   seq: 1,
+  width: 32,
+  depth: 32,
   createdAt: '2026-10-01T00:00:00.000Z',
   updatedAt: '2026-10-01T00:00:00.000Z',
 };
@@ -65,6 +67,7 @@ const info = {
 function chunksOf(map: MapState, seq = 1): MapChunksResponse {
   return {
     seq,
+    size: { width: 32, depth: 32 },
     palette: map.palette,
     chunks: [...map.store.keys()].map((key) => {
       const [cx, cy, cz] = parseChunkKey(key);
@@ -76,6 +79,7 @@ function chunksOf(map: MapState, seq = 1): MapChunksResponse {
 
 const emptyChunks: MapChunksResponse = {
   seq: 0,
+  size: { width: 32, depth: 32 },
   palette: createPalette(),
   chunks: [],
 };
@@ -215,6 +219,78 @@ describe('MapViewPage', () => {
 
     expect(await screen.findByText('Нечего отменять')).toBeInTheDocument();
     expect(screen.getByText('Сцена, срез Infinity')).toBeInTheDocument();
+  });
+
+  it('меняет размер карты из панели и показывает новый', async () => {
+    const fetchMock = stubFetch([
+      { status: 200, body: info },
+      { status: 200, body: towerChunks() },
+      {
+        status: 200,
+        body: {
+          seq: 2,
+          changedCells: 0,
+          conflicts: 0,
+          paletteAdded: [],
+          changes: {
+            cells: [],
+            paletteAdded: [],
+            size: {
+              before: { width: 32, depth: 32 },
+              after: { width: 34, depth: 32 },
+            },
+          },
+        },
+      },
+    ]);
+    renderPage();
+    const user = userEvent.setup();
+
+    expect(
+      await screen.findByText('32 × 32 клеток (160 × 160 фт)'),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Изменить' }));
+    const apply = screen.getByRole('button', { name: 'Применить' });
+    expect(apply).toBeDisabled();
+    // Пока панель открыта, инструменты спрятаны и сцена ничего не правит.
+    expect(
+      screen.queryByRole('button', { name: 'Блок' }),
+    ).not.toBeInTheDocument();
+    await user.clear(screen.getByRole('textbox', { name: 'Восток' }));
+    await user.type(screen.getByRole('textbox', { name: 'Восток' }), '2');
+    expect(
+      screen.getByText('Станет 34 × 32 клеток (170 × 160 фт)'),
+    ).toBeInTheDocument();
+    await user.click(apply);
+
+    expect(
+      await screen.findByText('34 × 32 клеток (170 × 160 фт)'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Применить' })).toBeNull();
+    const [url, init] = fetchMock.mock.calls[2];
+    expect(url).toMatch(new RegExp(`/maps/${MAP_ID}/ops$`));
+    expect(JSON.parse(init?.body as string)).toEqual({
+      ops: [{ op: 'resize', grow: { east: 2 } }],
+    });
+    // Размер применился к копии карты, без перечитывания.
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('предупреждает об удалении срезанных блоков', async () => {
+    stubFetch([
+      { status: 200, body: info },
+      { status: 200, body: towerChunks() },
+    ]);
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Изменить' }));
+    await user.clear(screen.getByRole('textbox', { name: 'Запад' }));
+    await user.type(screen.getByRole('textbox', { name: 'Запад' }), '-1');
+
+    expect(screen.getByText(/Удалится блоков: 5/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Отмена' }));
+    expect(screen.getByRole('button', { name: 'Блок' })).toBeInTheDocument();
   });
 
   it('показывает «Карта не найдена» на 404', async () => {

@@ -29,6 +29,9 @@ export interface MapChunkData {
 // Вся карта для рендера. seq — точка отсчёта: изменения после неё клиент получит отдельно.
 export interface MapChunksResponse {
   seq: number;
+  // Размер приходит вместе с блоками: resize меняет их разом, и два отдельных
+  // запроса могли бы разойтись.
+  size: MapSize;
   palette: Palette;
   chunks: MapChunkData[];
 }

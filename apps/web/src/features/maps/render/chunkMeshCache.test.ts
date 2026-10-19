@@ -6,6 +6,7 @@ import {
   packChangeset,
   type BlockOp,
   type MapState,
+  type SizedMapState,
 } from 'shared';
 import { describe, expect, it } from 'vitest';
 import { applyMapChanges } from '../applyMapChanges';
@@ -53,6 +54,26 @@ describe('updateChunkMeshes', () => {
     expect(meshesOf(second, 0)).not.toBe(meshesOf(first, 0));
     expect(meshesOf(second, 1)).not.toBe(meshesOf(first, 1));
     expect(meshesOf(second, 3)).toBe(meshesOf(first, 3));
+  });
+
+  it('при смене размера пересобирает всё, хотя чанки те же', () => {
+    // Сужение с cut «keep» не трогает ни одного массива чанка — только размер.
+    const wide: SizedMapState = {
+      ...threeChunks(),
+      size: { width: 64, depth: 16 },
+    };
+    const narrow: SizedMapState = { ...wide, size: { width: 20, depth: 16 } };
+    const first = updateChunkMeshes(null, wide, 100);
+    const second = updateChunkMeshes(first, narrow, 100);
+
+    expect(meshesOf(second, 0)).not.toBe(meshesOf(first, 0));
+    expect(meshesOf(second, 3)?.opaque).toBeNull();
+    const same = updateChunkMeshes(
+      second,
+      { ...narrow, size: { width: 20, depth: 16 } },
+      100,
+    );
+    expect(meshesOf(same, 0)).toBe(meshesOf(second, 0));
   });
 
   it('при смене среза пересобирает всё', () => {

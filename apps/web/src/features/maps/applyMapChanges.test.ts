@@ -4,6 +4,7 @@ import {
   createPalette,
   MemoryChunkStore,
   packChangeset,
+  type SizedMapState,
   readCell,
   type MapState,
 } from 'shared';
@@ -48,6 +49,24 @@ describe('applyMapChanges', () => {
     expect(after.store.get(far)).toBe(before.store.get(far));
     const near = chunkKey(0, 0, 0);
     expect(after.store.get(near)).not.toBe(before.store.get(near));
+  });
+
+  it('применяет размер из resize и бросает, если наш размер другой', () => {
+    const state: SizedMapState = {
+      ...emptyMap(),
+      size: { width: 8, depth: 8 },
+    };
+    const changes = packChangeset({
+      cells: [],
+      paletteAdded: [],
+      size: { before: { width: 8, depth: 8 }, after: { width: 10, depth: 8 } },
+    });
+
+    const after = applyMapChanges(state, changes);
+
+    expect(after.size).toEqual({ width: 10, depth: 8 });
+    expect(state.size).toEqual({ width: 8, depth: 8 });
+    expect(() => applyMapChanges(after, changes)).toThrow(/Размер карты/);
   });
 
   it('бросает, если копия разошлась с сервером', () => {

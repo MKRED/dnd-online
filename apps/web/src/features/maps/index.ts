@@ -10,5 +10,6 @@ export {
   redoMapEdit,
   undoMapEdit,
 } from './mapsApi';
+export { mapSizeLabel } from './mapSizeLabel';
 export { mapStateFromChunks } from './mapStateFromChunks';
 export { useMapData, type LoadedMap } from './useMapData';

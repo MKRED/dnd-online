@@ -6,6 +6,7 @@ import {
   Container,
   Group,
   Loader,
+  NumberInput,
   Stack,
   Text,
   TextInput,
@@ -13,8 +14,13 @@ import {
 } from '@mantine/core';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import type { MapInfo } from 'shared';
-import { createMap, deleteMap, listMaps } from '../features/maps';
+import {
+  DEFAULT_MAP_LIMITS,
+  DEFAULT_MAP_SIZE,
+  sizeLabel,
+  type MapInfo,
+} from 'shared';
+import { createMap, deleteMap, listMaps, mapSizeLabel } from '../features/maps';
 import { errorMessage } from '../lib/apiRequest';
 import { usePageTitle } from '../lib/usePageTitle';
 
@@ -25,6 +31,15 @@ function MapsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState('');
+  // Пока поле пустое или набирается, там строка — карту с ней не создаём.
+  const [width, setWidth] = useState<number | string>(DEFAULT_MAP_SIZE.width);
+  const [depth, setDepth] = useState<number | string>(DEFAULT_MAP_SIZE.depth);
+  const validSide = (value: number | string) =>
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= DEFAULT_MAP_LIMITS.maxSize;
+  const sizeValid = validSide(width) && validSide(depth);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -40,10 +55,10 @@ function MapsPage() {
 
   const handleCreate = (event: FormEvent) => {
     event.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || !sizeValid) return;
     setCreating(true);
     setError(null);
-    createMap(name.trim())
+    createMap(name.trim(), { width: Number(width), depth: Number(depth) })
       .then((map) => void navigate(`/maps/${map.id}`))
       .catch((err: unknown) => {
         console.error('Failed to create map', err);
@@ -74,19 +89,46 @@ function MapsPage() {
       </Group>
 
       <form onSubmit={handleCreate}>
-        <Group align="flex-end" mb="lg">
+        <Group align="flex-end" mb={4}>
           <TextInput
             label="Новая карта"
             placeholder="Название"
             value={name}
             onChange={(e) => setName(e.currentTarget.value)}
             maxLength={100}
-            style={{ flex: 1 }}
+            style={{ flex: '1 1 12rem' }}
           />
-          <Button type="submit" loading={creating} disabled={!name.trim()}>
+          <NumberInput
+            label="Ширина"
+            value={width}
+            onChange={setWidth}
+            min={1}
+            max={DEFAULT_MAP_LIMITS.maxSize}
+            allowDecimal={false}
+            w="6rem"
+          />
+          <NumberInput
+            label="Глубина"
+            value={depth}
+            onChange={setDepth}
+            min={1}
+            max={DEFAULT_MAP_LIMITS.maxSize}
+            allowDecimal={false}
+            w="6rem"
+          />
+          <Button
+            type="submit"
+            loading={creating}
+            disabled={!name.trim() || !sizeValid}
+          >
             Создать
           </Button>
         </Group>
+        <Text size="xs" c="dimmed" mb="lg">
+          {sizeValid
+            ? `Карта ${mapSizeLabel({ width: Number(width), depth: Number(depth) })}; клетка — 5 футов. Размер можно поменять потом.`
+            : `Ширина и глубина — от 1 до ${DEFAULT_MAP_LIMITS.maxSize} клеток.`}
+        </Text>
       </form>
 
       {error && (
@@ -104,7 +146,12 @@ function MapsPage() {
           {maps.map((map) => (
             <Card key={map.id} withBorder radius="md" p="md">
               <Group justify="space-between">
-                <Text fw={600}>{map.name}</Text>
+                <Group gap="xs" align="baseline">
+                  <Text fw={600}>{map.name}</Text>
+                  <Text size="sm" c="dimmed">
+                    {sizeLabel(map)}
+                  </Text>
+                </Group>
                 <Group gap="xs">
                   <Button
                     component={Link}

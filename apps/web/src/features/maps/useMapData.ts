@@ -5,7 +5,7 @@ import {
   type MapEditResult,
   type MapInfo,
   type MapOp,
-  type MapState,
+  type SizedMapState,
 } from 'shared';
 import { ApiError, errorMessage } from '../../lib/apiRequest';
 import {
@@ -18,15 +18,18 @@ import {
 import { applyMapChanges } from './applyMapChanges';
 import { mapStateFromChunks } from './mapStateFromChunks';
 
-// Кадр камеры для пустой карты: участок 16×16 у начала координат.
-const EMPTY_FRAME: Box3 = { min: [0, 0, 0], max: [15, 0, 15] };
-
 export interface LoadedMap {
+  // Ширину и глубину отсюда не брать: после resize они устаревают, верный размер — state.size.
   info: MapInfo;
-  state: MapState;
-  // Границы карты на момент открытия. По ним ставится камера, и они не меняются
-  // от правок — иначе каждый новый блок сбрасывал бы камеру пользователя.
+  state: SizedMapState;
+  // Карта на момент открытия: её площадь до верхнего блока. По ней ставится камера,
+  // и она не меняется от правок — иначе каждый новый блок сбрасывал бы камеру.
   frame: Box3;
+}
+
+function openingFrame({ store, size }: SizedMapState): Box3 {
+  const top = mapBounds(store)?.max[1] ?? 0;
+  return { min: [0, 0, 0], max: [size.width - 1, top, size.depth - 1] };
 }
 
 // Карта страницы /maps/:id: загрузка и правки (операции, undo, redo). После правки
@@ -48,7 +51,7 @@ export function useMapData(id: string) {
         if (cancelled) return;
         seqRef.current = chunks.seq;
         const state = mapStateFromChunks(chunks);
-        setMap({ info, state, frame: mapBounds(state.store) ?? EMPTY_FRAME });
+        setMap({ info, state, frame: openingFrame(state) });
       })
       .catch((err: unknown) => {
         console.error('Failed to load map', err);
@@ -103,42 +106,51 @@ export function useMapData(id: string) {
 
   // Правки идут по одной: пока запрос в пути, новые не принимаются (busy),
   // иначе быстрые клики могли бы применяться и перечитываться вперемешку.
+  // Промис говорит, прошла ли правка: панель размера закрывается только после успеха.
   const run = useCallback(
-    (request: () => Promise<MapEditResult>, failure: string) => {
-      if (busy) return;
+    (
+      request: () => Promise<MapEditResult>,
+      failure: string,
+    ): Promise<boolean> => {
+      if (busy) return Promise.resolve(false);
       setBusy(true);
       setEditError(null);
-      request()
-        .then((result) => {
+      return request()
+        .then(async (result) => {
           if (result.conflicts > 0) {
             setEditError(
               `Не тронуто клеток: ${result.conflicts} — их уже изменил кто-то другой`,
             );
           }
-          return syncAfterEdit(result);
+          await syncAfterEdit(result);
+          return true;
         })
         .catch((err: unknown) => {
           console.error(failure, err);
           setEditError(errorMessage(err, failure));
+          return false;
         })
         .finally(() => setBusy(false));
     },
     [busy, syncAfterEdit],
   );
 
-  const applyOps = useCallback(
+  // Ошибку run показывает сам (editError), поэтому клики по сцене и кнопкам промис не ждут;
+  // ждёт только панель размера — закрыться после успеха.
+  const editOps = useCallback(
     (ops: MapOp[]) =>
       run(() => applyMapOps(id, ops), 'Не удалось изменить карту'),
     [id, run],
   );
+  const applyOps = useCallback((ops: MapOp[]) => void editOps(ops), [editOps]);
   const undo = useCallback(
-    () => run(() => undoMapEdit(id), 'Не удалось отменить'),
+    () => void run(() => undoMapEdit(id), 'Не удалось отменить'),
     [id, run],
   );
   const redo = useCallback(
-    () => run(() => redoMapEdit(id), 'Не удалось вернуть'),
+    () => void run(() => redoMapEdit(id), 'Не удалось вернуть'),
     [id, run],
   );
 
-  return { map, loadError, editError, busy, applyOps, undo, redo };
+  return { map, loadError, editError, busy, applyOps, editOps, undo, redo };
 }

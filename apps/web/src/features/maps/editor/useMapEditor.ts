@@ -2,9 +2,10 @@ import { useHotkeys } from '@mantine/hooks';
 import { useMemo, useState } from 'react';
 import {
   cellTypeId,
+  insideMap,
   readCell,
   type MapOp,
-  type MapState,
+  type SizedMapState,
   type Rotation,
   type Vec3,
 } from 'shared';
@@ -26,7 +27,7 @@ interface Anchor {
 }
 
 interface MapEditorOptions {
-  state: MapState | null;
+  state: SizedMapState | null;
   applyOps: (ops: MapOp[]) => void;
   undo: () => void;
   redo: () => void;
@@ -77,7 +78,8 @@ export function useMapEditor({
     const settings = { block, rotation, height };
     const onPick = (cells: PickedCells) => {
       const cell = toolCell(tool, cells);
-      if (!cell) return;
+      // За границей карты сервер правку отклонит — и не отправляем.
+      if (!cell || !insideMap(cell, state.size)) return;
       if (tool === 'place' || tool === 'erase') {
         applyOps([cellOp(tool, cell, settings)]);
         return;

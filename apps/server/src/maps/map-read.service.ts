@@ -55,7 +55,7 @@ export class MapReadService {
         const bytes = encodeChunk(store.get(key)!);
         return { cx, cy, cz, data: Buffer.from(bytes).toString('base64') };
       });
-      return { seq: map.seq, palette: map.palette, chunks };
+      return { seq: map.seq, size: sizeOf(map), palette: map.palette, chunks };
     });
   }
 

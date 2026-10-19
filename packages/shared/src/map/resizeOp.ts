@@ -1,3 +1,4 @@
+import type { Vec3 } from './coords.js';
 import type { MapBoundsLimits, MapSize } from './mapSize.js';
 import { MapOpError } from './mapOpError.js';
 
@@ -25,6 +26,20 @@ export function resizedSize(size: MapSize, grow: ResizeOp['grow']): MapSize {
     width: size.width + (grow.west ?? 0) + (grow.east ?? 0),
     depth: size.depth + (grow.north ?? 0) + (grow.south ?? 0),
   };
+}
+
+// Сдвиг всех блоков: место на западе, севере и снизу появляется только так.
+export function resizeShift(grow: ResizeOp['grow']): Vec3 {
+  return [grow.west ?? 0, grow.down ?? 0, grow.north ?? 0];
+}
+
+// Судьба блока, уже сдвинутого в клетку at: ушёл в отрицательные координаты — срезан
+// (удаляется всегда), за восточной или южной границей — скрыт или удалён по cut.
+export type ResizeFate = 'cut' | 'outside' | 'inside';
+
+export function resizeFate(at: Vec3, size: MapSize): ResizeFate {
+  if (at.some((v) => v < 0)) return 'cut';
+  return at[0] >= size.width || at[2] >= size.depth ? 'outside' : 'inside';
 }
 
 // Разбор из недоверенного JSON. Насколько можно сузить, зависит от размера карты —

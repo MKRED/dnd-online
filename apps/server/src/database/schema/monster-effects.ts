@@ -2,7 +2,7 @@ import { index, pgTable, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { effects } from './effects.js';
 import { monsters } from './monsters.js';
 
-// Постоянные эффекты шаблона монстра (docs/plan/monsters-npcs.md, этап 6): ссылки на
+// Постоянные эффекты шаблона монстра (docs/plan/done/monsters-npcs.md, этап 6): ссылки на
 // эффекты каталога, как эффекты на персонаже (character-effects.ts).
 export const monsterEffects = pgTable(
   'monster_effects',

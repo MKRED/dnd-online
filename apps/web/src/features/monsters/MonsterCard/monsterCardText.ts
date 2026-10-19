@@ -9,7 +9,7 @@ import {
 import { ABILITY_LABELS, SKILL_LABELS, formatModifier } from '../../characters';
 
 // Тексты карточки монстра. Числа — как ввёл мастер: приложение их не пересчитывает
-// (docs/plan/monsters-npcs.md, «Монстр в каталоге»).
+// (docs/plan/done/monsters-npcs.md, «Монстр в каталоге»).
 
 // «+5», «−1»: минус типографский, как в книге.
 export const formatSigned = (n: number) => formatModifier(n).replace('-', '−');

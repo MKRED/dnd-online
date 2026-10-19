@@ -1,6 +1,6 @@
 # Monster stat blocks
 
-Reference for the 2024 monster stat block: its parts, the usage limits of monster abilities, sizes, creature types and the Challenge Rating tables. Researched on 2026-10-19 for block 2 of the roadmap ([plan/monsters-npcs.md](../plan/monsters-npcs.md)).
+Reference for the 2024 monster stat block: its parts, the usage limits of monster abilities, sizes, creature types and the Challenge Rating tables. Researched on 2026-10-19 for block 2 of the roadmap ([plan/done/monsters-npcs.md](../plan/done/monsters-npcs.md)).
 
 ## Sources
 
@@ -137,7 +137,7 @@ CR runs from 0 to 30, with the fractions 1/8, 1/4 and 1/2. The glossary describe
 
 ## In the app
 
-The decisions are in [plan/monsters-npcs.md](../plan/monsters-npcs.md) («Решения»).
+The decisions are in [plan/done/monsters-npcs.md](../plan/done/monsters-npcs.md) («Решения»).
 
 **Built (stage 2, 2026-10-19): the «Монстра» ability category.**
 

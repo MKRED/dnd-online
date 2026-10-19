@@ -1,4 +1,4 @@
-// Поля категории «Монстра» в форме (docs/plan/monsters-npcs.md, этап 2). Перезарядка —
+// Поля категории «Монстра» в форме (docs/plan/done/monsters-npcs.md, этап 2). Перезарядка —
 // строка, как отдаёт Select; 'none' — без перезарядки.
 export interface MonsterAbilityValues {
   recharge: string;

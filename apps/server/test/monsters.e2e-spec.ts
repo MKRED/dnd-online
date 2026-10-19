@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_MONSTER_STAT_BLOCK } from 'shared';
 import { describeCatalog } from './support/catalog-scenario/index.js';
 
-// Каталог монстров — docs/plan/monsters-npcs.md, этап 3. Доступ, источники и картинку
+// Каталог монстров — docs/plan/done/monsters-npcs.md, этап 3. Доступ, источники и картинку
 // проверяет общий сценарий, здесь — свои поля: тип, стат-блок и роль.
 const statBlock = {
   ...DEFAULT_MONSTER_STAT_BLOCK,

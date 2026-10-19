@@ -25,7 +25,7 @@ import {
   UpdateMonsterAbilityDto,
 } from './dto/monster-ability.dto.js';
 
-// Способности у монстра (docs/plan/monsters-npcs.md, этап 5). Права и ответ — общие для
+// Способности у монстра (docs/plan/done/monsters-npcs.md, этап 5). Права и ответ — общие для
 // связей монстра (changeMonsterLinks).
 @Injectable()
 export class MonsterAbilitiesService {

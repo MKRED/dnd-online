@@ -1,7 +1,7 @@
 import type { EffectLink } from './characterEffects.js';
 import type { ItemLink } from './inventory.js';
 
-// Снаряжение и эффекты монстра (docs/plan/monsters-npcs.md, этап 6): ссылки на каталоги,
+// Снаряжение и эффекты монстра (docs/plan/done/monsters-npcs.md, этап 6): ссылки на каталоги,
 // как у персонажа. Снаряжение — один список с количеством, без «При себе», хранилища,
 // денег и груза: это строка Gear книги, то, что можно забрать с тела.
 

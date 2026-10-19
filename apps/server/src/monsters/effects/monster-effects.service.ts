@@ -21,7 +21,7 @@ import {
 } from './monster-effects.messages.js';
 import { AddMonsterEffectDto } from './dto/monster-effect.dto.js';
 
-// Постоянные эффекты монстра (docs/plan/monsters-npcs.md, этап 6). Права и ответ — общие
+// Постоянные эффекты монстра (docs/plan/done/monsters-npcs.md, этап 6). Права и ответ — общие
 // для связей монстра (changeMonsterLinks).
 @Injectable()
 export class MonsterEffectsService {

@@ -6,7 +6,7 @@ import { DatabaseService } from '../src/database/database.service.js';
 import { monsterAbilities } from '../src/database/schema/index.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Способности у монстра — docs/plan/monsters-npcs.md, этап 5.
+// Способности у монстра — docs/plan/done/monsters-npcs.md, этап 5.
 interface AbilityRow {
   id: string;
   perDay: number | null;

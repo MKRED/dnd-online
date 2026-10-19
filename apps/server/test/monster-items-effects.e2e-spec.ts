@@ -7,7 +7,7 @@ import { createItem, itemBody } from './support/item-fixture.js';
 import { createMonster } from './support/monster-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Снаряжение и эффекты монстра — docs/plan/monsters-npcs.md, этап 6.
+// Снаряжение и эффекты монстра — docs/plan/done/monsters-npcs.md, этап 6.
 interface ItemRow {
   id: string;
   quantity: number;

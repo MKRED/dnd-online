@@ -23,7 +23,7 @@ import {
   UpdateMonsterItemDto,
 } from './dto/monster-item.dto.js';
 
-// Снаряжение монстра (docs/plan/monsters-npcs.md, этап 6): один список предметов с
+// Снаряжение монстра (docs/plan/done/monsters-npcs.md, этап 6): один список предметов с
 // количеством. Права и ответ — общие для связей монстра (changeMonsterLinks).
 @Injectable()
 export class MonsterItemsService {

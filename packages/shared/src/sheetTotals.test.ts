@@ -224,7 +224,7 @@ describe('sheetTotals', () => {
   });
 });
 
-// docs/plan/monsters-npcs.md, этап 6: у монстра особые скорости есть без эффектов.
+// docs/plan/done/monsters-npcs.md, этап 6: у монстра особые скорости есть без эффектов.
 describe('creatureTotals', () => {
   const base = {
     speed: { speed: 10, special: { swim: 40 }, hover: false },

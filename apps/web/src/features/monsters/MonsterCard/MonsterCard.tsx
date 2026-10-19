@@ -29,7 +29,7 @@ interface MonsterCardProps {
   onLinksChange?: (patch: MonsterLinksPatch) => void;
 }
 
-// Карточка монстра блоками, как лист персонажа (docs/plan/monsters-npcs.md, «Карточка —
+// Карточка монстра блоками, как лист персонажа (docs/plan/done/monsters-npcs.md, «Карточка —
 // как лист персонажа»).
 function MonsterCard({
   monster,

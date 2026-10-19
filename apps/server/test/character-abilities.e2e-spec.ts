@@ -138,7 +138,7 @@ describe('способности у персонажа (e2e)', () => {
     await owner.post(url(id)).send({ abilityId }).expect(201);
   });
 
-  // docs/plan/monsters-npcs.md, этап 2.
+  // docs/plan/done/monsters-npcs.md, этап 2.
   it('способность «Монстра» — 400, ставшая ею после добавления остаётся', async () => {
     const id = await createCharacter(owner);
     const monster = {

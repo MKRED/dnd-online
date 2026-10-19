@@ -4,7 +4,7 @@ import type {
   AbilityActivationKind,
 } from './abilityUsage.js';
 
-// Категория «Монстра» (docs/plan/monsters-npcs.md, этап 2; правила — docs/dnd/monsters.md,
+// Категория «Монстра» (docs/plan/done/monsters-npcs.md, этап 2; правила — docs/dnd/monsters.md,
 // «Usage limits»). Способности монстров живут в общем справочнике, но только у этой
 // категории есть активации «Черта» и «Легендарное действие» и перезарядка.
 

@@ -15,7 +15,7 @@ import { MonsterImagesService } from './monster-images.service.js';
 import { MonstersController } from './monsters.controller.js';
 import { MonstersService } from './monsters.service.js';
 
-// Каталог монстров, их картинки, способности, снаряжение и эффекты (docs/plan/monsters-npcs.md).
+// Каталог монстров, их картинки, способности, снаряжение и эффекты (docs/plan/done/monsters-npcs.md).
 @Module({
   imports: [AuthModule],
   controllers: [

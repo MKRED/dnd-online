@@ -6,7 +6,7 @@ import { abilitiesCatalog } from './abilityLinksApi';
 import type { AbilityLinkEntry } from './abilityLinkView';
 
 // Чьё окно: персонаж способности «Монстра» не берёт (сервер ответит 400), монстр берёт
-// все категории, свою — первой (docs/plan/monsters-npcs.md, «Кто что добавляет»).
+// все категории, свою — первой (docs/plan/done/monsters-npcs.md, «Кто что добавляет»).
 export type AbilityOwnerKind = 'character' | 'monster';
 
 const FAILED = 'Не удалось загрузить способности';

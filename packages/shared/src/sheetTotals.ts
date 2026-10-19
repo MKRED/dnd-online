@@ -25,7 +25,7 @@ import {
 import { conditionOf, sheetConditions } from './sheetConditions.js';
 
 // Итог листа персонажа или карточки монстра: база из формы плюс наложенные эффекты
-// (docs/plan/done/character-effects.md, docs/plan/monsters-npcs.md). Числа пересчитываются там, где движок это умеет
+// (docs/plan/done/character-effects.md, docs/plan/done/monsters-npcs.md). Числа пересчитываются там, где движок это умеет
 // (Скорость и Класс доспеха), остальное собирается в списки. У каждой строки — откуда она: названия
 // эффектов или состояний, для подсказки на листе.
 

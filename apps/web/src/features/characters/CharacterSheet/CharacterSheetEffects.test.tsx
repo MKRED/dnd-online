@@ -122,7 +122,7 @@ describe('speedTile', () => {
     expect(armorClassTile(15, totals)).toEqual({ value: '15' });
   });
 
-  // У монстра особые скорости есть и без эффектов (docs/plan/monsters-npcs.md, этап 6).
+  // У монстра особые скорости есть и без эффектов (docs/plan/done/monsters-npcs.md, этап 6).
   it('свои особые скорости — не изменение', () => {
     const swim = { special: { swim: 40 }, hover: false };
     const totals = (speed: number, special: { swim: number }) => ({

@@ -50,7 +50,7 @@ function AddAbilityDialog({
   const [abilityId, setAbilityId] = useState<string | null>(null);
   const [perDay, setPerDay] = useState<number | null>(null);
   const [lastAdded, setLastAdded] = useState<string | null>(null);
-  // Частоту задают только заклинанию монстра (docs/plan/monsters-npcs.md).
+  // Частоту задают только заклинанию монстра (docs/plan/done/monsters-npcs.md).
   const withPerDay =
     owner === 'monster' &&
     abilityId !== null &&

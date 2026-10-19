@@ -1,6 +1,6 @@
 import type { AbilityLink } from './abilityLinks.js';
 
-// Способности у монстра (docs/plan/monsters-npcs.md, этап 5): ссылки на каталог, как у
+// Способности у монстра (docs/plan/done/monsters-npcs.md, этап 5): ссылки на каталог, как у
 // персонажа, но без подготовки — вместо неё частота заклинания.
 
 // Предел «N/день» — правило приложения: в книгах бывает 1–3 (docs/dnd/monsters.md, «Usage

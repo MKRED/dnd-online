@@ -7,7 +7,7 @@ import type { MonsterAbilityEntry } from './monsterAbilities.js';
 import type { MonsterChallenge } from './monsterChallenge.js';
 import type { MonsterEffectEntry, MonsterItemEntry } from './monsterLinks.js';
 
-// Каталог монстров (docs/plan/monsters-npcs.md). Категория записи — тип существа, остальной
+// Каталог монстров (docs/plan/done/monsters-npcs.md). Категория записи — тип существа, остальной
 // стат-блок мастер вводит готовыми числами, как в книге: приложение их не выводит. Размеры,
 // типы и их названия — по книге 2024 (docs/dnd/monsters.md). Ключи хранятся в базе:
 // добавлять можно, переименовывать — только с миграцией данных.

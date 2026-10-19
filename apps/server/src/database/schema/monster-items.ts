@@ -11,7 +11,7 @@ import {
 import { items } from './items.js';
 import { monsters } from './monsters.js';
 
-// Снаряжение монстра (docs/plan/monsters-npcs.md, этап 6): ссылки на предметы каталога
+// Снаряжение монстра (docs/plan/done/monsters-npcs.md, этап 6): ссылки на предметы каталога
 // с количеством, как инвентарь персонажа, но одним списком — без мест хранения.
 export const monsterItems = pgTable(
   'monster_items',

@@ -15,7 +15,7 @@ interface MonsterGearProps {
   onChange?: (items: MonsterItemEntry[]) => void;
 }
 
-// Блок «Снаряжение» (docs/plan/monsters-npcs.md, «Снаряжение и эффекты»): строка Gear
+// Блок «Снаряжение» (docs/plan/done/monsters-npcs.md, «Снаряжение и эффекты»): строка Gear
 // книги — то, что можно отнять или забрать с тела. Один список с количеством, без мест
 // хранения, денег и груза. Правки идут по одной, как у способностей.
 function MonsterGear({ monsterId, items, onChange }: MonsterGearProps) {

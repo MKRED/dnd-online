@@ -22,7 +22,7 @@ export function monsterSpecials(
   return { special, hover: speed.hover && speed.fly !== null };
 }
 
-// Итог карточки с эффектами (docs/plan/monsters-npcs.md, этап 6): база — числа, которые
+// Итог карточки с эффектами (docs/plan/done/monsters-npcs.md, этап 6): база — числа, которые
 // ввёл мастер, эффекты пересчитывают КД и скорости, как на листе персонажа.
 export function monsterTotals(
   block: MonsterStatBlock,

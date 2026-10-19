@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CatalogContext } from '../support/catalog-scenario/index.js';
 
-// Категория «Монстра» (docs/plan/monsters-npcs.md, этап 2): активации «Черта» и
+// Категория «Монстра» (docs/plan/done/monsters-npcs.md, этап 2): активации «Черта» и
 // «Легендарное действие» с ценой и перезарядка в details — только у неё.
 
 const breath = {

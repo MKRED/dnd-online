@@ -9,7 +9,7 @@ import {
 import { abilities } from './abilities.js';
 import { monsters } from './monsters.js';
 
-// Способности у монстра (docs/plan/monsters-npcs.md, этап 5): ссылки на каталог, как у
+// Способности у монстра (docs/plan/done/monsters-npcs.md, этап 5): ссылки на каталог, как у
 // персонажа (character-abilities.ts).
 export const monsterAbilities = pgTable(
   'monster_abilities',

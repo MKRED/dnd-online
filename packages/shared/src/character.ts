@@ -203,7 +203,7 @@ export interface CharacterPersonality {
 export const CHARACTER_LINK_ACCESS = ['private', 'link'] as const;
 export type CharacterLinkAccess = (typeof CHARACTER_LINK_ACCESS)[number];
 
-// Игровой персонаж или НПС мастера (docs/plan/monsters-npcs.md): лист у них один и тот же,
+// Игровой персонаж или НПС мастера (docs/plan/done/monsters-npcs.md): лист у них один и тот же,
 // тип только делит список персонажей и помечает лист.
 export const CHARACTER_KINDS = ['pc', 'npc'] as const;
 export type CharacterKind = (typeof CHARACTER_KINDS)[number];

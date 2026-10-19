@@ -4,7 +4,7 @@ import type { CatalogImage } from './catalogImage.js';
 import type { CharacterEffectMissing } from './characterEffects.js';
 
 // Способность каталога на существе — у персонажа (docs/plan/done/character-abilities.md) и у
-// монстра (docs/plan/monsters-npcs.md): строка — ссылка на запись каталога, а не копия.
+// монстра (docs/plan/done/monsters-npcs.md): строка — ссылка на запись каталога, а не копия.
 // Правка карточки автором сразу видна у всех.
 
 // Что нужно листу и карточке монстра: группа («Умения» по активации, «Заклинания» по кругу

@@ -14,7 +14,7 @@ import type { CatalogImageConfig } from '../catalog/images/catalog-image.config.
 import { monsters, monsterImageTables } from '../database/schema/index.js';
 import type { MonsterDto } from './dto/monster.dto.js';
 
-// Каталог монстров на общем коде каталогов (docs/plan/monsters-npcs.md, этап 3).
+// Каталог монстров на общем коде каталогов (docs/plan/done/monsters-npcs.md, этап 3).
 export const MONSTER_ACCESS: CatalogAccess = {
   table: monsters,
   id: monsters.id,

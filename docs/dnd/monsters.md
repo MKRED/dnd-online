@@ -63,6 +63,7 @@ The SRD 5.2 PDF couldn't be read. The fetch tool gave summaries with short quote
 - **Legendary Actions:** «Legendary Action Uses: 3 (4 in Lair).»
   - The monster takes them one at a time, only right after another creature's turn.
   - Every legendary action costs exactly one use; the 2024 preview article says none cost more.
+  - **2014 books differ in cost only.** The Aspect of Bahamut (Fizban's Treasury of Dragons, https://dnd.su/bestiary/5524-aspect-of-bahamut/, read 2026-10-19) has 3 legendary actions that it «восстанавливает … в начале своего хода», the same per-round reset as 2024. But «Яростный укус» there «стоит 2 действия», and its Mythic Actions cost 2 or 3.
   - Spent uses return at the start of the monster's turn.
   - A monster that is Incapacitated or otherwise can't act can't take them.
 - **Spellcasting** is an action: «The dragon casts one of the following spells, requiring no Material components…».
@@ -140,5 +141,6 @@ The decisions are in [plan/monsters-npcs.md](../plan/monsters-npcs.md) («Реш
 
 - **The GM enters every number by hand**, as in the book, including the saves, skills, initiative and the average HP. The app doesn't derive them. XP and PB are read from the CR table above.
 - **A «Монстра» ability category** carries the Trait and Legendary Action activations and the Recharge cost.
-- **Monster spells** have a per-day limit stored on the monster's link to the spell. Monsters don't get spell slots.
+- **Monster spells** have a per-day limit stored on the monster's link to the spell. Monsters don't get spell slots. Spellcasting is not an ability: the monster has optional spellcasting ability, save DC and spell attack fields, shown in the «Заклинания» header.
+- **A legendary action has a cost of 1–3**, default 1. The 2024 book always costs 1. The cost is kept for monsters taken from 2014 books.
 - **The "unique" role is the app's own idea**, not the book's: only one copy of such a monster can be on a scene.

@@ -9,6 +9,8 @@ import type {
   CharacterSpecies,
   HitDie,
   SkillProficiency,
+  SpellSlots,
+  SpellSlotsExpended,
 } from 'shared';
 import { apiRequest as request } from '../../lib/apiRequest';
 
@@ -32,6 +34,7 @@ export interface CreateCharacterPayload {
   hitPointsCurrent: number;
   hitDie: HitDie;
   heroicInspiration?: number;
+  spellSlots?: SpellSlots;
   proficiencies: CharacterProficiencies;
   weaponMasteries?: string[];
   currency: CharacterCurrency;
@@ -63,6 +66,17 @@ export function updateCharacter(
   return request(`/characters/${id}`, {
     method: 'PUT',
     body: JSON.stringify(payload),
+  });
+}
+
+// Потраченные ячейки заклинаний с листа: только присланные круги, сохраняется сразу.
+export function spendSpellSlots(
+  id: string,
+  spellSlotsExpended: SpellSlotsExpended,
+): Promise<Character> {
+  return request(`/characters/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ spellSlotsExpended }),
   });
 }
 

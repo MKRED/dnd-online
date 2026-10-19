@@ -1,0 +1,55 @@
+/* Кнопка шире кружка: на телефоне в кружок 16 px трудно попасть пальцем. */
+.pipButton,
+.pipCell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.pipButton:hover:not(:disabled) {
+  background: var(--mantine-color-default-hover);
+}
+
+.pipButton:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+.pipButton:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* Пустой кружок — потраченная ячейка: только обводка, видна в обеих схемах. */
+.pip {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--mantine-primary-color-filled);
+  background: transparent;
+}
+
+.pip[data-full] {
+  background: var(--mantine-primary-color-filled);
+}
+
+.circleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--mantine-spacing-sm);
+  min-height: 28px;
+}
+
+.circleLabel {
+  flex: 0 0 5.5em;
+}
+
+/* Место кнопки «Долгий отдых» занято и когда она скрыта: иначе, появляясь после первой
+   траты, она сдвигала бы кружки под курсором (на телефоне она стоит своей строкой). */
+.longRest[data-hidden] {
+  visibility: hidden;
+}

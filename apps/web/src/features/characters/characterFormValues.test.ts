@@ -30,6 +30,7 @@ describe('fromCharacter', () => {
       hitPointsCurrent: c.hitPointsCurrent,
       hitDie: c.hitDie,
       heroicInspiration: c.heroicInspiration,
+      spellSlots: c.spellSlots,
       proficiencies: { ...c.proficiencies, other: undefined },
       weaponMasteries: c.weaponMasteries,
       currency: c.currency,
@@ -86,6 +87,26 @@ describe('toCreatePayload', () => {
     expect(toCreatePayload(values).proficiencies).toMatchObject({
       weapons: ['martial', 'dagger'],
       other: 'Ездовые животные',
+    });
+  });
+
+  it('ячейки: число из формы, потраченные — из персонажа, урезанные до нового числа', () => {
+    const values = fromCharacter({
+      ...sampleCharacter,
+      spellSlots: {
+        1: { total: 4, expended: 3 },
+        2: { total: 3, expended: 1 },
+        3: { total: 2, expended: 2 },
+      },
+    });
+    expect(values.spellSlots).toMatchObject({ 1: 4, 2: 3, 3: 2, 4: 0 });
+    values.spellSlots[1] = 2;
+    values.spellSlots[3] = 0;
+    values.spellSlots[5] = 1;
+    expect(toCreatePayload(values).spellSlots).toEqual({
+      1: { total: 2, expended: 2 },
+      2: { total: 3, expended: 1 },
+      5: { total: 1, expended: 0 },
     });
   });
 

@@ -23,6 +23,7 @@ const FIELD_ORDER = [
   'hitPointsCurrent',
   'hitDie',
   'heroicInspiration',
+  'spellSlots',
 ];
 
 const FIELD_LABELS: Record<string, string> = {
@@ -46,6 +47,7 @@ function labelOf(path: string): string {
     return key === '0' ? name : `${name} (${Number(key) + 1}-й класс)`;
   }
   if (root === 'abilityScores') return ABILITY_LABELS[key as AbilityScore];
+  if (root === 'spellSlots') return `Ячейки ${key} круга`;
   return FIELD_LABELS[path] ?? path;
 }
 
@@ -56,6 +58,7 @@ function rankOf(path: string): number[] {
   if (root === 'abilityScores') {
     return [base, ABILITY_SCORES.indexOf(key as AbilityScore), 0];
   }
+  if (root === 'spellSlots') return [base, Number(key), 0];
   return [base, 0, 0];
 }
 

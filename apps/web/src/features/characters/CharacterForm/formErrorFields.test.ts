@@ -4,6 +4,7 @@ import { errorFields } from './formErrorFields';
 describe('errorFields', () => {
   it('перечисляет ошибки в порядке полей на странице', () => {
     const fields = errorFields({
+      'spellSlots.3': 'От 0 до 9',
       hitDie: 'Обязательное поле',
       'abilityScores.wisdom': 'От 1 до 30',
       name: 'Обязательное поле',
@@ -18,6 +19,7 @@ describe('errorFields', () => {
       'Сила',
       'Мудрость',
       'Кость хитов',
+      'Ячейки 3 круга',
     ]);
   });
 

@@ -159,6 +159,14 @@ function CharacterViewPage() {
                   )
               : undefined
           }
+          onSpellSlotsChange={
+            isAuthor
+              ? (spellSlots) =>
+                  setCharacter((current) =>
+                    current ? { ...current, spellSlots } : current,
+                  )
+              : undefined
+          }
         />
       )}
     </Container>

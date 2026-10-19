@@ -14,9 +14,17 @@ import {
   type CharacterSpecies,
   type HitDie,
   type Skill,
+  type SpellSlotsExpended,
   type WeaponProficiency,
 } from 'shared';
 import type { CreateCharacterPayload } from './charactersApi';
+import {
+  emptySpellSlotTotals,
+  spellSlotsExpended,
+  spellSlotTotals,
+  toSpellSlots,
+  type SpellSlotTotals,
+} from './spellSlotsFormValues';
 
 export interface CharacterFormClassEntry {
   // Синтетический id, не отправляется на бэкенд (см. toCreatePayload) — нужен как
@@ -50,6 +58,9 @@ export interface CharacterFormValues {
   // Select работает со строками: '' — ещё не выбрана (форма такую не отправит), иначе число граней ('10').
   hitDie: string;
   heroicInspiration: number;
+  spellSlots: SpellSlotTotals;
+  // Полей для них нет: потраченные отмечаются на листе, форма их только сохраняет.
+  spellSlotsExpended: SpellSlotsExpended;
   armorProficiencies: ArmorTraining[];
   weaponProficiencies: WeaponProficiency[];
   toolProficiencies: string[];
@@ -90,6 +101,8 @@ export function createInitialFormValues(): CharacterFormValues {
     hitPointsCurrent: 10,
     hitDie: '',
     heroicInspiration: 0,
+    spellSlots: emptySpellSlotTotals(),
+    spellSlotsExpended: {},
     armorProficiencies: [],
     weaponProficiencies: [],
     toolProficiencies: [],
@@ -132,6 +145,8 @@ export function fromCharacter(character: Character): CharacterFormValues {
     hitPointsCurrent: character.hitPointsCurrent,
     hitDie: character.hitDie === null ? '' : String(character.hitDie),
     heroicInspiration: character.heroicInspiration,
+    spellSlots: spellSlotTotals(character.spellSlots),
+    spellSlotsExpended: spellSlotsExpended(character.spellSlots),
     armorProficiencies: [...character.proficiencies.armor],
     weaponProficiencies: [...character.proficiencies.weapons],
     toolProficiencies: [...character.proficiencies.tools],
@@ -188,6 +203,7 @@ export function toCreatePayload(
     hitPointsCurrent: values.hitPointsCurrent,
     hitDie: Number(values.hitDie) as HitDie,
     heroicInspiration: values.heroicInspiration,
+    spellSlots: toSpellSlots(values.spellSlots, values.spellSlotsExpended),
     proficiencies: {
       // Порядок как в справочнике, а не как отмечали галочки.
       armor: ARMOR_TRAINING.filter((category) =>

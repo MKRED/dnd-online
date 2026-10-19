@@ -5,11 +5,13 @@ import {
   type Character,
   type CharacterEffectEntry,
   type InventoryEntry,
+  type SpellSlots,
 } from 'shared';
 import AbilitiesView from './AbilitiesView';
 import CombatView from './CombatView';
 import EffectSummary from './EffectSummary';
 import EffectsStrip from '../Effects';
+import SpellsSection from '../Abilities';
 import InventorySection from '../Inventory';
 import PersonalityView from './PersonalityView';
 import ProficienciesView from './ProficienciesView';
@@ -23,16 +25,19 @@ interface CharacterSheetProps {
   onInventoryChange?: (inventory: InventoryEntry[]) => void;
   // Есть — автор накладывает и снимает эффекты на листе.
   onEffectsChange?: (effects: CharacterEffectEntry[]) => void;
+  // Есть — автор тратит и возвращает ячейки заклинаний на листе.
+  onSpellSlotsChange?: (spellSlots: SpellSlots) => void;
 }
 
 // Лист персонажа — так его видят и автор, и зритель по ссылке. Менять на листе можно
-// только инвентарь и наложенные эффекты (у автора); остальное — формой.
+// только инвентарь, наложенные эффекты и потраченные ячейки (у автора); остальное — формой.
 // Разделы идут в порядке формы, пустые не показываются.
 function CharacterSheet({
   character,
   aside,
   onInventoryChange,
   onEffectsChange,
+  onSpellSlotsChange,
 }: CharacterSheetProps) {
   // Вид листа: итог с эффектами или база из формы. Не запоминается — лист всегда
   // открывается итогом, в игре нужен он (решено с пользователем 2026-10-17).
@@ -72,6 +77,7 @@ function CharacterSheet({
         </Grid.Col>
       </Grid>
       <AbilitiesView character={character} />
+      <SpellsSection character={character} onChange={onSpellSlotsChange} />
       <ProficienciesView character={character} />
       <InventorySection character={character} onChange={onInventoryChange} />
       <PersonalityView character={character} />

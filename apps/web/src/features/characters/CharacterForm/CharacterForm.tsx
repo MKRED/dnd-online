@@ -1,7 +1,12 @@
 import { Alert, Button, Group, Stack } from '@mantine/core';
 import { useForm, type FormErrors } from '@mantine/form';
 import type { FormEvent } from 'react';
-import { ABILITY_SCORES, HEROIC_INSPIRATION_MAX } from 'shared';
+import {
+  ABILITY_SCORES,
+  HEROIC_INSPIRATION_MAX,
+  SPELL_SLOT_CIRCLES,
+  SPELL_SLOT_TOTAL_MAX,
+} from 'shared';
 import type { CharacterFormValues } from '../characterFormValues';
 import AbilityScoresSection from './AbilityScoresSection';
 import CombatSection from './CombatSection';
@@ -11,6 +16,7 @@ import { errorFields } from './formErrorFields';
 import FormErrorSummary from './FormErrorSummary';
 import IdentitySection from './IdentitySection';
 import ProficienciesSection from './ProficienciesSection';
+import SpellSlotsSection from './SpellSlotsSection';
 
 interface CharacterFormProps {
   // Читается один раз при монтировании (uncontrolled-режим) — при редактировании
@@ -73,6 +79,17 @@ function CharacterForm({
         Number.isInteger(value) && value >= 0 && value <= HEROIC_INSPIRATION_MAX
           ? null
           : `От 0 до ${HEROIC_INSPIRATION_MAX}`,
+      spellSlots: Object.fromEntries(
+        SPELL_SLOT_CIRCLES.map((level) => [
+          level,
+          (value: number) =>
+            Number.isInteger(value) &&
+            value >= 0 &&
+            value <= SPELL_SLOT_TOTAL_MAX
+              ? null
+              : `От 0 до ${SPELL_SLOT_TOTAL_MAX}`,
+        ]),
+      ),
     },
   });
 
@@ -96,6 +113,7 @@ function CharacterForm({
         <IdentitySection form={form} />
         <AbilityScoresSection form={form} />
         <CombatSection form={form} />
+        <SpellSlotsSection form={form} />
         <ProficienciesSection form={form} />
         <CurrencyPersonalitySection form={form} />
 

@@ -14,7 +14,7 @@ import {
   formatModifier,
   getAbilityModifier,
 } from './AbilityScoresSection/abilityMath';
-import { formErrorsEqual } from './formSectionMemo';
+import { formErrorsEqual } from '../../../components/form';
 
 const HIT_DIE_OPTIONS = HIT_DICE.map((die) => ({
   value: String(die),

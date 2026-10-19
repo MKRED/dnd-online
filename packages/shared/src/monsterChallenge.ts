@@ -68,9 +68,10 @@ export const challengeXp = (challenge: MonsterChallenge) =>
 export const challengeProficiencyBonus = (challenge: MonsterChallenge) =>
   CHALLENGE_TABLE[challenge].proficiencyBonus;
 
-// Опыт для карточки: «0 или 10» у ПО 0, иначе число с разрядами через неразрывный пробел
-// («5 900»), как в русских книгах.
+// Опыт с разрядами через неразрывный пробел («5 900»), как в русских книгах.
+export const formatXp = (xp: number) =>
+  String(xp).replace(/\B(?=(\d{3})+$)/g, ' ');
+
+// Опыт для карточки: «0 или 10» у ПО 0, иначе по таблице.
 export const formatChallengeXp = (challenge: MonsterChallenge) =>
-  challenge === '0'
-    ? '0 или 10'
-    : String(challengeXp(challenge)).replace(/\B(?=(\d{3})+$)/g, ' ');
+  challenge === '0' ? '0 или 10' : formatXp(challengeXp(challenge));

@@ -25,7 +25,7 @@ export type SimpleInput = AbilityInput | EffectInput;
 // Чем раздел справочника отличается от другого: адрес, запросы, категории и тексты
 // (род у способности женский, у эффекта мужской).
 export interface SimpleCatalogDef {
-  section: Exclude<CatalogSection, 'items'>;
+  section: Exclude<CatalogSection, 'items' | 'monsters'>;
   // Вид закладки на записи раздела (docs/plan/done/bookmarks.md).
   bookmarkKind: 'ability' | 'effect';
   path: string;

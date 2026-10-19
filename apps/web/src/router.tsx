@@ -15,6 +15,12 @@ import ItemViewPage from './pages/ItemViewPage';
 import LoginPage from './pages/LoginPage';
 import MapsPage from './pages/MapsPage';
 import MapViewPage from './pages/MapViewPage';
+import {
+  MonsterCreatePage,
+  MonsterEditPage,
+  MonsterListPage,
+  MonsterViewPage,
+} from './features/monsters';
 import NotFoundPage from './pages/NotFoundPage';
 import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
@@ -68,6 +74,10 @@ export const router = createBrowserRouter([
           { path: '/items/:id/edit', element: <ItemEditPage /> },
           ...simpleCatalogRoutes(ABILITIES),
           ...simpleCatalogRoutes(EFFECTS),
+          { path: '/monsters', element: <MonsterListPage /> },
+          { path: '/monsters/new', element: <MonsterCreatePage /> },
+          { path: '/monsters/:id', element: <MonsterViewPage /> },
+          { path: '/monsters/:id/edit', element: <MonsterEditPage /> },
           { path: '/bookmarks', element: <BookmarksPage /> },
           { path: '/maps', element: <MapsPage /> },
           { path: '/maps/:id', element: <MapViewPage /> },

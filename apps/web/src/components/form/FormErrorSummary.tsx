@@ -1,7 +1,9 @@
 import { Alert, Anchor, List } from '@mantine/core';
-import type { ErrorField } from './formErrorFields';
+import type { ErrorField } from './errorFields';
 
 interface FormErrorSummaryProps {
+  // «Персонаж не сохранён — исправьте поля»
+  title: string;
   fields: ErrorField[];
   onPick: (path: string, from: Element) => void;
 }
@@ -11,9 +13,9 @@ const lowerFirst = (text: string) =>
 
 // Сводка стоит над кнопкой сохранения: форма длинная, и ошибка у поля в начале
 // страницы не видна тому, кто нажал кнопку внизу.
-function FormErrorSummary({ fields, onPick }: FormErrorSummaryProps) {
+function FormErrorSummary({ title, fields, onPick }: FormErrorSummaryProps) {
   return (
-    <Alert color="red" title="Персонаж не сохранён — исправьте поля">
+    <Alert color="red" title={title}>
       <List size="sm" spacing={4}>
         {fields.map(({ path, label, message }) => (
           <List.Item key={path}>

@@ -11,9 +11,8 @@ import type { CharacterFormValues } from '../characterFormValues';
 import AbilityScoresSection from './AbilityScoresSection';
 import CombatSection from './CombatSection';
 import CurrencyPersonalitySection from './CurrencyPersonalitySection';
-import { focusField } from './focusField';
 import { errorFields } from './formErrorFields';
-import FormErrorSummary from './FormErrorSummary';
+import { FormErrorSummary, focusField } from '../../../components/form';
 import IdentitySection from './IdentitySection';
 import ProficienciesSection from './ProficienciesSection';
 import SpellSlotsSection from './SpellSlotsSection';
@@ -119,6 +118,7 @@ function CharacterForm({
 
         {invalid.length > 0 && (
           <FormErrorSummary
+            title="Персонаж не сохранён — исправьте поля"
             fields={invalid}
             onPick={(path, from) => focusField(from, path)}
           />

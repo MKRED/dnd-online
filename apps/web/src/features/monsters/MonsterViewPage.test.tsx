@@ -1,0 +1,82 @@
+import { screen } from '@testing-library/react';
+import { Route, Routes } from 'react-router-dom';
+import { describe, expect, it, vi } from 'vitest';
+import { sampleMonster } from '../../test/monsterFixture';
+import { renderWithProviders } from '../../test/render';
+import MonsterViewPage from './MonsterViewPage';
+
+function renderPage(
+  userId: string,
+  body: unknown = sampleMonster,
+  status = 200,
+) {
+  vi.stubGlobal(
+    'fetch',
+    vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(JSON.stringify(body), { status })),
+  );
+  return renderWithProviders(
+    <Routes>
+      <Route path="/monsters/:id" element={<MonsterViewPage />} />
+    </Routes>,
+    {
+      route: `/monsters/${sampleMonster.id}`,
+      auth: { user: { id: userId, login: 'someone', nickname: 'Кто-то' } },
+    },
+  );
+}
+
+describe('MonsterViewPage', () => {
+  it('показывает стат-блок как ввёл мастер и действия автора', async () => {
+    renderPage(sampleMonster.authorId);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Аболет' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Большая аберрация, законно-злой'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Уникальный')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        // Неразрывные пробелы в числах поиск по тексту сводит к обычным.
+        'ПО 10 · Опыт 5 900 (7 200 в логове) · Бонус мастерства +4',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Инициатива').nextSibling).toHaveTextContent(
+      '+7 (17)',
+    );
+    expect(screen.getByText('20к10 + 40')).toBeInTheDocument();
+    expect(screen.getByText('плавание 40 фт')).toBeInTheDocument();
+    // Спасбросок Ловкости +3 при модификаторе −1 — владение.
+    expect(screen.getByText('Спасбросок +3')).toBeInTheDocument();
+    expect(screen.getByText('История +12, Восприятие +10')).toBeInTheDocument();
+    expect(screen.getByText('3 за раунд, 4 в логове')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Редактировать' })).toHaveAttribute(
+      'href',
+      `/monsters/${sampleMonster.id}/edit`,
+    );
+  });
+
+  it('чужому показывает карточку без кнопок и ведёт назад в каталог', async () => {
+    renderPage('someone-else');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Аболет' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Редактировать' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '← К монстрам' })).toHaveAttribute(
+      'href',
+      '/monsters?tab=catalog',
+    );
+  });
+
+  it('на 404 говорит, что монстра нет', async () => {
+    renderPage('someone-else', { message: 'Монстр не найден' }, 404);
+
+    expect(await screen.findByText('Монстр не найден')).toBeInTheDocument();
+  });
+});

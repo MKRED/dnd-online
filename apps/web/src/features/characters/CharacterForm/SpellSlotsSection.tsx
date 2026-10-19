@@ -3,7 +3,7 @@ import type { UseFormReturnType } from '@mantine/form';
 import { memo } from 'react';
 import { SPELL_SLOT_CIRCLES, SPELL_SLOT_TOTAL_MAX } from 'shared';
 import type { CharacterFormValues } from '../characterFormValues';
-import { formErrorsEqual } from './formSectionMemo';
+import { formErrorsEqual } from '../../../components/form';
 
 interface SpellSlotsSectionProps {
   form: UseFormReturnType<CharacterFormValues>;

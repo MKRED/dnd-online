@@ -4,6 +4,7 @@ import {
   challengeProficiencyBonus,
   challengeXp,
   formatChallengeXp,
+  formatXp,
   isMonsterChallenge,
 } from './monsterChallenge.js';
 import {
@@ -147,6 +148,8 @@ describe('ПО монстра', () => {
   it('показывает опыт: у ПО 0 — «0 или 10», как в книге', () => {
     expect(formatChallengeXp('0')).toBe('0 или 10');
     expect(formatChallengeXp('1/8')).toBe('25');
+    expect(formatXp(7200)).toBe('7 200');
+    expect(formatXp(950)).toBe('950');
     expect(formatChallengeXp('10')).toBe('5 900');
     expect(formatChallengeXp('30')).toBe('155 000');
   });

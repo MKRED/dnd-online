@@ -24,3 +24,6 @@ export { default as CharacterGallery } from './CharacterGallery';
 export { default as CharacterSheet } from './CharacterSheet';
 export { default as ShareDialog } from './ShareDialog';
 export { default as CharacterAvatar } from './CharacterAvatar';
+export { formatModifier } from './CharacterForm/AbilityScoresSection/abilityMath';
+export { default as SheetField } from './CharacterSheet/SheetField';
+export { default as StatTile } from './CharacterSheet/StatTile';

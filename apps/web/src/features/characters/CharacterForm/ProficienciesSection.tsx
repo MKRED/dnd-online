@@ -17,7 +17,7 @@ import {
   WEAPON_PROFICIENCY_OPTIONS,
   WEAPON_SUGGESTIONS,
 } from '../characterWeapons';
-import { formErrorsEqual } from './formSectionMemo';
+import { formErrorsEqual } from '../../../components/form';
 
 // Как у подкласса: книжные варианты подсказываем, но своё вписать можно.
 const SUGGEST_PLACEHOLDER = 'Выберите или впишите своё';

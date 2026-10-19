@@ -2,7 +2,7 @@ import { Fieldset, Grid, NumberInput, Stack, Textarea } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import { memo } from 'react';
 import type { CharacterFormValues } from '../characterFormValues';
-import { formErrorsEqual } from './formSectionMemo';
+import { formErrorsEqual } from '../../../components/form';
 
 interface CurrencyPersonalitySectionProps {
   form: UseFormReturnType<CharacterFormValues>;

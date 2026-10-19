@@ -1,12 +1,7 @@
 import type { FormErrors } from '@mantine/form';
 import { ABILITY_SCORES, type AbilityScore } from 'shared';
+import { collectErrorFields } from '../../../components/form';
 import { ABILITY_LABELS } from '../characterLabels';
-
-export interface ErrorField {
-  path: string;
-  label: string;
-  message: string;
-}
 
 // Поля с проверкой в порядке формы: сводка у кнопки перечисляет ошибки сверху вниз.
 // Классы стоят между предысторией и характеристиками, поэтому порядок задан вручную.
@@ -62,17 +57,6 @@ function rankOf(path: string): number[] {
   return [base, 0, 0];
 }
 
-const byRank = (a: number[], b: number[]) =>
-  a.reduce((diff, value, i) => diff || value - b[i], 0);
-
-// Ошибки формы — списком «поле — что не так», в том порядке, в каком поля идут на странице.
-export function errorFields(errors: FormErrors): ErrorField[] {
-  return Object.entries(errors)
-    .flatMap(([path, message]) =>
-      // Все проверки формы возвращают строку; пустое значение — ошибки нет.
-      typeof message === 'string' && message
-        ? [{ path, label: labelOf(path), message }]
-        : [],
-    )
-    .sort((a, b) => byRank(rankOf(a.path), rankOf(b.path)));
-}
+// Ошибки формы персонажа сверху вниз — для сводки у кнопки.
+export const errorFields = (errors: FormErrors) =>
+  collectErrorFields(errors, labelOf, rankOf);

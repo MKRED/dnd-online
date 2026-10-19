@@ -176,6 +176,14 @@ The decisions are in [plan/monsters-npcs.md](../plan/monsters-npcs.md) («Реш
   - tags up to 100 characters, alignment up to 30, languages up to 300.
 - Code: `packages/shared/src/monsters.ts` (types, sizes, roles, the default stat block), `monsterChallenge.ts`, `monsterStatBlockCheck.ts`; server `apps/server/src/monsters/`.
 
+**Built (stage 4, 2026-10-19): the monster catalog pages** (`/monsters`).
+
+- **The header line agrees in gender**, as Russian books write it: «Большая аберрация (маг), законно-злой», «Среднее исчадие», «Огромный дракон». The size takes the gender of the type's Russian noun: аберрация, фея, слизь and нежить are feminine; исчадие, чудовище and растение are neuter; the rest are masculine. Tags go in brackets after the type. The alignment is shown as the GM typed it, since its gender can't be agreed from free text.
+- **Initiative** shows as «+7 (17)»: the modifier, then 10 + the modifier, as in the 2024 block.
+- **XP** shows with the lair XP in brackets: «Опыт 5 900 (7 200 в логове)». Digits are grouped with a no-break space (`formatXp`).
+- **The form suggests, never derives.** A save bonus follows the ability modifier until the GM types a different one. A newly picked skill gets the modifier + the CR's proficiency bonus, which the GM may change. Neither is recomputed later.
+- Code: `apps/web/src/features/monsters/`: the header line in `monsterKind.ts`, the card texts in `MonsterCard/monsterCardText.ts`.
+
 Planned for the next stages:
 
 - **The GM enters every number by hand**, as in the book, including the saves, skills, initiative and the average HP. The app doesn't derive them. XP and PB are read from the CR table above.

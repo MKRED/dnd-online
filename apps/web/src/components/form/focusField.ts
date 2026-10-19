@@ -6,7 +6,7 @@ export function focusField(from: Element, path: string) {
     .closest('form')
     ?.querySelector<HTMLElement>(`[data-path="${CSS.escape(path)}"]`);
   if (!input) {
-    console.error('Character form field not found for error', path);
+    console.error('Form field not found for error', path);
     return;
   }
   input.scrollIntoView({ block: 'center', behavior: 'smooth' });

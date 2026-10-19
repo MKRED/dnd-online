@@ -84,7 +84,7 @@ function SimpleListPage({ def }: SimpleListPageProps) {
             />
             {def.kinds.values.length > 1 && entries && (
               <CategoryChips
-                def={def}
+                kinds={def.kinds}
                 entries={entries}
                 value={filters.categories}
                 onChange={(categories) =>

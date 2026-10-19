@@ -9,7 +9,7 @@ import {
 import type { UseFormReturnType } from '@mantine/form';
 import { memo } from 'react';
 import type { CharacterFormValues } from '../../characterFormValues';
-import { formErrorsEqual } from '../formSectionMemo';
+import { formErrorsEqual } from '../../../../components/form';
 import ClassesList from './ClassesList';
 import SpeciesFields from './SpeciesFields';
 

@@ -15,7 +15,7 @@ interface SkillsSectionProps {
   onChange?: (abilities: CharacterAbilityEntry[]) => void;
 }
 
-// Блок «Умения» (docs/plan/character-abilities.md): способности категории «Базовая» по
+// Блок «Умения» (docs/plan/done/character-abilities.md): способности категории «Базовая» по
 // активации. «+ Способность» здесь добавляет и заклинания — они встают в «Заклинания».
 // Список и окно берут строки и обработчики, а не персонажа: их возьмёт и монстр.
 function SkillsSection({

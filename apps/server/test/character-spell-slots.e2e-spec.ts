@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { characterBody } from './support/character-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Ячейки заклинаний (docs/plan/character-abilities.md, этап 1): число задаёт форма (PUT),
+// Ячейки заклинаний (docs/plan/done/character-abilities.md, этап 1): число задаёт форма (PUT),
 // потраченные меняются точечно (PATCH spellSlotsExpended).
 describe('ячейки заклинаний (e2e)', () => {
   let t: TestApp;

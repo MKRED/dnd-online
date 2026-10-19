@@ -5,7 +5,7 @@ import {
   type SpellSlotsExpended,
 } from 'shared';
 
-// Потраченные ячейки из PATCH поверх ячеек в базе (docs/plan/character-abilities.md).
+// Потраченные ячейки из PATCH поверх ячеек в базе (docs/plan/done/character-abilities.md).
 // Считается от строки, прочитанной под блокировкой: два быстрых клика по кружкам не
 // должны затереть друг друга.
 export function spentSpellSlots(

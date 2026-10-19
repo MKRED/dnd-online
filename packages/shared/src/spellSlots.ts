@@ -1,6 +1,6 @@
 import type { SpellSlots } from './character.js';
 
-// Ячейки заклинаний вводит игрок по таблице своего класса (docs/plan/character-abilities.md).
+// Ячейки заклинаний вводит игрок по таблице своего класса (docs/plan/done/character-abilities.md).
 // В таблицах 2024 больше 4 ячеек одного круга не бывает; предел 9 — запас для хоумбрю и
 // предметов, а не правило книги. Он же держит ряд кружков на листе в одну строку.
 export const SPELL_SLOT_TOTAL_MAX = 9;

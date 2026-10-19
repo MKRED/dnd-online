@@ -29,7 +29,7 @@ import {
   UpdateCharacterAbilityDto,
 } from './dto/character-ability.dto.js';
 
-// Способности у персонажа (docs/plan/character-abilities.md). Меняет только автор
+// Способности у персонажа (docs/plan/done/character-abilities.md). Меняет только автор
 // персонажа, отдельно от формы: каждая правка отдаёт список целиком.
 @Injectable()
 export class CharacterAbilitiesService {

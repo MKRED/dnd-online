@@ -3,7 +3,7 @@ import type { AbilityActivation, AbilityCosts } from './abilityUsage.js';
 import type { CatalogImage } from './catalogImage.js';
 import type { CharacterEffectMissing } from './characterEffects.js';
 
-// Способности у персонажа (docs/plan/character-abilities.md): строка — ссылка на запись
+// Способности у персонажа (docs/plan/done/character-abilities.md): строка — ссылка на запись
 // каталога, а не копия, как эффект. Правка карточки автором сразу видна у всех.
 
 // Что нужно листу: группа («Умения» по активации, «Заклинания» по кругу) и строка

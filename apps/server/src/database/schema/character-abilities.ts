@@ -9,7 +9,7 @@ import {
 import { abilities } from './abilities.js';
 import { characters } from './characters.js';
 
-// Способности у персонажа (docs/plan/character-abilities.md): строка — ссылка на
+// Способности у персонажа (docs/plan/done/character-abilities.md): строка — ссылка на
 // способность каталога, как эффект на персонаже. Откуда способность (класс, вид, черта),
 // пока не храним: это придёт с ростом от уровня класса.
 export const characterAbilities = pgTable(

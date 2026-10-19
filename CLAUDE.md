@@ -67,7 +67,7 @@ Read the relevant file before working in that area:
   - Prettier
 - [docs/plan/README.md](docs/plan/README.md) is the plan summary (in Russian): the active plan, the closed ones in `docs/plan/done/`, and every leftover «на потом» from the closed plans in one list — start there when picking the next piece of work
 - [docs/plan/roadmap.md](docs/plan/roadmap.md) is the road to the game (in Russian, a living plan): the order of the blocks (abilities on creatures → monsters and NPCs → map editor → the game in `map.md`), monsters as a catalog and NPCs as characters, map objects as ops in the map journal, and open questions; each block gets its own detailed plan when it starts
-- [docs/plan/character-abilities.md](docs/plan/character-abilities.md) covers block 1 of the roadmap (in Russian, a living plan): catalog abilities on a character as links (the «Умения» block by activation, «Заклинания» by circle, the prepared mark), spell slots entered in the form and spent on the sheet, the `character_abilities` table, the API and the stage checklist
+- [docs/plan/done/character-abilities.md](docs/plan/done/character-abilities.md) covers block 1 of the roadmap (in Russian, a closed plan): catalog abilities on a character as links (the «Умения» block by activation, «Заклинания» by circle, the prepared mark), spell slots entered in the form and spent on the sheet, the `character_abilities` table, the API and the stage checklist
 - [docs/plan/map.md](docs/plan/map.md) covers the 3D map (in Russian, a living plan):
   - decisions (voxel blocks, 1 block = 5 ft, operations, AI/MCP access, server-authoritative rules on the map)
   - open questions

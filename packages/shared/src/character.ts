@@ -239,7 +239,7 @@ export interface Character {
   // Наложенные эффекты — тоже глазами смотрящего. armorClass и speed выше — база без
   // эффектов, итог считает shared (docs/plan/done/character-effects.md).
   effects: CharacterEffectEntry[];
-  // Способности из каталога — тоже глазами смотрящего (docs/plan/character-abilities.md).
+  // Способности из каталога — тоже глазами смотрящего (docs/plan/done/character-abilities.md).
   abilities: CharacterAbilityEntry[];
   currency: CharacterCurrency;
   features: CharacterFeature[];

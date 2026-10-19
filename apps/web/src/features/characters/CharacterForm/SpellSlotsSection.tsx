@@ -10,7 +10,7 @@ interface SpellSlotsSectionProps {
 }
 
 // Число ячеек по кругам вводит игрок: приложение таблицы классов не считает
-// (docs/plan/character-abilities.md). Потраченные отмечаются на листе, не здесь.
+// (docs/plan/done/character-abilities.md). Потраченные отмечаются на листе, не здесь.
 function SpellSlotsSection({ form }: SpellSlotsSectionProps) {
   return (
     <Fieldset legend="Ячейки заклинаний">

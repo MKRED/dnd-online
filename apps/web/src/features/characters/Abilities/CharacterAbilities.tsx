@@ -9,7 +9,7 @@ interface CharacterAbilitiesProps {
   onSpellSlotsChange?: (spellSlots: SpellSlots) => void;
 }
 
-// «Умения» и «Заклинания» на листе персонажа (docs/plan/character-abilities.md).
+// «Умения» и «Заклинания» на листе персонажа (docs/plan/done/character-abilities.md).
 function CharacterAbilities({
   character,
   onAbilitiesChange,

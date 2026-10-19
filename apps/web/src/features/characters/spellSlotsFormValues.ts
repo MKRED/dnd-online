@@ -33,7 +33,7 @@ export function spellSlotsExpended(slots: SpellSlots): SpellSlotsExpended {
 
 // Форма меняет только число ячеек, а потраченные отмечаются на листе. Поэтому
 // потраченные берём из загруженного персонажа и урезаем до нового числа: правка
-// формы их не сбрасывает (docs/plan/character-abilities.md, «Форма и потраченные»).
+// формы их не сбрасывает (docs/plan/done/character-abilities.md, «Форма и потраченные»).
 // Круг с 0 ячеек не отправляем — у него ячеек нет.
 export function toSpellSlots(
   totals: SpellSlotTotals,

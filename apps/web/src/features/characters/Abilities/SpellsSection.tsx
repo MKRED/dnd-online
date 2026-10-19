@@ -25,7 +25,7 @@ interface SpellsSectionProps {
   onAbilitiesChange?: (abilities: CharacterAbilityEntry[]) => void;
 }
 
-// Блок «Заклинания» (docs/plan/character-abilities.md): заговоры, затем круги 1–9. Ячейки
+// Блок «Заклинания» (docs/plan/done/character-abilities.md): заговоры, затем круги 1–9. Ячейки
 // стоят в заголовке круга, рядом с тем, на что они тратятся. Добавляют заклинания
 // кнопкой «+ Способность» в «Умениях».
 function SpellsSection({

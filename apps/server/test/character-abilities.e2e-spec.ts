@@ -6,7 +6,7 @@ import { characterAbilities } from '../src/database/schema/index.js';
 import { createCharacter } from './support/inventory-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Способности у персонажа — docs/plan/character-abilities.md, этап 3.
+// Способности у персонажа — docs/plan/done/character-abilities.md, этап 3.
 interface AbilityRow {
   id: string;
   prepared: boolean;

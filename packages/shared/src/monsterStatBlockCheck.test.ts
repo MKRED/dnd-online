@@ -3,6 +3,7 @@ import {
   MONSTER_CHALLENGES,
   challengeProficiencyBonus,
   challengeXp,
+  formatChallengeXp,
   isMonsterChallenge,
 } from './monsterChallenge.js';
 import {
@@ -141,5 +142,12 @@ describe('ПО монстра', () => {
     expect([challengeXp('30'), challengeProficiencyBonus('30')]).toEqual([
       155000, 9,
     ]);
+  });
+
+  it('показывает опыт: у ПО 0 — «0 или 10», как в книге', () => {
+    expect(formatChallengeXp('0')).toBe('0 или 10');
+    expect(formatChallengeXp('1/8')).toBe('25');
+    expect(formatChallengeXp('10')).toBe('5 900');
+    expect(formatChallengeXp('30')).toBe('155 000');
   });
 });

@@ -7,8 +7,9 @@ interface ChallengeRow {
   proficiencyBonus: number;
 }
 
-// У ПО 0 в книге «0 или 10» опыта: 10 — если у монстра есть действенная атака. Здесь 0;
-// как показывать это на карточке, решается вместе с ней (этап 4).
+// У ПО 0 в книге «0 или 10» опыта: 10 — если у монстра есть действенная атака. В таблице 0,
+// карточка показывает «0 или 10», как книга (formatChallengeXp; решено с пользователем
+// 2026-10-19).
 const CHALLENGE_TABLE = {
   '0': { xp: 0, proficiencyBonus: 2 },
   '1/8': { xp: 25, proficiencyBonus: 2 },
@@ -66,3 +67,10 @@ export const challengeXp = (challenge: MonsterChallenge) =>
 
 export const challengeProficiencyBonus = (challenge: MonsterChallenge) =>
   CHALLENGE_TABLE[challenge].proficiencyBonus;
+
+// Опыт для карточки: «0 или 10» у ПО 0, иначе число с разрядами через неразрывный пробел
+// («5 900»), как в русских книгах.
+export const formatChallengeXp = (challenge: MonsterChallenge) =>
+  challenge === '0'
+    ? '0 или 10'
+    : String(challengeXp(challenge)).replace(/\B(?=(\d{3})+$)/g, ' ');

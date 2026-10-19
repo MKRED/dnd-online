@@ -164,7 +164,7 @@ The decisions are in [plan/monsters-npcs.md](../plan/monsters-npcs.md) («Реш
   - CR as a string key (`'0'`, `'1/8'`, `'1/4'`, `'1/2'`, `'1'`…`'30'`);
   - optional in-lair XP, Legendary Action uses and in-lair uses (the in-lair count only with the regular one);
   - spellcasting `{ ability, saveDc, attackBonus }`, each optional.
-- **XP and PB come from the CR table** (`challengeXp`, `challengeProficiencyBonus`). For CR 0 the book gives «0 or 10» (10 when the monster has an effective attack); the table holds 0 until the card decides how to show it.
+- **XP and PB come from the CR table** (`challengeXp`, `challengeProficiencyBonus`). For CR 0 the book gives «0 or 10» (10 when the monster has an effective attack); the table holds 0, and the card shows «0 или 10» as the book does (`formatChallengeXp`, decided with the user on 2026-10-19).
 - **The limits are the app's, not the book's**, set with room above the largest 2024 monsters:
   - AC 1–50;
   - bonuses (initiative, saves, skills, spell attack) −10…+30;

@@ -8,6 +8,7 @@ import {
   ValidateBy,
   buildMessage,
 } from 'class-validator';
+import { SPELL_SLOT_TOTAL_MAX } from 'shared';
 
 export class KnownSpellDto {
   @IsString()
@@ -47,6 +48,7 @@ function isSpellSlotsShape(value: unknown): boolean {
         typeof total === 'number' &&
         Number.isInteger(total) &&
         total >= 0 &&
+        total <= SPELL_SLOT_TOTAL_MAX &&
         typeof expended === 'number' &&
         Number.isInteger(expended) &&
         expended >= 0 &&
@@ -63,7 +65,35 @@ export function IsSpellSlots() {
       validate: (value: unknown) => isSpellSlotsShape(value),
       defaultMessage: buildMessage(
         (eachPrefix) =>
-          `${eachPrefix}spellSlots must be a record of spell level ("1"-"9") to { total: non-negative int, expended: non-negative int <= total }`,
+          `${eachPrefix}spellSlots must be a record of spell level ("1"-"9") to { total: int 0-${SPELL_SLOT_TOTAL_MAX}, expended: non-negative int <= total }`,
+      ),
+    },
+  });
+}
+
+// Потраченные ячейки в точечном PATCH: круг "1".."9" → целое от 0. Больше ли это, чем
+// ячеек круга, проверяет сервис: число ячеек лежит в базе, а не в запросе.
+function isSpellSlotsExpendedShape(value: unknown): boolean {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  return Object.entries(value as Record<string, unknown>).every(
+    ([level, spent]) =>
+      /^[1-9]$/.test(level) &&
+      typeof spent === 'number' &&
+      Number.isInteger(spent) &&
+      spent >= 0,
+  );
+}
+
+export function IsSpellSlotsExpended() {
+  return ValidateBy({
+    name: 'isSpellSlotsExpended',
+    validator: {
+      validate: (value: unknown) => isSpellSlotsExpendedShape(value),
+      defaultMessage: buildMessage(
+        () =>
+          'Потраченные ячейки — по кругам от 1 до 9, целое число не меньше 0',
       ),
     },
   });

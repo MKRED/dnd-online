@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { and, desc, eq } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { loadMainImages } from '../character-images/character-image-access.js';
 import { DatabaseService } from '../database/database.service.js';
 import { characters, users } from '../database/schema/index.js';
 import { nicknameOf } from './character-author.js';
+import { spentSpellSlots } from './character-spell-slots.js';
 import { characterVisibleTo } from './character-visibility.js';
 import {
   loadCharacterEffectLists,
@@ -153,7 +154,17 @@ export class CharactersService {
     if (Object.values(dto).every((value) => value === undefined)) {
       return this.findOwn(userId, id);
     }
-    return this.applyUpdate(userId, id, dto, 'patch');
+    const { spellSlotsExpended, ...values } = dto;
+    return this.applyUpdate(
+      userId,
+      id,
+      values,
+      'patch',
+      spellSlotsExpended &&
+        ((row) => ({
+          spellSlots: spentSpellSlots(row.spellSlots, spellSlotsExpended),
+        })),
+    );
   }
 
   // Полное редактирование чарника формой: тот же DTO, что и при создании.
@@ -167,14 +178,33 @@ export class CharactersService {
     id: string,
     values: Partial<typeof characters.$inferInsert>,
     kind: 'patch' | 'replace',
+    // Значения, которые зависят от текущей строки (потраченные ячейки): строка читается
+    // под блокировкой в той же транзакции, что и запись.
+    fromCurrent?: (
+      row: typeof characters.$inferSelect,
+    ) => Partial<typeof characters.$inferInsert>,
   ) {
     const t0 = Date.now();
+    const own = and(eq(characters.id, id), eq(characters.userId, userId));
     try {
-      const [row] = await this.databaseService.db
-        .update(characters)
-        .set(values)
-        .where(and(eq(characters.id, id), eq(characters.userId, userId)))
-        .returning();
+      const row = await this.databaseService.db.transaction(async (tx) => {
+        let set = values;
+        if (fromCurrent) {
+          const [current] = await tx
+            .select()
+            .from(characters)
+            .where(own)
+            .for('update');
+          if (!current) return undefined;
+          set = { ...values, ...fromCurrent(current) };
+        }
+        const [updated] = await tx
+          .update(characters)
+          .set(set)
+          .where(own)
+          .returning();
+        return updated;
+      });
       if (!row) {
         throw new NotFoundException('Персонаж не найден');
       }
@@ -193,7 +223,8 @@ export class CharactersService {
         ),
       });
     } catch (err: unknown) {
-      if (err instanceof NotFoundException) {
+      // 404 и 400 (ячеек меньше, чем потрачено) — ответ клиенту, а не сбой.
+      if (err instanceof HttpException) {
         throw err;
       }
       this.logger.error(

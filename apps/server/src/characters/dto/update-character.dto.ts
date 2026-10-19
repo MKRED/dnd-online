@@ -1,11 +1,12 @@
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Max, Min, ValidateNested } from 'class-validator';
-import { HEROIC_INSPIRATION_MAX } from 'shared';
+import { HEROIC_INSPIRATION_MAX, type SpellSlotsExpended } from 'shared';
 import { CurrencyDto } from './nested/equipment.dto.js';
+import { IsSpellSlotsExpended } from './nested/spells.dto.js';
 
 // Узкий DTO точечных апдейтов "в процессе игры" — ради этого схема и сделана
 // гибридной (см. characters.ts): ХП, спасброски от смерти, вдохновение, опыт,
-// деньги. Инвентарь меняется своими маршрутами (inventory/). Полное редактирование
+// деньги, потраченные ячейки заклинаний. Инвентарь меняется своими маршрутами (inventory/). Полное редактирование
 // чарника (класс, характеристики и т.д.) идёт через PUT с CreateCharacterDto, а не через
 // этот DTO.
 export class UpdateCharacterDto {
@@ -46,4 +47,9 @@ export class UpdateCharacterDto {
   @ValidateNested()
   @Type(() => CurrencyDto)
   currency?: CurrencyDto;
+
+  // Сколько ячеек потрачено, по кругам ({ "1": 2 }); число ячеек задаёт форма (PUT).
+  @IsOptional()
+  @IsSpellSlotsExpended()
+  spellSlotsExpended?: SpellSlotsExpended;
 }

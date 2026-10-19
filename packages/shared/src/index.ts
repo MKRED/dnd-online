@@ -7,6 +7,7 @@ export * from './weapons.js';
 export * from './items.js';
 export * from './inventory.js';
 export * from './carrying.js';
+export * from './spellSlots.js';
 export * from './catalogImage.js';
 export * from './catalog.js';
 export * from './catalogSources.js';

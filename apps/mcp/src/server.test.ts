@@ -75,6 +75,32 @@ describe('dnd-map MCP server', () => {
     });
   });
 
+  it('create_map передаёт размер карты', async () => {
+    const api = vi.fn().mockResolvedValue({ id: MAP_ID, width: 10, depth: 20 });
+    const client = await connect(api as unknown as ApiCall);
+
+    await call(client, 'create_map', { name: 'Двор', width: 10, depth: 20 });
+
+    expect(api).toHaveBeenCalledWith('/maps', {
+      method: 'POST',
+      body: { name: 'Двор', width: 10, depth: 20 },
+    });
+  });
+
+  it('apply_ops пропускает resize на сервер', async () => {
+    const api = vi.fn().mockResolvedValue({ seq: 2, changedCells: 0 });
+    const client = await connect(api as unknown as ApiCall);
+    const ops = [{ op: 'resize', grow: { down: 3, east: -1 }, cut: 'delete' }];
+
+    const result = await call(client, 'apply_ops', { mapId: MAP_ID, ops });
+
+    expect(result.isError).toBe(false);
+    expect(api).toHaveBeenCalledWith(`/maps/${MAP_ID}/ops`, {
+      method: 'POST',
+      body: { ops },
+    });
+  });
+
   it('map_section передаёт серверу только заданные параметры', async () => {
     const api = vi
       .fn()
@@ -134,6 +160,9 @@ describe('dnd-map MCP server', () => {
     const { text } = await call(client, 'block_guide');
     expect(text).toContain('stone_stairs');
     expect(text).toContain('Север — -z');
+    expect(text).toContain(
+      'resize {grow: {north, south, west, east, down}, cut?}',
+    );
   });
 });
 

@@ -62,12 +62,17 @@ export function createMapMcpServer(api: ApiCall, webUrl: string): McpServer {
   server.registerTool(
     'create_map',
     {
-      description: 'Создать пустую карту.',
-      inputSchema: { name: z.string().min(1).max(100) },
+      description:
+        'Создать пустую карту. Размер — width (x) × depth (z) клеток, по умолчанию 32 × 32; потом его меняет операция resize.',
+      inputSchema: {
+        name: z.string().min(1).max(100),
+        width: z.number().int().min(1).optional(),
+        depth: z.number().int().min(1).optional(),
+      },
     },
-    ({ name }) =>
+    (body) =>
       guarded(async () =>
-        json(await api<MapInfo>('/maps', { method: 'POST', body: { name } })),
+        json(await api<MapInfo>('/maps', { method: 'POST', body })),
       ),
   );
 
@@ -83,7 +88,8 @@ export function createMapMcpServer(api: ApiCall, webUrl: string): McpServer {
   server.registerTool(
     'map_summary',
     {
-      description: 'Сводка карты: границы, число блоков по типам, палитра.',
+      description:
+        'Сводка карты: размер (size — width × depth, клетки x от 0 до width − 1, z от 0 до depth − 1), предел высоты maxHeight, габарит построенного (bounds), число блоков по типам, палитра.',
       inputSchema: { mapId },
     },
     ({ mapId: id }) =>
@@ -96,7 +102,7 @@ export function createMapMcpServer(api: ApiCall, webUrl: string): McpServer {
     'map_slice',
     {
       description:
-        'ASCII-срез карты на уровне высоты y: строки — z (север сверху), столбцы — x, с легендой. Прямоугольник задаётся целиком или не задаётся (тогда — границы карты). Не больше 100 000 клеток.',
+        'ASCII-срез карты на уровне высоты y: строки — z (север сверху), столбцы — x, с легендой. Прямоугольник задаётся целиком или не задаётся (тогда — вся карта). Не больше 100 000 клеток.',
       inputSchema: {
         mapId,
         y: z.number().int(),
@@ -119,7 +125,7 @@ export function createMapMcpServer(api: ApiCall, webUrl: string): McpServer {
     'map_section',
     {
       description:
-        'ASCII-разрез карты вертикальной плоскостью x = at или z = at: строки — высота y (верх сверху), столбцы — вторая горизонтальная ось, с легендой. Нужен там, где горизонтальный срез не помогает: крыши, высота этажей, лестницы и проёмы над ними. axis "z" — вид с юга (столбцы — x, слева запад), axis "x" — вид с запада (столбцы — z, слева север). min/max (вдоль столбцов) и minY/maxY задаются парами или не задаются (тогда — границы карты). Не больше 100 000 клеток.',
+        'ASCII-разрез карты вертикальной плоскостью x = at или z = at: строки — высота y (верх сверху), столбцы — вторая горизонтальная ось, с легендой. Нужен там, где горизонтальный срез не помогает: крыши, высота этажей, лестницы и проёмы над ними. axis "z" — вид с юга (столбцы — x, слева запад), axis "x" — вид с запада (столбцы — z, слева север). min/max (вдоль столбцов) и minY/maxY задаются парами или не задаются (тогда — вся ширина или глубина карты и высота от земли до верхнего блока). Не больше 100 000 клеток.',
       inputSchema: {
         mapId,
         axis: z.enum(SECTION_AXES),

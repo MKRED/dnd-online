@@ -7,6 +7,7 @@ import {
   Text,
   Title,
 } from '@mantine/core';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { GameSceneStatus } from 'shared';
 import classes from './GameScenePage.module.css';
@@ -23,10 +24,12 @@ interface SceneSidebarProps {
   // Пределы и значение среза по высоте; null — сцена пустая или не загружена.
   cut: { min: number; max: number; value: number } | null;
   onCutChange: (y: number) => void;
+  // Инструменты мастера (этап 6); у игрока их нет.
+  children?: ReactNode;
 }
 
-// Панель страницы сцены: где мы, дорога в лобби, у мастера — «Открыта игрокам», и срез
-// по высоте, как в редакторе карты.
+// Панель страницы сцены: где мы, дорога в лобби, у мастера — «Открыта игрокам» и свойства
+// инструмента, и срез по высоте, как в редакторе карты.
 function SceneSidebar({
   gameId,
   gameName,
@@ -37,6 +40,7 @@ function SceneSidebar({
   onOpenChange,
   cut,
   onCutChange,
+  children,
 }: SceneSidebarProps) {
   return (
     <aside className={classes.sidebar}>
@@ -68,12 +72,14 @@ function SceneSidebar({
             />
             <Text size="xs" c="dimmed">
               {scene.open
-                ? 'Игроки видят эту сцену. Закроете — их переведёт в лобби.'
+                ? 'Игроки видят эту сцену и каждую правку сразу. Закроете — их переведёт в лобби.'
                 : 'Игроки ждут в лобби. Откроете — их переведёт сюда.'}
             </Text>
           </Stack>
         )}
         {error && <Alert color="red">{error}</Alert>}
+
+        {children}
 
         {cut && (
           <Stack gap={4}>

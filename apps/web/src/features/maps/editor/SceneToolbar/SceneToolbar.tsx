@@ -6,6 +6,8 @@ import { TOOL_ICONS } from '../toolIcons';
 import classes from './SceneToolbar.module.css';
 
 interface SceneToolbarProps {
+  // Инструменты на полосе, по порядку; без него — все. Номер клавиши — место в полосе.
+  tools?: readonly EditorTool[];
   tool: EditorTool;
   onTool: (tool: EditorTool) => void;
   busy: boolean;
@@ -17,6 +19,7 @@ interface SceneToolbarProps {
 // строкой внизу, под большим пальцем. Отмена и возврат — в верхнем левом углу
 // (docs/plan/done/map-editor.md, «Панель: полоса инструментов на сцене»).
 function SceneToolbar({
+  tools = EDITOR_TOOLS,
   tool,
   onTool,
   busy,
@@ -31,7 +34,7 @@ function SceneToolbar({
     <>
       <Paper className={classes.tools} withBorder shadow="xs" p={4}>
         <ActionIcon.Group orientation={narrow ? 'horizontal' : 'vertical'}>
-          {EDITOR_TOOLS.map((value, index) => {
+          {tools.map((value, index) => {
             const Icon = TOOL_ICONS[value];
             return (
               <Tooltip

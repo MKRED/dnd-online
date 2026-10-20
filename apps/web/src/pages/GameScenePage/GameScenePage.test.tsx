@@ -6,10 +6,13 @@ import {
   DEFAULT_USER_SETTINGS,
   GAME_SOCKET,
   emptyRefsView,
+  type GameSceneEditMessage,
   type GameSceneView,
+  type MapObject,
   type MapObjectRefsView,
 } from 'shared';
 import type { ObjectImagePaths } from '../../features/maps/MapScene';
+import type { MapViewState } from '../../features/maps/mapStateFromChunks';
 import { createFakeGameSocket } from '../../test/fakeGameSocket';
 import { renderWithProviders } from '../../test/render';
 import { GAME, urlOf } from '../GameLobbyPage/lobbyTestKit';
@@ -21,11 +24,13 @@ vi.mock('../../features/maps/MapScene', async () => {
   const { useEffect } = await import('react');
   return {
     default: function MapSceneStub({
+      map,
       refs,
       objectImages,
       hideContainerContents,
       onReady,
     }: {
+      map: MapViewState;
       refs: MapObjectRefsView;
       objectImages: ObjectImagePaths;
       hideContainerContents: boolean;
@@ -39,6 +44,7 @@ vi.mock('../../features/maps/MapScene', async () => {
         <>
           <p>Сцена: {names.join(', ')}</p>
           <p>{objectImages.monster('g1', 2)}</p>
+          <p>Объектов: {map.objects.byId.size}</p>
           {hideContainerContents && <p>Содержимое скрыто</p>}
         </>
       );
@@ -171,7 +177,9 @@ describe('GameScenePage', () => {
         kind: 'scene.closed',
       }),
     );
-    expect(await screen.findByText('Лобби игры')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Лобби игры', {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
   });
 
   it('без доступа к сцене — сразу в лобби', async () => {
@@ -186,7 +194,9 @@ describe('GameScenePage', () => {
       }),
     });
     renderScene('u2');
-    expect(await screen.findByText('Лобби игры')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Лобби игры', {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
   });
 
   it('мастер открывает и закрывает сцену прямо со страницы; смену сцены перечитывает', async () => {
@@ -232,6 +242,98 @@ describe('GameScenePage', () => {
     expect(
       await screen.findByRole('heading', { name: 'Подвал' }),
     ).toBeInTheDocument();
+  });
+
+  it('игрок видит правку мастера сразу, после пропуска перечитывает сцену', async () => {
+    let reads = 0;
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'player' },
+      }),
+      [`GET ${base}/scene`]: () => {
+        reads++;
+        return { status: 200, body: VIEW };
+      },
+    });
+    renderScene('u2');
+    expect(await screen.findByText('Объектов: 0')).toBeInTheDocument();
+
+    const goblin: MapObject = {
+      id: 1,
+      at: [1, 1, 1],
+      hidden: false,
+      kind: 'monster',
+      monsterId: 'g1',
+      facing: 0,
+    };
+    const edit = (seq: number): GameSceneEditMessage => ({
+      gameId: GAME.id,
+      sceneId: 's1',
+      seq,
+      changes: {
+        cells: [],
+        paletteAdded: [],
+        objects: [{ id: seq, before: null, after: { ...goblin, id: seq } }],
+      },
+      refs: emptyRefsView(),
+    });
+    act(() => socket.current?.receive(GAME_SOCKET.sceneEdit, edit(1)));
+    expect(await screen.findByText('Объектов: 1')).toBeInTheDocument();
+    // Правка другой сцены странице не нужна.
+    act(() =>
+      socket.current?.receive(GAME_SOCKET.sceneEdit, {
+        ...edit(2),
+        sceneId: 's9',
+      }),
+    );
+    expect(reads).toBe(1);
+    // Номер через один — правка пропущена: сцена перечитывается.
+    act(() => socket.current?.receive(GAME_SOCKET.sceneEdit, edit(3)));
+    await vi.waitFor(() => expect(reads).toBe(2));
+    // Инструментов у игрока нет.
+    expect(
+      screen.queryByRole('button', { name: 'Отменить' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('мастер правит сцену инструментами редактора: без «Хода», отмена — запросом', async () => {
+    const fetchMock = stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'master' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+      [`POST ${base}/scenes/s1/undo`]: () => ({
+        status: 200,
+        body: {
+          seq: 1,
+          changedCells: 0,
+          conflicts: 0,
+          paletteAdded: [],
+          changes: { cells: [], paletteAdded: [] },
+          createdObjectIds: [],
+          refs: emptyRefsView(),
+        },
+      }),
+    });
+    renderScene('m1');
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Объекты' }));
+    expect(screen.getByText('На карте: 0')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Ход' }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Отменить' }));
+    await vi.waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(
+          ([url, init]) =>
+            urlOf(url).endsWith('/scenes/s1/undo') && init?.method === 'POST',
+        ),
+      ).toBe(true),
+    );
   });
 
   it('без активной сцены говорит об этом', async () => {

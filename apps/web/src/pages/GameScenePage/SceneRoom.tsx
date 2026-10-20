@@ -1,3 +1,4 @@
+import type { GameSceneEditMessage } from 'shared';
 import { useGameRoom } from '../../features/games';
 
 // События, после которых страница перечитывает сцену: её сменили, перезапустили,
@@ -15,6 +16,8 @@ interface SceneRoomProps {
   since: number;
   master: boolean;
   onReload: () => void;
+  // Правка сцены мастером (этап 6): применить к копии или перечитать.
+  onSceneEdit: (message: GameSceneEditMessage) => void;
   // Игроку закрыли сцену, его убрали из игры или игру удалили — в лобби.
   onLeave: () => void;
 }
@@ -26,6 +29,7 @@ function SceneRoom({
   since,
   master,
   onReload,
+  onSceneEdit,
   onLeave,
 }: SceneRoomProps) {
   useGameRoom(
@@ -35,6 +39,7 @@ function SceneRoom({
         if (!master && message.kind === 'scene.closed') onLeave();
         else if (SCENE_CHANGES.has(message.kind)) onReload();
       },
+      onSceneEdit,
       onResync: onReload,
       onClosed: onLeave,
     },

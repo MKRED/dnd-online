@@ -42,8 +42,8 @@ const HINTS: Record<EditorTool, string> = {
 
 interface EditorPanelProps {
   editor: MapEditor;
-  // Настройки проверки хода — показываются при инструменте «Ход».
-  walkPanel: ReactNode;
+  // Настройки проверки хода — показываются при инструменте «Ход»; на сцене игры его нет.
+  walkPanel?: ReactNode;
   // Панель инструмента «Объекты»: что ставить, свойства выделенного, список.
   objectsPanel: ReactNode;
 }

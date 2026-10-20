@@ -23,8 +23,9 @@
   text-align: center;
 }
 
+/* Ширина — как у редактора карты: у мастера здесь те же свойства инструментов. */
 .sidebar {
-  flex: 0 0 18rem;
+  flex: 0 0 20rem;
   padding: var(--mantine-spacing-md);
   border-left: 1px solid var(--mantine-color-default-border);
   overflow-y: auto;

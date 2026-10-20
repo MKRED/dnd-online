@@ -1,5 +1,6 @@
-import type { GameScenes, GameSceneView } from 'shared';
+import type { GameScenes, GameSceneView, MapEditResult } from 'shared';
 import type { ObjectImagePaths } from '../maps/MapScene';
+import type { MapEditApi } from '../maps/useMapEdits';
 import { apiRequest as request } from '../../lib/apiRequest';
 
 // Сцены игры (docs/plan/game.md, этап 5): блок мастера в лобби и страница сцены.
@@ -53,6 +54,21 @@ export function setGameSceneOpen(
 // Активная сцена; закрытая игроку — 403, нет активной — 404.
 export function getGameScene(gameId: string): Promise<GameSceneView> {
   return request(`/games/${gameId}/scene`);
+}
+
+// Правки сцены мастером (этап 6) — как у карты: операции, отмена, возврат.
+export function sceneEditApi(gameId: string, sceneId: string): MapEditApi {
+  const base = `${scenesBase(gameId)}/${sceneId}`;
+  const post = (path: string, body?: unknown): Promise<MapEditResult> =>
+    request(`${base}/${path}`, {
+      method: 'POST',
+      ...(body !== undefined && { body: JSON.stringify(body) }),
+    });
+  return {
+    applyOps: (ops) => post('ops', { ops }),
+    undo: () => post('undo'),
+    redo: () => post('redo'),
+  };
 }
 
 export function scenePagePath(gameId: string): string {

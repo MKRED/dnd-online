@@ -1,13 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   mapBounds,
   type Box3,
   type GameDetail,
+  type GameSceneEditMessage,
   type GameSceneView,
 } from 'shared';
-import { getGame, getGameScene } from '../../features/games';
+import { getGame, getGameScene, sceneEditApi } from '../../features/games';
 import { mapStateFromChunks } from '../../features/maps';
 import type { MapViewState } from '../../features/maps/mapStateFromChunks';
+import {
+  useMapEdits,
+  type EditableCopy,
+} from '../../features/maps/useMapEdits';
 import { ApiError, errorMessage } from '../../lib/apiRequest';
 
 export type SceneLoad =
@@ -35,11 +40,14 @@ function frameOf(state: MapViewState): Box3 {
 }
 
 // Страница сцены: игра (роль, название) и активная сцена. reload — после событий сокета:
-// сцену сменили, перезапустили, открыли или закрыли.
+// сцену сменили, перезапустили, открыли или закрыли. Правки сцены (этап 6) — свои у
+// мастера и пришедшие по сокету — применяются к копии через useMapEdits.
 export function useGameScene(gameId: string) {
   const [load, setLoad] = useState<SceneLoad>({ kind: 'loading' });
   // Запросы могут обгонять друг друга при частых событиях: побеждает последний.
   const requestRef = useRef(0);
+  // Номер последней правки сцены в копии (game_scenes.seq).
+  const seqRef = useRef(-1);
 
   const reload = useCallback(() => {
     const request = ++requestRef.current;
@@ -50,6 +58,7 @@ export function useGameScene(gameId: string) {
           const view = await getGameScene(gameId);
           if (!current()) return;
           const state = mapStateFromChunks(view);
+          seqRef.current = view.seq;
           setLoad((prev) => ({
             kind: 'ready',
             game,
@@ -86,5 +95,40 @@ export function useGameScene(gameId: string) {
 
   useEffect(reload, [reload]);
 
-  return { load, setLoad, reload };
+  const ready = load.kind === 'ready' ? load : null;
+  const sceneId = ready?.view.scene.id ?? null;
+  const copy = useMemo<EditableCopy | null>(
+    () => ready && { state: ready.state, refs: ready.view.refs },
+    [ready],
+  );
+  const onApplied = useCallback(
+    (next: EditableCopy, seq: number) =>
+      setLoad((prev) =>
+        prev.kind === 'ready'
+          ? {
+              ...prev,
+              state: next.state,
+              view: { ...prev.view, refs: next.refs, seq },
+            }
+          : prev,
+      ),
+    [],
+  );
+  const api = useMemo(
+    () => sceneEditApi(gameId, sceneId ?? ''),
+    [gameId, sceneId],
+  );
+  const edits = useMapEdits({ copy, seqRef, onApplied, refresh: reload, api });
+
+  // Правка сцены по сокету: другой сцены (мастер правил неактивную) страница не ждёт.
+  const { receive } = edits;
+  const receiveEdit = useCallback(
+    (message: GameSceneEditMessage) => {
+      if (message.sceneId !== sceneId) return;
+      void receive(message.seq, message.changes, message.refs);
+    },
+    [receive, sceneId],
+  );
+
+  return { load, setLoad, reload, edits, receiveEdit };
 }

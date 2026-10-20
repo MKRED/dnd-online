@@ -7,6 +7,7 @@ import {
   type GameEventMessage,
   type GameJoinAck,
   type GamePresenceMessage,
+  type GameSceneEditMessage,
 } from 'shared';
 import { acquireGameSocket, releaseGameSocket } from './gameSocket';
 
@@ -19,6 +20,8 @@ export interface GameRoomHandlers {
   // null — их не прислали (не мастер или слишком много), перечитать всё.
   onResync?: (missed: GameEvent[] | null) => void;
   onClosed?: (reason: GameClosedMessage['reason']) => void;
+  // Правка сцены (этап 6): мастеру — целиком, игроку — то, что ему видно.
+  onSceneEdit?: (message: GameSceneEditMessage) => void;
 }
 
 // Комната игры на сокете: живые изменения и кто сейчас в лобби. Одна комната на
@@ -84,6 +87,9 @@ export function useGameRoom(
       if (message.gameId === gameId)
         handlersRef.current.onClosed?.(message.reason);
     };
+    const onSceneEdit = (message: GameSceneEditMessage) => {
+      if (message.gameId === gameId) handlersRef.current.onSceneEdit?.(message);
+    };
 
     socket.on('connect', joinRoom);
     socket.on('disconnect', onDisconnect);
@@ -91,6 +97,7 @@ export function useGameRoom(
     socket.on(GAME_SOCKET.event, onEvent);
     socket.on(GAME_SOCKET.presence, onPresence);
     socket.on(GAME_SOCKET.closed, onClosed);
+    socket.on(GAME_SOCKET.sceneEdit, onSceneEdit);
     if (socket.connected) joinRoom();
 
     return () => {
@@ -101,6 +108,7 @@ export function useGameRoom(
       socket.off(GAME_SOCKET.event, onEvent);
       socket.off(GAME_SOCKET.presence, onPresence);
       socket.off(GAME_SOCKET.closed, onClosed);
+      socket.off(GAME_SOCKET.sceneEdit, onSceneEdit);
       if (socket.connected) socket.emit(GAME_SOCKET.leave, { gameId });
       releaseGameSocket();
     };

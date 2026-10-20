@@ -35,18 +35,24 @@ interface MapEditorOptions {
   applyOps: (ops: MapOp[]) => void;
   undo: () => void;
   redo: () => void;
-  // Проверка хода: клики инструмента «Ход» уходят ей, а не в операции карты.
-  walk: Pick<WalkTest, 'pick' | 'preview'>;
+  // Проверка хода: клики инструмента «Ход» уходят ей, а не в операции карты. Нет — нет
+  // и инструмента (страница сцены игры).
+  walk?: Pick<WalkTest, 'pick' | 'preview'>;
   // Инструмент «Объекты»: клики по клеткам и клавиши R, Del, Esc при нём уходят ему.
   objects: Pick<ObjectTool, 'pick' | 'span' | 'rotate' | 'remove' | 'escape'>;
   // false — инструменты спрятаны (открыта панель размера): клавиши 1–8, R и Del молчат.
   keysActive: boolean;
+  // Инструменты на полосе, по порядку; без него — все (EDITOR_TOOLS).
+  tools?: readonly EditorTool[];
 }
 
 // Клавиши 1–8 (и на цифровом блоке) — инструменты в порядке полосы.
-const toolKeys = (setTool: (tool: EditorTool) => void) =>
+const toolKeys = (
+  tools: readonly EditorTool[],
+  setTool: (tool: EditorTool) => void,
+) =>
   Object.fromEntries(
-    EDITOR_TOOLS.flatMap((tool, index) => [
+    tools.flatMap((tool, index) => [
       [`Digit${index + 1}`, () => setTool(tool)],
       [`Numpad${index + 1}`, () => setTool(tool)],
     ]),
@@ -61,6 +67,7 @@ export function useMapEditor({
   walk,
   objects,
   keysActive,
+  tools = EDITOR_TOOLS,
 }: MapEditorOptions) {
   const [tool, setToolState] = useState<EditorTool>('view');
   const [block, setBlock] = useState('stone');
@@ -91,7 +98,7 @@ export function useMapEditor({
   // У «Объектов» R поворачивает взгляд, у блоков — сам блок.
   useKeyCodes(
     {
-      ...toolKeys(setTool),
+      ...toolKeys(tools, setTool),
       KeyR: () =>
         tool === 'objects'
           ? objects.rotate()
@@ -105,7 +112,8 @@ export function useMapEditor({
     keysActive,
   );
 
-  const { pick: walkPick, preview: walkPreview } = walk;
+  const walkPick = walk?.pick;
+  const walkPreview = walk?.preview;
   const { pick: objectPick, span: objectSpan } = objects;
   const sceneEditor = useMemo<SceneEditor | null>(() => {
     if (tool === 'view' || !state) return null;
@@ -119,6 +127,7 @@ export function useMapEditor({
       };
     }
     if (tool === 'walk') {
+      if (!walkPick || !walkPreview) return null;
       return {
         tool,
         anchor: null,

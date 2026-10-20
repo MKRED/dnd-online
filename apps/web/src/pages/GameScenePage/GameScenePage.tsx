@@ -16,32 +16,42 @@ import {
 } from 'react-router-dom';
 import { DEFAULT_USER_SETTINGS, mapBounds } from 'shared';
 import { useAuth } from '../../features/auth';
-import { sceneObjectImages, setGameSceneOpen } from '../../features/games';
+import { sceneObjectImages } from '../../features/games';
 import { parseCameraParams, placeCamera } from '../../features/maps/cameraView';
+import { SceneToolbar } from '../../features/maps/editor';
 import type { CameraFocusApi } from '../../features/maps/MapScene';
-import { errorMessage } from '../../lib/apiRequest';
 import { usePageTitle } from '../../lib/usePageTitle';
 import classes from './GameScenePage.module.css';
 import SceneRoom from './SceneRoom';
 import SceneSidebar from './SceneSidebar';
+import SceneToolsPanel from './SceneToolsPanel';
 import { useGameScene } from './useGameScene';
+import { useSceneOpen } from './useSceneOpen';
+import { SCENE_TOOLS, useSceneTools } from './useSceneTools';
 
 // three.js тяжёлый — сцена грузится отдельным чанком.
 const MapScene = lazy(() => import('../../features/maps/MapScene'));
 
-// Страница сцены /games/:id/scene (docs/plan/game.md, этап 5): активная сцена игры в 3D,
-// только просмотр. Игрока, которому мастер закрыл сцену, переводит в лобби.
+// Страница сцены /games/:id/scene (docs/plan/game.md, этапы 5 и 6): активная сцена игры в
+// 3D. Мастер правит её инструментами редактора карты, игроки видят каждую правку сразу.
+// Игрока, которому мастер закрыл сцену, переводит в лобби.
 function GameScenePage() {
   const { id = '' } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { load, setLoad, reload } = useGameScene(id);
+  const { load, setLoad, reload, edits, receiveEdit } = useGameScene(id);
   const game = load.kind === 'ready' || load.kind === 'none' ? load.game : null;
   const master = game?.role === 'master';
-  const view = load.kind === 'ready' ? load.view : null;
+  const ready = load.kind === 'ready' ? load : null;
+  const view = ready?.view ?? null;
   usePageTitle(view?.scene.name ?? 'Сцена');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const open = useSceneOpen(id, setLoad);
+  const { editor, objects } = useSceneTools({
+    master,
+    state: ready?.state ?? null,
+    refs: view?.refs ?? null,
+    edits,
+  });
   const [readySceneId, setReadySceneId] = useState<string | null>(null);
   const [cutY, setCutY] = useState<number | null>(null);
   const focusRef = useRef<CameraFocusApi | null>(null);
@@ -54,7 +64,7 @@ function GameScenePage() {
     if (load.kind === 'away') void navigate(lobby, { replace: true });
   }, [load.kind, lobby, navigate]);
 
-  const frame = load.kind === 'ready' ? load.frame : null;
+  const frame = ready?.frame ?? null;
   const viewParam = searchParams.get('view');
   const cam = searchParams.get('cam');
   const target = searchParams.get('target');
@@ -68,44 +78,17 @@ function GameScenePage() {
         : null,
     [frame, viewParam, cam, target],
   );
+  const state = ready?.state ?? null;
   const bounds = useMemo(
-    () => (load.kind === 'ready' ? mapBounds(load.state.store) : null),
-    [load],
+    () => (state ? mapBounds(state.store) : null),
+    [state],
   );
   const sliderY = bounds
     ? Math.min(Math.max(cutY ?? bounds.max[1], bounds.min[1]), bounds.max[1])
     : 0;
   const sceneId = view?.scene.id ?? null;
   const handleReady = useCallback(() => setReadySceneId(sceneId), [sceneId]);
-
-  const handleOpenChange = (open: boolean) => {
-    setBusy(true);
-    setError(null);
-    setGameSceneOpen(id, open)
-      .then((scenes) => {
-        setLoad((prev) =>
-          prev.kind === 'ready'
-            ? {
-                ...prev,
-                view: {
-                  ...prev.view,
-                  scene: { ...prev.view.scene, open: scenes.open },
-                },
-              }
-            : prev,
-        );
-      })
-      .catch((err: unknown) => {
-        console.error('Failed to change scene visibility', err);
-        setError(
-          errorMessage(
-            err,
-            open ? 'Не удалось открыть сцену' : 'Не удалось закрыть сцену',
-          ),
-        );
-      })
-      .finally(() => setBusy(false));
-  };
+  const tools = master && ready !== null;
 
   const loader = (
     <div className={classes.placeholder}>
@@ -121,6 +104,7 @@ function GameScenePage() {
           since={game.eventSeq}
           master={master}
           onReload={reload}
+          onSceneEdit={receiveEdit}
           onLeave={() => void navigate(lobby)}
         />
       )}
@@ -141,18 +125,20 @@ function GameScenePage() {
           </div>
         )}
         {(load.kind === 'loading' || load.kind === 'away') && loader}
-        {load.kind === 'ready' && camera && (
+        {ready && camera && (
           <Suspense fallback={loader}>
             <MapScene
-              key={load.view.scene.id}
-              map={load.state}
-              refs={load.view.refs}
+              key={ready.view.scene.id}
+              map={ready.state}
+              refs={ready.view.refs}
               cutY={cutY === null ? Number.POSITIVE_INFINITY : sliderY}
               camera={camera}
               resizePreview={null}
-              editor={null}
+              editor={tools ? editor.sceneEditor : null}
               walk={null}
-              objectTool={null}
+              objectTool={
+                tools && editor.tool === 'objects' ? objects.scene : null
+              }
               focusRef={focusRef}
               onReady={handleReady}
               facingMarker={
@@ -160,9 +146,19 @@ function GameScenePage() {
                 DEFAULT_USER_SETTINGS.facingMarker
               }
               objectImages={images}
-              hideContainerContents={load.view.contentsHidden}
+              hideContainerContents={ready.view.contentsHidden}
             />
           </Suspense>
+        )}
+        {tools && (
+          <SceneToolbar
+            tools={SCENE_TOOLS}
+            tool={editor.tool}
+            onTool={editor.setTool}
+            busy={edits.busy}
+            onUndo={edits.undo}
+            onRedo={edits.redo}
+          />
         )}
         {/* Готовность сцены не видна глазу: её ждёт агент в браузере перед снимком,
             а скринридер читает её как статус. */}
@@ -179,9 +175,9 @@ function GameScenePage() {
         gameName={game?.name ?? ''}
         scene={view?.scene ?? null}
         master={master}
-        busy={busy}
-        error={error}
-        onOpenChange={handleOpenChange}
+        busy={open.busy}
+        error={open.error}
+        onOpenChange={open.setOpen}
         cut={
           bounds && bounds.max[1] > bounds.min[1]
             ? { min: bounds.min[1], max: bounds.max[1], value: sliderY }
@@ -191,7 +187,19 @@ function GameScenePage() {
           // Ползунок на самом верху — «без среза», как в редакторе.
           setCutY(bounds && y >= bounds.max[1] ? null : y)
         }
-      />
+      >
+        {tools && (
+          <SceneToolsPanel
+            editor={editor}
+            objects={objects}
+            state={ready.state}
+            refs={ready.view.refs}
+            busy={edits.busy}
+            editError={edits.editError}
+            onFocus={(point) => focusRef.current?.focusOn(point)}
+          />
+        )}
+      </SceneSidebar>
     </div>
   );
 }

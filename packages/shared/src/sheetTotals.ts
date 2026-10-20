@@ -22,6 +22,7 @@ import {
   type SpeedBase,
   type SpeedTotal,
 } from './effectSpeedTotal.js';
+import { perceptionShift } from './passivePerception.js';
 import { conditionOf, sheetConditions } from './sheetConditions.js';
 
 // Итог листа персонажа или карточки монстра: база из формы плюс наложенные эффекты
@@ -46,6 +47,8 @@ export type SheetTotals = {
   rolls: TotalLine[];
   noHealing: string[];
   perTurn: TotalLine[];
+  // Сдвиг пассивного восприятия от эффектов (passivePerception.ts).
+  perception: ReturnType<typeof perceptionShift>;
 };
 
 // На персонажа действует эффект, который видит его владелец: скрытый или удалённый
@@ -196,5 +199,6 @@ export function creatureTotals(
     rolls: rolls.list(),
     noHealing,
     perTurn: perTurn.list(),
+    perception: perceptionShift(expanded, nameOf),
   };
 }

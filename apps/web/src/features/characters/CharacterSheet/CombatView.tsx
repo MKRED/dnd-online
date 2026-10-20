@@ -4,7 +4,9 @@ import {
   formatModifier,
   getAbilityModifier,
 } from '../CharacterForm/AbilityScoresSection/abilityMath';
+import DeathSavesTile from './DeathSavesTile';
 import { armorClassTile } from './sheetArmorClass';
+import { perceptionTile } from './sheetPerception';
 import { speedTile } from './sheetSpeed';
 import StatTile from './StatTile';
 
@@ -16,11 +18,13 @@ interface CombatViewProps {
 
 // Боевые числа плитками: их смотрят чаще всего, поэтому они крупно и сразу под шапкой.
 // Инициатива не хранится — это модификатор Ловкости (docs/dnd/combat-stats.md).
-// Эффекты пересчитывают Класс доспеха и Скорость (docs/plan/done/character-effects.md).
+// Эффекты пересчитывают Класс доспеха, Скорость и пассивное восприятие
+// (docs/plan/done/character-effects.md).
 function CombatView({ character, totals }: CombatViewProps) {
   const initiative = getAbilityModifier(character.abilityScores.dexterity);
   const armorClass = armorClassTile(character.armorClass, totals);
   const speed = speedTile(character.speed, totals);
+  const perception = perceptionTile(character, totals);
   return (
     <SimpleGrid cols={3} spacing="xs">
       <StatTile
@@ -42,6 +46,11 @@ function CombatView({ character, totals }: CombatViewProps) {
       <StatTile
         label="Кость хитов"
         value={character.hitDie ? `к${character.hitDie}` : '—'}
+      />
+      <StatTile label="Пассивное восприятие" {...perception} />
+      <DeathSavesTile
+        successes={character.deathSaveSuccesses}
+        failures={character.deathSaveFailures}
       />
     </SimpleGrid>
   );

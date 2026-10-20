@@ -80,3 +80,30 @@
   object-fit: cover;
   object-position: center 20%;
 }
+
+/* Плитка на две колонки сетки боевых чисел. */
+.wideTile {
+  grid-column: span 2;
+}
+
+/* Кружок спасброска от смерти: пустой — только обводка, видна в обеих схемах; цвет
+   дублирует подпись «Успехи» или «Провалы». */
+.savePip {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--save-pip-color);
+  background: transparent;
+}
+
+.savePip[data-kind='success'] {
+  --save-pip-color: var(--mantine-color-teal-filled);
+}
+
+.savePip[data-kind='failure'] {
+  --save-pip-color: var(--mantine-color-red-filled);
+}
+
+.savePip[data-full] {
+  background: var(--save-pip-color);
+}

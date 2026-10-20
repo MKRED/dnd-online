@@ -116,6 +116,7 @@ describe('speedTile', () => {
       rolls: [],
       noHealing: [],
       perTurn: [],
+      perception: { shift: 0, lines: [] },
     };
     expect(speedTile(30, totals)).toEqual({ value: '30 фт' });
     expect(speedTile(30, null)).toEqual({ value: '30 фт' });
@@ -139,6 +140,7 @@ describe('speedTile', () => {
       rolls: [],
       noHealing: [],
       perTurn: [],
+      perception: { shift: 0, lines: [] },
     });
     expect(speedTile(10, null, swim)).toEqual({
       value: '10 фт',
@@ -155,4 +157,22 @@ describe('speedTile', () => {
         'Без эффектов 10 фт, Плавание 40 фт.\nУскорение: Скорость вдвое больше.',
     });
   });
+});
+
+// Мудрость 12 (+1), Восприятием не владеет: 11; Отравленный — помеха на проверки, −5.
+it('пассивное восприятие с помехой от Отравленного и спасброски от смерти', () => {
+  const poison = entry('Яд', [{ kind: 'condition', condition: 'poisoned' }]);
+  renderWithProviders(
+    <CharacterSheet character={sheet([poison])} aside={null} />,
+  );
+  expect(
+    screen.getByLabelText(/^Пассивное восприятие: 6\./),
+  ).toHaveAccessibleName(
+    'Пассивное восприятие: 6. Без эффектов 11. Отравленный: Помеха: −5.',
+  );
+  expect(
+    screen.getByRole('group', {
+      name: 'Спасброски от смерти: успехов 1 из 3, провалов 0 из 3',
+    }),
+  ).toBeInTheDocument();
 });

@@ -17,6 +17,7 @@ export * from './characterEffects.js';
 export * from './abilityLinks.js';
 export * from './characterAbilities.js';
 export * from './sheetTotals.js';
+export * from './passivePerception.js';
 export * from './effectDuration.js';
 export * from './effectDurationLabels.js';
 export * from './effectSenses.js';

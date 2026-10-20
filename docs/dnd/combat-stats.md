@@ -51,9 +51,31 @@ Researched on 2026-10-17 in the free rules (Playing the Game, the Heroic Inspira
   - `CharacterForm/CombatSection.tsx` — the number field «Героическое вдохновение»; `CharacterSheet/SheetHeader.tsx` — the badge «Героическое вдохновение: N» when it is above 0.
 - **Departures from the book:** more than one at a time, by the house rule above. The app does not grant it on its own (Resourceful after a Long Rest) and does not spend it on a reroll; the player changes the number in the form.
 
+## Passive Perception
+
+Researched on 2026-10-21 in the free rules (Rules Glossary, «Passive Perception»).
+
+- **Rule:** "A creature's Passive Perception equals 10 plus the creature's Wisdom (Perception) check bonus. If the creature has Advantage on such checks, increase the score by 5. If the creature has Disadvantage on them, decrease the score by 5." The check bonus is the Wisdom modifier plus the proficiency bonus with Perception proficiency, twice the bonus with Expertise.
+- **In the app:** not stored, computed for the sheet tile «Пассивное восприятие» (`CharacterSheet/sheetPerception.ts`).
+  - `packages/shared/src/passivePerception.ts` — `passivePerceptionBase` (10 + Wisdom + proficiency) and `perceptionShift` (the effects).
+  - The effects counted: an «Преимущество или помеха» component without a «когда» condition on ability checks of Wisdom or of all abilities, or on all D20 Tests, gives +5 or −5 (Poisoned through its condition gives −5). Advantage and Disadvantage together cancel out, as on a roll. A «Бонус к броску» on such checks adds its number (Enthrall's −10 written as a penalty of 10).
+  - The tile is highlighted when effects change the number, and its tooltip names them, as on Speed and Armor Class.
+- **Unverified / departures:**
+  - A die bonus (Guidance's 1d4) isn't added: a die is not a fixed bonus, and the rules don't say how a die adds to a passive score.
+  - Cancelling Advantage and Disadvantage is the rule for rolls; the glossary entry doesn't say what happens to the score when both apply. The app treats it the same way.
+  - Conditional Advantage («when the source is in sight», Frightened) isn't counted: the sheet doesn't know the situation.
+
+## Death Saving Throws
+
+Researched on 2026-10-21 in the free rules (Playing the Game, «Dropping to 0 Hit Points»).
+
+- **Rule:** "Whenever you start your turn with 0 Hit Points, you must make a Death Saving Throw … Roll 1d20. If the roll is 10 or higher, you succeed. Otherwise, you fail." "On your third success, you become Stable … On your third failure, you die." "The successes and failures don't need to be consecutive … The number of both is reset to zero when you regain any Hit Points or become Stable." A roll of 1 counts as two failures, a 20 restores 1 Hit Point; damage at 0 Hit Points is a failure (two from a Critical Hit), and damage equal to the Hit Point maximum kills.
+- **In the app:** the sheet stores the counts (`Character.deathSaveSuccesses` and `deathSaveFailures`, 0–3) and shows them as three circles each on the tile «Спасброски от смерти» (`CharacterSheet/DeathSavesTile.tsx`). The rolls themselves are made at the table; changing the counts in play comes with the game's creature state ([plan/game.md](../plan/game.md), stage 8).
+
 ## Links
 
 - [D&D Beyond free rules — Creating a Character](https://www.dndbeyond.com/sources/dnd/free-rules/creating-a-character)
 - [D&D Beyond free rules — Playing the Game](https://www.dndbeyond.com/sources/dnd/free-rules/playing-the-game)
+- [D&D Beyond free rules — Rules Glossary](https://www.dndbeyond.com/sources/dnd/free-rules/rules-glossary)
 - [D&D Beyond free rules — Character Origins](https://www.dndbeyond.com/sources/dnd/free-rules/character-origins)
 - [dungeonmister — hit points in D&D 2024](https://dungeonmister.com/guides/rules/hit-points-dnd-2024/)

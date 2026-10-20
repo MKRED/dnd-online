@@ -52,6 +52,7 @@ describe('sheetTotals', () => {
       rolls: [],
       noHealing: [],
       perTurn: [],
+      perception: { shift: 0, lines: [] },
     });
   });
 

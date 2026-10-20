@@ -45,6 +45,13 @@ describe('разбор операций объектов', () => {
       parse({
         op: 'placeObject',
         at: [0, 0, 0],
+        object: { kind: 'container', look: 'barrel' },
+      }),
+    ).toMatchObject({ object: { name: 'Бочка', look: 'barrel' } });
+    expect(
+      parse({
+        op: 'placeObject',
+        at: [0, 0, 0],
         object: { kind: 'item', itemId: ITEM.toUpperCase() },
       }),
     ).toMatchObject({ object: { kind: 'item', itemId: ITEM, quantity: 1 } });

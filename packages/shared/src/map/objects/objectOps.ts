@@ -2,7 +2,12 @@ import type { Vec3 } from '../coords.js';
 import type { MapBoundsLimits } from '../mapSize.js';
 import { MapOpError } from '../mapOpError.js';
 import { parseCell, type Fields } from '../opFields.js';
-import type { Facing, MapObjectBody, MapObjectKind } from './mapObject.js';
+import {
+  CONTAINER_LOOK_LABELS,
+  type Facing,
+  type MapObjectBody,
+  type MapObjectKind,
+} from './mapObject.js';
 import { parseObjectFields, type ObjectFields } from './objectFields.js';
 
 // Операции объектов (docs/plan/map-objects.md, «Операции объектов»). Номер нового
@@ -64,13 +69,16 @@ function placeBody(input: Fields): MapObjectBody {
         size: fields.size ?? 'medium',
         facing,
       };
-    case 'container':
+    case 'container': {
+      const look = fields.look ?? 'chest';
       return {
         kind,
-        look: fields.look ?? 'chest',
-        name: fields.name ?? 'Сундук',
+        look,
+        // Без названия контейнер зовётся по виду: «Бочка», «Мешок».
+        name: fields.name ?? CONTAINER_LOOK_LABELS[look],
         items: fields.items ?? [],
       };
+    }
     case 'item':
       return {
         kind,

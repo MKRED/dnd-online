@@ -2,11 +2,16 @@ import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { desc, eq, type SQL } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { Item, CatalogListScope } from 'shared';
+import {
+  keepPublicationForToken,
+  type CatalogWriteOptions,
+} from '../catalog/token-publication.js';
 import { DatabaseService } from '../database/database.service.js';
 import { itemImages, items, users } from '../database/schema/index.js';
 import { ItemDto } from './dto/item.dto.js';
 import { ItemHoldersService } from './item-holders.service.js';
 import {
+  ITEM_ACCESS,
   ITEM_NOT_FOUND,
   authoredItem,
   rejectEdit,
@@ -34,11 +39,23 @@ export class ItemsService {
     private readonly logger: PinoLogger,
   ) {}
 
-  async create(userId: string, dto: ItemDto): Promise<Item> {
+  async create(
+    userId: string,
+    dto: ItemDto,
+    options: CatalogWriteOptions = {},
+  ): Promise<Item> {
     const t0 = Date.now();
     try {
       // Предмет и состав набора пишутся вместе: отказ по составу не оставит пустой набор.
       const row = await this.databaseService.db.transaction(async (tx) => {
+        await keepPublicationForToken(
+          tx,
+          ITEM_ACCESS,
+          userId,
+          null,
+          dto,
+          options,
+        );
         const [inserted] = await tx
           .insert(items)
           .values({ authorId: userId, ...toItemValues(dto) })
@@ -141,11 +158,24 @@ export class ItemsService {
     }
   }
 
-  async replace(userId: string, id: string, dto: ItemDto): Promise<Item> {
+  async replace(
+    userId: string,
+    id: string,
+    dto: ItemDto,
+    options: CatalogWriteOptions = {},
+  ): Promise<Item> {
     const t0 = Date.now();
     const { db } = this.databaseService;
     try {
       await db.transaction(async (tx) => {
+        await keepPublicationForToken(
+          tx,
+          ITEM_ACCESS,
+          userId,
+          id,
+          dto,
+          options,
+        );
         const [row] = await tx
           .update(items)
           .set(toItemValues(dto))

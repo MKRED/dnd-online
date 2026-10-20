@@ -1,5 +1,6 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import type request from 'supertest';
+import type { TokenClient } from '../api-token.js';
 
 export interface CatalogScenario {
   // Путь API без /api: items, abilities, effects.
@@ -16,6 +17,9 @@ export interface CatalogContext {
   author: request.Agent;
   stranger: request.Agent;
   anonymous: request.Agent;
+  // API-токены автора и чужого: запросы без кук.
+  authorToken: TokenClient;
+  strangerToken: TokenClient;
   url: (id?: string) => string;
   body: (over?: Record<string, unknown>) => Record<string, unknown>;
   create: (over?: Record<string, unknown>) => Promise<{ id: string }>;

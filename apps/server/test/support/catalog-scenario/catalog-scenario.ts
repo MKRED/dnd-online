@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe } from 'vitest';
+import { issueApiToken } from '../api-token.js';
 import { createTestApp, type TestApp } from '../test-app.js';
 import { describeAccess } from './access.js';
 import type {
@@ -7,10 +8,11 @@ import type {
 } from './catalog-scenario.types.js';
 import { describeImage } from './image.js';
 import { describeSources } from './sources.js';
+import { describeTokenAccess } from './token.js';
 
-// Общее для каталогов предметов, способностей и эффектов: доступ к скрытым и
-// опубликованным записям, общие поля, источники и картинка. Свои поля каталога файл проверяет
-// сам через fields(ctx).
+// Общее для каталогов предметов, способностей, эффектов и монстров: доступ к скрытым и
+// опубликованным записям, общие поля, источники, картинка и доступ по API-токену. Свои
+// поля каталога файл проверяет сам через fields(ctx).
 export function describeCatalog(
   scenario: CatalogScenario,
   fields?: (ctx: () => CatalogContext) => void,
@@ -22,6 +24,7 @@ export function describeCatalog(
     beforeAll(async () => {
       t = await createTestApp();
       const author = await t.loginAs('author');
+      const stranger = await t.loginAs('stranger');
       const url = (id?: string) =>
         id ? `/api/${scenario.path}/${id}` : `/api/${scenario.path}`;
       const body = (over: Record<string, unknown> = {}) => ({
@@ -31,8 +34,10 @@ export function describeCatalog(
       ctx = {
         app: t.app,
         author,
-        stranger: await t.loginAs('stranger'),
+        stranger,
         anonymous: t.anonymous(),
+        authorToken: await issueApiToken(t.app, author),
+        strangerToken: await issueApiToken(t.app, stranger),
         url,
         body,
         async create(over) {
@@ -50,6 +55,7 @@ export function describeCatalog(
     describeAccess(() => ctx);
     describeImage(() => ctx);
     describeSources(() => ctx);
+    describeTokenAccess(() => ctx);
     fields?.(() => ctx);
   });
 }

@@ -10,19 +10,21 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { AuthenticatedRequest } from '../../auth/auth.guard.js';
-import { AuthGuard } from '../../auth/auth.guard.js';
+import { SessionOrApiTokenGuard } from '../../api-tokens/session-or-api-token.guard.js';
 import { CharacterAbilitiesService } from './character-abilities.service.js';
 import {
   AddCharacterAbilityDto,
   UpdateCharacterAbilityDto,
 } from './dto/character-ability.dto.js';
+import { AllowApiToken } from '../../api-tokens/allow-api-token.decorator.js';
 
 // Читаются способности вместе с листом (GET /characters/:id), здесь — только правки.
 @Controller('characters/:characterId/abilities')
-@UseGuards(AuthGuard)
+@UseGuards(SessionOrApiTokenGuard)
 export class CharacterAbilitiesController {
   constructor(private readonly abilitiesService: CharacterAbilitiesService) {}
 
+  @AllowApiToken()
   @Post()
   add(
     @Req() req: AuthenticatedRequest,
@@ -32,6 +34,7 @@ export class CharacterAbilitiesController {
     return this.abilitiesService.add(req.user.sub, characterId, dto);
   }
 
+  @AllowApiToken()
   @Patch(':entryId')
   update(
     @Req() req: AuthenticatedRequest,
@@ -47,6 +50,7 @@ export class CharacterAbilitiesController {
     );
   }
 
+  @AllowApiToken()
   @Delete(':entryId')
   remove(
     @Req() req: AuthenticatedRequest,

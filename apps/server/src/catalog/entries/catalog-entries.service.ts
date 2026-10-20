@@ -23,6 +23,10 @@ import {
   type ToStored,
   type ToVariant,
 } from './catalog-entry.mapper.js';
+import {
+  keepPublicationForToken,
+  type CatalogWriteOptions,
+} from '../token-publication.js';
 import type { CatalogEntryDto } from './dto/catalog-entry.dto.js';
 
 // Чем один простой каталог отличается от другого. catalog — имя в логах. D — тело
@@ -53,12 +57,17 @@ export abstract class CatalogEntriesService<
     private readonly config: CatalogEntriesConfig<V, D>,
   ) {}
 
-  async create(userId: string, dto: D): Promise<V & CatalogEntryFields> {
-    const { table, catalog, toStored } = this.config;
+  async create(
+    userId: string,
+    dto: D,
+    options: CatalogWriteOptions = {},
+  ): Promise<V & CatalogEntryFields> {
+    const { table, access, catalog, toStored } = this.config;
     const t0 = Date.now();
     try {
       // Отказ по связям не оставит записи без них.
       const row = await this.databaseService.db.transaction(async (tx) => {
+        await keepPublicationForToken(tx, access, userId, null, dto, options);
         const [inserted] = await tx
           .insert(table)
           .values({ authorId: userId, ...toCatalogEntryValues(dto, toStored) })
@@ -160,12 +169,14 @@ export abstract class CatalogEntriesService<
     userId: string,
     id: string,
     dto: D,
+    options: CatalogWriteOptions = {},
   ): Promise<V & CatalogEntryFields> {
     const { table, access, catalog, toStored } = this.config;
     const t0 = Date.now();
     const { db } = this.databaseService;
     try {
       await db.transaction(async (tx) => {
+        await keepPublicationForToken(tx, access, userId, id, dto, options);
         const [row] = await tx
           .update(table)
           .set(toCatalogEntryValues(dto, toStored))

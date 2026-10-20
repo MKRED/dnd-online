@@ -1,15 +1,33 @@
-import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  ExecutionContext,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { describe, expect, it, vi } from 'vitest';
 import type { AuthGuard } from '../auth/auth.guard.js';
+import { AllowApiToken } from './allow-api-token.decorator.js';
 import type { ApiTokensService } from './api-tokens.service.js';
 import { SessionOrApiTokenGuard } from './session-or-api-token.guard.js';
 
-function makeContext(authorization?: string) {
-  const request: { headers: Record<string, string>; user?: unknown } = {
+class Routes {
+  @AllowApiToken()
+  open(this: void) {}
+
+  closed(this: void) {}
+}
+
+function makeContext(authorization?: string, handler = Routes.prototype.open) {
+  const request: {
+    headers: Record<string, string>;
+    user?: unknown;
+    viaApiToken?: boolean;
+  } = {
     headers: authorization ? { authorization } : {},
   };
   const context = {
     switchToHttp: () => ({ getRequest: () => request }),
+    getHandler: () => handler,
   } as unknown as ExecutionContext;
   return { context, request };
 }
@@ -20,6 +38,7 @@ function makeGuard(verified: { sub: string; login: string } | null = null) {
   const guard = new SessionOrApiTokenGuard(
     sessionGuard as unknown as AuthGuard,
     apiTokensService as unknown as ApiTokensService,
+    new Reflector(),
   );
   return { guard, sessionGuard, apiTokensService };
 }
@@ -41,7 +60,38 @@ describe('SessionOrApiTokenGuard', () => {
 
     await expect(guard.canActivate(context)).resolves.toBe(true);
     expect(request.user).toEqual(owner);
+    expect(request.viaApiToken).toBe(true);
     expect(sessionGuard.canActivate).not.toHaveBeenCalled();
+  });
+
+  it('не пускает токен к обработчику без @AllowApiToken()', async () => {
+    const { guard } = makeGuard({ sub: 'u1', login: 'gm' });
+    const { context, request } = makeContext(
+      'Bearer dnd_abc',
+      Routes.prototype.closed,
+    );
+
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      ForbiddenException,
+    );
+    expect(request.user).toBeUndefined();
+  });
+
+  it('сессию пускает и к обработчику без @AllowApiToken()', async () => {
+    const { guard, sessionGuard } = makeGuard();
+    const { context } = makeContext(undefined, Routes.prototype.closed);
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
+    expect(sessionGuard.canActivate).toHaveBeenCalledWith(context);
+  });
+
+  it('неизвестный токен у закрытого обработчика — 401, а не 403', async () => {
+    const { guard } = makeGuard(null);
+    const { context } = makeContext('Bearer dnd_x', Routes.prototype.closed);
+
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it.each([

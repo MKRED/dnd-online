@@ -11,11 +11,12 @@ import type { AuthenticatedRequest } from '../../auth/auth.guard.js';
 import { ListCatalogQueryDto } from '../catalog-list-query.dto.js';
 import type { CatalogEntriesService } from './catalog-entries.service.js';
 import type { CatalogEntryDto } from './dto/catalog-entry.dto.js';
+import { AllowApiToken } from '../../api-tokens/allow-api-token.decorator.js';
 
 // Маршруты простого каталога без тела записи: список, карточка, удаление. Каждый каталог
-// наследует класс со своим адресом и AuthGuard и сам объявляет POST и PUT: тело
-// проверяется DTO его класса, а базовый метод не знает, какого. Nest читает декораторы
-// методов и по цепочке наследования.
+// наследует класс со своим адресом и SessionOrApiTokenGuard и сам объявляет POST и PUT:
+// тело проверяется DTO его класса, а базовый метод не знает, какого. Nest читает
+// декораторы методов и по цепочке наследования. Удаление API-токену закрыто.
 export abstract class CatalogEntriesController<
   V,
   D extends CatalogEntryDto = CatalogEntryDto,
@@ -24,11 +25,13 @@ export abstract class CatalogEntriesController<
     protected readonly service: CatalogEntriesService<V, D>,
   ) {}
 
+  @AllowApiToken()
   @Get()
   list(@Req() req: AuthenticatedRequest, @Query() query: ListCatalogQueryDto) {
     return this.service.list(req.user.sub, query.scope);
   }
 
+  @AllowApiToken()
   @Get(':id')
   findOne(
     @Req() req: AuthenticatedRequest,

@@ -10,20 +10,22 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { AuthenticatedRequest } from '../../auth/auth.guard.js';
-import { AuthGuard } from '../../auth/auth.guard.js';
+import { SessionOrApiTokenGuard } from '../../api-tokens/session-or-api-token.guard.js';
 import {
   AddInventoryItemDto,
   MoveInventoryEntryDto,
   UpdateInventoryEntryDto,
 } from './dto/inventory.dto.js';
 import { InventoryService } from './inventory.service.js';
+import { AllowApiToken } from '../../api-tokens/allow-api-token.decorator.js';
 
 // Читается инвентарь вместе с листом (GET /characters/:id), здесь — только правки.
 @Controller('characters/:characterId/items')
-@UseGuards(AuthGuard)
+@UseGuards(SessionOrApiTokenGuard)
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
+  @AllowApiToken()
   @Post()
   add(
     @Req() req: AuthenticatedRequest,
@@ -33,6 +35,7 @@ export class InventoryController {
     return this.inventoryService.add(req.user.sub, characterId, dto);
   }
 
+  @AllowApiToken()
   @Patch(':entryId')
   update(
     @Req() req: AuthenticatedRequest,
@@ -48,6 +51,7 @@ export class InventoryController {
     );
   }
 
+  @AllowApiToken()
   @Post(':entryId/move')
   move(
     @Req() req: AuthenticatedRequest,
@@ -58,6 +62,7 @@ export class InventoryController {
     return this.inventoryService.move(req.user.sub, characterId, entryId, dto);
   }
 
+  @AllowApiToken()
   @Delete(':entryId')
   remove(
     @Req() req: AuthenticatedRequest,

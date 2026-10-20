@@ -10,6 +10,9 @@ import { AccessTokenPayload, TokenService } from './token.service.js';
 
 export interface AuthenticatedRequest extends Request {
   user: AccessTokenPayload;
+  // Запрос пришёл по API-токену (SessionOrApiTokenGuard): через него нельзя менять
+  // видимость записей (docs/plan/ai-access.md).
+  viaApiToken?: boolean;
 }
 
 @Injectable()

@@ -10,19 +10,21 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { AuthenticatedRequest } from '../../auth/auth.guard.js';
-import { AuthGuard } from '../../auth/auth.guard.js';
+import { SessionOrApiTokenGuard } from '../../api-tokens/session-or-api-token.guard.js';
 import { MonsterAbilitiesService } from './monster-abilities.service.js';
 import {
   AddMonsterAbilityDto,
   UpdateMonsterAbilityDto,
 } from './dto/monster-ability.dto.js';
+import { AllowApiToken } from '../../api-tokens/allow-api-token.decorator.js';
 
 // Читаются способности вместе с карточкой (GET /monsters/:id), здесь — только правки.
 @Controller('monsters/:monsterId/abilities')
-@UseGuards(AuthGuard)
+@UseGuards(SessionOrApiTokenGuard)
 export class MonsterAbilitiesController {
   constructor(private readonly abilitiesService: MonsterAbilitiesService) {}
 
+  @AllowApiToken()
   @Post()
   add(
     @Req() req: AuthenticatedRequest,
@@ -32,6 +34,7 @@ export class MonsterAbilitiesController {
     return this.abilitiesService.add(req.user.sub, monsterId, dto);
   }
 
+  @AllowApiToken()
   @Patch(':entryId')
   update(
     @Req() req: AuthenticatedRequest,
@@ -42,6 +45,7 @@ export class MonsterAbilitiesController {
     return this.abilitiesService.update(req.user.sub, monsterId, entryId, dto);
   }
 
+  @AllowApiToken()
   @Delete(':entryId')
   remove(
     @Req() req: AuthenticatedRequest,

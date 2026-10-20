@@ -28,6 +28,7 @@ import {
   CatalogImageFileQueryDto,
   UpdateCatalogImageDto,
 } from './dto/catalog-image.dto.js';
+import { AllowApiToken } from '../../api-tokens/allow-api-token.decorator.js';
 
 // Из того, что multer кладёт в файл, нужны только байты (хранилище — память).
 interface UploadedImage {
@@ -35,8 +36,9 @@ interface UploadedImage {
 }
 
 // Маршруты картинки записи каталога. Каждый каталог наследует класс со своим адресом
-// (`@Controller('items/:ownerId/image')`) и AuthGuard, а обработчики берёт отсюда: Nest
-// читает декораторы методов и по цепочке наследования.
+// (`@Controller('items/:ownerId/image')`) и SessionOrApiTokenGuard, а обработчики берёт
+// отсюда: Nest читает декораторы методов и по цепочке наследования. Удаление картинки
+// API-токену закрыто.
 export abstract class CatalogImagesController {
   protected constructor(
     private readonly filesService: CatalogImageFilesService,
@@ -45,6 +47,7 @@ export abstract class CatalogImagesController {
 
   // Картинка у записи одна, поэтому загрузка — PUT: она же и замена.
   // Перекодирование нагружает процессор, поэтому ограничиваем по IP.
+  @AllowApiToken()
   @Put()
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 40, ttl: 60_000 } })
@@ -66,6 +69,7 @@ export abstract class CatalogImagesController {
   // Клиент добавляет в адрес версию картинки (?v=), а она растёт при каждой замене и
   // смене выреза, поэтому ответ можно кешировать навсегда. private — скрытую запись
   // видит только автор, общим кешам хранить нельзя.
+  @AllowApiToken()
   @Get()
   @Header('Cache-Control', 'private, max-age=31536000, immutable')
   async file(
@@ -84,6 +88,7 @@ export abstract class CatalogImagesController {
     });
   }
 
+  @AllowApiToken()
   @Patch()
   recrop(
     @Req() req: AuthenticatedRequest,

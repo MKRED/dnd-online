@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from '../auth/auth.module.js';
+import { ApiTokensModule } from '../api-tokens/api-tokens.module.js';
 import { AbilitiesController } from './abilities.controller.js';
 import { AbilitiesService } from './abilities.service.js';
 import { AbilityImageEditService } from './ability-image-edit.service.js';
@@ -9,7 +9,7 @@ import { StepEffectsService } from './step-effects/index.js';
 
 // Каталог способностей и их картинки (docs/plan/done/abilities.md).
 @Module({
-  imports: [AuthModule],
+  imports: [ApiTokensModule],
   controllers: [AbilitiesController, AbilityImagesController],
   providers: [
     AbilitiesService,

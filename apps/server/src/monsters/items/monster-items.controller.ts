@@ -10,19 +10,21 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { AuthenticatedRequest } from '../../auth/auth.guard.js';
-import { AuthGuard } from '../../auth/auth.guard.js';
+import { SessionOrApiTokenGuard } from '../../api-tokens/session-or-api-token.guard.js';
 import { MonsterItemsService } from './monster-items.service.js';
 import {
   AddMonsterItemDto,
   UpdateMonsterItemDto,
 } from './dto/monster-item.dto.js';
+import { AllowApiToken } from '../../api-tokens/allow-api-token.decorator.js';
 
 // Читается снаряжение вместе с карточкой (GET /monsters/:id), здесь — только правки.
 @Controller('monsters/:monsterId/items')
-@UseGuards(AuthGuard)
+@UseGuards(SessionOrApiTokenGuard)
 export class MonsterItemsController {
   constructor(private readonly itemsService: MonsterItemsService) {}
 
+  @AllowApiToken()
   @Post()
   add(
     @Req() req: AuthenticatedRequest,
@@ -32,6 +34,7 @@ export class MonsterItemsController {
     return this.itemsService.add(req.user.sub, monsterId, dto);
   }
 
+  @AllowApiToken()
   @Patch(':entryId')
   update(
     @Req() req: AuthenticatedRequest,
@@ -42,6 +45,7 @@ export class MonsterItemsController {
     return this.itemsService.update(req.user.sub, monsterId, entryId, dto);
   }
 
+  @AllowApiToken()
   @Delete(':entryId')
   remove(
     @Req() req: AuthenticatedRequest,

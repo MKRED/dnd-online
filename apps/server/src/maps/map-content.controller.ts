@@ -17,6 +17,7 @@ import { SectionQueryDto } from './dto/section-query.dto.js';
 import { SliceQueryDto } from './dto/slice-query.dto.js';
 import { MapEditService } from './map-edit.service.js';
 import { MapReadService } from './map-read.service.js';
+import { AllowApiToken } from '../api-tokens/allow-api-token.decorator.js';
 
 // Блоки карты: чтение (рендер, нейросеть) и правки через операции.
 @Controller('maps/:id')
@@ -27,6 +28,7 @@ export class MapContentController {
     private readonly readService: MapReadService,
   ) {}
 
+  @AllowApiToken()
   @Get('chunks')
   chunks(
     @Req() req: AuthenticatedRequest,
@@ -35,6 +37,7 @@ export class MapContentController {
     return this.readService.getChunks(req.user.sub, id);
   }
 
+  @AllowApiToken()
   @Get('summary')
   summary(
     @Req() req: AuthenticatedRequest,
@@ -43,6 +46,7 @@ export class MapContentController {
     return this.readService.getSummary(req.user.sub, id);
   }
 
+  @AllowApiToken()
   @Get('slice')
   slice(
     @Req() req: AuthenticatedRequest,
@@ -52,6 +56,7 @@ export class MapContentController {
     return this.readService.getSlice(req.user.sub, id, query);
   }
 
+  @AllowApiToken()
   @Get('section')
   section(
     @Req() req: AuthenticatedRequest,
@@ -61,6 +66,7 @@ export class MapContentController {
     return this.readService.getSection(req.user.sub, id, query);
   }
 
+  @AllowApiToken()
   @Post('ops')
   @HttpCode(200)
   applyOps(
@@ -71,6 +77,7 @@ export class MapContentController {
     return this.editService.applyBatch(req.user.sub, id, dto.ops);
   }
 
+  @AllowApiToken()
   @Post('undo')
   @HttpCode(200)
   undo(
@@ -80,6 +87,7 @@ export class MapContentController {
     return this.editService.undo(req.user.sub, id);
   }
 
+  @AllowApiToken()
   @Post('redo')
   @HttpCode(200)
   redo(

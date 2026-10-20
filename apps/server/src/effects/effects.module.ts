@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from '../auth/auth.module.js';
+import { ApiTokensModule } from '../api-tokens/api-tokens.module.js';
 import { EffectsController } from './effects.controller.js';
 import { EffectAbilitiesService } from './effect-abilities.service.js';
 import { EffectsService } from './effects.service.js';
@@ -9,7 +9,7 @@ import { EffectImagesService } from './effect-images.service.js';
 
 // Каталог эффектов и их картинки (docs/plan/done/effects.md).
 @Module({
-  imports: [AuthModule],
+  imports: [ApiTokensModule],
   controllers: [EffectsController, EffectImagesController],
   providers: [
     EffectsService,

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from '../auth/auth.module.js';
+import { ApiTokensModule } from '../api-tokens/api-tokens.module.js';
 import {
   MonsterAbilitiesController,
   MonsterAbilitiesService,
@@ -17,7 +17,7 @@ import { MonstersService } from './monsters.service.js';
 
 // Каталог монстров, их картинки, способности, снаряжение и эффекты (docs/plan/done/monsters-npcs.md).
 @Module({
-  imports: [AuthModule],
+  imports: [ApiTokensModule],
   controllers: [
     MonstersController,
     MonsterImagesController,

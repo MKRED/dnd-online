@@ -7,7 +7,8 @@ interface CreatedToken {
   info: { id: string; name: string };
 }
 
-// Токен API — доступ внешних клиентов (MCP-сервер карты) к картам владельца, и только к ним.
+// Токен API — доступ внешних клиентов (MCP-серверы) к данным владельца. Что именно ему
+// открыто — api-token-access.e2e-spec.ts и describeCatalog.
 describe('токены API (e2e)', () => {
   let t: TestApp;
   let owner: request.Agent;
@@ -58,7 +59,7 @@ describe('токены API (e2e)', () => {
     await api.get('/api/maps').expect(200);
   });
 
-  it('токен не открывает чужие карты и маршруты вне карт', async () => {
+  it('токен не открывает чужие карты, токены и аккаунт', async () => {
     const { token } = await issue(owner);
     const theirs = await stranger
       .post('/api/maps')
@@ -68,10 +69,9 @@ describe('токены API (e2e)', () => {
     await api
       .get(`/api/maps/${(theirs.body as { id: string }).id}`)
       .expect(404);
-    // Утёкший токен не должен выпускать новые токены и читать другие данные.
+    // Утёкший токен не должен выпускать новые токены и трогать аккаунт.
     await api.get('/api/api-tokens').expect(401);
     await api.post('/api/api-tokens').send({ name: 'ещё' }).expect(401);
-    await api.get('/api/characters').expect(401);
     await api.get('/api/auth/me').expect(401);
   });
 

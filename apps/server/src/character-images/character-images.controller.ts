@@ -22,12 +22,13 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { CHARACTER_IMAGE_MAX_BYTES } from 'shared';
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
-import { AuthGuard } from '../auth/auth.guard.js';
+import { SessionOrApiTokenGuard } from '../api-tokens/session-or-api-token.guard.js';
 import { CharacterImageEditService } from './character-image-edit.service.js';
 import { CharacterImagesService } from './character-images.service.js';
 import { ImageFileQueryDto } from './dto/image-file-query.dto.js';
 import { UpdateCharacterImageDto } from './dto/update-character-image.dto.js';
 import { UploadTooLargeFilter } from '../images/upload-too-large.filter.js';
+import { AllowApiToken } from '../api-tokens/allow-api-token.decorator.js';
 
 // Из того, что multer кладёт в файл, нужны только байты (хранилище — память).
 interface UploadedImage {
@@ -35,13 +36,14 @@ interface UploadedImage {
 }
 
 @Controller('characters/:characterId/images')
-@UseGuards(AuthGuard)
+@UseGuards(SessionOrApiTokenGuard)
 export class CharacterImagesController {
   constructor(
     private readonly imagesService: CharacterImagesService,
     private readonly editService: CharacterImageEditService,
   ) {}
 
+  @AllowApiToken()
   @Get()
   list(
     @Req() req: AuthenticatedRequest,
@@ -51,6 +53,7 @@ export class CharacterImagesController {
   }
 
   // Перекодирование картинки нагружает процессор, поэтому загрузку ограничиваем по IP.
+  @AllowApiToken()
   @Post()
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 40, ttl: 60_000 } })
@@ -72,6 +75,7 @@ export class CharacterImagesController {
   // Содержимое full и preview по id не меняется, а у миниатюры клиент добавляет в адрес
   // версию (?v=), поэтому ответ можно кешировать навсегда. private — картинки видят
   // только автор и зрители по ссылке, общим кешам их хранить нельзя.
+  @AllowApiToken()
   @Get(':imageId/file')
   @Header('Cache-Control', 'private, max-age=31536000, immutable')
   async file(
@@ -92,6 +96,7 @@ export class CharacterImagesController {
     });
   }
 
+  @AllowApiToken()
   @Patch(':imageId')
   update(
     @Req() req: AuthenticatedRequest,

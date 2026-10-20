@@ -368,7 +368,7 @@ describe('объекты на карте (e2e)', () => {
     await t.anonymous().get('/api/map-catalog?kind=monster').expect(401);
   });
 
-  it('поиск по каталогу для карты: своё и опубликованное, свои НПС; токен читает, но не пишет', async () => {
+  it('поиск по каталогу для карты: своё и опубликованное, свои НПС, по API-токену', async () => {
     const mine = await createMonster(owner, { name: 'Кобольд-лучник' });
     await createMonster(stranger, { name: 'Кобольд-тайный' });
     const shared = await createMonster(stranger, {
@@ -420,12 +420,5 @@ describe('объекты на карте (e2e)', () => {
     expect(literal.body).toEqual([]);
 
     await api('/api/map-catalog?kind=spell').expect(400);
-    // Остальной каталог токену закрыт.
-    await api('/api/monsters').expect(401);
-    await request(server)
-      .post('/api/monsters')
-      .set('Authorization', `Bearer ${token}`)
-      .send(monsterBody())
-      .expect(401);
   });
 });

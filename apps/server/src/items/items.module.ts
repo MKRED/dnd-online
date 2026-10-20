@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from '../auth/auth.module.js';
+import { ApiTokensModule } from '../api-tokens/api-tokens.module.js';
 import { ItemHoldersService } from './item-holders.service.js';
 import { ItemsController } from './items.controller.js';
 import { ItemsService } from './items.service.js';
@@ -9,7 +9,7 @@ import {
 } from './pack-contents/index.js';
 
 @Module({
-  imports: [AuthModule],
+  imports: [ApiTokensModule],
   controllers: [ItemsController],
   providers: [
     ItemsService,

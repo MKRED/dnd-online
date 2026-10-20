@@ -4,6 +4,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { loadMainImages } from '../character-images/character-image-access.js';
 import { DatabaseService } from '../database/database.service.js';
 import { characters, users } from '../database/schema/index.js';
+import { GameRealtimeService } from '../games/realtime/game-realtime.service.js';
 import { releaseCharacterSeat } from '../games/release-character-seat.js';
 import { assertSheetUnlocked, findSheetLock } from '../games/sheet-lock.js';
 import {
@@ -30,6 +31,7 @@ import { UpdateCharacterDto } from './dto/update-character.dto.js';
 export class CharactersService {
   constructor(
     private readonly databaseService: DatabaseService,
+    private readonly realtime: GameRealtimeService,
     @InjectPinoLogger(CharactersService.name)
     private readonly logger: PinoLogger,
   ) {}
@@ -290,25 +292,29 @@ export class CharactersService {
   async remove(userId: string, id: string) {
     const t0 = Date.now();
     try {
-      await this.databaseService.db.transaction(async (tx) => {
-        // Сначала — закрыт ли лист: releaseCharacterSeat освободит место, и проверка
-        // после него уже не нашла бы встречи. Чужому — 404, а не рассказ о чужой игре.
-        const [owned] = await tx
-          .select({ id: characters.id })
-          .from(characters)
-          .where(and(eq(characters.id, id), eq(characters.userId, userId)));
-        if (!owned) throw new NotFoundException('Персонаж не найден');
-        await assertSheetUnlocked(tx, id);
-        // Персонаж на месте в игре: место освобождается записью в журнале игры.
-        await releaseCharacterSeat(tx, id, userId);
-        const [row] = await tx
-          .delete(characters)
-          .where(and(eq(characters.id, id), eq(characters.userId, userId)))
-          .returning({ id: characters.id });
-        if (!row) {
-          throw new NotFoundException('Персонаж не найден');
-        }
-      });
+      const freedGameId = await this.databaseService.db.transaction(
+        async (tx) => {
+          // Сначала — закрыт ли лист: releaseCharacterSeat освободит место, и проверка
+          // после него уже не нашла бы встречи. Чужому — 404, а не рассказ о чужой игре.
+          const [owned] = await tx
+            .select({ id: characters.id })
+            .from(characters)
+            .where(and(eq(characters.id, id), eq(characters.userId, userId)));
+          if (!owned) throw new NotFoundException('Персонаж не найден');
+          await assertSheetUnlocked(tx, id);
+          // Персонаж на месте в игре: место освобождается записью в журнале игры.
+          const gameId = await releaseCharacterSeat(tx, id, userId);
+          const [row] = await tx
+            .delete(characters)
+            .where(and(eq(characters.id, id), eq(characters.userId, userId)))
+            .returning({ id: characters.id });
+          if (!row) {
+            throw new NotFoundException('Персонаж не найден');
+          }
+          return gameId;
+        },
+      );
+      if (freedGameId) this.realtime.publish(freedGameId);
       this.logger.info(
         { durationMs: Date.now() - t0, userId, characterId: id },
         'Character deleted',

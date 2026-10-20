@@ -6,18 +6,19 @@ import { appendGameEvent, lockGame } from './game-journal.js';
 // Удаляемый персонаж освобождает место в игре (characters.service.ts, remove). Внешний
 // ключ сделал бы это и сам (ON DELETE SET NULL), но мимо журнала; здесь место
 // освобождается явно и с записью. Вызывать в транзакции удаления до самого удаления:
-// блокировка игры берётся первой, как у всех правок игры (game-journal.ts).
+// блокировка игры берётся первой, как у всех правок игры (game-journal.ts). Возвращает
+// игру, где освободилось место: после транзакции ей нужна рассылка.
 export async function releaseCharacterSeat(
   tx: DbTransaction,
   characterId: string,
   actorId: string,
-): Promise<void> {
+): Promise<string | null> {
   const [found] = await tx
     .select({ gameId: gameMembers.gameId })
     .from(gameMembers)
     .where(eq(gameMembers.characterId, characterId))
     .limit(1);
-  if (!found) return;
+  if (!found) return null;
   await lockGame(tx, found.gameId);
   // Под блокировкой ещё раз: место могли освободить, пока ждали её.
   const [seat] = await tx
@@ -31,7 +32,7 @@ export async function releaseCharacterSeat(
       ),
     )
     .limit(1);
-  if (!seat) return;
+  if (!seat) return null;
   await tx
     .update(gameMembers)
     .set({ characterId: null, seatedAt: null })
@@ -50,4 +51,5 @@ export async function releaseCharacterSeat(
       reason: 'character_deleted',
     },
   });
+  return found.gameId;
 }

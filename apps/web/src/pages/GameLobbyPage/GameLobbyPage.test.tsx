@@ -1,70 +1,20 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_USER_SETTINGS, type GameDetail } from 'shared';
+import type { GameDetail } from 'shared';
+import { createFakeGameSocket } from '../../test/fakeGameSocket';
 import { sampleCharacter } from '../../test/characterFixture';
-import { renderWithProviders } from '../../test/render';
-import GameLobbyPage from './GameLobbyPage';
+import { body, GAME, renderLobby, stubFetch } from './lobbyTestKit';
 
-const GAME: GameDetail = {
-  id: '22222222-2222-4222-8222-222222222222',
-  name: 'Подземелье',
-  master: { id: 'm1', nickname: 'Мастер' },
-  seatCount: 3,
-  takenSeats: 1,
-  hasPassword: true,
-  role: 'member',
-  sessionStartedAt: null,
-  createdAt: '2026-10-20T00:00:00.000Z',
-  seats: [
-    {
-      user: { id: 'u2', nickname: 'Аня' },
-      character: {
-        id: 'c2',
-        name: 'Лира',
-        species: 'elf',
-        classes: [{ class: 'rogue', level: 3 }],
-      },
-      allowHandover: false,
-      seatedAt: '2026-10-20T00:00:00.000Z',
-    },
-  ],
-};
-
-function stubFetch(responses: { status: number; body?: unknown }[]) {
-  const fetchMock = vi.fn<typeof fetch>();
-  for (const { status, body } of responses) {
-    fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify(body ?? {}), { status }),
-    );
-  }
-  vi.stubGlobal('fetch', fetchMock);
-  return fetchMock;
-}
-
-function renderLobby(userId = 'u1') {
-  return renderWithProviders(
-    <Routes>
-      <Route path="/games/:id" element={<GameLobbyPage />} />
-    </Routes>,
-    {
-      route: `/games/${GAME.id}`,
-      auth: {
-        user: {
-          id: userId,
-          login: 'me',
-          nickname: 'Я',
-          settings: DEFAULT_USER_SETTINGS,
-        },
-      },
-    },
-  );
-}
-
-function body(call: unknown[]) {
-  return JSON.parse((call[1] as RequestInit).body as string) as unknown;
-}
+// Сокет — поддельный: тесты страницы не ходят в сеть.
+const socket = vi.hoisted(() => ({
+  current: null as ReturnType<typeof createFakeGameSocket> | null,
+}));
+vi.mock('../../features/games/gameSocket', () => ({
+  acquireGameSocket: () => socket.current,
+  releaseGameSocket: () => undefined,
+}));
+socket.current = createFakeGameSocket();
 
 afterEach(() => {
   vi.unstubAllGlobals();

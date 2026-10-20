@@ -11,7 +11,7 @@ import {
 import { IconLock } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { GameDetail } from 'shared';
+import type { GameDetail, GameEvent } from 'shared';
 import { useAuth } from '../../features/auth';
 import {
   deleteGame,
@@ -24,13 +24,20 @@ import {
   seatsLabel,
   startSession,
   updateSeat,
+  useGameRoom,
 } from '../../features/games';
 import { errorMessage } from '../../lib/apiRequest';
 import FreeSeatCard from './FreeSeatCard';
 import GameJournal from './GameJournal';
+import LobbyClosed from './LobbyClosed';
 import MasterActions from './MasterActions';
+import OnlineDot from './OnlineDot';
 import SeatCard from './SeatCard';
 import TakeSeatModal from './TakeSeatModal';
+
+// Сколько записей, пришедших по сокету, держим для журнала мастера: старше — он
+// подгрузит сам.
+const LIVE_EVENTS_MAX = 200;
 
 interface LobbyViewProps {
   game: GameDetail;
@@ -45,6 +52,34 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
   const [error, setError] = useState<string | null>(null);
   const [taking, setTaking] = useState(false);
   const [journalOpened, setJournalOpened] = useState(false);
+  const [liveEvents, setLiveEvents] = useState<GameEvent[]>([]);
+  // Растёт, когда живых записей пропущено слишком много: журнал перечитывается целиком.
+  const [journalKey, setJournalKey] = useState(0);
+  const [closed, setClosed] = useState<'deleted' | 'removed' | null>(null);
+
+  // Изменения других приходят по сокету: лобби перечитывает себя. Потерянный доступ
+  // сюда не дойдёт ошибкой — о нём скажет сообщение «комната закрыта».
+  const reload = () => {
+    getGame(game.id)
+      .then(onChange)
+      .catch((err: unknown) => console.error('Failed to reload game', err));
+  };
+  const addLive = (events: GameEvent[]) =>
+    setLiveEvents((prev) => [...prev, ...events].slice(-LIVE_EVENTS_MAX));
+  const { online } = useGameRoom(game.id, {
+    onChanged: reload,
+    onEvent: (event) => addLive([event]),
+    onResync: (missed) => {
+      reload();
+      if (missed) {
+        addLive(missed);
+      } else {
+        setLiveEvents([]);
+        setJournalKey((key) => key + 1);
+      }
+    },
+    onClosed: setClosed,
+  });
   const isMaster = game.role === 'master';
   const freeCount = Math.max(0, game.seatCount - game.seats.length);
 
@@ -108,6 +143,8 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
     );
   };
 
+  if (closed) return <LobbyClosed reason={closed} />;
+
   return (
     <Stack>
       <Group justify="space-between" align="flex-start">
@@ -127,8 +164,11 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
             )}
           </Title>
           <Group gap="xs" mt={4}>
+            {/* Точка — внутри строки: на телефоне строка переносится, а точка не
+                отрывается от имени мастера. */}
             <Text c="dimmed">
-              Мастер: {game.master.nickname} · {seatsLabel(game)}
+              <OnlineDot online={online.includes(game.master.id)} /> Мастер:{' '}
+              {game.master.nickname} · {seatsLabel(game)}
             </Text>
             {game.sessionStartedAt && (
               <Badge color="green" variant="light">
@@ -184,6 +224,7 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
             seat={seat}
             own={seat.user.id === user?.id}
             master={isMaster}
+            online={online.includes(seat.user.id)}
             busy={busy}
             onToggleHandover={(allow) =>
               run(
@@ -207,7 +248,9 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
 
       {isMaster && (
         <GameJournal
+          key={journalKey}
           gameId={game.id}
+          live={liveEvents}
           opened={journalOpened}
           onClose={() => setJournalOpened(false)}
         />

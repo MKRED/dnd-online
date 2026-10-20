@@ -19,6 +19,7 @@ import {
 } from './game-errors.js';
 import { appendGameEvent, lockGame } from './game-journal.js';
 import { findGameAccess, findMemberSeat, readGameDetail } from './game-read.js';
+import { GameRealtimeService } from './realtime/game-realtime.service.js';
 
 // Вход в лобби и выход из игры. Пароль закрытой игры спрашивается один раз — при входе;
 // дальше участник открывает лобби и занимает место без него.
@@ -26,6 +27,7 @@ import { findGameAccess, findMemberSeat, readGameDetail } from './game-read.js';
 export class GameMembersService {
   constructor(
     private readonly databaseService: DatabaseService,
+    private readonly realtime: GameRealtimeService,
     @InjectPinoLogger(GameMembersService.name)
     private readonly logger: PinoLogger,
   ) {}
@@ -65,6 +67,7 @@ export class GameMembersService {
           });
           return true;
         });
+        if (entered) this.realtime.publish(gameId);
         this.logger.info(
           { durationMs: Date.now() - t0, userId, gameId, entered },
           'Game lobby entered',
@@ -129,6 +132,7 @@ export class GameMembersService {
         }
         return seat.character;
       });
+      this.realtime.publish(gameId);
       this.logger.info(
         {
           durationMs: Date.now() - t0,

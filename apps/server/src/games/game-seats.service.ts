@@ -29,12 +29,14 @@ import {
 } from './game-errors.js';
 import { appendGameEvent, lockGame } from './game-journal.js';
 import { findGameAccess, findMemberSeat, readGameDetail } from './game-read.js';
+import { GameRealtimeService } from './realtime/game-realtime.service.js';
 
 // Места в лобби: занять своим персонажем, поменять разрешение, освободить.
 @Injectable()
 export class GameSeatsService {
   constructor(
     private readonly databaseService: DatabaseService,
+    private readonly realtime: GameRealtimeService,
     @InjectPinoLogger(GameSeatsService.name)
     private readonly logger: PinoLogger,
   ) {}
@@ -118,6 +120,7 @@ export class GameSeatsService {
           result: { character: { id: dto.characterId, name: character.name } },
         });
       });
+      this.realtime.publish(gameId);
       this.logger.info(
         {
           durationMs: Date.now() - t0,
@@ -196,6 +199,7 @@ export class GameSeatsService {
         if (!seat?.character) throw new NotFoundException(SEAT_NOT_FOUND);
         await change(tx, seat.character);
       });
+      this.realtime.publish(gameId);
       this.logger.info(
         { durationMs: Date.now() - t0, userId, gameId, kind },
         'Game seat changed',

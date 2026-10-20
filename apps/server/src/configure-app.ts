@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import { GameSocketAdapter } from './games/realtime/game-socket.adapter.js';
 
 // Настройка приложения поверх модулей — общая для main.ts и интеграционных тестов,
 // чтобы тесты гоняли тот же префикс, куки и валидацию, что и прод.
@@ -36,4 +37,6 @@ export function configureApp(app: NestExpressApplication): void {
     origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
     credentials: true,
   });
+  // Сокет игры (/api/socket.io) — с тем же CORS.
+  app.useWebSocketAdapter(new GameSocketAdapter(app));
 }

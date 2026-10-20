@@ -1,6 +1,7 @@
 import { Badge, Button, Card, Group, Stack, Switch, Text } from '@mantine/core';
 import type { GameSeat } from 'shared';
 import { CLASS_LABELS, SPECIES_LABELS } from '../../features/characters';
+import OnlineDot from './OnlineDot';
 
 interface SeatCardProps {
   seat: GameSeat;
@@ -8,6 +9,8 @@ interface SeatCardProps {
   own: boolean;
   // Смотрящий — мастер: может убрать игрока.
   master: boolean;
+  // Игрок сейчас в лобби (по сокету).
+  online: boolean;
   busy: boolean;
   onToggleHandover: (allow: boolean) => void;
   onFree: () => void;
@@ -19,6 +22,7 @@ function SeatCard({
   seat,
   own,
   master,
+  online,
   busy,
   onToggleHandover,
   onFree,
@@ -44,7 +48,12 @@ function SeatCard({
             .map((entry) => `${CLASS_LABELS[entry.class]} ${entry.level}`)
             .join(', ')}
         </Text>
-        <Text size="sm">Игрок: {seat.user.nickname}</Text>
+        <Group gap={6} wrap="nowrap">
+          <OnlineDot online={online} />
+          <Text size="sm" truncate>
+            Игрок: {seat.user.nickname}
+          </Text>
+        </Group>
         {own ? (
           <Switch
             size="sm"

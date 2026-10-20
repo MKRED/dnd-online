@@ -15,6 +15,7 @@ import type { CreateGameDto } from './dto/create-game.dto.js';
 import { GAME_NOT_FOUND, MASTER_ONLY_DELETE } from './game-errors.js';
 import { appendGameEvent } from './game-journal.js';
 import { listGames, readGameDetail } from './game-read.js';
+import { GameRealtimeService } from './realtime/game-realtime.service.js';
 
 // Игры как записи: общий список, лобби, создание, удаление. Вход и выход —
 // GameMembersService, места — GameSeatsService.
@@ -22,6 +23,7 @@ import { listGames, readGameDetail } from './game-read.js';
 export class GamesService {
   constructor(
     private readonly databaseService: DatabaseService,
+    private readonly realtime: GameRealtimeService,
     @InjectPinoLogger(GamesService.name) private readonly logger: PinoLogger,
   ) {}
 
@@ -121,6 +123,7 @@ export class GamesService {
         throw new ForbiddenException(MASTER_ONLY_DELETE);
       }
       await this.databaseService.db.delete(games).where(eq(games.id, gameId));
+      this.realtime.gameDeleted(gameId);
       this.logger.info(
         { durationMs: Date.now() - t0, userId, gameId },
         'Game deleted',

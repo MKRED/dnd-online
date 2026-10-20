@@ -26,6 +26,23 @@ Requires the `DEPLOY_CICD` secret (SSH private key) in the GitHub repo. The serv
   - `dnd.aoshi.ru.conf` has, in the `listen 443` block, `location = /.well-known/lolka-app.txt { default_type text/plain; return 200 "lolka-app-…
 "; }` with the domain verification code. Don't remove it: lolka re-checks it daily. The code isn't kept in the repo; it's in that file on the host;
   - quick check: `curl https://dnd.aoshi.ru/api/auth/providers` answers `{"lolka":true}`.
+- **The game socket** (Socket.IO at `/api/socket.io`, since 2026-10-20) works through any proxy by long-polling, but a real WebSocket needs the upgrade headers. **Manual step, not done yet:** in the `listen 443` block of `dnd.aoshi.ru.conf` add, then `docker exec nginx nginx -t && docker exec nginx nginx -s reload`:
+
+  ```nginx
+  location /api/socket.io/ {
+      proxy_pass http://dnd_online:3000;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+      proxy_set_header Host $host;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_read_timeout 1h;
+  }
+  ```
+
+  Check: in the browser's network tab the lobby has a `websocket` request to `/api/socket.io/?EIO=4&transport=websocket` with status 101, and the polling requests stop. The socket is checked locally on the built server (helmet's CSP `default-src 'self'` lets the same-origin WebSocket through).
+
 - `sharp` (image processing) brings native `@img/*` binaries as optional dependencies; the image builds and runs with it (first deployed 2026-10-14).
 
 ## Checking production from the server

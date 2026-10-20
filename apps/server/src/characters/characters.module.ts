@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ApiTokensModule } from '../api-tokens/api-tokens.module.js';
+import { GamesModule } from '../games/games.module.js';
 import {
   CharacterAbilitiesController,
   CharacterAbilitiesService,
@@ -14,7 +15,7 @@ import {
 import { InventoryController, InventoryService } from './inventory/index.js';
 
 @Module({
-  imports: [ApiTokensModule],
+  imports: [ApiTokensModule, GamesModule],
   controllers: [
     CharactersController,
     InventoryController,

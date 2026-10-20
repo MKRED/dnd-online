@@ -1,14 +1,11 @@
 import { ForbiddenException, HttpException, Injectable } from '@nestjs/common';
-import { and, desc, eq, lt } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { GAME_EVENTS_PAGE, type GameEvent, type GameEventPage } from 'shared';
+import { GAME_EVENTS_PAGE, type GameEventPage } from 'shared';
 import { DatabaseService } from '../database/database.service.js';
-import { gameEvents, users } from '../database/schema/index.js';
 import type { ListGameEventsDto } from './dto/list-game-events.dto.js';
 import { MASTER_ONLY_JOURNAL } from './game-errors.js';
+import { readGameEvents } from './game-event-read.js';
 import { findGameAccess } from './game-read.js';
-
-type EventRow = typeof gameEvents.$inferSelect;
 
 // Чтение журнала игры. Журнал видит только мастер: позже в нём будут скрытые от игроков
 // монстры и броски мастера.
@@ -34,23 +31,13 @@ export class GameEventsService {
       }
       const limit = query.limit ?? GAME_EVENTS_PAGE;
       // На одну запись больше: по ней видно, есть ли страница дальше.
-      const rows = await db
-        .select({ event: gameEvents, nickname: users.nickname })
-        .from(gameEvents)
-        .leftJoin(users, eq(users.id, gameEvents.actorId))
-        .where(
-          and(
-            eq(gameEvents.gameId, gameId),
-            query.before === undefined
-              ? undefined
-              : lt(gameEvents.seq, query.before),
-          ),
-        )
-        .orderBy(desc(gameEvents.seq))
-        .limit(limit + 1);
-      const events = rows
-        .slice(0, limit)
-        .map(({ event, nickname }) => toGameEvent(event, nickname));
+      const rows = await readGameEvents(
+        db,
+        gameId,
+        { before: query.before },
+        limit + 1,
+      );
+      const events = rows.slice(0, limit);
       this.logger.debug(
         { durationMs: Date.now() - t0, viewerId, gameId, count: events.length },
         'Game events listed',
@@ -65,22 +52,4 @@ export class GameEventsService {
       throw err;
     }
   }
-}
-
-function toGameEvent(row: EventRow, nickname: string | null): GameEvent {
-  // intent и result — jsonb, их форму по kind задаёт запись (appendGameEvent).
-  return {
-    seq: row.seq,
-    kind: row.kind,
-    actor: row.actorId && nickname ? { id: row.actorId, nickname } : null,
-    as: row.asKind
-      ? row.asKind === 'master'
-        ? { kind: 'master' }
-        : { kind: row.asKind, id: row.asId ?? '' }
-      : null,
-    sceneId: row.sceneId,
-    intent: row.intent,
-    result: row.result,
-    createdAt: row.createdAt.toISOString(),
-  } as GameEvent;
 }

@@ -5,7 +5,9 @@ import { errorMessage } from '../../../lib/apiRequest';
 
 // Записи журнала игры страницами, новые сверху. Первая страница грузится сразу: шторка
 // монтирует содержимое при каждом открытии, так что открытие и есть обновление.
-export function useGameJournal(gameId: string) {
+// live — записи, пришедшие по сокету (старые первыми): те, что новее загруженных,
+// встают сверху без перезагрузки и без потери подгруженных страниц.
+export function useGameJournal(gameId: string, live: GameEvent[]) {
   const [events, setEvents] = useState<GameEvent[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -60,5 +62,18 @@ export function useGameJournal(gameId: string) {
       .finally(() => setLoadingMore(false));
   };
 
-  return { events, hasMore, loading, loadingMore, error, refresh, loadMore };
+  const top = events[0]?.seq ?? 0;
+  // Пока первая страница грузится, живые записи не показываем: она их и так принесёт.
+  const fresh = loading
+    ? []
+    : live.filter((event) => event.seq > top).reverse();
+  return {
+    events: fresh.length > 0 ? [...fresh, ...events] : events,
+    hasMore,
+    loading,
+    loadingMore,
+    error,
+    refresh,
+    loadMore,
+  };
 }

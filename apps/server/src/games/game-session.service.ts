@@ -16,6 +16,7 @@ import {
 } from './game-errors.js';
 import { appendGameEvent, lockGame } from './game-journal.js';
 import { findGameAccess, readGameDetail } from './game-read.js';
+import { GameRealtimeService } from './realtime/game-realtime.service.js';
 
 // Встреча: мастер начинает и заканчивает её кнопками (docs/plan/game.md, «Понятия»).
 // Пока она идёт, листы персонажей на местах закрыты (sheet-lock.ts).
@@ -23,6 +24,7 @@ import { findGameAccess, readGameDetail } from './game-read.js';
 export class GameSessionService {
   constructor(
     private readonly databaseService: DatabaseService,
+    private readonly realtime: GameRealtimeService,
     @InjectPinoLogger(GameSessionService.name)
     private readonly logger: PinoLogger,
   ) {}
@@ -82,6 +84,7 @@ export class GameSessionService {
           });
         }
       });
+      this.realtime.publish(gameId);
       this.logger.info(
         { durationMs: Date.now() - t0, userId, gameId, kind },
         'Game session changed',

@@ -10,8 +10,10 @@ import { GameSeatsController } from './game-seats.controller.js';
 import { GameSeatsService } from './game-seats.service.js';
 import { GamesController } from './games.controller.js';
 import { GamesService } from './games.service.js';
+import { GameRealtimeGateway } from './realtime/game-realtime.gateway.js';
+import { GameRealtimeService } from './realtime/game-realtime.service.js';
 
-// Игры (docs/plan/game.md): общий список, лобби, места, встреча и журнал игры.
+// Игры (docs/plan/game.md): общий список, лобби, места, встреча, журнал игры и сокет.
 @Module({
   imports: [AuthModule],
   controllers: [
@@ -27,6 +29,10 @@ import { GamesService } from './games.service.js';
     GameSeatsService,
     GameEventsService,
     GameSessionService,
+    GameRealtimeService,
+    GameRealtimeGateway,
   ],
+  // Рассылка изменений нужна и персонажам: удаление персонажа освобождает место.
+  exports: [GameRealtimeService],
 })
 export class GamesModule {}

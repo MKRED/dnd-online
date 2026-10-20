@@ -36,6 +36,28 @@ export function gameEventText(event: GameEvent): string {
         ? `Обновлено из справочника: ${name}, докопировано связей: ${copied}`
         : `Обновлено из справочника: ${name}`;
     }
+    case 'scene.created': {
+      const { scene, libraryCopied, active } = event.result;
+      const parts = [`Сцена добавлена: ${scene.name}`];
+      if (active) parts.push('она активная');
+      if (libraryCopied > 0)
+        parts.push(`в библиотеку скопировано записей: ${libraryCopied}`);
+      return parts.join(', ');
+    }
+    case 'scene.activated':
+      return `Активная сцена: ${event.result.scene.name}`;
+    case 'scene.restarted': {
+      const { scene, libraryCopied } = event.result;
+      return libraryCopied > 0
+        ? `Сцена перезапущена: ${scene.name}, в библиотеку скопировано записей: ${libraryCopied}`
+        : `Сцена перезапущена: ${scene.name}`;
+    }
+    case 'scene.opened':
+      return `Сцена открыта игрокам: ${event.result.scene.name}`;
+    case 'scene.closed':
+      return event.result.scene
+        ? `Сцена закрыта от игроков: ${event.result.scene.name}`
+        : 'Сцена закрыта от игроков';
     case 'member.left':
       return withCharacter('Выход из игры', event.result.character);
     case 'member.removed':

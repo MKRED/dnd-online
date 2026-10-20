@@ -10,6 +10,7 @@ import {
   gameLibraryImageFiles,
 } from '../../database/schema/index.js';
 import { linkedRefs, type LibraryLinks } from './library-links.js';
+import { copyNpcImageFiles } from './library-npc-sources.js';
 import { loadSourceLinks } from './library-source-links.js';
 import {
   loadSources,
@@ -162,6 +163,7 @@ async function copyImageFiles(
     .filter((source) => source.image)
     .map((source) => source.sourceId);
   if (ids.length === 0) return;
+  if (kind === 'npc') return copyNpcImageFiles(tx, gameId, ids);
   const { files } = SOURCE_IMAGES[kind];
   await tx.insert(gameLibraryImageFiles).select(
     tx

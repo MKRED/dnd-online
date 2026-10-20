@@ -15,16 +15,20 @@ import {
   type CatalogEntryTable,
   type CatalogImageTables,
 } from '../../database/schema/index.js';
+import { loadNpcSources, npcStamps } from './library-npc-sources.js';
 
 // Записи справочников, из которых библиотека игры берёт копии. Видит запись тот же, кто
 // видит её в справочнике: автор или любой — у опубликованной.
 
+// Виды из справочников; НПС — персонаж, у него свои таблицы (library-npc-sources.ts).
+export type CatalogLibraryKind = Exclude<GameLibraryKind, 'npc'>;
+
 const ENTRY_TABLES: Record<
-  Exclude<GameLibraryKind, 'item'>,
+  Exclude<CatalogLibraryKind, 'item'>,
   CatalogEntryTable
 > = { monster: monsters, ability: abilities, effect: effects };
 
-export const SOURCE_IMAGES: Record<GameLibraryKind, CatalogImageTables> = {
+export const SOURCE_IMAGES: Record<CatalogLibraryKind, CatalogImageTables> = {
   monster: monsterImageTables,
   ability: abilityImageTables,
   effect: effectImageTables,
@@ -49,6 +53,7 @@ export async function loadSources(
   viewerId: string,
 ): Promise<LibrarySource[]> {
   if (ids.length === 0) return [];
+  if (kind === 'npc') return loadNpcSources(db, ids, viewerId);
   return kind === 'item'
     ? loadItems(db, ids, viewerId)
     : loadEntries(db, ENTRY_TABLES[kind], SOURCE_IMAGES[kind], ids, viewerId);
@@ -63,6 +68,7 @@ export async function sourceStamps(
   viewerId: string,
 ): Promise<Map<string, Date>> {
   if (ids.length === 0) return new Map();
+  if (kind === 'npc') return npcStamps(db, ids, viewerId);
   const table = kind === 'item' ? items : ENTRY_TABLES[kind];
   const rows = await db
     .select({ id: table.id, updatedAt: table.updatedAt })

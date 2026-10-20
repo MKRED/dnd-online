@@ -11,6 +11,8 @@ const base = {
 };
 const lira = { id: 'c1', name: 'Лира' };
 
+const lair = { id: 's1', name: 'Логово' };
+
 describe('gameEventText', () => {
   it.each<[GameEvent, string]>([
     [
@@ -85,6 +87,66 @@ describe('gameEventText', () => {
         result: { name: 'Набор', copied: 2 },
       },
       'Обновлено из справочника: Набор, докопировано связей: 2',
+    ],
+    [
+      {
+        ...base,
+        kind: 'scene.created',
+        as: { kind: 'master' },
+        intent: { mapId: 'm1' },
+        result: { scene: lair, libraryCopied: 3, active: true },
+      },
+      'Сцена добавлена: Логово, она активная, в библиотеку скопировано записей: 3',
+    ],
+    [
+      {
+        ...base,
+        kind: 'scene.created',
+        as: { kind: 'master' },
+        intent: { mapId: 'm1' },
+        result: { scene: lair, libraryCopied: 0, active: false },
+      },
+      'Сцена добавлена: Логово',
+    ],
+    [
+      {
+        ...base,
+        kind: 'scene.activated',
+        as: { kind: 'master' },
+        intent: { sceneId: 's1' },
+        result: { scene: lair },
+      },
+      'Активная сцена: Логово',
+    ],
+    [
+      {
+        ...base,
+        kind: 'scene.restarted',
+        as: { kind: 'master' },
+        intent: { sceneId: 's0' },
+        result: { from: lair, scene: lair, libraryCopied: 1 },
+      },
+      'Сцена перезапущена: Логово, в библиотеку скопировано записей: 1',
+    ],
+    [
+      {
+        ...base,
+        kind: 'scene.opened',
+        as: { kind: 'master' },
+        intent: null,
+        result: { scene: lair },
+      },
+      'Сцена открыта игрокам: Логово',
+    ],
+    [
+      {
+        ...base,
+        kind: 'scene.closed',
+        as: { kind: 'master' },
+        intent: null,
+        result: { scene: null },
+      },
+      'Сцена закрыта от игроков',
     ],
     [
       {

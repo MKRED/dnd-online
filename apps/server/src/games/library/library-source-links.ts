@@ -3,6 +3,9 @@ import type { GameLibraryKind } from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
 import {
   abilityStepEffects,
+  characterAbilities,
+  characterEffects,
+  characterItems,
   itemPackEntries,
   monsterAbilities,
   monsterEffects,
@@ -14,6 +17,7 @@ import {
   type ItemLinks,
   type LibraryLinks,
   type MonsterLinks,
+  type NpcLinks,
 } from './library-links.js';
 
 // Связи записей справочника в форме копии (library-links.ts) — по нескольким записям
@@ -30,6 +34,7 @@ export async function loadSourceLinks<K extends GameLibraryKind>(
   const of = (id: string) => result.get(id) as LibraryLinks[K];
   if (kind === 'monster')
     await loadMonsterLinks(db, ids, (id) => of(id) as MonsterLinks);
+  if (kind === 'npc') await loadNpcLinks(db, ids, (id) => of(id) as NpcLinks);
   if (kind === 'ability')
     await loadAbilityLinks(db, ids, (id) => of(id) as AbilityLinks);
   if (kind === 'item')
@@ -70,6 +75,42 @@ async function loadMonsterLinks(
     });
   for (const row of effectRows)
     of(row.monsterId).effects.push({ sourceId: row.effectId });
+}
+
+// Порядок — как в листе персонажа: по времени добавления.
+async function loadNpcLinks(
+  db: Db,
+  ids: readonly string[],
+  of: (id: string) => NpcLinks,
+) {
+  const itemRows = await db
+    .select()
+    .from(characterItems)
+    .where(inArray(characterItems.characterId, [...ids]))
+    .orderBy(asc(characterItems.addedAt), asc(characterItems.id));
+  const abilityRows = await db
+    .select()
+    .from(characterAbilities)
+    .where(inArray(characterAbilities.characterId, [...ids]))
+    .orderBy(asc(characterAbilities.addedAt), asc(characterAbilities.id));
+  const effectRows = await db
+    .select()
+    .from(characterEffects)
+    .where(inArray(characterEffects.characterId, [...ids]))
+    .orderBy(asc(characterEffects.addedAt), asc(characterEffects.id));
+  for (const row of itemRows)
+    of(row.characterId).items.push({
+      sourceId: row.itemId,
+      quantity: row.quantity,
+      location: row.location,
+    });
+  for (const row of abilityRows)
+    of(row.characterId).abilities.push({
+      sourceId: row.abilityId,
+      prepared: row.prepared,
+    });
+  for (const row of effectRows)
+    of(row.characterId).effects.push({ sourceId: row.effectId });
 }
 
 async function loadAbilityLinks(

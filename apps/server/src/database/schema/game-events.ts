@@ -8,6 +8,7 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 import type { GameEventAs, GameEventKind } from 'shared';
+import { gameScenes } from './game-scenes.js';
 import { games } from './games.js';
 import { users } from './users.js';
 
@@ -31,8 +32,11 @@ export const gameEvents = pgTable(
     // пережить удаление персонажа или экземпляра монстра.
     asKind: varchar('as_kind', { length: 20 }).$type<GameEventAs['kind']>(),
     asId: uuid('as_id'),
-    // Сцена события; внешний ключ появится вместе с таблицей сцен (этап 5).
-    sceneId: uuid('scene_id'),
+    // Сцена события; у событий лобби — null. Сцены не удаляются (перезапуск их
+    // архивирует), set null — на всякий случай.
+    sceneId: uuid('scene_id').references(() => gameScenes.id, {
+      onDelete: 'set null',
+    }),
     // Что просили и что получилось; форма — GameEventPayloads из shared.
     intent: jsonb('intent'),
     result: jsonb('result'),

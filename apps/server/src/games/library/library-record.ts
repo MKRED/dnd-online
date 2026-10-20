@@ -3,6 +3,7 @@ import {
   type Ability,
   type AbilityLink,
   type CatalogEntryFields,
+  type Character,
   type Coin,
   type Effect,
   type EffectLink,
@@ -15,7 +16,8 @@ import {
   type PackEntry,
 } from 'shared';
 import { toAbilityVariant } from '../../abilities/abilities.config.js';
-import type { gameLibrary } from '../../database/schema/index.js';
+import { toCharacter } from '../../characters/characters.mapper.js';
+import type { characters, gameLibrary } from '../../database/schema/index.js';
 import { toEffectFields } from '../../effects/effects.config.js';
 import { toItemVariant } from '../../items/items.mapper.js';
 import { toMonsterFields } from '../../monsters/monsters.config.js';
@@ -37,6 +39,8 @@ export function toLibraryRecord(row: LibraryRow, linked: LinkedRows) {
   switch (row.kind) {
     case 'monster':
       return toMonster(row, linked);
+    case 'npc':
+      return toNpc(row, linked);
     case 'item':
       return toItem(row, linked);
     case 'ability':
@@ -79,10 +83,16 @@ function variantArgs(row: LibraryRow) {
   ] as const;
 }
 
+// Связь копии: строка библиотеки, «скрыто» (в библиотеку не попала) или «удалено» (null —
+// удалили ещё до копии).
+function finder(linked: LinkedRows) {
+  return (kind: GameLibraryKind, sourceId: string | null) =>
+    sourceId ? (linked.get(libraryKey(kind, sourceId)) ?? 'hidden') : 'deleted';
+}
+
 function toMonster(row: LibraryRow, linked: LinkedRows): Monster {
   const links = readLinks('monster', row.links);
-  const find = (kind: GameLibraryKind, sourceId: string | null) =>
-    sourceId ? (linked.get(libraryKey(kind, sourceId)) ?? 'hidden') : 'deleted';
+  const find = finder(linked);
   return {
     ...entryFields(row),
     ...toMonsterFields(...variantArgs(row)),
@@ -101,6 +111,43 @@ function toMonster(row: LibraryRow, linked: LinkedRows): Monster {
       ...effectLink(find('effect', link.sourceId)),
     })),
   };
+}
+
+// Лист НПС тем же маппером, что и персонаж: колонки листа лежат в record как есть.
+// Картинка — у записи библиотеки, поэтому mainImage пуст; владелец не важен — копию
+// видит только мастер.
+function toNpc(row: LibraryRow, linked: LinkedRows): Character {
+  const links = readLinks('npc', row.links);
+  const find = finder(linked);
+  const sheet = {
+    ...row.record,
+    id: row.sourceId,
+    userId: '',
+    kind: 'npc',
+    name: row.name,
+    linkAccess: 'private',
+    createdAt: row.copiedAt,
+    updatedAt: row.refreshedAt ?? row.copiedAt,
+  } as unknown as typeof characters.$inferSelect;
+  return toCharacter(sheet, {
+    mainImage: null,
+    authorNickname: row.authorNickname,
+    inventory: links.items.map((link, index) => ({
+      id: link.sourceId ?? `deleted-${index}`,
+      location: link.location,
+      quantity: link.quantity,
+      ...itemLink(find('item', link.sourceId)),
+    })),
+    abilities: links.abilities.map((link, index) => ({
+      id: link.sourceId ?? `deleted-${index}`,
+      prepared: link.prepared,
+      ...abilityLink(find('ability', link.sourceId)),
+    })),
+    effects: links.effects.map((link, index) => ({
+      id: link.sourceId ?? `deleted-${index}`,
+      ...effectLink(find('effect', link.sourceId)),
+    })),
+  });
 }
 
 function abilityLink(found: LibraryRow | 'hidden' | 'deleted'): AbilityLink {

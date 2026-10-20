@@ -1,4 +1,8 @@
-import type { GameLibraryKind, GameLibraryRef } from 'shared';
+import type {
+  GameLibraryKind,
+  GameLibraryRef,
+  InventoryLocation,
+} from 'shared';
 
 // Связи копии исходными id (docs/plan/game.md, этап 4). Копия связей не держит внешних
 // ключей: связь ищется в библиотеке той же игры, а чего там нет — заглушка. null — запись
@@ -14,6 +18,18 @@ export interface AbilityLinks {
   stepEffects: { step: number; outcome: 'hit' | 'miss'; sourceId: string }[];
 }
 
+// Лист НПС: предметы с местом, способности с отметкой «подготовлено», эффекты — как в
+// листе персонажа. null — запись удалили в справочнике ещё до копии.
+export interface NpcLinks {
+  items: {
+    sourceId: string | null;
+    quantity: number;
+    location: InventoryLocation;
+  }[];
+  abilities: { sourceId: string | null; prepared: boolean }[];
+  effects: { sourceId: string | null }[];
+}
+
 // Состав набора; у остальных предметов пуст.
 export interface ItemLinks {
   pack: { sourceId: string; quantity: number }[];
@@ -21,6 +37,7 @@ export interface ItemLinks {
 
 export interface LibraryLinks {
   monster: MonsterLinks;
+  npc: NpcLinks;
   ability: AbilityLinks;
   item: ItemLinks;
   effect: Record<string, never>;
@@ -28,6 +45,7 @@ export interface LibraryLinks {
 
 const EMPTY_LINKS: { [K in GameLibraryKind]: () => LibraryLinks[K] } = {
   monster: () => ({ abilities: [], items: [], effects: [] }),
+  npc: () => ({ items: [], abilities: [], effects: [] }),
   ability: () => ({ stepEffects: [] }),
   item: () => ({ pack: [] }),
   effect: () => ({}),
@@ -62,8 +80,9 @@ export function linkedRefs(
   const add = (target: GameLibraryKind, sourceId: string | null) => {
     if (sourceId) refs.push({ kind: target, sourceId });
   };
-  if (kind === 'monster') {
-    const links = stored as MonsterLinks;
+  // У монстра и НПС связи одной формы: способности, предметы, эффекты.
+  if (kind === 'monster' || kind === 'npc') {
+    const links = stored as MonsterLinks | NpcLinks;
     for (const link of links.abilities) add('ability', link.sourceId);
     for (const link of links.items) add('item', link.sourceId);
     for (const link of links.effects) add('effect', link.sourceId);

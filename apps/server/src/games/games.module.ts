@@ -13,8 +13,14 @@ import { GamesService } from './games.service.js';
 import { GameLibraryController, GameLibraryService } from './library/index.js';
 import { GameRealtimeGateway } from './realtime/game-realtime.gateway.js';
 import { GameRealtimeService } from './realtime/game-realtime.service.js';
+import {
+  GameScenesController,
+  GameScenesService,
+  GameSceneViewService,
+} from './scenes/index.js';
 
-// Игры (docs/plan/game.md): общий список, лобби, места, встреча, журнал игры, библиотека и сокет.
+// Игры (docs/plan/game.md): общий список, лобби, места, встреча, журнал игры, библиотека,
+// сцены и сокет.
 @Module({
   imports: [AuthModule],
   controllers: [
@@ -24,6 +30,7 @@ import { GameRealtimeService } from './realtime/game-realtime.service.js';
     GameEventsController,
     GameSessionController,
     GameLibraryController,
+    GameScenesController,
   ],
   providers: [
     GamesService,
@@ -32,6 +39,8 @@ import { GameRealtimeService } from './realtime/game-realtime.service.js';
     GameEventsService,
     GameSessionService,
     GameLibraryService,
+    GameScenesService,
+    GameSceneViewService,
     GameRealtimeService,
     GameRealtimeGateway,
   ],

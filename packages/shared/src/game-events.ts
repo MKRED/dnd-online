@@ -1,5 +1,6 @@
 import type { GameUser } from './games.js';
 import type { GameLibraryRef } from './game-library.js';
+import type { GameSceneRef } from './game-scenes.js';
 
 // Журнал игры (docs/plan/game.md, «Журнал игры»): каждое действие в игре — запись с
 // номером по порядку внутри игры. Записи только добавляются; отмена — тоже запись.
@@ -61,6 +62,24 @@ export interface GameEventPayloads {
     intent: GameLibraryRef;
     result: { name: string; copied: number };
   };
+  // Мастер добавил сцену из своей карты. libraryCopied — сколько записей скопировано в
+  // библиотеку с её объектами; active — первая сцена игры сразу стала активной.
+  'scene.created': {
+    intent: { mapId: string };
+    result: { scene: GameSceneRef; libraryCopied: number; active: boolean };
+  };
+  'scene.activated': {
+    intent: { sceneId: string };
+    result: { scene: GameSceneRef };
+  };
+  // Новая копия той же карты встала на место старой (from); старая остаётся в базе.
+  'scene.restarted': {
+    intent: { sceneId: string };
+    result: { from: GameSceneRef; scene: GameSceneRef; libraryCopied: number };
+  };
+  // «Сцена открыта игрокам» включили или выключили; scene — активная в этот момент.
+  'scene.opened': { intent: null; result: { scene: GameSceneRef } };
+  'scene.closed': { intent: null; result: { scene: GameSceneRef | null } };
   // Мастер убрал игрока.
   'member.removed': {
     intent: { userId: string };

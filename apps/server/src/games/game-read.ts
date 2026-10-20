@@ -17,6 +17,7 @@ import {
   users,
 } from '../database/schema/index.js';
 import { GAME_LOCKED, GAME_NOT_FOUND } from './game-errors.js';
+import { findActiveScene, sceneStatus } from './scenes/scene-read.js';
 
 type Db = DatabaseService['db'];
 type GameRow = typeof games.$inferSelect;
@@ -166,6 +167,7 @@ export async function readGameDetail(
       and(eq(gameMembers.gameId, gameId), isNotNull(gameMembers.characterId)),
     )
     .orderBy(asc(gameMembers.seatedAt));
+  const scene = await findActiveScene(db, gameId);
   return {
     ...toListItem(
       game,
@@ -179,5 +181,6 @@ export async function readGameDetail(
       allowHandover: row.member.allowHandover,
       seatedAt: (row.member.seatedAt ?? row.member.joinedAt).toISOString(),
     })),
+    scene: sceneStatus(scene, game.sceneOpen, game.masterId === viewerId),
   };
 }

@@ -4,6 +4,7 @@ import {
   DEFAULT_EFFECT_DURATION,
   type GameLibraryEntry,
 } from 'shared';
+import { sampleCharacter } from '../../../test/characterFixture';
 import { sampleMonster } from '../../../test/monsterFixture';
 import { libraryLinkGroups } from './libraryLinkGroups';
 
@@ -87,6 +88,81 @@ describe('libraryLinkGroups', () => {
             name: 'Ожог',
             note: null,
           },
+        ],
+      },
+    ]);
+  });
+
+  it('НПС: предметы с местом и количеством, один предмет в двух местах', () => {
+    const entry: GameLibraryEntry = {
+      ...copy,
+      kind: 'npc',
+      category: 'npc',
+      record: {
+        ...sampleCharacter,
+        kind: 'npc',
+        abilities: [],
+        inventory: [
+          {
+            id: 'i1',
+            location: 'carried',
+            quantity: 1,
+            item: {
+              id: 'i1',
+              name: 'Самоцвет',
+              category: 'treasure',
+              rarity: 'none',
+              weight: 0,
+              isPublic: true,
+              image: null,
+            },
+            missing: null,
+            inactive: false,
+          },
+          {
+            id: 'i1',
+            location: 'stash',
+            quantity: 4,
+            item: {
+              id: 'i1',
+              name: 'Самоцвет',
+              category: 'treasure',
+              rarity: 'none',
+              weight: 0,
+              isPublic: true,
+              image: null,
+            },
+            missing: null,
+            inactive: false,
+          },
+        ],
+        effects: [{ id: 'e1', effect: null, missing: 'deleted' }],
+      },
+    };
+    expect(libraryLinkGroups(entry)).toEqual([
+      {
+        title: 'Предметы',
+        links: [
+          {
+            key: 'i1:carried',
+            kind: 'item',
+            sourceId: 'i1',
+            name: 'Самоцвет',
+            note: '×1',
+          },
+          {
+            key: 'i1:stash',
+            kind: 'item',
+            sourceId: 'i1',
+            name: 'Самоцвет',
+            note: '×4, в хранилище',
+          },
+        ],
+      },
+      {
+        title: 'Эффекты',
+        links: [
+          { key: 'e1', kind: 'effect', sourceId: null, name: null, note: null },
         ],
       },
     ]);

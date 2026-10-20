@@ -54,7 +54,7 @@ export const gameLibrary = pgTable(
     primaryKey({ columns: [table.gameId, table.kind, table.sourceId] }),
     check(
       'game_library_kind',
-      sql`${table.kind} in ('monster', 'item', 'ability', 'effect')`,
+      sql`${table.kind} in ('monster', 'npc', 'item', 'ability', 'effect')`,
     ),
   ],
 );

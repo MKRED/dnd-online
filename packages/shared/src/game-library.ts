@@ -1,5 +1,6 @@
 import type { Ability } from './abilities.js';
 import type { CatalogImage } from './catalogImage.js';
+import type { Character } from './character.js';
 import type { Effect } from './effects.js';
 import type { Item } from './items.js';
 import type { Monster } from './monsters.js';
@@ -8,8 +9,11 @@ import type { Monster } from './monsters.js';
 // справочников, которые игра использует. Копия одна на игру по виду и исходному id; правка,
 // скрытие и удаление записи в справочнике её не трогают.
 
+// НПС — не запись справочника, а персонаж мастера: копируется, когда сцена берёт его с
+// карты (этап 5), лист — со своими предметами, способностями и эффектами.
 export const GAME_LIBRARY_KINDS = [
   'monster',
+  'npc',
   'item',
   'ability',
   'effect',
@@ -29,7 +33,7 @@ export type GameLibrarySource = 'same' | 'changed' | 'missing';
 export interface GameLibraryItem extends GameLibraryRef {
   name: string;
   // Категория записи как в справочнике: тип монстра, категория предмета или способности;
-  // у эффекта — всегда basic.
+  // у эффекта — всегда basic, у НПС — npc.
   category: string;
   image: CatalogImage | null;
   copiedAt: string;
@@ -39,14 +43,17 @@ export interface GameLibraryItem extends GameLibraryRef {
 
 interface GameLibraryRecords {
   monster: Monster;
+  // Лист на момент копии; картинка — у записи (image), а не в mainImage.
+  npc: Character;
   item: Item;
   ability: Ability;
   effect: Effect;
 }
 
 // Карточка копии: запись в том же виде, что отдаёт справочник. id записи — исходный id,
-// автор — каким был при копии; связи (способности монстра, эффекты шагов, состав набора)
-// читаются из той же библиотеки, а чего в ней нет — заглушки, как скрытое в листе.
+// автор — каким был при копии; связи (способности монстра, эффекты шагов, состав набора,
+// предметы НПС) читаются из той же библиотеки, а чего в ней нет — заглушки, как скрытое
+// в листе.
 export type GameLibraryEntry = {
   [K in GameLibraryKind]: Omit<GameLibraryItem, 'kind'> & {
     kind: K;

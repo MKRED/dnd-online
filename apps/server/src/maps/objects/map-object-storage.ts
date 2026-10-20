@@ -10,8 +10,9 @@ import { mapObjects } from '../../database/schema/index.js';
 
 type MapObjectRow = typeof mapObjects.$inferSelect;
 
-// Строка ↔ объект: клетка — колонками, поля вида — в jsonb fields.
-export function toMapObject(row: MapObjectRow): MapObject {
+// Строка ↔ объект: клетка — колонками, поля вида — в jsonb fields. Строки объектов
+// сцены игры (game_scene_objects) — той же формы, только без map_id.
+export function toMapObject(row: Omit<MapObjectRow, 'mapId'>): MapObject {
   return {
     ...row.fields,
     id: row.id,

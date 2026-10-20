@@ -12,6 +12,7 @@ import { ABILITIES } from '../simpleCatalog/simpleCatalogs';
 
 export const LIBRARY_KIND_LABELS: Record<GameLibraryKind, string> = {
   monster: 'Монстр',
+  npc: 'НПС',
   item: 'Предмет',
   ability: 'Способность',
   effect: 'Эффект',
@@ -20,6 +21,7 @@ export const LIBRARY_KIND_LABELS: Record<GameLibraryKind, string> = {
 // Чипы над списком — во множественном числе.
 export const LIBRARY_KIND_CHIPS: Record<GameLibraryKind, string> = {
   monster: 'Монстры',
+  npc: 'НПС',
   item: 'Предметы',
   ability: 'Способности',
   effect: 'Эффекты',
@@ -34,7 +36,8 @@ export const LIBRARY_SOURCE_LABELS: Record<
   missing: 'Нет в справочнике',
 };
 
-// Вид записи и её категория одной строкой: «Предмет · Оружие». У эффекта категории нет.
+// Вид записи и её категория одной строкой: «Предмет · Оружие». У эффекта и НПС категории
+// нет.
 export function libraryKindLine(
   kind: GameLibraryKind,
   category: string,

@@ -29,6 +29,9 @@ export const games = pgTable('games', {
   // Когда мастер начал текущую встречу; null — встреча не идёт. Пока идёт, листы
   // персонажей на местах закрыты для правки владельцем (games/sheet-lock.ts).
   sessionStartedAt: timestamp('session_started_at', { withTimezone: true }),
+  // «Сцена открыта игрокам» (docs/plan/game.md, этап 5): закрытую активную сцену игрокам
+  // не отдают. У новой игры закрыта — мастер открывает сцену, когда готов.
+  sceneOpen: boolean('scene_open').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

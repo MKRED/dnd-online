@@ -27,3 +27,11 @@ export const LIBRARY_ENTRY_NOT_FOUND = 'Записи нет в библиоте�
 export const LIBRARY_NO_IMAGE = 'У записи нет картинки';
 export const LIBRARY_SOURCE_MISSING =
   'Записи нет в справочнике или она скрыта от вас — обновить нельзя';
+export const MASTER_ONLY_SCENES = 'Сценами управляет только мастер';
+export const SCENE_NOT_FOUND = 'Сцена не найдена';
+export const SCENE_MAP_GONE =
+  'Карты этой сцены больше нет — перезапустить сцену нельзя';
+export const NO_ACTIVE_SCENE = 'В игре нет активной сцены';
+export const SCENE_CLOSED = 'Мастер закрыл сцену';
+export const SCENE_MEMBERS_ONLY = 'Сцену видят только участники игры';
+export const SCENE_NO_IMAGE = 'Такой картинки на сцене нет';

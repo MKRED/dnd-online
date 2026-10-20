@@ -26,6 +26,8 @@ export type NewGameEvent<K extends GameEventKind> = {
   kind: K;
   actorId: string;
   as?: GameEventAs;
+  // Сцена, к которой относится событие; у событий лобби её нет.
+  sceneId?: string;
 } & GameEventPayloads[K];
 
 // Добавляет запись со следующим номером игры и возвращает этот номер.
@@ -47,6 +49,7 @@ export async function appendGameEvent<K extends GameEventKind>(
     actorId: event.actorId,
     asKind: event.as?.kind ?? null,
     asId: event.as && 'id' in event.as ? event.as.id : null,
+    sceneId: event.sceneId ?? null,
     intent: event.intent,
     result: event.result,
   });

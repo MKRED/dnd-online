@@ -111,7 +111,7 @@ function toLibraryItem(
     kind: row.kind,
     sourceId: row.sourceId,
     name: row.name,
-    category: String(row.record.category),
+    category: row.kind === 'npc' ? 'npc' : String(row.record.category),
     image: row.image,
     copiedAt: row.copiedAt.toISOString(),
     refreshedAt: row.refreshedAt?.toISOString() ?? null,

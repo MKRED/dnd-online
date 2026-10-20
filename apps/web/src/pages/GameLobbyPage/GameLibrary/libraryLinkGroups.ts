@@ -1,4 +1,4 @@
-import type { GameLibraryEntry, GameLibraryKind } from 'shared';
+import type { EffectLink, GameLibraryEntry, GameLibraryKind } from 'shared';
 
 // Связь копии строкой карточки: открыть её можно, если она есть в библиотеке.
 export interface LibraryLink {
@@ -16,8 +16,19 @@ export interface LibraryLinkGroup {
   links: LibraryLink[];
 }
 
+function effectLinks(effects: ({ id: string } & EffectLink)[]): LibraryLink[] {
+  return effects.map((link) => ({
+    key: link.id,
+    kind: 'effect',
+    sourceId: link.effect?.id ?? null,
+    name: link.effect?.name ?? null,
+    note: null,
+  }));
+}
+
 // Связи копии по группам, как в карточке справочника: способности, снаряжение и эффекты
-// монстра; состав набора; эффекты шагов способности (один раз, даже если в нескольких).
+// монстра; способности, предметы и эффекты НПС, как в его листе; состав набора; эффекты
+// шагов способности (один раз, даже если в нескольких).
 export function libraryLinkGroups(entry: GameLibraryEntry): LibraryLinkGroup[] {
   const groups: LibraryLinkGroup[] = [];
   const add = (title: string, links: LibraryLink[]) => {
@@ -45,16 +56,35 @@ export function libraryLinkGroups(entry: GameLibraryEntry): LibraryLinkGroup[] {
         note: `×${link.quantity}`,
       })),
     );
+    add('Эффекты', effectLinks(effects));
+  }
+  if (entry.kind === 'npc') {
+    const { abilities, inventory, effects } = entry.record;
     add(
-      'Эффекты',
-      effects.map((link) => ({
+      'Способности',
+      abilities.map((link) => ({
         key: link.id,
-        kind: 'effect',
-        sourceId: link.effect?.id ?? null,
-        name: link.effect?.name ?? null,
+        kind: 'ability',
+        sourceId: link.ability?.id ?? null,
+        name: link.ability?.name ?? null,
         note: null,
       })),
     );
+    add(
+      'Предметы',
+      // Один предмет может лежать и при себе, и в хранилище — ключ с местом.
+      inventory.map((row) => ({
+        key: `${row.id}:${row.location}`,
+        kind: 'item',
+        sourceId: row.item?.id ?? null,
+        name: row.item?.name ?? null,
+        note:
+          row.location === 'stash'
+            ? `×${row.quantity}, в хранилище`
+            : `×${row.quantity}`,
+      })),
+    );
+    add('Эффекты', effectLinks(effects));
   }
   if (entry.kind === 'item' && entry.record.category === 'pack') {
     add(

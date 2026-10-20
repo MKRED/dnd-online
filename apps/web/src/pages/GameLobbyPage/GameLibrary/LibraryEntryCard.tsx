@@ -76,10 +76,15 @@ function LibraryEntryCard({
     );
 
   const { record } = entry;
+  // У НПС описания и источников нет — это лист персонажа.
+  const text = entry.kind === 'npc' ? null : entry.record;
   return (
     <Stack gap="sm">
-      {record.image && (
-        <EntryImage entry={record} imagePath={libraryImagePath(gameId, kind)} />
+      {entry.image && (
+        <EntryImage
+          entry={{ id: entry.sourceId, name: entry.name, image: entry.image }}
+          imagePath={libraryImagePath(gameId, kind)}
+        />
       )}
       <Box>
         <Title order={3} style={{ overflowWrap: 'anywhere' }}>
@@ -128,15 +133,15 @@ function LibraryEntryCard({
         </Group>
       )}
 
-      {record.description && (
+      {text?.description && (
         <Text
           size="sm"
           style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
         >
-          {record.description}
+          {text.description}
         </Text>
       )}
-      <SourcesList sources={record.sources} />
+      {text && <SourcesList sources={text.sources} />}
       <LibraryLinks entry={entry} onOpen={onOpen} />
     </Stack>
   );

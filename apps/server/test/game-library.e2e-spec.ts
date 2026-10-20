@@ -277,7 +277,7 @@ describe('game library (e2e)', () => {
 
     // Картинка скопирована: удалили щит в справочнике — в игре она осталась.
     const shieldCopy = await entry(master.agent, gameId, 'item', shield.id);
-    expect(shieldCopy.record.image).toMatchObject({ version: 1 });
+    expect(shieldCopy.image).toMatchObject({ version: 1 });
     await owner
       .put(`/api/items/${pack}`)
       .send(

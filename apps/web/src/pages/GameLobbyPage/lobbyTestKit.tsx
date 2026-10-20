@@ -28,6 +28,7 @@ export const GAME: GameDetail = {
       seatedAt: '2026-10-20T00:00:00.000Z',
     },
   ],
+  scene: null,
 };
 
 export function stubFetch(responses: { status: number; body?: unknown }[]) {

@@ -4,6 +4,8 @@ import type { FormEvent } from 'react';
 import {
   ABILITY_SCORES,
   HEROIC_INSPIRATION_MAX,
+  PROFICIENCY_BONUS_MAX,
+  PROFICIENCY_BONUS_MIN,
   SPELL_SLOT_CIRCLES,
   SPELL_SLOT_TOTAL_MAX,
 } from 'shared';
@@ -61,7 +63,9 @@ function CharacterForm({
         ]),
       ),
       proficiencyBonus: (value: number) =>
-        value >= 2 && value <= 6 ? null : 'От 2 до 6',
+        value >= PROFICIENCY_BONUS_MIN && value <= PROFICIENCY_BONUS_MAX
+          ? null
+          : `От ${PROFICIENCY_BONUS_MIN} до ${PROFICIENCY_BONUS_MAX}`,
       armorClass: (value: number) =>
         value >= 0 ? null : 'Не может быть отрицательным',
       speed: (value: number) =>

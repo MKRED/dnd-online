@@ -28,6 +28,17 @@ For reference, the die per class. The app does not use this table.
 
 **Unverified:** the table comes from the dungeonmister summary, not from each class page. The free rules confirm only the level 1 hit points (Barbarian 12, Fighter, Paladin and Ranger 10) and that Fighter and Paladin share a d10.
 
+## Proficiency bonus
+
+Researched on 2026-10-20.
+
+- **Rule:** a character's proficiency bonus grows with the character level from +2 to +6 (levels 1–20, free rules, Creating a Character). A monster's comes from its Challenge Rating and reaches +9 at CR 29–30 (the table in [monsters.md](monsters.md); e.g. the Aspect of Bahamut, CR 30, +9, Fizban's Treasury of Dragons, [dnd.su](https://5e14.dnd.su/bestiary/5524-aspect-of-bahamut/)).
+- **In the app (decided on 2026-10-20, when the user built an NPC from the Aspect of Bahamut):** the bonus is entered by hand and not derived from the level. One range, 2 to 9, for player characters and NPCs alike, so an NPC copied from a monster's stat block fits.
+  - `packages/shared/src/character.ts` — `PROFICIENCY_BONUS_MIN` and `PROFICIENCY_BONUS_MAX`.
+  - `apps/server/src/characters/dto/create-character.dto.ts` — the server accepts an integer in that range.
+  - `CharacterForm/CombatSection.tsx` and `CharacterForm.tsx` — the field «Бонус мастерства» and its check.
+- **Departure from the book:** a player character can be given +7 to +9 too. The form doesn't tie the range to the kind: a PUT without a kind keeps the stored one, so the server can't always tell which limit applies.
+
 ## Heroic Inspiration
 
 Researched on 2026-10-17 in the free rules (Playing the Game, the Heroic Inspiration sidebar; Character Origins, Human).

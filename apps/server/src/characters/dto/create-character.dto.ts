@@ -20,6 +20,8 @@ import {
   CHARACTER_SPECIES,
   HEROIC_INSPIRATION_MAX,
   HIT_DICE,
+  PROFICIENCY_BONUS_MAX,
+  PROFICIENCY_BONUS_MIN,
   type CharacterKind,
   type CharacterSpecies,
   type HitDie,
@@ -106,10 +108,10 @@ export class CreateCharacterDto {
   @Type(() => ClassLevelDto)
   classes: ClassLevelDto[];
 
-  // 2..6 — весь диапазон бонуса мастерства по правилам 5e (уровни 1..20).
+  // 2..9: у игрового персонажа до +6, у НПС из бестиария до +9 (см. shared/character.ts).
   @IsInt()
-  @Min(2)
-  @Max(6)
+  @Min(PROFICIENCY_BONUS_MIN)
+  @Max(PROFICIENCY_BONUS_MAX)
   proficiencyBonus: number;
 
   @ValidateNested()

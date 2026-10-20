@@ -116,6 +116,12 @@ export type HitDie = (typeof HIT_DICE)[number];
 // оно бывает только одно (docs/dnd/combat-stats.md). Потолок ловит опечатки.
 export const HEROIC_INSPIRATION_MAX = 50;
 
+// Бонус мастерства вводится руками. Игровому персонажу по книге хватает 2..6 (уровни 1..20),
+// но НПС переносят из бестиария, где он доходит до +9 (ПО 29–30, monsterChallenge.ts),
+// поэтому предел один на всех — до максимума монстров (docs/dnd/combat-stats.md).
+export const PROFICIENCY_BONUS_MIN = 2;
+export const PROFICIENCY_BONUS_MAX = 9;
+
 // Мультикласс — это список: у персонажа может быть больше одного класса+уровня+подкласса одновременно.
 export interface CharacterClassLevel {
   class: CharacterClass;

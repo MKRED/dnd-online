@@ -8,7 +8,12 @@ import {
 } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import { memo, useCallback, useState } from 'react';
-import { HEROIC_INSPIRATION_MAX, HIT_DICE } from 'shared';
+import {
+  HEROIC_INSPIRATION_MAX,
+  HIT_DICE,
+  PROFICIENCY_BONUS_MAX,
+  PROFICIENCY_BONUS_MIN,
+} from 'shared';
 import type { CharacterFormValues } from '../characterFormValues';
 import {
   formatModifier,
@@ -47,8 +52,8 @@ function CombatSection({ form }: CombatSectionProps) {
         <Grid.Col span={{ base: 6, sm: 3 }}>
           <NumberInput
             label="Бонус мастерства"
-            min={2}
-            max={6}
+            min={PROFICIENCY_BONUS_MIN}
+            max={PROFICIENCY_BONUS_MAX}
             {...form.getInputProps('proficiencyBonus')}
           />
         </Grid.Col>

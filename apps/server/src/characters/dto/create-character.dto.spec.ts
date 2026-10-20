@@ -61,6 +61,19 @@ describe('CreateCharacterDto', () => {
     ).toEqual(['У этой расы нет рода или наследия']);
   });
 
+  it('принимает бонус мастерства от 2 до 9 — до +9 у НПС из бестиария', async () => {
+    for (const proficiencyBonus of [2, 6, 9]) {
+      expect(await errorsFor('proficiencyBonus', { proficiencyBonus })).toEqual(
+        [],
+      );
+    }
+    for (const proficiencyBonus of [1, 10]) {
+      expect(
+        await errorsFor('proficiencyBonus', { proficiencyBonus }),
+      ).not.toEqual([]);
+    }
+  });
+
   it('принимает только существующую кость хитов', async () => {
     expect(await errorsFor('hitDie', { hitDie: 10 })).toEqual([]);
     expect(await errorsFor('hitDie', {})).toEqual([

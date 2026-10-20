@@ -121,8 +121,26 @@ describe('персонажи (e2e)', () => {
         .send({ heroicInspiration })
         .expect(400);
     }
+    // Бонус мастерства — от 2 до 9 (до +9 у НПС из бестиария).
+    for (const proficiencyBonus of [1, 10]) {
+      await owner
+        .put(`/api/characters/${id}`)
+        .send(characterBody({ proficiencyBonus }))
+        .expect(400);
+    }
     await setAccess(id, 'everyone').expect(400);
     await owner.get('/api/characters/not-a-uuid').expect(400);
+  });
+
+  it('НПС из бестиария держит бонус мастерства +9', async () => {
+    const created = await owner
+      .post('/api/characters')
+      .send(characterBody({ kind: 'npc', proficiencyBonus: 9 }))
+      .expect(201);
+    const id = (created.body as { id: string }).id;
+    expect(
+      (await owner.get(`/api/characters/${id}`).expect(200)).body,
+    ).toMatchObject({ kind: 'npc', proficiencyBonus: 9 });
   });
 
   it('тип: без него — игровой, НПС держится при правке без типа, меняется явно', async () => {

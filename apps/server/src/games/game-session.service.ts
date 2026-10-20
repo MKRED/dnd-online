@@ -16,10 +16,12 @@ import {
 } from './game-errors.js';
 import { appendGameEvent, lockGame } from './game-journal.js';
 import { findGameAccess, readGameDetail } from './game-read.js';
+import { copyToLibrary, seatedCharacterRoots } from './library/index.js';
 import { GameRealtimeService } from './realtime/game-realtime.service.js';
 
 // Встреча: мастер начинает и заканчивает её кнопками (docs/plan/game.md, «Понятия»).
-// Пока она идёт, листы персонажей на местах закрыты (sheet-lock.ts).
+// Пока она идёт, листы персонажей на местах закрыты (sheet-lock.ts). Начало встречи
+// копирует в библиотеку игры то, что есть в этих листах (docs/plan/game.md, этап 4).
 @Injectable()
 export class GameSessionService {
   constructor(
@@ -62,12 +64,16 @@ export class GameSessionService {
             .update(games)
             .set({ sessionStartedAt: new Date() })
             .where(eq(games.id, gameId));
+          // Глазами владельца: в библиотеку идёт то, что он видит в своём листе.
+          let libraryCopied = 0;
+          for (const [ownerId, roots] of await seatedCharacterRoots(tx, gameId))
+            libraryCopied += await copyToLibrary(tx, gameId, ownerId, roots);
           await appendGameEvent(tx, gameId, {
             kind: 'session.started',
             actorId: userId,
             as: { kind: 'master' },
             intent: null,
-            result: null,
+            result: { libraryCopied },
           });
         } else {
           if (!startedAt) throw new ConflictException(SESSION_NOT_STARTED);

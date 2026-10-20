@@ -22,3 +22,8 @@ export const NPC_NO_SEAT = 'Место занимает игровой перс�
 export function characterInGame(gameName: string) {
   return `Персонаж уже в игре «${gameName}»`;
 }
+export const MASTER_ONLY_LIBRARY = 'Библиотеку игры видит только мастер';
+export const LIBRARY_ENTRY_NOT_FOUND = 'Записи нет в библиотеке игры';
+export const LIBRARY_NO_IMAGE = 'У записи нет картинки';
+export const LIBRARY_SOURCE_MISSING =
+  'Записи нет в справочнике или она скрыта от вас — обновить нельзя';

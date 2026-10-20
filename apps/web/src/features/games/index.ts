@@ -2,3 +2,5 @@ export * from './gamesApi';
 export * from './gameLabels';
 export * from './gameEventText';
 export * from './useGameRoom';
+export * from './gameLibraryApi';
+export * from './libraryLabels';

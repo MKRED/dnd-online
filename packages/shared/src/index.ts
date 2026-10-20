@@ -65,4 +65,5 @@ export * from './monsterStatBlockCheck.js';
 export * from './userSettings.js';
 export * from './games.js';
 export * from './game-events.js';
+export * from './game-library.js';
 export * from './game-socket.js';

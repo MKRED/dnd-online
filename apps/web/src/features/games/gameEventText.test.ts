@@ -64,6 +64,29 @@ describe('gameEventText', () => {
       'Встреча закончилась',
     ],
     [
+      { ...base, kind: 'session.started', intent: null, result: null },
+      'Встреча началась',
+    ],
+    [
+      {
+        ...base,
+        kind: 'session.started',
+        intent: null,
+        result: { libraryCopied: 3 },
+      },
+      'Встреча началась, в библиотеку скопировано записей: 3',
+    ],
+    [
+      {
+        ...base,
+        kind: 'library.refreshed',
+        as: { kind: 'master' },
+        intent: { kind: 'item', sourceId: 'i1' },
+        result: { name: 'Набор', copied: 2 },
+      },
+      'Обновлено из справочника: Набор, докопировано связей: 2',
+    ],
+    [
       {
         ...base,
         kind: 'member.left',

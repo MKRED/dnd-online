@@ -1,4 +1,5 @@
 import type { GameUser } from './games.js';
+import type { GameLibraryRef } from './game-library.js';
 
 // Журнал игры (docs/plan/game.md, «Журнал игры»): каждое действие в игре — запись с
 // номером по порядку внутри игры. Записи только добавляются; отмена — тоже запись.
@@ -50,8 +51,16 @@ export interface GameEventPayloads {
     result: { character: GameEventCharacter | null };
   };
   // Встречу начинает и заканчивает мастер; пока она идёт, листы на местах закрыты.
-  'session.started': { intent: null; result: null };
+  // libraryCopied — сколько записей справочников начало встречи скопировало в библиотеку
+  // игры; у записей до библиотеки (этап 4) result — null.
+  'session.started': { intent: null; result: { libraryCopied: number } | null };
   'session.ended': { intent: null; result: { startedAt: string } };
+  // Мастер обновил копию в библиотеке из справочника; copied — сколько новых связей
+  // докопировано вместе с ней.
+  'library.refreshed': {
+    intent: GameLibraryRef;
+    result: { name: string; copied: number };
+  };
   // Мастер убрал игрока.
   'member.removed': {
     intent: { userId: string };

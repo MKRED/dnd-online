@@ -21,10 +21,21 @@ export function gameEventText(event: GameEvent): string {
       return event.result.reason === 'character_deleted'
         ? `Персонаж удалён, место освобождено: ${event.result.character.name}`
         : `Место освобождено: ${event.result.character.name}`;
-    case 'session.started':
-      return 'Встреча началась';
+    case 'session.started': {
+      // У записей до библиотеки игры (этап 4) итога нет.
+      const copied = event.result?.libraryCopied ?? 0;
+      return copied > 0
+        ? `Встреча началась, в библиотеку скопировано записей: ${copied}`
+        : 'Встреча началась';
+    }
     case 'session.ended':
       return 'Встреча закончилась';
+    case 'library.refreshed': {
+      const { name, copied } = event.result;
+      return copied > 0
+        ? `Обновлено из справочника: ${name}, докопировано связей: ${copied}`
+        : `Обновлено из справочника: ${name}`;
+    }
     case 'member.left':
       return withCharacter('Выход из игры', event.result.character);
     case 'member.removed':

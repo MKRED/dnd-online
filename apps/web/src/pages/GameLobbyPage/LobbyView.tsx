@@ -29,6 +29,7 @@ import {
 import { errorMessage } from '../../lib/apiRequest';
 import FreeSeatCard from './FreeSeatCard';
 import GameJournal from './GameJournal';
+import GameLibrary from './GameLibrary';
 import LobbyClosed from './LobbyClosed';
 import MasterActions from './MasterActions';
 import OnlineDot from './OnlineDot';
@@ -38,6 +39,12 @@ import TakeSeatModal from './TakeSeatModal';
 // Сколько записей, пришедших по сокету, держим для журнала мастера: старше — он
 // подгрузит сам.
 const LIVE_EVENTS_MAX = 200;
+
+// Изменения игры, после которых в библиотеке другие записи.
+const LIBRARY_CHANGES = new Set<string>([
+  'session.started',
+  'library.refreshed',
+]);
 
 interface LobbyViewProps {
   game: GameDetail;
@@ -55,6 +62,10 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
   const [liveEvents, setLiveEvents] = useState<GameEvent[]>([]);
   // Растёт, когда живых записей пропущено слишком много: журнал перечитывается целиком.
   const [journalKey, setJournalKey] = useState(0);
+  const [libraryOpened, setLibraryOpened] = useState(false);
+  // Растёт, когда в игре скопировали или обновили записи библиотеки: открытая шторка
+  // перечитывает себя.
+  const [libraryVersion, setLibraryVersion] = useState(0);
   const [closed, setClosed] = useState<'deleted' | 'removed' | null>(null);
 
   // Изменения других приходят по сокету: лобби перечитывает себя. Потерянный доступ
@@ -67,7 +78,11 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
   const addLive = (events: GameEvent[]) =>
     setLiveEvents((prev) => [...prev, ...events].slice(-LIVE_EVENTS_MAX));
   const { online } = useGameRoom(game.id, {
-    onChanged: reload,
+    onChanged: (message) => {
+      reload();
+      if (LIBRARY_CHANGES.has(message.kind))
+        setLibraryVersion((version) => version + 1);
+    },
     onEvent: (event) => addLive([event]),
     onResync: (missed) => {
       reload();
@@ -199,6 +214,7 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
               )
             }
             onOpenJournal={() => setJournalOpened(true)}
+            onOpenLibrary={() => setLibraryOpened(true)}
             onDelete={handleDelete}
           />
         ) : (
@@ -253,6 +269,14 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
           live={liveEvents}
           opened={journalOpened}
           onClose={() => setJournalOpened(false)}
+        />
+      )}
+      {isMaster && (
+        <GameLibrary
+          gameId={game.id}
+          version={libraryVersion}
+          opened={libraryOpened}
+          onClose={() => setLibraryOpened(false)}
         />
       )}
 

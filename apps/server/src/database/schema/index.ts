@@ -29,3 +29,4 @@ export type {
 export * from './bookmarks.js';
 export * from './games.js';
 export * from './game-events.js';
+export * from './game-library.js';

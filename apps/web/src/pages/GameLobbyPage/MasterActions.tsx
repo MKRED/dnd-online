@@ -1,5 +1,6 @@
 import { ActionIcon, Button, Group, Menu } from '@mantine/core';
 import {
+  IconBooks,
   IconDots,
   IconNotebook,
   IconPlayerPlay,
@@ -12,6 +13,7 @@ interface MasterActionsProps {
   onStartSession: () => void;
   onEndSession: () => void;
   onOpenJournal: () => void;
+  onOpenLibrary: () => void;
   onDelete: () => void;
 }
 
@@ -23,6 +25,7 @@ function MasterActions({
   onStartSession,
   onEndSession,
   onOpenJournal,
+  onOpenLibrary,
   onDelete,
 }: MasterActionsProps) {
   return (
@@ -52,6 +55,13 @@ function MasterActions({
         onClick={onOpenJournal}
       >
         Журнал
+      </Button>
+      <Button
+        variant="default"
+        leftSection={<IconBooks size={16} />}
+        onClick={onOpenLibrary}
+      >
+        Библиотека
       </Button>
       <Menu position="bottom-end">
         <Menu.Target>

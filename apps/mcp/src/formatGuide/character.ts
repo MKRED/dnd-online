@@ -25,6 +25,7 @@ type CharacterInputKey = Exclude<
   | 'mainImage'
   | 'linkAccess'
   | 'authorNickname'
+  | 'sheetLock'
   | 'createdAt'
   | 'updatedAt'
 >;

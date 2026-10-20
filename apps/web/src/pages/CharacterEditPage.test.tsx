@@ -47,6 +47,26 @@ describe('CharacterEditPage', { timeout: 15_000 }, () => {
     );
   });
 
+  it('во время встречи вместо формы — почему лист закрыт', async () => {
+    stubFetch([
+      {
+        status: 200,
+        body: {
+          ...sampleCharacter,
+          sheetLock: { gameId: 'g1', gameName: 'Логово дракона' },
+        },
+      },
+      EMPTY_GALLERY,
+    ]);
+    renderEditPage();
+
+    expect(await screen.findByText('Лист закрыт')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Имя/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Сохранить изменения' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('сохраняет изменения через PUT и открывает лист персонажа', async () => {
     const fetchMock = stubFetch([
       { status: 200, body: sampleCharacter },

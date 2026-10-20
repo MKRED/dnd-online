@@ -2,7 +2,7 @@ import { Badge, Card, Group, Text } from '@mantine/core';
 import { IconLock } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import type { GameListItem } from 'shared';
-import { ROLE_LABELS, seatsLabel } from '../../features/games';
+import { ROLE_LABELS, SESSION_LABEL, seatsLabel } from '../../features/games';
 
 // Строка общего списка игр; вся карточка ведёт в лобби.
 function GameCard({ game }: { game: GameListItem }) {
@@ -41,6 +41,12 @@ function GameCard({ game }: { game: GameListItem }) {
           {seatsLabel(game)}
         </Text>
       </Text>
+      {/* Отдельной строкой: рядом с названием на телефоне не хватало места. */}
+      {game.sessionStartedAt && (
+        <Badge color="green" variant="light" mt={6}>
+          {SESSION_LABEL}
+        </Badge>
+      )}
     </Card>
   );
 }

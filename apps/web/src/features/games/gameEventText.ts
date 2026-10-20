@@ -21,6 +21,10 @@ export function gameEventText(event: GameEvent): string {
       return event.result.reason === 'character_deleted'
         ? `Персонаж удалён, место освобождено: ${event.result.character.name}`
         : `Место освобождено: ${event.result.character.name}`;
+    case 'session.started':
+      return 'Встреча началась';
+    case 'session.ended':
+      return 'Встреча закончилась';
     case 'member.left':
       return withCharacter('Выход из игры', event.result.character);
     case 'member.removed':

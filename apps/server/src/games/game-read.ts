@@ -46,6 +46,7 @@ function toListItem(
     takenSeats,
     hasPassword: game.passwordHash !== null,
     role,
+    sessionStartedAt: game.sessionStartedAt?.toISOString() ?? null,
     createdAt: game.createdAt.toISOString(),
   };
 }

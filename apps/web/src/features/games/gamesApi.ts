@@ -53,6 +53,15 @@ export function updateSeat(
   });
 }
 
+// Встречу начинает и заканчивает мастер; пока она идёт, листы на местах закрыты.
+export function startSession(id: string): Promise<GameDetail> {
+  return request(`/games/${id}/session`, { method: 'POST' });
+}
+
+export function endSession(id: string): Promise<GameDetail> {
+  return request(`/games/${id}/session`, { method: 'DELETE' });
+}
+
 export function freeSeat(id: string): Promise<GameDetail> {
   return request(`/games/${id}/seats/me`, { method: 'DELETE' });
 }

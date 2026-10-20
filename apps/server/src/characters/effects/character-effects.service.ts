@@ -10,6 +10,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { CharacterEffectEntry } from 'shared';
 import { visibleEntry } from '../../catalog/catalog-access.js';
 import { assertOwnedCharacter } from '../../character-images/character-image-access.js';
+import { assertSheetUnlocked } from '../../games/sheet-lock.js';
 import { DatabaseService } from '../../database/database.service.js';
 import { characterEffects, effects } from '../../database/schema/index.js';
 import { EFFECT_ACCESS } from '../../effects/effects.config.js';
@@ -43,6 +44,7 @@ export class CharacterEffectsService {
         await assertOwnedCharacter(tx, userId, characterId, {
           forUpdate: false,
         });
+        await assertSheetUnlocked(tx, characterId);
         // Наложить можно только то, что видишь сам: чужой скрытый неотличим от
         // несуществующего. 400, а не 404: не найден эффект из тела, а не адрес.
         const [effect] = await tx
@@ -90,6 +92,7 @@ export class CharacterEffectsService {
         await assertOwnedCharacter(tx, userId, characterId, {
           forUpdate: false,
         });
+        await assertSheetUnlocked(tx, characterId);
         const [row] = await tx
           .delete(characterEffects)
           .where(

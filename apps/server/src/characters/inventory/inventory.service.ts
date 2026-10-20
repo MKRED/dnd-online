@@ -8,6 +8,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { InventoryEntry, InventoryLocation } from 'shared';
 import { assertOwnedCharacter } from '../../character-images/character-image-access.js';
+import { assertSheetUnlocked } from '../../games/sheet-lock.js';
 import { DatabaseService } from '../../database/database.service.js';
 import { characterItems, items } from '../../database/schema/index.js';
 import { visibleItem } from '../../items/item-access.js';
@@ -57,6 +58,7 @@ export class InventoryService {
         await assertOwnedCharacter(tx, userId, characterId, {
           forUpdate: true,
         });
+        await assertSheetUnlocked(tx, characterId);
         // Положить можно только то, что видишь сам: чужой скрытый неотличим от несуществующего.
         const [item] = await tx
           .select({ id: items.id, category: items.category })
@@ -167,6 +169,7 @@ export class InventoryService {
         await assertOwnedCharacter(tx, userId, characterId, {
           forUpdate: true,
         });
+        await assertSheetUnlocked(tx, characterId);
         const entry = await findEditableEntry(tx, userId, characterId, entryId);
         const target =
           targetLocation && targetLocation !== entry.location
@@ -205,6 +208,7 @@ export class InventoryService {
         await assertOwnedCharacter(tx, userId, characterId, {
           forUpdate: false,
         });
+        await assertSheetUnlocked(tx, characterId);
         const [row] = await tx
           .delete(characterItems)
           .where(

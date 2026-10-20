@@ -19,6 +19,7 @@ import {
   deleteCharacter,
   getCharacter,
   ShareDialog,
+  SheetLockAlert,
 } from '../features/characters';
 import { ApiError, errorMessage } from '../lib/apiRequest';
 import { usePageTitle } from '../lib/usePageTitle';
@@ -43,6 +44,9 @@ function CharacterViewPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
   const isAuthor = Boolean(character && user && character.userId === user.id);
+  // Идёт встреча в игре персонажа: лист только для просмотра и у автора.
+  const sheetLock = character?.sheetLock ?? null;
+  const canEdit = isAuthor && !sheetLock;
 
   useEffect(() => {
     getCharacter(id)
@@ -72,30 +76,36 @@ function CharacterViewPage() {
   const aside = !character ? null : isAuthor ? (
     <>
       <Group gap="sm">
-        <Button component={Link} to={`/characters/${character.id}/edit`}>
-          Редактировать
-        </Button>
+        {canEdit && (
+          <Button component={Link} to={`/characters/${character.id}/edit`}>
+            Редактировать
+          </Button>
+        )}
+        {/* Доступ по ссылке — не лист, его можно менять и во время встречи. */}
         <Button variant="default" onClick={() => setSharing(true)}>
           Поделиться
         </Button>
-        <Menu position="bottom-end">
-          <Menu.Target>
-            <ActionIcon
-              variant="default"
-              size="lg"
-              aria-label="Ещё действия"
-              loading={deleting}
-            >
-              ⋯
-            </ActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item color="red" onClick={handleDelete}>
-              Удалить персонажа
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
+        {canEdit && (
+          <Menu position="bottom-end">
+            <Menu.Target>
+              <ActionIcon
+                variant="default"
+                size="lg"
+                aria-label="Ещё действия"
+                loading={deleting}
+              >
+                ⋯
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item color="red" onClick={handleDelete}>
+                Удалить персонажа
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        )}
       </Group>
+      {sheetLock && <SheetLockAlert lock={sheetLock} />}
       {/* Напоминание автору, что лист видят другие. */}
       {character.linkAccess === 'link' && (
         <Text size="sm" c="dimmed">
@@ -146,7 +156,7 @@ function CharacterViewPage() {
           character={character}
           aside={aside}
           onInventoryChange={
-            isAuthor
+            canEdit
               ? (inventory) =>
                   setCharacter((current) =>
                     current ? { ...current, inventory } : current,
@@ -154,7 +164,7 @@ function CharacterViewPage() {
               : undefined
           }
           onEffectsChange={
-            isAuthor
+            canEdit
               ? (effects) =>
                   setCharacter((current) =>
                     current ? { ...current, effects } : current,
@@ -162,7 +172,7 @@ function CharacterViewPage() {
               : undefined
           }
           onAbilitiesChange={
-            isAuthor
+            canEdit
               ? (abilities) =>
                   setCharacter((current) =>
                     current ? { ...current, abilities } : current,
@@ -170,7 +180,7 @@ function CharacterViewPage() {
               : undefined
           }
           onSpellSlotsChange={
-            isAuthor
+            canEdit
               ? (spellSlots) =>
                   setCharacter((current) =>
                     current ? { ...current, spellSlots } : current,

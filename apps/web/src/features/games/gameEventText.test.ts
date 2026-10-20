@@ -56,6 +56,16 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'session.ended',
+        as: { kind: 'master' },
+        intent: null,
+        result: { startedAt: '2026-10-20T09:00:00.000Z' },
+      },
+      'Встреча закончилась',
+    ],
+    [
+      {
+        ...base,
         kind: 'member.left',
         intent: null,
         result: { character: null },

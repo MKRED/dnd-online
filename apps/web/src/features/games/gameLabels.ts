@@ -6,6 +6,8 @@ export function seatsLabel(
   return `Места: ${game.takenSeats} из ${game.seatCount}`;
 }
 
+export const SESSION_LABEL = 'Идёт встреча';
+
 // Метка роли смотрящего у игры в списке и в лобби.
 export const ROLE_LABELS: Record<Exclude<GameRole, null>, string> = {
   master: 'Вы мастер',

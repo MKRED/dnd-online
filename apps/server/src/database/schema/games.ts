@@ -26,6 +26,9 @@ export const games = pgTable('games', {
   // Номер последней записи журнала игры (game_events). Растёт в той же транзакции, что и
   // запись: UPDATE строки игры и блокирует её, и даёт номер без пропусков.
   eventSeq: integer('event_seq').notNull().default(0),
+  // Когда мастер начал текущую встречу; null — встреча не идёт. Пока идёт, листы
+  // персонажей на местах закрыты для правки владельцем (games/sheet-lock.ts).
+  sessionStartedAt: timestamp('session_started_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

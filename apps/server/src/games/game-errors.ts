@@ -8,6 +8,10 @@ export const WRONG_PASSWORD = 'Неверный пароль игры';
 export const MASTER_ONLY_DELETE = 'Удалить игру может только мастер';
 export const MASTER_ONLY_REMOVE = 'Убрать игрока может только мастер';
 export const MASTER_ONLY_JOURNAL = 'Журнал игры видит только мастер';
+export const MASTER_ONLY_SESSION =
+  'Начать и закончить встречу может только мастер';
+export const SESSION_ALREADY_STARTED = 'Встреча уже идёт';
+export const SESSION_NOT_STARTED = 'Встреча не идёт';
 export const MASTER_NO_SEAT = 'Мастер не занимает место в своей игре';
 export const MASTER_NO_LEAVE =
   'Мастер не выходит из своей игры — её можно удалить';

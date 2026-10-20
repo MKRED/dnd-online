@@ -27,6 +27,8 @@ export interface GameListItem {
   // Закрытая игра спрашивает пароль при входе в лобби.
   hasPassword: boolean;
   role: GameRole;
+  // Начало идущей встречи; null — встреча не идёт. Начинает и заканчивает её мастер.
+  sessionStartedAt: string | null;
   createdAt: string;
 }
 

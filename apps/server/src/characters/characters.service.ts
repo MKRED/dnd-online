@@ -5,6 +5,7 @@ import { loadMainImages } from '../character-images/character-image-access.js';
 import { DatabaseService } from '../database/database.service.js';
 import { characters, users } from '../database/schema/index.js';
 import { releaseCharacterSeat } from '../games/release-character-seat.js';
+import { assertSheetUnlocked, findSheetLock } from '../games/sheet-lock.js';
 import {
   loadCharacterAbilities,
   loadCharacterAbilityLists,
@@ -134,7 +135,7 @@ export class CharactersService {
       if (!found) {
         throw new NotFoundException('Персонаж не найден');
       }
-      return toCharacter(found.row, {
+      const character = toCharacter(found.row, {
         mainImage: await this.mainImageOf(id),
         authorNickname: found.authorNickname,
         // Глазами смотрящего: чужие скрытые от него предметы — строки без карточки.
@@ -150,6 +151,10 @@ export class CharactersService {
           id,
         ),
       });
+      return {
+        ...character,
+        sheetLock: await findSheetLock(this.databaseService.db, id),
+      };
     } catch (err: unknown) {
       if (err instanceof NotFoundException) {
         throw err;
@@ -205,6 +210,12 @@ export class CharactersService {
     const own = and(eq(characters.id, id), eq(characters.userId, userId));
     try {
       const row = await this.databaseService.db.transaction(async (tx) => {
+        // Чужой или несуществующий даст 404 ниже, до рассказа о чужой игре.
+        const [owned] = await tx
+          .select({ id: characters.id })
+          .from(characters)
+          .where(own);
+        if (owned) await assertSheetUnlocked(tx, id);
         let set = values;
         if (fromCurrent) {
           const [current] = await tx
@@ -229,7 +240,8 @@ export class CharactersService {
         { durationMs: Date.now() - t0, userId, characterId: id, kind },
         'Character updated',
       );
-      return toCharacter(row, {
+      // Правка прошла — значит, лист открыт.
+      const character = toCharacter(row, {
         mainImage: await this.mainImageOf(id),
         authorNickname: await nicknameOf(this.databaseService.db, userId),
         inventory: await loadInventory(this.databaseService.db, userId, id),
@@ -244,8 +256,10 @@ export class CharactersService {
           id,
         ),
       });
+      return { ...character, sheetLock: null };
     } catch (err: unknown) {
-      // 404 и 400 (ячеек меньше, чем потрачено) — ответ клиенту, а не сбой.
+      // 404, 400 (ячеек меньше, чем потрачено) и 409 (лист закрыт встречей) — ответ
+      // клиенту, а не сбой.
       if (err instanceof HttpException) {
         throw err;
       }
@@ -277,8 +291,15 @@ export class CharactersService {
     const t0 = Date.now();
     try {
       await this.databaseService.db.transaction(async (tx) => {
-        // Персонаж на месте в игре: место освобождается записью в журнале игры. Чужой
-        // персонаж дальше даст 404, и транзакция откатит и это.
+        // Сначала — закрыт ли лист: releaseCharacterSeat освободит место, и проверка
+        // после него уже не нашла бы встречи. Чужому — 404, а не рассказ о чужой игре.
+        const [owned] = await tx
+          .select({ id: characters.id })
+          .from(characters)
+          .where(and(eq(characters.id, id), eq(characters.userId, userId)));
+        if (!owned) throw new NotFoundException('Персонаж не найден');
+        await assertSheetUnlocked(tx, id);
+        // Персонаж на месте в игре: место освобождается записью в журнале игры.
         await releaseCharacterSeat(tx, id, userId);
         const [row] = await tx
           .delete(characters)
@@ -293,7 +314,8 @@ export class CharactersService {
         'Character deleted',
       );
     } catch (err: unknown) {
-      if (err instanceof NotFoundException) {
+      // 404 и 409 (лист закрыт встречей) — ответ клиенту, а не сбой.
+      if (err instanceof HttpException) {
         throw err;
       }
       this.logger.error(

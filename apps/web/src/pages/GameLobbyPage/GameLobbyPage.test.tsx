@@ -15,6 +15,7 @@ const GAME: GameDetail = {
   takenSeats: 1,
   hasPassword: true,
   role: 'member',
+  sessionStartedAt: null,
   createdAt: '2026-10-20T00:00:00.000Z',
   seats: [
     {
@@ -153,18 +154,73 @@ describe('GameLobbyPage', () => {
   it('мастер видит «Убрать из игры» и «Удалить игру», занять место не может', async () => {
     stubFetch([{ status: 200, body: { ...GAME, role: 'master' } }]);
     renderLobby('m1');
+    const user = userEvent.setup();
 
     expect(
       await screen.findByRole('button', { name: 'Убрать из игры' }),
     ).toBeInTheDocument();
+    // «Удалить игру» — в меню, подальше от частых кнопок.
+    await user.click(screen.getByRole('button', { name: 'Ещё действия' }));
     expect(
-      screen.getByRole('button', { name: 'Удалить игру' }),
+      await screen.findByRole('menuitem', { name: 'Удалить игру' }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Занять' }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Выйти из игры' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('мастер начинает и заканчивает встречу', async () => {
+    const started = {
+      ...GAME,
+      role: 'master',
+      sessionStartedAt: '2026-10-20T10:00:00.000Z',
+    };
+    const fetchMock = stubFetch([
+      { status: 200, body: { ...GAME, role: 'master' } },
+      { status: 201, body: started },
+      { status: 200, body: { ...started, sessionStartedAt: null } },
+    ]);
+    renderLobby('m1');
+    const user = userEvent.setup();
+
+    expect(screen.queryByText('Идёт встреча')).not.toBeInTheDocument();
+    await user.click(
+      await screen.findByRole('button', { name: 'Начать встречу' }),
+    );
+    expect(await screen.findByText('Идёт встреча')).toBeInTheDocument();
+    expect(fetchMock.mock.calls[1][0]).toMatch(/\/games\/[^/]+\/session$/);
+    expect((fetchMock.mock.calls[1][1] as RequestInit).method).toBe('POST');
+
+    await user.click(screen.getByRole('button', { name: 'Закончить встречу' }));
+    expect(
+      await screen.findByRole('button', { name: 'Начать встречу' }),
+    ).toBeInTheDocument();
+    expect((fetchMock.mock.calls[2][1] as RequestInit).method).toBe('DELETE');
+    expect(screen.queryByText('Идёт встреча')).not.toBeInTheDocument();
+  });
+
+  it('игрок на месте видит, что идёт встреча и лист закрыт', async () => {
+    stubFetch([
+      {
+        status: 200,
+        body: {
+          ...GAME,
+          role: 'player',
+          sessionStartedAt: '2026-10-20T10:00:00.000Z',
+        },
+      },
+    ]);
+    renderLobby('u2');
+
+    expect(await screen.findByText('Идёт встреча')).toBeInTheDocument();
+    expect(
+      screen.getByText(/лист вашего персонажа закрыт для правки/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Начать встречу' }),
     ).not.toBeInTheDocument();
   });
 

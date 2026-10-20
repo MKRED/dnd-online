@@ -14,6 +14,7 @@ import {
 } from '../../abilities/abilities.config.js';
 import { visibleEntry } from '../../catalog/catalog-access.js';
 import { assertOwnedCharacter } from '../../character-images/character-image-access.js';
+import { assertSheetUnlocked } from '../../games/sheet-lock.js';
 import type { DbTransaction } from '../../database/database.service.js';
 import { DatabaseService } from '../../database/database.service.js';
 import { abilities, characterAbilities } from '../../database/schema/index.js';
@@ -140,6 +141,7 @@ export class CharacterAbilitiesService {
         await assertOwnedCharacter(tx, userId, characterId, {
           forUpdate: false,
         });
+        await assertSheetUnlocked(tx, characterId);
         await apply(tx);
       });
       const list = await loadCharacterAbilities(

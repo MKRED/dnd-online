@@ -214,6 +214,13 @@ export type CharacterLinkAccess = (typeof CHARACTER_LINK_ACCESS)[number];
 export const CHARACTER_KINDS = ['pc', 'npc'] as const;
 export type CharacterKind = (typeof CHARACTER_KINDS)[number];
 
+// Почему лист закрыт для правки: персонаж на месте в игре, где идёт встреча
+// (docs/plan/game.md, «Персонаж в игре пишет в свой лист»).
+export interface CharacterSheetLock {
+  gameId: string;
+  gameName: string;
+}
+
 export interface Character {
   id: string;
   userId: string;
@@ -261,6 +268,9 @@ export interface Character {
   linkAccess: CharacterLinkAccess;
   // Ник автора: по ссылке персонажа открывают и другие игроки.
   authorNickname: string;
+  // Лист закрыт идущей встречей; null — открыт. Только в ответе на одного персонажа,
+  // в списке его нет.
+  sheetLock?: CharacterSheetLock | null;
   createdAt: string;
   updatedAt: string;
 }

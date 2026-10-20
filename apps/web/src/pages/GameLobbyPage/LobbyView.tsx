@@ -8,23 +8,27 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { IconLock, IconNotebook } from '@tabler/icons-react';
+import { IconLock } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { GameDetail } from 'shared';
 import { useAuth } from '../../features/auth';
 import {
   deleteGame,
+  endSession,
   freeSeat,
   getGame,
   removeMember,
   ROLE_LABELS,
+  SESSION_LABEL,
   seatsLabel,
+  startSession,
   updateSeat,
 } from '../../features/games';
 import { errorMessage } from '../../lib/apiRequest';
 import FreeSeatCard from './FreeSeatCard';
 import GameJournal from './GameJournal';
+import MasterActions from './MasterActions';
 import SeatCard from './SeatCard';
 import TakeSeatModal from './TakeSeatModal';
 
@@ -126,29 +130,37 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
             <Text c="dimmed">
               Мастер: {game.master.nickname} · {seatsLabel(game)}
             </Text>
+            {game.sessionStartedAt && (
+              <Badge color="green" variant="light">
+                {SESSION_LABEL}
+              </Badge>
+            )}
             {game.role && (
               <Badge variant="light">{ROLE_LABELS[game.role]}</Badge>
             )}
           </Group>
         </div>
         {isMaster ? (
-          <Group gap="xs">
-            <Button
-              variant="default"
-              leftSection={<IconNotebook size={16} />}
-              onClick={() => setJournalOpened(true)}
-            >
-              Журнал
-            </Button>
-            <Button
-              color="red"
-              variant="light"
-              disabled={busy}
-              onClick={handleDelete}
-            >
-              Удалить игру
-            </Button>
-          </Group>
+          <MasterActions
+            sessionActive={game.sessionStartedAt !== null}
+            busy={busy}
+            onStartSession={() =>
+              run(
+                async () => onChange(await startSession(game.id)),
+                'Не удалось начать встречу',
+                'Failed to start game session',
+              )
+            }
+            onEndSession={() =>
+              run(
+                async () => onChange(await endSession(game.id)),
+                'Не удалось закончить встречу',
+                'Failed to end game session',
+              )
+            }
+            onOpenJournal={() => setJournalOpened(true)}
+            onDelete={handleDelete}
+          />
         ) : (
           game.role && (
             <Button variant="default" disabled={busy} onClick={handleLeave}>
@@ -159,6 +171,11 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
       </Group>
 
       {error && <Alert color="red">{error}</Alert>}
+      {game.sessionStartedAt && game.role === 'player' && (
+        <Text size="sm" c="dimmed">
+          Идёт встреча: лист вашего персонажа закрыт для правки до её конца.
+        </Text>
+      )}
 
       <SimpleGrid cols={{ base: 1, sm: 2 }}>
         {game.seats.map((seat) => (

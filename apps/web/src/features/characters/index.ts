@@ -28,6 +28,7 @@ export { default as CharacterForm } from './CharacterForm';
 export { default as CharacterGallery } from './CharacterGallery';
 export { default as CharacterSheet } from './CharacterSheet';
 export { default as ShareDialog } from './ShareDialog';
+export { default as SheetLockAlert } from './SheetLockAlert';
 export { default as CharacterAvatar } from './CharacterAvatar';
 export { formatModifier } from './CharacterForm/AbilityScoresSection/abilityMath';
 export { default as SheetField } from './CharacterSheet/SheetField';

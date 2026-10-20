@@ -49,6 +49,9 @@ export interface GameEventPayloads {
     intent: null;
     result: { character: GameEventCharacter | null };
   };
+  // Встречу начинает и заканчивает мастер; пока она идёт, листы на местах закрыты.
+  'session.started': { intent: null; result: null };
+  'session.ended': { intent: null; result: { startedAt: string } };
   // Мастер убрал игрока.
   'member.removed': {
     intent: { userId: string };

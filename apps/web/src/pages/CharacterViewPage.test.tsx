@@ -76,6 +76,34 @@ describe('CharacterViewPage', () => {
     expect(screen.queryByText('← К персонажам')).not.toBeInTheDocument();
   });
 
+  it('во время встречи лист закрыт и у автора, а «Поделиться» остаётся', async () => {
+    stubFetch([
+      {
+        status: 200,
+        body: {
+          ...sampleCharacter,
+          sheetLock: { gameId: 'g1', gameName: 'Логово дракона' },
+        },
+      },
+      { status: 200, body: [] },
+    ]);
+    renderViewPage(sampleCharacter.userId);
+
+    expect(await screen.findByText('Лист закрыт')).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: '«Логово дракона»' }),
+    ).toHaveAttribute('href', '/games/g1');
+    expect(
+      screen.queryByRole('link', { name: 'Редактировать' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Ещё действия' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Поделиться' }),
+    ).toBeInTheDocument();
+  });
+
   it('на 404 говорит, что доступ могли закрыть', async () => {
     stubFetch([{ status: 404, body: { message: 'Персонаж не найден' } }]);
     renderViewPage('someone-else');

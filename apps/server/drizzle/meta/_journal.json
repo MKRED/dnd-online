@@ -281,6 +281,13 @@
       "when": 1792490510844,
       "tag": "0039_game_events",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1792492389519,
+      "tag": "0040_game_sessions",
+      "breakpoints": true
     }
   ]
 }

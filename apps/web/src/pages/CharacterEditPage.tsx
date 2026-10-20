@@ -6,6 +6,7 @@ import EditPageTitle from '../components/EditPageTitle';
 import {
   CharacterForm,
   CharacterGallery,
+  SheetLockAlert,
   fromCharacter,
   getCharacter,
   toCreatePayload,
@@ -106,15 +107,21 @@ function CharacterEditPage() {
             characterId={character.id}
             characterName={character.name}
           />
-          <CharacterForm
-            key={character.id}
-            initialValues={initialValues}
-            submitLabel="Сохранить изменения"
-            submitting={submitting}
-            submitError={submitError}
-            errorTitle="Ошибка сохранения"
-            onSubmit={handleSubmit}
-          />
+          {/* Галерея — не лист и открыта всегда, а форму во время встречи не показываем:
+              сохранить её сервер всё равно не даст. */}
+          {character.sheetLock ? (
+            <SheetLockAlert lock={character.sheetLock} />
+          ) : (
+            <CharacterForm
+              key={character.id}
+              initialValues={initialValues}
+              submitLabel="Сохранить изменения"
+              submitting={submitting}
+              submitError={submitError}
+              errorTitle="Ошибка сохранения"
+              onSubmit={handleSubmit}
+            />
+          )}
         </Stack>
       ) : (
         <Loader />

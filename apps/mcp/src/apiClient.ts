@@ -4,16 +4,18 @@ import type { McpConfig } from './config.js';
 // или понятное описание проблемы с подключением.
 export class DndApiError extends Error {}
 
-export type ApiCall = <T>(
-  path: string,
-  init?: { method?: string; body?: unknown },
-) => Promise<T>;
+// body уходит JSON-ом, form — multipart (загрузка картинки): заголовок с границей
+// частей fetch ставит сам.
+export interface ApiInit {
+  method?: string;
+  body?: unknown;
+  form?: FormData;
+}
+
+export type ApiCall = <T>(path: string, init?: ApiInit) => Promise<T>;
 
 export function createApiCall(config: McpConfig): ApiCall {
-  return async <T>(
-    path: string,
-    init: { method?: string; body?: unknown } = {},
-  ) => {
+  return async <T>(path: string, init: ApiInit = {}) => {
     if (!config.token) {
       throw new DndApiError(
         'Не задан DND_API_TOKEN. Создайте токен в профиле, в карточке «Токены для нейросети» (/profile), и пропишите его в apps/mcp/.env (образец — apps/mcp/.env.example), затем перезапустите Claude Code.',
@@ -29,7 +31,9 @@ export function createApiCall(config: McpConfig): ApiCall {
             ? {}
             : { 'Content-Type': 'application/json' }),
         },
-        body: init.body === undefined ? undefined : JSON.stringify(init.body),
+        body:
+          init.form ??
+          (init.body === undefined ? undefined : JSON.stringify(init.body)),
       });
     } catch (err) {
       console.error('DnD API request failed', path, err);

@@ -28,6 +28,7 @@ describe('dnd MCP server', () => {
       'search',
       'undo',
       'update',
+      'upload_image',
       'view_url',
     ]);
   });

@@ -12,6 +12,7 @@ import { z } from 'zod';
 import type { ApiCall } from './apiClient.js';
 import { buildBlockGuide } from './blockGuide.js';
 import { registerCatalogTool } from './catalogTool.js';
+import { registerImageTools } from './imageTools.js';
 import { registerLinkTools } from './linkTools.js';
 import { registerReadTools } from './readTools.js';
 import { mapId, mapOp, point } from './schemas.js';
@@ -38,13 +39,14 @@ function queryString(query: Record<string, string | number | undefined>) {
 }
 
 // Сервер dnd: всё приложение от аккаунта владельца токена (docs/plan/ai-access.md) —
-// поиск, чтение, создание и правка записей, их связи и инструменты карты.
+// поиск, чтение, создание и правка записей, их связи, картинки и инструменты карты.
 export function createDndMcpServer(api: ApiCall, webUrl: string): McpServer {
   const server = new McpServer({ name: 'dnd', version: '0.2.0' });
 
   registerReadTools(server, api, guarded);
   registerWriteTools(server, api, guarded);
   registerLinkTools(server, api, guarded);
+  registerImageTools(server, api, guarded);
 
   server.registerTool(
     'list_maps',

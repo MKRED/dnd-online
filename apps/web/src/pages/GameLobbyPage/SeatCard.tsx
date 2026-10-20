@@ -1,5 +1,14 @@
-import { Badge, Button, Card, Group, Stack, Switch, Text } from '@mantine/core';
-import type { GameSeat } from 'shared';
+import {
+  Badge,
+  Button,
+  Card,
+  Group,
+  Select,
+  Stack,
+  Switch,
+  Text,
+} from '@mantine/core';
+import type { GameSeat, GameUser } from 'shared';
 import { CLASS_LABELS, SPECIES_LABELS } from '../../features/characters';
 import OnlineDot from './OnlineDot';
 
@@ -15,7 +24,13 @@ interface SeatCardProps {
   onToggleHandover: (allow: boolean) => void;
   onFree: () => void;
   onRemove: () => void;
+  // Мастеру: кому можно отдать управление (участники, кроме владельца).
+  candidates: GameUser[];
+  onController: (controllerId: string | null) => void;
 }
+
+// Пустое значение списка — управление у владельца.
+const OWNER = '';
 
 // Занятое место в лобби: персонаж (имя, вид, классы) и игрок за ним.
 function SeatCard({
@@ -27,6 +42,8 @@ function SeatCard({
   onToggleHandover,
   onFree,
   onRemove,
+  candidates,
+  onController,
 }: SeatCardProps) {
   const { character } = seat;
   return (
@@ -54,6 +71,8 @@ function SeatCard({
             Игрок: {seat.user.nickname}
           </Text>
         </Group>
+        {/* Мастер выбирает управляющего (этап 7), только если владелец разрешил: сам
+            список и говорит, что передать можно. */}
         {own ? (
           <Switch
             size="sm"
@@ -62,12 +81,31 @@ function SeatCard({
             disabled={busy}
             onChange={(e) => onToggleHandover(e.currentTarget.checked)}
           />
+        ) : master && seat.allowHandover ? (
+          <Select
+            size="xs"
+            label="Управляет"
+            description="Водит фигурку, когда владельца нет за столом"
+            data={[
+              { value: OWNER, label: `Владелец (${seat.user.nickname})` },
+              ...candidates.map((m) => ({ value: m.id, label: m.nickname })),
+            ]}
+            value={seat.controller?.id ?? OWNER}
+            allowDeselect={false}
+            disabled={busy}
+            onChange={(value) =>
+              onController(value && value !== OWNER ? value : null)
+            }
+          />
         ) : (
           <Text size="xs" c="dimmed">
             {seat.allowHandover
               ? 'Управление можно передать другому игроку'
               : 'Управление не передаётся'}
           </Text>
+        )}
+        {seat.controller && !(master && seat.allowHandover) && (
+          <Text size="sm">Управляет: {seat.controller.nickname}</Text>
         )}
         {(own || master) && (
           <Group justify="flex-end" mt="auto">

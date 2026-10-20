@@ -17,13 +17,17 @@ import {
 
 export type FigureRow = typeof gameFigures.$inferSelect;
 
-// Кто может водить фигурку: мастер — всех, игрок — своего персонажа.
+// Кто может водить фигурку: мастер — всех, игрок — своего персонажа и того, чьё
+// управление мастер ему отдал (controllerId).
 export function canMoveFigure(
   viewerId: string,
   masterId: string,
   ownerId: string,
+  controllerId: string | null,
 ): boolean {
-  return viewerId === masterId || viewerId === ownerId;
+  return (
+    viewerId === masterId || viewerId === ownerId || viewerId === controllerId
+  );
 }
 
 // Скорость из листа с эффектами — как её видит владелец в своём листе. Эффекты пока
@@ -61,9 +65,11 @@ export async function readSceneFigures(
       name: characters.name,
       ownerId: characters.userId,
       speed: characters.speed,
+      controllerId: gameMembers.controllerId,
     })
     .from(gameFigures)
     .innerJoin(characters, eq(characters.id, gameFigures.characterId))
+    .leftJoin(gameMembers, eq(gameMembers.characterId, gameFigures.characterId))
     .where(eq(gameFigures.sceneId, sceneId))
     .orderBy(asc(characters.name), asc(gameFigures.characterId));
   const ids = rows.map((row) => row.figure.characterId);
@@ -76,7 +82,7 @@ export async function readSceneFigures(
       speed: row.speed,
     })),
   );
-  return rows.map(({ figure, name, ownerId, speed }) => ({
+  return rows.map(({ figure, name, ownerId, speed, controllerId }) => ({
     character: { id: figure.characterId, name },
     ownerId,
     at: [figure.x, figure.y, figure.z],
@@ -86,7 +92,7 @@ export async function readSceneFigures(
     speed: speeds.get(figure.characterId) ?? speed,
     moved: figure.moved,
     dashes: figure.dashes,
-    canMove: canMoveFigure(viewerId, masterId, ownerId),
+    canMove: canMoveFigure(viewerId, masterId, ownerId, controllerId),
   }));
 }
 

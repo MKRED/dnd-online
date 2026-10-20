@@ -29,6 +29,7 @@ import {
   SESSION_LABEL,
   seatsLabel,
   startSession,
+  setSeatController,
   updateSeat,
   useGameRoom,
 } from '../../features/games';
@@ -289,6 +290,21 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
             }
             onFree={handleFree}
             onRemove={() => handleRemove(seat.user.id, seat.user.nickname)}
+            candidates={game.members.filter((m) => m.id !== seat.user.id)}
+            onController={(controllerId) =>
+              run(
+                async () =>
+                  onChange(
+                    await setSeatController(
+                      game.id,
+                      seat.user.id,
+                      controllerId,
+                    ),
+                  ),
+                'Не удалось передать управление',
+                'Failed to set seat controller',
+              )
+            }
           />
         ))}
         {Array.from({ length: freeCount }, (_, i) => (

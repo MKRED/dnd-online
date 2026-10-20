@@ -13,14 +13,22 @@ import {
   DatabaseService,
   type DbTransaction,
 } from '../database/database.service.js';
-import { characters, gameMembers, games } from '../database/schema/index.js';
+import {
+  characters,
+  gameMembers,
+  games,
+  users,
+} from '../database/schema/index.js';
 import { isUniqueViolation } from '../users/user-identities.service.js';
 import type { TakeSeatDto } from './dto/take-seat.dto.js';
 import type { UpdateSeatDto } from './dto/update-seat.dto.js';
 import {
   ALREADY_SEATED,
+  BAD_CONTROLLER,
   CHARACTER_NOT_FOUND,
   characterInGame,
+  HANDOVER_NOT_ALLOWED,
+  MASTER_ONLY_CONTROLLER,
   GAME_LOCKED,
   MASTER_NO_SEAT,
   NO_FREE_SEATS,
@@ -159,8 +167,10 @@ export class GameSeatsService {
       gameId,
       'update',
       async (tx, character) => {
+        // Запретил передачу — управляющий, если был, снимается.
         await setOwnSeat(tx, gameId, userId, {
           allowHandover: dto.allowHandover,
+          ...(!dto.allowHandover && { controllerId: null }),
         });
         await appendGameEvent(tx, gameId, {
           kind: 'seat.updated',
@@ -178,6 +188,7 @@ export class GameSeatsService {
       await setOwnSeat(tx, gameId, userId, {
         characterId: null,
         seatedAt: null,
+        controllerId: null,
       });
       await removeFigure(tx, character.id);
       await appendGameEvent(tx, gameId, {
@@ -187,6 +198,95 @@ export class GameSeatsService {
         result: { character, reason: 'freed' },
       });
     });
+  }
+
+  // Мастер отдаёт управление персонажем на месте ownerId участнику controllerId или
+  // забирает (null) — docs/plan/game.md, этап 7. Только если владелец разрешил передачу;
+  // управляющий — участник игры, не владелец и не мастер.
+  async setController(
+    masterId: string,
+    gameId: string,
+    ownerId: string,
+    controllerId: string | null,
+  ): Promise<GameDetail> {
+    const t0 = Date.now();
+    const { db } = this.databaseService;
+    try {
+      const { game } = await findGameAccess(db, gameId, masterId);
+      if (game.masterId !== masterId) {
+        throw new ForbiddenException(MASTER_ONLY_CONTROLLER);
+      }
+      await db.transaction(async (tx) => {
+        await lockGame(tx, gameId);
+        const [seat] = await tx
+          .select({
+            allowHandover: gameMembers.allowHandover,
+            id: characters.id,
+            name: characters.name,
+          })
+          .from(gameMembers)
+          .innerJoin(characters, eq(characters.id, gameMembers.characterId))
+          .where(
+            and(
+              eq(gameMembers.gameId, gameId),
+              eq(gameMembers.userId, ownerId),
+            ),
+          );
+        if (!seat) throw new NotFoundException(SEAT_NOT_FOUND);
+        if (controllerId !== null && !seat.allowHandover) {
+          throw new ConflictException(HANDOVER_NOT_ALLOWED);
+        }
+        const [controller] =
+          controllerId === null
+            ? [null]
+            : await tx
+                .select({ id: users.id, nickname: users.nickname })
+                .from(gameMembers)
+                .innerJoin(users, eq(users.id, gameMembers.userId))
+                .where(
+                  and(
+                    eq(gameMembers.gameId, gameId),
+                    eq(gameMembers.userId, controllerId),
+                  ),
+                );
+        if (
+          controllerId !== null &&
+          (!controller || controllerId === ownerId || controllerId === masterId)
+        ) {
+          throw new BadRequestException(BAD_CONTROLLER);
+        }
+        await setOwnSeat(tx, gameId, ownerId, { controllerId });
+        await appendGameEvent(tx, gameId, {
+          kind: 'seat.controller',
+          actorId: masterId,
+          as: { kind: 'master' },
+          intent: { userId: ownerId, controllerId },
+          result: {
+            character: { id: seat.id, name: seat.name },
+            controller: controller ?? null,
+          },
+        });
+      });
+      this.realtime.publish(gameId);
+      this.logger.info(
+        {
+          durationMs: Date.now() - t0,
+          masterId,
+          gameId,
+          ownerId,
+          controllerId,
+        },
+        'Game seat controller set',
+      );
+      return readGameDetail(db, gameId, masterId);
+    } catch (err: unknown) {
+      if (err instanceof HttpException) throw err;
+      this.logger.error(
+        { err, masterId, gameId, ownerId },
+        'Setting a game seat controller failed',
+      );
+      throw err;
+    }
   }
 
   // Правка своего места под блокировкой игры: место ищется уже под ней, чтобы журнал

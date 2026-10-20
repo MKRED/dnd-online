@@ -2,6 +2,7 @@ import type request from 'supertest';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import {
   GAME_SOCKET,
+  type GameDetail,
   type GameEventPage,
   type GameFigureDragMessage,
   type GameFigures,
@@ -456,5 +457,80 @@ describe('game figures (e2e)', () => {
     const closedToPlayer = collect(playerSocket, dragged);
     masterSocket.emit(GAME_SOCKET.figureDrag, drag([0, 1, 5]));
     expect(await closedToPlayer).toEqual([]);
+  });
+
+  it('мастер отдаёт управление участнику: тот водит фигурку, пока владелец разрешает', async () => {
+    const g = await opened('gfg_ctrl');
+    const second = await seatSecond(g.gameId, 'gfg_ctrl');
+    const stranger = await user('gfg_ctrl_stranger');
+    const controllerUrl = `/api/games/${g.gameId}/seats/${g.player.id}/controller`;
+    const give = (
+      agent: request.Agent,
+      controllerId: string | null,
+      status: number,
+    ) => agent.put(controllerUrl).send({ controllerId }).expect(status);
+    const move = (to: number[], status: number) =>
+      second.agent.post(`${g.url}/move`).send({ to }).expect(status);
+
+    await move([0, 1, 1], 403);
+    const given = await give(g.m, second.id, 200);
+    const seat = (given.body as GameDetail).seats.find(
+      (s) => s.user.id === g.player.id,
+    );
+    expect(seat?.controller).toEqual({
+      id: second.id,
+      nickname: 'gfg_ctrl_second',
+    });
+    // Участники — кто вошёл в лобби; мастер в их числе не значится.
+    expect((given.body as GameDetail).members.map((m) => m.id).sort()).toEqual(
+      [g.player.id, second.id].sort(),
+    );
+    expect(await lastEvent(g.m, g.gameId)).toMatchObject({
+      kind: 'seat.controller',
+      intent: { userId: g.player.id, controllerId: second.id },
+      result: { controller: { id: second.id } },
+    });
+    const moved = await move([0, 1, 1], 200);
+    expect(figureOf(moved, g.figure.character.id)?.canMove).toBe(true);
+    expect(await lastEvent(g.m, g.gameId)).toMatchObject({
+      kind: 'figure.moved',
+      actor: { id: second.id },
+      as: { kind: 'character', id: g.figure.character.id },
+    });
+    // Участников видит только мастер.
+    const lobby = await g.player.agent
+      .get(`/api/games/${g.gameId}`)
+      .expect(200);
+    expect((lobby.body as GameDetail).members).toEqual([]);
+
+    // Только мастер, только другой участник, только при разрешении владельца.
+    await give(g.player.agent, second.id, 403);
+    await give(g.m, g.player.id, 400);
+    await give(g.m, g.master.id, 400);
+    await give(g.m, stranger.id, 400);
+    await g.m
+      .put(`/api/games/${g.gameId}/seats/${stranger.id}/controller`)
+      .send({ controllerId: second.id })
+      .expect(404);
+    await g.player.agent
+      .patch(`/api/games/${g.gameId}/seats/me`)
+      .send({ allowHandover: false })
+      .expect(200);
+    await move([0, 1, 2], 403);
+    await give(g.m, second.id, 409);
+
+    // Снова можно — и управляющий уходит из игры: управление снимается.
+    await g.player.agent
+      .patch(`/api/games/${g.gameId}/seats/me`)
+      .send({ allowHandover: true })
+      .expect(200);
+    await give(g.m, second.id, 200);
+    await second.agent
+      .delete(`/api/games/${g.gameId}/members/${second.id}`)
+      .expect(204);
+    const after = await g.m.get(`/api/games/${g.gameId}`).expect(200);
+    expect((after.body as GameDetail).seats[0].controller).toBeNull();
+    // Забрать управление — null.
+    await give(g.m, null, 200);
   });
 });

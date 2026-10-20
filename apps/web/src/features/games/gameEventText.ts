@@ -22,6 +22,12 @@ export function gameEventText(event: GameEvent): string {
       return event.intent.allowHandover
         ? `Передача управления разрешена: ${event.result.character.name}`
         : `Передача управления запрещена: ${event.result.character.name}`;
+    case 'seat.controller': {
+      const { character, controller } = event.result;
+      return controller
+        ? `Управление передано: ${character.name} — ${controller.nickname}`
+        : `Управление возвращено владельцу: ${character.name}`;
+    }
     case 'seat.freed':
       return event.result.reason === 'character_deleted'
         ? `Персонаж удалён, место освобождено: ${event.result.character.name}`

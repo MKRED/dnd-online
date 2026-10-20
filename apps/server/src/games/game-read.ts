@@ -1,5 +1,6 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import type {
   GameDetail,
   GameEventCharacter,
@@ -22,6 +23,9 @@ import { findActiveScene, sceneStatus } from './scenes/scene-read.js';
 type Db = DatabaseService['db'];
 type GameRow = typeof games.$inferSelect;
 type MemberRow = typeof gameMembers.$inferSelect;
+
+// Управляющий персонажем — тоже пользователь: вторая копия users в запросе мест.
+const controllers = alias(users, 'controllers');
 
 function roleOf(
   game: GameRow,
@@ -153,6 +157,7 @@ export async function readGameDetail(
     .select({
       member: gameMembers,
       nickname: users.nickname,
+      controller: { id: controllers.id, nickname: controllers.nickname },
       character: {
         id: characters.id,
         name: characters.name,
@@ -163,11 +168,22 @@ export async function readGameDetail(
     .from(gameMembers)
     .innerJoin(users, eq(users.id, gameMembers.userId))
     .innerJoin(characters, eq(characters.id, gameMembers.characterId))
+    .leftJoin(controllers, eq(controllers.id, gameMembers.controllerId))
     .where(
       and(eq(gameMembers.gameId, gameId), isNotNull(gameMembers.characterId)),
     )
     .orderBy(asc(gameMembers.seatedAt));
   const scene = await findActiveScene(db, gameId);
+  const isMaster = game.masterId === viewerId;
+  // Участники — мастеру: из них он выбирает управляющего (этап 7).
+  const members = isMaster
+    ? await db
+        .select({ id: users.id, nickname: users.nickname })
+        .from(gameMembers)
+        .innerJoin(users, eq(users.id, gameMembers.userId))
+        .where(eq(gameMembers.gameId, gameId))
+        .orderBy(asc(users.nickname))
+    : [];
   return {
     ...toListItem(
       game,
@@ -179,9 +195,13 @@ export async function readGameDetail(
       user: { id: row.member.userId, nickname: row.nickname },
       character: row.character,
       allowHandover: row.member.allowHandover,
+      controller: row.controller?.id
+        ? { id: row.controller.id, nickname: row.controller.nickname }
+        : null,
       seatedAt: (row.member.seatedAt ?? row.member.joinedAt).toISOString(),
     })),
-    scene: sceneStatus(scene, game.sceneOpen, game.masterId === viewerId),
+    scene: sceneStatus(scene, game.sceneOpen, isMaster),
     eventSeq: game.eventSeq,
+    members,
   };
 }

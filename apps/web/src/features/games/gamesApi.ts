@@ -53,6 +53,18 @@ export function updateSeat(
   });
 }
 
+// Мастер отдаёт управление персонажем на месте userId участнику или забирает (null).
+export function setSeatController(
+  id: string,
+  userId: string,
+  controllerId: string | null,
+): Promise<GameDetail> {
+  return request(`/games/${id}/seats/${userId}/controller`, {
+    method: 'PUT',
+    body: JSON.stringify({ controllerId }),
+  });
+}
+
 // Встречу начинает и заканчивает мастер; пока она идёт, листы на местах закрыты.
 export function startSession(id: string): Promise<GameDetail> {
   return request(`/games/${id}/session`, { method: 'POST' });

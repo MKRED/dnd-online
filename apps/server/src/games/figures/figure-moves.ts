@@ -58,7 +58,7 @@ async function activeScene(actor: FigureActor): Promise<SceneRow> {
   return scene;
 }
 
-// Фигурка на сцене с именем, владельцем и Скоростью персонажа.
+// Фигурка на сцене с именем, владельцем, управляющим и Скоростью персонажа.
 async function findFigure(actor: FigureActor, characterId: string) {
   const [row] = await actor.tx
     .select({
@@ -66,9 +66,11 @@ async function findFigure(actor: FigureActor, characterId: string) {
       name: characters.name,
       ownerId: characters.userId,
       speed: characters.speed,
+      controllerId: gameMembers.controllerId,
     })
     .from(gameFigures)
     .innerJoin(characters, eq(characters.id, gameFigures.characterId))
+    .leftJoin(gameMembers, eq(gameMembers.characterId, gameFigures.characterId))
     .where(
       and(
         eq(gameFigures.gameId, actor.gameId),
@@ -115,8 +117,11 @@ export async function moveFigure(
   characterId: string,
   to: Vec3,
 ): Promise<void> {
-  const { figure, name, ownerId, speed } = await findFigure(actor, characterId);
-  if (!canMoveFigure(actor.userId, actor.masterId, ownerId)) {
+  const { figure, name, ownerId, speed, controllerId } = await findFigure(
+    actor,
+    characterId,
+  );
+  if (!canMoveFigure(actor.userId, actor.masterId, ownerId, controllerId)) {
     throw new ForbiddenException(FIGURE_NOT_YOURS);
   }
   const scene = await activeScene(actor);

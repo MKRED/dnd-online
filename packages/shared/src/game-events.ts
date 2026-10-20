@@ -61,6 +61,11 @@ export interface GameEventPayloads {
     intent: { allowHandover: boolean };
     result: { character: GameEventCharacter };
   };
+  // Мастер отдал управление персонажем участнику (controller) или забрал (null).
+  'seat.controller': {
+    intent: { userId: string; controllerId: string | null };
+    result: { character: GameEventCharacter; controller: GameUser | null };
+  };
   'seat.freed': {
     intent: null;
     result: { character: GameEventCharacter; reason: SeatFreedReason };

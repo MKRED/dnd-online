@@ -1,10 +1,10 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { GameDetail } from 'shared';
 import { createFakeGameSocket } from '../../test/fakeGameSocket';
 import { sampleCharacter } from '../../test/characterFixture';
-import { body, GAME, renderLobby, stubFetch } from './lobbyTestKit';
+import { body, GAME, renderLobby, stubFetch, urlOf } from './lobbyTestKit';
 
 // Сокет — поддельный: тесты страницы не ходят в сеть.
 const socket = vi.hoisted(() => ({
@@ -69,6 +69,7 @@ describe('GameLobbyPage', () => {
             classes: sampleCharacter.classes,
           },
           allowHandover: true,
+          controller: null,
           seatedAt: '2026-10-20T01:00:00.000Z',
         },
       ],
@@ -119,6 +120,65 @@ describe('GameLobbyPage', () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Выйти из игры' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('мастер отдаёт управление персонажем участнику; остальные видят, кто управляет', async () => {
+    const seat = { ...GAME.seats[0], allowHandover: true };
+    const boris = { id: 'u3', nickname: 'Борис' };
+    const masterGame: GameDetail = {
+      ...GAME,
+      role: 'master',
+      seats: [seat],
+      members: [seat.user, boris],
+    };
+    const given: GameDetail = {
+      ...masterGame,
+      seats: [{ ...seat, controller: boris }],
+    };
+    const fetchMock = stubFetch([
+      { status: 200, body: masterGame },
+      { status: 200, body: given },
+    ]);
+    // Список вариантов Select прокручивает к выбранному; в jsdom прокрутки нет.
+    Element.prototype.scrollIntoView = vi.fn();
+    renderLobby('m1');
+    const user = userEvent.setup();
+
+    const select = await screen.findByRole('combobox', { name: 'Управляет' });
+    expect(select).toHaveValue('Владелец (Аня)');
+    await user.click(select);
+    // Владельца среди кандидатов нет — только он сам как «Владелец».
+    expect(
+      screen.queryByRole('option', { name: 'Аня' }),
+    ).not.toBeInTheDocument();
+    await user.click(await screen.findByRole('option', { name: 'Борис' }));
+    await waitFor(() => expect(select).toHaveValue('Борис'));
+    const put = fetchMock.mock.calls.find(([, init]) => init?.method === 'PUT');
+    expect(urlOf(put?.[0] as RequestInfo)).toMatch(/\/seats\/u2\/controller$/);
+    expect(body(put as unknown[])).toEqual({ controllerId: 'u3' });
+  });
+
+  it('без разрешения владельца выбора нет; управляющего видят все', async () => {
+    stubFetch([
+      {
+        status: 200,
+        body: {
+          ...GAME,
+          seats: [
+            {
+              ...GAME.seats[0],
+              allowHandover: true,
+              controller: { id: 'u3', nickname: 'Борис' },
+            },
+          ],
+        },
+      },
+    ]);
+    renderLobby('u1');
+    expect(await screen.findByText('Управляет: Борис')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('combobox', { name: 'Управляет' }),
     ).not.toBeInTheDocument();
   });
 

@@ -104,6 +104,16 @@ export class GameMembersService {
         const seat = await findMemberSeat(tx, gameId, memberId);
         if (!seat) throw new NotFoundException(MEMBER_NOT_FOUND);
         if (seat.character) await removeFigure(tx, seat.character.id);
+        // Ушедший больше ничьим персонажем не управляет.
+        await tx
+          .update(gameMembers)
+          .set({ controllerId: null })
+          .where(
+            and(
+              eq(gameMembers.gameId, gameId),
+              eq(gameMembers.controllerId, memberId),
+            ),
+          );
         await tx
           .delete(gameMembers)
           .where(

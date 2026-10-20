@@ -9,6 +9,7 @@ import type { DatabaseService } from '../../database/database.service.js';
 import {
   characters,
   gameFigures,
+  gameMembers,
   gameScenes,
   games,
 } from '../../database/schema/index.js';
@@ -53,6 +54,7 @@ export async function relayFigureDrag(
       masterId: games.masterId,
       open: games.sceneOpen,
       ownerId: characters.userId,
+      controllerId: gameMembers.controllerId,
       width: gameScenes.width,
       depth: gameScenes.depth,
     })
@@ -60,6 +62,7 @@ export async function relayFigureDrag(
     .innerJoin(games, eq(games.id, gameFigures.gameId))
     .innerJoin(characters, eq(characters.id, gameFigures.characterId))
     .innerJoin(gameScenes, eq(gameScenes.id, gameFigures.sceneId))
+    .leftJoin(gameMembers, eq(gameMembers.characterId, gameFigures.characterId))
     .where(
       and(
         eq(gameFigures.gameId, gameId),
@@ -69,7 +72,9 @@ export async function relayFigureDrag(
   if (!row) return false;
   const { userId } = socket.data;
   const master = userId === row.masterId;
-  if (!canMoveFigure(userId, row.masterId, row.ownerId)) return false;
+  if (!canMoveFigure(userId, row.masterId, row.ownerId, row.controllerId)) {
+    return false;
+  }
   if (!master && !row.open) return false;
   if (at && !insideMap(at, { width: row.width, depth: row.depth })) {
     return false;

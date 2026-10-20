@@ -57,6 +57,12 @@ export const gameMembers = pgTable(
       onDelete: 'set null',
     }),
     allowHandover: boolean('allow_handover').notNull().default(true),
+    // Управляющий персонажем, которого назначил мастер (docs/plan/game.md, этап 7): водит
+    // его фигурку вместе с владельцем. Только при allowHandover; запрет передачи, уход
+    // управляющего и освобождение места его снимают.
+    controllerId: uuid('controller_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
     joinedAt: timestamp('joined_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

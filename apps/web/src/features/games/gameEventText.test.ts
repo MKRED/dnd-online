@@ -203,6 +203,29 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'seat.controller',
+        as: { kind: 'master' },
+        intent: { userId: 'u2', controllerId: 'u3' },
+        result: {
+          character: lira,
+          controller: { id: 'u3', nickname: 'Борис' },
+        },
+      },
+      'Управление передано: Лира — Борис',
+    ],
+    [
+      {
+        ...base,
+        kind: 'seat.controller',
+        as: { kind: 'master' },
+        intent: { userId: 'u2', controllerId: null },
+        result: { character: lira, controller: null },
+      },
+      'Управление возвращено владельцу: Лира',
+    ],
+    [
+      {
+        ...base,
         kind: 'figure.moved',
         as: { kind: 'character', id: 'c1' },
         intent: { characterId: 'c1', to: [0, 1, 3] },

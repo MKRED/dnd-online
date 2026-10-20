@@ -18,6 +18,12 @@ export const MASTER_NO_LEAVE =
 export const ALREADY_SEATED = 'Вы уже заняли место в этой игре';
 export const NO_FREE_SEATS = 'Свободных мест нет';
 export const NPC_NO_SEAT = 'Место занимает игровой персонаж, а не НПС';
+export const MASTER_ONLY_CONTROLLER =
+  'Отдать управление персонажем может только мастер';
+export const HANDOVER_NOT_ALLOWED =
+  'Владелец не разрешил передавать управление этим персонажем';
+export const BAD_CONTROLLER =
+  'Управлять персонажем может только другой участник игры — не владелец и не мастер';
 
 export function characterInGame(gameName: string) {
   return `Персонаж уже в игре «${gameName}»`;

@@ -25,11 +25,13 @@ export const GAME: GameDetail = {
         classes: [{ class: 'rogue', level: 3 }],
       },
       allowHandover: false,
+      controller: null,
       seatedAt: '2026-10-20T00:00:00.000Z',
     },
   ],
   scene: null,
   eventSeq: 1,
+  members: [],
 };
 
 export function stubFetch(responses: { status: number; body?: unknown }[]) {

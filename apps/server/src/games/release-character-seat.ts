@@ -35,7 +35,7 @@ export async function releaseCharacterSeat(
   if (!seat) return null;
   await tx
     .update(gameMembers)
-    .set({ characterId: null, seatedAt: null })
+    .set({ characterId: null, seatedAt: null, controllerId: null })
     .where(
       and(
         eq(gameMembers.gameId, found.gameId),

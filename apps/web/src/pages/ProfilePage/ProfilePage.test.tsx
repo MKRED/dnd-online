@@ -5,6 +5,10 @@ import { DEFAULT_USER_SETTINGS } from 'shared';
 import { renderWithProviders } from '../../test/render';
 import ProfilePage from './ProfilePage';
 
+// У карточки токенов свои запросы и свой тест (ApiTokensCard.test.tsx); здесь она
+// сбила бы очередь ответов stubFetch.
+vi.mock('./ApiTokensCard', () => ({ default: () => null }));
+
 const lolkaProfile = {
   login: null,
   nickname: 'Арвен',

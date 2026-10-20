@@ -31,7 +31,7 @@ Building proportions (a storey is 3 blocks, a door 2, creature heights) are deci
 ## Connecting
 
 1. Build: `pnpm --filter shared build && pnpm --filter map-mcp build` (`.mcp.json` runs `apps/mcp/dist/index.js`).
-2. Create a token in the UI: «Карты» → «Токены для нейросети» (`/tokens`). It's shown once.
+2. Create a token in the UI: «Профиль» → «Токены для нейросети» (`/profile`; the old `/tokens` redirects there). It's shown once.
 3. Copy `apps/mcp/.env.example` to `apps/mcp/.env` (gitignored) and paste the token into `DND_API_TOKEN`. The server reads this file itself on start (`src/envFile.ts`); real process environment variables win over it. `.mcp.json` holds no settings, so nothing secret can end up in git.
 4. Optional in the same file: `DND_API_URL` (default `http://localhost:3000/api`) and `DND_WEB_URL` (default `http://localhost:5173`). For production use `https://dnd.aoshi.ru/api` and `https://dnd.aoshi.ru`.
 5. Restart Claude Code and approve the project MCP server `dnd-map`.

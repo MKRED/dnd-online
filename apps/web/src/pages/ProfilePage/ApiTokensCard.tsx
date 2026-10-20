@@ -3,7 +3,6 @@ import {
   Button,
   Card,
   Code,
-  Container,
   CopyButton,
   Group,
   Loader,
@@ -18,16 +17,13 @@ import {
   createApiToken,
   listApiTokens,
   revokeApiToken,
-} from '../features/apiTokens';
-import { errorMessage } from '../lib/apiRequest';
-import { usePageTitle } from '../lib/usePageTitle';
-
-const formatDate = (iso: string) => new Date(iso).toLocaleString('ru-RU');
+} from '../../features/apiTokens';
+import { errorMessage } from '../../lib/apiRequest';
+import ApiTokenRow from './ApiTokenRow';
 
 // Токены для внешних клиентов — MCP-серверов, через которые нейросеть работает с
 // приложением. Что токену закрыто — docs/plan/ai-access.md.
-function ApiTokensPage() {
-  usePageTitle('Токены');
+function ApiTokensCard() {
   const [tokens, setTokens] = useState<ApiTokenInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +65,7 @@ function ApiTokensPage() {
       return;
     }
     setRevokingId(id);
+    setError(null);
     revokeApiToken(id)
       .then(() => {
         setTokens((prev) => prev.filter((t) => t.id !== id));
@@ -82,25 +79,25 @@ function ApiTokensPage() {
   };
 
   return (
-    <Container size="md" py="xl">
-      <Title order={1} mb="xs">
+    <Card withBorder padding="lg">
+      <Title order={3} mb="xs">
         Токены для нейросети
       </Title>
-      <Text c="dimmed" mb="lg">
+      <Text size="sm" c="dimmed" mb="md">
         Токен нужен MCP-серверу: с ним нейросеть смотрит, создаёт и правит ваших
         персонажей, монстров, предметы, способности, эффекты и карты. Удалять,
         публиковать и менять аккаунт через токен нельзя.
       </Text>
 
       <form onSubmit={handleCreate}>
-        <Group align="flex-end" mb="lg">
+        <Group align="flex-end" mb="md">
           <TextInput
             label="Новый токен"
             placeholder="Например: Claude Code на ноутбуке"
             value={name}
             onChange={(e) => setName(e.currentTarget.value)}
             maxLength={100}
-            style={{ flex: 1 }}
+            style={{ flex: 1, minWidth: 200 }}
           />
           <Button type="submit" loading={creating} disabled={!name.trim()}>
             Создать
@@ -133,40 +130,25 @@ function ApiTokensPage() {
       )}
 
       {loading ? (
-        <Loader />
+        <Loader size="sm" />
       ) : tokens.length === 0 ? (
-        <Text c="dimmed">Токенов пока нет.</Text>
+        <Text size="sm" c="dimmed">
+          Токенов пока нет.
+        </Text>
       ) : (
-        <Stack>
+        <Stack gap="xs">
           {tokens.map((token) => (
-            <Card key={token.id} withBorder radius="md" p="md">
-              <Group justify="space-between">
-                <div>
-                  <Text fw={600}>{token.name}</Text>
-                  <Text size="sm" c="dimmed">
-                    <Code>{token.prefix}…</Code> · создан{' '}
-                    {formatDate(token.createdAt)} ·{' '}
-                    {token.lastUsedAt
-                      ? `использован ${formatDate(token.lastUsedAt)}`
-                      : 'ещё не использовался'}
-                  </Text>
-                </div>
-                <Button
-                  color="red"
-                  variant="subtle"
-                  size="xs"
-                  loading={revokingId === token.id}
-                  onClick={() => handleRevoke(token.id)}
-                >
-                  Отозвать
-                </Button>
-              </Group>
-            </Card>
+            <ApiTokenRow
+              key={token.id}
+              token={token}
+              revoking={revokingId === token.id}
+              onRevoke={() => handleRevoke(token.id)}
+            />
           ))}
         </Stack>
       )}
-    </Container>
+    </Card>
   );
 }
 
-export default ApiTokensPage;
+export default ApiTokensCard;

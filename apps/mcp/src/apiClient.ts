@@ -16,7 +16,7 @@ export function createApiCall(config: McpConfig): ApiCall {
   ) => {
     if (!config.token) {
       throw new MapApiError(
-        'Не задан DND_API_TOKEN. Создайте токен на странице «Токены для нейросети» (/tokens) и пропишите его в apps/mcp/.env (образец — apps/mcp/.env.example), затем перезапустите Claude Code.',
+        'Не задан DND_API_TOKEN. Создайте токен в профиле, в карточке «Токены для нейросети» (/profile), и пропишите его в apps/mcp/.env (образец — apps/mcp/.env.example), затем перезапустите Claude Code.',
       );
     }
     let res: Response;

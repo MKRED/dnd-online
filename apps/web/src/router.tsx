@@ -1,7 +1,6 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import { RequireAuth, RequireGuest } from './features/auth';
-import ApiTokensPage from './pages/ApiTokensPage';
 import BookmarksPage from './pages/BookmarksPage';
 import CharacterCreatePage from './pages/CharacterCreatePage';
 import CharacterEditPage from './pages/CharacterEditPage';
@@ -81,7 +80,8 @@ export const router = createBrowserRouter([
           { path: '/bookmarks', element: <BookmarksPage /> },
           { path: '/maps', element: <MapsPage /> },
           { path: '/maps/:id', element: <MapViewPage /> },
-          { path: '/tokens', element: <ApiTokensPage /> },
+          // Токены переехали в профиль; старый адрес ведёт туда.
+          { path: '/tokens', element: <Navigate to="/profile" replace /> },
           { path: '/profile', element: <ProfilePage /> },
           { path: '*', element: <NotFoundPage /> },
         ],

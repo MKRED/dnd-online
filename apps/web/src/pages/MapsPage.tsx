@@ -1,6 +1,5 @@
 import {
   Alert,
-  Anchor,
   Button,
   Card,
   Container,
@@ -88,12 +87,9 @@ function MapsPage() {
 
   return (
     <Container size="md" py="xl">
-      <Group justify="space-between" align="center" mb="lg">
-        <Title order={1}>Мои карты</Title>
-        <Anchor component={Link} to="/tokens" size="sm">
-          Токены для нейросети
-        </Anchor>
-      </Group>
+      <Title order={1} mb="lg">
+        Мои карты
+      </Title>
 
       <form onSubmit={handleCreate}>
         <Group align="flex-end" mb={4}>

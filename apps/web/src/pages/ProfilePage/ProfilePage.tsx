@@ -14,6 +14,7 @@ import { useAuth } from '../../features/auth';
 import { getProfile, type Profile } from '../../features/profile';
 import { errorMessage } from '../../lib/apiRequest';
 import { usePageTitle } from '../../lib/usePageTitle';
+import ApiTokensCard from './ApiTokensCard';
 import ChangePasswordForm from './ChangePasswordForm';
 import SetCredentialsForm from './SetCredentialsForm';
 import SettingsCard from './SettingsCard';
@@ -90,6 +91,7 @@ function ProfilePage() {
           </Card>
 
           <SettingsCard />
+          <ApiTokensCard />
         </Stack>
       )}
     </Container>

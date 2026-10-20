@@ -52,9 +52,11 @@ describe('game scenes (e2e)', () => {
     const res = await agent
       .get(`/api/games/${gameId}/events?limit=5`)
       .expect(200);
-    return (res.body as GameEventPage).events.find(
+    const found = (res.body as GameEventPage).events.find(
       (event) => event.kind !== 'figures.placed',
     );
+    if (!found) throw new Error('Нет записи о сцене');
+    return found;
   }
 
   const setup = (prefix: string) => createSceneGame(user, png, prefix);

@@ -1,10 +1,11 @@
 import type { CellChange, Changeset } from './changeset.js';
 import type { Vec3 } from './coords.js';
 import { sameSize } from './mapSize.js';
+import { mergeObjectChanges } from './objects/objectChanges.js';
 
 // Сливает изменения операций одной пачки в одну единицу undo: по каждой клетке
 // остаётся первое «до» и последнее «после», клетки, вернувшиеся к исходному
-// значению, выпадают. Размер — так же: первый «до», последний «после».
+// значению, выпадают. Размер и объекты — так же: первый «до», последний «после».
 export function mergeChangesets(parts: Changeset[]): Changeset {
   const merged = new Map<string, CellChange>();
   const paletteAdded: Changeset['paletteAdded'] = [];
@@ -24,10 +25,12 @@ export function mergeChangesets(parts: Changeset[]): Changeset {
     }
   }
   const cells = [...merged.values()].filter((c) => c.before !== c.after);
+  const objects = mergeObjectChanges(parts.map((part) => part.objects ?? []));
   return {
     cells,
     paletteAdded,
     ...(size && !sameSize(size.before, size.after) && { size }),
+    ...(objects.length > 0 && { objects }),
   };
 }
 

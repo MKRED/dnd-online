@@ -2,14 +2,21 @@ import { isRotation, type Rotation } from './cell.js';
 import { boxFromCorners, boxVolume, type Box3, type Vec3 } from './coords.js';
 import type { MapBoundsLimits } from './mapSize.js';
 import { MapOpError } from './mapOpError.js';
+import { parseCell, type Fields } from './opFields.js';
 import { isKnownBlockName } from './palette.js';
+import {
+  isObjectOpKind,
+  parseObjectOp,
+  type ObjectOp,
+} from './objects/objectOps.js';
 import { parseResizeOp, type ResizeOp } from './resizeOp.js';
 
 export { MapOpError };
 
-// Операции — единственный способ изменить блоки карты: редактор мастера, API/MCP
-// для нейросети и (позже) способности в игре идут через них.
-export type MapOp = BlockOp | ResizeOp;
+// Операции — единственный способ изменить карту: редактор мастера, API/MCP
+// для нейросети и (позже) способности в игре идут через них. Объекты на карте —
+// тоже операции (objects/objectOps.ts), чтобы у них были отмена и журнал.
+export type MapOp = BlockOp | ResizeOp | ObjectOp;
 
 // Операции над блоками в области; resize меняет саму карту (resizeOp.ts).
 export type BlockOp =
@@ -44,43 +51,17 @@ export interface MapLimits extends MapBoundsLimits {
 }
 
 export function isBlockOp(op: MapOp): op is BlockOp {
-  return op.op !== 'resize';
+  return op.op !== 'resize' && !isObjectOpKind(op.op);
+}
+
+export function isObjectOp(op: MapOp): op is ObjectOp {
+  return isObjectOpKind(op.op);
 }
 
 export function opRegion(op: BlockOp): Box3 {
   return op.op === 'setBlock'
     ? { min: op.at, max: op.at }
     : boxFromCorners(op.from, op.to);
-}
-
-type Fields = Record<string, unknown>;
-
-function parseCell(fields: Fields, key: string, limits: MapLimits): Vec3 {
-  const value = fields[key];
-  if (
-    !Array.isArray(value) ||
-    value.length !== 3 ||
-    !value.every((n) => Number.isSafeInteger(n))
-  ) {
-    throw new MapOpError(`«${key}» должно быть тремя целыми числами [x, y, z]`);
-  }
-  const [x, y, z] = value as number[];
-  if (x < 0 || y < 0 || z < 0) {
-    throw new MapOpError(
-      `Координаты «${key}» не могут быть меньше нуля: карта начинается в [0, 0, 0]`,
-    );
-  }
-  if (x >= limits.maxSize || z >= limits.maxSize) {
-    throw new MapOpError(
-      `«${key}»: x и z должны быть меньше ${limits.maxSize} — это наибольший размер карты`,
-    );
-  }
-  if (y >= limits.maxHeight) {
-    throw new MapOpError(
-      `«${key}»: y должен быть меньше ${limits.maxHeight} — это предел высоты карты`,
-    );
-  }
-  return [x, y, z];
 }
 
 function parseBlock(fields: Fields, key: string): string {
@@ -140,6 +121,12 @@ export function parseMapOp(input: unknown, limits: MapLimits): MapOp {
     case 'resize':
       // Объёмом resize не ограничен: она трогает только непустые клетки карты.
       return parseResizeOp(fields, limits);
+    case 'placeObject':
+    case 'moveObject':
+    case 'turnObject':
+    case 'updateObject':
+    case 'removeObject':
+      return parseObjectOp(fields, limits);
     default:
       throw new MapOpError(`Неизвестная операция: ${String(fields.op)}`);
   }

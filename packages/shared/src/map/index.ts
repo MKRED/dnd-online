@@ -6,6 +6,7 @@ export * from './palette.js';
 export * from './chunkStore.js';
 export * from './mapState.js';
 export * from './ops.js';
+export * from './objects/index.js';
 export * from './mapSize.js';
 export * from './resizeOp.js';
 export * from './applyResize.js';

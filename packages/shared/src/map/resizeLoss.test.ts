@@ -32,6 +32,8 @@ describe('resizeLoss', () => {
       cut: 0,
       outside: 1,
       top: 4,
+      objectsCut: 0,
+      objectsOutside: 0,
     });
   });
 
@@ -42,6 +44,8 @@ describe('resizeLoss', () => {
       cut: 2,
       outside: 0,
       top: 1,
+      objectsCut: 0,
+      objectsOutside: 0,
     });
   });
 
@@ -51,6 +55,8 @@ describe('resizeLoss', () => {
       cut: 0,
       outside: 2,
       top: 0,
+      objectsCut: 0,
+      objectsOutside: 0,
     });
     expect(resizeLoss(map, { grow: { east: -1 } }).top).toBe(2);
   });

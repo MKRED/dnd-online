@@ -3,6 +3,11 @@ import { pruneEmptyChunks, readCell, writeCell } from './chunkStore.js';
 import { MapOpError } from './mapOpError.js';
 import { sameSize, sizeLabel, type MapSize } from './mapSize.js';
 import type { MapState } from './mapState.js';
+import type { MapObjects } from './objects/mapObject.js';
+import {
+  applyObjectChanges,
+  type ObjectChange,
+} from './objects/objectChanges.js';
 
 export interface CellChange {
   at: Vec3;
@@ -24,6 +29,8 @@ export interface Changeset {
   paletteAdded: PaletteAddition[];
   // Размер карты до и после — только у правок с resize.
   size?: { before: MapSize; after: MapSize };
+  // Объекты на карте (docs/plan/map-objects.md) — только у правок, которые их тронули.
+  objects?: ObjectChange[];
 }
 
 export type ChangesetDirection = 'forward' | 'backward';
@@ -68,10 +75,10 @@ function applySize(
 }
 
 export function applyChangeset(
-  state: MapState & { size?: MapSize },
+  state: MapState & { size?: MapSize; objects?: MapObjects },
   changeset: Changeset,
   direction: ChangesetDirection,
-): { conflicts: Vec3[]; applied: Changeset } {
+): { conflicts: Vec3[]; objectConflicts: number[]; applied: Changeset } {
   const forward = direction === 'forward';
   if (forward) syncPalette(state, changeset.paletteAdded);
   const size = changeset.size && applySize(state, changeset.size, forward);
@@ -90,12 +97,29 @@ export function applyChangeset(
     for (const key of chunkKeysInBox({ min: at, max: at })) touched.add(key);
   }
   pruneEmptyChunks(state.store, touched);
+  const objects = applyObjects(state, changeset.objects, forward);
   return {
     conflicts,
+    objectConflicts: objects.conflicts,
     applied: {
       cells: appliedCells,
       paletteAdded: forward ? changeset.paletteAdded : [],
       ...(size && { size }),
+      ...(objects.applied.length > 0 && { objects: objects.applied }),
     },
   };
+}
+
+function applyObjects(
+  state: { objects?: MapObjects },
+  changes: ObjectChange[] | undefined,
+  forward: boolean,
+) {
+  if (!changes?.length) return { conflicts: [], applied: [] };
+  if (!state.objects) {
+    throw new MapOpError(
+      'Изменения затрагивают объекты, а объектов карты нет — нужна досинхронизация',
+    );
+  }
+  return applyObjectChanges(state.objects, changes, forward);
 }

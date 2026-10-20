@@ -16,14 +16,19 @@ import {
   type ResizeOp,
 } from './resizeOp.js';
 import { solidCells } from './summary.js';
+import type { MapObjects } from './objects/mapObject.js';
+import { resizeObjects } from './objects/resizeObjects.js';
+import { emptyObjectRefs, type ObjectRefs } from './objects/objectRefs.js';
 
 // Меняет размер карты. Координаты карты начинаются с нуля, поэтому место на западе,
 // севере и снизу появляется только сдвигом всех блоков: добавить три уровня снизу —
-// поднять всё на три блока (docs/plan/done/map-editor.md, «Размер карты»).
+// поднять всё на три блока (docs/plan/done/map-editor.md, «Размер карты»). Объекты
+// двигаются вместе с блоками (docs/plan/map-objects.md); refs нужны ради размеров существ.
 export function applyResize(
-  map: SizedMapState,
+  map: SizedMapState & { objects?: MapObjects },
   op: ResizeOp,
   limits: MapBoundsLimits,
+  refs: ObjectRefs = emptyObjectRefs(),
 ): Changeset {
   const before = map.size;
   const after = resizedSize(before, op.grow);
@@ -69,6 +74,16 @@ export function applyResize(
   }
 
   const cells = [...changes.values()].filter((c) => c.before !== c.after);
+  const objects = map.objects
+    ? resizeObjects(
+        map.objects,
+        refs,
+        shift,
+        after,
+        keepHidden,
+        limits.maxHeight,
+      )
+    : [];
   const touched = new Set<string>();
   for (const { at, after: value } of cells) {
     writeCell(map.store, at, value);
@@ -76,5 +91,10 @@ export function applyResize(
   }
   pruneEmptyChunks(map.store, touched);
   map.size = after;
-  return { cells, paletteAdded: [], size: { before, after } };
+  return {
+    cells,
+    paletteAdded: [],
+    size: { before, after },
+    ...(objects.length > 0 && { objects }),
+  };
 }

@@ -29,17 +29,18 @@
 ### Операции объектов
 
 ```ts
-{ op: 'placeObject', at: [x, y, z], object: { kind: 'start' }, facing?: 0..315 }
-{ op: 'placeObject', at, object: { kind: 'creature', monsterId } | { kind: 'creature', characterId, size? } }
-{ op: 'placeObject', at, object: { kind: 'container', name, look, items: [{ itemId, quantity }] } }
-{ op: 'placeObject', at, object: { kind: 'item', itemId, quantity } }
+{ op: 'placeObject', at: [x, y, z], object: { kind: 'start', facing?: 0..315 } }
+{ op: 'placeObject', at, object: { kind: 'monster', monsterId, facing? } }
+{ op: 'placeObject', at, object: { kind: 'npc', characterId, size?, facing? } }
+{ op: 'placeObject', at, object: { kind: 'container', name?, look?, items?: [{ itemId, quantity }] } }
+{ op: 'placeObject', at, object: { kind: 'item', itemId, quantity? } }
 { op: 'moveObject',   id: 7, at: [x, y, z] }
 { op: 'turnObject',   id: 7, facing: 90 }
 { op: 'updateObject', id: 7, object: { … } }   // содержимое контейнера, количество, размер НПС
 { op: 'removeObject', id: 7 }
 ```
 
-Точный вид полей — на этапе 1. Общее у всех видов:
+Так операции устроены в коде (этап 1). «Существо» редактора — два вида, `monster` и `npc`: у них разные ссылки, а размер есть только у НПС. Общее у всех видов:
 
 - `at` — клетка, где стоят ноги (уровень, как у фигурки «Хода»). У существа больше Среднего это северо-западная клетка его места: место занимает квадрат по размеру (`rules/creature.ts`).
 - `facing` — у старта и существа. У контейнера и предмета взгляда нет.
@@ -147,12 +148,14 @@
 
 ### Этап 1. Модель в `shared`
 
-- [ ] Тип `MapObject` с видами и `hidden`, тип взгляда (8 направлений), разбор операций объектов из недоверенного JSON в `parseMapOp`
-- [ ] Объекты в состоянии карты и в `editMap`: постановка (номер из счётчика), перенос, поворот, правка, удаление; граница карты; справочник монстров для уникальных и размеров
-- [ ] Changeset с объектами: упаковка, `applyChangeset` вперёд и назад, конфликты по объектам
-- [ ] `resize` сдвигает объекты, оставляет за границей или удаляет; `resizeLoss` их считает
-- [ ] Тесты всего перечисленного
-- [ ] `docs/dnd/facing.md`: направление взгляда как правило дома, проверка по DMG 2024; строка в CLAUDE.md
+Сделан 2026-10-20 (`packages/shared/src/map/objects/`).
+
+- [x] Тип `MapObject` с видами и `hidden`, тип взгляда (8 направлений), разбор операций объектов из недоверенного JSON в `parseMapOp`. Значения по умолчанию: взгляд 0, НПС Средний, контейнер «Сундук» без предметов, количество 1. Поля чужого вида и смена вида правкой отклоняются
+- [x] Объекты в состоянии карты и в `editMap`: постановка (номер из счётчика), перенос, поворот, правка, удаление; граница карты по всему месту существа; справочник ссылок `ObjectRefs` (монстры с размером, ролью и «можно ли поставить», предметы, НПС) и предел числа объектов — в `MapEditContext`. Удалённый монстр занимает одну клетку, как Средний. Карта без загруженных объектов (`objects` не задан) операции объектов отклоняет: так сервер до этапа 2 отвечает на них 400
+- [x] Changeset с объектами: упаковка, `applyChangeset` вперёд и назад, конфликты по объектам (`objectConflicts`); повтор сдвигает счётчик номеров
+- [x] `resize` сдвигает объекты, оставляет за границей или удаляет; `resizeLoss` их считает (`objectsCut`, `objectsOutside`)
+- [x] Тесты всего перечисленного (`objectOps.test.ts`, `objectEdit.test.ts`)
+- [x] [docs/dnd/facing.md](../dnd/facing.md): в DMG 2024 правила о направлении нет (было необязательным в DMG 2014), у нас — правило дома для наглядности; строка в CLAUDE.md
 
 ### Этап 2. Сервер
 

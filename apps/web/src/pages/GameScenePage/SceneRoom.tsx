@@ -15,9 +15,12 @@ const SCENE_CHANGES = new Set<string>([
   'scene.closed',
 ]);
 
-// После них перечитываются фигурки (этап 7): ход, расстановка и ушедший с места персонаж.
+// После них перечитываются фигурки (этап 7): ход, расстановка, ушедший с места персонаж
+// и смена управляющего — кто может водить фигурку (canMove).
 const FIGURE_CHANGES = new Set<string>([
   ...FIGURE_KINDS,
+  'seat.controller',
+  'seat.updated',
   'seat.freed',
   'member.left',
   'member.removed',

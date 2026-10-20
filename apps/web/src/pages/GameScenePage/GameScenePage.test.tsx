@@ -1,4 +1,4 @@
-import { act, screen } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -207,6 +207,31 @@ describe('GameScenePage', () => {
     expect(
       screen.getByText('Щёлкните клетку, куда поставить: Борн.'),
     ).toBeInTheDocument();
+  });
+
+  it('управление отдали посреди игры — фигурку можно выбрать без перезагрузки', async () => {
+    let figures = figuresOf(3, [{ ...LIRA, ownerId: 'u2', canMove: false }]);
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'member' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+      [`GET ${base}/scene/figures`]: () => ({ status: 200, body: figures }),
+    });
+    renderScene('u3');
+    expect(await screen.findByRole('button', { name: /^Лира/ })).toBeDisabled();
+    figures = figuresOf(4, [{ ...LIRA, ownerId: 'u2', canMove: true }]);
+    act(() =>
+      socket.current?.receive(GAME_SOCKET.changed, {
+        gameId: GAME.id,
+        seq: 4,
+        kind: 'seat.controller',
+      }),
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /^Лира/ })).toBeEnabled(),
+    );
   });
 
   it('чужое перетаскивание видно тенью, пока фигурку не отпустили', async () => {

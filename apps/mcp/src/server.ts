@@ -1,5 +1,4 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import {
   SECTION_AXES,
   type MapEditResult,
@@ -10,16 +9,14 @@ import {
   type MapSummaryResponse,
 } from 'shared';
 import { z } from 'zod';
-import { MapApiError, type ApiCall } from './apiClient.js';
+import type { ApiCall } from './apiClient.js';
 import { buildBlockGuide } from './blockGuide.js';
 import { registerCatalogTool } from './catalogTool.js';
+import { registerReadTools } from './readTools.js';
 import { mapId, mapOp, point } from './schemas.js';
+import { guarded, json, text } from './toolResult.js';
 import { buildViewUrl, VIEWS } from './viewUrl.js';
 
-const text = (value: string): CallToolResult => ({
-  content: [{ type: 'text', text: value }],
-});
-const json = (value: unknown) => text(JSON.stringify(value, null, 2));
 // Итог правки без списка изменённых клеток и справочника ссылок: они нужны вебу для
 // обновления сцены, а нейросети раздули бы контекст (заливка — десятки тысяч чисел).
 // Номера новых объектов остаются: по ним модель правит объекты дальше.
@@ -38,23 +35,12 @@ function queryString(query: Record<string, string | number | undefined>) {
   return params.toString();
 }
 
-// Ошибки API возвращаются модели как результат с isError, а не исключением:
-// так она видит сообщение сервера («Операция №2: Неизвестный блок…») и может исправиться.
-async function guarded(
-  run: () => Promise<CallToolResult>,
-): Promise<CallToolResult> {
-  try {
-    return await run();
-  } catch (err) {
-    if (err instanceof MapApiError)
-      return { ...text(err.message), isError: true };
-    console.error('MCP tool failed', err);
-    throw err;
-  }
-}
+// Сервер dnd: всё приложение от аккаунта владельца токена (docs/plan/ai-access.md) —
+// поиск и чтение записей и инструменты карты.
+export function createDndMcpServer(api: ApiCall, webUrl: string): McpServer {
+  const server = new McpServer({ name: 'dnd', version: '0.2.0' });
 
-export function createMapMcpServer(api: ApiCall, webUrl: string): McpServer {
-  const server = new McpServer({ name: 'dnd-map', version: '0.1.0' });
+  registerReadTools(server, api, guarded);
 
   server.registerTool(
     'list_maps',

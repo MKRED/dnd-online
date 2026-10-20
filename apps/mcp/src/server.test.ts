@@ -1,43 +1,12 @@
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { describe, expect, it, vi } from 'vitest';
-import { createApiCall, MapApiError, type ApiCall } from './apiClient.js';
+import { createApiCall, DndApiError, type ApiCall } from './apiClient.js';
 import { readConfig } from './config.js';
-import { createMapMcpServer } from './server.js';
+import { call, connect } from './testing/mcpClient.js';
 
 const MAP_ID = '11111111-1111-4111-8111-111111111111';
 
-async function connect(api: ApiCall) {
-  const server = createMapMcpServer(api, 'http://web.test');
-  const [clientTransport, serverTransport] =
-    InMemoryTransport.createLinkedPair();
-  const client = new Client({ name: 'test', version: '0' });
-  await Promise.all([
-    server.connect(serverTransport),
-    client.connect(clientTransport),
-  ]);
-  return client;
-}
-
-async function call(
-  client: Client,
-  name: string,
-  args: Record<string, unknown> = {},
-) {
-  const result = (await client.callTool({
-    name,
-    arguments: args,
-  })) as CallToolResult;
-  const first = result.content[0];
-  return {
-    isError: result.isError ?? false,
-    text: first?.type === 'text' ? first.text : '',
-  };
-}
-
-describe('dnd-map MCP server', () => {
-  it('регистрирует инструменты карты', async () => {
+describe('dnd MCP server', () => {
+  it('регистрирует инструменты чтения и карты', async () => {
     const client = await connect(vi.fn());
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual([
@@ -45,11 +14,13 @@ describe('dnd-map MCP server', () => {
       'block_guide',
       'create_map',
       'find_catalog',
+      'get',
       'list_maps',
       'map_section',
       'map_slice',
       'map_summary',
       'redo',
+      'search',
       'undo',
       'view_url',
     ]);
@@ -125,7 +96,7 @@ describe('dnd-map MCP server', () => {
   it('ошибку API возвращает модели как результат с isError', async () => {
     const api = vi
       .fn()
-      .mockRejectedValue(new MapApiError('HTTP 400: Неизвестный блок'));
+      .mockRejectedValue(new DndApiError('HTTP 400: Неизвестный блок'));
     const client = await connect(api as unknown as ApiCall);
 
     const result = await call(client, 'undo', { mapId: MAP_ID });

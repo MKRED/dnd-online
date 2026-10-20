@@ -2,7 +2,7 @@ import type { McpConfig } from './config.js';
 
 // Ошибка, которую стоит показать модели как есть: сообщение сервера (на русском)
 // или понятное описание проблемы с подключением.
-export class MapApiError extends Error {}
+export class DndApiError extends Error {}
 
 export type ApiCall = <T>(
   path: string,
@@ -15,7 +15,7 @@ export function createApiCall(config: McpConfig): ApiCall {
     init: { method?: string; body?: unknown } = {},
   ) => {
     if (!config.token) {
-      throw new MapApiError(
+      throw new DndApiError(
         'Не задан DND_API_TOKEN. Создайте токен в профиле, в карточке «Токены для нейросети» (/profile), и пропишите его в apps/mcp/.env (образец — apps/mcp/.env.example), затем перезапустите Claude Code.',
       );
     }
@@ -33,7 +33,7 @@ export function createApiCall(config: McpConfig): ApiCall {
       });
     } catch (err) {
       console.error('DnD API request failed', path, err);
-      throw new MapApiError(
+      throw new DndApiError(
         `Сервер ${config.apiUrl} недоступен: ${String(err)}`,
       );
     }
@@ -43,14 +43,14 @@ export function createApiCall(config: McpConfig): ApiCall {
       data = text ? JSON.parse(text) : undefined;
     } catch {
       // Не JSON — скорее всего, DND_API_URL указывает не на API (например, на SPA).
-      throw new MapApiError(
+      throw new DndApiError(
         `Ответ ${config.apiUrl}${path} — не JSON (HTTP ${res.status}). Проверьте DND_API_URL.`,
       );
     }
     if (!res.ok) {
       const message = (data as { message?: string | string[] } | undefined)
         ?.message;
-      throw new MapApiError(
+      throw new DndApiError(
         `HTTP ${res.status}: ${Array.isArray(message) ? message.join(', ') : (message ?? res.statusText)}`,
       );
     }

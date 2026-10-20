@@ -1,15 +1,15 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { MapCatalogEntry } from 'shared';
 import { z } from 'zod';
 import type { ApiCall } from './apiClient.js';
+import type { Guarded } from './toolResult.js';
 
 // Поиск того, что можно поставить на карту: id для операций объектов
 // (docs/plan/done/map-objects.md, «Нейросеть»). Сервер ищет только своё и опубликованное.
 export function registerCatalogTool(
   server: McpServer,
   api: ApiCall,
-  guarded: (run: () => Promise<CallToolResult>) => Promise<CallToolResult>,
+  guarded: Guarded,
 ) {
   server.registerTool(
     'find_catalog',

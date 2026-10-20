@@ -4,7 +4,7 @@ pnpm workspaces: `pnpm-workspace.yaml` includes `apps/*` and `packages/*`. The r
 
 ## `apps/mcp`
 
-Local stdio MCP server for maps (`map-mcp` package), a thin client over the REST API — see [mcp.md](mcp.md). Built with plain `tsc`, tested with vitest (`pnpm --filter map-mcp test`). Not part of the Docker image; the Dockerfile only copies its `package.json` so `pnpm install --frozen-lockfile` sees every workspace from the lockfile. No ESLint config yet (like `shared`).
+Local stdio MCP server `dnd` (`dnd-mcp` package), a thin client over the REST API — see [mcp.md](mcp.md). Built with plain `tsc`, tested with vitest (`pnpm --filter dnd-mcp test`). Not part of the Docker image; the Dockerfile only copies its `package.json` so `pnpm install --frozen-lockfile` sees every workspace from the lockfile. No ESLint config yet (like `shared`).
 
 ## `packages/shared`
 

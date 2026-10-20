@@ -35,6 +35,8 @@ export interface GameSceneStatus extends GameSceneRef {
 // контейнеров (решено с пользователем 2026-10-20).
 export interface GameSceneView extends MapChunksResponse {
   scene: GameSceneStatus;
+  // Содержимое контейнеров убрано (игроку): пустой список — не «пусто», а «неизвестно».
+  contentsHidden: boolean;
 }
 
 export interface GameSceneAddInput {

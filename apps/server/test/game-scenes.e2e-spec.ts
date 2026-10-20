@@ -318,6 +318,8 @@ describe('game scenes (e2e)', () => {
     const lobby = (await player.agent.get(`/api/games/${gameId}`).expect(200))
       .body as GameDetail;
     expect(lobby.scene).toEqual({ id: sceneId, name: 'Логово', open: true });
+    // С этого номера лобби входит в комнату сокета.
+    expect(lobby.eventSeq).toBe((await lastEvent(m, gameId)).seq);
     const seen = await view(player.agent, gameId);
     expect(seen.objects.map((o) => o.kind)).toEqual([
       'start',
@@ -328,11 +330,13 @@ describe('game scenes (e2e)', () => {
     expect(seen.objects.find((o) => o.kind === 'container')).toMatchObject({
       items: [],
     });
+    expect(seen.contentsHidden).toBe(true);
     expect(seen.refs.monsters[goblin]).toBeUndefined();
     expect(seen.refs.items[gem.id]).toBeUndefined();
     // Мастер видит всё.
     const full = await view(m, gameId);
     expect(full.objects).toHaveLength(5);
+    expect(full.contentsHidden).toBe(false);
     expect(full.objects.find((o) => o.kind === 'container')).toMatchObject({
       items: [{ itemId: gem.id, quantity: 2 }],
     });
@@ -342,6 +346,7 @@ describe('game scenes (e2e)', () => {
       .get(imageUrl(gameId, 'npc', npc))
       .expect(200);
     expect(npcImage.headers['content-type']).toBe('image/webp');
+    expect(npcImage.headers['cache-control']).toContain('immutable');
     await player.agent.get(imageUrl(gameId, 'item', rope.id)).expect(200);
     await player.agent.get(imageUrl(gameId, 'item', gem.id)).expect(404);
     await player.agent.get(imageUrl(gameId, 'monster', goblin)).expect(404);
@@ -362,7 +367,11 @@ describe('game scenes (e2e)', () => {
       sceneId,
     });
     await player.agent.get(sceneUrl(gameId)).expect(403);
-    await player.agent.get(imageUrl(gameId, 'npc', npc)).expect(404);
+    // Отказ не кешируется: сцену откроют снова — картинка должна загрузиться.
+    const refused = await player.agent
+      .get(imageUrl(gameId, 'npc', npc))
+      .expect(404);
+    expect(refused.headers['cache-control'] ?? '').not.toContain('immutable');
     await player.agent
       .put(`${scenesUrl(gameId)}/open`)
       .send({ open: true })

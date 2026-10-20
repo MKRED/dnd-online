@@ -55,6 +55,8 @@ interface MapSceneProps {
   // Откуда миниатюры объектов: сцена игры берёт их из библиотеки игры. Без него — из
   // справочников. Держать один объект на сцену: новый перестраивает объекты.
   objectImages?: ObjectImagePaths;
+  // Содержимое контейнеров смотрящему не отдали (игрок на сцене игры).
+  hideContainerContents?: boolean;
 }
 
 function MapScene({
@@ -70,6 +72,7 @@ function MapScene({
   onReady,
   facingMarker,
   objectImages,
+  hideContainerContents,
 }: MapSceneProps) {
   const chunks = useChunkMeshes(map, cutY);
   const scheme = useComputedColorScheme('dark');
@@ -121,6 +124,7 @@ function MapScene({
             tool={objectTool}
             hover={hover}
             images={objectImages}
+            hideContents={hideContainerContents}
           />
         </FacingMarkerContext>
         {walk && <WalkLayer walk={walk} />}

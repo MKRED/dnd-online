@@ -36,6 +36,8 @@ interface ObjectLayerProps {
   hover: HoverStore;
   // Откуда миниатюры объектов; без него — из справочников (редактор карты).
   images?: ObjectImagePaths;
+  // Содержимое контейнеров смотрящему не отдают — подпись без него.
+  hideContents?: boolean;
 }
 
 // Обводка выделенного объекта во всё его место и рост.
@@ -84,10 +86,11 @@ function ObjectLayer({
   tool,
   hover,
   images,
+  hideContents,
 }: ObjectLayerProps) {
   const all = useMemo(
-    () => layoutObjects(state, refs, images),
-    [state, refs, images],
+    () => layoutObjects(state, refs, images, hideContents),
+    [state, refs, images, hideContents],
   );
   // Картинки — всех объектов, а не только ниже среза: иначе каждое движение ползунка
   // перезагружало бы текстуры.

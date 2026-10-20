@@ -160,6 +160,7 @@ function GameScenePage() {
                 DEFAULT_USER_SETTINGS.facingMarker
               }
               objectImages={images}
+              hideContainerContents={load.view.contentsHidden}
             />
           </Suspense>
         )}

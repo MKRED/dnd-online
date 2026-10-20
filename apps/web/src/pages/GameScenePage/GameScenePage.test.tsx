@@ -23,10 +23,12 @@ vi.mock('../../features/maps/MapScene', async () => {
     default: function MapSceneStub({
       refs,
       objectImages,
+      hideContainerContents,
       onReady,
     }: {
       refs: MapObjectRefsView;
       objectImages: ObjectImagePaths;
+      hideContainerContents: boolean;
       onReady: () => void;
     }) {
       useEffect(onReady, [onReady]);
@@ -37,6 +39,7 @@ vi.mock('../../features/maps/MapScene', async () => {
         <>
           <p>Сцена: {names.join(', ')}</p>
           <p>{objectImages.monster('g1', 2)}</p>
+          {hideContainerContents && <p>Содержимое скрыто</p>}
         </>
       );
     },
@@ -80,6 +83,7 @@ const VIEW: GameSceneView = {
     },
   },
   scene: { id: 's1', name: 'Пещера', open: true },
+  contentsHidden: true,
 };
 
 function stub(
@@ -134,6 +138,7 @@ describe('GameScenePage', () => {
       screen.getByText(`${base}/scene/images/monster/g1?variant=thumb&v=2`),
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Пещера' })).toBeInTheDocument();
+    expect(screen.getByText('Содержимое скрыто')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '← В лобби' })).toHaveAttribute(
       'href',
       base,

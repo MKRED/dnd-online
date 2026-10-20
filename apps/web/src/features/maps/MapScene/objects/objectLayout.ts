@@ -1,4 +1,5 @@
 import {
+  CONTAINER_LOOK_LABELS,
   CREATURE_SIZES,
   feetHeight,
   footprintCells,
@@ -132,10 +133,13 @@ function lookOf(
 // Объекты для сцены: что рисовать, где и как. Подпись и предупреждения — из той же
 // сводки, что видит нейросеть, чтобы номера стартов и заглушки совпадали. Объектов за
 // границей карты (после сужения с cut «keep») нет: они не рисуются.
+// hideContents — содержимое контейнеров смотрящему не отдают (игрок на сцене игры):
+// подпись без числа предметов и без перегруза, иначе сундук выглядел бы пустым.
 export function layoutObjects(
   state: MapViewState,
   refs: MapObjectRefsView,
   images: ObjectImagePaths = CATALOG_OBJECT_IMAGES,
+  hideContents = false,
 ): SceneObject[] {
   const summaries = summarizeObjects(state, state.objects.byId.values(), refs);
   const result: SceneObject[] = [];
@@ -170,13 +174,25 @@ export function layoutObjects(
       base: [x + middle, feet, z + middle],
       footprint,
       top: feet + height,
-      label: summary.label,
-      warnings: summary.warnings,
+      label:
+        hideContents && object.kind === 'container'
+          ? containerName(object)
+          : summary.label,
+      warnings:
+        hideContents && object.kind === 'container' ? [] : summary.warnings,
       blocked: stands && standing === null,
       look,
     });
   }
   return result;
+}
+
+// Имя контейнера с видом, как в сводке, но без содержимого: «Бочка эля (бочка)».
+function containerName(object: Extract<MapObject, { kind: 'container' }>) {
+  const look = CONTAINER_LOOK_LABELS[object.look];
+  return object.name === look
+    ? object.name
+    : `${object.name} (${look.toLowerCase()})`;
 }
 
 // Пути всех миниатюр, без повторов: по ним грузятся текстуры, и «Сцена готова» ждёт их.

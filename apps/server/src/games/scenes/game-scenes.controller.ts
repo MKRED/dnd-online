@@ -2,16 +2,17 @@ import {
   Body,
   Controller,
   Get,
-  Header,
   Param,
   ParseUUIDPipe,
   Post,
   Put,
   Query,
   Req,
+  Res,
   StreamableFile,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { AuthGuard, type AuthenticatedRequest } from '../../auth/auth.guard.js';
 import { CatalogImageFileQueryDto } from '../../catalog/images/dto/catalog-image.dto.js';
 import {
@@ -83,11 +84,13 @@ export class GameScenesController {
   }
 
   // Версия копии (?v=) растёт с каждым обновлением — ответ кешируется навсегда; private —
-  // доступ зависит от смотрящего и от того, открыта ли сцена.
+  // доступ зависит от смотрящего. Заголовок — только у удачного ответа: @Header ставит
+  // его и отказу, а доступ здесь меняется переключателем, и закешированный на год 404
+  // не дал бы картинке загрузиться, когда сцену откроют снова.
   @Get('scene/images/:kind/:sourceId')
-  @Header('Cache-Control', 'private, max-age=31536000, immutable')
   async image(
     @Req() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response,
     @Param() params: SceneImageParamsDto,
     @Query() query: CatalogImageFileQueryDto,
   ) {
@@ -98,6 +101,7 @@ export class GameScenesController {
       params.sourceId,
       query.variant ?? 'full',
     );
+    res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
     return new StreamableFile(data, {
       type: 'image/webp',
       length: data.length,

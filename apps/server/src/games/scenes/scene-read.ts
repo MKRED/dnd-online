@@ -111,6 +111,7 @@ export async function readSceneView(
     nextObjectId: scene.nextObjectId,
     refs: await sceneRefsView(db, scene.gameId, objects),
     scene: status,
+    contentsHidden: !master,
   };
 }
 

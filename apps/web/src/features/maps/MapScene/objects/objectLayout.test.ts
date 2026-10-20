@@ -225,6 +225,24 @@ describe('layoutObjects', () => {
     ]);
   });
 
+  it('без содержимого контейнера — подпись по имени, без числа предметов', () => {
+    const chest: MapObject = {
+      ...base,
+      id: 1,
+      at: [0, 1, 0],
+      kind: 'container',
+      name: 'Бочка эля',
+      look: 'barrel',
+      items: [],
+    };
+    expect(layoutObjects(mapWith([chest]), refs)[0].label).toBe(
+      'Бочка эля (бочка, предметов: 0)',
+    );
+    expect(
+      layoutObjects(mapWith([chest]), refs, undefined, true)[0],
+    ).toMatchObject({ label: 'Бочка эля (бочка)', warnings: [] });
+  });
+
   it('не рисует объекты за границей карты', () => {
     const objects = layoutObjects(
       mapWith([

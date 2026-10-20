@@ -23,7 +23,7 @@ interface ChunksResult {
   };
 }
 
-// Объекты на карте (docs/plan/map-objects.md, этап 2): операции журнала, ссылки на
+// Объекты на карте (docs/plan/done/map-objects.md, этап 2): операции журнала, ссылки на
 // каталог с заглушками, уникальный монстр, resize и поиск по каталогу для MCP.
 describe('объекты на карте (e2e)', () => {
   let t: TestApp;

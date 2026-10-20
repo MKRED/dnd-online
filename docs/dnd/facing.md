@@ -1,6 +1,6 @@
 # Направление взгляда
 
-Исследовано 2026-10-20 для объектов на карте ([plan/map-objects.md](../plan/map-objects.md)).
+Исследовано 2026-10-20 для объектов на карте ([plan/done/map-objects.md](../plan/done/map-objects.md)).
 
 ## Что в правилах
 

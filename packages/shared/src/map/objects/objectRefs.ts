@@ -4,7 +4,7 @@ import { footprintCells, type MapObject } from './mapObject.js';
 
 // Что о ссылках объектов знает правка карты. editMap — чистая функция, поэтому
 // сервер до применения читает из базы всё, на что ссылается пачка и затронутые ею
-// объекты, и передаёт сюда (docs/plan/map-objects.md, «Ссылки на каталог»).
+// объекты, и передаёт сюда (docs/plan/done/map-objects.md, «Ссылки на каталог»).
 export interface MonsterRef {
   name: string;
   size: CreatureSize;

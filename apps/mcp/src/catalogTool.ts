@@ -5,7 +5,7 @@ import { z } from 'zod';
 import type { ApiCall } from './apiClient.js';
 
 // Поиск того, что можно поставить на карту: id для операций объектов
-// (docs/plan/map-objects.md, «Нейросеть»). Сервер ищет только своё и опубликованное.
+// (docs/plan/done/map-objects.md, «Нейросеть»). Сервер ищет только своё и опубликованное.
 export function registerCatalogTool(
   server: McpServer,
   api: ApiCall,

@@ -1,7 +1,7 @@
 import type { Vec3 } from '../coords.js';
 import { CREATURE_SIZES, type CreatureSize } from '../rules/creature.js';
 
-// Объекты на карте (docs/plan/map-objects.md): стоят в клетках, но не в чанках —
+// Объекты на карте (docs/plan/done/map-objects.md): стоят в клетках, но не в чанках —
 // у них свои поля и ссылки на каталог. Меняются только операциями журнала, как блоки.
 
 // Направление взгляда — 8 направлений по сетке, градусы по часовой от севера (−z).

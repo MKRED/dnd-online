@@ -21,7 +21,7 @@ function contains(column: Parameters<typeof ilike>[0], q: string | undefined) {
 
 // Поиск того, что можно поставить на карту: монстры и предметы — свои и опубликованные,
 // НПС — свои. Только чтение. Открыт и API-токену, чтобы нейросеть через MCP находила id
-// для операций объектов (docs/plan/map-objects.md, «Нейросеть»); остальной каталог токену
+// для операций объектов (docs/plan/done/map-objects.md, «Нейросеть»); остальной каталог токену
 // по-прежнему закрыт.
 @Injectable()
 export class MapCatalogService {

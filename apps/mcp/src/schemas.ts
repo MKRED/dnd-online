@@ -26,7 +26,7 @@ const grow = z
   )
   .describe('Сколько клеток добавить с каждой стороны (меньше нуля — убрать)');
 
-// Объекты на карте (docs/plan/map-objects.md): поля по виду; id — из find_catalog.
+// Объекты на карте (docs/plan/done/map-objects.md): поля по виду; id — из find_catalog.
 const facingValue = z
   .literal(FACINGS)
   .describe('Взгляд: 0, 45, …, 315 — градусы по часовой от севера');

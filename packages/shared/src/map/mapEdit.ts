@@ -20,7 +20,7 @@ export interface EditableMap extends SizedMapState {
   objects?: MapObjects;
 }
 
-// Что правка знает об объектах помимо самой карты (docs/plan/map-objects.md).
+// Что правка знает об объектах помимо самой карты (docs/plan/done/map-objects.md).
 export interface MapEditContext {
   // Монстры, предметы и НПС, на которые ссылаются пачка и затронутые ею объекты.
   refs?: ObjectRefs;

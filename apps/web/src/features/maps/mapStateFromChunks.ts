@@ -8,7 +8,7 @@ import {
   type SizedMapState,
 } from 'shared';
 
-// Карта страницы: блоки с размером и объекты (docs/plan/map-objects.md). Объекты
+// Карта страницы: блоки с размером и объекты (docs/plan/done/map-objects.md). Объекты
 // нужны копии всегда: changeset правки, тронувшей их, без них не применится.
 export type MapViewState = SizedMapState & { objects: MapObjects };
 

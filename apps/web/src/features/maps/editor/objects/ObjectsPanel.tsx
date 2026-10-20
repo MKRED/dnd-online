@@ -18,7 +18,7 @@ interface ObjectsPanelProps {
 }
 
 // Панель инструмента «Объекты»: сверху — что ставить или свойства выделенного, ниже —
-// список «На карте» (docs/plan/map-objects.md, «Редактор: один инструмент»).
+// список «На карте» (docs/plan/done/map-objects.md, «Редактор: один инструмент»).
 function ObjectsPanel({ tool, state, refs, busy, onFocus }: ObjectsPanelProps) {
   const summaries = useMemo(
     () => summarizeObjects(state, state.objects.byId.values(), refs),

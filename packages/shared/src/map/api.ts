@@ -37,7 +37,7 @@ export interface MapChunksResponse {
   size: MapSize;
   palette: Palette;
   chunks: MapChunkData[];
-  // Объекты на карте и справочник их ссылок (docs/plan/map-objects.md) — тем же снимком.
+  // Объекты на карте и справочник их ссылок (docs/plan/done/map-objects.md) — тем же снимком.
   objects: MapObject[];
   // Следующий номер объекта: клиент держит его в состоянии карты, как сервер.
   nextObjectId: number;

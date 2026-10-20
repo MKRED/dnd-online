@@ -29,7 +29,7 @@ export interface Changeset {
   paletteAdded: PaletteAddition[];
   // Размер карты до и после — только у правок с resize.
   size?: { before: MapSize; after: MapSize };
-  // Объекты на карте (docs/plan/map-objects.md) — только у правок, которые их тронули.
+  // Объекты на карте (docs/plan/done/map-objects.md) — только у правок, которые их тронули.
   objects?: ObjectChange[];
 }
 

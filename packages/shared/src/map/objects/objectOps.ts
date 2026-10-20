@@ -10,7 +10,7 @@ import {
 } from './mapObject.js';
 import { parseObjectFields, type ObjectFields } from './objectFields.js';
 
-// Операции объектов (docs/plan/map-objects.md, «Операции объектов»). Номер нового
+// Операции объектов (docs/plan/done/map-objects.md, «Операции объектов»). Номер нового
 // объекта выдаёт сервер; сослаться на объект, поставленный в той же пачке, нельзя.
 export type ObjectOp =
   | { op: 'placeObject'; at: Vec3; object: MapObjectBody }

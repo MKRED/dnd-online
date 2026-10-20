@@ -23,7 +23,7 @@ import { emptyObjectRefs, type ObjectRefs } from './objects/objectRefs.js';
 // Меняет размер карты. Координаты карты начинаются с нуля, поэтому место на западе,
 // севере и снизу появляется только сдвигом всех блоков: добавить три уровня снизу —
 // поднять всё на три блока (docs/plan/done/map-editor.md, «Размер карты»). Объекты
-// двигаются вместе с блоками (docs/plan/map-objects.md); refs нужны ради размеров существ.
+// двигаются вместе с блоками (docs/plan/done/map-objects.md); refs нужны ради размеров существ.
 export function applyResize(
   map: SizedMapState & { objects?: MapObjects },
   op: ResizeOp,

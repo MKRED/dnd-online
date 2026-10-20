@@ -7,7 +7,7 @@ import { emptyObjectRefs, type ObjectRefs } from './objectRefs.js';
 
 // Что клиент знает о ссылках объектов: имя и картинка, или заглушка. Ссылки лежат в
 // объектах без внешних ключей, поэтому цель могли скрыть или удалить после постановки
-// (docs/plan/map-objects.md, «Ссылки на каталог»).
+// (docs/plan/done/map-objects.md, «Ссылки на каталог»).
 export type RefMissing = 'hidden' | 'deleted';
 
 // Размер есть всегда: место на карте нужно и заглушке. У удалённого — Средний.

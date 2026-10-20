@@ -36,7 +36,7 @@ export class MapLimitsConfig implements MapBatchLimits {
   readonly maxHeight: number;
   // Чанк — 8 КБ, 4096 чанков — 32 МБ на карту.
   readonly maxChunks: number;
-  // Объектов на одной карте (docs/plan/map-objects.md).
+  // Объектов на одной карте (docs/plan/done/map-objects.md).
   readonly maxObjects: number;
 
   constructor(configService: ConfigService) {

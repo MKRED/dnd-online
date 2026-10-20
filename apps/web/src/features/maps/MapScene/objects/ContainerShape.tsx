@@ -5,7 +5,7 @@ const WOOD = '#8a5a2b';
 const DARK_WOOD = '#6b4220';
 
 // Контейнер — простая фигура по виду в одну клетку; вид только для картинки
-// (docs/plan/map-objects.md). base — середина клетки на высоте пола.
+// (docs/plan/done/map-objects.md). base — середина клетки на высоте пола.
 function ContainerShape({ look, base }: { look: ContainerLook; base: Point3 }) {
   return <group position={base}>{SHAPES[look]}</group>;
 }

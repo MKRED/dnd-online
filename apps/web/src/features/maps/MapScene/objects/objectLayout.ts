@@ -16,7 +16,7 @@ import { itemImagePath } from '../../../items';
 import { monstersApi } from '../../../monsters/monstersApi';
 import type { MapViewState } from '../../mapStateFromChunks';
 
-// Как объект выглядит в сцене (docs/plan/map-objects.md, «Как выглядят объекты»).
+// Как объект выглядит в сцене (docs/plan/done/map-objects.md, «Как выглядят объекты»).
 // image — путь миниатюры в API или null; letter — что писать на карточке без картинки.
 export type SceneObjectLook =
   | {

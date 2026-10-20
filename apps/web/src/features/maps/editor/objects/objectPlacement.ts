@@ -12,7 +12,7 @@ import {
 } from 'shared';
 import { spanAnchor } from '../editorTools';
 
-// Что ставит инструмент «Объекты» (docs/plan/map-objects.md, «Редактор»). «Существо» —
+// Что ставит инструмент «Объекты» (docs/plan/done/map-objects.md, «Редактор»). «Существо» —
 // монстр или НПС из одного поиска, поэтому выбор хранит вид записи каталога.
 export type PlaceKind = 'start' | 'creature' | 'container' | 'item';
 

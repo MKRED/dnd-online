@@ -1,115 +1,42 @@
-import type { AddressInfo } from 'node:net';
-import { io, type Socket } from 'socket.io-client';
-import request from 'supertest';
+import type request from 'supertest';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import {
   GAME_SOCKET,
-  GAME_SOCKET_PATH,
   type GameChangedMessage,
   type GameClosedMessage,
   type GameDetail,
   type GameEventMessage,
-  type GameJoinAck,
   type GamePresenceMessage,
 } from 'shared';
 import { characterBody } from './support/character-fixture.js';
 import {
-  createTestApp,
-  TEST_PASSWORD,
-  type TestApp,
-} from './support/test-app.js';
+  collect,
+  join,
+  listenForSockets,
+  next,
+  type SocketClients,
+} from './support/socket-client.js';
+import { createTestApp, type TestApp } from './support/test-app.js';
 
 // Сокет игры (docs/plan/game.md, этап 3): вход по cookie, комната, присутствие,
 // рассылка изменений и закрытие комнаты для убранного игрока.
 describe('game socket (e2e)', () => {
   let t: TestApp;
-  let url: string;
-  const sockets: Socket[] = [];
+  let clients: SocketClients;
 
   beforeAll(async () => {
     t = await createTestApp();
-    await t.app.listen(0);
-    const { port } = t.app.getHttpServer().address() as AddressInfo;
-    url = `http://127.0.0.1:${port}`;
+    clients = await listenForSockets(t);
   });
 
-  afterEach(() => {
-    for (const socket of sockets.splice(0)) socket.disconnect();
-  });
+  afterEach(() => clients.disconnectAll());
 
   afterAll(async () => {
     await t.close();
   });
 
-  // Пользователь: агент supertest для REST и строка cookie для сокета.
-  async function user(login: string) {
-    const agent = await t.loginAs(login);
-    const res = await request(t.app.getHttpServer())
-      .post('/api/auth/login')
-      .send({ login, password: TEST_PASSWORD })
-      .expect(200);
-    const cookie = (res.headers['set-cookie'] as unknown as string[])
-      .map((c) => c.split(';')[0])
-      .join('; ');
-    const me = await agent.get('/api/auth/me').expect(200);
-    return {
-      agent,
-      cookie,
-      id: (me.body as { user: { id: string } }).user.id,
-    };
-  }
-
-  function connect(cookie?: string): Promise<Socket> {
-    const socket = io(url, {
-      path: GAME_SOCKET_PATH,
-      transports: ['websocket'],
-      extraHeaders: cookie ? { cookie } : {},
-      reconnection: false,
-    });
-    sockets.push(socket);
-    return new Promise((resolve, reject) => {
-      socket.once('connect', () => resolve(socket));
-      socket.once('connect_error', reject);
-    });
-  }
-
-  function join(socket: Socket, gameId: string, afterSeq?: number) {
-    return socket.emitWithAck(GAME_SOCKET.join, {
-      gameId,
-      afterSeq,
-    }) as Promise<GameJoinAck>;
-  }
-
-  // Следующее сообщение event, подходящее под условие; не дождались — ошибка.
-  function next<T>(
-    socket: Socket,
-    event: string,
-    match: (message: T) => boolean = () => true,
-  ): Promise<T> {
-    return new Promise((resolve, reject) => {
-      const timer = setTimeout(
-        () => reject(new Error(`Не пришло ${event}`)),
-        2000,
-      );
-      const handler = (message: T) => {
-        if (!match(message)) return;
-        clearTimeout(timer);
-        socket.off(event, handler);
-        resolve(message);
-      };
-      socket.on(event, handler);
-    });
-  }
-
-  // Все сообщения event за время ожидания — проверить, что лишнего не пришло.
-  async function collect<T>(socket: Socket, event: string, ms = 300) {
-    const got: T[] = [];
-    const handler = (message: T) => got.push(message);
-    socket.on(event, handler);
-    await new Promise((resolve) => setTimeout(resolve, ms));
-    socket.off(event, handler);
-    return got;
-  }
+  const user = (login: string) => clients.user(login);
+  const connect = (cookie?: string) => clients.connect(cookie);
 
   async function createGame(agent: request.Agent, body = {}) {
     const res = await agent

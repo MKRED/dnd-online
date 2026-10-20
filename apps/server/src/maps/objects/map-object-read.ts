@@ -8,10 +8,9 @@ import {
 } from 'shared';
 import type { DbTransaction } from '../../database/database.service.js';
 import type { maps } from '../../database/schema/index.js';
-import { loadChunks } from '../map-storage.js';
 import { sizeOf } from '../maps.mapper.js';
 import { loadRefs } from './map-object-refs.js';
-import { loadObjects } from './map-object-storage.js';
+import { mapStorage } from '../storage/index.js';
 
 type MapRow = typeof maps.$inferSelect;
 
@@ -21,7 +20,7 @@ export async function loadObjectsWithView(
   userId: string,
   map: MapRow,
 ) {
-  const objects = await loadObjects(tx, map.id, map.nextObjectId);
+  const objects = await mapStorage(map.id).loadObjects(tx, map.nextObjectId);
   const { view } = await loadRefs(
     tx,
     userId,
@@ -42,7 +41,7 @@ export async function objectSliceText(
 ): Promise<string[]> {
   const { objects, view } = await loadObjectsWithView(tx, userId, map);
   if (![...objects.byId.values()].some((o) => o.at[1] === y)) return [];
-  const store = await loadChunks(tx, map.id, 'all');
+  const store = await mapStorage(map.id).loadChunks(tx, 'all');
   const sized: { store: typeof store; palette: Palette; size: MapSize } = {
     store,
     palette: map.palette,

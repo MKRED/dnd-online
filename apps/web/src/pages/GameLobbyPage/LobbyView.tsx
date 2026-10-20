@@ -11,7 +11,7 @@ import {
 import { IconLock } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { GameDetail, GameEvent } from 'shared';
+import { SCENE_EDIT_KINDS, type GameDetail, type GameEvent } from 'shared';
 import { useAuth } from '../../features/auth';
 import {
   deleteGame,
@@ -94,13 +94,21 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
           void navigate(scenePagePath(game.id));
           return;
         }
+        // Правки сцены (этап 6) лобби не меняют: мастер правит часто, и каждая правка
+        // перечитывала бы лобби у всех. Запись мастеру всё равно придёт в журнал.
+        if (SCENE_EDIT_KINDS.includes(message.kind)) return;
         reload();
         if (LIBRARY_CHANGES.has(message.kind))
           setLibraryVersion((version) => version + 1);
         if (message.kind.startsWith('scene.'))
           setScenesVersion((version) => version + 1);
       },
-      onEvent: (event) => addLive([event]),
+      onEvent: (event) => {
+        addLive([event]);
+        // Правка сцены поставила новое из справочников — оно уже в библиотеке.
+        if (event.kind === 'scene.edited' && event.result.libraryCopied > 0)
+          setLibraryVersion((version) => version + 1);
+      },
       onResync: (missed) => {
         reload();
         if (missed) {

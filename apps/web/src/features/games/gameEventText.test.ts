@@ -151,6 +151,54 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'scene.edited',
+        as: { kind: 'master' },
+        intent: { ops: [] },
+        result: {
+          scene: lair,
+          sceneSeq: 3,
+          cells: 12,
+          objects: 1,
+          libraryCopied: 1,
+        },
+      },
+      'Сцена изменена: Логово (клеток: 12, объектов: 1), в библиотеку скопировано записей: 1',
+    ],
+    [
+      {
+        ...base,
+        kind: 'scene.undone',
+        as: { kind: 'master' },
+        intent: { seq: 7 },
+        result: {
+          scene: lair,
+          sceneSeq: 4,
+          cells: 0,
+          objects: 1,
+          conflicts: 0,
+        },
+      },
+      'Правка №7 отменена: Логово (объектов: 1)',
+    ],
+    [
+      {
+        ...base,
+        kind: 'scene.redone',
+        as: { kind: 'master' },
+        intent: { seq: 7, undoSeq: 8 },
+        result: {
+          scene: lair,
+          sceneSeq: 5,
+          cells: 2,
+          objects: 0,
+          conflicts: 1,
+        },
+      },
+      'Правка №7 возвращена: Логово (клеток: 2), не тронуто изменённого позже: 1',
+    ],
+    [
+      {
+        ...base,
         kind: 'member.left',
         intent: null,
         result: { character: null },

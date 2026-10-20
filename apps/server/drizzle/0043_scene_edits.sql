@@ -1,0 +1,1 @@
+ALTER TABLE "game_events" ADD COLUMN "changes" jsonb;

@@ -180,6 +180,29 @@ describe('GameLobbyPage: сцены', () => {
     expect(await screen.findByText('Страница сцены')).toBeInTheDocument();
   });
 
+  it('правки сцены лобби не перечитывают', async () => {
+    const fetchMock = routeFetch({
+      [`GET ${base}`]: () => ({ status: 200, body: GAME }),
+    });
+    renderLobby('u1');
+    await screen.findByText('Лира');
+    const calls = fetchMock.mock.calls.length;
+    act(() => {
+      socket.current?.receive(GAME_SOCKET.changed, {
+        gameId: GAME.id,
+        seq: 2,
+        kind: 'scene.edited',
+      });
+      socket.current?.receive(GAME_SOCKET.changed, {
+        gameId: GAME.id,
+        seq: 3,
+        kind: 'member.entered',
+      });
+    });
+    // Перечитал только вход в лобби.
+    await vi.waitFor(() => expect(fetchMock.mock.calls.length).toBe(calls + 1));
+  });
+
   it('игрок в лобби при открытой сцене видит приглашение, а не переход', async () => {
     routeFetch({
       [`GET ${base}`]: () => ({

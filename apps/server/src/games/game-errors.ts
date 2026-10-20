@@ -35,3 +35,7 @@ export const NO_ACTIVE_SCENE = 'В игре нет активной сцены';
 export const SCENE_CLOSED = 'Мастер закрыл сцену';
 export const SCENE_MEMBERS_ONLY = 'Сцену видят только участники игры';
 export const SCENE_NO_IMAGE = 'Такой картинки на сцене нет';
+export const SCENE_NO_RESIZE =
+  'Размер сцены в игре не меняется: измените карту в редакторе и перезапустите сцену';
+export const SCENE_NOTHING_TO_UNDO = 'Нечего отменять';
+export const SCENE_NOTHING_TO_REDO = 'Нечего возвращать';

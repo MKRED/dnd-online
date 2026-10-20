@@ -1,6 +1,11 @@
 import { NotFoundException } from '@nestjs/common';
 import { eq, sql } from 'drizzle-orm';
-import type { GameEventAs, GameEventKind, GameEventPayloads } from 'shared';
+import type {
+  GameEventAs,
+  GameEventKind,
+  GameEventPayloads,
+  PackedChangeset,
+} from 'shared';
 import type { DbTransaction } from '../database/database.service.js';
 import { gameEvents, games } from '../database/schema/index.js';
 import { GAME_NOT_FOUND } from './game-errors.js';
@@ -28,6 +33,8 @@ export type NewGameEvent<K extends GameEventKind> = {
   as?: GameEventAs;
   // Сцена, к которой относится событие; у событий лобби её нет.
   sceneId?: string;
+  // Правка сцены: что изменилось (в запись для мастера не входит, game-event-read.ts).
+  changes?: PackedChangeset;
 } & GameEventPayloads[K];
 
 // Добавляет запись со следующим номером игры и возвращает этот номер.
@@ -52,6 +59,7 @@ export async function appendGameEvent<K extends GameEventKind>(
     sceneId: event.sceneId ?? null,
     intent: event.intent,
     result: event.result,
+    changes: event.changes ?? null,
   });
   return row.seq;
 }

@@ -4,7 +4,24 @@ import type { DatabaseService } from '../database/database.service.js';
 import { gameEvents, users } from '../database/schema/index.js';
 
 type Db = DatabaseService['db'];
-type EventRow = typeof gameEvents.$inferSelect;
+
+// Колонки записи для мастера. Changeset правки сцены (changes) сюда не входит: он бывает
+// большим, а читают его только отмена и рассылка правок (games/scenes/).
+const EVENT_COLUMNS = {
+  seq: gameEvents.seq,
+  kind: gameEvents.kind,
+  actorId: gameEvents.actorId,
+  asKind: gameEvents.asKind,
+  asId: gameEvents.asId,
+  sceneId: gameEvents.sceneId,
+  intent: gameEvents.intent,
+  result: gameEvents.result,
+  createdAt: gameEvents.createdAt,
+};
+type EventRow = Pick<
+  typeof gameEvents.$inferSelect,
+  keyof typeof EVENT_COLUMNS
+>;
 
 // Записи журнала игры — для страницы мастера (новые сверху, до before) и для сокета
 // (по порядку, после after). limit — сколько вернуть, без запаса.
@@ -16,7 +33,7 @@ export async function readGameEvents(
 ): Promise<GameEvent[]> {
   const forward = range.after !== undefined;
   const rows = await db
-    .select({ event: gameEvents, nickname: users.nickname })
+    .select({ event: EVENT_COLUMNS, nickname: users.nickname })
     .from(gameEvents)
     .leftJoin(users, eq(users.id, gameEvents.actorId))
     .where(

@@ -1,4 +1,6 @@
 import type { GameEvent, GameEventKind } from './game-events.js';
+import type { PackedChangeset } from './map/changesetPacking.js';
+import type { MapObjectRefsView } from './map/objects/objectRefViews.js';
 
 // Сокет игры (docs/plan/game.md, этап 3): живые изменения лобби и присутствие. Входит
 // по cookie сессии, как и REST; путь — под /api, чтобы прокси и прод вели его туда же.
@@ -14,7 +16,15 @@ export const GAME_SOCKET = {
   event: 'game:event',
   presence: 'game:presence',
   closed: 'game:closed',
+  sceneEdit: 'game:scene-edit',
 } as const;
+
+// Правки сцены, которые клиент применяет к своей копии, а не перечитывает её.
+export const SCENE_EDIT_KINDS: readonly GameEventKind[] = [
+  'scene.edited',
+  'scene.undone',
+  'scene.redone',
+];
 
 // Сколько пропущенных записей журнала мастер получает при возвращении; больше —
 // журнал перечитывается целиком.
@@ -56,6 +66,20 @@ export interface GameEventMessage {
 export interface GamePresenceMessage {
   gameId: string;
   online: string[];
+}
+
+// Правка сцены (docs/plan/game.md, этап 6): мастеру — целиком, игрокам — без скрытых
+// объектов и содержимого контейнеров и только для активной открытой сцены. seq — номер
+// правки сцены после неё: копия на номер раньше применяет changes, иначе сцена
+// перечитывается. Игроку приходит и правка, в которой для него ничего не изменилось, —
+// чтобы номера шли без пропусков.
+export interface GameSceneEditMessage {
+  gameId: string;
+  sceneId: string;
+  seq: number;
+  changes: PackedChangeset;
+  // Справочник ссылок затронутых объектов — из библиотеки игры.
+  refs: MapObjectRefsView;
 }
 
 // Комната закрыта для этого клиента: игру удалили или его убрали из закрытой игры.

@@ -9,13 +9,8 @@ import type {
   GameScenes,
   GameSceneView,
 } from 'shared';
-import {
-  characterBody,
-  pngImage,
-  PNG_FILE,
-} from './support/character-fixture.js';
-import { createItem } from './support/item-fixture.js';
-import { monsterBody } from './support/monster-fixture.js';
+import { pngImage } from './support/character-fixture.js';
+import { createSceneGame } from './support/scene-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
 // Сцены игры (docs/plan/game.md, этап 5): копия карты мастера, активная сцена,
@@ -52,99 +47,7 @@ describe('game scenes (e2e)', () => {
     return (res.body as GameEventPage).events[0];
   }
 
-  // Мастер с картой (блоки, старт, монстр, НПС с картинкой и предметом, бочка с
-  // самоцветом, верёвка на полу), игра и игрок на месте.
-  async function setup(prefix: string) {
-    const master = await user(`${prefix}_master`);
-    const m = master.agent;
-    const map = await m
-      .post('/api/maps')
-      .send({ name: 'Логово', width: 8, depth: 8 })
-      .expect(201);
-    const mapId = idOf(map);
-    const goblin = idOf(
-      await m
-        .post('/api/monsters')
-        .send({ ...monsterBody(), name: 'Гоблин', role: 'regular' })
-        .expect(201),
-    );
-    const rope = await createItem(m, { name: 'Верёвка' });
-    await m
-      .put(`/api/items/${rope.id}/image`)
-      .attach('file', png, PNG_FILE)
-      .expect(200);
-    const gem = await createItem(m, { name: 'Самоцвет' });
-    await m
-      .put(`/api/items/${gem.id}/image`)
-      .attach('file', png, PNG_FILE)
-      .expect(200);
-    const npc = idOf(
-      await m
-        .post('/api/characters')
-        .send(characterBody({ kind: 'npc', name: 'Трактирщик' }))
-        .expect(201),
-    );
-    await m
-      .post(`/api/characters/${npc}/images`)
-      .attach('file', png, PNG_FILE)
-      .expect(201);
-    await m
-      .post(`/api/characters/${npc}/items`)
-      .send({ itemId: gem.id, quantity: 1, location: 'carried' })
-      .expect(201);
-    await m
-      .post(`/api/maps/${mapId}/ops`)
-      .send({
-        ops: [
-          { op: 'fillBox', from: [0, 0, 0], to: [7, 0, 7], block: 'stone' },
-          { op: 'placeObject', at: [0, 1, 0], object: { kind: 'start' } },
-          {
-            op: 'placeObject',
-            at: [1, 1, 0],
-            object: { kind: 'monster', monsterId: goblin },
-          },
-          {
-            op: 'placeObject',
-            at: [2, 1, 0],
-            object: { kind: 'npc', characterId: npc },
-          },
-          {
-            op: 'placeObject',
-            at: [3, 1, 0],
-            object: {
-              kind: 'container',
-              look: 'barrel',
-              items: [{ itemId: gem.id, quantity: 2 }],
-            },
-          },
-          {
-            op: 'placeObject',
-            at: [4, 1, 0],
-            object: { kind: 'item', itemId: rope.id },
-          },
-        ],
-      })
-      .expect(200);
-
-    const gameId = idOf(
-      await m
-        .post('/api/games')
-        .send({ name: 'Сценическая', seatCount: 2 })
-        .expect(201),
-    );
-    const player = await user(`${prefix}_player`);
-    const character = idOf(
-      await player.agent
-        .post('/api/characters')
-        .send(characterBody({ name: 'Зритель' }))
-        .expect(201),
-    );
-    await player.agent
-      .post(`/api/games/${gameId}/seats`)
-      .send({ characterId: character })
-      .expect(201);
-    return { master, player, mapId, gameId, goblin, npc, rope, gem };
-  }
+  const setup = (prefix: string) => createSceneGame(user, png, prefix);
 
   async function addScene(agent: request.Agent, gameId: string, mapId: string) {
     const res = await agent.post(scenesUrl(gameId)).send({ mapId }).expect(201);

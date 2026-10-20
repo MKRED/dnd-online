@@ -302,6 +302,13 @@
       "when": 1792501507345,
       "tag": "0042_game_scenes",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1792508369331,
+      "tag": "0043_scene_edits",
+      "breakpoints": true
     }
   ]
 }

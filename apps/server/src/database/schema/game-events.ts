@@ -7,7 +7,7 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
-import type { GameEventAs, GameEventKind } from 'shared';
+import type { GameEventAs, GameEventKind, PackedChangeset } from 'shared';
 import { gameScenes } from './game-scenes.js';
 import { games } from './games.js';
 import { users } from './users.js';
@@ -40,6 +40,9 @@ export const gameEvents = pgTable(
     // Что просили и что получилось; форма — GameEventPayloads из shared.
     intent: jsonb('intent'),
     result: jsonb('result'),
+    // Правка сцены (этап 6): что изменилось, в прямом виде, как map_ops.changeset. Не
+    // часть записи для мастера: бывает большим, а нужен только отмене и рассылке правок.
+    changes: jsonb('changes').$type<PackedChangeset>(),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

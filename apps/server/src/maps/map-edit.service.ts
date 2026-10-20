@@ -5,14 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
-  applyChangeset,
-  chunkKeysInBox,
-  editMap,
   emptyRefsView,
-  isBlockOp,
-  isObjectOp,
   MapOpError,
-  opRegion,
   parseMapOpBatch,
   unpackChangeset,
   type Changeset,
@@ -25,26 +19,34 @@ import {
 } from '../database/database.service.js';
 import type { maps } from '../database/schema/index.js';
 import { findOwnedMap } from './map-access.js';
+import { isEmptyEdit, runOps, runReplay, type EditTarget } from './edit-run.js';
 import {
-  chunkKeysOfChangeset,
   commitEdit,
   findRedoSource,
   findUndoTarget,
   setUndone,
 } from './map-journal.js';
 import { MapLimitsConfig } from './map-limits.js';
-import { loadChunks } from './map-storage.js';
 import { sizeOf } from './maps.mapper.js';
 import {
   createdObjectIds,
-  loadObjectsForEdit,
+  loadOpsRefs,
   loadTouchedRefsView,
   touchedRefsView,
 } from './objects/map-object-edit.js';
-import { loadObjects } from './objects/map-object-storage.js';
+import { mapStorage } from './storage/index.js';
 
 type MapRow = typeof maps.$inferSelect;
 type EditKind = 'op' | 'undo' | 'redo';
+
+function target(map: MapRow): EditTarget {
+  return {
+    storage: mapStorage(map.id),
+    palette: map.palette,
+    size: sizeOf(map),
+    nextObjectId: map.nextObjectId,
+  };
+}
 
 // Изменение блоков карты: пачки операций, undo, redo. Каждая правка — одна транзакция
 // под блокировкой строки карты (см. findOwnedMap).
@@ -59,39 +61,13 @@ export class MapEditService {
   applyBatch(ownerId: string, mapId: string, rawOps: unknown[]) {
     const ops = this.parse(rawOps);
     return this.edit(ownerId, mapId, 'op', async (tx, map) => {
-      // resize сдвигает и срезает все блоки карты — ему нужны все её чанки, а
-      // операциям объектов чанки не нужны вовсе.
-      const resizes = ops.some((op) => op.op === 'resize');
-      const keys = resizes
-        ? 'all'
-        : [
-            ...new Set(
-              ops
-                .filter(isBlockOp)
-                .flatMap((op) => chunkKeysInBox(opRegion(op))),
-            ),
-          ];
-      const store = await loadChunks(tx, mapId, keys);
-      const loadedKeys = new Set(store.keys());
-      // Объекты читаются, только если пачка их трогает: операциями объектов или resize.
-      const withObjects =
-        resizes || ops.some(isObjectOp)
-          ? await loadObjectsForEdit(tx, ownerId, map, ops)
-          : null;
-      const state = {
-        store,
-        palette: [...map.palette],
-        size: sizeOf(map),
-        objects: withObjects?.objects,
-      };
-      const applied = editMap(state, ops, this.limits, {
-        refs: withObjects?.loaded.refs,
-        maxObjects: this.limits.maxObjects,
-      });
+      const run = await runOps(tx, target(map), ops, this.limits, (objects) =>
+        loadOpsRefs(tx, ownerId, objects, ops),
+      );
       // Ничего не изменилось — запись в журнал не нужна, seq не двигается. Номер
       // объекта, поставленного и убранного в этой же пачке, в журнал не попал, и его
       // можно выдать снова.
-      if (applied.cells.length === 0 && !applied.size && !applied.objects) {
+      if (isEmptyEdit(run.applied)) {
         return {
           seq: map.seq,
           changedCells: 0,
@@ -104,16 +80,14 @@ export class MapEditService {
       }
       const result = await commitEdit(tx, {
         ...this.commitBase(ownerId, map),
-        ...state,
-        loadedKeys,
-        applied,
+        run,
         entry: { kind: 'op', ops },
       });
       return {
         ...result,
-        createdObjectIds: createdObjectIds(applied),
-        refs: withObjects
-          ? touchedRefsView(withObjects.loaded.view, applied)
+        createdObjectIds: createdObjectIds(run.applied),
+        refs: run.loaded
+          ? touchedRefsView(run.loaded.view, run.applied)
           : emptyRefsView(),
       };
     });
@@ -158,38 +132,19 @@ export class MapEditService {
     entry: { kind: 'undo' | 'redo'; targetSeq: number },
   ): Promise<MapEditResult> {
     // И undo, и redo откатывают запись журнала: undo — операцию, redo — отмену.
-    const store = await loadChunks(tx, map.id, [
-      ...chunkKeysOfChangeset(changeset),
-    ]);
-    const loadedKeys = new Set(store.keys());
-    const objects = changeset.objects
-      ? await loadObjects(tx, map.id, map.nextObjectId)
-      : undefined;
-    const state = {
-      store,
-      palette: [...map.palette],
-      size: sizeOf(map),
-      objects,
-    };
-    const { conflicts, objectConflicts, applied } = applyChangeset(
-      state,
-      changeset,
-      'backward',
-    );
+    const run = await runReplay(tx, target(map), changeset);
     // Запись пишется даже без изменений (всё в конфликтах): иначе флаг undone
     // разошёлся бы с журналом.
     const result = await commitEdit(tx, {
       ...this.commitBase(ownerId, map),
-      ...state,
-      loadedKeys,
-      applied,
+      run,
       entry,
     });
     return {
       ...result,
-      conflicts: conflicts.length + objectConflicts.length,
+      conflicts: run.conflicts,
       createdObjectIds: [],
-      refs: await loadTouchedRefsView(tx, ownerId, applied),
+      refs: await loadTouchedRefsView(tx, ownerId, run.applied),
     };
   }
 

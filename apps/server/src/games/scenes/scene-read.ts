@@ -1,18 +1,14 @@
 import { and, asc, eq, isNull } from 'drizzle-orm';
-import type {
-  GameScene,
-  GameSceneStatus,
-  GameSceneView,
-  MapObject,
-} from 'shared';
+import type { GameScene, GameSceneStatus, GameSceneView } from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
 import {
   gameSceneChunks,
   gameSceneObjects,
   gameScenes,
 } from '../../database/schema/index.js';
-import { toMapObject } from '../../maps/objects/map-object-storage.js';
+import { toMapObject } from '../../maps/storage/index.js';
 import type { SceneRow } from './scene-copy.js';
+import { forPlayer } from './scene-player-view.js';
 import { sceneRefsView } from './scene-refs.js';
 
 // Чтение сцен игры: список мастера, активная сцена и сама сцена для страницы сцены.
@@ -93,9 +89,8 @@ export async function readSceneView(
     .where(eq(gameSceneObjects.sceneId, scene.id))
     .orderBy(asc(gameSceneObjects.id));
   const objects = objectRows
-    .filter((row) => master || !row.hidden)
     .map(toMapObject)
-    .map((object) => (master ? object : forPlayer(object)));
+    .flatMap((object) => (master ? [object] : (forPlayer(object) ?? [])));
   return {
     seq: scene.seq,
     size: { width: scene.width, depth: scene.depth },
@@ -113,8 +108,4 @@ export async function readSceneView(
     scene: status,
     contentsHidden: !master,
   };
-}
-
-function forPlayer(object: MapObject): MapObject {
-  return object.kind === 'container' ? { ...object, items: [] } : object;
 }

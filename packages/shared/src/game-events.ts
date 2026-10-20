@@ -1,6 +1,7 @@
 import type { GameUser } from './games.js';
 import type { GameLibraryRef } from './game-library.js';
 import type { GameSceneRef } from './game-scenes.js';
+import type { MapOp } from './map/ops.js';
 
 // Журнал игры (docs/plan/game.md, «Журнал игры»): каждое действие в игре — запись с
 // номером по порядку внутри игры. Записи только добавляются; отмена — тоже запись.
@@ -22,6 +23,22 @@ export type GameEventAs =
   | { kind: 'master' }
   | { kind: 'character'; id: string }
   | { kind: 'monster'; id: string };
+
+// Итог правки сцены мастером (docs/plan/game.md, этап 6). sceneSeq — номер правки сцены
+// после неё (game_scenes.seq), cells и objects — сколько клеток и объектов изменилось.
+// Сам changeset в запись не входит: он бывает большим, его читают отмена и рассылка.
+export interface SceneEditResult {
+  scene: GameSceneRef;
+  sceneSeq: number;
+  cells: number;
+  objects: number;
+}
+
+// Отмена и возврат: conflicts — изменения, которые не тронуты, потому что их уже
+// поменяли после этой правки.
+export interface SceneReplayResult extends SceneEditResult {
+  conflicts: number;
+}
 
 // Почему освободилось место: игрок освободил сам или удалил персонажа.
 export type SeatFreedReason = 'freed' | 'character_deleted';
@@ -80,6 +97,19 @@ export interface GameEventPayloads {
   // «Сцена открыта игрокам» включили или выключили; scene — активная в этот момент.
   'scene.opened': { intent: null; result: { scene: GameSceneRef } };
   'scene.closed': { intent: null; result: { scene: GameSceneRef | null } };
+  // Мастер правит сцену в игре — блоки и объекты, как в редакторе карты. libraryCopied —
+  // сколько новых записей справочников (монстр, НПС, предмет) скопировано в библиотеку.
+  'scene.edited': {
+    intent: { ops: MapOp[] };
+    result: SceneEditResult & { libraryCopied: number };
+  };
+  // Отменена правка seq (запись scene.edited).
+  'scene.undone': { intent: { seq: number }; result: SceneReplayResult };
+  // Возвращена правка seq, которую сняла отмена undoSeq.
+  'scene.redone': {
+    intent: { seq: number; undoSeq: number };
+    result: SceneReplayResult;
+  };
   // Мастер убрал игрока.
   'member.removed': {
     intent: { userId: string };

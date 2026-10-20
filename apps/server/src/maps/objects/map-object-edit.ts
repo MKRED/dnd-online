@@ -9,14 +9,10 @@ import {
   type MapOp,
 } from 'shared';
 import type { DbTransaction } from '../../database/database.service.js';
-import type { maps } from '../../database/schema/index.js';
-import { loadObjects } from './map-object-storage.js';
 import { loadRefs, type LoadedRefs, type RefIds } from './map-object-refs.js';
 
-type MapRow = typeof maps.$inferSelect;
-
 // Ссылки, которые пачка ставит или меняет: их проверяет editMap.
-function opsRefIds(ops: MapOp[]): RefIds {
+export function opsRefIds(ops: MapOp[]): RefIds {
   const ids = objectRefIds([]);
   for (const op of ops) {
     if (!isObjectOp(op)) continue;
@@ -34,7 +30,7 @@ function opsRefIds(ops: MapOp[]): RefIds {
   return ids;
 }
 
-function unionIds(a: RefIds, b: RefIds): RefIds {
+export function unionIds(a: RefIds, b: RefIds): RefIds {
   return {
     monsters: new Set([...a.monsters, ...b.monsters]),
     items: new Set([...a.items, ...b.items]),
@@ -42,17 +38,16 @@ function unionIds(a: RefIds, b: RefIds): RefIds {
   };
 }
 
-// Объекты карты и ссылки — всех объектов карты (размеры монстров нужны resize и
+// Ссылки из справочников — всех объектов карты (размеры монстров нужны resize и
 // границе) и тех, что ставит пачка.
-export async function loadObjectsForEdit(
+export function loadOpsRefs(
   tx: DbTransaction,
   userId: string,
-  map: MapRow,
+  objects: MapObjects,
   ops: MapOp[],
-): Promise<{ objects: MapObjects; loaded: LoadedRefs }> {
-  const objects = await loadObjects(tx, map.id, map.nextObjectId);
+): Promise<LoadedRefs> {
   const ids = unionIds(objectRefIds(objects.byId.values()), opsRefIds(ops));
-  return { objects, loaded: await loadRefs(tx, userId, ids) };
+  return loadRefs(tx, userId, ids);
 }
 
 // Объекты, которые остались на карте после правки.

@@ -1,26 +1,11 @@
-import { BadRequestException } from '@nestjs/common';
 import { aliasedTable, and, desc, eq, gt, max } from 'drizzle-orm';
-import {
-  cellLocation,
-  packChangeset,
-  type Changeset,
-  type ChunkStore,
-  type MapEditResult,
-  type MapObjects,
-  type MapOp,
-  type MapSize,
-  type Palette,
-} from 'shared';
+import { packChangeset, type MapEditResult, type MapOp } from 'shared';
 import type { DbTransaction } from '../database/database.service.js';
 import { mapOps, maps, type MapJournalKind } from '../database/schema/index.js';
-import { countChunks, saveChunks } from './map-storage.js';
-import { saveObjects } from './objects/map-object-storage.js';
+import { saveEdit, type EditRun } from './edit-run.js';
+import { mapStorage } from './storage/index.js';
 
 type MapOpRow = typeof mapOps.$inferSelect;
-
-export function chunkKeysOfChangeset(changeset: Changeset): Set<string> {
-  return new Set(changeset.cells.map(({ at }) => cellLocation(at).key));
-}
 
 export interface JournalEntry {
   kind: MapJournalKind;
@@ -33,16 +18,8 @@ export interface CommitInput {
   authorId: string;
   // seq карты до этой записи (строка карты заблокирована FOR UPDATE).
   currentSeq: number;
-  palette: Palette;
-  // Размер карты после правки: меняет его только resize и его отмена.
-  size: MapSize;
-  store: ChunkStore;
-  // Объекты карты, если правка их загружала: из них берётся счётчик номеров. Не из
-  // changeset — «поставил и убрал» в одной пачке двигает счётчик без объекта в changeset.
-  objects?: MapObjects;
-  // Чанки, которые были в БД до применения: по ним считаются созданные и удалённые.
-  loadedKeys: Set<string>;
-  applied: Changeset;
+  // Правка в памяти; размер в ней меняет только resize и его отмена.
+  run: EditRun;
   entry: JournalEntry;
   maxChunks: number;
 }
@@ -55,27 +32,9 @@ export async function commitEdit(
   tx: DbTransaction,
   input: CommitInput,
 ): Promise<CommitResult> {
-  const { mapId, applied, store, loadedKeys } = input;
-  const dirtyKeys = chunkKeysOfChangeset(applied);
-  let created = 0;
-  let deleted = 0;
-  for (const key of dirtyKeys) {
-    const exists = store.get(key) !== undefined;
-    if (exists && !loadedKeys.has(key)) created++;
-    if (!exists && loadedKeys.has(key)) deleted++;
-  }
-  // Лимит проверяется, только когда карта растёт: правка, уменьшающая уже
-  // превысившую лимит карту, должна проходить.
-  if (created > deleted) {
-    const total = (await countChunks(tx, mapId)) + created - deleted;
-    if (total > input.maxChunks) {
-      throw new BadRequestException(
-        `Карта превысит лимит в ${input.maxChunks} чанков (16×16×16 клеток)`,
-      );
-    }
-  }
-  await saveChunks(tx, mapId, store, dirtyKeys);
-  if (applied.objects) await saveObjects(tx, mapId, applied.objects);
+  const { mapId, run } = input;
+  const { applied, state } = run;
+  await saveEdit(tx, mapStorage(mapId), run, input.maxChunks);
 
   const seq = input.currentSeq + 1;
   const changes = packChangeset(applied);
@@ -92,10 +51,10 @@ export async function commitEdit(
     .update(maps)
     .set({
       seq,
-      palette: input.palette,
-      width: input.size.width,
-      depth: input.size.depth,
-      ...(input.objects && { nextObjectId: input.objects.nextId }),
+      palette: state.palette,
+      width: state.size.width,
+      depth: state.size.depth,
+      ...(state.objects && { nextObjectId: state.objects.nextId }),
     })
     .where(eq(maps.id, mapId));
 

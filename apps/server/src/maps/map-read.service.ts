@@ -27,7 +27,7 @@ import { SectionQueryDto } from './dto/section-query.dto.js';
 import { SliceQueryDto } from './dto/slice-query.dto.js';
 import { findOwnedMap } from './map-access.js';
 import { MapLimitsConfig } from './map-limits.js';
-import { loadChunks } from './map-storage.js';
+import { mapStorage } from './storage/index.js';
 import { sizeOf } from './maps.mapper.js';
 import {
   loadObjectsWithView,
@@ -54,7 +54,7 @@ export class MapReadService {
 
   getChunks(ownerId: string, mapId: string): Promise<MapChunksResponse> {
     return this.read(ownerId, mapId, 'chunks', async (tx, map) => {
-      const store = await loadChunks(tx, mapId, 'all');
+      const store = await mapStorage(mapId).loadChunks(tx, 'all');
       const chunks = [...store.keys()].map((key) => {
         const [cx, cy, cz] = parseChunkKey(key);
         const bytes = encodeChunk(store.get(key)!);
@@ -75,7 +75,7 @@ export class MapReadService {
 
   getSummary(ownerId: string, mapId: string): Promise<MapSummaryResponse> {
     return this.read(ownerId, mapId, 'summary', async (tx, map) => {
-      const store = await loadChunks(tx, mapId, 'all');
+      const store = await mapStorage(mapId).loadChunks(tx, 'all');
       const summary = summarizeMap({ store, palette: map.palette });
       const { objects, view } = await loadObjectsWithView(tx, ownerId, map);
       const sized = { store, palette: map.palette, size: sizeOf(map) };
@@ -99,9 +99,8 @@ export class MapReadService {
     return this.read(ownerId, mapId, 'slice', async (tx, map) => {
       const { y } = query;
       const region = sliceRegion(sliceRanges(query), sizeOf(map));
-      const store = await loadChunks(
+      const store = await mapStorage(mapId).loadChunks(
         tx,
-        mapId,
         chunkKeysInBox({
           min: [region.minX, y, region.minZ],
           max: [region.maxX, y, region.maxZ],
@@ -130,9 +129,8 @@ export class MapReadService {
         }
       }
       const region = sectionRegion(query, ranges, sizeOf(map), top);
-      const store = await loadChunks(
+      const store = await mapStorage(mapId).loadChunks(
         tx,
-        mapId,
         chunkKeysInBox(sectionBox(query, region)),
       );
       const text = renderAsciiSection(
@@ -147,7 +145,7 @@ export class MapReadService {
 
   // Границы построенного — для разреза, у которого не задана высота.
   private async loadBounds(tx: DbTransaction, map: MapRow) {
-    const store = await loadChunks(tx, map.id, 'all');
+    const store = await mapStorage(map.id).loadChunks(tx, 'all');
     return mapBounds(store);
   }
 

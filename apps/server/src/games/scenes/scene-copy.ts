@@ -9,7 +9,7 @@ import {
   mapObjects,
   type maps,
 } from '../../database/schema/index.js';
-import { toMapObject } from '../../maps/objects/map-object-storage.js';
+import { toMapObject } from '../../maps/storage/index.js';
 import { copyToLibrary } from '../library/library-copy.js';
 
 type MapRow = typeof maps.$inferSelect;

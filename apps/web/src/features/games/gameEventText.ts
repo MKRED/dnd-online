@@ -1,4 +1,4 @@
-import type { GameEvent } from 'shared';
+import type { GameEvent, SceneReplayResult, SceneEditResult } from 'shared';
 
 // Строка журнала игры по-русски. Кто сделал, показывается рядом отдельно, поэтому здесь —
 // безличные фразы: пол автора по нику не угадать.
@@ -58,6 +58,17 @@ export function gameEventText(event: GameEvent): string {
       return event.result.scene
         ? `Сцена закрыта от игроков: ${event.result.scene.name}`
         : 'Сцена закрыта от игроков';
+    case 'scene.edited': {
+      const { libraryCopied } = event.result;
+      const text = `Сцена изменена: ${sceneEdit(event.result)}`;
+      return libraryCopied > 0
+        ? `${text}, в библиотеку скопировано записей: ${libraryCopied}`
+        : text;
+    }
+    case 'scene.undone':
+      return `Правка №${event.intent.seq} отменена: ${sceneReplay(event.result)}`;
+    case 'scene.redone':
+      return `Правка №${event.intent.seq} возвращена: ${sceneReplay(event.result)}`;
     case 'member.left':
       return withCharacter('Выход из игры', event.result.character);
     case 'member.removed':
@@ -66,6 +77,22 @@ export function gameEventText(event: GameEvent): string {
         event.result.character,
       );
   }
+}
+
+// «Пещера (клеток: 12, объектов: 1)» — что задела правка сцены.
+function sceneEdit({ scene, cells, objects }: SceneEditResult) {
+  const parts = [];
+  if (cells > 0) parts.push(`клеток: ${cells}`);
+  if (objects > 0) parts.push(`объектов: ${objects}`);
+  return parts.length > 0 ? `${scene.name} (${parts.join(', ')})` : scene.name;
+}
+
+// Отмена и возврат: что не тронуто, потому что это изменили уже после правки.
+function sceneReplay(result: SceneReplayResult) {
+  const text = sceneEdit(result);
+  return result.conflicts > 0
+    ? `${text}, не тронуто изменённого позже: ${result.conflicts}`
+    : text;
 }
 
 function withCharacter(text: string, character: { name: string } | null) {

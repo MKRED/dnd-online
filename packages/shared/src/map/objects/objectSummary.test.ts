@@ -90,6 +90,31 @@ describe('summarizeObjects', () => {
     expect(summary[2]).toMatchObject({ size: 'small', facing: 0 });
   });
 
+  it('контейнер называет вид, только если имя с ним не совпадает', () => {
+    const chest = (
+      id: number,
+      name: string,
+      look: 'chest' | 'barrel',
+    ): MapObject => ({
+      ...base,
+      id,
+      at: [0, 1, 0],
+      kind: 'container',
+      name,
+      look,
+      items: [{ itemId: ROPE, quantity: 1 }],
+    });
+    const labels = summarizeObjects(
+      floorMap(),
+      [chest(1, 'Сундук', 'chest'), chest(2, 'Бочка эля', 'barrel')],
+      refs,
+    ).map((o) => o.label);
+    expect(labels).toEqual([
+      'Сундук (предметов: 1)',
+      'Бочка эля (бочка, предметов: 1)',
+    ]);
+  });
+
   it('срез перечисляет объекты своего уровня внутри области', () => {
     const summary = summarizeObjects(floorMap(), objects, refs);
     const lines = objectSliceLines(summary, 1, {

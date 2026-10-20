@@ -11,6 +11,7 @@ import {
 import { z } from 'zod';
 import { MapApiError, type ApiCall } from './apiClient.js';
 import { buildBlockGuide } from './blockGuide.js';
+import { registerCatalogTool } from './catalogTool.js';
 import { mapId, mapOp, point } from './schemas.js';
 import { buildViewUrl, VIEWS } from './viewUrl.js';
 
@@ -18,10 +19,14 @@ const text = (value: string): CallToolResult => ({
   content: [{ type: 'text', text: value }],
 });
 const json = (value: unknown) => text(JSON.stringify(value, null, 2));
-// Итог правки без списка изменённых клеток: он нужен вебу для обновления сцены,
-// а нейросети раздул бы контекст (заливка — десятки тысяч чисел).
-const editSummary = ({ changes: _changes, ...summary }: MapEditResult) =>
-  json(summary);
+// Итог правки без списка изменённых клеток и справочника ссылок: они нужны вебу для
+// обновления сцены, а нейросети раздули бы контекст (заливка — десятки тысяч чисел).
+// Номера новых объектов остаются: по ним модель правит объекты дальше.
+const editSummary = ({
+  changes: _changes,
+  refs: _refs,
+  ...summary
+}: MapEditResult) => json(summary);
 
 // Параметры среза в строку запроса; незаданные не передаём — сервер возьмёт границы карты.
 function queryString(query: Record<string, string | number | undefined>) {
@@ -89,7 +94,7 @@ export function createMapMcpServer(api: ApiCall, webUrl: string): McpServer {
     'map_summary',
     {
       description:
-        'Сводка карты: размер (size — width × depth, клетки x от 0 до width − 1, z от 0 до depth − 1), предел высоты maxHeight, габарит построенного (bounds), число блоков по типам, палитра.',
+        'Сводка карты: размер (size — width × depth, клетки x от 0 до width − 1, z от 0 до depth − 1), предел высоты maxHeight, габарит построенного (bounds), число блоков по типам, палитра и объекты (objects: номер, вид, клетка, подпись, взгляд, размер и предупреждения — например, «здесь нельзя стоять»).',
       inputSchema: { mapId },
     },
     ({ mapId: id }) =>
@@ -102,7 +107,7 @@ export function createMapMcpServer(api: ApiCall, webUrl: string): McpServer {
     'map_slice',
     {
       description:
-        'ASCII-срез карты на уровне высоты y: строки — z (север сверху), столбцы — x, с легендой. Прямоугольник задаётся целиком или не задаётся (тогда — вся карта). Не больше 100 000 клеток.',
+        'ASCII-срез карты на уровне высоты y: строки — z (север сверху), столбцы — x, с легендой. Объекты, стоящие на этом уровне, перечислены под сеткой. Прямоугольник задаётся целиком или не задаётся (тогда — вся карта). Не больше 100 000 клеток.',
       inputSchema: {
         mapId,
         y: z.number().int(),
@@ -149,7 +154,7 @@ export function createMapMcpServer(api: ApiCall, webUrl: string): McpServer {
     'apply_ops',
     {
       description:
-        'Применить пачку операций к карте (до 100 операций). Пачка применяется целиком или не применяется вовсе и откатывается одним undo. Форматы — в block_guide.',
+        'Применить пачку операций к карте (до 100 операций): блоки, размер и объекты (старт, монстр, НПС, контейнер, предмет). Пачка применяется целиком или не применяется вовсе и откатывается одним undo. Номера поставленных объектов — в createdObjectIds. Форматы — в block_guide.',
       inputSchema: { mapId, ops: z.array(mapOp).min(1).max(100) },
     },
     ({ mapId: id, ops }) =>
@@ -208,6 +213,8 @@ export function createMapMcpServer(api: ApiCall, webUrl: string): McpServer {
     ({ mapId: id, ...options }) =>
       Promise.resolve(text(buildViewUrl(webUrl, id, options))),
   );
+
+  registerCatalogTool(server, api, guarded);
 
   return server;
 }

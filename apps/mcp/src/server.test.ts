@@ -44,6 +44,7 @@ describe('dnd-map MCP server', () => {
       'apply_ops',
       'block_guide',
       'create_map',
+      'find_catalog',
       'list_maps',
       'map_section',
       'map_slice',
@@ -162,6 +163,76 @@ describe('dnd-map MCP server', () => {
     expect(text).toContain('Север — -z');
     expect(text).toContain(
       'resize {grow: {north, south, west, east, down}, cut?}',
+    );
+    expect(text).toContain('ОБЪЕКТЫ НА КАРТЕ');
+    expect(text).toContain('placeObject {at, object}');
+  });
+
+  it('apply_ops пропускает операции объектов и отдаёт их номера без справочника', async () => {
+    const api = vi.fn().mockResolvedValue({
+      seq: 3,
+      changedCells: 0,
+      conflicts: 0,
+      paletteAdded: [],
+      changes: { cells: [], paletteAdded: [] },
+      createdObjectIds: [4],
+      refs: { monsters: {}, items: {}, npcs: {} },
+    });
+    const client = await connect(api as unknown as ApiCall);
+    const ops = [
+      {
+        op: 'placeObject',
+        at: [1, 1, 1],
+        object: { kind: 'monster', monsterId: MAP_ID, facing: 90 },
+      },
+      { op: 'turnObject', id: 2, facing: 315 },
+      { op: 'updateObject', id: 3, object: { quantity: 2 } },
+      { op: 'removeObject', id: 1 },
+    ];
+
+    const result = await call(client, 'apply_ops', { mapId: MAP_ID, ops });
+
+    expect(result.isError).toBe(false);
+    expect(JSON.parse(result.text)).toEqual({
+      seq: 3,
+      changedCells: 0,
+      conflicts: 0,
+      paletteAdded: [],
+      createdObjectIds: [4],
+    });
+    expect(api).toHaveBeenCalledWith(`/maps/${MAP_ID}/ops`, {
+      method: 'POST',
+      body: { ops },
+    });
+  });
+
+  it('apply_ops не пропускает неверный взгляд объекта', async () => {
+    const api = vi.fn();
+    const client = await connect(api as unknown as ApiCall);
+    const result = await call(client, 'apply_ops', {
+      mapId: MAP_ID,
+      ops: [{ op: 'turnObject', id: 1, facing: 30 }],
+    });
+    expect(result.isError).toBe(true);
+    expect(api).not.toHaveBeenCalled();
+  });
+
+  it('find_catalog ищет по виду и строке', async () => {
+    const api = vi
+      .fn()
+      .mockResolvedValue([{ id: MAP_ID, name: 'Гоблин', size: 'small' }]);
+    const client = await connect(api as unknown as ApiCall);
+
+    const result = await call(client, 'find_catalog', {
+      kind: 'monster',
+      q: 'гоб',
+    });
+
+    expect(JSON.parse(result.text)).toEqual([
+      { id: MAP_ID, name: 'Гоблин', size: 'small' },
+    ]);
+    expect(api).toHaveBeenCalledWith(
+      '/map-catalog?kind=monster&q=%D0%B3%D0%BE%D0%B1',
     );
   });
 });

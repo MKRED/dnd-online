@@ -79,9 +79,11 @@ function describe(
       const missing = object.items.flatMap(
         ({ itemId }) => ref(refs.items[itemId], `предмет ${itemId}`).missing,
       );
-      const look = CONTAINER_LOOK_LABELS[object.look].toLowerCase();
+      const look = CONTAINER_LOOK_LABELS[object.look];
+      // «Сундук (сундук, …)» — повтор: вид называем, только если имя другое.
+      const kind = object.name === look ? '' : `${look.toLowerCase()}, `;
       return {
-        label: `${object.name} (${look}, предметов: ${object.items.length})`,
+        label: `${object.name} (${kind}предметов: ${object.items.length})`,
         missing,
       };
     }

@@ -153,7 +153,11 @@ New or changed logic ships with its tests in the same commit, whenever it can be
 - **A new catalog** reuses `describeCatalog` (`test/support/catalog-scenario/`) and tests only its own fields.
 - **Pure logic** (rules in `packages/shared`, mappers, validators) gets unit tests next to it; UI gets component tests as described in [docs/web.md](docs/web.md).
 - **Check that a test can fail:** for an access rule, break it in the server code for a moment and see the test go red, then restore it.
-- **Before a commit or deploy, run every check** through the `test-runner` subagent (`.claude/agents/test-runner.md`), in the background. CI runs the same checks on every push to `master` and before every deploy.
+- **Before a commit, check what the change touches, not everything** (decided with the user 2026-10-20: the full run got slow, and CI runs every check on every push to `master` and before every deploy, so a broken deploy can't go out):
+  - type-check the packages you changed (`tsc`; rebuild `shared` first if it changed);
+  - run the tests of the changed area (`vitest related <files>` or the folder), lint and `prettier --check` on the changed files;
+  - run only the e2e spec files of the routes you changed.
+- **Run every check** through the `test-runner` subagent (`.claude/agents/test-runner.md`, in the background) only for a wide change: `shared` types used across apps, a schema or migration, shared test helpers, config or dependencies. Otherwise leave the full run to CI.
 - If something truly can't be tested (an external service like lolka), say so in the report and in the plan, instead of skipping it silently.
 
 ### UI changes (`apps/web`)

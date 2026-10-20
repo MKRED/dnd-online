@@ -21,7 +21,7 @@ API errors come back as tool results with `isError` and the server's Russian mes
 ## The build → look → fix loop
 
 1. Edit with `apply_ops`, check with `map_slice` (plan), `map_section` (heights) and `map_summary`.
-2. `view_url` → open it with the browser MCP → **wait for the text «Сцена готова»** (the page shows it after the first rendered frame; before that the canvas may still be empty) → screenshot. Make these three calls one after another, not in parallel: a parallel screenshot is taken before the wait finishes and shows the loader.
+2. `view_url` → open it with the browser MCP → **wait for the text «Сцена готова»** (the page shows it after the first frame rendered with the object thumbnails loaded or failed; before that the canvas may still be empty or the cards blank) → screenshot. Make these three calls one after another, not in parallel: a parallel screenshot is taken before the wait finishes and shows the loader.
 3. Same URL, same picture: the camera comes from the URL, not from mouse drags.
 
 Building proportions (a storey is 3 blocks, a door 2, creature heights) are decided in [plan/map.md](plan/map.md), «Два масштаба: правила и пропорции»; `block_guide` repeats them for the model.

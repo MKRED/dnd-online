@@ -43,8 +43,9 @@ function MapViewPage() {
     walk,
     keysActive: sizeDraft === null,
   });
-  // Сцена монтируется заново только при смене карты, и первый кадр (FirstFrame)
-  // приходит один раз на монтирование — поэтому готовность помним по id карты.
+  // Сцена монтируется заново только при смене карты, и готовность (первый кадр с
+  // картинками объектов, FirstFrame) приходит один раз на монтирование — поэтому
+  // помним её по id карты.
   const [readyMapId, setReadyMapId] = useState<string | null>(null);
   // Срез и камера живут в адресе страницы (?y=3&view=north), чтобы одна ссылка
   // всегда давала одну и ту же картинку — см. cameraView.ts.
@@ -116,6 +117,7 @@ function MapViewPage() {
             <MapScene
               key={id}
               map={map.state}
+              refs={map.refs}
               cutY={cutY}
               camera={camera}
               resizePreview={resizePreview}

@@ -2,9 +2,10 @@ import { useComputedColorScheme } from '@mantine/core';
 import { MapControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { useCallback, useRef, useState } from 'react';
-import type { ResizeOp, SizedMapState } from 'shared';
+import type { MapObjectRefsView, ResizeOp } from 'shared';
 import type { CameraPlacement, Point } from '../cameraView';
 import type { SceneEditor } from '../editor/editorTools';
+import type { MapViewState } from '../mapStateFromChunks';
 import { useKeyCodes } from '../useKeyCodes';
 import type { WalkScene } from '../walkTest';
 import WalkLayer from './WalkLayer';
@@ -15,6 +16,7 @@ import CursorReadout from './CursorReadout';
 import { createHoverStore } from './hoverStore';
 import EditLayer from './EditLayer';
 import FirstFrame from './FirstFrame';
+import ObjectLayer from './objects';
 import ResizePreview from './ResizePreview';
 import ChunkMesh from './ChunkMesh';
 import { useChunkMeshes } from './useChunkMeshes';
@@ -25,7 +27,9 @@ import classes from './MapScene.module.css';
 const SCENE_BACKGROUND = { light: '#d8ccb2', dark: '#191613' };
 
 interface MapSceneProps {
-  map: SizedMapState;
+  map: MapViewState;
+  // Имена и картинки того, на что ссылаются объекты карты.
+  refs: MapObjectRefsView;
   // Срез по высоте: клетки выше не рисуются.
   cutY: number;
   // Начальная камера (из адреса страницы); дальше ей управляет пользователь.
@@ -37,12 +41,13 @@ interface MapSceneProps {
   // Проверка хода (фигурка и куда она дойдёт): видна при любом инструменте,
   // чтобы правки карты сразу сказывались на ней.
   walk: WalkScene | null;
-  // Первый кадр отрисован (см. FirstFrame).
+  // Сцена отрисована с картинками объектов (см. FirstFrame).
   onReady: () => void;
 }
 
 function MapScene({
   map,
+  refs,
   cutY,
   camera,
   resizePreview,
@@ -57,6 +62,10 @@ function MapScene({
   const focus = useRef<CameraFocusApi | null>(null);
   const [centerLevel, setCenterLevel] = useState<number | null>(null);
   const [hover] = useState(createHoverStore);
+  // Миниатюры объектов догрузились (или не загрузились) — только после этого первый
+  // кадр считается готовым, иначе на снимке пустые карточки.
+  const [imagesSettled, setImagesSettled] = useState(false);
+  const settleImages = useCallback(() => setImagesSettled(true), []);
   const shiftLevel = useCallback(
     (dy: number) => focus.current?.shiftLevel(dy),
     [],
@@ -94,6 +103,12 @@ function MapScene({
             </group>
           ))}
         </EditLayer>
+        <ObjectLayer
+          state={map}
+          refs={refs}
+          cutY={cutY}
+          onImagesSettled={settleImages}
+        />
         {walk && <WalkLayer walk={walk} />}
         {resizePreview && (
           <ResizePreview size={map.size} grow={resizePreview} />
@@ -104,7 +119,7 @@ function MapScene({
         <CameraRig placement={camera} />
         {/* После CameraRig: первый уровень для подсказки берётся из уже поставленной камеры. */}
         <CameraFocus apiRef={focus} onLevel={setCenterLevel} />
-        <FirstFrame onReady={onReady} />
+        {imagesSettled && <FirstFrame onReady={onReady} />}
       </Canvas>
       <CenterHint level={centerLevel} onShift={shiftLevel} />
       <CursorReadout hover={hover} editor={editor} />

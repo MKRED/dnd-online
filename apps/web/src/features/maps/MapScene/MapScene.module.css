@@ -42,3 +42,9 @@
     bottom: calc(var(--mantine-spacing-xs) * 2 + 2.75rem);
   }
 }
+
+/* Предупреждение под подписью объекта («здесь нельзя стоять»). */
+.labelWarning {
+  font-weight: 400;
+  color: #ffc9c9;
+}

@@ -1,0 +1,66 @@
+import {
+  boolean,
+  integer,
+  pgTable,
+  primaryKey,
+  timestamp,
+  unique,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
+import { characters } from './characters.js';
+import { users } from './users.js';
+
+// Игра — кампания мастера (docs/plan/game.md). Видна всем в общем списке; закрытая
+// пускает в лобби только с паролем.
+export const games = pgTable('games', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  masterId: uuid('master_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 100 }).notNull(),
+  // Сколько мест всего; занятые — участники с персонажем (game_members).
+  seatCount: integer('seat_count').notNull(),
+  // bcrypt; null — игра открытая.
+  passwordHash: varchar('password_hash', { length: 100 }),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+// Участник игры — кто вошёл в лобби (в закрытое — с паролем, один раз). Место — участник
+// с персонажем; свободных мест строками нет, их число — seat_count минус занятые.
+export const gameMembers = pgTable(
+  'game_members',
+  {
+    gameId: uuid('game_id')
+      .notNull()
+      .references(() => games.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    // null — в лобби без места. Удалили персонажа — место освобождается, вход остаётся.
+    characterId: uuid('character_id').references(() => characters.id, {
+      onDelete: 'set null',
+    }),
+    allowHandover: boolean('allow_handover').notNull().default(true),
+    joinedAt: timestamp('joined_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    // Когда занято место: порядок мест в лобби.
+    seatedAt: timestamp('seated_at', { withTimezone: true }),
+  },
+  (table) => [
+    primaryKey({
+      name: 'game_members_pk',
+      columns: [table.gameId, table.userId],
+    }),
+    // Персонаж — только в одной игре: игра пишет в его лист (docs/plan/game.md).
+    // null в unique различны, поэтому участники без места не мешают друг другу.
+    unique('game_members_character').on(table.characterId),
+  ],
+);

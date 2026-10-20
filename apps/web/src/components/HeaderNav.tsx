@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../features/auth';
 
 const NAV_LINKS = [
+  { to: '/games', label: 'Игры' },
   { to: '/characters', label: 'Персонажи' },
   { to: '/maps', label: 'Карты' },
   // Справочник: предметы, способности, эффекты, монстры; ведёт на первый раздел.
@@ -11,8 +12,8 @@ const NAV_LINKS = [
   { to: '/bookmarks', label: 'Закладки' },
 ];
 
-// Правая часть шапки. На широком экране (от md) ссылки лежат в ряд; уже — четыре ссылки
-// вместе с ником и «Выйти» не помещаются, поэтому уходят в меню.
+// Правая часть шапки. На широком экране (от lg) ссылки лежат в ряд; уже — пять ссылок
+// вместе с ником и «Выйти» не помещаются (на 1000px «Выйти» обрезалось), поэтому уходят в меню.
 function HeaderNav() {
   const { user, loading, logout } = useAuth();
   const [menuOpened, setMenuOpened] = useState(false);
@@ -35,7 +36,7 @@ function HeaderNav() {
 
   return (
     <>
-      <Group gap="sm" wrap="nowrap" visibleFrom="md">
+      <Group gap="sm" wrap="nowrap" visibleFrom="lg">
         {NAV_LINKS.map(({ to, label }) => (
           <Button key={to} component={Link} to={to} variant="subtle" size="sm">
             {label}
@@ -69,7 +70,7 @@ function HeaderNav() {
           <Burger
             opened={menuOpened}
             size="sm"
-            hiddenFrom="md"
+            hiddenFrom="lg"
             aria-label="Меню"
           />
         </Menu.Target>

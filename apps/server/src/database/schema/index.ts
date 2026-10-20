@@ -27,3 +27,4 @@ export type {
   CatalogImageTables,
 } from './catalog-tables.js';
 export * from './bookmarks.js';
+export * from './games.js';

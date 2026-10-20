@@ -12,6 +12,7 @@ import { CharacterImagesModule } from './character-images/character-images.modul
 import { CharactersModule } from './characters/characters.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { EffectsModule } from './effects/effects.module.js';
+import { GamesModule } from './games/games.module.js';
 import { MonstersModule } from './monsters/monsters.module.js';
 import { ItemImagesModule } from './item-images/item-images.module.js';
 import { ItemsModule } from './items/items.module.js';
@@ -38,6 +39,7 @@ const level = process.env.LOG_LEVEL ?? 'info';
     MonstersModule,
     ApiTokensModule,
     BookmarksModule,
+    GamesModule,
     ...webAppModules(),
     LoggerModule.forRoot({
       pinoHttp: {

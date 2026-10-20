@@ -1,0 +1,63 @@
+import type { GameDetail, GameListItem } from 'shared';
+import { apiRequest as request } from '../../lib/apiRequest';
+
+export interface CreateGamePayload {
+  name: string;
+  seatCount: number;
+  // Пустой — игра открытая.
+  password?: string;
+}
+
+export function listGames(): Promise<GameListItem[]> {
+  return request('/games');
+}
+
+export function createGame(payload: CreateGamePayload): Promise<GameDetail> {
+  return request('/games', { method: 'POST', body: JSON.stringify(payload) });
+}
+
+// Закрытое лобби без входа отвечает 403 — страница спрашивает пароль.
+export function getGame(id: string): Promise<GameDetail> {
+  return request(`/games/${id}`);
+}
+
+export function enterGame(id: string, password: string): Promise<GameDetail> {
+  return request(`/games/${id}/enter`, {
+    method: 'POST',
+    body: JSON.stringify({ password }),
+  });
+}
+
+export function deleteGame(id: string): Promise<void> {
+  return request(`/games/${id}`, { method: 'DELETE' });
+}
+
+export function takeSeat(
+  id: string,
+  characterId: string,
+  allowHandover: boolean,
+): Promise<GameDetail> {
+  return request(`/games/${id}/seats`, {
+    method: 'POST',
+    body: JSON.stringify({ characterId, allowHandover }),
+  });
+}
+
+export function updateSeat(
+  id: string,
+  allowHandover: boolean,
+): Promise<GameDetail> {
+  return request(`/games/${id}/seats/me`, {
+    method: 'PATCH',
+    body: JSON.stringify({ allowHandover }),
+  });
+}
+
+export function freeSeat(id: string): Promise<GameDetail> {
+  return request(`/games/${id}/seats/me`, { method: 'DELETE' });
+}
+
+// Себя — выйти из игры, другого — убрать (мастер).
+export function removeMember(id: string, userId: string): Promise<void> {
+  return request(`/games/${id}/members/${userId}`, { method: 'DELETE' });
+}

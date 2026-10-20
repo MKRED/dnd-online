@@ -12,6 +12,8 @@ import ItemEditPage from './pages/ItemEditPage';
 import ItemsPage from './pages/ItemsPage';
 import ItemViewPage from './pages/ItemViewPage';
 import LoginPage from './pages/LoginPage';
+import GamesPage from './pages/GamesPage';
+import GameLobbyPage from './pages/GameLobbyPage';
 import MapsPage from './pages/MapsPage';
 import MapViewPage from './pages/MapViewPage';
 import {
@@ -78,6 +80,8 @@ export const router = createBrowserRouter([
           { path: '/monsters/:id', element: <MonsterViewPage /> },
           { path: '/monsters/:id/edit', element: <MonsterEditPage /> },
           { path: '/bookmarks', element: <BookmarksPage /> },
+          { path: '/games', element: <GamesPage /> },
+          { path: '/games/:id', element: <GameLobbyPage /> },
           { path: '/maps', element: <MapsPage /> },
           { path: '/maps/:id', element: <MapViewPage /> },
           // Токены переехали в профиль; старый адрес ведёт туда.

@@ -4,12 +4,13 @@ import type {
   MapChunksResponse,
   MapEditResult,
   MapInfo,
+  MapListItem,
   MapOp,
   MapSize,
 } from 'shared';
 import { apiRequest as request } from '../../lib/apiRequest';
 
-export function listMaps(): Promise<MapInfo[]> {
+export function listMaps(): Promise<MapListItem[]> {
   return request('/maps');
 }
 

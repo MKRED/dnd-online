@@ -17,17 +17,24 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   DEFAULT_MAP_LIMITS,
   DEFAULT_MAP_SIZE,
+  pluralRu,
   sizeLabel,
-  type MapInfo,
+  type MapListItem,
 } from 'shared';
 import { createMap, deleteMap, listMaps, mapSizeLabel } from '../features/maps';
 import { errorMessage } from '../lib/apiRequest';
 import { usePageTitle } from '../lib/usePageTitle';
 
+// Старты — места игроков: по их числу видно, на сколько человек карта.
+function startsLabel(count: number) {
+  if (count === 0) return 'нет стартов';
+  return `${count} ${pluralRu(count, ['старт', 'старта', 'стартов'])}`;
+}
+
 function MapsPage() {
   usePageTitle('Карты');
   const navigate = useNavigate();
-  const [maps, setMaps] = useState<MapInfo[]>([]);
+  const [maps, setMaps] = useState<MapListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -149,7 +156,7 @@ function MapsPage() {
                 <Group gap="xs" align="baseline">
                   <Text fw={600}>{map.name}</Text>
                   <Text size="sm" c="dimmed">
-                    {sizeLabel(map)}
+                    {sizeLabel(map)} · {startsLabel(map.startCount)}
                   </Text>
                 </Group>
                 <Group gap="xs">

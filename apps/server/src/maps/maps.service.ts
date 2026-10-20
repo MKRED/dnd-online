@@ -3,11 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { createPalette, DEFAULT_MAP_SIZE } from 'shared';
+import { createPalette, DEFAULT_MAP_SIZE, type MapListItem } from 'shared';
 import { DatabaseService } from '../database/database.service.js';
-import { maps } from '../database/schema/index.js';
+import { mapObjects, maps } from '../database/schema/index.js';
 import type { CreateMapDto } from './dto/create-map.dto.js';
 import { MAP_NOT_FOUND } from './map-access.js';
 import { MapLimitsConfig } from './map-limits.js';
@@ -54,19 +54,31 @@ export class MapsService {
     }
   }
 
-  async findAllForOwner(ownerId: string) {
+  // Список со стартами каждой карты: по ним видно, на сколько игроков карта.
+  async findAllForOwner(ownerId: string): Promise<MapListItem[]> {
     const t0 = Date.now();
     try {
       const rows = await this.databaseService.db
-        .select()
+        .select({
+          map: maps,
+          startCount: sql<number>`count(${mapObjects.id})::int`,
+        })
         .from(maps)
+        .leftJoin(
+          mapObjects,
+          and(eq(mapObjects.mapId, maps.id), eq(mapObjects.kind, 'start')),
+        )
         .where(eq(maps.ownerId, ownerId))
+        .groupBy(maps.id)
         .orderBy(desc(maps.updatedAt), desc(maps.createdAt));
       this.logger.debug(
         { durationMs: Date.now() - t0, ownerId, count: rows.length },
         'Maps listed',
       );
-      return rows.map(toMapInfo);
+      return rows.map((row) => ({
+        ...toMapInfo(row.map),
+        startCount: row.startCount,
+      }));
     } catch (err: unknown) {
       this.logger.error({ err, ownerId }, 'Map listing failed');
       throw err;

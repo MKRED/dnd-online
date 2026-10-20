@@ -21,6 +21,11 @@ export interface MapInfo {
   updatedAt: string;
 }
 
+// Карта в списке «Мои карты»: число стартов — на сколько игроков она рассчитана.
+export interface MapListItem extends MapInfo {
+  startCount: number;
+}
+
 export interface MapChunkData {
   cx: number;
   cy: number;

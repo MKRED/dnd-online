@@ -23,15 +23,22 @@ const MAP = {
   depth: 12,
   createdAt: '2026-10-01T00:00:00.000Z',
   updatedAt: '2026-10-01T00:00:00.000Z',
+  startCount: 3,
 };
 
 describe('MapsPage', () => {
-  it('показывает размер карт в списке', async () => {
-    stubFetch([{ status: 200, body: [MAP] }]);
+  it('показывает размер карт и число стартов в списке', async () => {
+    stubFetch([
+      {
+        status: 200,
+        body: [MAP, { ...MAP, id: 'empty', name: 'Пустошь', startCount: 0 }],
+      },
+    ]);
     renderWithProviders(<MapsPage />, { route: '/maps' });
 
     expect(await screen.findByText('Двор')).toBeInTheDocument();
-    expect(screen.getByText('20 × 12')).toBeInTheDocument();
+    expect(screen.getByText('20 × 12 · 3 старта')).toBeInTheDocument();
+    expect(screen.getByText('20 × 12 · нет стартов')).toBeInTheDocument();
   });
 
   it('создаёт карту с заданным размером', async () => {

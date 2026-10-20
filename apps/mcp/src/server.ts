@@ -4,6 +4,7 @@ import {
   SECTION_AXES,
   type MapEditResult,
   type MapInfo,
+  type MapListItem,
   type MapSectionResponse,
   type MapSliceResponse,
   type MapSummaryResponse,
@@ -59,9 +60,9 @@ export function createMapMcpServer(api: ApiCall, webUrl: string): McpServer {
     'list_maps',
     {
       description:
-        'Список карт пользователя (id, название, номер последней правки seq).',
+        'Список карт пользователя (id, название, размер, номер последней правки seq, число стартов startCount).',
     },
-    () => guarded(async () => json(await api<MapInfo[]>('/maps'))),
+    () => guarded(async () => json(await api<MapListItem[]>('/maps'))),
   );
 
   server.registerTool(

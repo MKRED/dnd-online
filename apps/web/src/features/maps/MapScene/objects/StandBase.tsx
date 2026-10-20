@@ -26,8 +26,10 @@ interface StandBaseProps {
 }
 
 // Подставка на полу: квадрат во всё место существа (или плитка старта) и стрелка
-// взгляда. Наведение на подставку показывает подсказку объекта (ObjectLayer); номер и
-// стрелку луч пропускает.
+// взгляда. Все три прозрачные и глубину не пишут, а прозрачное three.js сортирует по
+// расстоянию до камеры — под иными углами квадрат рисовался поверх номера и стрелки.
+// renderOrder ставит их строго после квадрата. Наведение на подставку показывает
+// подсказку объекта (ObjectLayer); номер и стрелку луч пропускает.
 function StandBase({ size, color, facing, texture }: StandBaseProps) {
   const arrow = useMemo(() => arrowGeometry(), []);
   useEffect(() => () => arrow.dispose(), [arrow]);
@@ -48,6 +50,7 @@ function StandBase({ size, color, facing, texture }: StandBaseProps) {
           position={[0, 0.03, 0]}
           rotation={[-Math.PI / 2, 0, 0]}
           raycast={() => null}
+          renderOrder={1}
         >
           <planeGeometry args={[side * 0.4, side * 0.4]} />
           <meshBasicMaterial map={texture} transparent depthWrite={false} />
@@ -60,6 +63,7 @@ function StandBase({ size, color, facing, texture }: StandBaseProps) {
             position={[0, 0.035 / size, 0]}
             rotation={[-Math.PI / 2, 0, 0]}
             raycast={() => null}
+            renderOrder={2}
           >
             <meshBasicMaterial color="#fff" depthWrite={false} transparent />
           </mesh>

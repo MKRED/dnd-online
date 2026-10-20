@@ -1,6 +1,6 @@
-import { Billboard } from '@react-three/drei';
 import type { Texture } from 'three';
 import { CREATURE_SIZES } from 'shared';
+import FaceCamera from './FaceCamera';
 import type { SceneObject, SceneObjectLook } from './objectLayout';
 import StandBase, { BLOCKED_COLOR } from './StandBase';
 import { useLabelTexture } from './useLabelTexture';
@@ -33,7 +33,7 @@ function CreatureCard({ object, look, texture }: CreatureCardProps) {
         color={object.blocked ? BLOCKED_COLOR : frame}
         facing={look.facing}
       />
-      <Billboard lockX lockZ position={[0, height / 2, 0]}>
+      <FaceCamera position={[0, height / 2, 0]}>
         <mesh>
           <planeGeometry args={[width, height]} />
           <meshStandardMaterial color={frame} />
@@ -44,7 +44,7 @@ function CreatureCard({ object, look, texture }: CreatureCardProps) {
           <planeGeometry args={[picture, picture]} />
           <meshBasicMaterial map={texture ?? letter} alphaTest={0.05} />
         </mesh>
-      </Billboard>
+      </FaceCamera>
     </group>
   );
 }

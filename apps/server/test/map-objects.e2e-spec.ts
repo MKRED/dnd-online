@@ -169,6 +169,25 @@ describe('объекты на карте (e2e)', () => {
     );
   });
 
+  it('список карт считает старты, без других объектов', async () => {
+    const id = await createMap();
+    const empty = await createMap();
+    await ops(id, [
+      place([0, 0, 0], { kind: 'start' }),
+      place([1, 0, 0], { kind: 'start' }),
+      place([2, 0, 0], { kind: 'container', look: 'sack', items: [] }),
+    ]).expect(200);
+    const list = await owner.get('/api/maps').expect(200);
+    const counts = new Map(
+      (list.body as { id: string; startCount: number }[]).map((m) => [
+        m.id,
+        m.startCount,
+      ]),
+    );
+    expect(counts.get(id)).toBe(2);
+    expect(counts.get(empty)).toBe(0);
+  });
+
   it('ссылки: чужое скрытое, чужой НПС и неизвестное — 400, опубликованное — можно', async () => {
     const id = await createMap();
     const hidden = await createMonster(stranger);

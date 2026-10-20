@@ -39,8 +39,9 @@ export function useMapData(id: string) {
   const [map, setMap] = useState<LoadedMap | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   // Номер последнего применённого снимка: запоздавший ответ со старым seq не
-  // откатывает карту назад.
+  // откатывает карту назад. Копия для правок ставится вместе с ним (useMapEdits).
   const seqRef = useRef(-1);
+  const copyRef = useRef<EditableCopy | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,8 +49,9 @@ export function useMapData(id: string) {
     Promise.all([getMap(id), getMapChunks(id)])
       .then(([info, chunks]) => {
         if (cancelled) return;
-        seqRef.current = chunks.seq;
         const state = mapStateFromChunks(chunks);
+        seqRef.current = chunks.seq;
+        copyRef.current = { state, refs: chunks.refs };
         setMap({
           info,
           state,
@@ -79,23 +81,17 @@ export function useMapData(id: string) {
     () =>
       getMapChunks(id).then((chunks) => {
         if (chunks.seq < seqRef.current) return;
+        const copy = {
+          state: mapStateFromChunks(chunks),
+          refs: chunks.refs,
+        };
         seqRef.current = chunks.seq;
-        setMap(
-          (prev) =>
-            prev && {
-              ...prev,
-              state: mapStateFromChunks(chunks),
-              refs: chunks.refs,
-            },
-        );
+        copyRef.current = copy;
+        setMap((prev) => prev && { ...prev, ...copy });
       }),
     [id],
   );
 
-  const copy = useMemo<EditableCopy | null>(
-    () => map && { state: map.state, refs: map.refs },
-    [map],
-  );
   const onApplied = useCallback(
     (next: EditableCopy) => setMap((prev) => prev && { ...prev, ...next }),
     [],
@@ -110,7 +106,7 @@ export function useMapData(id: string) {
     [id],
   );
   const { editError, busy, applyOps, editOps, undo, redo } = useMapEdits({
-    copy,
+    copyRef,
     seqRef,
     onApplied,
     refresh,

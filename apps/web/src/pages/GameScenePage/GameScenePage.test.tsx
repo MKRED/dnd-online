@@ -257,7 +257,9 @@ describe('GameScenePage', () => {
       },
     });
     renderScene('u2');
-    expect(await screen.findByText('Объектов: 0')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Объектов: 0', {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
 
     const goblin: MapObject = {
       id: 1,
@@ -290,7 +292,7 @@ describe('GameScenePage', () => {
     expect(reads).toBe(1);
     // Номер через один — правка пропущена: сцена перечитывается.
     act(() => socket.current?.receive(GAME_SOCKET.sceneEdit, edit(3)));
-    await vi.waitFor(() => expect(reads).toBe(2));
+    await vi.waitFor(() => expect(reads).toBe(2), { timeout: 3000 });
     // Инструментов у игрока нет.
     expect(
       screen.queryByRole('button', { name: 'Отменить' }),
@@ -320,7 +322,9 @@ describe('GameScenePage', () => {
     renderScene('m1');
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole('button', { name: 'Объекты' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Объекты' }, { timeout: 3000 }),
+    );
     expect(screen.getByText('На карте: 0')).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Ход' }),

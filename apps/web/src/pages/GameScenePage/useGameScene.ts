@@ -46,8 +46,10 @@ export function useGameScene(gameId: string) {
   const [load, setLoad] = useState<SceneLoad>({ kind: 'loading' });
   // Запросы могут обгонять друг друга при частых событиях: побеждает последний.
   const requestRef = useRef(0);
-  // Номер последней правки сцены в копии (game_scenes.seq).
+  // Номер последней правки сцены в копии (game_scenes.seq) и сама копия для правок —
+  // ставятся вместе с состоянием (useMapEdits).
   const seqRef = useRef(-1);
+  const copyRef = useRef<EditableCopy | null>(null);
 
   const reload = useCallback(() => {
     const request = ++requestRef.current;
@@ -59,6 +61,7 @@ export function useGameScene(gameId: string) {
           if (!current()) return;
           const state = mapStateFromChunks(view);
           seqRef.current = view.seq;
+          copyRef.current = { state, refs: view.refs };
           setLoad((prev) => ({
             kind: 'ready',
             game,
@@ -73,6 +76,7 @@ export function useGameScene(gameId: string) {
         } catch (err: unknown) {
           if (!current()) return;
           if (err instanceof ApiError && err.status === 404) {
+            copyRef.current = null;
             setLoad({ kind: 'none', game });
             return;
           }
@@ -97,10 +101,6 @@ export function useGameScene(gameId: string) {
 
   const ready = load.kind === 'ready' ? load : null;
   const sceneId = ready?.view.scene.id ?? null;
-  const copy = useMemo<EditableCopy | null>(
-    () => ready && { state: ready.state, refs: ready.view.refs },
-    [ready],
-  );
   const onApplied = useCallback(
     (next: EditableCopy, seq: number) =>
       setLoad((prev) =>
@@ -118,7 +118,13 @@ export function useGameScene(gameId: string) {
     () => sceneEditApi(gameId, sceneId ?? ''),
     [gameId, sceneId],
   );
-  const edits = useMapEdits({ copy, seqRef, onApplied, refresh: reload, api });
+  const edits = useMapEdits({
+    copyRef,
+    seqRef,
+    onApplied,
+    refresh: reload,
+    api,
+  });
 
   // Правка сцены по сокету: другой сцены (мастер правил неактивную) страница не ждёт.
   const { receive } = edits;

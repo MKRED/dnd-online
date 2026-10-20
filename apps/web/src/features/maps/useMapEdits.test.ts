@@ -40,15 +40,19 @@ function setup() {
   const api = { applyOps: vi.fn(), undo: vi.fn(), redo: vi.fn() };
   const { result } = renderHook(() => {
     const seqRef = useRef(0);
-    // Копия не перерисовывается между правками: так приходят два сообщения сокета подряд.
+    // Страница между правками не перерисовывается: так приходят два сообщения сокета подряд.
+    const copyRef = useRef<EditableCopy | null>({
+      state,
+      refs: emptyRefsView(),
+    });
     const edits = useMapEdits({
-      copy: { state, refs: emptyRefsView() },
+      copyRef,
       seqRef,
       onApplied,
       refresh,
       api,
     });
-    return { edits, seqRef };
+    return { edits, seqRef, copyRef };
   });
   return { result, onApplied, refresh };
 }
@@ -65,6 +69,23 @@ describe('useMapEdits', () => {
     expect(seq).toBe(2);
     expect([...last.state.objects.byId.keys()]).toEqual([1, 2]);
     expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it('правка сразу после чтения целиком ложится на прочитанную копию', () => {
+    const { result, onApplied } = setup();
+    // Перечитали сцену: копия и номер ставятся вместе, ещё до перерисовки.
+    const fresh: EditableCopy = {
+      state: { ...state, objects: createMapObjects([start(9)], 10) },
+      refs: emptyRefsView(),
+    };
+    act(() => {
+      result.current.copyRef.current = fresh;
+      result.current.seqRef.current = 5;
+      void result.current.edits.receive(6, placed(6), emptyRefsView());
+    });
+    const [next, seq] = onApplied.mock.calls[0];
+    expect(seq).toBe(6);
+    expect([...next.state.objects.byId.keys()].sort()).toEqual([6, 9]);
   });
 
   it('уже применённую пропускает, после пропуска перечитывает', () => {

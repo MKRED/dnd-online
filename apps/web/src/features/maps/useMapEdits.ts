@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type RefObject,
-} from 'react';
+import { useCallback, useState, type RefObject } from 'react';
 import {
   mergeRefsView,
   type MapEditResult,
@@ -30,8 +24,11 @@ export interface EditableCopy {
 }
 
 interface MapEditsOptions {
-  copy: EditableCopy | null;
-  // Номер последней правки в копии. Его ставит и чтение целиком (refresh).
+  // Последняя копия и номер последней правки в ней. Владелец данных ставит их вместе,
+  // когда читает копию целиком, — тем же вызовом, что и своё состояние: правка сокета,
+  // пришедшая до перерисовки, должна лечь на новую копию, а не на старую. Правки двигают
+  // их здесь же (receive).
+  copyRef: RefObject<EditableCopy | null>;
   seqRef: RefObject<number>;
   // Новая копия после правки с номером seq.
   onApplied: (next: EditableCopy, seq: number) => void;
@@ -45,7 +42,7 @@ interface MapEditsOptions {
 // правки (receive): следующая за копией применяется к ней, уже применённая (ответ на свою
 // правку и то же сообщение сокета) пропускается, после пропуска копия перечитывается.
 export function useMapEdits({
-  copy,
+  copyRef,
   seqRef,
   onApplied,
   refresh,
@@ -53,12 +50,6 @@ export function useMapEdits({
 }: MapEditsOptions) {
   const [editError, setEditError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  // Последняя копия — в ref: два сообщения сокета подряд приходят до перерисовки, и
-  // второе легло бы на копию без первого.
-  const copyRef = useRef(copy);
-  useEffect(() => {
-    copyRef.current = copy;
-  }, [copy]);
 
   const receive = useCallback(
     (
@@ -84,7 +75,7 @@ export function useMapEdits({
       }
       return refresh();
     },
-    [seqRef, onApplied, refresh],
+    [copyRef, seqRef, onApplied, refresh],
   );
 
   // Свои правки идут по одной: пока запрос в пути, новые не принимаются (busy), иначе

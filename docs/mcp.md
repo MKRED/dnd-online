@@ -47,3 +47,35 @@ Building proportions (a storey is 3 blocks, a door 2, creature heights) are deci
 Without a token the server still starts; every tool then explains where to get one.
 
 stdout is the protocol channel: the server logs only to stderr.
+
+# The `comfy` MCP server (`apps/comfy-mcp`)
+
+A second local stdio MCP server (`comfy` in `.mcp.json`, package `comfy-mcp`) that only generates images on ComfyUI and knows nothing about DnD. ComfyUI runs on another computer with the GPU (RTX 5070 Ti), reached over Radmin VPN; if it is off, `comfy` answers with a clear error and `dnd` works as usual. Plan and decisions: [plan/ai-access.md](plan/ai-access.md).
+
+## Tools
+
+| Tool           | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `comfy_status` | Whether ComfyUI answers (`/system_stats`, `/queue`), its GPU and VRAM, the queue, the checkpoints and LoRAs it has (`/models/checkpoints`, `/models/loras`), and the style presets, each with `missing` — the preset's files ComfyUI doesn't have. The presets are listed even when ComfyUI is down.                                                                                                                                                                                                                          |
+| `generate`     | `style`, `prompt` (only the subject, in English), optional `negative`, `seed`, `width`, `height` and `count` (up to 4). Builds the preset's graph, queues it (`POST /prompt`), polls `/history/{id}` every second up to `COMFY_TIMEOUT_SEC`, downloads the images (`/view`) and saves them as PNG to `COMFY_OUTPUT_DIR`. The result is the file paths, the seed and a 512 px JPEG preview of each image, which the model looks at. A path goes on to `dnd`'s `upload_image`: the image itself never passes through the model. |
+
+ComfyUI errors come back as tool results with `isError`: unreachable (the real cause, a 30 s limit per request), a graph rejected by ComfyUI (the node and its message, such as a missing checkpoint), a failed run (`execution_error`, such as CUDA out of memory), a timeout.
+
+## Style presets
+
+One file per style in `apps/comfy-mcp/styles/<name>.json` (in git), checked by `src/styles.ts` and read on every call, so editing one needs no restart: the graph (`workflow`, so far `txt2img` for single-checkpoint models such as SD 1.5 and SDXL, built in `src/workflow.ts`), `checkpoint`, `loras`, `sampler`, `scheduler`, `steps`, `cfg`, the default `width` and `height`, and `promptPrefix`, `promptSuffix` and `negative` around the model's subject. Two drafts ship until the models are picked (stage 6 of the plan): `dark-fantasy-creature` (portrait 832 × 1216) and `dark-fantasy-item` (one object on a dark background, 1024 × 1024).
+
+## The generate → look → upload loop
+
+1. `comfy_status`, then `generate` with a short subject.
+2. Look at the preview against the description; fix the prompt or the seed. At most three tries per image, then show the user the best ones and ask. Small defects (fingers, lettering) may go unnoticed on the preview.
+3. `dnd`'s `upload_image` with the chosen path.
+
+## Connecting
+
+1. Build: `pnpm --filter comfy-mcp build` (`.mcp.json` runs `apps/comfy-mcp/dist/index.js`).
+2. On the GPU computer: start ComfyUI with `--listen` (port 8188) and open the port in the firewall for the Radmin network.
+3. Copy `apps/comfy-mcp/.env.example` to `apps/comfy-mcp/.env` (gitignored) and set `COMFY_URL` to that computer's Radmin address, such as `http://26.x.x.x:8188`. Real environment variables win over the file. Optional: `COMFY_OUTPUT_DIR` (default `apps/comfy-mcp/output/`, gitignored) and `COMFY_TIMEOUT_SEC` (default 300; the first load of a model is slow).
+4. Restart Claude Code and approve the project MCP server `comfy`.
+
+Without `COMFY_URL` the server still starts; `generate` then explains where to set it. Like `dnd`, it logs only to stderr.

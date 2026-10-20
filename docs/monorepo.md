@@ -6,6 +6,10 @@ pnpm workspaces: `pnpm-workspace.yaml` includes `apps/*` and `packages/*`. The r
 
 Local stdio MCP server `dnd` (`dnd-mcp` package), a thin client over the REST API — see [mcp.md](mcp.md). Built with plain `tsc`, tested with vitest (`pnpm --filter dnd-mcp test`). Not part of the Docker image; the Dockerfile only copies its `package.json` so `pnpm install --frozen-lockfile` sees every workspace from the lockfile. No ESLint config yet (like `shared`).
 
+## `apps/comfy-mcp`
+
+Local stdio MCP server `comfy` (`comfy-mcp` package), image generation on ComfyUI — see [mcp.md](mcp.md). Doesn't depend on `shared`; uses `sharp` for the previews. Built and tested like `apps/mcp` (`pnpm --filter comfy-mcp test`), not part of the Docker image (the Dockerfile copies only its `package.json`), no ESLint config yet.
+
 ## `packages/shared`
 
 Code consumed by web and server through a `workspace:*` dependency, re-exported from `src/index.ts`:

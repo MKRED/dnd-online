@@ -1,0 +1,15 @@
+{
+  "description": "Тёмное фэнтези: существа, монстры, персонажи и НПС. Черновик до этапа 6 — модель ещё не выбрана.",
+  "workflow": "txt2img",
+  "checkpoint": "sd_xl_base_1.0.safetensors",
+  "loras": [],
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "steps": 30,
+  "cfg": 6,
+  "width": 832,
+  "height": 1216,
+  "promptPrefix": "dark fantasy illustration, grim atmosphere, dramatic chiaroscuro lighting, muted desaturated colors, detailed painterly style",
+  "promptSuffix": "highly detailed, sharp focus",
+  "negative": "lowres, blurry, text, watermark, signature, logo, jpeg artifacts, deformed, bad anatomy, extra limbs, cartoon, anime, bright cheerful colors"
+}

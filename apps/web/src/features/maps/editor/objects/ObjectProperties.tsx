@@ -4,6 +4,7 @@ import {
   SegmentedControl,
   Select,
   Stack,
+  Switch,
   Text,
 } from '@mantine/core';
 import {
@@ -64,6 +65,22 @@ function ObjectProperties({
           </Text>
         ))}
       </div>
+
+      {/* Первым из свойств: в игре это самая частая правка — вывести засаду. */}
+      <Stack gap={2}>
+        <Switch
+          size="sm"
+          label="Скрыт от игроков"
+          checked={object.hidden}
+          onChange={(e) => tool.update({ hidden: e.currentTarget.checked })}
+          disabled={busy}
+        />
+        {object.hidden && (
+          <Text size="xs" c="dimmed">
+            Видите только вы. Снимите — игроки увидят его сразу.
+          </Text>
+        )}
+      </Stack>
 
       {facing !== null && (
         <FacingPicker value={facing} onChange={tool.turn} disabled={busy} />

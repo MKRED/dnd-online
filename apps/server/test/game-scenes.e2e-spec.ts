@@ -1,4 +1,3 @@
-import { and, eq } from 'drizzle-orm';
 import type request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type {
@@ -10,8 +9,6 @@ import type {
   GameScenes,
   GameSceneView,
 } from 'shared';
-import { DatabaseService } from '../src/database/database.service.js';
-import { gameSceneObjects } from '../src/database/schema/index.js';
 import {
   characterBody,
   pngImage,
@@ -287,16 +284,13 @@ describe('game scenes (e2e)', () => {
       await setup('gs_open');
     const m = master.agent;
     const stranger = await user('gs_open_stranger');
+    // Монстр — засада: скрыт от игроков ещё в карте, признак копируется в сцену.
+    await m
+      .post(`/api/maps/${mapId}/ops`)
+      .send({ ops: [{ op: 'updateObject', id: 2, object: { hidden: true } }] })
+      .expect(200);
     const scenes = await addScene(m, gameId, mapId);
     const sceneId = scenes.scenes[0].id;
-    // Монстр — засада: видит только мастер. Скрыть объект пока можно только в базе.
-    const { db } = t.app.get(DatabaseService);
-    await db
-      .update(gameSceneObjects)
-      .set({ hidden: true })
-      .where(
-        and(eq(gameSceneObjects.sceneId, sceneId), eq(gameSceneObjects.id, 2)),
-      );
 
     const opened = await m
       .put(`${scenesUrl(gameId)}/open`)

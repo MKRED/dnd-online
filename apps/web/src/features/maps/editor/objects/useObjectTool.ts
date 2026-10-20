@@ -49,6 +49,7 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
   const [item, setItem] = useState<CatalogChoice | null>(null);
   const [look, setLook] = useState<ContainerLook>('chest');
   const [facing, setFacing] = useState<Facing>(0);
+  const [hidden, setHidden] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   // «Перенести» в свойствах: следующий клик по клетке переносит выделенный объект.
   const [moving, setMoving] = useState(false);
@@ -69,7 +70,7 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
     [objectRefs],
   );
 
-  const settings = { kind, creature, item, look, facing };
+  const settings = { kind, creature, item, look, facing, hidden };
   const dragged =
     (draggingId !== null && state?.objects.byId.get(draggingId)) || null;
   const carried = dragged ?? (moving ? selected : null);
@@ -130,6 +131,7 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
     },
     setLook,
     setFacing,
+    setHidden,
     missingChoice,
     selected,
     select,

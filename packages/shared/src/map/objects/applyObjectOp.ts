@@ -8,7 +8,7 @@ import {
 } from './containerLoad.js';
 import { objectFacing, type MapObject, type MapObjects } from './mapObject.js';
 import type { ObjectChange } from './objectChanges.js';
-import { KIND_FIELDS } from './objectFields.js';
+import { fieldsOfKind } from './objectFields.js';
 import type { ObjectOp } from './objectOps.js';
 import { objectSpan, type ObjectRefs } from './objectRefs.js';
 
@@ -31,11 +31,12 @@ export function applyObjectOp(
         `На карте уже ${objects.byId.size} объектов — это предел`,
       );
     }
+    // hidden — после тела: у сохранённого объекта он есть всегда, true или false.
     const object = {
       id: objects.nextId,
       at: op.at,
-      hidden: false,
       ...op.object,
+      hidden: op.object.hidden ?? false,
     };
     checkRefs(ctx, object, null);
     checkLoad(ctx, object, null);
@@ -63,7 +64,7 @@ export function applyObjectOp(
         facing: op.facing,
       } as MapObject);
     case 'updateObject': {
-      const allowed = KIND_FIELDS[current.kind];
+      const allowed = fieldsOfKind(current.kind);
       for (const key of Object.keys(op.object)) {
         if (!allowed.includes(key as (typeof allowed)[number])) {
           throw new MapOpError(

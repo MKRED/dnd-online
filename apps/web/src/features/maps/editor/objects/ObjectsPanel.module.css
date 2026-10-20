@@ -12,3 +12,9 @@
 .row[data-selected] {
   background: var(--mantine-primary-color-light);
 }
+
+/* Глаз со штрихом у скрытого от игроков — по строке текста. */
+.hiddenMark {
+  vertical-align: -2px;
+  color: var(--mantine-color-dimmed);
+}

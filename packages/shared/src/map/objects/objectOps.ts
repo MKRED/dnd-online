@@ -13,7 +13,7 @@ import { parseObjectFields, type ObjectFields } from './objectFields.js';
 // Операции объектов (docs/plan/done/map-objects.md, «Операции объектов»). Номер нового
 // объекта выдаёт сервер; сослаться на объект, поставленный в той же пачке, нельзя.
 export type ObjectOp =
-  | { op: 'placeObject'; at: Vec3; object: MapObjectBody }
+  | { op: 'placeObject'; at: Vec3; object: PlacedObject }
   | { op: 'moveObject'; id: number; at: Vec3 }
   | { op: 'turnObject'; id: number; facing: Facing }
   // Меняет только переданные поля; вид объекта не меняется.
@@ -48,10 +48,19 @@ function parseObject(fields: Fields): Fields {
   return object as Fields;
 }
 
-// Новый объект: вид обязателен, у необязательных полей — значения по умолчанию.
-function placeBody(input: Fields): MapObjectBody {
+// Новый объект. Скрытым его ставят сразу: в открытой сцене поставленный видимым и
+// спрятанный следом объект игроки успели бы увидеть.
+export type PlacedObject = MapObjectBody & { hidden?: boolean };
+
+function placeBody(input: Fields): PlacedObject {
   const kind = input.kind as MapObjectKind;
   const fields = parseObjectFields(input, kind);
+  const body = kindBody(kind, fields);
+  return fields.hidden ? { ...body, hidden: true } : body;
+}
+
+// Тело объекта по виду: вид обязателен, у необязательных полей — значения по умолчанию.
+function kindBody(kind: MapObjectKind, fields: ObjectFields): MapObjectBody {
   const facing = fields.facing ?? 0;
   switch (kind) {
     case 'start':

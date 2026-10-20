@@ -105,6 +105,34 @@ describe('разбор операций объектов', () => {
     ).toThrow(`Предмет ${ITEM} в контейнере дважды`);
   });
 
+  it('«скрыт от игроков» — у любого вида и только true или false', () => {
+    expect(
+      parse({
+        op: 'placeObject',
+        at: [0, 0, 0],
+        object: { kind: 'item', itemId: ITEM, hidden: true },
+      }),
+    ).toMatchObject({ object: { kind: 'item', hidden: true } });
+    // Видимый — без поля: тело объекта как раньше.
+    expect(
+      parse({
+        op: 'placeObject',
+        at: [0, 0, 0],
+        object: { kind: 'start', hidden: false },
+      }),
+    ).toEqual({
+      op: 'placeObject',
+      at: [0, 0, 0],
+      object: { kind: 'start', facing: 0 },
+    });
+    expect(
+      parse({ op: 'updateObject', id: 2, object: { hidden: true } }),
+    ).toEqual({ op: 'updateObject', id: 2, object: { hidden: true } });
+    expect(() =>
+      parse({ op: 'updateObject', id: 2, object: { hidden: 'yes' } }),
+    ).toThrow('«hidden» — true или false');
+  });
+
   it('правка не меняет вид, поворот требует направления', () => {
     expect(
       parse({ op: 'updateObject', id: 3, object: { quantity: 5 } }),

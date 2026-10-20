@@ -27,9 +27,11 @@ export interface ObjectFields {
   items?: ObjectItem[];
   itemId?: string;
   quantity?: number;
+  // «Скрыт от игроков» — у объекта любого вида (docs/plan/game.md, этап 6).
+  hidden?: boolean;
 }
 
-// Какие поля есть у какого вида.
+// Какие поля есть у какого вида, кроме общих (COMMON_FIELDS).
 export const KIND_FIELDS: Record<MapObjectKind, (keyof ObjectFields)[]> = {
   start: ['facing'],
   monster: ['monsterId', 'facing'],
@@ -38,7 +40,17 @@ export const KIND_FIELDS: Record<MapObjectKind, (keyof ObjectFields)[]> = {
   item: ['itemId', 'quantity'],
 };
 
-const ALL_FIELDS = new Set(Object.values(KIND_FIELDS).flat());
+// Поля, которые есть у объекта любого вида.
+export const COMMON_FIELDS: (keyof ObjectFields)[] = ['hidden'];
+
+export function fieldsOfKind(kind: MapObjectKind): (keyof ObjectFields)[] {
+  return [...KIND_FIELDS[kind], ...COMMON_FIELDS];
+}
+
+const ALL_FIELDS = new Set([
+  ...Object.values(KIND_FIELDS).flat(),
+  ...COMMON_FIELDS,
+]);
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -114,7 +126,7 @@ export function parseObjectFields(
       `Неизвестный вид объекта: ${String(kind)}. Бывают ${MAP_OBJECT_KINDS.join(', ')}`,
     );
   }
-  const allowed = kind ? new Set(KIND_FIELDS[kind]) : ALL_FIELDS;
+  const allowed = kind ? new Set(fieldsOfKind(kind)) : ALL_FIELDS;
   const parsed: ObjectFields = {};
   for (const [key, value] of Object.entries(input)) {
     if (key === 'kind' || value === undefined) continue;
@@ -161,6 +173,12 @@ export function parseObjectFields(
         break;
       case 'quantity':
         parsed.quantity = parseQuantity(value, 'quantity');
+        break;
+      case 'hidden':
+        if (typeof value !== 'boolean') {
+          throw new MapOpError('«hidden» — true или false');
+        }
+        parsed.hidden = value;
         break;
     }
   }

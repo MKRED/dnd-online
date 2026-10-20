@@ -147,4 +147,16 @@ describe('summarizeObjects', () => {
       objectSliceLines(summary, 0, { minX: 0, maxX: 7, minZ: 0, maxZ: 7 }),
     ).toEqual([]);
   });
+
+  it('скрытый от игроков помечен в сводке и в срезе', () => {
+    const hidden = objects.map((o) =>
+      o.id === 3 ? { ...o, hidden: true } : o,
+    );
+    const summary = summarizeObjects(floorMap(), hidden, refs);
+    expect(summary.find((s) => s.id === 3)?.hidden).toBe(true);
+    expect(summary.find((s) => s.id === 1)).not.toHaveProperty('hidden');
+    expect(
+      objectSliceLines(summary, 1, { minX: 0, maxX: 3, minZ: 0, maxZ: 3 }),
+    ).toContain('#3 Гоблин [1, 1, 1] (скрыт от игроков)');
+  });
 });

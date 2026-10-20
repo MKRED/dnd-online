@@ -27,6 +27,7 @@ const settings = (patch: Partial<PlaceSettings>): PlaceSettings => ({
   item: null,
   look: 'chest',
   facing: 90,
+  hidden: false,
   ...patch,
 });
 
@@ -56,6 +57,15 @@ describe('placeBody', () => {
       size: 'medium',
       facing: 90,
     });
+  });
+
+  it('«скрыт от игроков» уходит в операцию, только когда выбран', () => {
+    expect(placeBody(settings({ hidden: true }))).toEqual({
+      kind: 'start',
+      facing: 90,
+      hidden: true,
+    });
+    expect(placeBody(settings({ kind: 'item', hidden: true }))).toBeNull();
   });
 
   it('существо или предмет не выбраны — ставить нечего', () => {

@@ -10,6 +10,7 @@ import classes from '../MapScene.module.css';
 import ContainerShape from './ContainerShape';
 import CreatureCard from './CreatureCard';
 import FloorItem from './FloorItem';
+import GhostGroup from './GhostGroup';
 import {
   layoutObjects,
   objectImagePaths,
@@ -121,39 +122,44 @@ function ObjectLayer({
       {objects.map((object) => {
         const { look } = object;
         return (
-          <group
-            key={object.id}
-            {...handlers(object.id)}
-            onPointerOver={() => setHovered(object.id)}
-            onPointerOut={() =>
-              setHovered((prev) => (prev === object.id ? null : prev))
-            }
+          // Смена признака «скрыт» пересоздаёт объект: материалы приходят чистыми.
+          <GhostGroup
+            key={`${object.id}:${object.hidden}`}
+            active={object.hidden}
           >
-            {look.kind === 'creature' && (
-              <CreatureCard
-                object={object}
-                look={look}
-                texture={texture(look.image)}
-              />
-            )}
-            {look.kind === 'start' && (
-              <StartTile object={object} number={look.number} />
-            )}
-            {look.kind === 'container' && (
-              <ContainerShape
-                look={look.look}
-                facing={look.facing}
-                base={object.base}
-              />
-            )}
-            {look.kind === 'item' && (
-              <FloorItem
-                object={object}
-                look={look}
-                texture={texture(look.image)}
-              />
-            )}
-          </group>
+            <group
+              {...handlers(object.id)}
+              onPointerOver={() => setHovered(object.id)}
+              onPointerOut={() =>
+                setHovered((prev) => (prev === object.id ? null : prev))
+              }
+            >
+              {look.kind === 'creature' && (
+                <CreatureCard
+                  object={object}
+                  look={look}
+                  texture={texture(look.image)}
+                />
+              )}
+              {look.kind === 'start' && (
+                <StartTile object={object} number={look.number} />
+              )}
+              {look.kind === 'container' && (
+                <ContainerShape
+                  look={look.look}
+                  facing={look.facing}
+                  base={object.base}
+                />
+              )}
+              {look.kind === 'item' && (
+                <FloorItem
+                  object={object}
+                  look={look}
+                  texture={texture(look.image)}
+                />
+              )}
+            </group>
+          </GhostGroup>
         );
       })}
       {selected && <SelectionFrame object={selected} />}
@@ -164,6 +170,9 @@ function ObjectLayer({
           className={classes.label}
         >
           {tip.label}
+          {tip.hidden && (
+            <div className={classes.labelNote}>Скрыт от игроков</div>
+          )}
           {tip.warnings.map((warning) => (
             <div key={warning} className={classes.labelWarning}>
               {warning}

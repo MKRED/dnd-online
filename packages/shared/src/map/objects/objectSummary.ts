@@ -32,6 +32,8 @@ export interface MapObjectSummary {
   label: string;
   facing?: Facing;
   size?: CreatureSize;
+  // Есть только у скрытого от игроков.
+  hidden?: true;
   warnings: string[];
 }
 
@@ -151,6 +153,7 @@ export function summarizeObjects(
       label,
       ...(facing !== null && { facing }),
       ...(size && { size }),
+      ...(object.hidden && { hidden: true as const }),
       warnings: [
         ...placementWarnings(map, object, size),
         ...missing,
@@ -182,6 +185,7 @@ export function objectSliceLines(
     ...here.map(
       (o) =>
         `#${o.id} ${o.label} [${o.at.join(', ')}]` +
+        (o.hidden ? ' (скрыт от игроков)' : '') +
         (o.warnings.length > 0 ? ` — ${o.warnings.join('; ')}` : ''),
     ),
   ];

@@ -46,6 +46,8 @@ export interface SceneObject {
   warnings: string[];
   // Существу или старту здесь негде стоять: подставка красная.
   blocked: boolean;
+  // Скрыт от игроков: мастер видит его полупрозрачным.
+  hidden: boolean;
   look: SceneObjectLook;
 }
 
@@ -181,6 +183,7 @@ export function layoutObjects(
       warnings:
         hideContents && object.kind === 'container' ? [] : summary.warnings,
       blocked: stands && standing === null,
+      hidden: object.hidden,
       look,
     });
   }

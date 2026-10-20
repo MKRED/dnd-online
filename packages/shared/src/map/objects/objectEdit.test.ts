@@ -126,6 +126,31 @@ describe('объекты в editMap', () => {
     );
   });
 
+  it('«скрыт от игроков»: ставится сразу или правкой у объекта любого вида', () => {
+    const map = emptyMap();
+    edit(map, [
+      place([0, 0, 0], { kind: 'start', facing: 0 }),
+      place([2, 0, 2], {
+        kind: 'monster',
+        monsterId: GOBLIN,
+        facing: 0,
+        hidden: true,
+      }),
+    ]);
+    expect(map.objects.byId.get(1)?.hidden).toBe(false);
+    expect(map.objects.byId.get(2)?.hidden).toBe(true);
+    const changes = edit(map, [
+      { op: 'updateObject', id: 1, object: { hidden: true } },
+      { op: 'updateObject', id: 2, object: { hidden: false } },
+    ]);
+    expect(map.objects.byId.get(1)?.hidden).toBe(true);
+    expect(map.objects.byId.get(2)?.hidden).toBe(false);
+    // Отмена возвращает признак, как любое поле.
+    applyChangeset(map, changes, 'backward');
+    expect(map.objects.byId.get(1)?.hidden).toBe(false);
+    expect(map.objects.byId.get(2)?.hidden).toBe(true);
+  });
+
   it('груз контейнера не больше вместимости вида; правку не хуже пропускает', () => {
     const map = emptyMap();
     const sack = (items: object[]) =>

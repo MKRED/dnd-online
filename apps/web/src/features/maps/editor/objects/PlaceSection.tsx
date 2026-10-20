@@ -1,4 +1,4 @@
-import { SegmentedControl, Stack, Text } from '@mantine/core';
+import { Checkbox, SegmentedControl, Stack, Text } from '@mantine/core';
 import { CONTAINER_LOOK_LABELS, CONTAINER_LOOKS } from 'shared';
 import CatalogSelect from './CatalogSelect';
 import FacingPicker from './FacingPicker';
@@ -65,6 +65,15 @@ function PlaceSection({ tool }: { tool: ObjectTool }) {
       {kind !== 'item' && (
         <FacingPicker value={settings.facing} onChange={tool.setFacing} />
       )}
+      {/* Засаду ставят сразу скрытой: в открытой сцене объект, спрятанный после
+          постановки, игроки успели бы увидеть. */}
+      <Checkbox
+        size="xs"
+        label="Ставить скрытым от игроков"
+        description="Снять скрытие — в свойствах объекта"
+        checked={settings.hidden}
+        onChange={(e) => tool.setHidden(e.currentTarget.checked)}
+      />
     </Stack>
   );
 }

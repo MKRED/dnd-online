@@ -48,3 +48,9 @@
   font-weight: 400;
   color: #ffc9c9;
 }
+
+/* «Скрыт от игроков» под подписью — мастеру. */
+.labelNote {
+  font-weight: 400;
+  opacity: 0.8;
+}

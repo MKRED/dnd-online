@@ -14,7 +14,7 @@ interface EditResult {
 }
 
 interface ChunksResult {
-  objects: { id: number; kind: string; at: number[] }[];
+  objects: { id: number; kind: string; at: number[]; hidden: boolean }[];
   nextObjectId: number;
   refs: {
     monsters: Record<string, { missing: string | null; size: string }>;
@@ -167,6 +167,35 @@ describe('объекты на карте (e2e)', () => {
     expect((slice.body as { text: string }).text).toContain(
       '#1 Старт 1 [1, 1, 1]',
     );
+  });
+
+  it('«скрыт от игроков»: ставится сразу или правкой, виден в сводке, отменяется', async () => {
+    const id = await createMap();
+    await ops(id, [
+      place([1, 0, 1], { kind: 'start' }),
+      place([3, 0, 3], { kind: 'container', hidden: true }),
+    ]).expect(200);
+    await ops(id, [
+      { op: 'updateObject', id: 1, object: { hidden: true } },
+    ]).expect(200);
+    let map = await chunks(id);
+    expect(map.objects.map((o) => [o.id, o.hidden])).toEqual([
+      [1, true],
+      [2, true],
+    ]);
+    const summary = await owner.get(`/api/maps/${id}/summary`).expect(200);
+    expect(
+      (summary.body as { objects: { hidden?: boolean }[] }).objects.map(
+        (o) => o.hidden,
+      ),
+    ).toEqual([true, true]);
+
+    await owner.post(`/api/maps/${id}/undo`).expect(200);
+    map = await chunks(id);
+    expect(map.objects[0].hidden).toBe(false);
+    await ops(id, [
+      { op: 'updateObject', id: 2, object: { hidden: 'да' } },
+    ]).expect(400);
   });
 
   it('список карт считает старты, без других объектов', async () => {

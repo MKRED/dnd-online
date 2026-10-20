@@ -32,7 +32,7 @@ const objects: MapObject[] = [
   {
     id: 6,
     at: [4, 1, 0],
-    hidden: false,
+    hidden: true,
     kind: 'item',
     itemId: CUP,
     quantity: 1,
@@ -149,6 +149,38 @@ describe('ObjectsPanel', () => {
     );
     expect(applyOps).toHaveBeenCalledTimes(2);
     expect(screen.getByRole('radio', { name: 'Старт' })).toBeInTheDocument();
+  });
+
+  it('«скрыт от игроков»: ставит скрытым, помечает в списке, снимается в свойствах', async () => {
+    const { applyOps } = setup();
+    await userEvent.click(
+      screen.getByRole('checkbox', { name: /Ставить скрытым от игроков/ }),
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Клик по клетке' }),
+    );
+    expect(sent(applyOps)).toEqual([
+      {
+        op: 'placeObject',
+        at: [5, 1, 5],
+        object: { kind: 'start', facing: 0, hidden: true },
+      },
+    ]);
+
+    // В списке скрыт только предмет №6.
+    expect(
+      screen.getAllByRole('img', { name: 'скрыт от игроков' }),
+    ).toHaveLength(1);
+    await userEvent.click(screen.getByRole('button', { name: /№6/ }));
+    const toggle = screen.getByRole('switch', { name: 'Скрыт от игроков' });
+    expect(toggle).toBeChecked();
+    expect(screen.getByText(/Снимите — игроки увидят его сразу/)).toBeVisible();
+    await userEvent.click(toggle);
+    expect(sent(applyOps)[1]).toEqual({
+      op: 'updateObject',
+      id: 6,
+      object: { hidden: false },
+    });
   });
 
   it('«Перенести»: следующий клик по клетке переносит объект', async () => {

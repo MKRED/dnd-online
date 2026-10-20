@@ -1,4 +1,5 @@
 import { ScrollArea, Stack, Text, UnstyledButton } from '@mantine/core';
+import { IconEyeOff } from '@tabler/icons-react';
 import type { MapObjectSummary } from 'shared';
 import classes from './ObjectsPanel.module.css';
 
@@ -35,6 +36,18 @@ function ObjectList({ summaries, selectedId, onPick }: ObjectListProps) {
                     №{summary.id}
                   </Text>{' '}
                   {summary.label}
+                  {summary.hidden && (
+                    <>
+                      {' '}
+                      <IconEyeOff
+                        size={14}
+                        stroke={1.75}
+                        className={classes.hiddenMark}
+                        role="img"
+                        aria-label="скрыт от игроков"
+                      />
+                    </>
+                  )}
                 </Text>
                 {summary.warnings.length > 0 && (
                   <Text size="xs" c="orange" lineClamp={1}>

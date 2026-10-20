@@ -8,6 +8,7 @@ import {
   type MapObjectBody,
   type MapSize,
   type ObjectOp,
+  type PlacedObject,
   type Vec3,
 } from 'shared';
 import { spanAnchor } from '../editorTools';
@@ -39,11 +40,18 @@ export interface PlaceSettings {
   item: CatalogChoice | null;
   look: ContainerLook;
   facing: Facing;
+  // Ставить скрытым от игроков (docs/plan/game.md, этап 6).
+  hidden: boolean;
 }
 
 // Новый объект по настройкам панели; null — существо или предмет ещё не выбраны.
+export function placeBody(settings: PlaceSettings): PlacedObject | null {
+  const body = kindBody(settings);
+  return body && settings.hidden ? { ...body, hidden: true } : body;
+}
+
 // НПС ставится Средним: размер меняют в свойствах (у персонажа размера нет).
-export function placeBody(settings: PlaceSettings): MapObjectBody | null {
+function kindBody(settings: PlaceSettings): MapObjectBody | null {
   const { kind, creature, item, look, facing } = settings;
   switch (kind) {
     case 'start':

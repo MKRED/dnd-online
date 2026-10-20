@@ -38,18 +38,24 @@ const size = z
   .optional();
 const quantity = z.number().int().min(1).optional();
 const objectItem = z.object({ itemId: catalogId('предмета'), quantity });
+const hidden = z
+  .boolean()
+  .optional()
+  .describe('Скрыт от игроков: в игре его видит только мастер');
 const objectBody = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('start'), facing }),
+  z.object({ kind: z.literal('start'), facing, hidden }),
   z.object({
     kind: z.literal('monster'),
     monsterId: catalogId('монстра'),
     facing,
+    hidden,
   }),
   z.object({
     kind: z.literal('npc'),
     characterId: catalogId('НПС'),
     size,
     facing,
+    hidden,
   }),
   z.object({
     kind: z.literal('container'),
@@ -62,11 +68,13 @@ const objectBody = z.discriminatedUnion('kind', [
       ),
     items: z.array(objectItem).optional(),
     facing,
+    hidden,
   }),
   z.object({
     kind: z.literal('item'),
     itemId: catalogId('предмета'),
     quantity,
+    hidden,
   }),
 ]);
 const objectId = z.number().int().min(1).describe('Номер объекта на карте');
@@ -117,6 +125,7 @@ export const mapOp = z.discriminatedUnion('op', [
         items: z.array(objectItem).optional(),
         itemId: catalogId('предмета').optional(),
         quantity,
+        hidden,
       })
       .describe('Только меняемые поля; вид объекта не меняется'),
   }),

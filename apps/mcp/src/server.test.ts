@@ -6,15 +6,20 @@ import { call, connect } from './testing/mcpClient.js';
 const MAP_ID = '11111111-1111-4111-8111-111111111111';
 
 describe('dnd MCP server', () => {
-  it('регистрирует инструменты чтения и карты', async () => {
+  it('регистрирует инструменты записей, связей и карты', async () => {
     const client = await connect(vi.fn());
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual([
       'apply_ops',
       'block_guide',
+      'create',
       'create_map',
       'find_catalog',
+      'format_guide',
       'get',
+      'link_add',
+      'link_remove',
+      'link_update',
       'list_maps',
       'map_section',
       'map_slice',
@@ -22,6 +27,7 @@ describe('dnd MCP server', () => {
       'redo',
       'search',
       'undo',
+      'update',
       'view_url',
     ]);
   });

@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
+import { DEFAULT_USER_SETTINGS } from 'shared';
 import { sampleCharacter } from '../test/characterFixture';
 import { renderWithProviders } from '../test/render';
 import CharacterViewPage from './CharacterViewPage';
@@ -23,7 +24,14 @@ function renderViewPage(userId: string) {
     </Routes>,
     {
       route: `/characters/${sampleCharacter.id}`,
-      auth: { user: { id: userId, login: 'someone', nickname: 'Кто-то' } },
+      auth: {
+        user: {
+          id: userId,
+          login: 'someone',
+          nickname: 'Кто-то',
+          settings: DEFAULT_USER_SETTINGS,
+        },
+      },
     },
   );
 }

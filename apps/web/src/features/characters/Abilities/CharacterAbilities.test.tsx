@@ -7,7 +7,7 @@ import type {
   CharacterAbilityEntry,
   SpellSlots,
 } from 'shared';
-import { NO_ABILITY_COSTS } from 'shared';
+import { NO_ABILITY_COSTS, DEFAULT_USER_SETTINGS } from 'shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleCharacter } from '../../../test/characterFixture';
 import { renderWithProviders } from '../../../test/render';
@@ -226,7 +226,16 @@ describe('CharacterAbilities', () => {
         character={character([surge])}
         onAbilitiesChange={onChange}
       />,
-      { auth: { user: { id: 'me', login: 'me', nickname: 'Я' } } },
+      {
+        auth: {
+          user: {
+            id: 'me',
+            login: 'me',
+            nickname: 'Я',
+            settings: DEFAULT_USER_SETTINGS,
+          },
+        },
+      },
     );
     await userEvent.click(
       screen.getByRole('button', { name: '+ Способность' }),

@@ -2,11 +2,17 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Bookmark } from 'shared';
 import { describe, expect, it, vi } from 'vitest';
+import { DEFAULT_USER_SETTINGS } from 'shared';
 import { renderWithProviders } from '../../test/render';
 import BookmarksPage from './BookmarksPage';
 
 const createdAt = '2026-10-19T10:00:00.000Z';
-const me = { id: 'me', login: 'me', nickname: 'Я' };
+const me = {
+  id: 'me',
+  login: 'me',
+  nickname: 'Я',
+  settings: DEFAULT_USER_SETTINGS,
+};
 const bookmarks: Bookmark[] = [
   {
     kind: 'item',

@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
+import { DEFAULT_USER_SETTINGS } from 'shared';
 import { sampleMonster } from '../../test/monsterFixture';
 import { renderWithProviders } from '../../test/render';
 import MonsterViewPage from './MonsterViewPage';
@@ -26,7 +27,14 @@ function renderPage(
     </Routes>,
     {
       route: `/monsters/${sampleMonster.id}`,
-      auth: { user: { id: userId, login: 'someone', nickname: 'Кто-то' } },
+      auth: {
+        user: {
+          id: userId,
+          login: 'someone',
+          nickname: 'Кто-то',
+          settings: DEFAULT_USER_SETTINGS,
+        },
+      },
     },
   );
 }

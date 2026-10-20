@@ -1,2 +1,7 @@
-export { changePassword, getProfile, setCredentials } from './profileApi';
+export {
+  changePassword,
+  getProfile,
+  setCredentials,
+  updateSettings,
+} from './profileApi';
 export type { Profile } from './profileApi';

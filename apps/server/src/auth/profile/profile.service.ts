@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import { readUserSettings, type UserSettings } from 'shared';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   isUniqueViolation,
@@ -18,6 +19,7 @@ import {
 } from '../auth.service.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { SetCredentialsDto } from './dto/set-credentials.dto.js';
+import { UpdateSettingsDto } from './dto/update-settings.dto.js';
 
 export interface Profile {
   // null — пароля нет (аккаунт из лольки): технический логин показывать незачем.
@@ -95,6 +97,24 @@ export class ProfileService {
       PASSWORD_SALT_ROUNDS,
     );
     await this.usersService.updatePassword(userId, passwordHash);
+  }
+
+  async getSettings(userId: string): Promise<UserSettings> {
+    const user = await this.requireUser(userId);
+    return readUserSettings(user.settings);
+  }
+
+  // Меняются только переданные поля, остальные настройки остаются как были.
+  async updateSettings(
+    userId: string,
+    dto: UpdateSettingsDto,
+  ): Promise<UserSettings> {
+    const patch = Object.fromEntries(
+      Object.entries(dto).filter(([, value]) => value !== undefined),
+    );
+    const settings = await this.usersService.mergeSettings(userId, patch);
+    if (!settings) throw new UnauthorizedException();
+    return readUserSettings(settings);
   }
 
   private async requireUser(userId: string) {

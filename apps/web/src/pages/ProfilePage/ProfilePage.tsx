@@ -16,6 +16,7 @@ import { errorMessage } from '../../lib/apiRequest';
 import { usePageTitle } from '../../lib/usePageTitle';
 import ChangePasswordForm from './ChangePasswordForm';
 import SetCredentialsForm from './SetCredentialsForm';
+import SettingsCard from './SettingsCard';
 
 function ProfilePage() {
   usePageTitle('Профиль');
@@ -87,6 +88,8 @@ function ProfilePage() {
               <SetCredentialsForm onSaved={handleCredentialsSaved} />
             )}
           </Card>
+
+          <SettingsCard />
         </Stack>
       )}
     </Container>

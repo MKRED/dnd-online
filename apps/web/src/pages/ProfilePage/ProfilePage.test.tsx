@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { DEFAULT_USER_SETTINGS } from 'shared';
 import { renderWithProviders } from '../../test/render';
 import ProfilePage from './ProfilePage';
 
@@ -32,7 +33,14 @@ describe('ProfilePage', () => {
       [200, { ...lolkaProfile, login: 'arwen', hasPassword: true }],
     );
     const { authValue } = renderWithProviders(<ProfilePage />, {
-      auth: { user: { id: 'u1', login: 'lolka_ab12cd34', nickname: 'Арвен' } },
+      auth: {
+        user: {
+          id: 'u1',
+          login: 'lolka_ab12cd34',
+          nickname: 'Арвен',
+          settings: DEFAULT_USER_SETTINGS,
+        },
+      },
     });
     const user = userEvent.setup();
 

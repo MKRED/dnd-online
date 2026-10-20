@@ -260,6 +260,13 @@
       "when": 1792456340748,
       "tag": "0036_map_objects",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1792478775008,
+      "tag": "0037_user_settings",
+      "breakpoints": true
     }
   ]
 }

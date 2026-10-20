@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Character, CharacterEffectEntry, Effect } from 'shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { DEFAULT_USER_SETTINGS } from 'shared';
 import { sampleCharacter } from '../../../test/characterFixture';
 import { renderWithProviders } from '../../../test/render';
 import EffectsStrip from './EffectsStrip';
@@ -122,7 +123,16 @@ describe('EffectsStrip', () => {
         character={character([applied('Ускорение')])}
         onChange={onChange}
       />,
-      { auth: { user: { id: 'me', login: 'me', nickname: 'Я' } } },
+      {
+        auth: {
+          user: {
+            id: 'me',
+            login: 'me',
+            nickname: 'Я',
+            settings: DEFAULT_USER_SETTINGS,
+          },
+        },
+      },
     );
     await userEvent.click(screen.getByRole('button', { name: '+ Эффект' }));
     const select = await screen.findByRole('combobox', { name: 'Эффект' });

@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_USER_SETTINGS } from 'shared';
 import { renderWithProviders, type RenderOptions } from '../../test/render';
 import RequireAuth from './RequireAuth';
 
@@ -40,7 +41,12 @@ describe('RequireAuth', () => {
 
   it('вошедшему показывает защищённую страницу', () => {
     renderProtectedRoute({
-      user: { id: '1', login: 'hero', nickname: 'Hero' },
+      user: {
+        id: '1',
+        login: 'hero',
+        nickname: 'Hero',
+        settings: DEFAULT_USER_SETTINGS,
+      },
     });
     expect(screen.getByText('Мои персонажи')).toBeInTheDocument();
   });

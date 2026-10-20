@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Item, MonsterItemEntry } from 'shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { DEFAULT_USER_SETTINGS } from 'shared';
 import { sampleMonster } from '../../../test/monsterFixture';
 import { renderWithProviders } from '../../../test/render';
 import MonsterGear from './MonsterGear';
@@ -41,7 +42,16 @@ const renderGear = (
       items={items}
       onChange={onChange}
     />,
-    { auth: { user: { id: 'me', login: 'me', nickname: 'Я' } } },
+    {
+      auth: {
+        user: {
+          id: 'me',
+          login: 'me',
+          nickname: 'Я',
+          settings: DEFAULT_USER_SETTINGS,
+        },
+      },
+    },
   );
 
 beforeEach(() => {

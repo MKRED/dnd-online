@@ -23,12 +23,14 @@ describe('AuthService', () => {
     login: string;
     nickname: string;
     passwordHash: string | null;
+    settings: Record<string, unknown>;
     createdAt: Date;
   } = {
     id: 'u1',
     login: 'bob',
     nickname: 'Bob',
     passwordHash: '',
+    settings: { facingMarker: 'compass' },
     createdAt: new Date(),
   };
 
@@ -96,7 +98,12 @@ describe('AuthService', () => {
       password: 'x',
     });
 
-    expect(result.user).toEqual({ id: 'u1', login: 'bob', nickname: 'Bob' });
+    expect(result.user).toEqual({
+      id: 'u1',
+      login: 'bob',
+      nickname: 'Bob',
+      settings: { facingMarker: 'compass' },
+    });
     expect(result.tokens).toEqual({
       accessToken: 'access-jwt',
       refreshToken: 'refresh-jwt',

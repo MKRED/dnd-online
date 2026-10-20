@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   roundBaseGeometry,
-  roundRimGeometry,
+  dropRimGeometry,
   tileNoseGeometry,
 } from './standShapes';
 
@@ -20,7 +20,7 @@ describe('standShapes', () => {
 
   it('без взгляда — простой круг, окантовка повторяет каплю', () => {
     expect(box(roundBaseGeometry(false)).max.y).toBeCloseTo(0.46);
-    expect(box(roundRimGeometry(true)).max.y).toBeCloseTo(0.69);
+    expect(box(dropRimGeometry()).max.y).toBeCloseTo(0.69);
   });
 
   it('нос плитки старта лежит за её краем и не перекрывает её', () => {

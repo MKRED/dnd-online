@@ -2,7 +2,7 @@ import { useComputedColorScheme } from '@mantine/core';
 import { MapControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { useCallback, useState, type RefObject } from 'react';
-import type { MapObjectRefsView, ResizeOp } from 'shared';
+import type { FacingMarker, MapObjectRefsView, ResizeOp } from 'shared';
 import type { CameraPlacement, Point } from '../cameraView';
 import type { SceneEditor } from '../editor/editorTools';
 import type { ObjectToolScene } from '../editor/objects';
@@ -17,7 +17,7 @@ import CursorReadout from './CursorReadout';
 import { createHoverStore } from './hoverStore';
 import EditLayer from './EditLayer';
 import FirstFrame from './FirstFrame';
-import ObjectLayer from './objects';
+import ObjectLayer, { FacingMarkerContext } from './objects';
 import ResizePreview from './ResizePreview';
 import ChunkMesh from './ChunkMesh';
 import { useChunkMeshes } from './useChunkMeshes';
@@ -49,6 +49,8 @@ interface MapSceneProps {
   focusRef: RefObject<CameraFocusApi | null>;
   // Сцена отрисована с картинками объектов (см. FirstFrame).
   onReady: () => void;
+  // Вид отметки взгляда на подставках — из настроек пользователя.
+  facingMarker: FacingMarker;
 }
 
 function MapScene({
@@ -62,6 +64,7 @@ function MapScene({
   objectTool,
   focusRef: focus,
   onReady,
+  facingMarker,
 }: MapSceneProps) {
   const chunks = useChunkMeshes(map, cutY);
   const scheme = useComputedColorScheme('dark');
@@ -104,14 +107,16 @@ function MapScene({
             </group>
           ))}
         </EditLayer>
-        <ObjectLayer
-          state={map}
-          refs={refs}
-          cutY={cutY}
-          onImagesSettled={settleImages}
-          tool={objectTool}
-          hover={hover}
-        />
+        <FacingMarkerContext value={facingMarker}>
+          <ObjectLayer
+            state={map}
+            refs={refs}
+            cutY={cutY}
+            onImagesSettled={settleImages}
+            tool={objectTool}
+            hover={hover}
+          />
+        </FacingMarkerContext>
         {walk && <WalkLayer walk={walk} />}
         {resizePreview && (
           <ResizePreview size={map.size} grow={resizePreview} />

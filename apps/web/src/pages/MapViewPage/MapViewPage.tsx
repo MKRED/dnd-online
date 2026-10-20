@@ -1,7 +1,8 @@
 import { Loader, VisuallyHidden } from '@mantine/core';
 import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { mapBounds } from 'shared';
+import { DEFAULT_USER_SETTINGS, mapBounds } from 'shared';
+import { useAuth } from '../../features/auth';
 import { useMapData } from '../../features/maps';
 import {
   EMPTY_DRAFT,
@@ -32,6 +33,7 @@ const MapScene = lazy(() => import('../../features/maps/MapScene'));
 
 function MapViewPage() {
   const { id = '' } = useParams();
+  const { user } = useAuth();
   const { map, loadError, editError, busy, applyOps, editOps, undo, redo } =
     useMapData(id);
   usePageTitle(map?.info.name ?? 'Карта');
@@ -139,6 +141,10 @@ function MapViewPage() {
               }
               focusRef={focusRef}
               onReady={handleSceneReady}
+              facingMarker={
+                user?.settings.facingMarker ??
+                DEFAULT_USER_SETTINGS.facingMarker
+              }
             />
           </Suspense>
         )}

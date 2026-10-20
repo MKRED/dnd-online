@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { readUserSettings, type UserSettings } from 'shared';
 import { UsersService } from '../users/users.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
@@ -22,6 +23,8 @@ export interface PublicUser {
   id: string;
   login: string;
   nickname: string;
+  // Приходят вместе с пользователем, чтобы веб знал их с первого экрана.
+  settings: UserSettings;
 }
 
 @Injectable()
@@ -71,11 +74,9 @@ export class AuthService {
   }
 
   // Вход, личность для которого уже подтвердил кто-то другой (лолька): только выдаём токены.
-  async signIn(user: {
-    id: string;
-    login: string;
-    nickname: string;
-  }): Promise<{ user: PublicUser; tokens: AuthTokens }> {
+  async signIn(
+    user: UserRow,
+  ): Promise<{ user: PublicUser; tokens: AuthTokens }> {
     const tokens = await this.issueTokens(user.id, user.login);
     return { user: toPublicUser(user), tokens };
   }
@@ -134,10 +135,18 @@ export class AuthService {
   }
 }
 
-function toPublicUser(user: {
+interface UserRow {
   id: string;
   login: string;
   nickname: string;
-}): PublicUser {
-  return { id: user.id, login: user.login, nickname: user.nickname };
+  settings: unknown;
+}
+
+export function toPublicUser(user: UserRow): PublicUser {
+  return {
+    id: user.id,
+    login: user.login,
+    nickname: user.nickname,
+    settings: readUserSettings(user.settings),
+  };
 }

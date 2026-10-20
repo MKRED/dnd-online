@@ -1,3 +1,4 @@
+import type { UserSettings } from 'shared';
 import { apiRequest } from '../../lib/apiRequest';
 
 export interface Profile {
@@ -30,5 +31,15 @@ export function changePassword(input: {
   return apiRequest('/profile/password', {
     method: 'POST',
     body: JSON.stringify(input),
+  });
+}
+
+// Меняет только переданные настройки и возвращает все настройки целиком.
+export function updateSettings(
+  patch: Partial<UserSettings>,
+): Promise<UserSettings> {
+  return apiRequest('/profile/settings', {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
   });
 }

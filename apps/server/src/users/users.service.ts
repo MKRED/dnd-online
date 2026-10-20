@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { DatabaseService } from '../database/database.service.js';
 import { users } from '../database/schema/index.js';
@@ -92,5 +92,27 @@ export class UsersService {
       { durationMs: Date.now() - t0, id },
       'User password changed',
     );
+  }
+
+  // Сливает переданные поля с уже сохранёнными прямо в UPDATE (jsonb ||): два
+  // параллельных изменения разных настроек не затрут друг друга. undefined — нет такого
+  // пользователя.
+  async mergeSettings(
+    id: string,
+    patch: Record<string, unknown>,
+  ): Promise<Record<string, unknown> | undefined> {
+    const t0 = Date.now();
+    const [row] = await this.databaseService.db
+      .update(users)
+      .set({
+        settings: sql`${users.settings} || ${JSON.stringify(patch)}::jsonb`,
+      })
+      .where(eq(users.id, id))
+      .returning({ settings: users.settings });
+    this.logger.info(
+      { durationMs: Date.now() - t0, id, fields: Object.keys(patch) },
+      'User settings updated',
+    );
+    return row?.settings;
   }
 }

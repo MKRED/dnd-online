@@ -2,12 +2,10 @@ import { Path, Shape, ShapeGeometry } from 'three';
 
 // Фигуры подставки в долях стороны места: подставка занимает 0,92 стороны, взгляд —
 // к северу (+y фигуры, после поворота на пол это −z) при повороте 0.
-const HALF = 0.46;
+export const HALF = 0.46;
 // Вершина «носа» круглой подставки от центра и ширина светлой окантовки по краю.
 const NOSE_TIP = HALF * 1.5;
 const RIM = 0.035;
-// Шеврон взгляда: вершина, плечо, толщина и тёмная обводка вокруг него.
-const CHEVRON = { tip: 0.62, arm: 0.1, thick: 0.06, outline: 0.025 };
 
 // Капля: круг радиуса r и острый нос к северу с вершиной на расстоянии tip от центра.
 // Стороны носа — касательные к кругу, так обод переходит в нос без излома.
@@ -34,18 +32,19 @@ export function roundBaseGeometry(withNose: boolean) {
   return new ShapeGeometry(shape, 48);
 }
 
-// Светлая окантовка по краю круглой подставки: та же фигура с вырезом на ширину RIM
-// (у выреза нос короче, чтобы окантовка у острия была не тоньше, чем по кругу).
-export function roundRimGeometry(withNose: boolean) {
-  const shape = new Shape();
-  if (withNose) {
-    dropPath(shape, HALF, NOSE_TIP);
-    shape.holes.push(dropPath(new Path(), HALF - RIM, NOSE_TIP - RIM * 1.9));
-  } else {
-    circlePath(shape, HALF, false);
-    shape.holes.push(circlePath(new Path(), HALF - RIM, true));
-  }
+// Светлая окантовка капли: та же фигура с вырезом на ширину RIM (у выреза нос
+// короче, чтобы окантовка у острия была не тоньше, чем по кругу).
+export function dropRimGeometry() {
+  const shape = dropPath(new Shape(), HALF, NOSE_TIP);
+  shape.holes.push(dropPath(new Path(), HALF - RIM, NOSE_TIP - RIM * 1.9));
   return new ShapeGeometry(shape, 48);
+}
+
+// Кольцо между радиусами inner и outer.
+export function ringGeometry(inner: number, outer: number) {
+  const shape = circlePath(new Shape(), outer, false);
+  shape.holes.push(circlePath(new Path(), inner, true));
+  return new ShapeGeometry(shape, 64);
 }
 
 // Нос квадратной плитки старта. Плитка не поворачивается, поэтому нос строится уже
@@ -67,7 +66,15 @@ export function tileNoseGeometry(angle: number) {
   return new ShapeGeometry(shape);
 }
 
-function chevron(tip: number, arm: number, thick: number) {
+export interface ChevronSize {
+  // Вершина от центра, плечо и толщина.
+  tip: number;
+  arm: number;
+  thick: number;
+}
+
+// Шеврон остриём к северу.
+export function chevronGeometry({ tip, arm, thick }: ChevronSize) {
   const shape = new Shape();
   shape.moveTo(0, tip);
   shape.lineTo(arm, tip - arm);
@@ -79,18 +86,33 @@ function chevron(tip: number, arm: number, thick: number) {
   return new ShapeGeometry(shape);
 }
 
-// Шеврон взгляда остриём к северу.
-export function chevronGeometry() {
-  return chevron(CHEVRON.tip, CHEVRON.arm, CHEVRON.thick);
-}
-
 // Тёмная обводка шеврона: тот же шеврон, раздутый на outline во все стороны
 // (у острия под 45° раздутие по вертикали — outline·√2).
-export function chevronOutlineGeometry() {
-  const { tip, arm, thick, outline } = CHEVRON;
-  return chevron(
-    tip + outline * Math.SQRT2,
-    arm + outline,
-    thick + outline * 2 * Math.SQRT2,
-  );
+export function chevronOutlineGeometry(size: ChevronSize, outline: number) {
+  return chevronGeometry({
+    tip: size.tip + outline * Math.SQRT2,
+    arm: size.arm + outline,
+    thick: size.thick + outline * 2 * Math.SQRT2,
+  });
+}
+
+// Треугольник остриём к северу: основание на y = from, вершина на y = to.
+export function triangleGeometry(from: number, to: number, halfWidth: number) {
+  const shape = new Shape();
+  shape.moveTo(0, to);
+  shape.lineTo(halfWidth, from);
+  shape.lineTo(-halfWidth, from);
+  shape.closePath();
+  return new ShapeGeometry(shape);
+}
+
+// Засечка компаса: узкий прямоугольник поперёк обода к северу.
+export function tickGeometry(from: number, to: number, width: number) {
+  const shape = new Shape();
+  shape.moveTo(-width / 2, from);
+  shape.lineTo(width / 2, from);
+  shape.lineTo(width / 2, to);
+  shape.lineTo(-width / 2, to);
+  shape.closePath();
+  return new ShapeGeometry(shape);
 }

@@ -1,9 +1,12 @@
+import type { UserSettings } from 'shared';
 import { API_BASE_URL } from '../../lib/apiBaseUrl';
 
 export interface AuthUser {
   id: string;
   login: string;
   nickname: string;
+  // Настройки пользователя приходят с ним самим (вход, регистрация, /auth/me).
+  settings: UserSettings;
 }
 
 export class AuthApiError extends Error {

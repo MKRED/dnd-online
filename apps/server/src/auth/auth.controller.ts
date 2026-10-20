@@ -13,7 +13,7 @@ import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import type { AuthenticatedRequest } from './auth.guard.js';
 import { AuthGuard } from './auth.guard.js';
-import { AuthService } from './auth.service.js';
+import { AuthService, toPublicUser } from './auth.service.js';
 import { LolkaOAuthService } from './lolka/lolka-oauth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
@@ -98,8 +98,6 @@ export class AuthController {
     if (!user) {
       throw new UnauthorizedException();
     }
-    return {
-      user: { id: user.id, login: user.login, nickname: user.nickname },
-    };
+    return { user: toPublicUser(user) };
   }
 }

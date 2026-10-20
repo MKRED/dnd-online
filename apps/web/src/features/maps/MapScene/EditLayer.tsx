@@ -6,6 +6,7 @@ import { readoutCell } from '../editor/cellReadout';
 import {
   cellsFromHit,
   regionBox,
+  spanAnchor,
   toolCell,
   type PickedCells,
   type SceneEditor,
@@ -77,9 +78,14 @@ function CellHighlight({
 }) {
   const cell = toolCell(editor.tool, pick);
   if (!cell || !insideMap(cell, size)) return null;
+  const span = editor.span ?? 1;
+  const from = spanAnchor(cell, span);
+  const to: Vec3 = [from[0] + span - 1, from[1], from[2] + span - 1];
+  // Место крупного существа целиком: не влезает в карту — не подсвечиваем.
+  if (!insideMap(from, size) || !insideMap(to, size)) return null;
   const box: Box3 = editor.anchor
     ? regionBox(editor.anchor, cell, editor.height)
-    : { min: cell, max: cell };
+    : { min: from, max: to };
   return (
     <FrameBox
       min={box.min}

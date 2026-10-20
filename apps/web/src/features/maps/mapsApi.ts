@@ -1,4 +1,6 @@
 import type {
+  MapCatalogEntry,
+  MapCatalogKind,
   MapChunksResponse,
   MapEditResult,
   MapInfo,
@@ -43,4 +45,13 @@ export function undoMapEdit(id: string): Promise<MapEditResult> {
 
 export function redoMapEdit(id: string): Promise<MapEditResult> {
   return request(`/maps/${id}/redo`, { method: 'POST' });
+}
+
+// Что можно поставить на карту: свои и опубликованные монстры и предметы, свои НПС.
+export function searchMapCatalog(
+  kind: MapCatalogKind,
+  q: string,
+): Promise<MapCatalogEntry[]> {
+  const params = new URLSearchParams({ kind, q });
+  return request(`/map-catalog?${params}`);
 }

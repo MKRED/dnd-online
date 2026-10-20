@@ -1,5 +1,5 @@
 import { Loader, VisuallyHidden } from '@mantine/core';
-import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { mapBounds } from 'shared';
 import { useMapData } from '../../features/maps';
@@ -15,10 +15,13 @@ import {
 } from '../../features/maps/cameraView';
 import {
   EditorPanel,
+  ObjectsPanel,
   SceneToolbar,
   TOOL_LABELS,
   useMapEditor,
+  useObjectTool,
 } from '../../features/maps/editor';
+import type { CameraFocusApi } from '../../features/maps/MapScene';
 import { useWalkTest, WalkTestPanel } from '../../features/maps/walkTest';
 import MapSidebar from './MapSidebar';
 import classes from './MapViewPage.module.css';
@@ -33,6 +36,13 @@ function MapViewPage() {
     useMapData(id);
   usePageTitle(map?.info.name ?? 'Карта');
   const walk = useWalkTest(map?.state ?? null);
+  const objects = useObjectTool({
+    state: map?.state ?? null,
+    refs: map?.refs ?? null,
+    applyOps,
+  });
+  // Центр камеры: страница переносит его к объекту из списка «На карте».
+  const focusRef = useRef<CameraFocusApi | null>(null);
   // Открытая панель «Размер карты» с набранным изменением; null — панель закрыта.
   const [sizeDraft, setSizeDraft] = useState<ResizeDraft | null>(null);
   const editor = useMapEditor({
@@ -41,6 +51,7 @@ function MapViewPage() {
     undo,
     redo,
     walk,
+    objects,
     keysActive: sizeDraft === null,
   });
   // Сцена монтируется заново только при смене карты, и готовность (первый кадр с
@@ -123,6 +134,10 @@ function MapViewPage() {
               resizePreview={resizePreview}
               editor={sizeDraft ? null : editor.sceneEditor}
               walk={walk.scene}
+              objectTool={
+                !sizeDraft && editor.tool === 'objects' ? objects.scene : null
+              }
+              focusRef={focusRef}
               onReady={handleSceneReady}
             />
           </Suspense>
@@ -166,6 +181,7 @@ function MapViewPage() {
         {map && sizeDraft ? (
           <MapSizePanel
             state={map.state}
+            refs={map.refs}
             draft={sizeDraft}
             onChange={setSizeDraft}
             onApply={(op) =>
@@ -180,6 +196,17 @@ function MapViewPage() {
           <EditorPanel
             editor={editor}
             walkPanel={<WalkTestPanel walk={walk} />}
+            objectsPanel={
+              map && (
+                <ObjectsPanel
+                  tool={objects}
+                  state={map.state}
+                  refs={map.refs}
+                  busy={busy}
+                  onFocus={(point) => focusRef.current?.focusOn(point)}
+                />
+              )
+            }
           />
         )}
       </MapSidebar>

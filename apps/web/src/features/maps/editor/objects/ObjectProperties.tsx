@@ -1,0 +1,154 @@
+import {
+  Button,
+  Group,
+  SegmentedControl,
+  Select,
+  Stack,
+  Text,
+} from '@mantine/core';
+import {
+  CONTAINER_LOOK_LABELS,
+  CONTAINER_LOOKS,
+  CREATURE_SIZES,
+  hasFacing,
+  type CreatureSize,
+  type MapObject,
+  type MapObjectRefsView,
+  type MapObjectSummary,
+} from 'shared';
+import { NameInput, QuantityInput } from './CommitInputs';
+import ContainerItems from './ContainerItems';
+import FacingPicker from './FacingPicker';
+import type { ObjectTool } from './useObjectTool';
+
+const SIZE_OPTIONS = Object.entries(CREATURE_SIZES).map(([value, size]) => ({
+  value,
+  label: size.label,
+}));
+
+const LOOK_OPTIONS = CONTAINER_LOOKS.map((look) => ({
+  value: look,
+  label: CONTAINER_LOOK_LABELS[look],
+}));
+
+interface ObjectPropertiesProps {
+  tool: ObjectTool;
+  object: MapObject;
+  summary: MapObjectSummary | undefined;
+  refs: MapObjectRefsView;
+  busy: boolean;
+}
+
+// Свойства выделенного объекта. Каждое изменение — своя операция журнала
+// (turnObject, updateObject), поэтому отменяется по одному.
+function ObjectProperties({
+  tool,
+  object,
+  summary,
+  refs,
+  busy,
+}: ObjectPropertiesProps) {
+  return (
+    <Stack gap="sm">
+      <div>
+        <Text fw={600}>
+          {summary?.label ?? 'Объект'}{' '}
+          <Text span c="dimmed" size="sm">
+            №{object.id}
+          </Text>
+        </Text>
+        {summary?.warnings.map((warning) => (
+          <Text key={warning} size="xs" c="orange">
+            {warning}
+          </Text>
+        ))}
+      </div>
+
+      {hasFacing(object) && (
+        <FacingPicker
+          value={object.facing}
+          onChange={tool.turn}
+          disabled={busy}
+        />
+      )}
+
+      {object.kind === 'npc' && (
+        <Select
+          size="xs"
+          label="Размер"
+          data={SIZE_OPTIONS}
+          value={object.size}
+          onChange={(size) =>
+            size && tool.update({ size: size as CreatureSize })
+          }
+          allowDeselect={false}
+          disabled={busy}
+        />
+      )}
+
+      {object.kind === 'container' && (
+        <>
+          <NameInput
+            key={object.name}
+            value={object.name}
+            onCommit={(name) => tool.update({ name })}
+            disabled={busy}
+          />
+          <SegmentedControl
+            size="xs"
+            data={LOOK_OPTIONS}
+            value={object.look}
+            onChange={(look) => tool.update({ look: look })}
+            disabled={busy}
+          />
+          <ContainerItems
+            items={object.items}
+            refs={refs.items}
+            onChange={(items) => tool.update({ items })}
+            disabled={busy}
+          />
+        </>
+      )}
+
+      {object.kind === 'item' && (
+        <QuantityInput
+          key={object.quantity}
+          label="Количество"
+          value={object.quantity}
+          w={120}
+          onCommit={(quantity) => tool.update({ quantity })}
+          disabled={busy}
+        />
+      )}
+
+      {/* Отмена переноса — кнопкой под свойствами (ObjectsPanel) и Esc. */}
+      {tool.moving ? (
+        <Text size="sm" c="blue" role="status">
+          Кликните клетку, куда перенести.
+        </Text>
+      ) : (
+        <Group gap="xs" grow>
+          <Button
+            size="xs"
+            variant="default"
+            onClick={() => tool.setMoving(true)}
+            disabled={busy}
+          >
+            Перенести
+          </Button>
+          <Button
+            size="xs"
+            color="red"
+            variant="light"
+            onClick={tool.remove}
+            disabled={busy}
+          >
+            Удалить (Del)
+          </Button>
+        </Group>
+      )}
+    </Stack>
+  );
+}
+
+export default ObjectProperties;

@@ -11,16 +11,26 @@ import {
 import { useMemo } from 'react';
 import {
   DEFAULT_MAP_LIMITS,
+  objectRefsFromView,
+  type MapObjectRefsView,
+  type MapObjects,
   type ResizeCut,
   type ResizeOp,
   type ResizeSide,
   type SizedMapState,
 } from 'shared';
 import { mapSizeLabel } from '../mapSizeLabel';
-import { checkDraft, draftOp, type ResizeDraft } from './resizeDraft';
+import {
+  checkDraft,
+  draftOp,
+  lossLabel,
+  type ResizeDraft,
+} from './resizeDraft';
 
 interface MapSizePanelProps {
-  state: SizedMapState;
+  state: SizedMapState & { objects: MapObjects };
+  // Размеры монстров на карте: по ним считается, какие объекты уйдут за границу.
+  refs: MapObjectRefsView;
   draft: ResizeDraft;
   onChange: (draft: ResizeDraft) => void;
   onApply: (op: ResizeOp) => void;
@@ -54,6 +64,7 @@ const COMPASS: (ResizeSide | null)[] = [
 // пока не нажато «Применить» (docs/plan/done/map-editor.md, «Размер карты»).
 function MapSizePanel({
   state,
+  refs,
   draft,
   onChange,
   onApply,
@@ -61,9 +72,11 @@ function MapSizePanel({
   busy,
 }: MapSizePanelProps) {
   const check = useMemo(
-    () => checkDraft(state, draft, DEFAULT_MAP_LIMITS),
-    [state, draft],
+    () =>
+      checkDraft(state, draft, DEFAULT_MAP_LIMITS, objectRefsFromView(refs)),
+    [state, refs, draft],
   );
+  const outside = check.outside + check.objectsOutside;
 
   const sideInput = (side: ResizeSide) => (
     <NumberInput
@@ -101,9 +114,9 @@ function MapSizePanel({
         Станет {mapSizeLabel(check.after)}
       </Text>
 
-      {check.outside > 0 && (
+      {outside > 0 && (
         <Radio.Group
-          label={`За восточной и южной границей окажется блоков: ${check.outside}`}
+          label={`За восточной и южной границей окажется ${lossLabel(check.outside, check.objectsOutside)}`}
           value={draft.cut}
           onChange={(value) => onChange({ ...draft, cut: value })}
         >
@@ -118,9 +131,10 @@ function MapSizePanel({
       {check.error ? (
         <Alert color="red">{check.error}</Alert>
       ) : (
-        check.removed > 0 && (
+        check.removed + check.objectsRemoved > 0 && (
           <Alert color="yellow">
-            Удалится блоков: {check.removed}. Вернуть их можно отменой (Ctrl+Z).
+            Удалится {lossLabel(check.removed, check.objectsRemoved)}. Вернуть
+            их можно отменой (Ctrl+Z).
           </Alert>
         )
       )}
@@ -130,7 +144,7 @@ function MapSizePanel({
           size="xs"
           loading={busy}
           disabled={check.unchanged || check.error !== null}
-          onClick={() => onApply(draftOp(draft, check.outside))}
+          onClick={() => onApply(draftOp(draft, outside))}
         >
           Применить
         </Button>

@@ -18,6 +18,7 @@ export const EDITOR_TOOLS = [
   'hollow',
   'replace',
   'walk',
+  'objects',
 ] as const;
 export type EditorTool = (typeof EDITOR_TOOLS)[number];
 
@@ -29,6 +30,7 @@ export const TOOL_LABELS: Record<EditorTool, string> = {
   hollow: 'Коробка',
   replace: 'Замена',
   walk: 'Ход',
+  objects: 'Объекты',
 };
 
 // Инструменты, которым нужны два угла области.
@@ -67,11 +69,22 @@ export function cellsFromHit(
 }
 
 // С какой клеткой работает инструмент: новые блоки и области строятся в соседней
-// клетке, а ластик и замена берут уже стоящий блок.
+// клетке, а ластик и замена берут уже стоящий блок. Объект ставится в клетку ног —
+// над блоком, по которому кликнули.
 export function toolCell(tool: EditorTool, cells: PickedCells): Vec3 | null {
-  return tool === 'place' || tool === 'fill' || tool === 'hollow'
+  return tool === 'place' ||
+    tool === 'fill' ||
+    tool === 'hollow' ||
+    tool === 'objects'
     ? cells.place
     : cells.hit;
+}
+
+// Северо-западная клетка места объекта со стороной span, когда курсор над клеткой
+// cell: курсор — в середине места, как у фигурки крупного существа.
+export function spanAnchor(cell: Vec3, span: number): Vec3 {
+  const back = Math.floor((span - 1) / 2);
+  return [cell[0] - back, cell[1], cell[2] - back];
 }
 
 // Область между двумя углами; высота наращивает её вверх от верхнего угла,
@@ -136,4 +149,7 @@ export interface SceneEditor {
   // Подсветка проверки хода вместо клеток: тело там, где встанет фигурка, путь
   // до него и цена.
   preview?: (cells: PickedCells) => WalkHover | null;
+  // Сторона места в клетках у ставящегося или переносимого объекта: подсветка — во всё
+  // место, курсор в его середине (spanAnchor). Без него — одна клетка.
+  span?: number;
 }

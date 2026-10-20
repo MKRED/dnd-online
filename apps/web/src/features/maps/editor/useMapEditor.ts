@@ -22,6 +22,7 @@ import {
   type SceneEditor,
 } from './editorTools';
 import type { WalkTest } from '../walkTest';
+import type { ObjectTool } from './objects';
 
 interface Anchor {
   cell: Vec3;
@@ -36,11 +37,13 @@ interface MapEditorOptions {
   redo: () => void;
   // Проверка хода: клики инструмента «Ход» уходят ей, а не в операции карты.
   walk: Pick<WalkTest, 'pick' | 'preview'>;
-  // false — инструменты спрятаны (открыта панель размера): клавиши 1–7 и R молчат.
+  // Инструмент «Объекты»: клики по клеткам и клавиши R, Del, Esc при нём уходят ему.
+  objects: Pick<ObjectTool, 'pick' | 'span' | 'rotate' | 'remove' | 'escape'>;
+  // false — инструменты спрятаны (открыта панель размера): клавиши 1–8, R и Del молчат.
   keysActive: boolean;
 }
 
-// Клавиши 1–7 (и на цифровом блоке) — инструменты в порядке полосы.
+// Клавиши 1–8 (и на цифровом блоке) — инструменты в порядке полосы.
 const toolKeys = (setTool: (tool: EditorTool) => void) =>
   Object.fromEntries(
     EDITOR_TOOLS.flatMap((tool, index) => [
@@ -56,6 +59,7 @@ export function useMapEditor({
   undo,
   redo,
   walk,
+  objects,
   keysActive,
 }: MapEditorOptions) {
   const [tool, setToolState] = useState<EditorTool>('view');
@@ -75,23 +79,45 @@ export function useMapEditor({
     ['mod+Z', undo],
     ['mod+shift+Z', redo],
     ['mod+Y', redo],
-    ['Escape', () => setAnchor(null)],
+    [
+      'Escape',
+      () => {
+        setAnchor(null);
+        if (tool === 'objects') objects.escape();
+      },
+    ],
   ]);
   // Цифры и R — по месту клавиши (useKeyCodes): R в русской раскладке — это К.
+  // У «Объектов» R поворачивает взгляд, у блоков — сам блок.
   useKeyCodes(
     {
       ...toolKeys(setTool),
       KeyR: () =>
-        setRotation(
-          (r) => ROTATIONS[(ROTATIONS.indexOf(r) + 1) % ROTATIONS.length],
-        ),
+        tool === 'objects'
+          ? objects.rotate()
+          : setRotation(
+              (r) => ROTATIONS[(ROTATIONS.indexOf(r) + 1) % ROTATIONS.length],
+            ),
+      Delete: () => {
+        if (tool === 'objects') objects.remove();
+      },
     },
     keysActive,
   );
 
   const { pick: walkPick, preview: walkPreview } = walk;
+  const { pick: objectPick, span: objectSpan } = objects;
   const sceneEditor = useMemo<SceneEditor | null>(() => {
     if (tool === 'view' || !state) return null;
+    if (tool === 'objects') {
+      return {
+        tool,
+        anchor: null,
+        height,
+        onPick: objectPick,
+        span: objectSpan,
+      };
+    }
     if (tool === 'walk') {
       return {
         tool,
@@ -133,6 +159,8 @@ export function useMapEditor({
     applyOps,
     walkPick,
     walkPreview,
+    objectPick,
+    objectSpan,
   ]);
 
   return {

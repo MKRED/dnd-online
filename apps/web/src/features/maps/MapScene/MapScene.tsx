@@ -1,10 +1,11 @@
 import { useComputedColorScheme } from '@mantine/core';
 import { MapControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState, type RefObject } from 'react';
 import type { MapObjectRefsView, ResizeOp } from 'shared';
 import type { CameraPlacement, Point } from '../cameraView';
 import type { SceneEditor } from '../editor/editorTools';
+import type { ObjectToolScene } from '../editor/objects';
 import type { MapViewState } from '../mapStateFromChunks';
 import { useKeyCodes } from '../useKeyCodes';
 import type { WalkScene } from '../walkTest';
@@ -41,6 +42,11 @@ interface MapSceneProps {
   // Проверка хода (фигурка и куда она дойдёт): видна при любом инструменте,
   // чтобы правки карты сразу сказывались на ней.
   walk: WalkScene | null;
+  // Инструмент «Объекты»: выделение и перетаскивание; null — другой инструмент.
+  objectTool: ObjectToolScene | null;
+  // Центр камеры: его двигают и сцена (двойной клик, Q/E), и страница (объект из
+  // списка «На карте»).
+  focusRef: RefObject<CameraFocusApi | null>;
   // Сцена отрисована с картинками объектов (см. FirstFrame).
   onReady: () => void;
 }
@@ -53,27 +59,22 @@ function MapScene({
   resizePreview,
   editor,
   walk,
+  objectTool,
+  focusRef: focus,
   onReady,
 }: MapSceneProps) {
   const chunks = useChunkMeshes(map, cutY);
   const scheme = useComputedColorScheme('dark');
   // Центр камеры живёт внутри Canvas (CameraFocus), а подсказка с кнопками и клавиши
-  // Q/E — снаружи, в обычном DOM; связывает их этот ref.
-  const focus = useRef<CameraFocusApi | null>(null);
+  // Q/E — снаружи, в обычном DOM; связывает их ref focus.
   const [centerLevel, setCenterLevel] = useState<number | null>(null);
   const [hover] = useState(createHoverStore);
   // Миниатюры объектов догрузились (или не загрузились) — только после этого первый
   // кадр считается готовым, иначе на снимке пустые карточки.
   const [imagesSettled, setImagesSettled] = useState(false);
   const settleImages = useCallback(() => setImagesSettled(true), []);
-  const shiftLevel = useCallback(
-    (dy: number) => focus.current?.shiftLevel(dy),
-    [],
-  );
-  const focusOn = useCallback(
-    (point: Point) => focus.current?.focusOn(point),
-    [],
-  );
+  const shiftLevel = (dy: number) => focus.current?.shiftLevel(dy);
+  const focusOn = (point: Point) => focus.current?.focusOn(point);
   // Q опускает центр камеры, E поднимает (docs/plan/done/map-editor.md, «Камера»).
   useKeyCodes({ KeyQ: () => shiftLevel(-1), KeyE: () => shiftLevel(1) });
 
@@ -108,6 +109,8 @@ function MapScene({
           refs={refs}
           cutY={cutY}
           onImagesSettled={settleImages}
+          tool={objectTool}
+          hover={hover}
         />
         {walk && <WalkLayer walk={walk} />}
         {resizePreview && (

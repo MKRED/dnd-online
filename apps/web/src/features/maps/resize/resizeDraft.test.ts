@@ -1,6 +1,8 @@
 import {
   applyOps,
+  createMapObjects,
   createPalette,
+  emptyObjectRefs,
   MemoryChunkStore,
   type SizedMapState,
 } from 'shared';
@@ -9,6 +11,7 @@ import {
   checkDraft,
   draftOp,
   EMPTY_DRAFT,
+  lossLabel,
   type ResizeDraft,
 } from './resizeDraft';
 
@@ -54,6 +57,47 @@ describe('checkDraft', () => {
     expect(del.removed).toBe(5);
   });
 
+  it('считает объекты: Большой монстр у края уходит за границу всем местом', () => {
+    const OGRE = '00000000-0000-4000-8000-000000000001';
+    const state = {
+      ...map(),
+      objects: createMapObjects([
+        {
+          id: 1,
+          at: [7, 1, 0],
+          hidden: false,
+          kind: 'monster',
+          monsterId: OGRE,
+          facing: 0,
+        },
+        { id: 2, at: [0, 1, 0], hidden: false, kind: 'start', facing: 0 },
+      ]),
+    };
+    const refs = emptyObjectRefs();
+    refs.monsters.set(OGRE, {
+      name: 'Огр',
+      size: 'large',
+      role: 'regular',
+      usable: true,
+    });
+    // Столб в x = 9 тоже уходит, огр [7–8] — только из-за своего размера.
+    const keep = checkDraft(state, draft({ east: -2 }), limits, refs);
+    expect(keep).toMatchObject({
+      objectsOutside: 1,
+      objectsRemoved: 0,
+    });
+    const del = checkDraft(state, draft({ east: -2 }, 'delete'), limits, refs);
+    expect(del.objectsRemoved).toBe(1);
+    // Без справочника огр считался бы Средним и остался бы внутри.
+    expect(checkDraft(state, draft({ east: -2 }), limits).objectsOutside).toBe(
+      0,
+    );
+    // Север срезает всегда: и старт, и огр стоят в z = 0.
+    expect(
+      checkDraft(state, draft({ north: -1 }), limits, refs).objectsRemoved,
+    ).toBe(2);
+  });
+
   it('отклоняет пустую, слишком большую и слишком высокую карту', () => {
     expect(checkDraft(map(), draft({ east: -10 }), limits).error).toMatch(
       /хотя бы одна клетка/,
@@ -64,6 +108,14 @@ describe('checkDraft', () => {
     expect(checkDraft(map(), draft({ down: 5 }), limits).error).toMatch(
       /выше предела высоты: 8/,
     );
+  });
+});
+
+describe('lossLabel', () => {
+  it('пишет только ненулевые части', () => {
+    expect(lossLabel(12, 2)).toBe('блоков: 12, объектов: 2');
+    expect(lossLabel(0, 1)).toBe('объектов: 1');
+    expect(lossLabel(3, 0)).toBe('блоков: 3');
   });
 });
 

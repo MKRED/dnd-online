@@ -35,6 +35,8 @@ const HINTS: Record<EditorTool, string> = {
     'Два клика задают углы: стены, пол и потолок из блока, внутри — воздух.',
   replace:
     'Два клика по блокам задают углы; блоки как в первом углу заменяются выбранным.',
+  objects:
+    'Клик по клетке ставит выбранное. Клик по объекту выделяет его, перетаскивание переносит. R — взгляд, Del — удалить, Esc — снять выделение.',
   walk: 'Клик ставит фигурку. Зелёное — дойдёт: клик делает ход и списывает футы. Оранжевое — не дойдёт: клик переставляет фигурку. Карту инструмент не меняет, фигурка нигде не сохраняется.',
 };
 
@@ -42,13 +44,19 @@ interface EditorPanelProps {
   editor: MapEditor;
   // Настройки проверки хода — показываются при инструменте «Ход».
   walkPanel: ReactNode;
+  // Панель инструмента «Объекты»: что ставить, свойства выделенного, список.
+  objectsPanel: ReactNode;
 }
 
 // Свойства выбранного инструмента в правой панели страницы карты; сами инструменты,
 // отмена и возврат — на сцене (SceneToolbar).
-function EditorPanel({ editor, walkPanel }: EditorPanelProps) {
+function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
   const { tool, anchor } = editor;
-  const builds = tool !== 'view' && tool !== 'erase' && tool !== 'walk';
+  const builds =
+    tool !== 'view' &&
+    tool !== 'erase' &&
+    tool !== 'walk' &&
+    tool !== 'objects';
 
   return (
     <Stack gap="sm">
@@ -93,6 +101,7 @@ function EditorPanel({ editor, walkPanel }: EditorPanelProps) {
       )}
 
       {tool === 'walk' && walkPanel}
+      {tool === 'objects' && objectsPanel}
 
       <Text size="xs" c="dimmed">
         {HINTS[tool]}

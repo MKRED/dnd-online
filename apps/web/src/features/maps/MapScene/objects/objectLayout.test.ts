@@ -189,6 +189,42 @@ describe('layoutObjects', () => {
     ]);
   });
 
+  it('миниатюры берёт по переданным путям — сцена игры читает их из библиотеки', () => {
+    const images = {
+      monster: (id: string, v: number) => `lib/monster/${id}/${v}`,
+      item: (id: string, v: number) => `lib/item/${id}/${v}`,
+      npc: (id: string, image: { thumbVersion: number }) =>
+        `lib/npc/${id}/${image.thumbVersion}`,
+    };
+    const objects = layoutObjects(
+      mapWith([
+        {
+          ...base,
+          id: 1,
+          at: [0, 1, 0],
+          kind: 'monster',
+          monsterId: OGRE,
+          facing: 0,
+        },
+        {
+          ...base,
+          id: 2,
+          at: [3, 1, 0],
+          kind: 'npc',
+          characterId: HERO,
+          size: 'medium',
+          facing: 0,
+        },
+      ]),
+      refs,
+      images,
+    );
+    expect(objectImagePaths(objects)).toEqual([
+      `lib/monster/${OGRE}/3`,
+      `lib/npc/${HERO}/2`,
+    ]);
+  });
+
   it('не рисует объекты за границей карты', () => {
     const objects = layoutObjects(
       mapWith([

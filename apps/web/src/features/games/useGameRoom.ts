@@ -23,11 +23,19 @@ export interface GameRoomHandlers {
 
 // Комната игры на сокете: живые изменения и кто сейчас в лобби. Одна комната на
 // страницу — второй хук на ту же игру при размонтировании вывел бы из неё весь сокет.
-export function useGameRoom(gameId: string, handlers: GameRoomHandlers) {
+// since — номер журнала, на котором страница прочитала игру (GameDetail.eventSeq): что
+// случилось между чтением и входом в комнату, придёт как onResync.
+export function useGameRoom(
+  gameId: string,
+  handlers: GameRoomHandlers,
+  since?: number,
+) {
   const [online, setOnline] = useState<string[]>([]);
   const [connected, setConnected] = useState(false);
   // Обработчики — свежие на каждый рендер, а подписка — одна на игру.
   const handlersRef = useRef(handlers);
+  // Нужен только при первом входе: сама подписка от него не зависит.
+  const sinceRef = useRef(since);
   useEffect(() => {
     handlersRef.current = handlers;
   });
@@ -35,7 +43,7 @@ export function useGameRoom(gameId: string, handlers: GameRoomHandlers) {
   useEffect(() => {
     const socket = acquireGameSocket();
     // Последний номер журнала, о котором знает страница: по нему догоняем после обрыва.
-    let lastSeq: number | undefined;
+    let lastSeq: number | undefined = sinceRef.current;
     let disposed = false;
 
     const joinRoom = () => {

@@ -1,0 +1,44 @@
+/* Как страница карты: сцена на всю высоту окна под шапкой, панель справа, на узком
+   экране — под сценой. */
+.page {
+  display: flex;
+  height: calc(100dvh - var(--app-shell-header-offset, 0rem));
+}
+
+.scene {
+  position: relative;
+  flex: 1;
+  /* Без нулевых минимумов холст R3F не даёт flex-элементу сжаться — появляется прокрутка. */
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--mantine-spacing-md);
+  text-align: center;
+}
+
+.sidebar {
+  flex: 0 0 18rem;
+  padding: var(--mantine-spacing-md);
+  border-left: 1px solid var(--mantine-color-default-border);
+  overflow-y: auto;
+}
+
+@media (max-width: 48em) {
+  .page {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    flex: 0 0 auto;
+    max-height: 40%;
+    border-left: none;
+    border-top: 1px solid var(--mantine-color-default-border);
+  }
+}

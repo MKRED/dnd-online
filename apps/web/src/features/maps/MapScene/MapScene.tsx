@@ -18,6 +18,7 @@ import { createHoverStore } from './hoverStore';
 import EditLayer from './EditLayer';
 import FirstFrame from './FirstFrame';
 import ObjectLayer, { FacingMarkerContext } from './objects';
+import type { ObjectImagePaths } from './objects/objectImages';
 import ResizePreview from './ResizePreview';
 import ChunkMesh from './ChunkMesh';
 import { useChunkMeshes } from './useChunkMeshes';
@@ -51,6 +52,9 @@ interface MapSceneProps {
   onReady: () => void;
   // Вид отметки взгляда на подставках — из настроек пользователя.
   facingMarker: FacingMarker;
+  // Откуда миниатюры объектов: сцена игры берёт их из библиотеки игры. Без него — из
+  // справочников. Держать один объект на сцену: новый перестраивает объекты.
+  objectImages?: ObjectImagePaths;
 }
 
 function MapScene({
@@ -65,6 +69,7 @@ function MapScene({
   focusRef: focus,
   onReady,
   facingMarker,
+  objectImages,
 }: MapSceneProps) {
   const chunks = useChunkMeshes(map, cutY);
   const scheme = useComputedColorScheme('dark');
@@ -115,6 +120,7 @@ function MapScene({
             onImagesSettled={settleImages}
             tool={objectTool}
             hover={hover}
+            images={objectImages}
           />
         </FacingMarkerContext>
         {walk && <WalkLayer walk={walk} />}

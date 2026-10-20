@@ -41,14 +41,15 @@ afterEach(() => {
 
 describe('GameLobbyPage: живое лобби', () => {
   it('входит в комнату игры и показывает, кто сейчас в лобби', async () => {
-    fake().joinAck = { ok: true, seq: 3, online: ['m1'], missed: null };
+    fake().joinAck = { ok: true, seq: 1, online: ['m1'], missed: null };
     stubFetch([{ status: 200, body: GAME }]);
     renderLobby();
 
     await screen.findByText('Лира');
+    // Входит с номера журнала, на котором прочитала лобби.
     expect(fake().emitWithAck).toHaveBeenCalledWith(GAME_SOCKET.join, {
       gameId: GAME.id,
-      afterSeq: undefined,
+      afterSeq: GAME.eventSeq,
     });
     // Мастер в сети, Аня (место Лиры) — нет.
     const dots = await screen.findAllByRole('img', { name: /лобби/ });
@@ -64,6 +65,20 @@ describe('GameLobbyPage: живое лобби', () => {
       }),
     );
     expect(screen.getAllByRole('img', { name: 'В лобби' })).toHaveLength(2);
+  });
+
+  it('изменения между чтением лобби и входом в комнату не теряются', async () => {
+    // Пока лобби грузилось, игрок занял место: журнал ушёл вперёд.
+    fake().joinAck = { ok: true, seq: 2, online: [], missed: null };
+    stubFetch([
+      { status: 200, body: GAME },
+      { status: 200, body: { ...GAME, seats: [], takenSeats: 0, eventSeq: 2 } },
+    ]);
+    renderLobby();
+    await screen.findByText('Лира');
+    await waitFor(() =>
+      expect(screen.queryByText('Лира')).not.toBeInTheDocument(),
+    );
   });
 
   it('по изменению игры перечитывает лобби', async () => {

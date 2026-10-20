@@ -182,5 +182,6 @@ export async function readGameDetail(
       seatedAt: (row.member.seatedAt ?? row.member.joinedAt).toISOString(),
     })),
     scene: sceneStatus(scene, game.sceneOpen, game.masterId === viewerId),
+    eventSeq: game.eventSeq,
   };
 }

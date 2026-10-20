@@ -11,10 +11,8 @@ import {
   type MapObjectRefsView,
   type Point3,
 } from 'shared';
-import { characterImagePath } from '../../../characters/characterImagesApi';
-import { itemImagePath } from '../../../items';
-import { monstersApi } from '../../../monsters/monstersApi';
 import type { MapViewState } from '../../mapStateFromChunks';
+import { CATALOG_OBJECT_IMAGES, type ObjectImagePaths } from './objectImages';
 
 // Как объект выглядит в сцене (docs/plan/done/map-objects.md, «Как выглядят объекты»).
 // image — путь миниатюры в API или null; letter — что писать на карточке без картинки.
@@ -65,6 +63,7 @@ const letterOf = (name: string) => name.trim().charAt(0).toUpperCase() || '?';
 function creatureLook(
   object: Extract<MapObject, { kind: 'monster' | 'npc' }>,
   refs: MapObjectRefsView,
+  images: ObjectImagePaths,
 ): Extract<SceneObjectLook, { kind: 'creature' }> {
   if (object.kind === 'monster') {
     const ref = refs.monsters[object.monsterId];
@@ -75,7 +74,7 @@ function creatureLook(
       size: ref?.size ?? 'medium',
       facing: object.facing,
       image: found?.image
-        ? monstersApi.imagePath(object.monsterId, 'thumb', found.image.version)
+        ? images.monster(object.monsterId, found.image.version)
         : null,
       letter: found ? letterOf(found.name) : '?',
       missing: !found,
@@ -89,12 +88,7 @@ function creatureLook(
     size: object.size,
     facing: object.facing,
     image: found?.mainImage
-      ? characterImagePath(
-          object.characterId,
-          found.mainImage.id,
-          'thumb',
-          found.mainImage.thumbVersion,
-        )
+      ? images.npc(object.characterId, found.mainImage)
       : null,
     letter: found ? letterOf(found.name) : '?',
     missing: !found,
@@ -105,13 +99,14 @@ function lookOf(
   object: MapObject,
   refs: MapObjectRefsView,
   startNumber: number,
+  images: ObjectImagePaths,
 ): SceneObjectLook {
   switch (object.kind) {
     case 'start':
       return { kind: 'start', number: startNumber, facing: object.facing };
     case 'monster':
     case 'npc':
-      return creatureLook(object, refs);
+      return creatureLook(object, refs, images);
     case 'container':
       // У поставленных до поворота контейнеров взгляда нет — север.
       return {
@@ -125,7 +120,7 @@ function lookOf(
       return {
         kind: 'item',
         image: found?.image
-          ? itemImagePath(object.itemId, 'thumb', found.image.version)
+          ? images.item(object.itemId, found.image.version)
           : null,
         letter: found ? letterOf(found.name) : '?',
         missing: !found,
@@ -140,6 +135,7 @@ function lookOf(
 export function layoutObjects(
   state: MapViewState,
   refs: MapObjectRefsView,
+  images: ObjectImagePaths = CATALOG_OBJECT_IMAGES,
 ): SceneObject[] {
   const summaries = summarizeObjects(state, state.objects.byId.values(), refs);
   const result: SceneObject[] = [];
@@ -148,7 +144,7 @@ export function layoutObjects(
     const object = state.objects.byId.get(summary.id);
     if (!object) continue;
     if (object.kind === 'start') starts++;
-    const look = lookOf(object, refs, starts);
+    const look = lookOf(object, refs, starts, images);
     const size: CreatureSize = look.kind === 'creature' ? look.size : 'medium';
     const span = look.kind === 'creature' ? footprintCells(size) : 1;
     const [x, y, z] = object.at;

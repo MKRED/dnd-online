@@ -15,6 +15,7 @@ import {
   objectImagePaths,
   type SceneObject,
 } from './objectLayout';
+import type { ObjectImagePaths } from './objectImages';
 import StandBase, { BLOCKED_COLOR } from './StandBase';
 import { useLabelTexture } from './useLabelTexture';
 import { useObjectDrag } from './useObjectDrag';
@@ -33,6 +34,8 @@ interface ObjectLayerProps {
   tool: ObjectToolScene | null;
   // Клетка под курсором — туда переносится отпущенный объект.
   hover: HoverStore;
+  // Откуда миниатюры объектов; без него — из справочников (редактор карты).
+  images?: ObjectImagePaths;
 }
 
 // Обводка выделенного объекта во всё его место и рост.
@@ -80,8 +83,12 @@ function ObjectLayer({
   onImagesSettled,
   tool,
   hover,
+  images,
 }: ObjectLayerProps) {
-  const all = useMemo(() => layoutObjects(state, refs), [state, refs]);
+  const all = useMemo(
+    () => layoutObjects(state, refs, images),
+    [state, refs, images],
+  );
   // Картинки — всех объектов, а не только ниже среза: иначе каждое движение ползунка
   // перезагружало бы текстуры.
   const paths = useMemo(() => objectImagePaths(all), [all]);

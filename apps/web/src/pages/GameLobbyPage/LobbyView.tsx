@@ -20,6 +20,7 @@ import {
   getGame,
   removeMember,
   ROLE_LABELS,
+  scenePagePath,
   SESSION_LABEL,
   seatsLabel,
   startSession,
@@ -30,6 +31,7 @@ import { errorMessage } from '../../lib/apiRequest';
 import FreeSeatCard from './FreeSeatCard';
 import GameJournal from './GameJournal';
 import GameLibrary from './GameLibrary';
+import GameScenes, { SceneInvite } from './GameScenes';
 import LobbyClosed from './LobbyClosed';
 import MasterActions from './MasterActions';
 import OnlineDot from './OnlineDot';
@@ -44,6 +46,8 @@ const LIVE_EVENTS_MAX = 200;
 const LIBRARY_CHANGES = new Set<string>([
   'session.started',
   'library.refreshed',
+  'scene.created',
+  'scene.restarted',
 ]);
 
 interface LobbyViewProps {
@@ -66,6 +70,8 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
   // Растёт, когда в игре скопировали или обновили записи библиотеки: открытая шторка
   // перечитывает себя.
   const [libraryVersion, setLibraryVersion] = useState(0);
+  // Растёт, когда сцены поменялись (в том числе из другой вкладки мастера).
+  const [scenesVersion, setScenesVersion] = useState(0);
   const [closed, setClosed] = useState<'deleted' | 'removed' | null>(null);
 
   // Изменения других приходят по сокету: лобби перечитывает себя. Потерянный доступ
@@ -77,25 +83,37 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
   };
   const addLive = (events: GameEvent[]) =>
     setLiveEvents((prev) => [...prev, ...events].slice(-LIVE_EVENTS_MAX));
-  const { online } = useGameRoom(game.id, {
-    onChanged: (message) => {
-      reload();
-      if (LIBRARY_CHANGES.has(message.kind))
-        setLibraryVersion((version) => version + 1);
-    },
-    onEvent: (event) => addLive([event]),
-    onResync: (missed) => {
-      reload();
-      if (missed) {
-        addLive(missed);
-      } else {
-        setLiveEvents([]);
-        setJournalKey((key) => key + 1);
-      }
-    },
-    onClosed: setClosed,
-  });
   const isMaster = game.role === 'master';
+  const { online } = useGameRoom(
+    game.id,
+    {
+      onChanged: (message) => {
+        // Мастер открыл сцену — игроков из лобби переводит на неё (docs/plan/game.md,
+        // этап 5). Мастера не переводит: он открывает сам.
+        if (!isMaster && message.kind === 'scene.opened') {
+          void navigate(scenePagePath(game.id));
+          return;
+        }
+        reload();
+        if (LIBRARY_CHANGES.has(message.kind))
+          setLibraryVersion((version) => version + 1);
+        if (message.kind.startsWith('scene.'))
+          setScenesVersion((version) => version + 1);
+      },
+      onEvent: (event) => addLive([event]),
+      onResync: (missed) => {
+        reload();
+        if (missed) {
+          addLive(missed);
+        } else {
+          setLiveEvents([]);
+          setJournalKey((key) => key + 1);
+        }
+      },
+      onClosed: setClosed,
+    },
+    game.eventSeq,
+  );
   const freeCount = Math.max(0, game.seatCount - game.seats.length);
 
   // Одно действие за раз: кнопки гаснут, ошибка показывается над местами.
@@ -227,6 +245,9 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
       </Group>
 
       {error && <Alert color="red">{error}</Alert>}
+      {!isMaster && game.scene && (
+        <SceneInvite gameId={game.id} scene={game.scene} />
+      )}
       {game.sessionStartedAt && game.role === 'player' && (
         <Text size="sm" c="dimmed">
           Идёт встреча: лист вашего персонажа закрыт для правки до её конца.
@@ -261,6 +282,14 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
           />
         ))}
       </SimpleGrid>
+
+      {isMaster && (
+        <GameScenes
+          gameId={game.id}
+          version={scenesVersion}
+          onChanged={reload}
+        />
+      )}
 
       {isMaster && (
         <GameJournal

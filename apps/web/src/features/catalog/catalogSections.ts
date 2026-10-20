@@ -1,5 +1,5 @@
 // Разделы справочника (docs/plan/done/abilities-effects.md, «Место в интерфейсе»): у каждого
-// свой адрес, ссылка «Справочник» в шапке ведёт на первый.
+// свой адрес и свой пункт в группе «Справочник» боковой панели (components/AppLayout).
 export const CATALOG_SECTIONS = [
   { value: 'items', path: '/items', label: 'Предметы' },
   { value: 'abilities', path: '/abilities', label: 'Способности' },

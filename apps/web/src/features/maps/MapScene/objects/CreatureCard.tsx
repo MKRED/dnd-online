@@ -28,7 +28,7 @@ interface CreatureCardProps {
 // подставке, картинка с обеих сторон. К камере не поворачивается: лицом смотрит по
 // взгляду существа (туда же, куда стрелка на полу), так поворот виден по самому
 // жетону. Высота — рост размера, на полу — подставка во всё место. Без картинки —
-// первая буква имени, у заглушки — «?».
+// первая буква имени, у заглушки — «?». Подставка на полу круглая, как у миниатюры.
 function CreatureCard({ object, look, texture }: CreatureCardProps) {
   const frame = look.missing ? FRAME.missing : FRAME[look.side];
   const letter = useLabelTexture(texture ? null : look.letter, frame);
@@ -46,6 +46,7 @@ function CreatureCard({ object, look, texture }: CreatureCardProps) {
         size={object.footprint}
         color={object.blocked ? BLOCKED_COLOR : frame}
         facing={look.facing}
+        round
       />
       {/* В повёрнутой группе взгляд — локальный −z: туда смотрит лицевая сторона. */}
       <group rotation={[0, facingAngle(look.facing), 0]}>

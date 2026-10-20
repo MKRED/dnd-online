@@ -23,21 +23,27 @@ interface StandBaseProps {
   facing?: Facing;
   // Картинка на самой подставке (номер старта).
   texture?: Texture | null;
+  // Круг вместо квадрата — подставка фигурки существа; плитка старта квадратная.
+  round?: boolean;
 }
 
-// Подставка на полу: квадрат во всё место существа (или плитка старта) и стрелка
-// взгляда. Все три прозрачные и глубину не пишут, а прозрачное three.js сортирует по
+// Подставка на полу: круг во всё место существа или квадратная плитка старта, и
+// стрелка взгляда. Все три прозрачные и глубину не пишут, а прозрачное three.js сортирует по
 // расстоянию до камеры — под иными углами квадрат рисовался поверх номера и стрелки.
 // renderOrder ставит их строго после квадрата. Наведение на подставку показывает
 // подсказку объекта (ObjectLayer); номер и стрелку луч пропускает.
-function StandBase({ size, color, facing, texture }: StandBaseProps) {
+function StandBase({ size, color, facing, texture, round }: StandBaseProps) {
   const arrow = useMemo(() => arrowGeometry(), []);
   useEffect(() => () => arrow.dispose(), [arrow]);
   const side = size * 0.92;
   return (
     <group>
       <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[side, side]} />
+        {round ? (
+          <circleGeometry args={[side / 2, 48]} />
+        ) : (
+          <planeGeometry args={[side, side]} />
+        )}
         <meshStandardMaterial
           color={color}
           transparent

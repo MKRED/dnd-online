@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { Socket } from 'socket.io-client';
 import {
   GAME_SOCKET,
   type GameChangedMessage,
   type GameClosedMessage,
   type GameEvent,
   type GameEventMessage,
+  type GameFigureDragMessage,
   type GameJoinAck,
   type GamePresenceMessage,
   type GameSceneEditMessage,
@@ -22,6 +24,8 @@ export interface GameRoomHandlers {
   onClosed?: (reason: GameClosedMessage['reason']) => void;
   // Правка сцены (этап 6): мастеру — целиком, игроку — то, что ему видно.
   onSceneEdit?: (message: GameSceneEditMessage) => void;
+  // Кто-то тянет фигурку (этап 7): где она сейчас под его курсором.
+  onFigureDrag?: (message: GameFigureDragMessage) => void;
 }
 
 // Комната игры на сокете: живые изменения и кто сейчас в лобби. Одна комната на
@@ -39,12 +43,15 @@ export function useGameRoom(
   const handlersRef = useRef(handlers);
   // Нужен только при первом входе: сама подписка от него не зависит.
   const sinceRef = useRef(since);
+  // Сокет этой комнаты — чтобы и страница могла в него писать (sendFigureDrag).
+  const socketRef = useRef<Socket | null>(null);
   useEffect(() => {
     handlersRef.current = handlers;
   });
 
   useEffect(() => {
     const socket = acquireGameSocket();
+    socketRef.current = socket;
     // Последний номер журнала, о котором знает страница: по нему догоняем после обрыва.
     let lastSeq: number | undefined = sinceRef.current;
     let disposed = false;
@@ -90,6 +97,10 @@ export function useGameRoom(
     const onSceneEdit = (message: GameSceneEditMessage) => {
       if (message.gameId === gameId) handlersRef.current.onSceneEdit?.(message);
     };
+    const onFigureDrag = (message: GameFigureDragMessage) => {
+      if (message.gameId === gameId)
+        handlersRef.current.onFigureDrag?.(message);
+    };
 
     socket.on('connect', joinRoom);
     socket.on('disconnect', onDisconnect);
@@ -98,6 +109,7 @@ export function useGameRoom(
     socket.on(GAME_SOCKET.presence, onPresence);
     socket.on(GAME_SOCKET.closed, onClosed);
     socket.on(GAME_SOCKET.sceneEdit, onSceneEdit);
+    socket.on(GAME_SOCKET.figureDragged, onFigureDrag);
     if (socket.connected) joinRoom();
 
     return () => {
@@ -109,10 +121,19 @@ export function useGameRoom(
       socket.off(GAME_SOCKET.presence, onPresence);
       socket.off(GAME_SOCKET.closed, onClosed);
       socket.off(GAME_SOCKET.sceneEdit, onSceneEdit);
+      socket.off(GAME_SOCKET.figureDragged, onFigureDrag);
+      socketRef.current = null;
       if (socket.connected) socket.emit(GAME_SOCKET.leave, { gameId });
       releaseGameSocket();
     };
   }, [gameId]);
 
-  return { online, connected };
+  // Куда тянут фигурку: без ответа и без очереди — пропавшая позиция не важна, следующая
+  // её заменит.
+  const sendFigureDrag = useCallback((message: GameFigureDragMessage) => {
+    const socket = socketRef.current;
+    if (socket?.connected) socket.emit(GAME_SOCKET.figureDrag, message);
+  }, []);
+
+  return { online, connected, sendFigureDrag };
 }

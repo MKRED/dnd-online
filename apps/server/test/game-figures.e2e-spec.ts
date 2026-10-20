@@ -1,10 +1,12 @@
 import type request from 'supertest';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type {
-  GameEventPage,
-  GameFigures,
-  GameScenes,
-  GameSceneView,
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import {
+  GAME_SOCKET,
+  type GameEventPage,
+  type GameFigureDragMessage,
+  type GameFigures,
+  type GameScenes,
+  type GameSceneView,
 } from 'shared';
 import {
   characterBody,
@@ -12,6 +14,13 @@ import {
   PNG_FILE,
 } from './support/character-fixture.js';
 import { createSceneGame } from './support/scene-fixture.js';
+import {
+  collect,
+  join,
+  listenForSockets,
+  next,
+  type SocketClients,
+} from './support/socket-client.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
 // Фигурки персонажей (docs/plan/game.md, этап 7): встают на свободные стартовые точки,
@@ -19,22 +28,22 @@ import { createTestApp, type TestApp } from './support/test-app.js';
 // видит сцену.
 describe('game figures (e2e)', () => {
   let t: TestApp;
+  let clients: SocketClients;
   let png: Buffer;
 
   beforeAll(async () => {
     t = await createTestApp();
+    clients = await listenForSockets(t);
     png = await pngImage();
   });
+
+  afterEach(() => clients.disconnectAll());
 
   afterAll(async () => {
     await t.close();
   });
 
-  async function user(login: string) {
-    const agent = await t.loginAs(login);
-    const me = await agent.get('/api/auth/me').expect(200);
-    return { agent, id: (me.body as { user: { id: string } }).user.id };
-  }
+  const user = (login: string) => clients.user(login);
 
   const idOf = (res: request.Response) => (res.body as { id: string }).id;
   const figuresUrl = (gameId: string) => `/api/games/${gameId}/scene/figures`;
@@ -399,5 +408,53 @@ describe('game figures (e2e)', () => {
       .expect(200);
     await move(g.player.agent, 403);
     await move(g.m, 200);
+  });
+
+  it('куда тянут фигурку — остальным по сокету; чужую, за сценой и на закрытой сцене игроку — нет', async () => {
+    const g = await opened('gfg_drag');
+    const second = await seatSecond(g.gameId, 'gfg_drag');
+    const connect = async (cookie: string) => {
+      const socket = await clients.connect(cookie);
+      expect((await join(socket, g.gameId)).ok).toBe(true);
+      return socket;
+    };
+    const masterSocket = await connect(g.master.cookie);
+    const playerSocket = await connect(g.player.cookie);
+    const secondSocket = await connect(second.cookie);
+    const id = g.figure.character.id;
+    const drag = (at: GameFigureDragMessage['at']): GameFigureDragMessage => ({
+      gameId: g.gameId,
+      characterId: id,
+      at,
+    });
+    const dragged = GAME_SOCKET.figureDragged;
+
+    // Игрок тянет свою фигурку — видят мастер и второй игрок, сам он — нет.
+    const toMaster = next(masterSocket, dragged);
+    const toSecond = next(secondSocket, dragged);
+    const toSelf = collect(playerSocket, dragged);
+    playerSocket.emit(GAME_SOCKET.figureDrag, drag([0, 1, 2]));
+    expect(await toMaster).toEqual(drag([0, 1, 2]));
+    expect(await toSecond).toEqual(drag([0, 1, 2]));
+    expect(await toSelf).toEqual([]);
+
+    // Чужую фигурку, клетку за сценой и кривое сообщение сервер отбрасывает.
+    const nothing = collect(masterSocket, dragged);
+    secondSocket.emit(GAME_SOCKET.figureDrag, drag([0, 1, 3]));
+    playerSocket.emit(GAME_SOCKET.figureDrag, drag([40, 1, 3]));
+    playerSocket.emit(GAME_SOCKET.figureDrag, { ...drag(null), at: [1, 2] });
+    expect(await nothing).toEqual([]);
+
+    // Сцена закрыта: игрок не тянет, тянущий мастер игрокам не виден.
+    await g.m
+      .put(`/api/games/${g.gameId}/scenes/open`)
+      .send({ open: false })
+      .expect(200);
+    const closedToMaster = collect(masterSocket, dragged);
+    playerSocket.emit(GAME_SOCKET.figureDrag, drag([0, 1, 4]));
+    expect(await closedToMaster).toEqual([]);
+    const closedToPlayer = collect(playerSocket, dragged);
+    masterSocket.emit(GAME_SOCKET.figureDrag, drag([0, 1, 5]));
+    expect(await closedToPlayer).toEqual([]);
   });
 });

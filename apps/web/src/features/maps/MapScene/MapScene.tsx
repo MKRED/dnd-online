@@ -16,7 +16,10 @@ import CenterHint from './CenterHint';
 import CursorReadout from './CursorReadout';
 import { createHoverStore } from './hoverStore';
 import EditLayer from './EditLayer';
-import FigureLayer, { type FigureInput } from './figures';
+import FigureLayer, {
+  type FigureDragHandlers,
+  type FigureInput,
+} from './figures';
 import FirstFrame from './FirstFrame';
 import ObjectLayer, { FacingMarkerContext } from './objects';
 import type { ObjectImagePaths } from './objects/objectImages';
@@ -60,7 +63,10 @@ interface MapSceneProps {
   hideContainerContents?: boolean;
   // Фигурки персонажей на сцене игры (этап 7); в редакторе карты их нет.
   figures?: readonly FigureInput[];
-  onFigureSelect?: (id: string) => void;
+  // Фигурки, которые сейчас тянут другие (по сокету).
+  figureGhosts?: readonly FigureInput[];
+  // Выбор и перетаскивание своих фигурок; без них фигурки не трогаются.
+  figureDrag?: FigureDragHandlers;
 }
 
 function MapScene({
@@ -78,7 +84,8 @@ function MapScene({
   objectImages,
   hideContainerContents,
   figures,
-  onFigureSelect,
+  figureGhosts,
+  figureDrag,
 }: MapSceneProps) {
   const chunks = useChunkMeshes(map, cutY);
   const scheme = useComputedColorScheme('dark');
@@ -137,7 +144,8 @@ function MapScene({
               map={map}
               figures={figures}
               cutY={cutY}
-              onSelect={onFigureSelect}
+              ghosts={figureGhosts}
+              {...figureDrag}
             />
           )}
         </FacingMarkerContext>

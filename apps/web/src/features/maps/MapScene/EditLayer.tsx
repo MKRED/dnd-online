@@ -107,8 +107,10 @@ function EditLayer({
 }: EditLayerProps) {
   const [hover, setHover] = useState<PickedCells | null>(null);
 
-  const updateHover = (pick: PickedCells | null) =>
+  const updateHover = (pick: PickedCells | null) => {
     setHover((prev) => (samePick(prev, pick) ? prev : pick));
+    editor?.onHover?.(pick);
+  };
 
   return (
     <>

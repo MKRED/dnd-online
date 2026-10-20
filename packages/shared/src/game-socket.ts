@@ -1,5 +1,6 @@
 import type { GameEvent, GameEventKind } from './game-events.js';
 import type { PackedChangeset } from './map/changesetPacking.js';
+import type { Vec3 } from './map/coords.js';
 import type { MapObjectRefsView } from './map/objects/objectRefViews.js';
 
 // Сокет игры (docs/plan/game.md, этап 3): живые изменения лобби и присутствие. Входит
@@ -11,12 +12,15 @@ export const GAME_SOCKET = {
   // клиент → сервер, с ответом (ack)
   join: 'game:join',
   leave: 'game:leave',
+  // клиент → сервер, без ответа: куда сейчас тянут фигурку (этап 7)
+  figureDrag: 'game:figure-drag',
   // сервер → клиент
   changed: 'game:changed',
   event: 'game:event',
   presence: 'game:presence',
   closed: 'game:closed',
   sceneEdit: 'game:scene-edit',
+  figureDragged: 'game:figure-dragged',
 } as const;
 
 // Правки сцены, которые клиент применяет к своей копии, а не перечитывает её.
@@ -92,6 +96,21 @@ export interface GameSceneEditMessage {
   // Справочник ссылок затронутых объектов — из библиотеки игры.
   refs: MapObjectRefsView;
 }
+
+// Фигурку тянут (docs/plan/game.md, этап 7): промежуточные позиции идут только по сокету,
+// в базу и журнал попадает лишь ход или постановка при отпускании. at — клетка ног под
+// курсором; null — фигурку отпустили. Сервер пересылает это остальным в комнате (игрокам —
+// пока сцена открыта).
+export interface GameFigureDragMessage {
+  gameId: string;
+  characterId: string;
+  at: Vec3 | null;
+}
+
+// Чаще клиент позицию не шлёт; чужая тень без новостей дольше FIGURE_DRAG_STALE_MS
+// пропадает (тянувший мог отключиться посреди перетаскивания).
+export const FIGURE_DRAG_INTERVAL_MS = 100;
+export const FIGURE_DRAG_STALE_MS = 2000;
 
 // Комната закрыта для этого клиента: игру удалили или его убрали из закрытой игры.
 export interface GameClosedMessage {

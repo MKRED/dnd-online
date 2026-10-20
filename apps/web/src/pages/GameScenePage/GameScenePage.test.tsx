@@ -35,6 +35,7 @@ vi.mock('../../features/maps/MapScene', async () => {
       hideContainerContents,
       onReady,
       figures,
+      figureGhosts,
     }: {
       map: MapViewState;
       refs: MapObjectRefsView;
@@ -42,6 +43,7 @@ vi.mock('../../features/maps/MapScene', async () => {
       hideContainerContents: boolean;
       onReady: () => void;
       figures?: FigureInput[];
+      figureGhosts?: FigureInput[];
     }) {
       useEffect(onReady, [onReady]);
       const names = Object.values(refs.monsters).map((m) =>
@@ -56,6 +58,11 @@ vi.mock('../../features/maps/MapScene', async () => {
           {figures?.map((figure) => (
             <p key={figure.id}>
               Фигурка: {figure.name} {figure.at.join(',')} {figure.image}
+            </p>
+          ))}
+          {figureGhosts?.map((figure) => (
+            <p key={figure.id}>
+              Тень: {figure.name} {figure.at.join(',')}
             </p>
           ))}
         </>
@@ -200,6 +207,34 @@ describe('GameScenePage', () => {
     expect(
       screen.getByText('Щёлкните клетку, куда поставить: Борн.'),
     ).toBeInTheDocument();
+  });
+
+  it('чужое перетаскивание видно тенью, пока фигурку не отпустили', async () => {
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'player' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+      [`GET ${base}/scene/figures`]: () => ({
+        status: 200,
+        body: figuresOf(3, [LIRA]),
+      }),
+    });
+    renderScene('u3');
+    await screen.findByText(/Фигурка: Лира/);
+    const drag = (at: [number, number, number] | null) =>
+      act(() =>
+        socket.current?.receive(GAME_SOCKET.figureDragged, {
+          gameId: GAME.id,
+          characterId: 'c1',
+          at,
+        }),
+      );
+    drag([2, 1, 3]);
+    expect(await screen.findByText('Тень: Лира 2,1,3')).toBeInTheDocument();
+    drag(null);
+    expect(screen.queryByText(/Тень: Лира/)).not.toBeInTheDocument();
   });
 
   it('игрок выбирает свою фигурку по имени, чужую — нет; запас правит только мастер', async () => {

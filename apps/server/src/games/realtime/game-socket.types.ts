@@ -2,6 +2,7 @@ import type {
   GameChangedMessage,
   GameClosedMessage,
   GameEventMessage,
+  GameFigureDragMessage,
   GamePresenceMessage,
   GameSceneEditMessage,
 } from 'shared';
@@ -15,6 +16,7 @@ export interface GameServerEvents {
   'game:presence': (message: GamePresenceMessage) => void;
   'game:closed': (message: GameClosedMessage) => void;
   'game:scene-edit': (message: GameSceneEditMessage) => void;
+  'game:figure-dragged': (message: GameFigureDragMessage) => void;
 }
 
 export interface GameSocketData {

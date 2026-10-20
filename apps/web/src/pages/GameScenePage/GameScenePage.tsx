@@ -16,10 +16,9 @@ import {
 } from 'react-router-dom';
 import { DEFAULT_USER_SETTINGS, mapBounds } from 'shared';
 import { useAuth } from '../../features/auth';
-import { figureApi, sceneObjectImages } from '../../features/games';
+import { sceneObjectImages } from '../../features/games';
 import { parseCameraParams, placeCamera } from '../../features/maps/cameraView';
 import { SceneToolbar } from '../../features/maps/editor';
-import { useKeyCodes } from '../../features/maps/useKeyCodes';
 import type { CameraFocusApi } from '../../features/maps/MapScene';
 import { usePageTitle } from '../../lib/usePageTitle';
 import classes from './GameScenePage.module.css';
@@ -27,7 +26,7 @@ import SceneRoom from './SceneRoom';
 import SceneSidebar from './SceneSidebar';
 import SceneToolsPanel from './SceneToolsPanel';
 import { useGameScene } from './useGameScene';
-import { FiguresPanel, useFigureTool, useSceneFigures } from './figures';
+import { FiguresPanel, useScenePlay } from './figures';
 import { useSceneOpen } from './useSceneOpen';
 import { SCENE_TOOLS, useSceneTools } from './useSceneTools';
 
@@ -89,26 +88,17 @@ function GameScenePage() {
     ? Math.min(Math.max(cutY ?? bounds.max[1], bounds.min[1]), bounds.max[1])
     : 0;
   const sceneId = view?.scene.id ?? null;
-  const figures = useSceneFigures(id, sceneId);
-  const figuresApi = useMemo(() => figureApi(id), [id]);
-  const figureTool = useFigureTool({
+  const play = useScenePlay({
+    gameId: id,
+    sceneId,
     master,
+    editorTool: editor.tool,
     state,
     refs: view?.refs ?? null,
-    figures: figures.figures,
-    api: figuresApi,
-    onFigures: figures.apply,
   });
-  // Мастер водит фигурки в «Просмотре»: в остальных инструментах щелчок правит карту.
-  const figureMode = !master || editor.tool === 'view';
-  const { select: selectFigure } = figureTool;
-  useEffect(() => {
-    if (!figureMode) selectFigure(null);
-  }, [figureMode, selectFigure]);
-  useKeyCodes({ Escape: () => selectFigure(null) });
+  const { figures } = play;
   const sceneEditor =
-    (master && ready ? editor.sceneEditor : null) ??
-    (figureMode ? figureTool.editor : null);
+    (master && ready ? editor.sceneEditor : null) ?? play.editor;
   const handleReady = useCallback(() => setReadySceneId(sceneId), [sceneId]);
   const tools = master && ready !== null;
 
@@ -128,6 +118,8 @@ function GameScenePage() {
           onReload={reload}
           onSceneEdit={receiveEdit}
           onFigures={figures.reload}
+          onFigureDrag={play.ghosts.receive}
+          dragSenderRef={play.dragSenderRef}
           onLeave={() => void navigate(lobby)}
         />
       )}
@@ -158,7 +150,7 @@ function GameScenePage() {
               camera={camera}
               resizePreview={null}
               editor={sceneEditor}
-              walk={figureMode ? figureTool.scene : null}
+              walk={play.walk}
               objectTool={
                 tools && editor.tool === 'objects' ? objects.scene : null
               }
@@ -171,14 +163,8 @@ function GameScenePage() {
               objectImages={images}
               hideContainerContents={ready.view.contentsHidden}
               figures={figures.inputs}
-              onFigureSelect={
-                figureMode
-                  ? (figureId) =>
-                      selectFigure(
-                        figureTool.selectedId === figureId ? null : figureId,
-                      )
-                  : undefined
-              }
+              figureGhosts={play.ghosts.ghosts}
+              figureDrag={play.drag}
             />
           </Suspense>
         )}
@@ -224,7 +210,7 @@ function GameScenePage() {
           <FiguresPanel
             figures={figures.figures}
             master={master}
-            tool={figureTool}
+            tool={play.tool}
           />
         )}
         {tools && (

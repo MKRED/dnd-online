@@ -9,6 +9,7 @@ import {
   type MapObjectRefsView,
   type Occupant,
   type Reach,
+  type Vec3,
 } from 'shared';
 import type {
   PickedCells,
@@ -22,6 +23,7 @@ import type { figureApi } from '../../../features/games';
 import { errorMessage } from '../../../lib/apiRequest';
 import { figureHover } from './figureHover';
 import { sceneOccupants } from './sceneOccupants';
+import { useFigureDragging } from './useFigureDragging';
 
 interface FigureToolOptions {
   master: boolean;
@@ -31,6 +33,8 @@ interface FigureToolOptions {
   api: ReturnType<typeof figureApi>;
   // Ответ правки — фигурки глазами того, кто правил: показать сразу.
   onFigures: (figures: GameFigures) => void;
+  // Куда тянут выбранную фигурку — остальным по сокету; null — отпустили.
+  onDrag?: (characterId: string, at: Vec3 | null) => void;
 }
 
 // Выбранная фигурка на сцене игры (docs/plan/game.md, этап 7): куда она дойдёт на
@@ -43,6 +47,7 @@ export function useFigureTool({
   figures,
   api,
   onFigures,
+  onDrag,
 }: FigureToolOptions) {
   // Персонаж, которого водят: фигурка на сцене или (у мастера) «Не на сцене».
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -133,17 +138,8 @@ export function useFigureTool({
 
   const pick = useCallback(
     (cells: PickedCells) => {
-      if (!state || !selectedId) return;
-      const hover = figureHover(
-        state,
-        reach,
-        cells,
-        FIGURE_SIZE,
-        others,
-        master,
-        figure?.at ?? null,
-      );
-      if (hover.kind === 'blocked') return;
+      const hover = preview(cells);
+      if (!selectedId || !hover || hover.kind === 'blocked') return;
       if (hover.kind === 'move') {
         run(() => api.move(selectedId, hover.anchor), 'Не удалось сделать ход');
       } else {
@@ -153,15 +149,31 @@ export function useFigureTool({
         );
       }
     },
-    [state, selectedId, reach, others, master, figure, api, run],
+    [selectedId, preview, api, run],
   );
+
+  const dragging = useFigureDragging({
+    selectedId,
+    select: setSelectedId,
+    preview,
+    pick,
+    onDrag,
+  });
+  const { onHover } = dragging;
 
   const editor = useMemo<SceneEditor | null>(
     () =>
       active
-        ? { tool: 'walk', anchor: null, height: 1, onPick: pick, preview }
+        ? {
+            tool: 'walk',
+            anchor: null,
+            height: 1,
+            onPick: pick,
+            preview,
+            onHover,
+          }
         : null,
-    [active, pick, preview],
+    [active, pick, preview, onHover],
   );
 
   return {
@@ -182,6 +194,8 @@ export function useFigureTool({
     error,
     editor,
     scene,
+    grab: dragging.grab,
+    release: dragging.release,
   };
 }
 

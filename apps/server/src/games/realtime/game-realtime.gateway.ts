@@ -21,6 +21,7 @@ import { DatabaseService } from '../../database/database.service.js';
 import { GAME_LOCKED, GAME_NOT_FOUND } from '../game-errors.js';
 import { readGameEvents } from '../game-event-read.js';
 import { findGameAccess } from '../game-read.js';
+import { parseFigureDrag, relayFigureDrag } from './figure-drag.js';
 import { GameRealtimeService } from './game-realtime.service.js';
 import {
   gameRoom,
@@ -43,7 +44,10 @@ export class GameRealtimeGateway implements OnGatewayInit, OnGatewayDisconnect {
     private readonly logger: PinoLogger,
   ) {}
 
+  private server?: GameServer;
+
   afterInit(server: GameServer): void {
+    this.server = server;
     this.realtime.attach(server);
     // Без сессии сокет не открывается. Истёкший access-токен клиент обновляет через
     // /auth/refresh и подключается снова — сообщение 'unauthorized' ему для этого.
@@ -123,6 +127,35 @@ export class GameRealtimeGateway implements OnGatewayInit, OnGatewayDisconnect {
       }
       this.logger.error({ err, gameId, userId }, 'Joining a game room failed');
       return { ok: false, error: 'Не удалось подключиться к игре' };
+    }
+  }
+
+  // Куда тянут фигурку (этап 7): без ответа, кривое или чужое сообщение просто отбрасывается.
+  @SubscribeMessage(GAME_SOCKET.figureDrag)
+  async figureDrag(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() body: unknown,
+  ): Promise<void> {
+    const message = parseFigureDrag(body);
+    if (!message || !this.server) return;
+    try {
+      const relayed = await relayFigureDrag(
+        this.databaseService,
+        this.server,
+        socket,
+        message,
+      );
+      if (!relayed) {
+        this.logger.debug(
+          { userId: socket.data.userId, ...message },
+          'Figure drag dropped',
+        );
+      }
+    } catch (err: unknown) {
+      this.logger.error(
+        { err, userId: socket.data.userId, ...message },
+        'Relaying a figure drag failed',
+      );
     }
   }
 

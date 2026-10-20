@@ -19,3 +19,4 @@
 
 - `packages/shared/src/map/objects/mapObject.ts`: `FACINGS`, `Facing`, `nextFacing`.
 - Операция `turnObject` и поле `facing` у видов `start`, `monster` и `npc`: `packages/shared/src/map/objects/`.
+- На сцене взгляд показывают стрелка на полу и жетон существа, повёрнутый лицом по взгляду: `apps/web/src/features/maps/MapScene/objects/CreatureCard.tsx`.

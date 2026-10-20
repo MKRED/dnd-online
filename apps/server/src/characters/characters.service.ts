@@ -4,6 +4,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { loadMainImages } from '../character-images/character-image-access.js';
 import { DatabaseService } from '../database/database.service.js';
 import { characters, users } from '../database/schema/index.js';
+import { releaseCharacterSeat } from '../games/release-character-seat.js';
 import {
   loadCharacterAbilities,
   loadCharacterAbilityLists,
@@ -275,13 +276,18 @@ export class CharactersService {
   async remove(userId: string, id: string) {
     const t0 = Date.now();
     try {
-      const [row] = await this.databaseService.db
-        .delete(characters)
-        .where(and(eq(characters.id, id), eq(characters.userId, userId)))
-        .returning({ id: characters.id });
-      if (!row) {
-        throw new NotFoundException('Персонаж не найден');
-      }
+      await this.databaseService.db.transaction(async (tx) => {
+        // Персонаж на месте в игре: место освобождается записью в журнале игры. Чужой
+        // персонаж дальше даст 404, и транзакция откатит и это.
+        await releaseCharacterSeat(tx, id, userId);
+        const [row] = await tx
+          .delete(characters)
+          .where(and(eq(characters.id, id), eq(characters.userId, userId)))
+          .returning({ id: characters.id });
+        if (!row) {
+          throw new NotFoundException('Персонаж не найден');
+        }
+      });
       this.logger.info(
         { durationMs: Date.now() - t0, userId, characterId: id },
         'Character deleted',

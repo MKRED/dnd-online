@@ -28,3 +28,4 @@ export type {
 } from './catalog-tables.js';
 export * from './bookmarks.js';
 export * from './games.js';
+export * from './game-events.js';

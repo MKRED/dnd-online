@@ -8,7 +8,7 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { IconLock } from '@tabler/icons-react';
+import { IconLock, IconNotebook } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { GameDetail } from 'shared';
@@ -24,6 +24,7 @@ import {
 } from '../../features/games';
 import { errorMessage } from '../../lib/apiRequest';
 import FreeSeatCard from './FreeSeatCard';
+import GameJournal from './GameJournal';
 import SeatCard from './SeatCard';
 import TakeSeatModal from './TakeSeatModal';
 
@@ -39,6 +40,7 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [taking, setTaking] = useState(false);
+  const [journalOpened, setJournalOpened] = useState(false);
   const isMaster = game.role === 'master';
   const freeCount = Math.max(0, game.seatCount - game.seats.length);
 
@@ -130,14 +132,23 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
           </Group>
         </div>
         {isMaster ? (
-          <Button
-            color="red"
-            variant="light"
-            disabled={busy}
-            onClick={handleDelete}
-          >
-            Удалить игру
-          </Button>
+          <Group gap="xs">
+            <Button
+              variant="default"
+              leftSection={<IconNotebook size={16} />}
+              onClick={() => setJournalOpened(true)}
+            >
+              Журнал
+            </Button>
+            <Button
+              color="red"
+              variant="light"
+              disabled={busy}
+              onClick={handleDelete}
+            >
+              Удалить игру
+            </Button>
+          </Group>
         ) : (
           game.role && (
             <Button variant="default" disabled={busy} onClick={handleLeave}>
@@ -176,6 +187,14 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
           />
         ))}
       </SimpleGrid>
+
+      {isMaster && (
+        <GameJournal
+          gameId={game.id}
+          opened={journalOpened}
+          onClose={() => setJournalOpened(false)}
+        />
+      )}
 
       <TakeSeatModal
         gameId={game.id}

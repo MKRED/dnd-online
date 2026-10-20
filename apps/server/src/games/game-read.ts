@@ -1,7 +1,15 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm';
-import type { GameDetail, GameListItem, GameRole } from 'shared';
-import type { DatabaseService } from '../database/database.service.js';
+import type {
+  GameDetail,
+  GameEventCharacter,
+  GameListItem,
+  GameRole,
+} from 'shared';
+import type {
+  DatabaseService,
+  DbTransaction,
+} from '../database/database.service.js';
 import {
   characters,
   gameMembers,
@@ -105,6 +113,25 @@ export async function findGameAccess(db: Db, gameId: string, viewerId: string) {
   const canView =
     game.masterId === viewerId || member !== undefined || !game.passwordHash;
   return { game, member, canView };
+}
+
+// Участник игры и персонаж на его месте (null — в лобби без места); undefined — не
+// участник. Имя персонажа нужно журналу: запись читается и после удаления персонажа.
+export async function findMemberSeat(
+  db: Db | DbTransaction,
+  gameId: string,
+  userId: string,
+): Promise<{ character: GameEventCharacter | null } | undefined> {
+  const [row] = await db
+    .select({ id: characters.id, name: characters.name })
+    .from(gameMembers)
+    .leftJoin(characters, eq(characters.id, gameMembers.characterId))
+    .where(and(eq(gameMembers.gameId, gameId), eq(gameMembers.userId, userId)))
+    .limit(1);
+  if (!row) return undefined;
+  return {
+    character: row.id && row.name ? { id: row.id, name: row.name } : null,
+  };
 }
 
 // Лобби: игра с занятыми местами. Закрытое без входа — 403, страница спросит пароль.

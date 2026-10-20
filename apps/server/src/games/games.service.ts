@@ -13,6 +13,7 @@ import { DatabaseService } from '../database/database.service.js';
 import { games } from '../database/schema/index.js';
 import type { CreateGameDto } from './dto/create-game.dto.js';
 import { GAME_NOT_FOUND, MASTER_ONLY_DELETE } from './game-errors.js';
+import { appendGameEvent } from './game-journal.js';
 import { listGames, readGameDetail } from './game-read.js';
 
 // Игры как записи: общий список, лобби, создание, удаление. Вход и выход —
@@ -65,15 +66,29 @@ export class GamesService {
       const passwordHash = dto.password
         ? await bcrypt.hash(dto.password, PASSWORD_SALT_ROUNDS)
         : null;
-      const [row] = await this.databaseService.db
-        .insert(games)
-        .values({
-          masterId,
-          name: dto.name,
-          seatCount: dto.seatCount,
-          passwordHash,
-        })
-        .returning({ id: games.id });
+      const row = await this.databaseService.db.transaction(async (tx) => {
+        const [created] = await tx
+          .insert(games)
+          .values({
+            masterId,
+            name: dto.name,
+            seatCount: dto.seatCount,
+            passwordHash,
+          })
+          .returning({ id: games.id });
+        await appendGameEvent(tx, created.id, {
+          kind: 'game.created',
+          actorId: masterId,
+          as: { kind: 'master' },
+          intent: {
+            name: dto.name,
+            seatCount: dto.seatCount,
+            hasPassword: passwordHash !== null,
+          },
+          result: null,
+        });
+        return created;
+      });
       this.logger.info(
         {
           durationMs: Date.now() - t0,
@@ -91,7 +106,8 @@ export class GamesService {
     }
   }
 
-  // Участники и места уходят каскадом; персонажи свободны для других игр.
+  // Участники, места и журнал уходят каскадом; персонажи свободны для других игр.
+  // Записи «игра удалена» нет: она ушла бы вместе с журналом.
   async remove(userId: string, gameId: string): Promise<void> {
     const t0 = Date.now();
     try {

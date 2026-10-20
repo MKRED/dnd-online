@@ -7,6 +7,7 @@ export const CHARACTER_NOT_FOUND = 'Персонаж не найден';
 export const WRONG_PASSWORD = 'Неверный пароль игры';
 export const MASTER_ONLY_DELETE = 'Удалить игру может только мастер';
 export const MASTER_ONLY_REMOVE = 'Убрать игрока может только мастер';
+export const MASTER_ONLY_JOURNAL = 'Журнал игры видит только мастер';
 export const MASTER_NO_SEAT = 'Мастер не занимает место в своей игре';
 export const MASTER_NO_LEAVE =
   'Мастер не выходит из своей игры — её можно удалить';

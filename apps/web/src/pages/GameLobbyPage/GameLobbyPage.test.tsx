@@ -167,4 +167,94 @@ describe('GameLobbyPage', () => {
       screen.queryByRole('button', { name: 'Выйти из игры' }),
     ).not.toBeInTheDocument();
   });
+
+  it('мастер открывает журнал, раскрывает запись и подгружает старые', async () => {
+    const event = (seq: number, nickname: string) => ({
+      seq,
+      kind: 'member.entered',
+      actor: { id: `u${seq}`, nickname },
+      as: null,
+      sceneId: null,
+      intent: null,
+      result: null,
+      createdAt: '2026-10-20T10:00:00.000Z',
+    });
+    const fetchMock = stubFetch([
+      { status: 200, body: { ...GAME, role: 'master' } },
+      {
+        status: 200,
+        body: {
+          events: [
+            {
+              ...event(3, 'Аня'),
+              kind: 'seat.taken',
+              intent: { characterId: 'c2', allowHandover: false },
+              result: { character: { id: 'c2', name: 'Лира' } },
+            },
+            event(2, 'Аня'),
+          ],
+          hasMore: true,
+        },
+      },
+      {
+        status: 200,
+        body: {
+          events: [
+            {
+              ...event(1, 'Мастер'),
+              kind: 'game.created',
+              as: { kind: 'master' },
+              intent: { name: 'Подземелье', seatCount: 3, hasPassword: true },
+            },
+          ],
+          hasMore: false,
+        },
+      },
+    ]);
+    renderLobby('m1');
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Журнал' }));
+    const drawer = await screen.findByRole('dialog', { name: 'Журнал игры' });
+    expect(
+      await within(drawer).findByText('Место занято: Лира'),
+    ).toBeInTheDocument();
+    expect(fetchMock.mock.calls[1][0]).toMatch(/\/games\/[^/]+\/events$/);
+
+    // Раскрытая запись показывает номер, вид и данные как есть.
+    await user.click(within(drawer).getByText('Место занято: Лира'));
+    expect(within(drawer).getByText('№ 3 · seat.taken')).toBeInTheDocument();
+    // Панель аккордеона в DOM и закрытой, поэтому раскрытие — по aria-expanded.
+    expect(
+      within(drawer).getByRole('button', { name: /Место занято: Лира/ }),
+    ).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      within(drawer).getByText(/"allowHandover": false/),
+    ).toBeInTheDocument();
+
+    await user.click(
+      within(drawer).getByRole('button', { name: 'Показать ещё' }),
+    );
+    expect(
+      await within(drawer).findByText(
+        'Игра «Подземелье» создана: мест 3, с паролем',
+      ),
+    ).toBeInTheDocument();
+    expect(fetchMock.mock.calls[2][0]).toMatch(/\/events\?before=2$/);
+    expect(
+      within(drawer).queryByRole('button', { name: 'Показать ещё' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('у игрока журнала нет', async () => {
+    stubFetch([{ status: 200, body: { ...GAME, role: 'player' } }]);
+    renderLobby('u2');
+
+    expect(
+      await screen.findByRole('button', { name: 'Выйти из игры' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Журнал' }),
+    ).not.toBeInTheDocument();
+  });
 });

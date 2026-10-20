@@ -1,4 +1,4 @@
-import type { GameDetail, GameListItem } from 'shared';
+import type { GameDetail, GameEventPage, GameListItem } from 'shared';
 import { apiRequest as request } from '../../lib/apiRequest';
 
 export interface CreateGamePayload {
@@ -60,4 +60,14 @@ export function freeSeat(id: string): Promise<GameDetail> {
 // Себя — выйти из игры, другого — убрать (мастер).
 export function removeMember(id: string, userId: string): Promise<void> {
   return request(`/games/${id}/members/${userId}`, { method: 'DELETE' });
+}
+
+// Журнал игры, новые сверху; только мастеру. before — номер записи, старше которой
+// нужна следующая страница.
+export function listGameEvents(
+  id: string,
+  before?: number,
+): Promise<GameEventPage> {
+  const query = before === undefined ? '' : `?before=${before}`;
+  return request(`/games/${id}/events${query}`);
 }

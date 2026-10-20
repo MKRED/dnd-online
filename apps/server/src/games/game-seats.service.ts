@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { and, count, eq, isNotNull } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import type { GameDetail } from 'shared';
+import type { GameDetail, GameEventCharacter } from 'shared';
 import {
   DatabaseService,
   type DbTransaction,
@@ -22,13 +22,13 @@ import {
   CHARACTER_NOT_FOUND,
   characterInGame,
   GAME_LOCKED,
-  GAME_NOT_FOUND,
   MASTER_NO_SEAT,
   NO_FREE_SEATS,
   NPC_NO_SEAT,
   SEAT_NOT_FOUND,
 } from './game-errors.js';
-import { findGameAccess, readGameDetail } from './game-read.js';
+import { appendGameEvent, lockGame } from './game-journal.js';
+import { findGameAccess, findMemberSeat, readGameDetail } from './game-read.js';
 
 // Места в лобби: занять своим персонажем, поменять разрешение, освободить.
 @Injectable()
@@ -52,7 +52,7 @@ export class GameSeatsService {
       // В закрытую игру сначала входят с паролем (POST /games/:id/enter).
       if (!canView) throw new ForbiddenException(GAME_LOCKED);
       const [character] = await db
-        .select({ kind: characters.kind })
+        .select({ kind: characters.kind, name: characters.name })
         .from(characters)
         .where(
           and(
@@ -108,6 +108,15 @@ export class GameSeatsService {
             target: [gameMembers.gameId, gameMembers.userId],
             set: seat,
           });
+        await appendGameEvent(tx, gameId, {
+          kind: 'seat.taken',
+          actorId: userId,
+          intent: {
+            characterId: dto.characterId,
+            allowHandover: seat.allowHandover,
+          },
+          result: { character: { id: dto.characterId, name: character.name } },
+        });
       });
       this.logger.info(
         {
@@ -136,40 +145,57 @@ export class GameSeatsService {
     gameId: string,
     dto: UpdateSeatDto,
   ): Promise<GameDetail> {
-    return this.changeOwnSeat(userId, gameId, 'update', {
-      allowHandover: dto.allowHandover,
-    });
+    return this.changeOwnSeat(
+      userId,
+      gameId,
+      'update',
+      async (tx, character) => {
+        await setOwnSeat(tx, gameId, userId, {
+          allowHandover: dto.allowHandover,
+        });
+        await appendGameEvent(tx, gameId, {
+          kind: 'seat.updated',
+          actorId: userId,
+          intent: { allowHandover: dto.allowHandover },
+          result: { character },
+        });
+      },
+    );
   }
 
   // Освободить место и остаться в лобби: можно сесть другим персонажем.
   async free(userId: string, gameId: string): Promise<GameDetail> {
-    return this.changeOwnSeat(userId, gameId, 'free', {
-      characterId: null,
-      seatedAt: null,
+    return this.changeOwnSeat(userId, gameId, 'free', async (tx, character) => {
+      await setOwnSeat(tx, gameId, userId, {
+        characterId: null,
+        seatedAt: null,
+      });
+      await appendGameEvent(tx, gameId, {
+        kind: 'seat.freed',
+        actorId: userId,
+        intent: null,
+        result: { character, reason: 'freed' },
+      });
     });
   }
 
+  // Правка своего места под блокировкой игры: место ищется уже под ней, чтобы журнал
+  // назвал персонажа, который сидел на месте в момент правки.
   private async changeOwnSeat(
     userId: string,
     gameId: string,
     kind: 'update' | 'free',
-    set: Partial<typeof gameMembers.$inferInsert>,
+    change: (tx: DbTransaction, character: GameEventCharacter) => Promise<void>,
   ): Promise<GameDetail> {
     const t0 = Date.now();
     const { db } = this.databaseService;
     try {
-      const [row] = await db
-        .update(gameMembers)
-        .set(set)
-        .where(
-          and(
-            eq(gameMembers.gameId, gameId),
-            eq(gameMembers.userId, userId),
-            isNotNull(gameMembers.characterId),
-          ),
-        )
-        .returning({ userId: gameMembers.userId });
-      if (!row) throw new NotFoundException(SEAT_NOT_FOUND);
+      await db.transaction(async (tx) => {
+        await lockGame(tx, gameId);
+        const seat = await findMemberSeat(tx, gameId, userId);
+        if (!seat?.character) throw new NotFoundException(SEAT_NOT_FOUND);
+        await change(tx, seat.character);
+      });
       this.logger.info(
         { durationMs: Date.now() - t0, userId, gameId, kind },
         'Game seat changed',
@@ -186,12 +212,14 @@ export class GameSeatsService {
   }
 }
 
-async function lockGame(tx: DbTransaction, gameId: string) {
-  const [row] = await tx
-    .select({ id: games.id })
-    .from(games)
-    .where(eq(games.id, gameId))
-    .for('update');
-  // Игру удалили между проверкой доступа и транзакцией.
-  if (!row) throw new NotFoundException(GAME_NOT_FOUND);
+function setOwnSeat(
+  tx: DbTransaction,
+  gameId: string,
+  userId: string,
+  set: Partial<typeof gameMembers.$inferInsert>,
+) {
+  return tx
+    .update(gameMembers)
+    .set(set)
+    .where(and(eq(gameMembers.gameId, gameId), eq(gameMembers.userId, userId)));
 }

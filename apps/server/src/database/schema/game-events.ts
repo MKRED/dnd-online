@@ -1,0 +1,46 @@
+import {
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  timestamp,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
+import type { GameEventAs, GameEventKind } from 'shared';
+import { games } from './games.js';
+import { users } from './users.js';
+
+// Журнал игры (docs/plan/game.md, «Журнал игры»): все действия в игре по порядку, записи
+// только добавляются. Состояние живёт в обычных таблицах, журнал — история для отладки и
+// восстановления; запись и изменение пишутся в одной транзакции (games/game-journal.ts).
+export const gameEvents = pgTable(
+  'game_events',
+  {
+    gameId: uuid('game_id')
+      .notNull()
+      .references(() => games.id, { onDelete: 'cascade' }),
+    // Номер по порядку внутри игры, без пропусков: по нему клиент сокета догоняет
+    // пропущенное. Берётся из games.event_seq.
+    seq: integer('seq').notNull(),
+    kind: varchar('kind', { length: 40 }).notNull().$type<GameEventKind>(),
+    actorId: uuid('actor_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    // От имени кого: мастер, персонаж или монстр. Без внешнего ключа — запись должна
+    // пережить удаление персонажа или экземпляра монстра.
+    asKind: varchar('as_kind', { length: 20 }).$type<GameEventAs['kind']>(),
+    asId: uuid('as_id'),
+    // Сцена события; внешний ключ появится вместе с таблицей сцен (этап 5).
+    sceneId: uuid('scene_id'),
+    // Что просили и что получилось; форма — GameEventPayloads из shared.
+    intent: jsonb('intent'),
+    result: jsonb('result'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ name: 'game_events_pk', columns: [table.gameId, table.seq] }),
+  ],
+);

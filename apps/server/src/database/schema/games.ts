@@ -23,6 +23,9 @@ export const games = pgTable('games', {
   seatCount: integer('seat_count').notNull(),
   // bcrypt; null — игра открытая.
   passwordHash: varchar('password_hash', { length: 100 }),
+  // Номер последней записи журнала игры (game_events). Растёт в той же транзакции, что и
+  // запись: UPDATE строки игры и блокирует её, и даёт номер без пропусков.
+  eventSeq: integer('event_seq').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

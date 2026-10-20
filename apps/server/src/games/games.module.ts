@@ -13,6 +13,7 @@ import { GamesService } from './games.service.js';
 import {
   GameFiguresController,
   GameFiguresReadService,
+  GameFiguresService,
 } from './figures/index.js';
 import { GameLibraryController, GameLibraryService } from './library/index.js';
 import { GameRealtimeGateway } from './realtime/game-realtime.gateway.js';
@@ -52,6 +53,7 @@ import {
     GameSceneViewService,
     GameSceneEditService,
     GameFiguresReadService,
+    GameFiguresService,
     // Пределы правки карты — и для правок сцены (этап 6).
     MapLimitsConfig,
     GameRealtimeService,

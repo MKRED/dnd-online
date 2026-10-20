@@ -29,7 +29,7 @@ export function canMoveFigure(
 // Скорость из листа с эффектами — как её видит владелец в своём листе. Эффекты пока
 // читаются из справочника, а не из библиотеки игры: игра начнёт читать их оттуда на
 // этапе 8 (docs/plan/game.md).
-async function speedsOf(
+export async function figureSpeeds(
   db: Db,
   rows: { id: string; ownerId: string; speed: number }[],
 ): Promise<Map<string, number>> {
@@ -68,7 +68,7 @@ export async function readSceneFigures(
     .orderBy(asc(characters.name), asc(gameFigures.characterId));
   const ids = rows.map((row) => row.figure.characterId);
   const images = await loadMainImages(db, ids);
-  const speeds = await speedsOf(
+  const speeds = await figureSpeeds(
     db,
     rows.map((row) => ({
       id: row.figure.characterId,

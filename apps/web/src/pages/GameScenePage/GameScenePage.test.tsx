@@ -161,6 +161,83 @@ function figuresOf(eventSeq: number, figures: GameFigure[]): GameFigures {
 }
 
 describe('GameScenePage', () => {
+  it('мастер видит запас фигурок, начинает новый раунд и ставит персонажа «Не на сцене»', async () => {
+    const fetchMock = stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'master' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+      [`GET ${base}/scene/figures`]: () => ({
+        status: 200,
+        body: {
+          ...figuresOf(3, [{ ...LIRA, moved: 20, dashes: 1 }]),
+          unplaced: [{ id: 'c2', name: 'Борн' }],
+        },
+      }),
+      [`POST ${base}/figures/round`]: () => ({
+        status: 200,
+        body: {
+          ...figuresOf(4, [LIRA]),
+          unplaced: [{ id: 'c2', name: 'Борн' }],
+        },
+      }),
+    });
+    renderScene('m1');
+    const user = userEvent.setup();
+
+    expect(await screen.findByText('Осталось 40 из 60 фт')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Новый раунд' }));
+    expect(await screen.findByText('Осталось 30 из 30 фт')).toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.some(
+        ([input, init]) =>
+          init?.method === 'POST' && urlOf(input).endsWith('/figures/round'),
+      ),
+    ).toBe(true);
+
+    await user.click(screen.getByRole('button', { name: 'Поставить' }));
+    expect(
+      screen.getByText('Щёлкните клетку, куда поставить: Борн.'),
+    ).toBeInTheDocument();
+  });
+
+  it('игрок выбирает свою фигурку по имени, чужую — нет; запас правит только мастер', async () => {
+    const born = {
+      ...LIRA,
+      character: { id: 'c2', name: 'Борн' },
+      ownerId: 'u3',
+      canMove: false,
+    };
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'player' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+      [`GET ${base}/scene/figures`]: () => ({
+        status: 200,
+        body: figuresOf(3, [LIRA, born]),
+      }),
+    });
+    renderScene('u2');
+    const user = userEvent.setup();
+
+    const own = await screen.findByRole('button', { name: /^Лира/ });
+    expect(screen.getByRole('button', { name: /^Борн/ })).toBeDisabled();
+    expect(
+      screen.queryByRole('button', { name: 'Новый раунд' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Рывок/ }),
+    ).not.toBeInTheDocument();
+    await user.click(own);
+    expect(own).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      screen.getByText(/Щёлкните подсвеченную клетку — фигурка пойдёт туда/),
+    ).toBeInTheDocument();
+  });
+
   it('игрок видит фигурки и перечитывает их после событий фигурок; старый ответ не откатывает', async () => {
     let figures = figuresOf(3, [LIRA]);
     stub({

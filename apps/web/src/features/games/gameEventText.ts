@@ -76,6 +76,24 @@ export function gameEventText(event: GameEvent): string {
       return `Правка №${event.intent.seq} возвращена: ${sceneReplay(event.result)}`;
     case 'figures.placed':
       return figuresPlaced(event.intent.reason, event.result);
+    case 'figure.moved': {
+      const { character, cost, left } = event.result;
+      return `Ход: ${character.name} — ${cost} фт, осталось ${left} фт`;
+    }
+    case 'figure.placed':
+      return event.result.from
+        ? `Фигурка переставлена: ${event.result.character.name}`
+        : `Фигурка поставлена на сцену: ${event.result.character.name}`;
+    case 'figures.round':
+      return `Новый раунд: запас движения снова полный у фигурок: ${event.result.count}`;
+    case 'figure.refreshed':
+      return `Запас движения обновлён: ${event.result.character.name}`;
+    case 'figure.dashed': {
+      const { character, dashes } = event.result;
+      return dashes > 1
+        ? `Рывок: ${character.name} (за ход: ${dashes})`
+        : `Рывок: ${character.name}`;
+    }
     case 'member.left':
       return withCharacter('Выход из игры', event.result.character);
     case 'member.removed':

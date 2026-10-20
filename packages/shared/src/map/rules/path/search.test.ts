@@ -6,6 +6,7 @@ import type { MapState } from '../../mapState.js';
 import type { BlockOp } from '../../ops.js';
 import { createPalette } from '../../palette.js';
 import type { CreatureSize } from '../creature.js';
+import type { Occupant } from '../occupancy.js';
 import { stepCost } from '../step.js';
 import {
   findPath,
@@ -174,5 +175,54 @@ describe('findPath', () => {
     const large = findPath(map, [0, 0, -3], [0, 0, 2], 'large');
     expectValid(map, large, 'large');
     expect(large?.path).toContainEqual([4, 0, 0]);
+  });
+});
+
+describe('другие существа на пути', () => {
+  const at = (x: number, z: number): Vec3 => [x, 0, z];
+  // Коридор шириной в клетку по z = 0: стены по z = −1 и z = 1.
+  const corridor = () =>
+    floorWith(
+      { op: 'fillBox', from: [-6, 0, -1], to: [6, 1, -1], block: 'stone' },
+      { op: 'fillBox', from: [-6, 0, 1], to: [6, 1, 1], block: 'stone' },
+    );
+
+  it('сквозь союзника проходят даром, но остановиться на нём нельзя', () => {
+    const map = corridor();
+    const ally: Occupant = { at: at(1, 0), size: 'medium', ally: true };
+    const path = findPath(map, at(0, 0), at(2, 0), 'medium', 10, [ally]);
+    expect(path?.cost).toBe(10);
+    expect(findPath(map, at(0, 0), at(1, 0), 'medium', 30, [ally])).toBeNull();
+    const reach = reachable(map, at(0, 0), 'medium', 30, [ally]);
+    expect(reach.find((r) => r.at[0] === 1)?.end).toBe(false);
+    expect(reach.find((r) => r.at[0] === 2)?.end).toBe(true);
+    expect(pathFromReach(reach, at(1, 0))).toBeNull();
+    expect(pathFromReach(reach, at(2, 0))?.path).toHaveLength(3);
+  });
+
+  it('противник того же размера перекрывает коридор', () => {
+    const map = corridor();
+    const goblin: Occupant = { at: at(1, 0), size: 'medium', ally: false };
+    expect(
+      findPath(map, at(0, 0), at(2, 0), 'medium', 30, [goblin]),
+    ).toBeNull();
+  });
+
+  it('сквозь Огромного Средний проходит, но его место — труднопроходимое', () => {
+    const map = corridor();
+    // Огромный 3×3 занимает x от 1 до 3 поперёк коридора — обойти негде: шаг в его
+    // место стоит 10, а не 5. 5 + 3 × 10 = 35.
+    const giant: Occupant = { at: at(1, -1), size: 'huge', ally: false };
+    const path = findPath(map, at(0, 0), at(4, 0), 'medium', 35, [giant]);
+    expect(path?.cost).toBe(35);
+    expect(findPath(map, at(0, 0), at(4, 0), 'medium', 30, [giant])).toBeNull();
+  });
+
+  it('Крошечный не мешает пройти и не делает место труднопроходимым', () => {
+    const map = corridor();
+    const rat: Occupant = { at: at(1, 0), size: 'tiny', ally: false };
+    expect(findPath(map, at(0, 0), at(2, 0), 'medium', 10, [rat])?.cost).toBe(
+      10,
+    );
   });
 });

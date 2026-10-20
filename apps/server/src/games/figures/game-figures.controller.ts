@@ -1,7 +1,11 @@
 import {
+  Body,
   Controller,
   Get,
+  HttpCode,
   Param,
+  Post,
+  Put,
   ParseUUIDPipe,
   Req,
   Res,
@@ -10,13 +14,18 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthGuard, type AuthenticatedRequest } from '../../auth/auth.guard.js';
+import { MoveFigureDto, PlaceFigureDto } from './dto/figure.dto.js';
 import { GameFiguresReadService } from './game-figures-read.service.js';
+import { GameFiguresService } from './game-figures.service.js';
 
 // Фигурки персонажей на активной сцене (docs/plan/game.md, этап 7).
 @Controller('games/:id')
 @UseGuards(AuthGuard)
 export class GameFiguresController {
-  constructor(private readonly readService: GameFiguresReadService) {}
+  constructor(
+    private readonly readService: GameFiguresReadService,
+    private readonly figuresService: GameFiguresService,
+  ) {}
 
   @Get('scene/figures')
   list(
@@ -24,6 +33,62 @@ export class GameFiguresController {
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.readService.list(req.user.sub, id);
+  }
+
+  // Правки отвечают фигурками глазами того, кто правил: страница показывает их сразу.
+  @Post('figures/round')
+  @HttpCode(200)
+  round(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.figuresService.round(req.user.sub, id);
+  }
+
+  @Post('figures/:characterId/move')
+  @HttpCode(200)
+  move(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('characterId', ParseUUIDPipe) characterId: string,
+    @Body() dto: MoveFigureDto,
+  ) {
+    return this.figuresService.move(req.user.sub, id, characterId, dto.to);
+  }
+
+  @Put('figures/:characterId')
+  place(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('characterId', ParseUUIDPipe) characterId: string,
+    @Body() dto: PlaceFigureDto,
+  ) {
+    return this.figuresService.place(req.user.sub, id, characterId, dto.at);
+  }
+
+  @Post('figures/:characterId/refresh')
+  @HttpCode(200)
+  refresh(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('characterId', ParseUUIDPipe) characterId: string,
+  ) {
+    return this.figuresService.allowance(
+      req.user.sub,
+      id,
+      characterId,
+      'refresh',
+    );
+  }
+
+  @Post('figures/:characterId/dash')
+  @HttpCode(200)
+  dash(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('characterId', ParseUUIDPipe) characterId: string,
+  ) {
+    return this.figuresService.allowance(req.user.sub, id, characterId, 'dash');
   }
 
   // Клиент добавляет в адрес версию миниатюры (?v=), поэтому удачный ответ кешируется

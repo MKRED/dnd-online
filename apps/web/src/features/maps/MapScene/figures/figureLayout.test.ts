@@ -26,6 +26,7 @@ const lira: FigureInput = {
   facing: 90,
   size: 'medium',
   image: null,
+  selectable: true,
 };
 
 describe('layoutFigures', () => {

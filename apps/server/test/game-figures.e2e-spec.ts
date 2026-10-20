@@ -1,6 +1,11 @@
 import type request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { GameEventPage, GameFigures, GameScenes } from 'shared';
+import type {
+  GameEventPage,
+  GameFigures,
+  GameScenes,
+  GameSceneView,
+} from 'shared';
 import {
   characterBody,
   pngImage,
@@ -221,5 +226,178 @@ describe('game figures (e2e)', () => {
     // Фигурки на сцене нет — нет и картинки.
     const unknown = `/api/games/${g.gameId}/figures/${second.character}/image?v=1`;
     await m.get(unknown).expect(404);
+  });
+
+  // Игра с открытой активной сценой: фигурка игрока на стартовой точке [0, 1, 0],
+  // гоблин — на [1, 1, 0], пол — камень на y = 0 (стоят на y = 1).
+  async function opened(prefix: string) {
+    const g = await createSceneGame(user, png, prefix);
+    const m = g.master.agent;
+    const { scenes } = await addScene(m, g.gameId, g.mapId);
+    await m
+      .put(`/api/games/${g.gameId}/scenes/open`)
+      .send({ open: true })
+      .expect(200);
+    const [figure] = (await figures(m, g.gameId)).figures;
+    const base = `/api/games/${g.gameId}/figures`;
+    const url = `${base}/${figure.character.id}`;
+    return { ...g, m, sceneId: scenes[0].id, figure, base, url };
+  }
+
+  const figureOf = (res: request.Response, id: string) =>
+    (res.body as GameFigures).figures.find((f) => f.character.id === id);
+
+  it('ход по пути тратит запас; «Рывок» и «Новый раунд» его пополняют', async () => {
+    const g = await opened('gfg_move');
+    const id = g.figure.character.id;
+    const p = g.player.agent;
+    const moved = await p
+      .post(`${g.url}/move`)
+      .send({ to: [0, 1, 3] })
+      .expect(200);
+    expect(figureOf(moved, id)).toMatchObject({
+      at: [0, 1, 3],
+      moved: 15,
+      facing: 180,
+    });
+    expect(await lastEvent(g.m, g.gameId)).toMatchObject({
+      kind: 'figure.moved',
+      as: { kind: 'character', id },
+      sceneId: g.sceneId,
+      result: { from: [0, 1, 0], to: [0, 1, 3], cost: 15, left: 15 },
+    });
+    // 20 футов при запасе 15 — не дойти.
+    await p
+      .post(`${g.url}/move`)
+      .send({ to: [0, 1, 7] })
+      .expect(409);
+
+    // «Рывок» — ещё 30 футов; дошли, осталось 25.
+    const dashed = await g.m.post(`${g.url}/dash`).expect(200);
+    expect(figureOf(dashed, id)).toMatchObject({ dashes: 1, moved: 15 });
+    const far = await p
+      .post(`${g.url}/move`)
+      .send({ to: [0, 1, 7] })
+      .expect(200);
+    expect(figureOf(far, id)).toMatchObject({ at: [0, 1, 7], moved: 35 });
+
+    const round = await g.m.post(`${g.base}/round`).expect(200);
+    expect(figureOf(round, id)).toMatchObject({ moved: 0, dashes: 0 });
+    expect(await lastEvent(g.m, g.gameId)).toMatchObject({
+      kind: 'figures.round',
+      result: { count: 1 },
+    });
+    await p
+      .post(`${g.url}/move`)
+      .send({ to: [0, 1, 6] })
+      .expect(200);
+    const refreshed = await g.m.post(`${g.url}/refresh`).expect(200);
+    expect(figureOf(refreshed, id)).toMatchObject({ moved: 0 });
+  });
+
+  it('в чужом месте ход не кончается; скрытый монстр игроку не мешает, мастеру — да', async () => {
+    const g = await opened('gfg_crowd');
+    const p = g.player.agent;
+    // Гоблин стоит на [1, 1, 0]: остановиться там нельзя.
+    await p
+      .post(`${g.url}/move`)
+      .send({ to: [1, 1, 0] })
+      .expect(409);
+    const view = (await g.m.get(`/api/games/${g.gameId}/scene`).expect(200))
+      .body as GameSceneView;
+    const goblin = view.objects.find((o) => o.kind === 'monster');
+    await g.m
+      .post(`/api/games/${g.gameId}/scenes/${g.sceneId}/ops`)
+      .send({
+        ops: [{ op: 'updateObject', id: goblin?.id, object: { hidden: true } }],
+      })
+      .expect(200);
+    // Мастер видит засаду — поставить туда не даст; игрок её не видит — встанет.
+    await g.m
+      .put(g.url)
+      .send({ at: [1, 1, 0] })
+      .expect(409);
+    await p
+      .post(`${g.url}/move`)
+      .send({ to: [1, 1, 0] })
+      .expect(200);
+  });
+
+  it('мастер ставит фигурку куда угодно, где она встанет; «Не на сцене» — тоже', async () => {
+    const g = await opened('gfg_place2');
+    const second = await seatSecond(g.gameId, 'gfg_place2');
+    const placed = await g.m
+      .put(`${g.base}/${second.character}`)
+      .send({ at: [6, 1, 6] })
+      .expect(200);
+    expect(figureOf(placed, second.character)).toMatchObject({
+      at: [6, 1, 6],
+      moved: 0,
+    });
+    expect((placed.body as GameFigures).unplaced).toEqual([]);
+    expect(await lastEvent(g.m, g.gameId)).toMatchObject({
+      kind: 'figure.placed',
+      result: { from: null, to: [6, 1, 6] },
+    });
+    // Без пути: через всю карту, запас не тратится.
+    const jumped = await g.m
+      .put(g.url)
+      .send({ at: [7, 1, 7] })
+      .expect(200);
+    expect(figureOf(jumped, g.figure.character.id)).toMatchObject({
+      at: [7, 1, 7],
+      moved: 0,
+    });
+    // Занято другой фигуркой, в воздухе, за картой — нельзя.
+    for (const at of [
+      [6, 1, 6],
+      [5, 4, 5],
+      [9, 1, 9],
+    ]) {
+      await g.m.put(g.url).send({ at }).expect(409);
+    }
+  });
+
+  it('водит фигурку владелец и мастер; правки запаса — только мастер', async () => {
+    const g = await opened('gfg_rights');
+    const second = await seatSecond(g.gameId, 'gfg_rights');
+    const stranger = await user('gfg_rights_stranger');
+    const move = (agent: request.Agent, status: number) =>
+      agent
+        .post(`${g.url}/move`)
+        .send({ to: [0, 1, 1] })
+        .expect(status);
+    await move(second.agent, 403);
+    await move(stranger.agent, 403);
+    await t
+      .anonymous()
+      .post(`${g.url}/move`)
+      .send({ to: [0, 1, 1] })
+      .expect(401);
+    for (const path of ['round']) {
+      await g.player.agent.post(`${g.base}/${path}`).expect(403);
+    }
+    await g.player.agent.post(`${g.url}/dash`).expect(403);
+    await g.player.agent.post(`${g.url}/refresh`).expect(403);
+    await g.player.agent
+      .put(g.url)
+      .send({ at: [5, 1, 5] })
+      .expect(403);
+    // Кривое тело и неизвестная фигурка.
+    await g.player.agent
+      .post(`${g.url}/move`)
+      .send({ to: [0, 1] })
+      .expect(400);
+    await g.m
+      .post(`${g.base}/${second.id}/move`)
+      .send({ to: [0, 1, 1] })
+      .expect(404);
+    // Закрытая сцена — игрок не ходит, мастер ходит.
+    await g.m
+      .put(`/api/games/${g.gameId}/scenes/open`)
+      .send({ open: false })
+      .expect(200);
+    await move(g.player.agent, 403);
+    await move(g.m, 200);
   });
 });

@@ -2,6 +2,7 @@ import type { GameFigurePlacement } from './game-figures.js';
 import type { GameUser } from './games.js';
 import type { GameLibraryRef } from './game-library.js';
 import type { GameSceneRef } from './game-scenes.js';
+import type { Vec3 } from './map/coords.js';
 import type { MapOp } from './map/ops.js';
 
 // Журнал игры (docs/plan/game.md, «Журнал игры»): каждое действие в игре — запись с
@@ -120,6 +121,36 @@ export interface GameEventPayloads {
       placed: GameFigurePlacement[];
       unplaced: GameEventCharacter[];
     };
+  };
+  // Ход фигурки по пути: cost — сколько футов он стоил, left — сколько запаса осталось.
+  'figure.moved': {
+    intent: { characterId: string; to: Vec3 };
+    result: {
+      character: GameEventCharacter;
+      from: Vec3;
+      to: Vec3;
+      cost: number;
+      left: number;
+    };
+  };
+  // Мастер поставил фигурку без пути и запаса; from — null, если её не было на сцене.
+  'figure.placed': {
+    intent: { characterId: string; at: Vec3 };
+    result: { character: GameEventCharacter; from: Vec3 | null; to: Vec3 };
+  };
+  // «Новый раунд»: запас движения всех фигурок снова полный; count — сколько их.
+  'figures.round': {
+    intent: null;
+    result: { scene: GameSceneRef; count: number };
+  };
+  // Запас одной фигурки обновлён (её новый ход) или к нему добавлен «Рывок».
+  'figure.refreshed': {
+    intent: { characterId: string };
+    result: { character: GameEventCharacter };
+  };
+  'figure.dashed': {
+    intent: { characterId: string };
+    result: { character: GameEventCharacter; dashes: number };
   };
   // Мастер убрал игрока.
   'member.removed': {

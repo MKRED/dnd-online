@@ -18,6 +18,16 @@ export function nextFacing(facing: Facing): Facing {
   return FACINGS[(FACINGS.indexOf(facing) + 1) % FACINGS.length];
 }
 
+// Взгляд по шагу из from в to (docs/plan/game.md, этап 7): фигурка после хода смотрит
+// туда, куда шла. Север — −z, по часовой; шаг без сдвига по x и z — север.
+export function stepFacing(from: Vec3, to: Vec3): Facing {
+  const dx = Math.sign(to[0] - from[0]);
+  const dz = Math.sign(to[2] - from[2]);
+  if (dx === 0 && dz === 0) return 0;
+  const degrees = (Math.atan2(dx, -dz) * 180) / Math.PI;
+  return ((Math.round(degrees / 45) * 45 + 360) % 360) as Facing;
+}
+
 // Вид контейнера — только для картинки, на правила не влияет. Ключи хранятся в базе.
 export const CONTAINER_LOOKS = ['chest', 'crate', 'barrel', 'sack'] as const;
 export type ContainerLook = (typeof CONTAINER_LOOKS)[number];

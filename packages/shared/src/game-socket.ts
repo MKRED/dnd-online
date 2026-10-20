@@ -28,7 +28,14 @@ export const SCENE_EDIT_KINDS: readonly GameEventKind[] = [
 
 // Фигурки на сцене (этап 7): страница сцены перечитывает фигурки, а не всю сцену, лобби
 // не меняется — ход за ходом лобби перечитывалось бы у всех.
-export const FIGURE_KINDS: readonly GameEventKind[] = ['figures.placed'];
+export const FIGURE_KINDS: readonly GameEventKind[] = [
+  'figures.placed',
+  'figure.moved',
+  'figure.placed',
+  'figures.round',
+  'figure.refreshed',
+  'figure.dashed',
+];
 
 // Сколько пропущенных записей журнала мастер получает при возвращении; больше —
 // журнал перечитывается целиком.

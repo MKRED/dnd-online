@@ -2,6 +2,7 @@ import type { Vec3 } from '../../coords.js';
 import type { MapState } from '../../mapState.js';
 import type { CreatureSize } from '../creature.js';
 import { cellDistance, FEET_PER_CELL } from '../distance.js';
+import { crowdAt, type Crowd, type Occupant } from '../occupancy.js';
 import { standHeight } from '../standing.js';
 import { createStepper } from '../step.js';
 import { MinHeap } from './heap.js';
@@ -12,6 +13,8 @@ export interface Reach {
   at: Vec3;
   cost: number;
   from: Vec3 | null;
+  // Здесь можно закончить ход: false — чужое место, сквозь которое путь только идёт.
+  end: boolean;
 }
 
 export interface PathResult {
@@ -49,6 +52,27 @@ const stepLength = (d: Vec3) => Math.hypot(d[0], d[1], d[2]);
 
 const keyOf = (at: Vec3) => at.join(',');
 
+// Другие существа на позициях пути, с кэшем: поиск проверяет одну позицию для каждого
+// из соседей (docs/dnd/movement.md).
+function createCrowd(
+  map: MapState,
+  size: CreatureSize,
+  others: readonly Occupant[],
+): (at: Vec3) => Crowd {
+  const free: Crowd = { pass: true, difficult: false, free: true };
+  const cache = new Map<string, Crowd>();
+  return (at) => {
+    if (others.length === 0) return free;
+    const key = keyOf(at);
+    let crowd = cache.get(key);
+    if (!crowd) {
+      crowd = crowdAt(map, at, size, others);
+      cache.set(key, crowd);
+    }
+    return crowd;
+  };
+}
+
 // Общее ядро: без цели — Дейкстра (все позиции в пределах цены), с целью — A*.
 // Эвристика — расстояние Чебышёва × 5 футов: любой шаг стоит не меньше 5 и сдвигает
 // каждую ось не больше чем на 1, поэтому она не переоценивает и A* находит самый дешёвый путь.
@@ -57,12 +81,19 @@ function explore(
   start: Vec3,
   size: CreatureSize,
   maxCost: number,
+  others: readonly Occupant[],
   goal?: Vec3,
-): { nodes: Map<string, Node>; closed: Set<string>; reached: boolean } {
+): {
+  nodes: Map<string, Node>;
+  closed: Set<string>;
+  reached: boolean;
+  crowd: (at: Vec3) => Crowd;
+} {
   const nodes = new Map<string, Node>();
   const closed = new Set<string>();
+  const crowd = createCrowd(map, size, others);
   if (standHeight(map, start, size) === null) {
-    return { nodes, closed, reached: false };
+    return { nodes, closed, reached: false, crowd };
   }
   const step = createStepper(map, size);
   const goalKey = goal && keyOf(goal);
@@ -76,7 +107,7 @@ function explore(
     const key = heap.pop() as string;
     if (closed.has(key)) continue;
     closed.add(key);
-    if (key === goalKey) return { nodes, closed, reached: true };
+    if (key === goalKey) return { nodes, closed, reached: true, crowd };
     const node = nodes.get(key) as Node;
     for (const d of NEIGHBOURS) {
       const next: Vec3 = [
@@ -84,8 +115,15 @@ function explore(
         node.at[1] + d[1],
         node.at[2] + d[2],
       ];
-      const cost = step(node.at, next);
-      if (cost === null) continue;
+      const terrain = step(node.at, next);
+      if (terrain === null) continue;
+      const near = crowd(next);
+      if (!near.pass) continue;
+      // Чужое место — труднопроходимая местность; с другой труднопроходимостью
+      // не складывается.
+      const cost = near.difficult
+        ? Math.max(terrain, 2 * FEET_PER_CELL)
+        : terrain;
       const total = node.cost + cost;
       if (total > maxCost) continue;
       const len = node.len + stepLength(d);
@@ -101,25 +139,30 @@ function explore(
       heap.push(nextKey, total + estimate(next), len);
     }
   }
-  return { nodes, closed, reached: false };
+  return { nodes, closed, reached: false, crowd };
 }
 
 // Все позиции, до которых существо дойдёт, потратив не больше maxCost футов, — для
 // подсветки «куда могу дойти». Начальная позиция входит с ценой 0; если в ней стоять
-// нельзя — пустой список.
+// нельзя — пустой список. others — другие существа: сквозь их место путь идёт, где
+// правила пускают, но закончить ход там нельзя — у таких позиций end = false.
 export function reachable(
   map: MapState,
   start: Vec3,
   size: CreatureSize,
   maxCost: number,
+  others: readonly Occupant[] = [],
 ): Reach[] {
-  const { nodes, closed } = explore(map, start, size, maxCost);
+  const { nodes, closed, crowd } = explore(map, start, size, maxCost, others);
+  const startKey = keyOf(start);
   return [...closed].map((key) => {
     const { at, cost, prev } = nodes.get(key) as Node;
     return {
       at,
       cost,
       from: prev === null ? null : (nodes.get(prev) as Node).at,
+      // Начальная позиция — своя, даже если там уже кто-то стоит.
+      end: key === startKey || crowd(at).free,
     };
   });
 }
@@ -137,15 +180,15 @@ function trace<T extends { at: Vec3 }>(
 }
 
 // Путь до goal по результату reachable — для подсветки пути под курсором без
-// нового поиска. null, если goal среди них нет. Предыдущая позиция любой из них
-// тоже среди них: Дейкстра закрывает её раньше.
+// нового поиска. null, если goal среди них нет или там нельзя остановиться.
+// Предыдущая позиция любой из них тоже среди них: Дейкстра закрывает её раньше.
 export function pathFromReach(
   reach: readonly Reach[],
   goal: Vec3,
 ): PathResult | null {
   const byKey = new Map(reach.map((r) => [keyOf(r.at), r]));
   const end = byKey.get(keyOf(goal));
-  if (!end) return null;
+  if (!end?.end) return null;
   const path = trace(end, (r) =>
     r.from ? byKey.get(keyOf(r.from)) : undefined,
   );
@@ -153,16 +196,25 @@ export function pathFromReach(
 }
 
 // Самый дешёвый путь от start до goal (позиции привязки) или null: дойти нельзя,
-// дороже maxCost или поиск упёрся в предел раскрытых позиций.
+// дороже maxCost, goal занята другим существом или поиск упёрся в предел раскрытых
+// позиций.
 export function findPath(
   map: MapState,
   start: Vec3,
   goal: Vec3,
   size: CreatureSize,
   maxCost = Infinity,
+  others: readonly Occupant[] = [],
 ): PathResult | null {
-  const { nodes, reached } = explore(map, start, size, maxCost, goal);
-  if (!reached) return null;
+  const { nodes, reached, crowd } = explore(
+    map,
+    start,
+    size,
+    maxCost,
+    others,
+    goal,
+  );
+  if (!reached || !crowd(goal).free) return null;
   const end = nodes.get(keyOf(goal)) as Node;
   const path = trace(end, (n) =>
     n.prev === null ? undefined : nodes.get(n.prev),

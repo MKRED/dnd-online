@@ -11,11 +11,15 @@ interface FigureLayerProps {
   map: MapState;
   figures: readonly FigureInput[];
   cutY: number;
+  // Щелчок по своей фигурке выбирает её; без него фигурки не выбираются.
+  onSelect?: (id: string) => void;
 }
 
 // Фигурки персонажей на сцене игры (docs/plan/game.md, этап 7): стоячие карточки, как
-// существа карты, с зелёной рамкой. Наведение показывает имя и не перехватывает событие.
-function FigureLayer({ map, figures, cutY }: FigureLayerProps) {
+// существа карты, с зелёной рамкой. Наведение показывает имя и не перехватывает событие;
+// щелчок по фигурке, которую смотрящий водит, выбирает её — и дальше не идёт, иначе
+// попал бы ещё и в клетку под ней.
+function FigureLayer({ map, figures, cutY, onSelect }: FigureLayerProps) {
   const all = useMemo(() => layoutFigures(map, figures), [map, figures]);
   const visible = all.filter((figure) => figure.level <= cutY);
   const paths = useMemo(
@@ -39,6 +43,11 @@ function FigureLayer({ map, figures, cutY }: FigureLayerProps) {
           onPointerOut={() =>
             setHovered((prev) => (prev === figure.id ? null : prev))
           }
+          onClick={(event) => {
+            if (!figure.selectable || !onSelect) return;
+            event.stopPropagation();
+            onSelect(figure.id);
+          }}
         >
           <CreatureCard
             object={figure}

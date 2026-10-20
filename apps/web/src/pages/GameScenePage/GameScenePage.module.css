@@ -43,3 +43,23 @@
     border-top: 1px solid var(--mantine-color-default-border);
   }
 }
+
+/* Строка фигурки в панели: щелчок выбирает её, выбранная подсвечена. */
+.figureRow {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.figureRow:not(:disabled):hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.figureRow[data-selected] {
+  background: var(--mantine-primary-color-light);
+}
+
+.figureRow:disabled {
+  cursor: default;
+}

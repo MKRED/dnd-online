@@ -19,6 +19,8 @@ export interface FigureInput {
   size: CreatureSize;
   // Путь миниатюры в API; null — картинки нет.
   image: string | null;
+  // Смотрящий может выбрать фигурку и водить её.
+  selectable: boolean;
 }
 
 export interface SceneFigure extends FigureInput {

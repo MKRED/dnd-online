@@ -40,3 +40,11 @@ export const SCENE_NO_RESIZE =
 export const SCENE_NOTHING_TO_UNDO = 'Нечего отменять';
 export const SCENE_NOTHING_TO_REDO = 'Нечего возвращать';
 export const FIGURE_NO_IMAGE = 'У фигурки нет картинки';
+export const FIGURE_NOT_FOUND = 'Фигурки нет на сцене';
+export const FIGURE_NOT_YOURS = 'Эту фигурку водит другой игрок';
+export const MASTER_ONLY_FIGURES =
+  'Ставить фигурки и менять их запас движения может только мастер';
+export const FIGURE_CANT_REACH =
+  'Туда не дойти: путь перекрыт или не хватает движения';
+export const FIGURE_CANT_STAND =
+  'Здесь фигурке не встать: нет опоры, тесно или место занято';

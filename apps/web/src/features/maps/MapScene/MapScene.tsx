@@ -60,6 +60,7 @@ interface MapSceneProps {
   hideContainerContents?: boolean;
   // Фигурки персонажей на сцене игры (этап 7); в редакторе карты их нет.
   figures?: readonly FigureInput[];
+  onFigureSelect?: (id: string) => void;
 }
 
 function MapScene({
@@ -77,6 +78,7 @@ function MapScene({
   objectImages,
   hideContainerContents,
   figures,
+  onFigureSelect,
 }: MapSceneProps) {
   const chunks = useChunkMeshes(map, cutY);
   const scheme = useComputedColorScheme('dark');
@@ -130,7 +132,14 @@ function MapScene({
             images={objectImages}
             hideContents={hideContainerContents}
           />
-          {figures && <FigureLayer map={map} figures={figures} cutY={cutY} />}
+          {figures && (
+            <FigureLayer
+              map={map}
+              figures={figures}
+              cutY={cutY}
+              onSelect={onFigureSelect}
+            />
+          )}
         </FacingMarkerContext>
         {walk && <WalkLayer walk={walk} />}
         {resizePreview && (

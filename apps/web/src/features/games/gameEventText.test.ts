@@ -203,6 +203,72 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'figure.moved',
+        as: { kind: 'character', id: 'c1' },
+        intent: { characterId: 'c1', to: [0, 1, 3] },
+        result: {
+          character: lira,
+          from: [0, 1, 0],
+          to: [0, 1, 3],
+          cost: 15,
+          left: 15,
+        },
+      },
+      'Ход: Лира — 15 фт, осталось 15 фт',
+    ],
+    [
+      {
+        ...base,
+        kind: 'figure.placed',
+        as: { kind: 'master' },
+        intent: { characterId: 'c1', at: [2, 1, 2] },
+        result: { character: lira, from: null, to: [2, 1, 2] },
+      },
+      'Фигурка поставлена на сцену: Лира',
+    ],
+    [
+      {
+        ...base,
+        kind: 'figure.placed',
+        as: { kind: 'master' },
+        intent: { characterId: 'c1', at: [2, 1, 2] },
+        result: { character: lira, from: [0, 1, 0], to: [2, 1, 2] },
+      },
+      'Фигурка переставлена: Лира',
+    ],
+    [
+      {
+        ...base,
+        kind: 'figures.round',
+        as: { kind: 'master' },
+        intent: null,
+        result: { scene: lair, count: 3 },
+      },
+      'Новый раунд: запас движения снова полный у фигурок: 3',
+    ],
+    [
+      {
+        ...base,
+        kind: 'figure.refreshed',
+        as: { kind: 'master' },
+        intent: { characterId: 'c1' },
+        result: { character: lira },
+      },
+      'Запас движения обновлён: Лира',
+    ],
+    [
+      {
+        ...base,
+        kind: 'figure.dashed',
+        as: { kind: 'master' },
+        intent: { characterId: 'c1' },
+        result: { character: lira, dashes: 2 },
+      },
+      'Рывок: Лира (за ход: 2)',
+    ],
+    [
+      {
+        ...base,
         kind: 'scene.undone',
         as: { kind: 'master' },
         intent: { seq: 7 },

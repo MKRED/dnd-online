@@ -1,20 +1,22 @@
 import { useEffect, useMemo } from 'react';
-import { Shape, ShapeGeometry, type Texture } from 'three';
+import type { BufferGeometry, Texture } from 'three';
 import type { Facing } from 'shared';
 import { facingAngle } from './objectLayout';
+import {
+  chevronGeometry,
+  chevronOutlineGeometry,
+  roundBaseGeometry,
+  roundRimGeometry,
+  tileNoseGeometry,
+} from './standShapes';
 
 // Красный — существу или старту здесь негде стоять (как фигурка «Хода»).
 export const BLOCKED_COLOR = '#e03131';
-
-// Стрелка взгляда: треугольник остриём к северу (−z) при повороте 0, в долях стороны.
-function arrowGeometry() {
-  const shape = new Shape();
-  shape.moveTo(0, 0.48);
-  shape.lineTo(0.2, 0.2);
-  shape.lineTo(-0.2, 0.2);
-  shape.closePath();
-  return new ShapeGeometry(shape);
-}
+const LIGHT = '#f8f9fa';
+const DARK = '#1a1b1e';
+// Подставка лежит над полом, слои над ней — выше на миллиметры, в клетках.
+const BASE_Y = 0.02;
+const FLAT = [-Math.PI / 2, 0, 0] as const;
 
 interface StandBaseProps {
   // Сторона места в клетках.
@@ -27,52 +29,113 @@ interface StandBaseProps {
   round?: boolean;
 }
 
-// Подставка на полу: круг во всё место существа или квадратная плитка старта, и
-// стрелка взгляда. Все три прозрачные и глубину не пишут, а прозрачное three.js сортирует по
-// расстоянию до камеры — под иными углами квадрат рисовался поверх номера и стрелки.
-// renderOrder ставит их строго после квадрата. Наведение на подставку показывает
-// подсказку объекта (ObjectLayer); номер и стрелку луч пропускает.
-function StandBase({ size, color, facing, texture, round }: StandBaseProps) {
-  const arrow = useMemo(() => arrowGeometry(), []);
-  useEffect(() => () => arrow.dispose(), [arrow]);
-  const side = size * 0.92;
+// Своя геометрия освобождается, когда её сменили или компонент ушёл со сцены.
+function useDispose(geometry: BufferGeometry) {
+  useEffect(() => () => geometry.dispose(), [geometry]);
+}
+
+// Плоский прозрачный слой поверх подставки; луч наведения его пропускает.
+function Overlay(props: {
+  geometry: BufferGeometry;
+  y: number;
+  order: number;
+  color: string;
+  opacity?: number;
+}) {
   return (
-    <group>
-      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        {round ? (
-          <circleGeometry args={[side / 2, 48]} />
-        ) : (
-          <planeGeometry args={[side, side]} />
-        )}
-        <meshStandardMaterial
-          color={color}
-          transparent
-          opacity={0.85}
-          depthWrite={false}
-        />
-      </mesh>
+    <mesh
+      geometry={props.geometry}
+      position={[0, props.y, 0]}
+      rotation={FLAT}
+      raycast={() => null}
+      renderOrder={props.order}
+    >
+      <meshBasicMaterial
+        color={props.color}
+        transparent
+        opacity={props.opacity ?? 1}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
+function BaseMaterial({ color }: { color: string }) {
+  return (
+    <meshStandardMaterial
+      color={color}
+      transparent
+      opacity={0.85}
+      depthWrite={false}
+    />
+  );
+}
+
+// Подставка на полу: круг во всё место существа или квадратная плитка старта.
+// Взгляд показывает острый «нос» подставки и белый шеврон с тёмной обводкой в нём,
+// у круга ещё светлый обод. Все слои прозрачные и глубину не пишут, а прозрачное
+// three.js сортирует по расстоянию до камеры — под иными углами подставка рисовалась
+// бы поверх номера и шеврона. renderOrder ставит их строго по порядку. Наведение на
+// подставку показывает подсказку объекта (ObjectLayer); остальные слои луч пропускает.
+// Фигуры — в долях стороны места (standShapes), группа масштабируется на size, поэтому
+// высоты слоёв делятся на size.
+function StandBase({ size, color, facing, texture, round }: StandBaseProps) {
+  const angle = facing === undefined ? 0 : facingAngle(facing);
+  const withNose = facing !== undefined;
+  const roundBase = useMemo(() => roundBaseGeometry(withNose), [withNose]);
+  const rim = useMemo(() => roundRimGeometry(withNose), [withNose]);
+  const tileNose = useMemo(() => tileNoseGeometry(angle), [angle]);
+  const chevron = useMemo(() => chevronGeometry(), []);
+  const outline = useMemo(() => chevronOutlineGeometry(), []);
+  useDispose(roundBase);
+  useDispose(rim);
+  useDispose(tileNose);
+  useDispose(chevron);
+  useDispose(outline);
+  const y = (offset: number) => (BASE_Y + offset) / size;
+  return (
+    <group scale={size}>
+      {round ? (
+        <group rotation={[0, angle, 0]}>
+          <mesh geometry={roundBase} position={[0, y(0), 0]} rotation={FLAT}>
+            <BaseMaterial color={color} />
+          </mesh>
+          <Overlay geometry={rim} y={y(0.004)} order={1} color={LIGHT} />
+        </group>
+      ) : (
+        <>
+          <mesh position={[0, y(0), 0]} rotation={FLAT}>
+            <planeGeometry args={[0.92, 0.92]} />
+            <BaseMaterial color={color} />
+          </mesh>
+          {withNose && (
+            <mesh geometry={tileNose} position={[0, y(0), 0]} rotation={FLAT}>
+              <BaseMaterial color={color} />
+            </mesh>
+          )}
+        </>
+      )}
       {texture && (
         <mesh
-          position={[0, 0.03, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, y(0.008), 0]}
+          rotation={FLAT}
           raycast={() => null}
-          renderOrder={1}
+          renderOrder={2}
         >
-          <planeGeometry args={[side * 0.4, side * 0.4]} />
+          <planeGeometry args={[0.37, 0.37]} />
           <meshBasicMaterial map={texture} transparent depthWrite={false} />
         </mesh>
       )}
-      {facing !== undefined && (
-        <group rotation={[0, facingAngle(facing), 0]} scale={size}>
-          <mesh
-            geometry={arrow}
-            position={[0, 0.035 / size, 0]}
-            rotation={[-Math.PI / 2, 0, 0]}
-            raycast={() => null}
-            renderOrder={2}
-          >
-            <meshBasicMaterial color="#fff" depthWrite={false} transparent />
-          </mesh>
+      {withNose && (
+        <group rotation={[0, angle, 0]}>
+          <Overlay
+            geometry={outline}
+            y={y(0.012)}
+            order={3}
+            color={DARK}
+            opacity={0.75}
+          />
+          <Overlay geometry={chevron} y={y(0.014)} order={4} color={LIGHT} />
         </group>
       )}
     </group>

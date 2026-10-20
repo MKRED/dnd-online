@@ -19,4 +19,4 @@
 
 - `packages/shared/src/map/objects/mapObject.ts`: `FACINGS`, `Facing`, `nextFacing`.
 - Операция `turnObject` и поле `facing` у видов `start`, `monster`, `npc` и `container` (`objectFacing` в `mapObject.ts`): `packages/shared/src/map/objects/`.
-- На сцене взгляд показывают стрелка на полу, жетон существа, повёрнутый лицом по взгляду, и перед контейнера (замок сундука): `apps/web/src/features/maps/MapScene/objects/CreatureCard.tsx`.
+- На сцене взгляд показывают «нос» подставки с шевроном на полу (`MapScene/objects/StandBase.tsx`, с 2026-10-20 вместо плоской стрелки), жетон существа, повёрнутый лицом по взгляду, и перед контейнера (замок сундука): `apps/web/src/features/maps/MapScene/objects/CreatureCard.tsx`.

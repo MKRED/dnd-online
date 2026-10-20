@@ -6,12 +6,17 @@ import {
   DEFAULT_USER_SETTINGS,
   GAME_SOCKET,
   emptyRefsView,
+  type GameFigure,
+  type GameFigures,
   type GameSceneEditMessage,
   type GameSceneView,
   type MapObject,
   type MapObjectRefsView,
 } from 'shared';
-import type { ObjectImagePaths } from '../../features/maps/MapScene';
+import type {
+  FigureInput,
+  ObjectImagePaths,
+} from '../../features/maps/MapScene';
 import type { MapViewState } from '../../features/maps/mapStateFromChunks';
 import { createFakeGameSocket } from '../../test/fakeGameSocket';
 import { renderWithProviders } from '../../test/render';
@@ -29,12 +34,14 @@ vi.mock('../../features/maps/MapScene', async () => {
       objectImages,
       hideContainerContents,
       onReady,
+      figures,
     }: {
       map: MapViewState;
       refs: MapObjectRefsView;
       objectImages: ObjectImagePaths;
       hideContainerContents: boolean;
       onReady: () => void;
+      figures?: FigureInput[];
     }) {
       useEffect(onReady, [onReady]);
       const names = Object.values(refs.monsters).map((m) =>
@@ -46,6 +53,11 @@ vi.mock('../../features/maps/MapScene', async () => {
           <p>{objectImages.monster('g1', 2)}</p>
           <p>Объектов: {map.objects.byId.size}</p>
           {hideContainerContents && <p>Содержимое скрыто</p>}
+          {figures?.map((figure) => (
+            <p key={figure.id}>
+              Фигурка: {figure.name} {figure.at.join(',')} {figure.image}
+            </p>
+          ))}
         </>
       );
     },
@@ -97,7 +109,10 @@ function stub(
 ) {
   const fetchMock = vi.fn<typeof fetch>((input, init) => {
     const key = `${init?.method ?? 'GET'} ${urlOf(input).replace(/^.*\/api/, '')}`;
-    const route = responses[key];
+    // Фигурки (этап 7) нужны не каждому тесту: без ответа — «нет активной сцены».
+    const route =
+      responses[key] ??
+      (key.endsWith('/scene/figures') ? () => ({ status: 404 }) : undefined);
     if (!route) return Promise.reject(new Error(`Нет ответа для ${key}`));
     const { status, body } = route();
     return Promise.resolve(
@@ -128,7 +143,69 @@ function renderScene(userId: string) {
   );
 }
 
+const LIRA: GameFigure = {
+  character: { id: 'c1', name: 'Лира' },
+  ownerId: 'u2',
+  at: [0, 1, 0],
+  facing: 0,
+  size: 'medium',
+  image: { id: 'i1', thumbVersion: 3 },
+  speed: 30,
+  moved: 0,
+  dashes: 0,
+  canMove: true,
+};
+
+function figuresOf(eventSeq: number, figures: GameFigure[]): GameFigures {
+  return { sceneId: 's1', eventSeq, figures, unplaced: [] };
+}
+
 describe('GameScenePage', () => {
+  it('игрок видит фигурки и перечитывает их после событий фигурок; старый ответ не откатывает', async () => {
+    let figures = figuresOf(3, [LIRA]);
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'player' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+      [`GET ${base}/scene/figures`]: () => ({ status: 200, body: figures }),
+    });
+    renderScene('u2');
+    expect(
+      await screen.findByText(
+        `Фигурка: Лира 0,1,0 ${base}/figures/c1/image?i=i1&v=3`,
+      ),
+    ).toBeInTheDocument();
+
+    const born = {
+      ...LIRA,
+      character: { id: 'c2', name: 'Борн' },
+      image: null,
+    };
+    figures = figuresOf(6, [LIRA, { ...born, at: [2, 1, 2] }]);
+    act(() =>
+      socket.current?.receive(GAME_SOCKET.changed, {
+        gameId: GAME.id,
+        seq: 6,
+        kind: 'figures.placed',
+      }),
+    );
+    expect(await screen.findByText(/Фигурка: Борн 2,1,2/)).toBeInTheDocument();
+
+    // Запоздавший ответ со старым номером журнала фигурки не откатывает.
+    figures = figuresOf(5, [LIRA]);
+    act(() =>
+      socket.current?.receive(GAME_SOCKET.changed, {
+        gameId: GAME.id,
+        seq: 7,
+        kind: 'seat.freed',
+      }),
+    );
+    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    expect(screen.getByText(/Фигурка: Борн/)).toBeInTheDocument();
+  });
+
   it('игрок видит открытую сцену с картинками из библиотеки игры', async () => {
     stub({
       [`GET ${base}`]: () => ({

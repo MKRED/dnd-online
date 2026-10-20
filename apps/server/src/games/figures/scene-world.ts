@@ -1,0 +1,52 @@
+import {
+  objectRefIds,
+  objectSize,
+  type MapObject,
+  type MapState,
+  type Occupant,
+} from 'shared';
+import type { DbTransaction } from '../../database/database.service.js';
+import type { SceneRow } from '../scenes/scene-copy.js';
+import { sceneRefs } from '../scenes/scene-refs.js';
+import { sceneStorage } from '../scenes/scene-storage.js';
+
+// Существо карты (монстр, НПС) как препятствие для фигурок. hidden — его не видят игроки:
+// их ход его не учитывает, иначе отказ сервера выдал бы засаду.
+export type SceneCreature = Occupant & { hidden: boolean };
+
+// Сцена глазами правил хода: блоки, существа на ней и стартовые точки по номеру.
+export interface SceneWorld {
+  map: MapState;
+  creatures: SceneCreature[];
+  starts: Extract<MapObject, { kind: 'start' }>[];
+}
+
+export async function loadSceneWorld(
+  tx: DbTransaction,
+  scene: SceneRow,
+): Promise<SceneWorld> {
+  const storage = sceneStorage(scene.id);
+  const store = await storage.loadChunks(tx, 'all');
+  const objects = [
+    ...(await storage.loadObjects(tx, scene.nextObjectId)).byId.values(),
+  ].sort((a, b) => a.id - b.id);
+  const { refs } = await sceneRefs(tx, scene.gameId, objectRefIds(objects));
+  return {
+    map: { store, palette: scene.palette },
+    creatures: objects.flatMap((object) =>
+      object.kind === 'monster' || object.kind === 'npc'
+        ? [
+            {
+              at: object.at,
+              size: objectSize(object, refs),
+              ally: false,
+              hidden: object.hidden,
+            },
+          ]
+        : [],
+    ),
+    starts: objects.flatMap((object) =>
+      object.kind === 'start' ? [object] : [],
+    ),
+  };
+}

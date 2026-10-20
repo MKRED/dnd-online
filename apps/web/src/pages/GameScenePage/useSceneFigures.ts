@@ -1,0 +1,46 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { GameFigures } from 'shared';
+import { figureImagePath, getGameFigures } from '../../features/games';
+import type { FigureInput } from '../../features/maps/MapScene';
+import { ApiError } from '../../lib/apiRequest';
+
+// Фигурки персонажей на активной сцене (docs/plan/game.md, этап 7). Перечитываются
+// целиком после событий фигурок: их немного, а ход по пути считает сервер. Ответ старше
+// уже показанного (по номеру журнала) не откатывает фигурки назад.
+export function useSceneFigures(gameId: string, sceneId: string | null) {
+  const [loaded, setLoaded] = useState<GameFigures | null>(null);
+  const seqRef = useRef(-1);
+
+  const reload = useCallback(() => {
+    if (!sceneId) return;
+    getGameFigures(gameId)
+      .then((result) => {
+        if (result.eventSeq < seqRef.current) return;
+        seqRef.current = result.eventSeq;
+        setLoaded(result);
+      })
+      .catch((err: unknown) => {
+        // Сцену закрыли или сменили — это перечитает сама страница сцены.
+        if (err instanceof ApiError && [403, 404].includes(err.status)) return;
+        console.error('Failed to load scene figures', err);
+      });
+  }, [gameId, sceneId]);
+
+  useEffect(reload, [reload]);
+
+  // Фигурки другой сцены (ответ пришёл до смены) не показываются.
+  const current = loaded?.sceneId === sceneId ? loaded : null;
+  const inputs = useMemo<FigureInput[]>(
+    () =>
+      (current?.figures ?? []).map((figure) => ({
+        id: figure.character.id,
+        name: figure.character.name,
+        at: figure.at,
+        facing: figure.facing,
+        size: figure.size,
+        image: figureImagePath(gameId, figure),
+      })),
+    [current, gameId],
+  );
+  return { figures: current, inputs, reload };
+}

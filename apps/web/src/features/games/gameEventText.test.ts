@@ -167,6 +167,42 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'figures.placed',
+        as: { kind: 'master' },
+        intent: { reason: 'scene' },
+        result: {
+          scene: lair,
+          placed: [{ character: lira, at: [0, 1, 0] }],
+          unplaced: [{ id: 'c2', name: 'Борн' }],
+        },
+      },
+      'Фигурки сцены Логово — на стартовых точках: Лира; не хватило точки: Борн',
+    ],
+    [
+      {
+        ...base,
+        kind: 'figures.placed',
+        intent: { reason: 'seat' },
+        result: {
+          scene: lair,
+          placed: [{ character: lira, at: [0, 1, 0] }],
+          unplaced: [],
+        },
+      },
+      'Фигурка на стартовой точке: Лира',
+    ],
+    [
+      {
+        ...base,
+        kind: 'figures.placed',
+        intent: { reason: 'seat' },
+        result: { scene: lair, placed: [], unplaced: [lira] },
+      },
+      'Фигурке не хватило стартовой точки: Лира',
+    ],
+    [
+      {
+        ...base,
         kind: 'scene.undone',
         as: { kind: 'master' },
         intent: { seq: 7 },

@@ -27,6 +27,7 @@ import {
   NPC_NO_SEAT,
   SEAT_NOT_FOUND,
 } from './game-errors.js';
+import { placeSeatedFigure, removeFigure } from './figures/figure-placement.js';
 import { appendGameEvent, lockGame } from './game-journal.js';
 import { findGameAccess, findMemberSeat, readGameDetail } from './game-read.js';
 import { GameRealtimeService } from './realtime/game-realtime.service.js';
@@ -119,6 +120,11 @@ export class GameSeatsService {
           },
           result: { character: { id: dto.characterId, name: character.name } },
         });
+        // Сцена уже идёт — фигурка встаёт на свободную стартовую точку (этап 7).
+        await placeSeatedFigure(tx, gameId, userId, {
+          id: dto.characterId,
+          name: character.name,
+        });
       });
       this.realtime.publish(gameId);
       this.logger.info(
@@ -173,6 +179,7 @@ export class GameSeatsService {
         characterId: null,
         seatedAt: null,
       });
+      await removeFigure(tx, character.id);
       await appendGameEvent(tx, gameId, {
         kind: 'seat.freed',
         actorId: userId,

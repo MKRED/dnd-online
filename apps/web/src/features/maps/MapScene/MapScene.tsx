@@ -16,6 +16,7 @@ import CenterHint from './CenterHint';
 import CursorReadout from './CursorReadout';
 import { createHoverStore } from './hoverStore';
 import EditLayer from './EditLayer';
+import FigureLayer, { type FigureInput } from './figures';
 import FirstFrame from './FirstFrame';
 import ObjectLayer, { FacingMarkerContext } from './objects';
 import type { ObjectImagePaths } from './objects/objectImages';
@@ -57,6 +58,8 @@ interface MapSceneProps {
   objectImages?: ObjectImagePaths;
   // Содержимое контейнеров смотрящему не отдали (игрок на сцене игры).
   hideContainerContents?: boolean;
+  // Фигурки персонажей на сцене игры (этап 7); в редакторе карты их нет.
+  figures?: readonly FigureInput[];
 }
 
 function MapScene({
@@ -73,6 +76,7 @@ function MapScene({
   facingMarker,
   objectImages,
   hideContainerContents,
+  figures,
 }: MapSceneProps) {
   const chunks = useChunkMeshes(map, cutY);
   const scheme = useComputedColorScheme('dark');
@@ -126,6 +130,7 @@ function MapScene({
             images={objectImages}
             hideContents={hideContainerContents}
           />
+          {figures && <FigureLayer map={map} figures={figures} cutY={cutY} />}
         </FacingMarkerContext>
         {walk && <WalkLayer walk={walk} />}
         {resizePreview && (

@@ -26,6 +26,7 @@ import SceneRoom from './SceneRoom';
 import SceneSidebar from './SceneSidebar';
 import SceneToolsPanel from './SceneToolsPanel';
 import { useGameScene } from './useGameScene';
+import { useSceneFigures } from './useSceneFigures';
 import { useSceneOpen } from './useSceneOpen';
 import { SCENE_TOOLS, useSceneTools } from './useSceneTools';
 
@@ -87,6 +88,7 @@ function GameScenePage() {
     ? Math.min(Math.max(cutY ?? bounds.max[1], bounds.min[1]), bounds.max[1])
     : 0;
   const sceneId = view?.scene.id ?? null;
+  const figures = useSceneFigures(id, sceneId);
   const handleReady = useCallback(() => setReadySceneId(sceneId), [sceneId]);
   const tools = master && ready !== null;
 
@@ -105,6 +107,7 @@ function GameScenePage() {
           master={master}
           onReload={reload}
           onSceneEdit={receiveEdit}
+          onFigures={figures.reload}
           onLeave={() => void navigate(lobby)}
         />
       )}
@@ -147,6 +150,7 @@ function GameScenePage() {
               }
               objectImages={images}
               hideContainerContents={ready.view.contentsHidden}
+              figures={figures.inputs}
             />
           </Suspense>
         )}

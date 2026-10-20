@@ -1,4 +1,4 @@
-import type { GameSceneEditMessage } from 'shared';
+import { FIGURE_KINDS, type GameSceneEditMessage } from 'shared';
 import { useGameRoom } from '../../features/games';
 
 // События, после которых страница перечитывает сцену: её сменили, перезапустили,
@@ -10,6 +10,14 @@ const SCENE_CHANGES = new Set<string>([
   'scene.closed',
 ]);
 
+// После них перечитываются фигурки (этап 7): ход, расстановка и ушедший с места персонаж.
+const FIGURE_CHANGES = new Set<string>([
+  ...FIGURE_KINDS,
+  'seat.freed',
+  'member.left',
+  'member.removed',
+]);
+
 interface SceneRoomProps {
   gameId: string;
   // Номер журнала, на котором страница впервые прочитала игру: с него комната догоняет.
@@ -18,6 +26,8 @@ interface SceneRoomProps {
   onReload: () => void;
   // Правка сцены мастером (этап 6): применить к копии или перечитать.
   onSceneEdit: (message: GameSceneEditMessage) => void;
+  // Фигурки изменились — перечитать их.
+  onFigures: () => void;
   // Игроку закрыли сцену, его убрали из игры или игру удалили — в лобби.
   onLeave: () => void;
 }
@@ -30,6 +40,7 @@ function SceneRoom({
   master,
   onReload,
   onSceneEdit,
+  onFigures,
   onLeave,
 }: SceneRoomProps) {
   useGameRoom(
@@ -38,9 +49,13 @@ function SceneRoom({
       onChanged: (message) => {
         if (!master && message.kind === 'scene.closed') onLeave();
         else if (SCENE_CHANGES.has(message.kind)) onReload();
+        else if (FIGURE_CHANGES.has(message.kind)) onFigures();
       },
       onSceneEdit,
-      onResync: onReload,
+      onResync: () => {
+        onReload();
+        onFigures();
+      },
       onClosed: onLeave,
     },
     since,

@@ -1,3 +1,4 @@
+import type { GameFigurePlacement } from './game-figures.js';
 import type { GameUser } from './games.js';
 import type { GameLibraryRef } from './game-library.js';
 import type { GameSceneRef } from './game-scenes.js';
@@ -109,6 +110,16 @@ export interface GameEventPayloads {
   'scene.redone': {
     intent: { seq: number; undoSeq: number };
     result: SceneReplayResult;
+  };
+  // Фигурки встали на свободные стартовые точки активной сцены (этап 7): сцена стала
+  // активной (scene) или персонаж сел на место (seat). unplaced — кому точки не хватило.
+  'figures.placed': {
+    intent: { reason: 'scene' | 'seat' };
+    result: {
+      scene: GameSceneRef;
+      placed: GameFigurePlacement[];
+      unplaced: GameEventCharacter[];
+    };
   };
   // Мастер убрал игрока.
   'member.removed': {

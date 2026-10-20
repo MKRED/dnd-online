@@ -10,15 +10,21 @@ import { useLabelTexture } from './useLabelTexture';
 
 type CreatureLook = Extract<SceneObjectLook, { kind: 'creature' }>;
 
-// Рамка карточки по виду: монстр — красноватая, НПС — синяя, заглушка — серая.
-const FRAME = { monster: '#9c3b30', npc: '#2f63a0', missing: '#7d848c' };
+// Рамка карточки по виду: монстр — красноватая, НПС — синяя, персонаж игрока —
+// зелёная, заглушка — серая.
+const FRAME = {
+  monster: '#9c3b30',
+  npc: '#2f63a0',
+  pc: '#3d8a4f',
+  missing: '#7d848c',
+};
 const PLINTH = '#2b2622';
 // Толщина жетона и высота подставки, в которую он вставлен, — в клетках.
 const THICKNESS = 0.05;
 const PLINTH_HEIGHT = 0.07;
 
 interface CreatureCardProps {
-  object: SceneObject;
+  object: Pick<SceneObject, 'base' | 'footprint' | 'blocked'>;
   look: CreatureLook;
   // Миниатюра; null — нет картинки или она не загрузилась.
   texture: Texture | null;

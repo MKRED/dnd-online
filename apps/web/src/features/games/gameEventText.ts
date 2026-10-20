@@ -1,4 +1,9 @@
-import type { GameEvent, SceneReplayResult, SceneEditResult } from 'shared';
+import type {
+  GameEvent,
+  GameEventPayloads,
+  SceneReplayResult,
+  SceneEditResult,
+} from 'shared';
 
 // Строка журнала игры по-русски. Кто сделал, показывается рядом отдельно, поэтому здесь —
 // безличные фразы: пол автора по нику не угадать.
@@ -69,6 +74,8 @@ export function gameEventText(event: GameEvent): string {
       return `Правка №${event.intent.seq} отменена: ${sceneReplay(event.result)}`;
     case 'scene.redone':
       return `Правка №${event.intent.seq} возвращена: ${sceneReplay(event.result)}`;
+    case 'figures.placed':
+      return figuresPlaced(event.intent.reason, event.result);
     case 'member.left':
       return withCharacter('Выход из игры', event.result.character);
     case 'member.removed':
@@ -93,6 +100,26 @@ function sceneReplay(result: SceneReplayResult) {
   return result.conflicts > 0
     ? `${text}, не тронуто изменённого позже: ${result.conflicts}`
     : text;
+}
+
+type FiguresPlaced = GameEventPayloads['figures.placed'];
+
+// Фигурки встали на стартовые точки: вся сцена разом или один севший на место.
+function figuresPlaced(
+  reason: FiguresPlaced['intent']['reason'],
+  { scene, placed, unplaced }: FiguresPlaced['result'],
+) {
+  const standing = placed.map((entry) => entry.character.name).join(', ');
+  const left = unplaced.map((character) => character.name).join(', ');
+  if (reason === 'seat') {
+    return placed.length > 0
+      ? `Фигурка на стартовой точке: ${standing}`
+      : `Фигурке не хватило стартовой точки: ${left}`;
+  }
+  const parts = [];
+  if (placed.length > 0) parts.push(`на стартовых точках: ${standing}`);
+  if (unplaced.length > 0) parts.push(`не хватило точки: ${left}`);
+  return `Фигурки сцены ${scene.name} — ${parts.join('; ')}`;
 }
 
 function withCharacter(text: string, character: { name: string } | null) {

@@ -8,6 +8,7 @@ import {
   SCENE_MAP_GONE,
   SCENE_NOT_FOUND,
 } from '../game-errors.js';
+import { placeFiguresOnScene } from '../figures/figure-placement.js';
 import { appendGameEvent } from '../game-journal.js';
 import { createScene } from './scene-copy.js';
 import { findActiveScene, findScene } from './scene-read.js';
@@ -47,6 +48,7 @@ export async function addScene(
       active,
     },
   });
+  if (active) await placeFiguresOnScene(tx, scene, masterId);
   return true;
 }
 
@@ -78,6 +80,7 @@ export async function activateScene(
     intent: { sceneId },
     result: { scene: { id: scene.id, name: scene.name } },
   });
+  await placeFiguresOnScene(tx, scene, masterId);
   return true;
 }
 
@@ -122,6 +125,8 @@ export async function restartScene(
       libraryCopied,
     },
   });
+  // Перезапуск активной сцены — фигурки снова на стартовых точках новой копии.
+  if (old.active) await placeFiguresOnScene(tx, scene, masterId);
   return true;
 }
 

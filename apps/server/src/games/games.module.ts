@@ -10,6 +10,10 @@ import { GameSeatsController } from './game-seats.controller.js';
 import { GameSeatsService } from './game-seats.service.js';
 import { GamesController } from './games.controller.js';
 import { GamesService } from './games.service.js';
+import {
+  GameFiguresController,
+  GameFiguresReadService,
+} from './figures/index.js';
 import { GameLibraryController, GameLibraryService } from './library/index.js';
 import { GameRealtimeGateway } from './realtime/game-realtime.gateway.js';
 import { GameRealtimeService } from './realtime/game-realtime.service.js';
@@ -23,7 +27,7 @@ import {
 } from './scenes/index.js';
 
 // Игры (docs/plan/game.md): общий список, лобби, места, встреча, журнал игры, библиотека,
-// сцены и сокет.
+// сцены, фигурки персонажей и сокет.
 @Module({
   imports: [AuthModule],
   controllers: [
@@ -35,6 +39,7 @@ import {
     GameLibraryController,
     GameScenesController,
     GameSceneEditController,
+    GameFiguresController,
   ],
   providers: [
     GamesService,
@@ -46,6 +51,7 @@ import {
     GameScenesService,
     GameSceneViewService,
     GameSceneEditService,
+    GameFiguresReadService,
     // Пределы правки карты — и для правок сцены (этап 6).
     MapLimitsConfig,
     GameRealtimeService,

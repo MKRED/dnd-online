@@ -17,6 +17,7 @@ import {
   MEMBER_NOT_FOUND,
   WRONG_PASSWORD,
 } from './game-errors.js';
+import { removeFigure } from './figures/figure-placement.js';
 import { appendGameEvent, lockGame } from './game-journal.js';
 import { findGameAccess, findMemberSeat, readGameDetail } from './game-read.js';
 import { GameRealtimeService } from './realtime/game-realtime.service.js';
@@ -102,6 +103,7 @@ export class GameMembersService {
         await lockGame(tx, gameId);
         const seat = await findMemberSeat(tx, gameId, memberId);
         if (!seat) throw new NotFoundException(MEMBER_NOT_FOUND);
+        if (seat.character) await removeFigure(tx, seat.character.id);
         await tx
           .delete(gameMembers)
           .where(

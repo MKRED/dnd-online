@@ -11,7 +11,12 @@ import {
 import { IconLock } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SCENE_EDIT_KINDS, type GameDetail, type GameEvent } from 'shared';
+import {
+  FIGURE_KINDS,
+  SCENE_EDIT_KINDS,
+  type GameDetail,
+  type GameEvent,
+} from 'shared';
 import { useAuth } from '../../features/auth';
 import {
   deleteGame,
@@ -94,9 +99,13 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
           void navigate(scenePagePath(game.id));
           return;
         }
-        // Правки сцены (этап 6) лобби не меняют: мастер правит часто, и каждая правка
-        // перечитывала бы лобби у всех. Запись мастеру всё равно придёт в журнал.
-        if (SCENE_EDIT_KINDS.includes(message.kind)) return;
+        // Правки сцены (этап 6) и фигурки (этап 7) лобби не меняют: они идут часто, и
+        // каждая перечитывала бы лобби у всех. Запись мастеру всё равно придёт в журнал.
+        if (
+          SCENE_EDIT_KINDS.includes(message.kind) ||
+          FIGURE_KINDS.includes(message.kind)
+        )
+          return;
         reload();
         if (LIBRARY_CHANGES.has(message.kind))
           setLibraryVersion((version) => version + 1);

@@ -39,3 +39,4 @@ export const SCENE_NO_RESIZE =
   'Размер сцены в игре не меняется: измените карту в редакторе и перезапустите сцену';
 export const SCENE_NOTHING_TO_UNDO = 'Нечего отменять';
 export const SCENE_NOTHING_TO_REDO = 'Нечего возвращать';
+export const FIGURE_NO_IMAGE = 'У фигурки нет картинки';

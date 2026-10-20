@@ -5,3 +5,4 @@ export * from './useGameRoom';
 export * from './gameLibraryApi';
 export * from './libraryLabels';
 export * from './gameScenesApi';
+export * from './gameFiguresApi';

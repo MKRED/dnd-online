@@ -47,6 +47,16 @@ describe('game scenes (e2e)', () => {
     return (res.body as GameEventPage).events[0];
   }
 
+  // Последняя запись о самой сцене: за сменой сцены идёт расстановка фигурок (этап 7).
+  async function lastSceneEvent(agent: request.Agent, gameId: string) {
+    const res = await agent
+      .get(`/api/games/${gameId}/events?limit=5`)
+      .expect(200);
+    return (res.body as GameEventPage).events.find(
+      (event) => event.kind !== 'figures.placed',
+    );
+  }
+
   const setup = (prefix: string) => createSceneGame(user, png, prefix);
 
   async function addScene(agent: request.Agent, gameId: string, mapId: string) {
@@ -70,7 +80,7 @@ describe('game scenes (e2e)', () => {
       expect.objectContaining({ name: 'Логово', mapId, active: true }),
     ]);
     const sceneId = scenes.scenes[0].id;
-    const created = await lastEvent(m, gameId);
+    const created = await lastSceneEvent(m, gameId);
     expect(created).toMatchObject({
       kind: 'scene.created',
       sceneId,
@@ -292,7 +302,7 @@ describe('game scenes (e2e)', () => {
       [first.id, false],
       [next.id, true],
     ]);
-    expect(await lastEvent(m, gameId)).toMatchObject({
+    expect(await lastSceneEvent(m, gameId)).toMatchObject({
       kind: 'scene.activated',
       sceneId: next.id,
     });
@@ -323,7 +333,7 @@ describe('game scenes (e2e)', () => {
     expect(after[0].id).toBe(first.id);
     expect(after[1]).toMatchObject({ name: 'Логово', active: true });
     expect(after[1].id).not.toBe(next.id);
-    expect(await lastEvent(m, gameId)).toMatchObject({
+    expect(await lastSceneEvent(m, gameId)).toMatchObject({
       kind: 'scene.restarted',
       sceneId: after[1].id,
       intent: { sceneId: next.id },

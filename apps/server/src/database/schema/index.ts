@@ -6,6 +6,7 @@ export * from './character-image-files.js';
 export * from './maps.js';
 export * from './map-chunks.js';
 export * from './map-ops.js';
+export * from './map-objects.js';
 export * from './api-tokens.js';
 export * from './user-identities.js';
 export * from './items.js';

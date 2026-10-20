@@ -253,6 +253,13 @@
       "when": 1792413828856,
       "tag": "0035_map_size",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1792456340748,
+      "tag": "0036_map_objects",
+      "breakpoints": true
     }
   ]
 }

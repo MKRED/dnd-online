@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { DEFAULT_MAP_LIMITS, type MapBatchLimits } from 'shared';
+import {
+  DEFAULT_MAP_LIMITS,
+  DEFAULT_MAX_OBJECTS,
+  type MapBatchLimits,
+} from 'shared';
 
 function readPositiveInt(
   configService: ConfigService,
@@ -32,6 +36,8 @@ export class MapLimitsConfig implements MapBatchLimits {
   readonly maxHeight: number;
   // Чанк — 8 КБ, 4096 чанков — 32 МБ на карту.
   readonly maxChunks: number;
+  // Объектов на одной карте (docs/plan/map-objects.md).
+  readonly maxObjects: number;
 
   constructor(configService: ConfigService) {
     this.maxOpVolume = readPositiveInt(
@@ -60,5 +66,10 @@ export class MapLimitsConfig implements MapBatchLimits {
       DEFAULT_MAP_LIMITS.maxHeight,
     );
     this.maxChunks = readPositiveInt(configService, 'MAP_MAX_CHUNKS', 4096);
+    this.maxObjects = readPositiveInt(
+      configService,
+      'MAP_MAX_OBJECTS',
+      DEFAULT_MAX_OBJECTS,
+    );
   }
 }

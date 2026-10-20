@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   mapBounds,
+  mergeRefsView,
   type Box3,
   type MapEditResult,
   type MapInfo,
+  type MapObjectRefsView,
   type MapOp,
   type SizedMapState,
 } from 'shared';
@@ -16,12 +18,14 @@ import {
   undoMapEdit,
 } from './mapsApi';
 import { applyMapChanges } from './applyMapChanges';
-import { mapStateFromChunks } from './mapStateFromChunks';
+import { mapStateFromChunks, type MapViewState } from './mapStateFromChunks';
 
 export interface LoadedMap {
   // Ширину и глубину отсюда не брать: после resize они устаревают, верный размер — state.size.
   info: MapInfo;
-  state: SizedMapState;
+  state: MapViewState;
+  // Имена, картинки и размеры того, на что ссылаются объекты (или заглушки).
+  refs: MapObjectRefsView;
   // Карта на момент открытия: её площадь до верхнего блока. По ней ставится камера,
   // и она не меняется от правок — иначе каждый новый блок сбрасывал бы камеру.
   frame: Box3;
@@ -51,7 +55,12 @@ export function useMapData(id: string) {
         if (cancelled) return;
         seqRef.current = chunks.seq;
         const state = mapStateFromChunks(chunks);
-        setMap({ info, state, frame: openingFrame(state) });
+        setMap({
+          info,
+          state,
+          refs: chunks.refs,
+          frame: openingFrame(state),
+        });
       })
       .catch((err: unknown) => {
         console.error('Failed to load map', err);
@@ -76,7 +85,12 @@ export function useMapData(id: string) {
         if (chunks.seq < seqRef.current) return;
         seqRef.current = chunks.seq;
         setMap(
-          (prev) => prev && { ...prev, state: mapStateFromChunks(chunks) },
+          (prev) =>
+            prev && {
+              ...prev,
+              state: mapStateFromChunks(chunks),
+              refs: chunks.refs,
+            },
         );
       }),
     [id],
@@ -93,7 +107,11 @@ export function useMapData(id: string) {
         try {
           const state = applyMapChanges(map.state, result.changes);
           seqRef.current = result.seq;
-          setMap({ ...map, state });
+          setMap({
+            ...map,
+            state,
+            refs: mergeRefsView(map.refs, result.refs),
+          });
           return;
         } catch (err) {
           console.error('Map changes did not apply locally, refetching', err);
@@ -119,7 +137,7 @@ export function useMapData(id: string) {
         .then(async (result) => {
           if (result.conflicts > 0) {
             setEditError(
-              `Не тронуто клеток: ${result.conflicts} — их уже изменил кто-то другой`,
+              `Не тронуто изменений: ${result.conflicts} — эти клетки или объекты уже изменил кто-то другой`,
             );
           }
           await syncAfterEdit(result);

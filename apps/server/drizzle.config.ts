@@ -12,6 +12,7 @@ export default defineConfig({
     './src/database/schema/maps.ts',
     './src/database/schema/map-chunks.ts',
     './src/database/schema/map-ops.ts',
+    './src/database/schema/map-objects.ts',
     './src/database/schema/api-tokens.ts',
     './src/database/schema/user-identities.ts',
     './src/database/schema/items.ts',

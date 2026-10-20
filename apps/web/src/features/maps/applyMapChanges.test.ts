@@ -1,11 +1,13 @@
 import {
   applyOps,
   chunkKey,
+  createMapObjects,
   createPalette,
   MemoryChunkStore,
   packChangeset,
   type SizedMapState,
   readCell,
+  type MapObject,
   type MapState,
 } from 'shared';
 import { describe, expect, it } from 'vitest';
@@ -77,5 +79,35 @@ describe('applyMapChanges', () => {
     applyOps(state, [{ op: 'setBlock', at: [0, 0, 0], block: 'stone' }]);
 
     expect(() => applyMapChanges(state, changes)).toThrow();
+  });
+
+  it('применяет объекты, не трогая объекты старого состояния', () => {
+    const start: MapObject = {
+      id: 1,
+      at: [0, 0, 0],
+      hidden: false,
+      kind: 'start',
+      facing: 0,
+    };
+    const state = { ...emptyMap(), objects: createMapObjects([start], 2) };
+    const changes = packChangeset({
+      cells: [],
+      paletteAdded: [],
+      objects: [
+        { id: 1, before: start, after: { ...start, at: [2, 0, 2] } },
+        { id: 2, before: null, after: { ...start, id: 2 } },
+      ],
+    });
+
+    const after = applyMapChanges(state, changes);
+
+    expect(after.objects.byId.get(1)?.at).toEqual([2, 0, 2]);
+    expect(after.objects.nextId).toBe(3);
+    expect(state.objects.byId.get(1)?.at).toEqual([0, 0, 0]);
+    expect(state.objects.byId.has(2)).toBe(false);
+    // Объект в копии уже не тот, что ждёт правка, — копию нужно перечитать.
+    expect(() => applyMapChanges(after, changes)).toThrow(
+      /objects in conflict/,
+    );
   });
 });

@@ -3,6 +3,7 @@ import {
   cellLocation,
   MemoryChunkStore,
   unpackChangeset,
+  type MapObjects,
   type MapSize,
   type MapState,
   type PackedChangeset,
@@ -14,11 +15,10 @@ import {
 // сцена понимает, что чанк пересобирать не нужно.
 // Бросает, если изменения не ложатся на нашу копию (конфликт, чужая палитра или
 // другой размер): значит, копия разошлась с сервером и карту нужно перечитать.
-// Размер копируется: resize меняет его в той же правке, что и блоки.
-export function applyMapChanges<S extends MapState & { size?: MapSize }>(
-  state: S,
-  packed: PackedChangeset,
-): S {
+// Размер и объекты копируются: resize меняет их в той же правке, что и блоки.
+export function applyMapChanges<
+  S extends MapState & { size?: MapSize; objects?: MapObjects },
+>(state: S, packed: PackedChangeset): S {
   const changeset = unpackChangeset(packed);
   const store = new MemoryChunkStore();
   for (const key of state.store.keys()) store.set(key, state.store.get(key)!);
@@ -36,10 +36,22 @@ export function applyMapChanges<S extends MapState & { size?: MapSize }>(
     store,
     palette: [...state.palette],
     ...(state.size && { size: { ...state.size } }),
+    ...(state.objects && {
+      objects: {
+        byId: new Map(state.objects.byId),
+        nextId: state.objects.nextId,
+      },
+    }),
   };
-  const { conflicts } = applyChangeset(next, changeset, 'forward');
-  if (conflicts.length > 0) {
-    throw new Error(`Map copy diverged: ${conflicts.length} conflicting cells`);
+  const { conflicts, objectConflicts } = applyChangeset(
+    next,
+    changeset,
+    'forward',
+  );
+  if (conflicts.length > 0 || objectConflicts.length > 0) {
+    throw new Error(
+      `Map copy diverged: ${conflicts.length} cells, ${objectConflicts.length} objects in conflict`,
+    );
   }
   return next;
 }

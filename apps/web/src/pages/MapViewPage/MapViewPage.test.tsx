@@ -4,6 +4,7 @@ import { Route, Routes } from 'react-router-dom';
 import {
   applyOps,
   createPalette,
+  emptyRefsView,
   encodeChunk,
   MemoryChunkStore,
   parseChunkKey,
@@ -74,6 +75,9 @@ function chunksOf(map: MapState, seq = 1): MapChunksResponse {
       const bytes = encodeChunk(map.store.get(key)!);
       return { cx, cy, cz, data: btoa(String.fromCharCode(...bytes)) };
     }),
+    objects: [],
+    nextObjectId: 1,
+    refs: emptyRefsView(),
   };
 }
 
@@ -82,6 +86,9 @@ const emptyChunks: MapChunksResponse = {
   size: { width: 32, depth: 32 },
   palette: createPalette(),
   chunks: [],
+  objects: [],
+  nextObjectId: 1,
+  refs: emptyRefsView(),
 };
 
 function towerChunks() {
@@ -172,6 +179,8 @@ describe('MapViewPage', () => {
         body: {
           seq: 1,
           changedCells: 1,
+          createdObjectIds: [],
+          refs: emptyRefsView(),
           conflicts: 0,
           paletteAdded: ['stone'],
           // Клетка (1, 0, 1): воздух → stone (id 1, поворот 0 → значение 4).
@@ -208,6 +217,8 @@ describe('MapViewPage', () => {
         body: {
           seq: 5,
           changedCells: 1,
+          createdObjectIds: [],
+          refs: emptyRefsView(),
           conflicts: 0,
           paletteAdded: [],
           changes: { cells: [1, 0, 1, 0, 4], paletteAdded: [] },
@@ -249,6 +260,8 @@ describe('MapViewPage', () => {
         body: {
           seq: 2,
           changedCells: 0,
+          createdObjectIds: [],
+          refs: emptyRefsView(),
           conflicts: 0,
           paletteAdded: [],
           changes: {

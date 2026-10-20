@@ -12,6 +12,7 @@ import {
   renderAsciiSection,
   renderAsciiSlice,
   summarizeMap,
+  summarizeObjects,
   type MapChunksResponse,
   type MapSectionResponse,
   type MapSliceResponse,
@@ -28,6 +29,10 @@ import { findOwnedMap } from './map-access.js';
 import { MapLimitsConfig } from './map-limits.js';
 import { loadChunks } from './map-storage.js';
 import { sizeOf } from './maps.mapper.js';
+import {
+  loadObjectsWithView,
+  objectSliceText,
+} from './objects/map-object-read.js';
 import {
   sectionBox,
   sectionRanges,
@@ -55,7 +60,16 @@ export class MapReadService {
         const bytes = encodeChunk(store.get(key)!);
         return { cx, cy, cz, data: Buffer.from(bytes).toString('base64') };
       });
-      return { seq: map.seq, size: sizeOf(map), palette: map.palette, chunks };
+      const { objects, view } = await loadObjectsWithView(tx, ownerId, map);
+      return {
+        seq: map.seq,
+        size: sizeOf(map),
+        palette: map.palette,
+        chunks,
+        objects: [...objects.byId.values()],
+        nextObjectId: objects.nextId,
+        refs: view,
+      };
     });
   }
 
@@ -63,6 +77,8 @@ export class MapReadService {
     return this.read(ownerId, mapId, 'summary', async (tx, map) => {
       const store = await loadChunks(tx, mapId, 'all');
       const summary = summarizeMap({ store, palette: map.palette });
+      const { objects, view } = await loadObjectsWithView(tx, ownerId, map);
+      const sized = { store, palette: map.palette, size: sizeOf(map) };
       return {
         seq: map.seq,
         size: sizeOf(map),
@@ -70,6 +86,7 @@ export class MapReadService {
         ...summary,
         chunkCount: [...store.keys()].length,
         palette: map.palette,
+        objects: summarizeObjects(sized, objects.byId.values(), view),
       };
     });
   }
@@ -91,7 +108,8 @@ export class MapReadService {
         }),
       );
       const text = renderAsciiSlice({ store, palette: map.palette }, y, region);
-      return { seq: map.seq, y, text };
+      const lines = await objectSliceText(tx, ownerId, map, y, region);
+      return { seq: map.seq, y, text: [text, ...lines].join('\n') };
     });
   }
 

@@ -6,6 +6,7 @@ import {
   type Changeset,
   type ChunkStore,
   type MapEditResult,
+  type MapObjects,
   type MapOp,
   type MapSize,
   type Palette,
@@ -13,6 +14,7 @@ import {
 import type { DbTransaction } from '../database/database.service.js';
 import { mapOps, maps, type MapJournalKind } from '../database/schema/index.js';
 import { countChunks, saveChunks } from './map-storage.js';
+import { saveObjects } from './objects/map-object-storage.js';
 
 type MapOpRow = typeof mapOps.$inferSelect;
 
@@ -35,6 +37,9 @@ export interface CommitInput {
   // Размер карты после правки: меняет его только resize и его отмена.
   size: MapSize;
   store: ChunkStore;
+  // Объекты карты, если правка их загружала: из них берётся счётчик номеров. Не из
+  // changeset — «поставил и убрал» в одной пачке двигает счётчик без объекта в changeset.
+  objects?: MapObjects;
   // Чанки, которые были в БД до применения: по ним считаются созданные и удалённые.
   loadedKeys: Set<string>;
   applied: Changeset;
@@ -42,11 +47,14 @@ export interface CommitInput {
   maxChunks: number;
 }
 
-// Сохраняет результат правки: изменённые чанки, запись журнала с новым seq, палитру.
+// Что знает о правке журнал; номера новых объектов и справочник ссылок добавляет сервис.
+export type CommitResult = Omit<MapEditResult, 'createdObjectIds' | 'refs'>;
+
+// Сохраняет результат правки: изменённые чанки и объекты, запись журнала с новым seq, палитру.
 export async function commitEdit(
   tx: DbTransaction,
   input: CommitInput,
-): Promise<MapEditResult> {
+): Promise<CommitResult> {
   const { mapId, applied, store, loadedKeys } = input;
   const dirtyKeys = chunkKeysOfChangeset(applied);
   let created = 0;
@@ -67,6 +75,7 @@ export async function commitEdit(
     }
   }
   await saveChunks(tx, mapId, store, dirtyKeys);
+  if (applied.objects) await saveObjects(tx, mapId, applied.objects);
 
   const seq = input.currentSeq + 1;
   const changes = packChangeset(applied);
@@ -86,6 +95,7 @@ export async function commitEdit(
       palette: input.palette,
       width: input.size.width,
       depth: input.size.depth,
+      ...(input.objects && { nextObjectId: input.objects.nextId }),
     })
     .where(eq(maps.id, mapId));
 

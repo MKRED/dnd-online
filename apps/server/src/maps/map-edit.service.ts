@@ -8,7 +8,9 @@ import {
   applyChangeset,
   chunkKeysInBox,
   editMap,
+  emptyRefsView,
   isBlockOp,
+  isObjectOp,
   MapOpError,
   opRegion,
   parseMapOpBatch,
@@ -33,6 +35,13 @@ import {
 import { MapLimitsConfig } from './map-limits.js';
 import { loadChunks } from './map-storage.js';
 import { sizeOf } from './maps.mapper.js';
+import {
+  createdObjectIds,
+  loadObjectsForEdit,
+  loadTouchedRefsView,
+  touchedRefsView,
+} from './objects/map-object-edit.js';
+import { loadObjects } from './objects/map-object-storage.js';
 
 type MapRow = typeof maps.$inferSelect;
 type EditKind = 'op' | 'undo' | 'redo';
@@ -50,31 +59,63 @@ export class MapEditService {
   applyBatch(ownerId: string, mapId: string, rawOps: unknown[]) {
     const ops = this.parse(rawOps);
     return this.edit(ownerId, mapId, 'op', async (tx, map) => {
-      // resize сдвигает и срезает все блоки карты — ему нужны все её чанки.
-      const keys = ops.every(isBlockOp)
-        ? [...new Set(ops.flatMap((op) => chunkKeysInBox(opRegion(op))))]
-        : 'all';
+      // resize сдвигает и срезает все блоки карты — ему нужны все её чанки, а
+      // операциям объектов чанки не нужны вовсе.
+      const resizes = ops.some((op) => op.op === 'resize');
+      const keys = resizes
+        ? 'all'
+        : [
+            ...new Set(
+              ops
+                .filter(isBlockOp)
+                .flatMap((op) => chunkKeysInBox(opRegion(op))),
+            ),
+          ];
       const store = await loadChunks(tx, mapId, keys);
       const loadedKeys = new Set(store.keys());
-      const state = { store, palette: [...map.palette], size: sizeOf(map) };
-      const applied = editMap(state, ops, this.limits);
-      // Ничего не изменилось — запись в журнал не нужна, seq не двигается.
-      if (applied.cells.length === 0 && !applied.size) {
+      // Объекты читаются, только если пачка их трогает: операциями объектов или resize.
+      const withObjects =
+        resizes || ops.some(isObjectOp)
+          ? await loadObjectsForEdit(tx, ownerId, map, ops)
+          : null;
+      const state = {
+        store,
+        palette: [...map.palette],
+        size: sizeOf(map),
+        objects: withObjects?.objects,
+      };
+      const applied = editMap(state, ops, this.limits, {
+        refs: withObjects?.loaded.refs,
+        maxObjects: this.limits.maxObjects,
+      });
+      // Ничего не изменилось — запись в журнал не нужна, seq не двигается. Номер
+      // объекта, поставленного и убранного в этой же пачке, в журнал не попал, и его
+      // можно выдать снова.
+      if (applied.cells.length === 0 && !applied.size && !applied.objects) {
         return {
           seq: map.seq,
           changedCells: 0,
           conflicts: 0,
           paletteAdded: [],
           changes: { cells: [], paletteAdded: [] },
+          createdObjectIds: [],
+          refs: emptyRefsView(),
         };
       }
-      return commitEdit(tx, {
+      const result = await commitEdit(tx, {
         ...this.commitBase(ownerId, map),
         ...state,
         loadedKeys,
         applied,
         entry: { kind: 'op', ops },
       });
+      return {
+        ...result,
+        createdObjectIds: createdObjectIds(applied),
+        refs: withObjects
+          ? touchedRefsView(withObjects.loaded.view, applied)
+          : emptyRefsView(),
+      };
     });
   }
 
@@ -121,8 +162,20 @@ export class MapEditService {
       ...chunkKeysOfChangeset(changeset),
     ]);
     const loadedKeys = new Set(store.keys());
-    const state = { store, palette: [...map.palette], size: sizeOf(map) };
-    const { conflicts, applied } = applyChangeset(state, changeset, 'backward');
+    const objects = changeset.objects
+      ? await loadObjects(tx, map.id, map.nextObjectId)
+      : undefined;
+    const state = {
+      store,
+      palette: [...map.palette],
+      size: sizeOf(map),
+      objects,
+    };
+    const { conflicts, objectConflicts, applied } = applyChangeset(
+      state,
+      changeset,
+      'backward',
+    );
     // Запись пишется даже без изменений (всё в конфликтах): иначе флаг undone
     // разошёлся бы с журналом.
     const result = await commitEdit(tx, {
@@ -132,7 +185,12 @@ export class MapEditService {
       applied,
       entry,
     });
-    return { ...result, conflicts: conflicts.length };
+    return {
+      ...result,
+      conflicts: conflicts.length + objectConflicts.length,
+      createdObjectIds: [],
+      refs: await loadTouchedRefsView(tx, ownerId, applied),
+    };
   }
 
   private commitBase(ownerId: string, map: MapRow) {

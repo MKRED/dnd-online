@@ -3,6 +3,9 @@ import type { PackedChangeset } from './changesetPacking.js';
 import type { Box3 } from './coords.js';
 import type { MapSize } from './mapSize.js';
 import type { Palette } from './palette.js';
+import type { MapObject } from './objects/mapObject.js';
+import type { MapObjectRefsView } from './objects/objectRefViews.js';
+import type { MapObjectSummary } from './objects/objectSummary.js';
 
 // Ответы HTTP API карт — общие для сервера и веба.
 
@@ -34,6 +37,11 @@ export interface MapChunksResponse {
   size: MapSize;
   palette: Palette;
   chunks: MapChunkData[];
+  // Объекты на карте и справочник их ссылок (docs/plan/map-objects.md) — тем же снимком.
+  objects: MapObject[];
+  // Следующий номер объекта: клиент держит его в состоянии карты, как сервер.
+  nextObjectId: number;
+  refs: MapObjectRefsView;
 }
 
 export interface MapEditResult {
@@ -46,6 +54,12 @@ export interface MapEditResult {
   // клиент применяет это к своей копии карты через applyChangeset(..., 'forward'),
   // а не перечитывает её целиком.
   changes: PackedChangeset;
+  // Номера объектов, поставленных этой правкой, по порядку операций.
+  createdObjectIds: number[];
+  // Справочник ссылок затронутых объектов: новый гоблин без него рисовался бы без
+  // картинки и размера, а отмена могла вернуть объект с монстром, удалённым после
+  // загрузки карты.
+  refs: MapObjectRefsView;
 }
 
 export interface MapSliceResponse {
@@ -63,6 +77,7 @@ export interface MapSummaryResponse {
   blockCounts: Record<string, number>;
   chunkCount: number;
   palette: Palette;
+  objects: MapObjectSummary[];
 }
 
 export interface MapSectionResponse {
@@ -70,4 +85,16 @@ export interface MapSectionResponse {
   axis: SectionAxis;
   at: number;
   text: string;
+}
+
+// Поиск по каталогу для расстановки объектов (нейросеть через MCP, редактор).
+export type MapCatalogKind = 'monster' | 'item' | 'npc';
+
+export interface MapCatalogEntry {
+  id: string;
+  name: string;
+  // Монстр: размер и роль; предмет: категория. У НПС — только имя.
+  size?: string;
+  role?: string;
+  category?: string;
 }

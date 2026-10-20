@@ -9,7 +9,7 @@ import {
 import type { Palette } from 'shared';
 import { users } from './users.js';
 
-// Шаблон карты. Блоки лежат в map_chunks, история изменений — в map_ops.
+// Шаблон карты. Блоки лежат в map_chunks, объекты — в map_objects, история изменений — в map_ops.
 export const maps = pgTable('maps', {
   id: uuid('id').defaultRandom().primaryKey(),
   // Мастер карты — единственный, кто может её менять.
@@ -25,6 +25,9 @@ export const maps = pgTable('maps', {
   depth: integer('depth').notNull().default(32),
   // Номер последней записи журнала: клиенты сверяют по нему, не пропустили ли изменения.
   seq: integer('seq').notNull().default(0),
+  // Номер следующего объекта карты (map_objects). Только растёт: отмена удаления
+  // старого объекта вернула бы его под номером, который уже занял новый.
+  nextObjectId: integer('next_object_id').notNull().default(1),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

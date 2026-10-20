@@ -17,14 +17,15 @@ export interface MonsterRef {
 export interface ObjectRefs {
   // Удалённого монстра здесь нет.
   monsters: Map<string, MonsterRef>;
-  // Предметы, которые можно положить: свои или опубликованные.
-  items: Set<string>;
+  // Предметы, которые можно положить (свои или опубликованные), с весом в фунтах:
+  // по нему считается груз контейнера.
+  items: Map<string, number>;
   // НПС, которых можно поставить: свои персонажи с типом НПС.
   npcs: Set<string>;
 }
 
 export function emptyObjectRefs(): ObjectRefs {
-  return { monsters: new Map(), items: new Set(), npcs: new Set() };
+  return { monsters: new Map(), items: new Map(), npcs: new Set() };
 }
 
 // Размер места объекта. Удалённый монстр занимает одну клетку, как Средний:

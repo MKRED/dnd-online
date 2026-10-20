@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
-import type { ContainerLook, Point3 } from 'shared';
+import type { ContainerLook, Facing, Point3 } from 'shared';
+import { facingAngle } from '../objectLayout';
 import Barrel from './Barrel';
 import Chest from './Chest';
 import Crate from './Crate';
@@ -12,13 +13,20 @@ const SHAPES: Record<ContainerLook, ComponentType> = {
   sack: Sack,
 };
 
-// Контейнер — фигура по виду в одну клетку; вид только для картинки
-// (docs/plan/done/map-objects.md). base — середина клетки на высоте пола, перед
-// фигуры смотрит на юг (+z).
-function ContainerShape({ look, base }: { look: ContainerLook; base: Point3 }) {
+interface ContainerShapeProps {
+  look: ContainerLook;
+  facing: Facing;
+  // Середина клетки на высоте пола.
+  base: Point3;
+}
+
+// Контейнер — фигура по виду в одну клетку (docs/plan/done/map-objects.md). Фигуры
+// построены передом (замком сундука) на юг (+z), а взгляд 0 — север, поэтому к углу
+// взгляда добавлен разворот на 180°.
+function ContainerShape({ look, facing, base }: ContainerShapeProps) {
   const Shape = SHAPES[look];
   return (
-    <group position={base}>
+    <group position={base} rotation={[0, facingAngle(facing) + Math.PI, 0]}>
       <Shape />
     </group>
   );

@@ -68,7 +68,9 @@ const refs: MapObjectRefsView = {
     },
     [GONE]: { missing: 'deleted', size: 'medium' },
   },
-  items: { [ROPE]: { missing: null, name: 'Верёвка', image: null } },
+  items: {
+    [ROPE]: { missing: null, name: 'Верёвка', image: null, weight: 10 },
+  },
   npcs: { [GONE]: { missing: 'hidden' } },
 };
 
@@ -113,6 +115,22 @@ describe('summarizeObjects', () => {
       'Сундук (предметов: 1)',
       'Бочка эля (бочка, предметов: 1)',
     ]);
+  });
+
+  it('перегруженный контейнер и взгляд контейнера', () => {
+    const sack: MapObject = {
+      ...base,
+      id: 1,
+      at: [0, 1, 0],
+      kind: 'container',
+      name: 'Мешок',
+      look: 'sack',
+      items: [{ itemId: ROPE, quantity: 4 }],
+    };
+    const [summary] = summarizeObjects(floorMap(), [sack], refs);
+    expect(summary.warnings).toEqual(['перегружен: 40 из 30 фнт.']);
+    // Поставлен до поворота контейнеров — смотрит на север.
+    expect(summary.facing).toBe(0);
   });
 
   it('срез перечисляет объекты своего уровня внутри области', () => {

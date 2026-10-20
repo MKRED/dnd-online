@@ -6,7 +6,7 @@ import { editMap, type EditableMap } from '../mapEdit.js';
 import type { MapOp } from '../ops.js';
 import { createPalette } from '../palette.js';
 import { resizeLoss } from '../resizeLoss.js';
-import { createMapObjects, type MapObject } from './mapObject.js';
+import { createMapObjects, objectFacing, type MapObject } from './mapObject.js';
 import type { ObjectRefs } from './objectRefs.js';
 
 const limits = { maxSize: 64, maxHeight: 16 };
@@ -30,7 +30,11 @@ function refs(): ObjectRefs {
         { name: 'Тайна', size: 'large', role: 'regular', usable: false },
       ],
     ]),
-    items: new Set([ROPE, TORCH]),
+    // Вес в фунтах: верёвка 10, факел 1.
+    items: new Map([
+      [ROPE, 10],
+      [TORCH, 1],
+    ]),
     npcs: new Set([NPC]),
   };
 }
@@ -105,8 +109,14 @@ describe('объекты в editMap', () => {
       items: [{ itemId: ROPE, quantity: 2 }],
     });
     expect(map.objects.byId.get(2)).toMatchObject({ facing: 135 });
-    expect(() => edit(map, [{ op: 'turnObject', id: 1, facing: 90 }])).toThrow(
-      'У объекта 1 нет направления взгляда',
+    // Контейнер поворачивают, предмет на полу — нет.
+    edit(map, [
+      { op: 'turnObject', id: 1, facing: 90 },
+      place([5, 0, 5], { kind: 'item', itemId: TORCH }),
+    ]);
+    expect(map.objects.byId.get(1)).toMatchObject({ facing: 90 });
+    expect(() => edit(map, [{ op: 'turnObject', id: 3, facing: 90 }])).toThrow(
+      'У объекта 3 нет направления взгляда',
     );
     expect(() =>
       edit(map, [{ op: 'updateObject', id: 2, object: { quantity: 3 } }]),
@@ -114,6 +124,89 @@ describe('объекты в editMap', () => {
     expect(() => edit(map, [{ op: 'removeObject', id: 9 }])).toThrow(
       'Операция №1: Объекта 9 нет на карте',
     );
+  });
+
+  it('груз контейнера не больше вместимости вида; правку не хуже пропускает', () => {
+    const map = emptyMap();
+    const sack = (items: object[]) =>
+      place([0, 0, 0], {
+        kind: 'container',
+        name: 'Мешок',
+        look: 'sack',
+        items,
+      });
+    // Мешок — 30 фнт.: три верёвки влезают, четвёртая — нет.
+    expect(() => edit(map, [sack([{ itemId: ROPE, quantity: 4 }])])).toThrow(
+      'Не влезет в «Мешок»: 40 из 30 фнт.',
+    );
+    edit(map, [sack([{ itemId: ROPE, quantity: 3 }])]);
+    expect(() =>
+      edit(map, [
+        {
+          op: 'updateObject',
+          id: 1,
+          object: {
+            items: [
+              { itemId: ROPE, quantity: 3 },
+              { itemId: TORCH, quantity: 1 },
+            ],
+          },
+        },
+      ]),
+    ).toThrow('31 из 30 фнт.');
+    // Бочка вмещает 120: сменить вид на больший можно, обратно — нет.
+    edit(map, [
+      {
+        op: 'updateObject',
+        id: 1,
+        object: { look: 'barrel', items: [{ itemId: ROPE, quantity: 5 }] },
+      },
+    ]);
+    expect(() =>
+      edit(map, [{ op: 'updateObject', id: 1, object: { look: 'sack' } }]),
+    ).toThrow('Не влезет');
+
+    // Контейнер стал тяжелее вместимости без правки (вес поменяли в каталоге):
+    // переименовать и разгрузить можно, догрузить — нет.
+    const heavy = { ...refs(), items: new Map([[ROPE, 50]]) };
+    const editHeavy = (ops: MapOp[]) =>
+      editMap(map, ops, limits, { refs: heavy });
+    editHeavy([
+      { op: 'updateObject', id: 1, object: { name: 'Старая бочка' } },
+    ]);
+    editHeavy([
+      {
+        op: 'updateObject',
+        id: 1,
+        object: { items: [{ itemId: ROPE, quantity: 4 }] },
+      },
+    ]);
+    expect(() =>
+      editHeavy([
+        {
+          op: 'updateObject',
+          id: 1,
+          object: { items: [{ itemId: ROPE, quantity: 5 }] },
+        },
+      ]),
+    ).toThrow('250 из 120 фнт.');
+  });
+
+  it('контейнер без взгляда (поставлен до поворота) смотрит на север и поворачивается', () => {
+    const map = emptyMap();
+    const old: MapObject = {
+      id: 1,
+      at: [0, 0, 0],
+      hidden: false,
+      kind: 'container',
+      name: 'Сундук',
+      look: 'chest',
+      items: [],
+    };
+    map.objects = createMapObjects([old], 2);
+    expect(objectFacing(old)).toBe(0);
+    edit(map, [{ op: 'turnObject', id: 1, facing: 45 }]);
+    expect(map.objects.byId.get(1)).toMatchObject({ facing: 45 });
   });
 
   it('место существа целиком внутри карты', () => {

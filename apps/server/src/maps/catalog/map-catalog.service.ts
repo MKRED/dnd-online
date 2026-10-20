@@ -80,7 +80,12 @@ export class MapCatalogService {
     }
     if (kind === 'item') {
       const rows = await db
-        .select({ id: items.id, name: items.name, category: items.category })
+        .select({
+          id: items.id,
+          name: items.name,
+          category: items.category,
+          weight: items.weight,
+        })
         .from(items)
         .where(
           where(entryVisibleTo(ITEM_ACCESS, userId), contains(items.name, q)),

@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
-  hasFacing,
   nextFacing,
   objectRefsFromView,
+  objectFacing,
   objectSpan,
   type ContainerLook,
   type Facing,
@@ -142,12 +142,15 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
     // R: взгляд выделенного объекта, а без выделения — следующего ставящегося.
     rotate: () => {
       if (!selected) setFacing(nextFacing);
-      else if (hasFacing(selected)) {
-        edit({
-          op: 'turnObject',
-          id: selected.id,
-          facing: nextFacing(selected.facing),
-        });
+      else {
+        const facing = objectFacing(selected);
+        if (facing !== null) {
+          edit({
+            op: 'turnObject',
+            id: selected.id,
+            facing: nextFacing(facing),
+          });
+        }
       }
     },
     turn: (to: Facing) => {

@@ -8,12 +8,21 @@ import type { SliceRegion } from '../asciiSlice.js';
 import {
   CONTAINER_LOOK_LABELS,
   footprintCells,
-  hasFacing,
+  objectFacing,
   type Facing,
   type MapObject,
   type MapObjectKind,
 } from './mapObject.js';
-import type { MapObjectRefsView, RefMissing } from './objectRefViews.js';
+import {
+  CONTAINER_CAPACITY,
+  containerLoad,
+  loadLabel,
+} from './containerLoad.js';
+import {
+  itemWeight,
+  type MapObjectRefsView,
+  type RefMissing,
+} from './objectRefViews.js';
 
 // Объект в сводке для нейросети: что это, где и что с ним не так.
 export interface MapObjectSummary {
@@ -114,6 +123,15 @@ function placementWarnings(
   return supported ? [] : ['висит в воздухе'];
 }
 
+// Контейнер тяжелее вместимости: правка такого не пропустит, но вес предмета могли
+// поменять в каталоге уже после.
+function loadWarnings(object: MapObject, refs: MapObjectRefsView): string[] {
+  if (object.kind !== 'container') return [];
+  const load = containerLoad(object.items, (id) => itemWeight(refs, id));
+  const capacity = CONTAINER_CAPACITY[object.look];
+  return load > capacity ? [`перегружен: ${loadLabel(load, capacity)}`] : [];
+}
+
 export function summarizeObjects(
   map: SizedMapState,
   objects: Iterable<MapObject>,
@@ -125,14 +143,19 @@ export function summarizeObjects(
     if (object.kind === 'start') starts++;
     const size = objectSize(object, refs);
     const { label, missing } = describe(object, refs, starts);
+    const facing = objectFacing(object);
     return {
       id: object.id,
       kind: object.kind,
       at: object.at,
       label,
-      ...(hasFacing(object) && { facing: object.facing }),
+      ...(facing !== null && { facing }),
       ...(size && { size }),
-      warnings: [...placementWarnings(map, object, size), ...missing],
+      warnings: [
+        ...placementWarnings(map, object, size),
+        ...missing,
+        ...loadWarnings(object, refs),
+      ],
     };
   });
 }

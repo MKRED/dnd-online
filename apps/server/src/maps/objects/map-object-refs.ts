@@ -83,9 +83,14 @@ export async function loadRefs(
     for (const { entry, image } of rows) {
       const visible = entry.authorId === userId || entry.isPublic;
       view.items[entry.id] = visible
-        ? { missing: null, name: entry.name, image: toCatalogImage(image) }
+        ? {
+            missing: null,
+            name: entry.name,
+            image: toCatalogImage(image),
+            weight: entry.weight,
+          }
         : { missing: 'hidden' };
-      if (visible) refs.items.add(entry.id);
+      if (visible) refs.items.set(entry.id, entry.weight);
     }
     for (const id of ids.items) view.items[id] ??= { missing: 'deleted' };
   }

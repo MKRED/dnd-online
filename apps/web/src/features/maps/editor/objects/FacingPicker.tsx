@@ -38,7 +38,7 @@ interface FacingPickerProps {
   disabled?: boolean;
 }
 
-// Взгляд старта или существа — 8 направлений, правило дома (docs/dnd/facing.md).
+// Взгляд старта, существа или контейнера — 8 направлений, правило дома (docs/dnd/facing.md).
 function FacingPicker({ value, onChange, disabled }: FacingPickerProps) {
   return (
     <Stack gap={4}>

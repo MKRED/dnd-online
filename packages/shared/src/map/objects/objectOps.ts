@@ -77,6 +77,7 @@ function placeBody(input: Fields): MapObjectBody {
         // Без названия контейнер зовётся по виду: «Бочка», «Мешок».
         name: fields.name ?? CONTAINER_LOOK_LABELS[look],
         items: fields.items ?? [],
+        facing,
       };
     }
     case 'item':

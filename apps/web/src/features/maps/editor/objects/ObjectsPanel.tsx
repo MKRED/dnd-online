@@ -38,7 +38,10 @@ function ObjectsPanel({ tool, state, refs, busy, onFocus }: ObjectsPanelProps) {
     <Stack gap="sm">
       {selected ? (
         <>
+          {/* key: свойства другого объекта — новая панель. Иначе индикатор
+              SegmentedControl вида оставался на месте прошлого объекта. */}
           <ObjectProperties
+            key={selected.id}
             tool={tool}
             object={selected}
             summary={summaries.find((s) => s.id === selected.id)}

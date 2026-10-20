@@ -130,7 +130,11 @@ function ObjectLayer({
               <StartTile object={object} number={look.number} />
             )}
             {look.kind === 'container' && (
-              <ContainerShape look={look.look} base={object.base} />
+              <ContainerShape
+                look={look.look}
+                facing={look.facing}
+                base={object.base}
+              />
             )}
             {look.kind === 'item' && (
               <FloorItem

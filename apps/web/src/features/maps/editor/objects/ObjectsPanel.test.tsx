@@ -41,7 +41,7 @@ const objects: MapObject[] = [
 
 const refs: MapObjectRefsView = {
   ...emptyRefsView(),
-  items: { [CUP]: { missing: null, name: 'Кубок', image: null } },
+  items: { [CUP]: { missing: null, name: 'Кубок', image: null, weight: 1 } },
 };
 
 const state: MapViewState = {
@@ -164,6 +164,18 @@ describe('ObjectsPanel', () => {
     expect(sent(applyOps)).toEqual([
       { op: 'moveObject', id: 6, at: [5, 1, 5] },
     ]);
+  });
+
+  it('контейнер: груз против вместимости вида и поворот', async () => {
+    const { applyOps } = setup();
+    await userEvent.click(screen.getByRole('button', { name: /№5/ }));
+    // Два кубка по 1 фнт. в сундуке на 360.
+    expect(screen.getByText('Груз: 2 из 360 фнт.')).toBeInTheDocument();
+    // Поставлен без взгляда — смотрит на север, поворачивается как существо.
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Взгляд: запад' }),
+    );
+    expect(sent(applyOps)).toEqual([{ op: 'turnObject', id: 5, facing: 270 }]);
   });
 
   it('количество пишется одной правкой по уходу из поля', async () => {

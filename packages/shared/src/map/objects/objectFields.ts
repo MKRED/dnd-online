@@ -34,7 +34,7 @@ export const KIND_FIELDS: Record<MapObjectKind, (keyof ObjectFields)[]> = {
   start: ['facing'],
   monster: ['monsterId', 'facing'],
   npc: ['characterId', 'size', 'facing'],
-  container: ['name', 'look', 'items'],
+  container: ['name', 'look', 'items', 'facing'],
   item: ['itemId', 'quantity'],
 };
 

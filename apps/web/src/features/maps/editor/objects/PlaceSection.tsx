@@ -62,7 +62,7 @@ function PlaceSection({ tool }: { tool: ObjectTool }) {
           fullWidth
         />
       )}
-      {(kind === 'start' || kind === 'creature') && (
+      {kind !== 'item' && (
         <FacingPicker value={settings.facing} onChange={tool.setFacing} />
       )}
     </Stack>

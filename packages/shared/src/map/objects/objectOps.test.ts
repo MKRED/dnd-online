@@ -39,7 +39,13 @@ describe('разбор операций объектов', () => {
         object: { kind: 'container' },
       }),
     ).toMatchObject({
-      object: { kind: 'container', name: 'Сундук', look: 'chest', items: [] },
+      object: {
+        kind: 'container',
+        name: 'Сундук',
+        look: 'chest',
+        items: [],
+        facing: 0,
+      },
     });
     expect(
       parse({
@@ -65,9 +71,9 @@ describe('разбор операций объектов', () => {
       parse({
         op: 'placeObject',
         at: [0, 0, 0],
-        object: { kind: 'container', facing: 90 },
+        object: { kind: 'item', itemId: ITEM, facing: 90 },
       }),
-    ).toThrow('У объекта «container» нет поля «facing»');
+    ).toThrow('У объекта «item» нет поля «facing»');
     expect(() =>
       parse({ op: 'placeObject', at: [0, 0, 0], object: { kind: 'monster' } }),
     ).toThrow('Нужно поле «monsterId»');

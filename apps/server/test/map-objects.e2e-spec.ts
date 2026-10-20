@@ -2,7 +2,7 @@ import request from 'supertest';
 import { DEFAULT_MONSTER_STAT_BLOCK } from 'shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { characterBody } from './support/character-fixture.js';
-import { createItem } from './support/item-fixture.js';
+import { createItem, itemBody } from './support/item-fixture.js';
 import { monsterBody } from './support/monster-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
@@ -188,6 +188,54 @@ describe('объекты на карте (e2e)', () => {
     expect(counts.get(empty)).toBe(0);
   });
 
+  it('контейнер поворачивается и не берёт больше своей вместимости', async () => {
+    const id = await createMap();
+    const anvil = await createItem(owner, { name: 'Наковальня', weight: 25 });
+    const placed = await ops(id, [
+      place([0, 0, 0], {
+        kind: 'container',
+        look: 'sack',
+        items: [{ itemId: anvil.id, quantity: 1 }],
+        facing: 90,
+      }),
+    ]).expect(200);
+    expect((placed.body as EditResult).refs.items[anvil.id]).toMatchObject({
+      weight: 25,
+    });
+    await ops(id, [{ op: 'turnObject', id: 1, facing: 180 }]).expect(200);
+    expect((await chunks(id)).objects[0]).toMatchObject({ facing: 180 });
+
+    // Мешок — 30 фнт.: вторая наковальня не влезает, в бочку (120) — влезает.
+    const twoAnvils = { items: [{ itemId: anvil.id, quantity: 2 }] };
+    const over = await ops(id, [
+      { op: 'updateObject', id: 1, object: twoAnvils },
+    ]).expect(400);
+    expect((over.body as { message: string }).message).toContain(
+      'Не влезет в «Мешок»: 50 из 30 фнт.',
+    );
+    await ops(id, [
+      { op: 'updateObject', id: 1, object: { ...twoAnvils, look: 'barrel' } },
+    ]).expect(200);
+
+    // Предмет потяжелел в каталоге: сводка предупреждает, разгрузить можно.
+    await owner
+      .put(`/api/items/${anvil.id}`)
+      .send(itemBody({ name: 'Наковальня', weight: 70 }))
+      .expect(200);
+    const summary = await owner.get(`/api/maps/${id}/summary`).expect(200);
+    expect(
+      (summary.body as { objects: { warnings: string[] }[] }).objects[0]
+        .warnings,
+    ).toContain('перегружен: 140 из 120 фнт.');
+    await ops(id, [
+      {
+        op: 'updateObject',
+        id: 1,
+        object: { items: [{ itemId: anvil.id, quantity: 1 }] },
+      },
+    ]).expect(200);
+  });
+
   it('ссылки: чужое скрытое, чужой НПС и неизвестное — 400, опубликованное — можно', async () => {
     const id = await createMap();
     const hidden = await createMonster(stranger);
@@ -348,6 +396,17 @@ describe('объекты на карте (e2e)', () => {
     expect(monsters.body).toContainEqual(
       expect.objectContaining({ id: mine, size: 'medium', role: 'regular' }),
     );
+
+    const rope = await createItem(owner, {
+      name: 'Кобольдова верёвка',
+      weight: 10,
+    });
+    const found = await api('/api/map-catalog?kind=item&q=кобольдова').expect(
+      200,
+    );
+    expect(found.body).toEqual([
+      expect.objectContaining({ id: rope.id, category: 'basic', weight: 10 }),
+    ]);
 
     const npcs = await api('/api/map-catalog?kind=npc').expect(200);
     const npcIds = (npcs.body as { id: string }[]).map((n) => n.id);

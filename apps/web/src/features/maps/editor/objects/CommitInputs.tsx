@@ -4,7 +4,20 @@ import { OBJECT_NAME_MAX, OBJECT_QUANTITY_MAX } from 'shared';
 
 // Поля свойств объекта пишут правку только по уходу из поля или Enter: каждая правка —
 // запись журнала, и набор «12» по цифрам дал бы две отмены. Новое значение с сервера
-// приходит через key: поле пересоздаётся с ним.
+// приходит через key: поле пересоздаётся с ним. Если сервер правку отклонил (груз не
+// влез), значение не меняется и key тоже — тогда черновик сбрасывает useDraft.
+
+// Черновик поля: возвращается к value, когда правка закончилась (disabled снялся), —
+// успешная к этому времени уже пересоздала поле через key.
+function useDraft<T>(value: T, disabled: boolean | undefined) {
+  const [draft, setDraft] = useState<T>(value);
+  const [wasDisabled, setWasDisabled] = useState(disabled);
+  if (disabled !== wasDisabled) {
+    setWasDisabled(disabled);
+    if (!disabled) setDraft(value);
+  }
+  return [draft, setDraft] as const;
+}
 
 interface QuantityInputProps {
   value: number;
@@ -20,7 +33,7 @@ export function QuantityInput({
   onCommit,
   ...rest
 }: QuantityInputProps) {
-  const [draft, setDraft] = useState<number | string>(value);
+  const [draft, setDraft] = useDraft<number | string>(value, rest.disabled);
   const commit = () => {
     const quantity = Number(draft);
     if (Number.isInteger(quantity) && quantity >= 1 && quantity !== value) {
@@ -51,7 +64,7 @@ interface NameInputProps {
 }
 
 export function NameInput({ value, onCommit, disabled }: NameInputProps) {
-  const [draft, setDraft] = useState(value);
+  const [draft, setDraft] = useDraft(value, disabled);
   const commit = () => {
     const name = draft.trim();
     if (name && name !== value) onCommit(name);

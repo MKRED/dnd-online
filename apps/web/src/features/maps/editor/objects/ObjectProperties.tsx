@@ -10,7 +10,7 @@ import {
   CONTAINER_LOOK_LABELS,
   CONTAINER_LOOKS,
   CREATURE_SIZES,
-  hasFacing,
+  objectFacing,
   type CreatureSize,
   type MapObject,
   type MapObjectRefsView,
@@ -48,6 +48,7 @@ function ObjectProperties({
   refs,
   busy,
 }: ObjectPropertiesProps) {
+  const facing = objectFacing(object);
   return (
     <Stack gap="sm">
       <div>
@@ -64,12 +65,8 @@ function ObjectProperties({
         ))}
       </div>
 
-      {hasFacing(object) && (
-        <FacingPicker
-          value={object.facing}
-          onChange={tool.turn}
-          disabled={busy}
-        />
+      {facing !== null && (
+        <FacingPicker value={facing} onChange={tool.turn} disabled={busy} />
       )}
 
       {object.kind === 'npc' && (
@@ -103,6 +100,7 @@ function ObjectProperties({
           />
           <ContainerItems
             items={object.items}
+            look={object.look}
             refs={refs.items}
             onChange={(items) => tool.update({ items })}
             disabled={busy}

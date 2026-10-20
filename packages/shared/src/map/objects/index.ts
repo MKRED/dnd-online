@@ -7,3 +7,4 @@ export * from './applyObjectOp.js';
 export * from './resizeObjects.js';
 export * from './objectRefViews.js';
 export * from './objectSummary.js';
+export * from './containerLoad.js';

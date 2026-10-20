@@ -46,6 +46,10 @@ export type MapObjectBody =
       name: string;
       look: ContainerLook;
       items: ObjectItem[];
+      // Контейнеры поворачивают с 2026-10-20: у поставленных раньше поля нет, это 0.
+      // Не дописываем его при чтении: объект из базы разошёлся бы с записью журнала,
+      // и отмена старой правки сочла бы его чужим изменением.
+      facing?: Facing;
     }
   | ({ kind: 'item' } & ObjectItem);
 
@@ -68,10 +72,10 @@ export type MapObject = {
   hidden: boolean;
 } & MapObjectBody;
 
-export function hasFacing(
-  object: MapObjectBody,
-): object is Extract<MapObjectBody, { facing: Facing }> {
-  return 'facing' in object;
+// Направление взгляда объекта; null — объект не поворачивают (предмет на полу).
+export function objectFacing(object: MapObjectBody): Facing | null {
+  if (object.kind === 'item') return null;
+  return object.facing ?? 0;
 }
 
 // Объекты карты и счётчик номеров. Счётчик только растёт: отмена удаления старого

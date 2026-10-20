@@ -30,7 +30,7 @@ export type SceneObjectLook =
       missing: boolean;
     }
   | { kind: 'start'; number: number; facing: Facing }
-  | { kind: 'container'; look: ContainerLook }
+  | { kind: 'container'; look: ContainerLook; facing: Facing }
   | { kind: 'item'; image: string | null; letter: string; missing: boolean };
 
 export interface SceneObject {
@@ -113,7 +113,12 @@ function lookOf(
     case 'npc':
       return creatureLook(object, refs);
     case 'container':
-      return { kind: 'container', look: object.look };
+      // У поставленных до поворота контейнеров взгляда нет — север.
+      return {
+        kind: 'container',
+        look: object.look,
+        facing: object.facing ?? 0,
+      };
     case 'item': {
       const ref = refs.items[object.itemId];
       const found = ref?.missing === null ? ref : null;

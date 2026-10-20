@@ -49,7 +49,7 @@ const refs: MapObjectRefsView = {
     },
     [GONE]: { missing: 'deleted', size: 'medium' },
   },
-  items: { [CUP]: { missing: null, name: 'Кубок', image: null } },
+  items: { [CUP]: { missing: null, name: 'Кубок', image: null, weight: 1 } },
   npcs: {
     [HERO]: {
       missing: null,

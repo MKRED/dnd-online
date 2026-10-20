@@ -64,6 +64,7 @@ export function placeBody(settings: PlaceSettings): MapObjectBody | null {
         name: CONTAINER_LOOK_LABELS[look],
         look,
         items: [],
+        facing,
       };
     case 'item':
       return item && { kind: 'item', itemId: item.id, quantity: 1 };

@@ -40,6 +40,7 @@ describe('placeBody', () => {
       name: 'Бочка',
       look: 'barrel',
       items: [],
+      facing: 90,
     });
   });
 

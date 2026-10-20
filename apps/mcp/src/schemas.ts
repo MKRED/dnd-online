@@ -54,8 +54,14 @@ const objectBody = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('container'),
     name: z.string().optional(),
-    look: z.enum(CONTAINER_LOOKS).optional(),
+    look: z
+      .enum(CONTAINER_LOOKS)
+      .optional()
+      .describe(
+        'Вид и вместимость: sack — 30 фнт., barrel — 120, crate — 240, chest — 360',
+      ),
     items: z.array(objectItem).optional(),
+    facing,
   }),
   z.object({
     kind: z.literal('item'),

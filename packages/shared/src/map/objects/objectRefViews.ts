@@ -21,8 +21,9 @@ export type MonsterRefView = { size: CreatureSize } & (
   | { missing: RefMissing }
 );
 
+// weight — фунты, для груза контейнера.
 export type ItemRefView =
-  | { missing: null; name: string; image: CatalogImage | null }
+  | { missing: null; name: string; image: CatalogImage | null; weight: number }
   | { missing: RefMissing };
 
 export type NpcRefView =
@@ -59,8 +60,16 @@ export function objectRefIds(objects: Iterable<MapObject>) {
   return ids;
 }
 
-// Справочник для правок на клиенте (подсчёт потерь при смене размера): нужны только
-// размеры монстров. Ставить что-либо клиент сам не проверяет — это делает сервер.
+// Вес предмета для груза контейнера: скрытый и удалённый не считаются
+// (containerLoad.ts).
+export function itemWeight(view: MapObjectRefsView, itemId: string): number {
+  const item = view.items[itemId];
+  return item?.missing === null ? item.weight : 0;
+}
+
+// Справочник для правок на клиенте: размеры монстров (подсчёт потерь при смене
+// размера) и вес видимых предметов. Ставить что-либо клиент сам не проверяет — это
+// делает сервер.
 export function objectRefsFromView(view: MapObjectRefsView): ObjectRefs {
   const refs = emptyObjectRefs();
   for (const [id, monster] of Object.entries(view.monsters)) {
@@ -70,6 +79,10 @@ export function objectRefsFromView(view: MapObjectRefsView): ObjectRefs {
       role: monster.missing === null ? monster.role : 'regular',
       usable: monster.missing === null,
     });
+  }
+  for (const id of Object.keys(view.items)) {
+    if (view.items[id].missing === null)
+      refs.items.set(id, itemWeight(view, id));
   }
   return refs;
 }

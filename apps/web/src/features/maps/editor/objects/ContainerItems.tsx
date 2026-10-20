@@ -1,12 +1,22 @@
 import { ActionIcon, Box, Group, Stack, Text } from '@mantine/core';
 import { IconX } from '@tabler/icons-react';
-import { OBJECT_QUANTITY_MAX, type ItemRefView, type ObjectItem } from 'shared';
+import {
+  CONTAINER_CAPACITY,
+  containerLoad,
+  loadLabel,
+  OBJECT_QUANTITY_MAX,
+  type ContainerLook,
+  type ItemRefView,
+  type ObjectItem,
+} from 'shared';
 import ItemThumb from '../../../items/ItemThumb';
 import CatalogSelect from './CatalogSelect';
 import { QuantityInput } from './CommitInputs';
 
 interface ContainerItemsProps {
   items: ObjectItem[];
+  // Вид: по нему вместимость.
+  look: ContainerLook;
   refs: Record<string, ItemRefView>;
   // Новый список целиком: updateObject заменяет содержимое, а не дописывает.
   onChange: (items: ObjectItem[]) => void;
@@ -20,9 +30,12 @@ function itemName(ref: ItemRefView | undefined): string {
 }
 
 // Содержимое контейнера на карте — по образцу снаряжения монстра: миниатюра, имя,
-// количество и «убрать». Уже лежащий предмет при добавлении прибавляет единицу.
+// количество и «убрать». Уже лежащий предмет при добавлении прибавляет единицу. Над
+// списком — груз против вместимости вида; лишнее не пропустит сервер, его ошибку
+// покажет редактор.
 function ContainerItems({
   items,
+  look,
   refs,
   onChange,
   disabled,
@@ -43,9 +56,20 @@ function ContainerItems({
     );
   };
 
+  const load = containerLoad(items, (itemId) => {
+    const ref = refs[itemId];
+    return ref?.missing === null ? ref.weight : 0;
+  });
+  const capacity = CONTAINER_CAPACITY[look];
+
   return (
     <Stack gap={6}>
-      <Text size="sm">Содержимое</Text>
+      <Group justify="space-between" gap="xs">
+        <Text size="sm">Содержимое</Text>
+        <Text size="xs" c={load > capacity ? 'red' : 'dimmed'}>
+          Груз: {loadLabel(load, capacity)}
+        </Text>
+      </Group>
       {items.length === 0 && (
         <Text size="xs" c="dimmed">
           Пусто.

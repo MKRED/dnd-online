@@ -98,8 +98,10 @@ export type MapCatalogKind = 'monster' | 'item' | 'npc';
 export interface MapCatalogEntry {
   id: string;
   name: string;
-  // Монстр: размер и роль; предмет: категория. У НПС — только имя.
+  // Монстр: размер и роль; предмет: категория и вес в фунтах (груз контейнера). У НПС —
+  // только имя.
   size?: string;
   role?: string;
   category?: string;
+  weight?: number;
 }

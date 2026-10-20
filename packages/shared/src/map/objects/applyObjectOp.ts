@@ -1,7 +1,12 @@
 import type { Vec3 } from '../coords.js';
 import { assertInsideMap, type MapSize } from '../mapSize.js';
 import { MapOpError } from '../mapOpError.js';
-import { hasFacing, type MapObject, type MapObjects } from './mapObject.js';
+import {
+  CONTAINER_CAPACITY,
+  containerLoad,
+  loadLabel,
+} from './containerLoad.js';
+import { objectFacing, type MapObject, type MapObjects } from './mapObject.js';
 import type { ObjectChange } from './objectChanges.js';
 import { KIND_FIELDS } from './objectFields.js';
 import type { ObjectOp } from './objectOps.js';
@@ -33,6 +38,7 @@ export function applyObjectOp(
       ...op.object,
     };
     checkRefs(ctx, object, null);
+    checkLoad(ctx, object, null);
     assertFits(ctx, object);
     objects.nextId++;
     return write(objects, null, object);
@@ -47,12 +53,15 @@ export function applyObjectOp(
       return write(objects, current, moved);
     }
     case 'turnObject':
-      if (!hasFacing(current)) {
+      if (objectFacing(current) === null) {
         throw new MapOpError(
-          `У объекта ${op.id} нет направления взгляда: оно есть у старта и существ`,
+          `У объекта ${op.id} нет направления взгляда: оно есть у старта, существ и контейнеров`,
         );
       }
-      return write(objects, current, { ...current, facing: op.facing });
+      return write(objects, current, {
+        ...current,
+        facing: op.facing,
+      } as MapObject);
     case 'updateObject': {
       const allowed = KIND_FIELDS[current.kind];
       for (const key of Object.keys(op.object)) {
@@ -64,6 +73,7 @@ export function applyObjectOp(
       }
       const updated = { ...current, ...op.object } as MapObject;
       checkRefs(ctx, updated, current);
+      checkLoad(ctx, updated, current);
       assertFits(ctx, updated);
       return write(objects, current, updated);
     }
@@ -136,6 +146,28 @@ function checkRefs(
       throw new MapOpError(`Предмет ${itemId} не найден в каталоге`);
     }
   }
+}
+
+// Груз контейнера не больше вместимости вида. Правку, которая не делает хуже, не
+// останавливаем: контейнер мог стать тяжелее вместимости без неё — вес предмета
+// поменяли в каталоге, — и переименовать или разгрузить его всё равно нужно.
+function checkLoad(
+  ctx: ObjectEditContext,
+  object: MapObject,
+  previous: MapObject | null,
+) {
+  if (object.kind !== 'container') return;
+  const weightOf = (itemId: string) => ctx.refs.items.get(itemId) ?? 0;
+  const load = containerLoad(object.items, weightOf);
+  const capacity = CONTAINER_CAPACITY[object.look];
+  if (load <= capacity) return;
+  if (previous?.kind === 'container') {
+    const before = containerLoad(previous.items, weightOf);
+    if (load <= before && capacity >= CONTAINER_CAPACITY[previous.look]) return;
+  }
+  throw new MapOpError(
+    `Не влезет в «${object.name}»: ${loadLabel(load, capacity)}`,
+  );
 }
 
 function itemIds(object: MapObject | null): string[] {

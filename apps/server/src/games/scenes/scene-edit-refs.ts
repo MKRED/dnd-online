@@ -14,7 +14,7 @@ import { opsRefIds, unionIds } from '../../maps/objects/map-object-edit.js';
 import { copyToLibrary } from '../library/library-copy.js';
 import { sceneRefs } from './scene-refs.js';
 
-// Ссылки для правки сцены (docs/plan/game.md, этап 6). Новое — то, чего ещё нет в
+// Ссылки для правки сцены (docs/plan/done/game.md, этап 6). Новое — то, чего ещё нет в
 // библиотеке игры, — проверяется по правилам редактора карты (своё или опубликованное,
 // свой НПС с видом «НПС») и копируется в библиотеку глазами мастера в той же транзакции.
 // Размеры, роли и веса для editMap — уже из копий: правка справочника идущую игру не

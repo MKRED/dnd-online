@@ -17,7 +17,7 @@ export interface SeatedCharacter {
 }
 
 // Персонаж на месте в этой игре. Кто его ведёт — тот же круг, что водит фигурку: мастер,
-// владелец и управляющий (docs/plan/game.md, «Состояние существ»).
+// владелец и управляющий (docs/plan/done/game.md, «Состояние существ»).
 export async function findSeatedCharacter(
   db: Db,
   gameId: string,

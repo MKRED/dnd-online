@@ -53,7 +53,7 @@ const abilityBody = (name: string, effectIds: string[], isPublic = false) => ({
 
 const idOf = (res: request.Response) => (res.body as { id: string }).id;
 
-// Библиотека игры (docs/plan/game.md, этап 4): копии записей справочников, которые игра
+// Библиотека игры (docs/plan/done/game.md, этап 4): копии записей справочников, которые игра
 // использует. Начало встречи копирует листы персонажей на местах; правка справочника
 // копию не трогает; мастер обновляет копию сам.
 describe('game library (e2e)', () => {

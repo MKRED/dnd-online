@@ -14,7 +14,7 @@ import {
 } from './support/socket-client.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Монстры и НПС на сцене — экземпляры со своими хитами и эффектами (docs/plan/game.md,
+// Монстры и НПС на сцене — экземпляры со своими хитами и эффектами (docs/plan/done/game.md,
 // этап 8). Правит мастер; игрок видит только метки здоровья видимых ему существ.
 describe('game creatures (e2e)', () => {
   let t: TestApp;

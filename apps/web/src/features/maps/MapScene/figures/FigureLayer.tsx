@@ -18,7 +18,7 @@ interface FigureLayerProps extends FigureDragHandlers {
   ghosts?: readonly FigureInput[];
 }
 
-// Фигурки персонажей на сцене игры (docs/plan/game.md, этап 7): стоячие карточки, как
+// Фигурки персонажей на сцене игры (docs/plan/done/game.md, этап 7): стоячие карточки, как
 // существа карты, с зелёной рамкой. Наведение показывает имя и не перехватывает событие;
 // фигурку, которую смотрящий водит, выбирают щелчком и тянут мышью (useFigureDrag).
 function FigureLayer({

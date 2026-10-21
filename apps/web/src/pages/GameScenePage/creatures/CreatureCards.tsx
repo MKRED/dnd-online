@@ -14,7 +14,7 @@ interface CreatureCardsProps {
   figure: GameFigure | null;
 }
 
-// Состояние существ в боковой панели сцены (docs/plan/game.md, этап 8): у мастера —
+// Состояние существ в боковой панели сцены (docs/plan/done/game.md, этап 8): у мастера —
 // список монстров и НПС; карточка выбранной фигурки или существа; полный лист в шторке.
 function CreatureCards({ gameId, master, cards, figure }: CreatureCardsProps) {
   const creature = !figure && cards.selected?.state ? cards.selected : null;

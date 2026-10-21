@@ -4,7 +4,7 @@ import request from 'supertest';
 import { GAME_SOCKET, GAME_SOCKET_PATH, type GameJoinAck } from 'shared';
 import { TEST_PASSWORD, type TestApp } from './test-app.js';
 
-// Клиенты сокета игры для e2e (docs/plan/game.md, этапы 3 и 6). Приложение должно
+// Клиенты сокета игры для e2e (docs/plan/done/game.md, этапы 3 и 6). Приложение должно
 // слушать порт: listenForSockets в beforeAll, disconnectAll в afterEach.
 export interface SocketClients {
   // Пользователь: агент supertest для REST, строка cookie для сокета и id.

@@ -21,7 +21,7 @@ export interface SceneEditMessages {
   player: GameSceneEditMessage | null;
 }
 
-// Сообщения о правках сцены из порции журнала (docs/plan/game.md, этап 6), по номеру
+// Сообщения о правках сцены из порции журнала (docs/plan/done/game.md, этап 6), по номеру
 // записи. Открыта ли сцена — на момент рассылки: правку, сделанную при закрытой сцене,
 // игрок всё равно увидит, когда её откроют, — вместе со всей сценой.
 export async function sceneEditMessages(

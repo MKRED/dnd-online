@@ -20,7 +20,7 @@ import {
 } from './support/socket-client.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Правки мастера в сцене (docs/plan/game.md, этап 6): операции карты на сцене, записи
+// Правки мастера в сцене (docs/plan/done/game.md, этап 6): операции карты на сцене, записи
 // журнала, отмена и возврат, новые записи справочников — в библиотеку, рассылка правок
 // мастеру целиком и игрокам — без скрытого.
 describe('game scene edits (e2e)', () => {

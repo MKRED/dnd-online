@@ -71,7 +71,7 @@ function SheetContent({
   );
 }
 
-// «Полный лист» из карточки (docs/plan/game.md, этап 8): лист персонажа или стат-блок
+// «Полный лист» из карточки (docs/plan/done/game.md, этап 8): лист персонажа или стат-блок
 // поверх сцены, только для чтения — правки в карточке. Галереи нет: её картинки видит
 // только владелец.
 function FullSheetDrawer({ gameId, target, onClose }: FullSheetDrawerProps) {

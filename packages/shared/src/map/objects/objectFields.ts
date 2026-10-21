@@ -27,7 +27,7 @@ export interface ObjectFields {
   items?: ObjectItem[];
   itemId?: string;
   quantity?: number;
-  // «Скрыт от игроков» — у объекта любого вида (docs/plan/game.md, этап 6).
+  // «Скрыт от игроков» — у объекта любого вида (docs/plan/done/game.md, этап 6).
   hidden?: boolean;
 }
 

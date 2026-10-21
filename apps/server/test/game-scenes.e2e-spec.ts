@@ -13,7 +13,7 @@ import { pngImage } from './support/character-fixture.js';
 import { createSceneGame } from './support/scene-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Сцены игры (docs/plan/game.md, этап 5): копия карты мастера, активная сцена,
+// Сцены игры (docs/plan/done/game.md, этап 5): копия карты мастера, активная сцена,
 // перезапуск, «сцена открыта игрокам» и что из сцены уходит игроку.
 describe('game scenes (e2e)', () => {
   let t: TestApp;

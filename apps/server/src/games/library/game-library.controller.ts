@@ -15,7 +15,7 @@ import { CatalogImageFileQueryDto } from '../../catalog/images/dto/catalog-image
 import { LibraryEntryParamsDto } from './dto/library-entry-params.dto.js';
 import { GameLibraryService } from './game-library.service.js';
 
-// Библиотека игры — только мастеру (docs/plan/game.md, этап 4).
+// Библиотека игры — только мастеру (docs/plan/done/game.md, этап 4).
 @Controller('games/:id/library')
 @UseGuards(AuthGuard)
 export class GameLibraryController {

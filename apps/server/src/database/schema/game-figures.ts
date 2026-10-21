@@ -4,7 +4,7 @@ import { characters } from './characters.js';
 import { gameScenes } from './game-scenes.js';
 import { games } from './games.js';
 
-// Фигурка персонажа на сцене (docs/plan/game.md, этап 7). Персонаж — только в одной
+// Фигурка персонажа на сцене (docs/plan/done/game.md, этап 7). Персонаж — только в одной
 // игре, и фигурка у него одна: она живёт на активной сцене, а при смене сцены встаёт на
 // стартовые точки новой. Персонажа на месте без строки здесь мастер ставит сам.
 export const gameFigures = pgTable(

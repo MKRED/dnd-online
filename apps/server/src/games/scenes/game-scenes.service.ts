@@ -19,7 +19,7 @@ import { listScenes } from './scene-read.js';
 
 type SceneEdit = (tx: DbTransaction, masterId: string) => Promise<boolean>;
 
-// Сцены игры в лобби мастера (docs/plan/game.md, этап 5): список, добавление из своей
+// Сцены игры в лобби мастера (docs/plan/done/game.md, этап 5): список, добавление из своей
 // карты, активная сцена, перезапуск и «сцена открыта игрокам». Каждая правка отвечает
 // блоком сцен целиком.
 @Injectable()

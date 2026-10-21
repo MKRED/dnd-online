@@ -35,7 +35,7 @@ import {
   GameSceneViewService,
 } from './scenes/index.js';
 
-// Игры (docs/plan/game.md): общий список, лобби, места, встреча, журнал игры, библиотека,
+// Игры (docs/plan/done/game.md): общий список, лобби, места, встреча, журнал игры, библиотека,
 // сцены, фигурки персонажей, персонажи, монстры и НПС в игре и сокет.
 @Module({
   imports: [AuthModule],

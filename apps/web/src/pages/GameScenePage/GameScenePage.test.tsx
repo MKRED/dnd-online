@@ -23,7 +23,7 @@ import { renderWithProviders } from '../../test/render';
 import { GAME, urlOf } from '../GameLobbyPage/lobbyTestKit';
 import GameScenePage from './GameScenePage';
 
-// Страница сцены (docs/plan/game.md, этап 5). В jsdom нет WebGL — вместо сцены заглушка,
+// Страница сцены (docs/plan/done/game.md, этап 5). В jsdom нет WebGL — вместо сцены заглушка,
 // которая показывает, что ей передали.
 vi.mock('../../features/maps/MapScene', async () => {
   const { useEffect } = await import('react');

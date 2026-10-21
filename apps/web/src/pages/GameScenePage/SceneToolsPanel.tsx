@@ -22,7 +22,7 @@ interface SceneToolsPanelProps {
   onFocus: (point: Point) => void;
 }
 
-// Свойства инструмента мастера на странице сцены (docs/plan/game.md, этап 6) — как в
+// Свойства инструмента мастера на странице сцены (docs/plan/done/game.md, этап 6) — как в
 // правой панели редактора карты: название инструмента, ошибка правки, блок или объекты.
 function SceneToolsPanel({
   editor,

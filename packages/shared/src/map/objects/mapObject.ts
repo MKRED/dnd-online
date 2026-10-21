@@ -18,7 +18,7 @@ export function nextFacing(facing: Facing): Facing {
   return FACINGS[(FACINGS.indexOf(facing) + 1) % FACINGS.length];
 }
 
-// Взгляд по шагу из from в to (docs/plan/game.md, этап 7): фигурка после хода смотрит
+// Взгляд по шагу из from в to (docs/plan/done/game.md, этап 7): фигурка после хода смотрит
 // туда, куда шла. Север — −z, по часовой; шаг без сдвига по x и z — север.
 export function stepFacing(from: Vec3, to: Vec3): Facing {
   const dx = Math.sign(to[0] - from[0]);

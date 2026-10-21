@@ -5,7 +5,7 @@ import { GAME_SOCKET, type GameScenes, type MapListItem } from 'shared';
 import { createFakeGameSocket } from '../../test/fakeGameSocket';
 import { GAME, renderLobby, routeFetch, urlOf } from './lobbyTestKit';
 
-// Сцены в лобби (docs/plan/game.md, этап 5): блок мастера и переход игроков на открытую
+// Сцены в лобби (docs/plan/done/game.md, этап 5): блок мастера и переход игроков на открытую
 // сцену. Сокет поддельный.
 const socket = vi.hoisted(() => ({
   current: null as ReturnType<typeof createFakeGameSocket> | null,

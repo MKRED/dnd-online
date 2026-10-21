@@ -23,7 +23,7 @@ interface GameJournalProps {
 }
 
 // Журнал игры у мастера — шторка справа: так же откроется и поверх 3D-сцены, не уводя с
-// неё (docs/plan/game.md, этап 2). Новые записи приходят по сокету; «Обновить» — на
+// неё (docs/plan/done/game.md, этап 2). Новые записи приходят по сокету; «Обновить» — на
 // случай обрыва связи.
 function GameJournal({ gameId, live, opened, onClose }: GameJournalProps) {
   const narrow = useMediaQuery('(max-width: 36em)');

@@ -30,7 +30,7 @@ async function sceneOpen(tx: DbTransaction, gameId: string): Promise<boolean> {
   return game?.open ?? false;
 }
 
-// Правки фигурок (docs/plan/game.md, этап 7): ход игрока, постановка, «Новый раунд»,
+// Правки фигурок (docs/plan/done/game.md, этап 7): ход игрока, постановка, «Новый раунд»,
 // запас одной фигурки. Каждая — одна транзакция под блокировкой игры, событие журнала и
 // рассылка; ответ — фигурки глазами того, кто правил.
 @Injectable()

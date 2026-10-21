@@ -18,7 +18,7 @@ import { MoveFigureDto, PlaceFigureDto } from './dto/figure.dto.js';
 import { GameFiguresReadService } from './game-figures-read.service.js';
 import { GameFiguresService } from './game-figures.service.js';
 
-// Фигурки персонажей на активной сцене (docs/plan/game.md, этап 7).
+// Фигурки персонажей на активной сцене (docs/plan/done/game.md, этап 7).
 @Controller('games/:id')
 @UseGuards(AuthGuard)
 export class GameFiguresController {

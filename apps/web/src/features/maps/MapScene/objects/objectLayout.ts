@@ -20,7 +20,7 @@ import { CATALOG_OBJECT_IMAGES, type ObjectImagePaths } from './objectImages';
 export type SceneObjectLook =
   | {
       kind: 'creature';
-      // pc — фигурка персонажа игрока на сцене игры (docs/plan/game.md, этап 7).
+      // pc — фигурка персонажа игрока на сцене игры (docs/plan/done/game.md, этап 7).
       side: 'monster' | 'npc' | 'pc';
       size: CreatureSize;
       facing: Facing;

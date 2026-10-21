@@ -29,7 +29,7 @@ interface GameScenesProps {
   onChanged: () => void;
 }
 
-// Блок «Сцены» в лобби мастера (docs/plan/game.md, этап 5): переключатель «Открыта
+// Блок «Сцены» в лобби мастера (docs/plan/done/game.md, этап 5): переключатель «Открыта
 // игрокам», список сцен с активной и «Добавить сцену».
 function GameScenes({ gameId, version, onChanged }: GameScenesProps) {
   const { scenes, error, busy, run } = useGameScenes(gameId, version);

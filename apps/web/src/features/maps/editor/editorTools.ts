@@ -153,6 +153,6 @@ export interface SceneEditor {
   // место, курсор в его середине (spanAnchor). Без него — одна клетка.
   span?: number;
   // Клетки под курсором сменились (null — курсор ушёл со сцены): фигурку тянут, и при
-  // отпускании ей нужна последняя клетка (docs/plan/game.md, этап 7).
+  // отпускании ей нужна последняя клетка (docs/plan/done/game.md, этап 7).
   onHover?: (cells: PickedCells | null) => void;
 }

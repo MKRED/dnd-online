@@ -24,7 +24,7 @@ import {
 } from './support/socket-client.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Фигурки персонажей (docs/plan/game.md, этап 7): встают на свободные стартовые точки,
+// Фигурки персонажей (docs/plan/done/game.md, этап 7): встают на свободные стартовые точки,
 // когда сцена становится активной и когда персонаж садится на место; видны тем, кто
 // видит сцену.
 describe('game figures (e2e)', () => {

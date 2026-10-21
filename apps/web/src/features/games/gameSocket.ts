@@ -3,7 +3,7 @@ import { GAME_SOCKET_PATH } from 'shared';
 import { API_BASE_URL } from '../../lib/apiBaseUrl';
 import { notifySessionExpired, refreshSession } from '../../lib/session';
 
-// Один сокет игры на страницу (docs/plan/game.md, этап 3): открыт, пока он нужен хоть
+// Один сокет игры на страницу (docs/plan/done/game.md, этап 3): открыт, пока он нужен хоть
 // одному лобби, и закрывается за последним. Вход — по cookie сессии, как у REST.
 let socket: Socket | null = null;
 let holders = 0;

@@ -3,7 +3,7 @@ import type { ObjectImagePaths } from '../maps/MapScene';
 import type { MapEditApi } from '../maps/useMapEdits';
 import { apiRequest as request } from '../../lib/apiRequest';
 
-// Сцены игры (docs/plan/game.md, этап 5): блок мастера в лобби и страница сцены.
+// Сцены игры (docs/plan/done/game.md, этап 5): блок мастера в лобби и страница сцены.
 const scenesBase = (gameId: string) => `/games/${gameId}/scenes`;
 
 export function listGameScenes(gameId: string): Promise<GameScenes> {

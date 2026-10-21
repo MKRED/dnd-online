@@ -25,7 +25,7 @@ import {
 import { GameSceneViewService } from './game-scene-view.service.js';
 import { GameScenesService } from './game-scenes.service.js';
 
-// Сцены игры (docs/plan/game.md, этап 5): /games/:id/scenes — управление мастера,
+// Сцены игры (docs/plan/done/game.md, этап 5): /games/:id/scenes — управление мастера,
 // /games/:id/scene — активная сцена для страницы сцены.
 @Controller('games/:id')
 @UseGuards(AuthGuard)

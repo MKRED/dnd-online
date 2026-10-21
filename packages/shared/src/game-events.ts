@@ -14,7 +14,7 @@ import type { GameSceneRef } from './game-scenes.js';
 import type { Vec3 } from './map/coords.js';
 import type { MapOp } from './map/ops.js';
 
-// Журнал игры (docs/plan/game.md, «Журнал игры»): каждое действие в игре — запись с
+// Журнал игры (docs/plan/done/game.md, «Журнал игры»): каждое действие в игре — запись с
 // номером по порядку внутри игры. Записи только добавляются; отмена — тоже запись.
 // Сам журнал видит только мастер.
 
@@ -41,7 +41,7 @@ export type GameEventAs =
   | { kind: 'character'; id: string }
   | { kind: 'monster'; id: string };
 
-// Итог правки сцены мастером (docs/plan/game.md, этап 6). sceneSeq — номер правки сцены
+// Итог правки сцены мастером (docs/plan/done/game.md, этап 6). sceneSeq — номер правки сцены
 // после неё (game_scenes.seq), cells и objects — сколько клеток и объектов изменилось.
 // Сам changeset в запись не входит: он бывает большим, его читают отмена и рассылка.
 export interface SceneEditResult {

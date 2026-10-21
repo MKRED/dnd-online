@@ -18,7 +18,7 @@ import {
 import { GameCharacterEffectDto } from './dto/character-effect.dto.js';
 import { GameCharactersService } from './game-characters.service.js';
 
-// Персонаж игрока в игре (docs/plan/game.md, этап 8): лист, правки хитов и ячеек, эффекты.
+// Персонаж игрока в игре (docs/plan/done/game.md, этап 8): лист, правки хитов и ячеек, эффекты.
 @Controller('games/:id/characters/:characterId')
 @UseGuards(AuthGuard)
 export class GameCharactersController {

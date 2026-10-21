@@ -15,7 +15,7 @@ type LoadState =
   | { kind: 'locked' }
   | { kind: 'error'; message: string };
 
-// Лобби игры /games/:id (docs/plan/game.md, этап 1).
+// Лобби игры /games/:id (docs/plan/done/game.md, этап 1).
 function GameLobbyPage() {
   const { id = '' } = useParams();
   const [state, setState] = useState<LoadState>({ kind: 'loading' });

@@ -10,7 +10,7 @@ import { findSheetLock } from '../sheet-lock.js';
 import type { SeatedCharacter } from './game-character-access.js';
 import { loadGameEffectLists } from './game-character-effects.js';
 
-// Полный лист персонажа из игры (docs/plan/game.md, этап 8): тем, кто его ведёт. Эффекты —
+// Полный лист персонажа из игры (docs/plan/done/game.md, этап 8): тем, кто его ведёт. Эффекты —
 // из библиотеки игры; способности и инвентарь пока глазами владельца, как в его листе:
 // читать их из библиотеки — на потом.
 export async function readGameCharacter(

@@ -2,7 +2,7 @@ import type { SpellSlots } from './character.js';
 import type { HitPointsChange } from './hitPoints.js';
 import type { SpellSlotsExpended } from './spellSlots.js';
 
-// Персонаж игрока в игре (docs/plan/game.md, этап 8): хиты, ячейки и эффекты правят
+// Персонаж игрока в игре (docs/plan/done/game.md, этап 8): хиты, ячейки и эффекты правят
 // мастер, владелец и управляющий; правка пишется в лист владельца и в журнал.
 
 // Что можно поменять одной правкой: хиты по правилам (hitPoints.ts) или потраченные

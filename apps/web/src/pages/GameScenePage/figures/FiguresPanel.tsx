@@ -24,7 +24,7 @@ function allowance(figure: GameFigure) {
   return `${movementLeft(figure)} из ${total} фт`;
 }
 
-// Фигурки сцены в панели (docs/plan/game.md, этап 7): чья, сколько осталось движения,
+// Фигурки сцены в панели (docs/plan/done/game.md, этап 7): чья, сколько осталось движения,
 // выбор фигурки, у мастера — запас и «Не на сцене». Выбор — и щелчком по самой фигурке.
 function FiguresPanel({ figures, master, tool }: FiguresPanelProps) {
   const { busy } = tool;

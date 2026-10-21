@@ -10,7 +10,7 @@ import {
   type Vec3,
 } from 'shared';
 
-// Фигурка персонажа для сцены (docs/plan/game.md, этап 7): что знает о ней карта — без
+// Фигурка персонажа для сцены (docs/plan/done/game.md, этап 7): что знает о ней карта — без
 // игры, запаса движения и прав.
 export interface FigureInput {
   id: string;

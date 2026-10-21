@@ -1,7 +1,7 @@
 import type { GameFigure, GameFigures, Vec3 } from 'shared';
 import { apiRequest as request } from '../../lib/apiRequest';
 
-// Фигурки персонажей на активной сцене (docs/plan/game.md, этап 7).
+// Фигурки персонажей на активной сцене (docs/plan/done/game.md, этап 7).
 
 // Закрытая игроку сцена — 403, нет активной — 404.
 export function getGameFigures(gameId: string): Promise<GameFigures> {

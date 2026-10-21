@@ -3,7 +3,7 @@ import type { PackedChangeset } from './map/changesetPacking.js';
 import type { Vec3 } from './map/coords.js';
 import type { MapObjectRefsView } from './map/objects/objectRefViews.js';
 
-// Сокет игры (docs/plan/game.md, этап 3): живые изменения лобби и присутствие. Входит
+// Сокет игры (docs/plan/done/game.md, этап 3): живые изменения лобби и присутствие. Входит
 // по cookie сессии, как и REST; путь — под /api, чтобы прокси и прод вели его туда же.
 export const GAME_SOCKET_PATH = '/api/socket.io';
 
@@ -95,7 +95,7 @@ export interface GamePresenceMessage {
   online: string[];
 }
 
-// Правка сцены (docs/plan/game.md, этап 6): мастеру — целиком, игрокам — без скрытых
+// Правка сцены (docs/plan/done/game.md, этап 6): мастеру — целиком, игрокам — без скрытых
 // объектов и содержимого контейнеров и только для активной открытой сцены. seq — номер
 // правки сцены после неё: копия на номер раньше применяет changes, иначе сцена
 // перечитывается. Игроку приходит и правка, в которой для него ничего не изменилось, —
@@ -109,7 +109,7 @@ export interface GameSceneEditMessage {
   refs: MapObjectRefsView;
 }
 
-// Фигурку тянут (docs/plan/game.md, этап 7): промежуточные позиции идут только по сокету,
+// Фигурку тянут (docs/plan/done/game.md, этап 7): промежуточные позиции идут только по сокету,
 // в базу и журнал попадает лишь ход или постановка при отпускании. at — клетка ног под
 // курсором; null — фигурку отпустили. Сервер пересылает это остальным в комнате (игрокам —
 // пока сцена открыта).

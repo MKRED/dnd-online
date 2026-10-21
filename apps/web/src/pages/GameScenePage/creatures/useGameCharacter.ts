@@ -3,7 +3,7 @@ import type { Character, GameCharacterChange } from 'shared';
 import { changeGameCharacter, getGameCharacter } from '../../../features/games';
 import { errorMessage } from '../../../lib/apiRequest';
 
-// Лист персонажа из игры для карточки (docs/plan/game.md, этап 8). version растёт с
+// Лист персонажа из игры для карточки (docs/plan/done/game.md, этап 8). version растёт с
 // событиями состояния существ: чужая правка перечитывает лист. Правки идут по одной.
 export function useGameCharacter(
   gameId: string,

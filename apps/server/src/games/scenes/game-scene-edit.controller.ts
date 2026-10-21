@@ -12,7 +12,7 @@ import { ApplyOpsDto } from '../../maps/dto/apply-ops.dto.js';
 import { SceneParamsDto } from './dto/scene.dto.js';
 import { GameSceneEditService } from './game-scene-edit.service.js';
 
-// Правки сцены мастером (docs/plan/game.md, этап 6) — как /maps/:id/ops, undo, redo, но
+// Правки сцены мастером (docs/plan/done/game.md, этап 6) — как /maps/:id/ops, undo, redo, но
 // для сцены игры. Ответ — тот же MapEditResult, что у карты.
 @Controller('games/:id/scenes/:sceneId')
 @UseGuards(AuthGuard)

@@ -10,7 +10,7 @@ import { errorMessage } from '../../lib/apiRequest';
 import { applyMapChanges } from './applyMapChanges';
 import type { MapViewState } from './mapStateFromChunks';
 
-// Куда уходят правки: карта в редакторе или сцена игры (docs/plan/game.md, этап 6).
+// Куда уходят правки: карта в редакторе или сцена игры (docs/plan/done/game.md, этап 6).
 export interface MapEditApi {
   applyOps: (ops: MapOp[]) => Promise<MapEditResult>;
   undo: () => Promise<MapEditResult>;

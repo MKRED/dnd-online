@@ -15,7 +15,7 @@ import { appendGameEvent } from '../game-journal.js';
 import type { SceneRow } from './scene-copy.js';
 import { sceneStorage } from './scene-storage.js';
 
-// Журнал правок сцены (docs/plan/game.md, этап 6) — записи журнала игры, а не map_ops:
+// Журнал правок сцены (docs/plan/done/game.md, этап 6) — записи журнала игры, а не map_ops:
 // отдельного журнала у сцены нет. Changeset лежит в колонке changes записи, в прямом
 // виде — и у правки, и у отмены, и у возврата: рассылка применяет их одинаково.
 

@@ -12,7 +12,7 @@ import { gameScenes } from './game-scenes.js';
 import { games } from './games.js';
 import { users } from './users.js';
 
-// Журнал игры (docs/plan/game.md, «Журнал игры»): все действия в игре по порядку, записи
+// Журнал игры (docs/plan/done/game.md, «Журнал игры»): все действия в игре по порядку, записи
 // только добавляются. Состояние живёт в обычных таблицах, журнал — история для отладки и
 // восстановления; запись и изменение пишутся в одной транзакции (games/game-journal.ts).
 export const gameEvents = pgTable(

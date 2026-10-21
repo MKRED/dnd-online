@@ -24,7 +24,7 @@ import { findGameAccess } from '../game-read.js';
 import { findActiveScene } from '../scenes/index.js';
 import { readSceneFigures, readUnplaced } from './figure-read.js';
 
-// Фигурки активной сцены (docs/plan/game.md, этап 7): видят их те же, кто видит сцену, —
+// Фигурки активной сцены (docs/plan/done/game.md, этап 7): видят их те же, кто видит сцену, —
 // мастер всегда, участники игры, пока сцена открыта.
 @Injectable()
 export class GameFiguresReadService {

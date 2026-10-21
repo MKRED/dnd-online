@@ -1,6 +1,6 @@
 # Movement: Speed, other creatures, Dash
 
-How a creature moves on its turn in the 2024 rules, and how the app's figures follow them (plan: [plan/game.md](../plan/game.md), stage 7).
+How a creature moves on its turn in the 2024 rules, and how the app's figures follow them (plan: [plan/game.md](../plan/done/game.md), stage 7).
 
 Researched 2026-10-21 in the free 2024 rules (the SRD 5.2 text):
 

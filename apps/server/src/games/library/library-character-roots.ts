@@ -10,7 +10,7 @@ import {
 } from '../../database/schema/index.js';
 
 // Что из листов персонажей на местах идёт в библиотеку в начале встречи: предметы,
-// способности и эффекты. По владельцу — копируется то, что видит он (docs/plan/game.md,
+// способности и эффекты. По владельцу — копируется то, что видит он (docs/plan/done/game.md,
 // этап 4).
 export async function seatedCharacterRoots(
   tx: DbTransaction,

@@ -34,7 +34,7 @@ import {
 import { sceneRefs } from './scene-refs.js';
 import { sceneTarget } from './scene-storage.js';
 
-// Правки сцены мастером (docs/plan/game.md, этап 6): блоки и объекты, как в редакторе
+// Правки сцены мастером (docs/plan/done/game.md, этап 6): блоки и объекты, как в редакторе
 // карты, отмена и возврат. Каждая — внутри транзакции, которая уже взяла lockGame, и
 // отвечает так же, как правка карты (MapEditResult). changed — правка записана в журнал
 // и её надо разослать.

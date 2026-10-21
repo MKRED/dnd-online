@@ -4,7 +4,7 @@ import type { GameDetail, GameEventPage } from 'shared';
 import { characterBody } from './support/character-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Журнал игры (docs/plan/game.md, этап 2): действия лобби пишутся записями по порядку,
+// Журнал игры (docs/plan/done/game.md, этап 2): действия лобби пишутся записями по порядку,
 // читает журнал только мастер.
 describe('game events (e2e)', () => {
   let t: TestApp;

@@ -20,7 +20,7 @@ import { readLibraryImage } from '../library/index.js';
 import { sceneShowsEntry, type SceneImageKind } from './scene-image-access.js';
 import { findActiveScene, readSceneView, sceneStatus } from './scene-read.js';
 
-// Страница сцены (docs/plan/game.md, этап 5): активная сцена мастеру и участникам игры,
+// Страница сцены (docs/plan/done/game.md, этап 5): активная сцена мастеру и участникам игры,
 // игрокам — только открытая. Картинки объектов — копии из библиотеки.
 @Injectable()
 export class GameSceneViewService {

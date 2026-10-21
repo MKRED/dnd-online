@@ -70,7 +70,7 @@ Researched on 2026-10-21 in the free rules (Rules Glossary, «Passive Perception
 Researched on 2026-10-21 in the free rules (Playing the Game, «Dropping to 0 Hit Points»).
 
 - **Rule:** "Whenever you start your turn with 0 Hit Points, you must make a Death Saving Throw … Roll 1d20. If the roll is 10 or higher, you succeed. Otherwise, you fail." "On your third success, you become Stable … On your third failure, you die." "The successes and failures don't need to be consecutive … The number of both is reset to zero when you regain any Hit Points or become Stable." A roll of 1 counts as two failures, a 20 restores 1 Hit Point; damage at 0 Hit Points is a failure (two from a Critical Hit), and damage equal to the Hit Point maximum kills.
-- **In the app:** the sheet stores the counts (`Character.deathSaveSuccesses` and `deathSaveFailures`, 0–3) and shows them as three circles each on the tile «Спасброски от смерти» (`CharacterSheet/DeathSavesTile.tsx`). The rolls themselves are made at the table; changing the counts in play comes with the game's creature state ([plan/game.md](../plan/game.md), stage 8).
+- **In the app:** the sheet stores the counts (`Character.deathSaveSuccesses` and `deathSaveFailures`, 0–3) and shows them as three circles each on the tile «Спасброски от смерти» (`CharacterSheet/DeathSavesTile.tsx`). The rolls themselves are made at the table; changing the counts in play comes with the game's creature state ([plan/game.md](../plan/done/game.md), stage 8).
 
 ## Links
 

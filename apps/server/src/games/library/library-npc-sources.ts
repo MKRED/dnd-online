@@ -10,7 +10,7 @@ import {
 } from '../../database/schema/index.js';
 import type { LibrarySource } from './library-sources.js';
 
-// НПС как источник копии (docs/plan/game.md, этап 5): персонаж, а не запись справочника.
+// НПС как источник копии (docs/plan/done/game.md, этап 5): персонаж, а не запись справочника.
 // Видит его только владелец — мастер, чья карта; чужой НПС на карте остаётся заглушкой.
 
 const NOT_SHEET = [

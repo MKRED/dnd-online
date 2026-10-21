@@ -25,7 +25,7 @@ interface CreatureStateCardProps {
   onOpenSheet: () => void;
 }
 
-// Карточка монстра или НПС у мастера (docs/plan/game.md, этап 8): хиты экземпляра и
+// Карточка монстра или НПС у мастера (docs/plan/done/game.md, этап 8): хиты экземпляра и
 // эффекты, наложенные в игре. Свойства вида — в стат-блоке («Полный лист»).
 function CreatureStateCard({
   gameId,

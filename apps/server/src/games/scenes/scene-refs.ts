@@ -13,7 +13,7 @@ import type { LoadedRefs, RefIds } from '../../maps/objects/map-object-refs.js';
 import { toMonsterFields } from '../../monsters/monsters.config.js';
 
 // Справочник ссылок объектов сцены — из библиотеки игры, а не из справочников: правка
-// справочника идущую игру не трогает (docs/plan/game.md, «Справочники не влияют на
+// справочника идущую игру не трогает (docs/plan/done/game.md, «Справочники не влияют на
 // игру»). Чего в библиотеке нет (скрыто от мастера или удалено до копии), для игры нет
 // вовсе — заглушка «удалено».
 export async function sceneRefsView(

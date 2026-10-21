@@ -4,7 +4,7 @@ import { figureImagePath, getGameFigures } from '../../../features/games';
 import type { FigureInput } from '../../../features/maps/MapScene';
 import { ApiError } from '../../../lib/apiRequest';
 
-// Фигурки персонажей на активной сцене (docs/plan/game.md, этап 7). Перечитываются
+// Фигурки персонажей на активной сцене (docs/plan/done/game.md, этап 7). Перечитываются
 // целиком после событий фигурок: их немного, а ход по пути считает сервер. Ответ старше
 // уже показанного (по номеру журнала) не откатывает фигурки назад.
 export function useSceneFigures(gameId: string, sceneId: string | null) {

@@ -10,7 +10,7 @@ import type { DbTransaction } from '../database/database.service.js';
 import { gameEvents, games } from '../database/schema/index.js';
 import { GAME_NOT_FOUND } from './game-errors.js';
 
-// Запись журнала игры (docs/plan/game.md, «Журнал игры»). Простые функции от транзакции,
+// Запись журнала игры (docs/plan/done/game.md, «Журнал игры»). Простые функции от транзакции,
 // а не провайдер: запись идёт в той же транзакции, что и изменение, и её пишет не только
 // модуль игр — удаление персонажа освобождает место (characters.service.ts).
 

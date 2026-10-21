@@ -38,7 +38,7 @@ import { SCENE_TOOLS, useSceneTools } from './useSceneTools';
 // three.js тяжёлый — сцена грузится отдельным чанком.
 const MapScene = lazy(() => import('../../features/maps/MapScene'));
 
-// Страница сцены /games/:id/scene (docs/plan/game.md, этапы 5–8): активная сцена игры в
+// Страница сцены /games/:id/scene (docs/plan/done/game.md, этапы 5–8): активная сцена игры в
 // 3D. Мастер правит её инструментами редактора карты, игроки видят каждую правку сразу.
 // Игрока, которому мастер закрыл сцену, переводит в лобби.
 function GameScenePage() {

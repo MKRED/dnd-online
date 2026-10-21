@@ -15,7 +15,7 @@ import { copyToLibrary } from '../library/library-copy.js';
 type MapRow = typeof maps.$inferSelect;
 export type SceneRow = typeof gameScenes.$inferSelect;
 
-// Новая сцена — копия карты мастера (docs/plan/game.md, этап 5). Транзакция уже взяла
+// Новая сцена — копия карты мастера (docs/plan/done/game.md, этап 5). Транзакция уже взяла
 // lockGame, а строку карты — на изменение (findOwnedMap с forUpdate): правка карты не
 // вклинится между палитрой и чанками. Монстры, НПС и предметы со сцены копируются в
 // библиотеку глазами мастера. Возвращает сцену и сколько записей скопировано.

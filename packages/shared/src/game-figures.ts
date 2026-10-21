@@ -5,7 +5,7 @@ import type { Vec3 } from './map/coords.js';
 import type { Facing } from './map/objects/mapObject.js';
 import type { CreatureSize } from './map/rules/creature.js';
 
-// Фигурки персонажей на активной сцене (docs/plan/game.md, этап 7). Фигурка есть только
+// Фигурки персонажей на активной сцене (docs/plan/done/game.md, этап 7). Фигурка есть только
 // на активной сцене: когда сцена становится активной, фигурки встают на её стартовые
 // точки заново.
 

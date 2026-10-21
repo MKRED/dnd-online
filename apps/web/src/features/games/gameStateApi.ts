@@ -6,7 +6,7 @@ import type {
 } from 'shared';
 import { apiRequest as request } from '../../lib/apiRequest';
 
-// Состояние существ в игре (docs/plan/game.md, этап 8): персонажи игроков — лист, хиты,
+// Состояние существ в игре (docs/plan/done/game.md, этап 8): персонажи игроков — лист, хиты,
 // ячейки; монстры и НПС сцены — экземпляры. Эффекты — по адресам из effectLinksApi.
 
 export const gameCharacterBase = (gameId: string, characterId: string) =>

@@ -11,7 +11,7 @@ import {
 import { characters } from './characters.js';
 import { users } from './users.js';
 
-// Игра — кампания мастера (docs/plan/game.md). Видна всем в общем списке; закрытая
+// Игра — кампания мастера (docs/plan/done/game.md). Видна всем в общем списке; закрытая
 // пускает в лобби только с паролем.
 export const games = pgTable('games', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -29,7 +29,7 @@ export const games = pgTable('games', {
   // Когда мастер начал текущую встречу; null — встреча не идёт. Пока идёт, листы
   // персонажей на местах закрыты для правки владельцем (games/sheet-lock.ts).
   sessionStartedAt: timestamp('session_started_at', { withTimezone: true }),
-  // «Сцена открыта игрокам» (docs/plan/game.md, этап 5): закрытую активную сцену игрокам
+  // «Сцена открыта игрокам» (docs/plan/done/game.md, этап 5): закрытую активную сцену игрокам
   // не отдают. У новой игры закрыта — мастер открывает сцену, когда готов.
   sceneOpen: boolean('scene_open').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true })
@@ -57,7 +57,7 @@ export const gameMembers = pgTable(
       onDelete: 'set null',
     }),
     allowHandover: boolean('allow_handover').notNull().default(true),
-    // Управляющий персонажем, которого назначил мастер (docs/plan/game.md, этап 7): водит
+    // Управляющий персонажем, которого назначил мастер (docs/plan/done/game.md, этап 7): водит
     // его фигурку вместе с владельцем. Только при allowHandover; запрет передачи, уход
     // управляющего и освобождение места его снимают.
     controllerId: uuid('controller_id').references(() => users.id, {
@@ -74,7 +74,7 @@ export const gameMembers = pgTable(
       name: 'game_members_pk',
       columns: [table.gameId, table.userId],
     }),
-    // Персонаж — только в одной игре: игра пишет в его лист (docs/plan/game.md).
+    // Персонаж — только в одной игре: игра пишет в его лист (docs/plan/done/game.md).
     // null в unique различны, поэтому участники без места не мешают друг другу.
     unique('game_members_character').on(table.characterId),
   ],

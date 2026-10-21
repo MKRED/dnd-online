@@ -18,7 +18,7 @@ import {
 } from './support/socket-client.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Сокет игры (docs/plan/game.md, этап 3): вход по cookie, комната, присутствие,
+// Сокет игры (docs/plan/done/game.md, этап 3): вход по cookie, комната, присутствие,
 // рассылка изменений и закрытие комнаты для убранного игрока.
 describe('game socket (e2e)', () => {
   let t: TestApp;

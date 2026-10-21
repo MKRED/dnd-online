@@ -3,7 +3,7 @@ import { characterBody, PNG_FILE } from './character-fixture.js';
 import { createItem } from './item-fixture.js';
 import { monsterBody } from './monster-fixture.js';
 
-// Игра со сценой для e2e сцен (docs/plan/game.md, этапы 5 и 6).
+// Игра со сценой для e2e сцен (docs/plan/done/game.md, этапы 5 и 6).
 
 // Как входит пользователь: у сокетных тестов — ещё и с cookie (socket-client.ts).
 export type SceneUser<U> = (login: string) => Promise<U>;

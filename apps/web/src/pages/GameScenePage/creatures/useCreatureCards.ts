@@ -18,7 +18,7 @@ interface CreatureCardsOptions {
   reloadFigures: () => void;
 }
 
-// Состояние существ на странице сцены (docs/plan/game.md, этап 8): монстры и НПС, выбор
+// Состояние существ на странице сцены (docs/plan/done/game.md, этап 8): монстры и НПС, выбор
 // существа мастером, номер для перечитывания карточки персонажа и открытый полный лист.
 export function useCreatureCards({
   gameId,

@@ -18,7 +18,7 @@ interface ScenePlayOptions {
   refs: MapObjectRefsView | null;
 }
 
-// Фигурки на странице сцены (docs/plan/game.md, этап 7): чтение, выбор и ход, тени чужих
+// Фигурки на странице сцены (docs/plan/done/game.md, этап 7): чтение, выбор и ход, тени чужих
 // перетаскиваний. В других инструментах мастера щелчок правит карту — выбор снимается.
 export function useScenePlay({
   gameId,

@@ -5,7 +5,7 @@ import type { GameLibraryEntry, GameLibraryItem, Item } from 'shared';
 import { createFakeGameSocket } from '../../test/fakeGameSocket';
 import { GAME, renderLobby, stubFetch } from './lobbyTestKit';
 
-// Библиотека игры у мастера (docs/plan/game.md, этап 4). Сокет — поддельный.
+// Библиотека игры у мастера (docs/plan/done/game.md, этап 4). Сокет — поддельный.
 const socket = vi.hoisted(() => ({
   current: null as ReturnType<typeof createFakeGameSocket> | null,
 }));

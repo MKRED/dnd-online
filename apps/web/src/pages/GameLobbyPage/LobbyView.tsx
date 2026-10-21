@@ -95,7 +95,7 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
     game.id,
     {
       onChanged: (message) => {
-        // Мастер открыл сцену — игроков из лобби переводит на неё (docs/plan/game.md,
+        // Мастер открыл сцену — игроков из лобби переводит на неё (docs/plan/done/game.md,
         // этап 5). Мастера не переводит: он открывает сам.
         if (!isMaster && message.kind === 'scene.opened') {
           void navigate(scenePagePath(game.id));

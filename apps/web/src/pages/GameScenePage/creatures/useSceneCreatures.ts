@@ -3,7 +3,7 @@ import type { CreatureHealth, GameCreatures } from 'shared';
 import { getGameCreatures } from '../../../features/games';
 import { ApiError } from '../../../lib/apiRequest';
 
-// Монстры и НПС активной сцены (docs/plan/game.md, этап 8): мастеру — хиты и эффекты,
+// Монстры и НПС активной сцены (docs/plan/done/game.md, этап 8): мастеру — хиты и эффекты,
 // игроку — метки здоровья. Перечитываются целиком, как фигурки; ответ старше уже
 // показанного (по номеру журнала) не откатывает их назад.
 export function useSceneCreatures(gameId: string, sceneId: string | null) {

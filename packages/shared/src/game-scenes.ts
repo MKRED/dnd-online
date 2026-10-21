@@ -1,6 +1,6 @@
 import type { MapChunksResponse } from './map/api.js';
 
-// Сцены игры (docs/plan/game.md, «Сцены и смена карты на ходу»): копия карты мастера
+// Сцены игры (docs/plan/done/game.md, «Сцены и смена карты на ходу»): копия карты мастера
 // внутри игры. Активная сцена одна; игроки видят её, только пока мастер её не закрыл.
 
 export interface GameSceneRef {

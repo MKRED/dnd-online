@@ -13,7 +13,7 @@ import { appendGameEvent } from '../game-journal.js';
 import { createScene } from './scene-copy.js';
 import { findActiveScene, findScene } from './scene-read.js';
 
-// Правки сцен мастером (docs/plan/game.md, этап 5). Каждая — внутри транзакции, которая
+// Правки сцен мастером (docs/plan/done/game.md, этап 5). Каждая — внутри транзакции, которая
 // уже взяла lockGame, и пишет событие журнала. false — ничего не изменилось (повторный
 // клик), события нет.
 

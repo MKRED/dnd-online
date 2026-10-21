@@ -8,7 +8,7 @@ interface CreaturesPanelProps {
   onSelect: (objectId: number | null) => void;
 }
 
-// Монстры и НПС сцены у мастера (docs/plan/game.md, этап 8): хиты и метка здоровья;
+// Монстры и НПС сцены у мастера (docs/plan/done/game.md, этап 8): хиты и метка здоровья;
 // щелчок выбирает существо — его карточка ниже. Выбрать можно и щелчком по нему на карте.
 function CreaturesPanel({
   creatures,

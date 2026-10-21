@@ -26,7 +26,7 @@ interface AddSceneModalProps {
 }
 
 // Добавить сцену из своей карты. Сцена — копия: правки карты в редакторе после этого
-// её не тронут (docs/plan/game.md, «Сцены и смена карты на ходу»).
+// её не тронут (docs/plan/done/game.md, «Сцены и смена карты на ходу»).
 function AddSceneModal({
   opened,
   busy,

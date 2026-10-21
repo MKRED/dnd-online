@@ -13,7 +13,7 @@ const REF_FIELD: Record<SceneImageKind, string> = {
   item: 'itemId',
 };
 
-// Есть ли на сцене видимый игрокам объект с этой ссылкой (docs/plan/game.md, этап 5):
+// Есть ли на сцене видимый игрокам объект с этой ссылкой (docs/plan/done/game.md, этап 5):
 // по нему игрок получает картинку копии, остальная библиотека ему закрыта.
 export async function sceneShowsEntry(
   db: Db,

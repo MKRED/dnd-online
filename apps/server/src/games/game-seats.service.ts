@@ -201,7 +201,7 @@ export class GameSeatsService {
   }
 
   // Мастер отдаёт управление персонажем на месте ownerId участнику controllerId или
-  // забирает (null) — docs/plan/game.md, этап 7. Только если владелец разрешил передачу;
+  // забирает (null) — docs/plan/done/game.md, этап 7. Только если владелец разрешил передачу;
   // управляющий — участник игры, не владелец и не мастер.
   async setController(
     masterId: string,

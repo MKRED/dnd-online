@@ -15,7 +15,7 @@ interface GameLibraryProps {
 }
 
 // Библиотека игры у мастера — шторка справа, как журнал: так же откроется и поверх сцены
-// (docs/plan/game.md, этап 4). Список и карточка копии сменяют друг друга внутри шторки.
+// (docs/plan/done/game.md, этап 4). Список и карточка копии сменяют друг друга внутри шторки.
 function GameLibrary({ gameId, version, opened, onClose }: GameLibraryProps) {
   const narrow = useMediaQuery('(max-width: 36em)');
   return (

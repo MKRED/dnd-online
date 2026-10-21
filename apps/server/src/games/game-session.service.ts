@@ -19,9 +19,9 @@ import { findGameAccess, readGameDetail } from './game-read.js';
 import { copyToLibrary, seatedCharacterRoots } from './library/index.js';
 import { GameRealtimeService } from './realtime/game-realtime.service.js';
 
-// Встреча: мастер начинает и заканчивает её кнопками (docs/plan/game.md, «Понятия»).
+// Встреча: мастер начинает и заканчивает её кнопками (docs/plan/done/game.md, «Понятия»).
 // Пока она идёт, листы персонажей на местах закрыты (sheet-lock.ts). Начало встречи
-// копирует в библиотеку игры то, что есть в этих листах (docs/plan/game.md, этап 4).
+// копирует в библиотеку игры то, что есть в этих листах (docs/plan/done/game.md, этап 4).
 @Injectable()
 export class GameSessionService {
   constructor(

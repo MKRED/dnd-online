@@ -6,7 +6,7 @@ import type {
 import type { ImagePathFn } from '../catalog';
 import { apiRequest as request } from '../../lib/apiRequest';
 
-// Библиотека игры — только мастеру (docs/plan/game.md, этап 4).
+// Библиотека игры — только мастеру (docs/plan/done/game.md, этап 4).
 const libraryBase = (gameId: string) => `/games/${gameId}/library`;
 
 export function listGameLibrary(gameId: string): Promise<GameLibraryItem[]> {

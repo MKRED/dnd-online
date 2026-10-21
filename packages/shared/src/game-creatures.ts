@@ -1,7 +1,7 @@
 import type { CharacterEffectEntry } from './characterEffects.js';
 import type { CreatureHealth, HitPointsChange } from './hitPoints.js';
 
-// Монстры и НПС на сцене — экземпляры со своим состоянием (docs/plan/game.md, этап 8):
+// Монстры и НПС на сцене — экземпляры со своим состоянием (docs/plan/done/game.md, этап 8):
 // хиты и эффекты правит мастер, игроки видят только метку здоровья.
 
 // Правка экземпляра: спасбросков от смерти у монстра и НПС нет.

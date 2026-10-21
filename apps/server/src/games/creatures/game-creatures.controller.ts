@@ -16,7 +16,7 @@ import { GameCharacterEffectDto } from '../characters/dto/character-effect.dto.j
 import { CreatureChangeDto } from './dto/creature-change.dto.js';
 import { GameCreaturesService } from './game-creatures.service.js';
 
-// Монстры и НПС активной сцены (docs/plan/game.md, этап 8): чтение, хиты и эффекты.
+// Монстры и НПС активной сцены (docs/plan/done/game.md, этап 8): чтение, хиты и эффекты.
 @Controller('games/:id/scene/creatures')
 @UseGuards(AuthGuard)
 export class GameCreaturesController {

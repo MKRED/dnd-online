@@ -4,7 +4,7 @@ import { itemImagePath } from '../../../items';
 import { monstersApi } from '../../../monsters/monstersApi';
 
 // Откуда брать миниатюры объектов. Редактор карты берёт их из справочников и галереи
-// персонажа; сцена игры — из копий в библиотеке игры (docs/plan/game.md, этап 5).
+// персонажа; сцена игры — из копий в библиотеке игры (docs/plan/done/game.md, этап 5).
 export interface ObjectImagePaths {
   monster: (monsterId: string, version: number) => string;
   item: (itemId: string, version: number) => string;

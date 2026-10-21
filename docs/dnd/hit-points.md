@@ -22,7 +22,7 @@ How damage, healing, Temporary Hit Points, dropping to 0 and the death saving th
 
 ## In the app
 
-Decided with the user on 2026-10-21 ([plan/game.md](../plan/game.md), «Состояние существ»).
+Decided with the user on 2026-10-21 ([plan/game.md](../plan/done/game.md), «Состояние существ»).
 
 - **A change is what was asked, not a number.** The server computes the new state from «урон 7», «лечение 5», «временные хиты 5» or «спасброски: успехов 1, провалов 2»: the GM and a player edit the same character at once, and a number from a client would overwrite the other edit.
   - `packages/shared/src/hitPoints.ts` — `applyHitPoints` (the rules above) and `creatureHealth` (what others see).

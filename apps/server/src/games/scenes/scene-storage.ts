@@ -12,7 +12,7 @@ import {
 import type { SceneRow } from './scene-copy.js';
 
 // Чанки и объекты сцены игры — в таблицах той же формы, что у карты: правка сцены идёт
-// тем же кодом, что и правка карты (docs/plan/game.md, этап 6).
+// тем же кодом, что и правка карты (docs/plan/done/game.md, этап 6).
 const SCENE_CHUNKS: ChunkTable = {
   table: gameSceneChunks,
   owner: gameSceneChunks.sceneId,

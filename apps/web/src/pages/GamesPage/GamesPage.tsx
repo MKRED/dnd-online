@@ -17,7 +17,7 @@ import { usePageTitle } from '../../lib/usePageTitle';
 import CreateGameModal from './CreateGameModal';
 import GameCard from './GameCard';
 
-// Общий список игр (docs/plan/game.md): свои сверху, закрытые — с замком.
+// Общий список игр (docs/plan/done/game.md): свои сверху, закрытые — с замком.
 function GamesPage() {
   usePageTitle('Игры');
   const [games, setGames] = useState<GameListItem[]>([]);

@@ -15,7 +15,7 @@ import { findActiveScene } from '../scenes/scene-read.js';
 import { seatedCharacters } from './figure-read.js';
 import { loadSceneWorld, type SceneWorld } from './scene-world.js';
 
-// Фигурки встают на свободные стартовые точки (docs/plan/game.md, этап 7): когда сцена
+// Фигурки встают на свободные стартовые точки (docs/plan/done/game.md, этап 7): когда сцена
 // становится активной — все персонажи на местах по порядку мест, когда персонаж садится
 // на место посреди игры — он один. Кому точки не хватило, того ставит мастер. Вызывать
 // внутри транзакции, которая уже взяла lockGame.

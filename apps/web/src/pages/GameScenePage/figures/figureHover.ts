@@ -10,7 +10,7 @@ import type { PickedCells } from '../../../features/maps/editor/editorTools';
 import type { WalkHover } from '../../../features/maps/walkTest';
 import { walkHover } from '../../../features/maps/walkTest/walkHover';
 
-// Что будет по клику с выбранной фигуркой (docs/plan/game.md, этап 7). Игрок только
+// Что будет по клику с выбранной фигуркой (docs/plan/done/game.md, этап 7). Игрок только
 // ходит — по достижимой позиции; мастер ставит фигурку куда угодно, где она может
 // стоять и где никого нет, без пути и запаса (решено с пользователем 2026-10-21).
 // at — где фигурка стоит сейчас (null — её нет на сцене): туда не ходят и не ставят.

@@ -40,7 +40,7 @@ export interface PlaceSettings {
   item: CatalogChoice | null;
   look: ContainerLook;
   facing: Facing;
-  // Ставить скрытым от игроков (docs/plan/game.md, этап 6).
+  // Ставить скрытым от игроков (docs/plan/done/game.md, этап 6).
   hidden: boolean;
 }
 

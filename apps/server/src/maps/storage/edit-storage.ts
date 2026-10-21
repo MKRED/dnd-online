@@ -20,7 +20,7 @@ import {
 } from './object-storage.js';
 
 // Где лежат чанки и объекты того, что правится: карты в редакторе или сцены игры
-// (docs/plan/game.md, этап 6). Операции карты (editMap из shared) не знают, где лежат
+// (docs/plan/done/game.md, этап 6). Операции карты (editMap из shared) не знают, где лежат
 // чанки, — правка карты и правка сцены отличаются только этим хранилищем и журналом.
 export interface EditStorage {
   loadChunks(db: Db, keys: string[] | 'all'): Promise<MemoryChunkStore>;

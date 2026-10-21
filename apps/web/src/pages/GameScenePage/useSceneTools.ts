@@ -8,7 +8,7 @@ import type { MapViewState } from '../../features/maps/mapStateFromChunks';
 import type { useMapEdits } from '../../features/maps/useMapEdits';
 
 // Инструменты на странице сцены — те же, что в редакторе карты, без «Хода»: фигурки
-// придут с этапом 7, а размер сцены в игре не меняется (docs/plan/game.md, этап 6).
+// придут с этапом 7, а размер сцены в игре не меняется (docs/plan/done/game.md, этап 6).
 export const SCENE_TOOLS = EDITOR_TOOLS.filter((tool) => tool !== 'walk');
 
 const nothing = () => undefined;

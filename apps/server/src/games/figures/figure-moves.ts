@@ -36,7 +36,7 @@ import { findActiveScene } from '../scenes/scene-read.js';
 import { canMoveFigure, figureSpeeds } from './figure-read.js';
 import { loadSceneWorld, type SceneWorld } from './scene-world.js';
 
-// Ход фигурки и правки мастера (docs/plan/game.md, этап 7; правила — docs/dnd/movement.md).
+// Ход фигурки и правки мастера (docs/plan/done/game.md, этап 7; правила — docs/dnd/movement.md).
 // Вызывать внутри транзакции, которая уже взяла lockGame.
 
 export interface FigureActor {

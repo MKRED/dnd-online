@@ -14,7 +14,7 @@ const effectBody = (name: string, change: string) => ({
   saveEnds: null,
 });
 
-// Встреча (docs/plan/game.md, этап 3): мастер начинает и заканчивает её, пока она идёт,
+// Встреча (docs/plan/done/game.md, этап 3): мастер начинает и заканчивает её, пока она идёт,
 // лист персонажа на месте закрыт для правки владельцем.
 describe('game session (e2e)', () => {
   let t: TestApp;

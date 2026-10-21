@@ -19,7 +19,7 @@ import {
 import type { DbTransaction } from '../database/database.service.js';
 import type { EditStorage } from './storage/index.js';
 
-// Правка в памяти, общая для карты в редакторе и сцены игры (docs/plan/game.md, этап 6):
+// Правка в памяти, общая для карты в редакторе и сцены игры (docs/plan/done/game.md, этап 6):
 // загрузить задетые чанки и объекты из хранилища, применить пачку или откатить запись
 // журнала, сохранить. Журнал у карты и сцены свой (map-journal.ts, scenes/scene-journal.ts).
 

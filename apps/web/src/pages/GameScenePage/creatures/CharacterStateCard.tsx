@@ -15,7 +15,7 @@ interface CharacterStateCardProps {
   onOpenSheet: () => void;
 }
 
-// Карточка персонажа игрока в панели сцены (docs/plan/game.md, этап 8): тем, кто его
+// Карточка персонажа игрока в панели сцены (docs/plan/done/game.md, этап 8): тем, кто его
 // ведёт, — хиты, спасброски на нуле, ячейки и эффекты. Правка пишется в лист владельца.
 function CharacterStateCard({
   gameId,

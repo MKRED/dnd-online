@@ -16,7 +16,7 @@ import { bytea } from './bytea.js';
 import { games } from './games.js';
 import { maps } from './maps.js';
 
-// Сцена игры (docs/plan/game.md, «Сцены и смена карты на ходу»): копия карты мастера.
+// Сцена игры (docs/plan/done/game.md, «Сцены и смена карты на ходу»): копия карты мастера.
 // Колонки повторяют maps, чанки и объекты — map_chunks и map_objects: операции карты
 // (этап 6) не знают, где лежат чанки, и правят сцену тем же кодом.
 export const gameScenes = pgTable(

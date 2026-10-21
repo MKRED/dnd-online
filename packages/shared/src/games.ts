@@ -1,7 +1,7 @@
 import type { CharacterClassLevel, CharacterSpecies } from './character.js';
 import type { GameSceneStatus } from './game-scenes.js';
 
-// Игры (docs/plan/game.md): кампания мастера с местами для персонажей игроков.
+// Игры (docs/plan/done/game.md): кампания мастера с местами для персонажей игроков.
 // Место — персонаж в игре, а не человек онлайн; мастер места не занимает.
 export const GAME_NAME_MAX = 100;
 export const GAME_PASSWORD_MAX = 100;

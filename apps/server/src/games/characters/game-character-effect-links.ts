@@ -21,7 +21,7 @@ import { copyToLibrary } from '../library/index.js';
 import { actingAs, type SeatedCharacter } from './game-character-access.js';
 import type { CharacterActor } from './game-character-state.js';
 
-// Наложить и снять эффект персонажа в игре (docs/plan/game.md, этап 8). Строка — та же
+// Наложить и снять эффект персонажа в игре (docs/plan/done/game.md, этап 8). Строка — та же
 // ссылка в листе владельца, что и на его странице; игра читает эффект из библиотеки.
 // Наложенный в игре эффект сразу копируется туда глазами того, кто накладывает: мастер
 // может наложить свой скрытый эффект, игрок — только то, что видит.

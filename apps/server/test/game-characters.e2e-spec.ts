@@ -8,7 +8,7 @@ import {
 } from './support/socket-client.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Персонаж игрока в игре (docs/plan/game.md, этап 8): лист, хиты, спасброски, ячейки и
+// Персонаж игрока в игре (docs/plan/done/game.md, этап 8): лист, хиты, спасброски, ячейки и
 // эффекты правят мастер, владелец и управляющий; правка пишется в лист и в журнал.
 describe('game characters (e2e)', () => {
   let t: TestApp;

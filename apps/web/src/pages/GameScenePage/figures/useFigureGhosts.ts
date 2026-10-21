@@ -12,7 +12,7 @@ interface Held {
   seenAt: number;
 }
 
-// Фигурки, которые сейчас тянут другие (docs/plan/game.md, этап 7): позиции приходят по
+// Фигурки, которые сейчас тянут другие (docs/plan/done/game.md, этап 7): позиции приходят по
 // сокету, в базу не пишутся. Тень пропадает, когда фигурку отпустили (at: null), и сама —
 // если тянувший замолчал дольше FIGURE_DRAG_STALE_MS (отключился посреди перетаскивания).
 export function useFigureGhosts(inputs: readonly FigureInput[]) {

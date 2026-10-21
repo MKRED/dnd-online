@@ -215,7 +215,7 @@ export const CHARACTER_KINDS = ['pc', 'npc'] as const;
 export type CharacterKind = (typeof CHARACTER_KINDS)[number];
 
 // Почему лист закрыт для правки: персонаж на месте в игре, где идёт встреча
-// (docs/plan/game.md, «Персонаж в игре пишет в свой лист»).
+// (docs/plan/done/game.md, «Персонаж в игре пишет в свой лист»).
 export interface CharacterSheetLock {
   gameId: string;
   gameName: string;

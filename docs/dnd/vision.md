@@ -29,6 +29,7 @@ Decided with the user on 2026-10-21, for the fog of war ([docs/plan/fog-of-war.m
 - **Creatures don't block sight.** Following the book: they are only Half Cover.
 - **All around, no facing.**
 - **Sight range — a house rule.** The books have none in Bright Light, but there is no lighting on the map yet, and unlimited sight on a large open map is too expensive to count on every move. Until lighting lands, every scene is treated as Bright Light and the GM sets its **sight range** in feet. The range is a separate value per viewer, so that Darkness, Darkvision and Blinded can later change it for one creature without rewriting the fog.
+- **An Unconscious creature doesn't see.** The condition makes it unaware of its surroundings ([conditions.md](conditions.md)), so a down or dead character gives the fog no sight (range 0). This follows from the condition and isn't a house rule.
 - **Not counted yet:** light and darkness, Darkvision and other senses, Blinded, Invisible, the Hide action.
 
 Where it lives in code: nothing yet; the plan is in [docs/plan/fog-of-war.md](../plan/fog-of-war.md).

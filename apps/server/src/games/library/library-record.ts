@@ -270,6 +270,16 @@ function toEffect(row: LibraryRow): Effect {
   return { ...entryFields(row), ...libraryEffectFields(row) };
 }
 
+// Максимум хитов экземпляра на сцене (этап 8): у монстра — средние хиты стат-блока, у
+// НПС — максимум из его листа.
+export function libraryCreatureMaxHp(row: LibraryRow): number {
+  if (row.kind === 'npc') {
+    const max = row.record.hitPointsMax;
+    return typeof max === 'number' && max > 0 ? max : 1;
+  }
+  return toMonsterFields(...variantArgs(row)).statBlock.hitPoints.average;
+}
+
 // Составляющие и длительность копии эффекта — для итога листа в игре.
 export function libraryEffectFields(row: LibraryRow) {
   return toEffectFields(...variantArgs(row));

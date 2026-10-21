@@ -347,6 +347,20 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'creature.changed',
+        as: { kind: 'master' },
+        intent: { objectId: 2, change: { kind: 'damage', amount: 3 } },
+        result: {
+          creature: { objectId: 2, name: 'Гоблин' },
+          before: { current: 7, max: 7, temp: 0 },
+          after: { current: 4, max: 7, temp: 0 },
+        },
+      },
+      'Урон: Гоблин — 3, хиты 7 → 4',
+    ],
+    [
+      {
+        ...base,
         kind: 'scene.undone',
         as: { kind: 'master' },
         intent: { seq: 7 },

@@ -41,12 +41,16 @@ export const FIGURE_KINDS: readonly GameEventKind[] = [
   'figure.dashed',
 ];
 
-// Состояние персонажей в игре (этап 8): страница сцены перечитывает фигурки (метка
-// здоровья) и открытую карточку, лобби не меняется — как с фигурками.
+// Состояние персонажей, монстров и НПС в игре (этап 8): страница сцены перечитывает
+// фигурки и существа (метки здоровья) и открытую карточку, лобби не меняется — как с
+// фигурками.
 export const CREATURE_KINDS: readonly GameEventKind[] = [
   'character.changed',
   'character.effect_added',
   'character.effect_removed',
+  'creature.changed',
+  'creature.effect_added',
+  'creature.effect_removed',
 ];
 
 // Сколько пропущенных записей журнала мастер получает при возвращении; больше —

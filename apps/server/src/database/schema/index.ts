@@ -29,6 +29,7 @@ export type {
 export * from './bookmarks.js';
 export * from './games.js';
 export * from './game-events.js';
+export * from './game-creatures.js';
 export * from './game-figures.js';
 export * from './game-library.js';
 export * from './game-scenes.js';

@@ -4,7 +4,10 @@ import type {
   SceneReplayResult,
   SceneEditResult,
 } from 'shared';
-import { characterChangedText } from './characterEventText';
+import {
+  characterChangedText,
+  creatureChangedText,
+} from './characterEventText';
 
 // Строка журнала игры по-русски. Кто сделал, показывается рядом отдельно, поэтому здесь —
 // безличные фразы: пол автора по нику не угадать.
@@ -109,6 +112,14 @@ export function gameEventText(event: GameEvent): string {
       return event.result.effect
         ? `Эффект снят: ${event.result.character.name} — ${event.result.effect.name}`
         : `Эффект снят: ${event.result.character.name}`;
+    case 'creature.changed':
+      return creatureChangedText(event);
+    case 'creature.effect_added':
+      return `Эффект наложен: ${event.result.creature.name} — ${event.result.effect.name}`;
+    case 'creature.effect_removed':
+      return event.result.effect
+        ? `Эффект снят: ${event.result.creature.name} — ${event.result.effect.name}`
+        : `Эффект снят: ${event.result.creature.name}`;
     case 'member.left':
       return withCharacter('Выход из игры', event.result.character);
     case 'member.removed':

@@ -2,6 +2,11 @@ import type {
   GameCharacterChange,
   GameCharacterState,
 } from './game-characters.js';
+import type {
+  GameCreatureChange,
+  GameCreatureHitPoints,
+  GameEventCreature,
+} from './game-creatures.js';
 import type { GameFigurePlacement } from './game-figures.js';
 import type { GameUser } from './games.js';
 import type { GameLibraryRef } from './game-library.js';
@@ -192,6 +197,27 @@ export interface GameEventPayloads {
   'character.effect_removed': {
     intent: { characterId: string; entryId: string };
     result: { character: GameEventCharacter; effect: GameEventEffect | null };
+  };
+  // Хиты монстра или НПС на сцене (этап 8); правит только мастер.
+  'creature.changed': {
+    intent: { objectId: number; change: GameCreatureChange };
+    result: {
+      creature: GameEventCreature;
+      before: GameCreatureHitPoints;
+      after: GameCreatureHitPoints;
+    };
+  };
+  'creature.effect_added': {
+    intent: { objectId: number; effectId: string };
+    result: {
+      creature: GameEventCreature;
+      effect: GameEventEffect;
+      libraryCopied: number;
+    };
+  };
+  'creature.effect_removed': {
+    intent: { objectId: number; entryId: string };
+    result: { creature: GameEventCreature; effect: GameEventEffect | null };
   };
   // Мастер убрал игрока.
   'member.removed': {

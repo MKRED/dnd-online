@@ -30,7 +30,7 @@ Decided with the user on 2026-10-21 ([plan/game.md](../plan/game.md), «Сост
 - **Damage:** Temporary Hit Points first, then Hit Points, never below 0. A character dropped to 0 with a remainder at least its maximum dies (`instantDeath` in the log; the sheet gets three failures). Damage at 0 is one failure, and a death at its maximum; three successes (Stable) start over. A Critical Hit's second failure is marked by hand.
 - **Healing:** up to the maximum; any healing from 0 clears both counts. A dead character (three failures) can't be healed (409) until the counts are cleared by hand: «revived by magic» is the GM's call. An effect with the «Запрет лечения» component (Chill Touch) refuses healing (400) with its name.
 - **Temporary Hit Points** are set as a number, which the player chooses (0 removes them): the rules let them pick which to keep.
-- **Monsters and NPCs** on the scene (next step of stage 8): no death saves and no instant death — they are down at 0 («Повержен»), and stay on the map until the GM removes them.
+- **Monsters and NPCs** on the scene (`apps/server/src/games/creatures/`): full hit points from the library copy (the stat block's average, an NPC's sheet maximum), changed by the GM only; no death saves and no instant death — they are down at 0 («Повержен»), and stay on the map until the GM removes them. Players see only «Ранен» and «Повержен» of the creatures visible to them.
 - **What others see:** `creatureHealth` — «Ранен» (Bloodied, half the maximum or less), «Без сознания» or «Повержен» at 0, «Погиб» with three failures. The numbers stay with whoever drives the creature.
 - **Departures and gaps:**
   - The Unconscious condition isn't put on by the server at 0 Hit Points: the GM adds it (decided with the user).

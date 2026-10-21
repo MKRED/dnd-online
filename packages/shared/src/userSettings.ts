@@ -17,14 +17,21 @@ export const AVAILABLE_GRAPHICS_QUALITIES: readonly GraphicsQuality[] = [
   'medium',
 ];
 
+// Вид метки здоровья над существом в игре: тёмная табличка с рамкой, надпись с обводкой
+// или лента.
+export const HEALTH_MARK_STYLES = ['plate', 'text', 'ribbon'] as const;
+export type HealthMarkStyle = (typeof HEALTH_MARK_STYLES)[number];
+
 export interface UserSettings {
   facingMarker: FacingMarker;
   graphicsQuality: GraphicsQuality;
+  healthMarkStyle: HealthMarkStyle;
 }
 
 export const DEFAULT_USER_SETTINGS: UserSettings = {
   facingMarker: 'pointer',
   graphicsQuality: 'medium',
+  healthMarkStyle: 'plate',
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -36,6 +43,7 @@ export function readUserSettings(raw: unknown): UserSettings {
   const source = isRecord(raw) ? raw : {};
   const marker = source.facingMarker;
   const quality = source.graphicsQuality;
+  const mark = source.healthMarkStyle;
   return {
     facingMarker: FACING_MARKERS.includes(marker as FacingMarker)
       ? (marker as FacingMarker)
@@ -47,5 +55,8 @@ export function readUserSettings(raw: unknown): UserSettings {
     )
       ? (quality as GraphicsQuality)
       : DEFAULT_USER_SETTINGS.graphicsQuality,
+    healthMarkStyle: HEALTH_MARK_STYLES.includes(mark as HealthMarkStyle)
+      ? (mark as HealthMarkStyle)
+      : DEFAULT_USER_SETTINGS.healthMarkStyle,
   };
 }

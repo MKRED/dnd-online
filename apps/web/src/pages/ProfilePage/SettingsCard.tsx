@@ -16,6 +16,7 @@ import { updateSettings } from '../../features/profile';
 import { errorMessage } from '../../lib/apiRequest';
 import FacingMarkerPreview from './FacingMarkerPreview';
 import GraphicsQualityField from './GraphicsQualityField';
+import HealthMarkStyleField from './HealthMarkStyleField';
 
 const MARKER_TEXT: Record<FacingMarker, { label: string; hint: string }> = {
   pointer: { label: 'Указатель', hint: 'Подставка вытянута носом по взгляду' },
@@ -87,6 +88,12 @@ function SettingsCard() {
         value={user.settings.graphicsQuality}
         disabled={saving}
         onChange={(graphicsQuality) => change({ graphicsQuality })}
+      />
+      <Divider my="md" />
+      <HealthMarkStyleField
+        value={user.settings.healthMarkStyle}
+        disabled={saving}
+        onChange={(healthMarkStyle) => change({ healthMarkStyle })}
       />
       {error && (
         <Alert color="red" mt="sm">

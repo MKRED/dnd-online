@@ -2,6 +2,7 @@ import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import { DoubleSide, type Group, type Texture } from 'three';
 import { useGraphicsQuality } from '../graphicsQualityContext';
+import { SPIRIT_GAP, SPIRIT_SWAY, spiritSize } from './creaturePose';
 
 const SPIRIT = '#d8ecff';
 
@@ -18,11 +19,8 @@ interface SpiritProps {
 // «низком» висит на месте.
 function Spirit({ footprint, floor, picture }: SpiritProps) {
   const animate = useGraphicsQuality() !== 'low';
-  // Размер растёт с местом, но у Большого и крупнее не дальше Среднего: высокий призрак
-  // над огромным гробом с наклонной камеры заслонял бы соседние клетки.
-  const width = Math.min(footprint, 1.2) * 0.5;
-  const height = width * 1.3;
-  const rest = floor + 0.15 + height / 2;
+  const { width, height } = spiritSize(footprint);
+  const rest = floor + SPIRIT_GAP + height / 2;
   const group = useRef<Group>(null);
   // Сцена рисует кадры по требованию (frameloop="demand"). Пока на ней есть
   // покачивающийся призрак, каждый кадр просит следующий — сцена перерисовывается
@@ -30,7 +28,7 @@ function Spirit({ footprint, floor, picture }: SpiritProps) {
   useFrame((state) => {
     if (!animate || !group.current) return;
     const t = state.clock.elapsedTime;
-    group.current.position.y = rest + Math.sin(t * 1.4) * 0.06;
+    group.current.position.y = rest + Math.sin(t * 1.4) * SPIRIT_SWAY;
     group.current.rotation.y = Math.sin(t * 0.7) * 0.15;
     state.invalidate();
   });

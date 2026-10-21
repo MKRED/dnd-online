@@ -174,6 +174,7 @@ function ObjectLayer({
                   pc={false}
                   base={object.base}
                   top={object.top}
+                  footprint={object.footprint}
                 />
               )}
               {look.kind === 'start' && (

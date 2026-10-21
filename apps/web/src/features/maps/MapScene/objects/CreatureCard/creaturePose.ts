@@ -33,6 +33,37 @@ export function coffinSize(footprint: number): CoffinSize {
   return { length, width: length * 0.42, height: 0.06 + footprint * 0.1 };
 }
 
+// Призрак над гробом: растёт с местом, но у Большого и крупнее не дальше Среднего —
+// высокий призрак над огромным гробом с наклонной камеры заслонял бы соседние клетки.
+// Парит на gap над крышкой и качается на sway вверх-вниз.
+export const SPIRIT_GAP = 0.15;
+export const SPIRIT_SWAY = 0.06;
+
+export function spiritSize(footprint: number): {
+  width: number;
+  height: number;
+} {
+  const width = Math.min(footprint, 1.2) * 0.5;
+  return { width, height: width * 1.3 };
+}
+
+// Верх существа в позе над его ногами — над ним встаёт метка здоровья. standing — рост
+// стоящей карточки; лежащая карточка — плоская, её верх у пола.
+export function poseTop(
+  pose: CreaturePose,
+  footprint: number,
+  standing: number,
+): number {
+  if (pose === 'standing') return standing;
+  if (pose === 'lying') return 0.05;
+  return (
+    coffinSize(footprint).height +
+    SPIRIT_GAP +
+    spiritSize(footprint).height +
+    SPIRIT_SWAY
+  );
+}
+
 // Контур гроба сверху — классический шестиугольник: узкое изголовье по взгляду (−z),
 // шире всего у плеч, сужение к ногам. Точки (x, z) по часовой стрелке.
 export function coffinOutline({

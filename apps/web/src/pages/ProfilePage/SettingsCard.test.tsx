@@ -9,7 +9,11 @@ const me: AuthUser = {
   id: 'u1',
   login: 'hero',
   nickname: 'Hero',
-  settings: { facingMarker: 'compass', graphicsQuality: 'medium' },
+  settings: {
+    facingMarker: 'compass',
+    graphicsQuality: 'medium',
+    healthMarkStyle: 'plate',
+  },
 };
 
 function stubFetch(status: number, body: unknown) {
@@ -30,6 +34,7 @@ describe('SettingsCard', () => {
     const fetchMock = stubFetch(200, {
       facingMarker: 'chevrons',
       graphicsQuality: 'medium',
+      healthMarkStyle: 'plate',
     });
     const { authValue } = renderWithProviders(<SettingsCard />, {
       auth: { user: me },
@@ -42,7 +47,11 @@ describe('SettingsCard', () => {
     // Сначала сразу, до ответа сервера, потом — тем, что ответил сервер.
     expect(authValue.setUser).toHaveBeenNthCalledWith(1, {
       ...me,
-      settings: { facingMarker: 'chevrons', graphicsQuality: 'medium' },
+      settings: {
+        facingMarker: 'chevrons',
+        graphicsQuality: 'medium',
+        healthMarkStyle: 'plate',
+      },
     });
     await waitFor(() => expect(authValue.setUser).toHaveBeenCalledTimes(2));
     const [url, init] = fetchMock.mock.calls[0] as unknown as [
@@ -74,6 +83,7 @@ describe('SettingsCard', () => {
     const fetchMock = stubFetch(200, {
       facingMarker: 'compass',
       graphicsQuality: 'low',
+      healthMarkStyle: 'plate',
     });
     renderWithProviders(<SettingsCard />, { auth: { user: me } });
     const user = userEvent.setup();
@@ -88,5 +98,26 @@ describe('SettingsCard', () => {
       RequestInit,
     ];
     expect(JSON.parse(init.body as string)).toEqual({ graphicsQuality: 'low' });
+  });
+
+  it('вид метки здоровья: по умолчанию «Табличка», выбор сохраняется', async () => {
+    const fetchMock = stubFetch(200, {
+      ...me.settings,
+      healthMarkStyle: 'ribbon',
+    });
+    renderWithProviders(<SettingsCard />, { auth: { user: me } });
+    const user = userEvent.setup();
+
+    expect(screen.getByRole('radio', { name: /Табличка/ })).toBeChecked();
+    await user.click(screen.getByRole('radio', { name: /Лента/ }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const [, init] = fetchMock.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
+    expect(JSON.parse(init.body as string)).toEqual({
+      healthMarkStyle: 'ribbon',
+    });
   });
 });

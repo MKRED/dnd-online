@@ -103,7 +103,11 @@ describe('AuthService', () => {
       login: 'bob',
       nickname: 'Bob',
       // Чего нет в базе, readUserSettings берёт по умолчанию.
-      settings: { facingMarker: 'compass', graphicsQuality: 'medium' },
+      settings: {
+        facingMarker: 'compass',
+        graphicsQuality: 'medium',
+        healthMarkStyle: 'plate',
+      },
     });
     expect(result.tokens).toEqual({
       accessToken: 'access-jwt',

@@ -3,6 +3,8 @@ import {
   coffinOutline,
   coffinSize,
   creaturePose,
+  poseTop,
+  spiritSize,
   lyingScale,
 } from './creaturePose';
 
@@ -35,5 +37,18 @@ describe('размеры лежащих', () => {
       expect(head).toBeLessThan(shoulders);
       expect(size.length).toBeGreaterThan(size.width);
     }
+  });
+});
+
+describe('poseTop', () => {
+  it('стоящее — свой рост, лежащее — у пола', () => {
+    expect(poseTop('standing', 1, 1.8)).toBe(1.8);
+    expect(poseTop('lying', 1, 1.8)).toBeLessThan(0.1);
+  });
+
+  it('над гробом — выше призрака, у Большого не выше, чем гроб плюс призрак Среднего', () => {
+    const top = poseTop('coffin', 2, 1.8);
+    expect(top).toBeGreaterThan(coffinSize(2).height + spiritSize(2).height);
+    expect(spiritSize(4)).toEqual(spiritSize(2));
   });
 });

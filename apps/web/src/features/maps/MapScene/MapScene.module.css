@@ -28,27 +28,6 @@
   background: rgb(0 0 0 / 65%);
 }
 
-/* Метка здоровья над существом в игре: «Ранен» — красная, на нуле — серая, «Погиб» —
-   почти чёрная; белый текст читается в обеих схемах. */
-.healthMark {
-  pointer-events: none;
-  white-space: nowrap;
-  padding: 1px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  background: #c92a2a;
-}
-
-.healthDown {
-  background: #495057;
-}
-
-.healthDead {
-  background: #212529;
-}
-
 /* Клетка под курсором и размер области — внизу сцены, правее полосы инструментов. */
 .readout {
   position: absolute;

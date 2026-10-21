@@ -83,6 +83,7 @@ function FigureLayer({
               pc
               base={figure.base}
               top={figure.top}
+              footprint={figure.footprint}
             />
           )}
         </group>

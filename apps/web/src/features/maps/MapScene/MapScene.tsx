@@ -1,7 +1,7 @@
 import { useComputedColorScheme } from '@mantine/core';
 import { MapControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { useCallback, useRef, useState, type RefObject } from 'react';
+import { useCallback, useState, type RefObject } from 'react';
 import type { MapObjectRefsView, ResizeOp, UserSettings } from 'shared';
 import type { CameraPlacement, Point } from '../cameraView';
 import type { SceneEditor } from '../editor/editorTools';
@@ -24,7 +24,7 @@ import FirstFrame from './FirstFrame';
 import ObjectLayer, {
   FacingMarkerContext,
   GraphicsQualityContext,
-  MarkPortalContext,
+  HealthMarkStyleContext,
   type SceneCreaturesView,
 } from './objects';
 import type { ObjectImagePaths } from './objects/objectImages';
@@ -101,8 +101,6 @@ function MapScene({
   // Q/E — снаружи, в обычном DOM; связывает их ref focus.
   const [centerLevel, setCenterLevel] = useState<number | null>(null);
   const [hover] = useState(createHoverStore);
-  // Метки здоровья кладутся в эту обёртку холста (HealthMark).
-  const overlay = useRef<HTMLDivElement>(null);
   // Миниатюры объектов догрузились (или не загрузились) — только после этого первый
   // кадр считается готовым, иначе на снимке пустые карточки.
   const [imagesSettled, setImagesSettled] = useState(false);
@@ -113,7 +111,7 @@ function MapScene({
   useKeyCodes({ KeyQ: () => shiftLevel(-1), KeyE: () => shiftLevel(1) });
 
   return (
-    <div className={classes.canvas} ref={overlay}>
+    <div className={classes.canvas}>
       <Canvas
         frameloop="demand"
         camera={{ position: camera.position, fov: 45, near: 0.1, far: 5000 }}
@@ -140,7 +138,7 @@ function MapScene({
         </EditLayer>
         <FacingMarkerContext value={settings.facingMarker}>
           <GraphicsQualityContext value={settings.graphicsQuality}>
-            <MarkPortalContext value={overlay}>
+            <HealthMarkStyleContext value={settings.healthMarkStyle}>
               <ObjectLayer
                 state={map}
                 refs={refs}
@@ -161,7 +159,7 @@ function MapScene({
                   {...figureDrag}
                 />
               )}
-            </MarkPortalContext>
+            </HealthMarkStyleContext>
           </GraphicsQualityContext>
         </FacingMarkerContext>
         {walk && <WalkLayer walk={walk} />}

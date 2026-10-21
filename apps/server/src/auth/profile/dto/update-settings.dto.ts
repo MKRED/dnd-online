@@ -2,8 +2,10 @@ import { IsIn, IsOptional } from 'class-validator';
 import {
   AVAILABLE_GRAPHICS_QUALITIES,
   FACING_MARKERS,
+  HEALTH_MARK_STYLES,
   type FacingMarker,
   type GraphicsQuality,
+  type HealthMarkStyle,
 } from 'shared';
 
 // Частичное изменение настроек: необязательные поля, неизвестные отбрасывает
@@ -19,4 +21,8 @@ export class UpdateSettingsDto {
     message: 'Такое качество графики недоступно',
   })
   graphicsQuality?: GraphicsQuality;
+
+  @IsOptional()
+  @IsIn(HEALTH_MARK_STYLES, { message: 'Неизвестный вид метки здоровья' })
+  healthMarkStyle?: HealthMarkStyle;
 }

@@ -16,6 +16,9 @@ describe('readUserSettings', () => {
     expect(readUserSettings({ graphicsQuality: 'ultra' })).toEqual(
       DEFAULT_USER_SETTINGS,
     );
+    expect(readUserSettings({ healthMarkStyle: 'neon' })).toEqual(
+      DEFAULT_USER_SETTINGS,
+    );
   });
 
   it('берёт допустимые значения и отбрасывает лишние поля', () => {
@@ -23,8 +26,13 @@ describe('readUserSettings', () => {
       readUserSettings({
         facingMarker: 'compass',
         graphicsQuality: 'low',
+        healthMarkStyle: 'ribbon',
         extra: 1,
       }),
-    ).toEqual({ facingMarker: 'compass', graphicsQuality: 'low' });
+    ).toEqual({
+      facingMarker: 'compass',
+      graphicsQuality: 'low',
+      healthMarkStyle: 'ribbon',
+    });
   });
 });

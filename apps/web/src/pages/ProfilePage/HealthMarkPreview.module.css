@@ -1,0 +1,18 @@
+/* Полоска цвета пола сцены: метки видны на том фоне, где их увидят в игре. */
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px;
+  border-radius: var(--mantine-radius-sm);
+  background: #6f6f6f;
+}
+
+/* Холст нарисован вчетверо крупнее — показываем в размере метки на сцене. */
+.mark {
+  height: 22px;
+  width: auto;
+}

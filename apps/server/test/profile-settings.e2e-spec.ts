@@ -72,16 +72,40 @@ describe('profile settings (e2e)', () => {
     await agent
       .patch('/api/profile/settings')
       .send({ graphicsQuality: 'low' })
-      .expect(200, { facingMarker: 'compass', graphicsQuality: 'low' });
+      .expect(200, {
+        ...DEFAULT_USER_SETTINGS,
+        facingMarker: 'compass',
+        graphicsQuality: 'low',
+      });
     for (const graphicsQuality of ['high', 'ultra']) {
       await agent
         .patch('/api/profile/settings')
         .send({ graphicsQuality })
         .expect(400);
     }
+    await agent.get('/api/profile/settings').expect(200, {
+      ...DEFAULT_USER_SETTINGS,
+      facingMarker: 'compass',
+      graphicsQuality: 'low',
+    });
+  });
+
+  it('вид метки здоровья сохраняется; неизвестный — 400', async () => {
+    const agent = await t.loginAs('set_mark');
+    await agent
+      .patch('/api/profile/settings')
+      .send({ healthMarkStyle: 'ribbon' })
+      .expect(200, { ...DEFAULT_USER_SETTINGS, healthMarkStyle: 'ribbon' });
+    const bad = await agent
+      .patch('/api/profile/settings')
+      .send({ healthMarkStyle: 'neon' })
+      .expect(400);
+    expect((bad.body as { message: string[] }).message).toContain(
+      'Неизвестный вид метки здоровья',
+    );
     await agent
       .get('/api/profile/settings')
-      .expect(200, { facingMarker: 'compass', graphicsQuality: 'low' });
+      .expect(200, { ...DEFAULT_USER_SETTINGS, healthMarkStyle: 'ribbon' });
   });
 
   it('настройки у каждого свои', async () => {

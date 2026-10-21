@@ -1,7 +1,11 @@
 import { Html } from '@react-three/drei';
-import { useThree } from '@react-three/fiber';
+import { useThree, type ThreeEvent } from '@react-three/fiber';
 import { useEffect, useMemo, useState } from 'react';
-import type { MapObjectRefsView } from 'shared';
+import {
+  creatureHealthLabel,
+  type CreatureHealth,
+  type MapObjectRefsView,
+} from 'shared';
 import type { ObjectToolScene } from '../../editor/objects';
 import type { MapViewState } from '../../mapStateFromChunks';
 import FrameBox from '../FrameBox';
@@ -11,6 +15,7 @@ import ContainerShape from './ContainerShape';
 import CreatureCard from './CreatureCard';
 import FloorItem from './FloorItem';
 import GhostGroup from './GhostGroup';
+import HealthMark from './HealthMark';
 import {
   layoutObjects,
   objectImagePaths,
@@ -24,6 +29,14 @@ import { useObjectTextures } from './useObjectTextures';
 
 const START_COLOR = '#d9a01e';
 const SELECTED_COLOR = '#4dabf7';
+
+// Монстры и НПС на сцене игры (этап 8): метки здоровья и выбор щелчком.
+export interface SceneCreaturesView {
+  health: ReadonlyMap<number, CreatureHealth>;
+  selectedId: number | null;
+  // Есть — щелчок по монстру или НПС выбирает его (мастер в «Просмотре»).
+  onPick?: (id: number) => void;
+}
 
 interface ObjectLayerProps {
   state: MapViewState;
@@ -39,6 +52,7 @@ interface ObjectLayerProps {
   images?: ObjectImagePaths;
   // Содержимое контейнеров смотрящему не отдают — подпись без него.
   hideContents?: boolean;
+  creatures?: SceneCreaturesView;
 }
 
 // Обводка выделенного объекта во всё его место и рост.
@@ -88,6 +102,7 @@ function ObjectLayer({
   hover,
   images,
   hideContents,
+  creatures,
 }: ObjectLayerProps) {
   const all = useMemo(
     () => layoutObjects(state, refs, images, hideContents),
@@ -114,8 +129,12 @@ function ObjectLayer({
   const texture = (path: string | null) =>
     (path !== null && textures.get(path)) || null;
   const tip = objects.find((object) => object.id === hovered);
-  const selected =
-    tool && objects.find((object) => object.id === tool.selectedId);
+  const selectedId = tool ? tool.selectedId : (creatures?.selectedId ?? null);
+  const selected = objects.find((object) => object.id === selectedId);
+  // Щелчок по существу выбирает его, пока инструмент «Объекты» клик не забирает.
+  const pick = !tool && creatures?.onPick;
+  const healthOf = (id: number) => creatures?.health.get(id) ?? null;
+  const tipHealth = tip && healthOf(tip.id);
 
   return (
     <>
@@ -129,6 +148,13 @@ function ObjectLayer({
           >
             <group
               {...handlers(object.id)}
+              {...(pick &&
+                look.kind === 'creature' && {
+                  onClick: (event: ThreeEvent<MouseEvent>) => {
+                    event.stopPropagation();
+                    pick(object.id);
+                  },
+                })}
               onPointerOver={() => setHovered(object.id)}
               onPointerOut={() =>
                 setHovered((prev) => (prev === object.id ? null : prev))
@@ -139,6 +165,15 @@ function ObjectLayer({
                   object={object}
                   look={look}
                   texture={texture(look.image)}
+                  health={healthOf(object.id)}
+                />
+              )}
+              {look.kind === 'creature' && healthOf(object.id) && (
+                <HealthMark
+                  health={healthOf(object.id)!}
+                  pc={false}
+                  base={object.base}
+                  top={object.top}
                 />
               )}
               {look.kind === 'start' && (
@@ -172,6 +207,11 @@ function ObjectLayer({
           {tip.label}
           {tip.hidden && (
             <div className={classes.labelNote}>Скрыт от игроков</div>
+          )}
+          {tipHealth && (
+            <div className={classes.labelNote}>
+              {creatureHealthLabel(tipHealth, false)}
+            </div>
           )}
           {tip.warnings.map((warning) => (
             <div key={warning} className={classes.labelWarning}>

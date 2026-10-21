@@ -1,5 +1,5 @@
 import type { Texture } from 'three';
-import { CREATURE_SIZES } from 'shared';
+import { CREATURE_SIZES, type CreatureHealth } from 'shared';
 import {
   facingAngle,
   type SceneObject,
@@ -28,6 +28,8 @@ interface CreatureCardProps {
   look: CreatureLook;
   // Миниатюра; null — нет картинки или она не загрузилась.
   texture: Texture | null;
+  // Здоровье в игре (этап 8): на нуле карточка лежит на спине, рамка серая.
+  health?: CreatureHealth | null;
 }
 
 // Существо — объёмный жетон, как фигурка на игровом поле: толстая карточка в
@@ -35,8 +37,9 @@ interface CreatureCardProps {
 // взгляду существа (туда же, куда стрелка на полу), так поворот виден по самому
 // жетону. Высота — рост размера, на полу — подставка во всё место. Без картинки —
 // первая буква имени, у заглушки — «?». Подставка на полу круглая, как у миниатюры.
-function CreatureCard({ object, look, texture }: CreatureCardProps) {
-  const frame = look.missing ? FRAME.missing : FRAME[look.side];
+function CreatureCard({ object, look, texture, health }: CreatureCardProps) {
+  const down = health === 'down' || health === 'dead';
+  const frame = look.missing || down ? FRAME.missing : FRAME[look.side];
   const letter = useLabelTexture(texture ? null : look.letter, frame);
   const width = object.footprint * 0.9;
   const height = CREATURE_SIZES[look.size].height * 0.95;
@@ -54,26 +57,33 @@ function CreatureCard({ object, look, texture }: CreatureCardProps) {
         facing={look.facing}
         round
       />
-      {/* В повёрнутой группе взгляд — локальный −z: туда смотрит лицевая сторона. */}
+      {/* В повёрнутой группе взгляд — локальный −z: туда смотрит лицевая сторона.
+          Поверженный падает на спину: поворот на четверть вокруг x кладёт карточку
+          картинкой вверх, чуть над полом. */}
       <group rotation={[0, facingAngle(look.facing), 0]}>
-        <mesh position={[0, height / 2, 0]}>
-          <boxGeometry args={[width, height, THICKNESS]} />
-          <meshStandardMaterial color={frame} />
-        </mesh>
-        <mesh position={[0, pictureY, -face]} rotation={[0, Math.PI, 0]}>
-          <planeGeometry args={[picture, picture]} />
-          {image}
-        </mesh>
-        <mesh position={[0, pictureY, face]}>
-          <planeGeometry args={[picture, picture]} />
-          {image}
-        </mesh>
-        <mesh position={[0, PLINTH_HEIGHT / 2, 0]}>
-          <boxGeometry
-            args={[width * 0.8, PLINTH_HEIGHT, 0.18 * object.footprint]}
-          />
-          <meshStandardMaterial color={PLINTH} />
-        </mesh>
+        <group
+          rotation={[down ? Math.PI / 2 : 0, 0, 0]}
+          position={[0, down ? THICKNESS : 0, 0]}
+        >
+          <mesh position={[0, height / 2, 0]}>
+            <boxGeometry args={[width, height, THICKNESS]} />
+            <meshStandardMaterial color={frame} />
+          </mesh>
+          <mesh position={[0, pictureY, -face]} rotation={[0, Math.PI, 0]}>
+            <planeGeometry args={[picture, picture]} />
+            {image}
+          </mesh>
+          <mesh position={[0, pictureY, face]}>
+            <planeGeometry args={[picture, picture]} />
+            {image}
+          </mesh>
+          <mesh position={[0, PLINTH_HEIGHT / 2, 0]}>
+            <boxGeometry
+              args={[width * 0.8, PLINTH_HEIGHT, 0.18 * object.footprint]}
+            />
+            <meshStandardMaterial color={PLINTH} />
+          </mesh>
+        </group>
       </group>
     </group>
   );

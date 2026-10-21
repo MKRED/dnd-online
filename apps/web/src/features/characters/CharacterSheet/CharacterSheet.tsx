@@ -30,6 +30,8 @@ interface CharacterSheetProps {
   onSpellSlotsChange?: (spellSlots: SpellSlots) => void;
   // Есть — автор добавляет, отмечает и убирает способности на листе.
   onAbilitiesChange?: (abilities: CharacterAbilityEntry[]) => void;
+  // false — без галереи: лист из игры (её картинки видит только владелец).
+  images?: boolean;
 }
 
 // Лист персонажа — так его видят и автор, и зритель по ссылке. Менять на листе можно
@@ -43,6 +45,7 @@ function CharacterSheet({
   onEffectsChange,
   onSpellSlotsChange,
   onAbilitiesChange,
+  images = true,
 }: CharacterSheetProps) {
   // Вид листа: итог с эффектами или база из формы. Не запоминается — лист всегда
   // открывается итогом, в игре нужен он (решено с пользователем 2026-10-17).
@@ -54,13 +57,15 @@ function CharacterSheet({
   return (
     <Stack gap="lg">
       <Grid gap="xl">
-        <Grid.Col span={{ base: 12, sm: 4 }}>
-          <SheetImages
-            characterId={character.id}
-            characterName={character.name}
-          />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 8 }}>
+        {images && (
+          <Grid.Col span={{ base: 12, sm: 4 }}>
+            <SheetImages
+              characterId={character.id}
+              characterName={character.name}
+            />
+          </Grid.Col>
+        )}
+        <Grid.Col span={{ base: 12, sm: images ? 8 : 12 }}>
           <Stack gap="md">
             <SheetHeader character={character} aside={aside} />
             <EffectsStrip character={character} onChange={onEffectsChange} />

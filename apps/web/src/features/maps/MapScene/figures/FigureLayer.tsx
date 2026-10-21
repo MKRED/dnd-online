@@ -6,6 +6,7 @@ import classes from '../MapScene.module.css';
 import CreatureCard from '../objects/CreatureCard';
 import { useObjectTextures } from '../objects/useObjectTextures';
 import GhostGroup from '../objects/GhostGroup';
+import HealthMark from '../objects/HealthMark';
 import { layoutFigures, type FigureInput } from './figureLayout';
 import { useFigureDrag, type FigureDragHandlers } from './useFigureDrag';
 
@@ -61,6 +62,7 @@ function FigureLayer({
         missing: false,
       }}
       texture={(figure.image && textures.get(figure.image)) || null}
+      health={figure.health}
     />
   );
   return (
@@ -75,6 +77,14 @@ function FigureLayer({
           }
         >
           {card(figure)}
+          {figure.health && (
+            <HealthMark
+              health={figure.health}
+              pc
+              base={figure.base}
+              top={figure.top}
+            />
+          )}
         </group>
       ))}
       {shadows.map((figure) => (

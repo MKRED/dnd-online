@@ -1,0 +1,66 @@
+/* Кнопка шире кружка: на телефоне в кружок 14 px трудно попасть пальцем. */
+.pipButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.pipButton:hover:not(:disabled) {
+  background: var(--mantine-color-default-hover);
+}
+
+.pipButton:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+.pipButton:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* Кружок спасброска, как на листе: пустой — только обводка, цвет дублирует подпись. */
+.savePip {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--save-pip-color);
+}
+
+.savePip[data-kind='success'] {
+  --save-pip-color: var(--mantine-color-teal-filled);
+}
+
+.savePip[data-kind='failure'] {
+  --save-pip-color: var(--mantine-color-red-filled);
+}
+
+.savePip[data-full] {
+  background: var(--save-pip-color);
+}
+
+/* Карточка выбранного существа под списками панели. */
+.card {
+  padding: var(--mantine-spacing-xs);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+}
+
+/* Строка существа в списке мастера: щелчок выбирает его, выбранное подсвечено. */
+.row {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.row:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.row[data-selected] {
+  background: var(--mantine-primary-color-light);
+}

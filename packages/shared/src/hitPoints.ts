@@ -127,6 +127,19 @@ function damage(
 // персонаж с тремя провалами спасбросков.
 export type CreatureHealth = 'bloodied' | 'down' | 'dead';
 
+// Метка словами — над существом на карте и в панели: у персонажа на нуле — «Без
+// сознания», у монстра и НПС — «Повержен».
+export function creatureHealthLabel(health: CreatureHealth, pc: boolean) {
+  switch (health) {
+    case 'bloodied':
+      return 'Ранен';
+    case 'down':
+      return pc ? 'Без сознания' : 'Повержен';
+    case 'dead':
+      return 'Погиб';
+  }
+}
+
 export function creatureHealth(
   state: Pick<HitPointsState, 'current' | 'max' | 'deathFailures'>,
 ): CreatureHealth | null {

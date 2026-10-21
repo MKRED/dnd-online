@@ -12,7 +12,7 @@ Online DnD platform for playing with friends: 3D map, real-time updates, persist
 - `apps/comfy-mcp` — local stdio MCP server `comfy` (package `comfy-mcp`): image generation on a remote ComfyUI over Radmin VPN with style presets in `styles/*.json`; saves PNG files whose paths `dnd`'s `upload_image` takes. Setup in [docs/mcp.md](docs/mcp.md).
 - `packages/shared` — code shared by web and server: the DnD 5e character-sheet types and the voxel map model (`src/map/`: chunks, palette, operations, ASCII slices) and the rules geometry on top of it (`src/map/rules/`: distance, creature bodies, line of sight and cover, areas of effect, walking paths), with its own vitest tests.
 
-**Not built yet:** the game beyond its list, lobby, session, event log, socket, library, scenes with the GM's edits, the characters' figures and the creatures' state in play (its UI on the scene page is in progress) — combat on the map (plans in [docs/plan/game.md](docs/plan/game.md) and [docs/plan/map.md](docs/plan/map.md)). Don't assume they exist because the README mentions them.
+**Not built yet:** the game beyond its list, lobby, session, event log, socket, library, scenes with the GM's edits, the characters' figures and the creatures' state in play — combat on the map (plans in [docs/plan/game.md](docs/plan/game.md) and [docs/plan/map.md](docs/plan/map.md)). Don't assume they exist because the README mentions them.
 
 ## Commands
 

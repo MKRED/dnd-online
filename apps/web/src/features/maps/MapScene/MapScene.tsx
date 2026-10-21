@@ -1,7 +1,7 @@
 import { useComputedColorScheme } from '@mantine/core';
 import { MapControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { useCallback, useState, type RefObject } from 'react';
+import { useCallback, useRef, useState, type RefObject } from 'react';
 import type { FacingMarker, MapObjectRefsView, ResizeOp } from 'shared';
 import type { CameraPlacement, Point } from '../cameraView';
 import type { SceneEditor } from '../editor/editorTools';
@@ -21,7 +21,11 @@ import FigureLayer, {
   type FigureInput,
 } from './figures';
 import FirstFrame from './FirstFrame';
-import ObjectLayer, { FacingMarkerContext } from './objects';
+import ObjectLayer, {
+  FacingMarkerContext,
+  MarkPortalContext,
+  type SceneCreaturesView,
+} from './objects';
 import type { ObjectImagePaths } from './objects/objectImages';
 import ResizePreview from './ResizePreview';
 import ChunkMesh from './ChunkMesh';
@@ -67,6 +71,8 @@ interface MapSceneProps {
   figureGhosts?: readonly FigureInput[];
   // Выбор и перетаскивание своих фигурок; без них фигурки не трогаются.
   figureDrag?: FigureDragHandlers;
+  // Монстры и НПС сцены игры (этап 8): метки здоровья и выбор щелчком.
+  creatures?: SceneCreaturesView;
 }
 
 function MapScene({
@@ -86,6 +92,7 @@ function MapScene({
   figures,
   figureGhosts,
   figureDrag,
+  creatures,
 }: MapSceneProps) {
   const chunks = useChunkMeshes(map, cutY);
   const scheme = useComputedColorScheme('dark');
@@ -93,6 +100,8 @@ function MapScene({
   // Q/E — снаружи, в обычном DOM; связывает их ref focus.
   const [centerLevel, setCenterLevel] = useState<number | null>(null);
   const [hover] = useState(createHoverStore);
+  // Метки здоровья кладутся в эту обёртку холста (HealthMark).
+  const overlay = useRef<HTMLDivElement>(null);
   // Миниатюры объектов догрузились (или не загрузились) — только после этого первый
   // кадр считается готовым, иначе на снимке пустые карточки.
   const [imagesSettled, setImagesSettled] = useState(false);
@@ -103,7 +112,7 @@ function MapScene({
   useKeyCodes({ KeyQ: () => shiftLevel(-1), KeyE: () => shiftLevel(1) });
 
   return (
-    <div className={classes.canvas}>
+    <div className={classes.canvas} ref={overlay}>
       <Canvas
         frameloop="demand"
         camera={{ position: camera.position, fov: 45, near: 0.1, far: 5000 }}
@@ -129,25 +138,28 @@ function MapScene({
           ))}
         </EditLayer>
         <FacingMarkerContext value={facingMarker}>
-          <ObjectLayer
-            state={map}
-            refs={refs}
-            cutY={cutY}
-            onImagesSettled={settleImages}
-            tool={objectTool}
-            hover={hover}
-            images={objectImages}
-            hideContents={hideContainerContents}
-          />
-          {figures && (
-            <FigureLayer
-              map={map}
-              figures={figures}
+          <MarkPortalContext value={overlay}>
+            <ObjectLayer
+              state={map}
+              refs={refs}
               cutY={cutY}
-              ghosts={figureGhosts}
-              {...figureDrag}
+              onImagesSettled={settleImages}
+              tool={objectTool}
+              hover={hover}
+              images={objectImages}
+              hideContents={hideContainerContents}
+              creatures={creatures}
             />
-          )}
+            {figures && (
+              <FigureLayer
+                map={map}
+                figures={figures}
+                cutY={cutY}
+                ghosts={figureGhosts}
+                {...figureDrag}
+              />
+            )}
+          </MarkPortalContext>
         </FacingMarkerContext>
         {walk && <WalkLayer walk={walk} />}
         {resizePreview && (

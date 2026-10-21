@@ -34,6 +34,7 @@ export { formatModifier } from './CharacterForm/AbilityScoresSection/abilityMath
 export { default as SheetField } from './CharacterSheet/SheetField';
 export { default as StatTile } from './CharacterSheet/StatTile';
 export { EffectLinksStrip } from './Effects';
+export { default as SpellSlotPips } from './Abilities/SpellSlotPips';
 export { default as EffectSummary } from './CharacterSheet/EffectSummary';
 export { armorClassTile } from './CharacterSheet/sheetArmorClass';
 export { speedTile } from './CharacterSheet/sheetSpeed';

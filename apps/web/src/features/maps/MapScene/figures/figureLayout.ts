@@ -2,6 +2,7 @@ import {
   CREATURE_SIZES,
   feetHeight,
   standHeight,
+  type CreatureHealth,
   type CreatureSize,
   type Facing,
   type MapState,
@@ -21,6 +22,8 @@ export interface FigureInput {
   image: string | null;
   // Смотрящий может выбрать фигурку и водить её.
   selectable: boolean;
+  // Метка здоровья в игре (этап 8); у тени её нет.
+  health?: CreatureHealth | null;
 }
 
 export interface SceneFigure extends FigureInput {

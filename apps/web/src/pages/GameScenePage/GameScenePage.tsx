@@ -14,7 +14,11 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router-dom';
-import { DEFAULT_USER_SETTINGS, mapBounds } from 'shared';
+import {
+  DEFAULT_USER_SETTINGS,
+  mapBounds,
+  type GameSceneEditMessage,
+} from 'shared';
 import { useAuth } from '../../features/auth';
 import { sceneObjectImages } from '../../features/games';
 import { parseCameraParams, placeCamera } from '../../features/maps/cameraView';
@@ -26,6 +30,7 @@ import SceneRoom from './SceneRoom';
 import SceneSidebar from './SceneSidebar';
 import SceneToolsPanel from './SceneToolsPanel';
 import { useGameScene } from './useGameScene';
+import { CreatureCards, useCreatureCards } from './creatures';
 import { FiguresPanel, useScenePlay } from './figures';
 import { useSceneOpen } from './useSceneOpen';
 import { SCENE_TOOLS, useSceneTools } from './useSceneTools';
@@ -33,7 +38,7 @@ import { SCENE_TOOLS, useSceneTools } from './useSceneTools';
 // three.js тяжёлый — сцена грузится отдельным чанком.
 const MapScene = lazy(() => import('../../features/maps/MapScene'));
 
-// Страница сцены /games/:id/scene (docs/plan/game.md, этапы 5 и 6): активная сцена игры в
+// Страница сцены /games/:id/scene (docs/plan/game.md, этапы 5–8): активная сцена игры в
 // 3D. Мастер правит её инструментами редактора карты, игроки видят каждую правку сразу.
 // Игрока, которому мастер закрыл сцену, переводит в лобби.
 function GameScenePage() {
@@ -97,6 +102,25 @@ function GameScenePage() {
     refs: view?.refs ?? null,
   });
   const { figures } = play;
+  const { select: selectFigure } = play.tool;
+  const clearFigure = useCallback(() => selectFigure(null), [selectFigure]);
+  const cards = useCreatureCards({
+    gameId: id,
+    sceneId,
+    master,
+    state,
+    canPick: master && editor.tool === 'view',
+    clearFigure,
+    reloadFigures: figures.reload,
+  });
+  const { onSceneEdit: creaturesSceneEdit } = cards;
+  const sceneEdit = useCallback(
+    (message: GameSceneEditMessage) => {
+      receiveEdit(message);
+      creaturesSceneEdit(message);
+    },
+    [receiveEdit, creaturesSceneEdit],
+  );
   const sceneEditor =
     (master && ready ? editor.sceneEditor : null) ?? play.editor;
   const handleReady = useCallback(() => setReadySceneId(sceneId), [sceneId]);
@@ -116,8 +140,8 @@ function GameScenePage() {
           since={game.eventSeq}
           master={master}
           onReload={reload}
-          onSceneEdit={receiveEdit}
-          onFigures={figures.reload}
+          onSceneEdit={sceneEdit}
+          onFigures={cards.onChanged}
           onFigureDrag={play.ghosts.receive}
           dragSenderRef={play.dragSenderRef}
           onLeave={() => void navigate(lobby)}
@@ -165,6 +189,7 @@ function GameScenePage() {
               figures={figures.inputs}
               figureGhosts={play.ghosts.ghosts}
               figureDrag={play.drag}
+              creatures={cards.view}
             />
           </Suspense>
         )}
@@ -211,6 +236,14 @@ function GameScenePage() {
             figures={figures.figures}
             master={master}
             tool={play.tool}
+          />
+        )}
+        {ready && (
+          <CreatureCards
+            gameId={id}
+            master={master}
+            cards={cards}
+            figure={play.tool.figure}
           />
         )}
         {tools && (

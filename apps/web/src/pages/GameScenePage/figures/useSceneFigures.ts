@@ -43,6 +43,7 @@ export function useSceneFigures(gameId: string, sceneId: string | null) {
         size: figure.size,
         image: figureImagePath(gameId, figure),
         selectable: figure.canMove,
+        health: figure.health,
       })),
     [current, gameId],
   );

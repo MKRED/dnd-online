@@ -135,7 +135,7 @@ function IdentitySection({ form }: IdentitySectionProps) {
           {...form.getInputProps('role')}
         />
         <Text size="xs" c="dimmed">
-          Уникальный монстр (босс) бывает на сцене только один.
+          Уникального монстра (босса) на карте не бывает двух одинаковых.
         </Text>
       </Stack>
     </Stack>

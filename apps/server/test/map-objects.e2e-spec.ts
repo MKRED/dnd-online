@@ -291,16 +291,18 @@ describe('объекты на карте (e2e)', () => {
     expect((await chunks(id)).objects).toHaveLength(1);
   });
 
-  it('уникальный монстр — только один на карте', async () => {
+  it('уникальный монстр — один экземпляр на карте, разные уникальные уживаются', async () => {
     const id = await createMap();
     const dragon = await createMonster(owner, {
       name: 'Дракон',
       role: 'unique',
     });
+    const lich = await createMonster(owner, { name: 'Лич', role: 'unique' });
     const goblin = await createMonster(owner, { name: 'Гоблин' });
     await ops(id, [
       place([0, 0, 0], { kind: 'monster', monsterId: dragon }),
       place([4, 0, 4], { kind: 'monster', monsterId: goblin }),
+      place([6, 0, 6], { kind: 'monster', monsterId: lich }),
     ]).expect(200);
     const second = await ops(id, [
       place([2, 0, 2], { kind: 'monster', monsterId: dragon }),

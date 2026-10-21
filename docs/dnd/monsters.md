@@ -195,4 +195,4 @@ Planned for the next stages:
 - **The GM enters every number by hand**, as in the book, including the saves, skills, initiative and the average HP. The app doesn't derive them. XP and PB are read from the CR table above.
 - **Monsters don't get spell slots.** Spellcasting is not an ability: the monster has optional spellcasting ability, save DC and spell attack fields, shown in the «Заклинания» header (built in stage 5).
 - **A legendary action has a cost of 1–3**, default 1 (built in stage 2). The 2024 book always costs 1. The cost is kept for monsters taken from 2014 books.
-- **The "unique" role is the app's own idea**, not the book's: only one copy of such a monster can be on a scene.
+- **The "unique" role is the app's own idea**, not the book's: only one copy of such a monster can be on a map, while different unique monsters may share one (a ghost and a boss on the same map). Checked by `applyObjectOp` in `packages/shared/src/map/objects/` (clarified with the user on 2026-10-21).

@@ -76,8 +76,9 @@ export const MONSTER_SIZE_HIT_DIE: Record<MonsterSize, number> = {
   gargantuan: 20,
 };
 
-// Уникальный монстр (босс) на сцене бывает только один. Это правило приложения, не книги;
-// проверят его редактор карты и сцена (блоки 3–4).
+// Уникальный монстр (босс, именной) стоит на карте в одном экземпляре: второго такого же
+// поставить нельзя, а разные уникальные уживаются (Сайлас и Крысиный Король на одной
+// карте). Это правило приложения, не книги; проверяет его applyObjectOp.
 export const MONSTER_ROLES = ['regular', 'unique'] as const;
 export type MonsterRole = (typeof MONSTER_ROLES)[number];
 

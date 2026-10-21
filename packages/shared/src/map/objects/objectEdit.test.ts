@@ -16,6 +16,7 @@ const HIDDEN = '00000000-0000-4000-8000-000000000003';
 const NPC = '00000000-0000-4000-8000-000000000004';
 const ROPE = '00000000-0000-4000-8000-000000000005';
 const TORCH = '00000000-0000-4000-8000-000000000006';
+const LICH = '00000000-0000-4000-8000-000000000007';
 
 function refs(): ObjectRefs {
   return {
@@ -25,6 +26,7 @@ function refs(): ObjectRefs {
         { name: 'Гоблин', size: 'small', role: 'regular', usable: true },
       ],
       [DRAGON, { name: 'Дракон', size: 'huge', role: 'unique', usable: true }],
+      [LICH, { name: 'Лич', size: 'medium', role: 'unique', usable: true }],
       [
         HIDDEN,
         { name: 'Тайна', size: 'large', role: 'regular', usable: false },
@@ -308,7 +310,16 @@ describe('объекты в editMap', () => {
     expect(map.objects.byId.get(1)).toMatchObject({ at: [4, 0, 4] });
   });
 
-  it('уникальный монстр на карте только один — и при постановке, и при правке', () => {
+  it('разные уникальные монстры стоят на одной карте', () => {
+    const map = emptyMap();
+    edit(map, [
+      place([0, 0, 0], { kind: 'monster', monsterId: DRAGON, facing: 0 }),
+      place([5, 0, 5], { kind: 'monster', monsterId: LICH, facing: 0 }),
+    ]);
+    expect(map.objects.byId.size).toBe(2);
+  });
+
+  it('второго такого же уникального не поставить — ни постановкой, ни правкой', () => {
     const map = emptyMap();
     edit(map, [
       place([0, 0, 0], { kind: 'monster', monsterId: DRAGON, facing: 0 }),

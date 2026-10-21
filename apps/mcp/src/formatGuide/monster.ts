@@ -17,7 +17,7 @@ import { fieldLines, labeled, list, sample } from './common.js';
 const FIELDS = {
   name: 'название, до 100 символов',
   category: `тип существа: ${labeled(MONSTER_TYPE_LABELS)}`,
-  role: `${labeled(MONSTER_ROLE_LABELS)}; уникальный (босс, именной) на карте бывает только один`,
+  role: `${labeled(MONSTER_ROLE_LABELS)}; уникальный (босс, именной) стоит на карте в одном экземпляре, разные уникальные уживаются`,
   statBlock: 'стат-блок, см. ниже',
   description: 'всё, чему нет поля: описание, мифические действия',
   sources: 'источники — строки, например «Monster Manual 2024, с. 361»',

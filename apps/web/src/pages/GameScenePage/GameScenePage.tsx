@@ -110,6 +110,7 @@ function GameScenePage() {
     master,
     state,
     canPick: master && editor.tool === 'view',
+    figureId: play.tool.selectedId,
     clearFigure,
     reloadFigures: figures.reload,
   });

@@ -9,7 +9,7 @@ const me: AuthUser = {
   id: 'u1',
   login: 'hero',
   nickname: 'Hero',
-  settings: { facingMarker: 'compass' },
+  settings: { facingMarker: 'compass', graphicsQuality: 'medium' },
 };
 
 function stubFetch(status: number, body: unknown) {
@@ -27,7 +27,10 @@ afterEach(() => {
 
 describe('SettingsCard', () => {
   it('показывает текущий выбор и сохраняет новый сразу', async () => {
-    const fetchMock = stubFetch(200, { facingMarker: 'chevrons' });
+    const fetchMock = stubFetch(200, {
+      facingMarker: 'chevrons',
+      graphicsQuality: 'medium',
+    });
     const { authValue } = renderWithProviders(<SettingsCard />, {
       auth: { user: me },
     });
@@ -39,7 +42,7 @@ describe('SettingsCard', () => {
     // Сначала сразу, до ответа сервера, потом — тем, что ответил сервер.
     expect(authValue.setUser).toHaveBeenNthCalledWith(1, {
       ...me,
-      settings: { facingMarker: 'chevrons' },
+      settings: { facingMarker: 'chevrons', graphicsQuality: 'medium' },
     });
     await waitFor(() => expect(authValue.setUser).toHaveBeenCalledTimes(2));
     const [url, init] = fetchMock.mock.calls[0] as unknown as [
@@ -65,5 +68,25 @@ describe('SettingsCard', () => {
 
     expect(await screen.findByText('Неизвестный вид')).toBeInTheDocument();
     expect(authValue.setUser).toHaveBeenLastCalledWith(me);
+  });
+
+  it('качество графики: «Высокое» выбрать нельзя, «Низкое» сохраняется', async () => {
+    const fetchMock = stubFetch(200, {
+      facingMarker: 'compass',
+      graphicsQuality: 'low',
+    });
+    renderWithProviders(<SettingsCard />, { auth: { user: me } });
+    const user = userEvent.setup();
+
+    expect(screen.getByRole('radio', { name: /Среднее/ })).toBeChecked();
+    expect(screen.getByRole('radio', { name: /Высокое/ })).toBeDisabled();
+    await user.click(screen.getByRole('radio', { name: /Низкое/ }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const [, init] = fetchMock.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
+    expect(JSON.parse(init.body as string)).toEqual({ graphicsQuality: 'low' });
   });
 });

@@ -141,10 +141,7 @@ function MapViewPage() {
               }
               focusRef={focusRef}
               onReady={handleSceneReady}
-              facingMarker={
-                user?.settings.facingMarker ??
-                DEFAULT_USER_SETTINGS.facingMarker
-              }
+              settings={user?.settings ?? DEFAULT_USER_SETTINGS}
             />
           </Suspense>
         )}

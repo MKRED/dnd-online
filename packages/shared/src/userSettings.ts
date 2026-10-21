@@ -7,11 +7,25 @@
 export const FACING_MARKERS = ['pointer', 'chevrons', 'compass'] as const;
 export type FacingMarker = (typeof FACING_MARKERS)[number];
 
+// Качество графики на карте: «низкое» — без анимаций (для слабых устройств),
+// «среднее» — с анимациями (призрак над гробом поверженного), «высокое» — потом
+// (частицы и т. п.), пока его выбрать нельзя.
+export const GRAPHICS_QUALITIES = ['low', 'medium', 'high'] as const;
+export type GraphicsQuality = (typeof GRAPHICS_QUALITIES)[number];
+export const AVAILABLE_GRAPHICS_QUALITIES: readonly GraphicsQuality[] = [
+  'low',
+  'medium',
+];
+
 export interface UserSettings {
   facingMarker: FacingMarker;
+  graphicsQuality: GraphicsQuality;
 }
 
-export const DEFAULT_USER_SETTINGS: UserSettings = { facingMarker: 'pointer' };
+export const DEFAULT_USER_SETTINGS: UserSettings = {
+  facingMarker: 'pointer',
+  graphicsQuality: 'medium',
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -21,9 +35,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export function readUserSettings(raw: unknown): UserSettings {
   const source = isRecord(raw) ? raw : {};
   const marker = source.facingMarker;
+  const quality = source.graphicsQuality;
   return {
     facingMarker: FACING_MARKERS.includes(marker as FacingMarker)
       ? (marker as FacingMarker)
       : DEFAULT_USER_SETTINGS.facingMarker,
+    // Недоступное качество («высокое») не сохраняется, но и битым не считается:
+    // читается как значение по умолчанию.
+    graphicsQuality: AVAILABLE_GRAPHICS_QUALITIES.includes(
+      quality as GraphicsQuality,
+    )
+      ? (quality as GraphicsQuality)
+      : DEFAULT_USER_SETTINGS.graphicsQuality,
   };
 }

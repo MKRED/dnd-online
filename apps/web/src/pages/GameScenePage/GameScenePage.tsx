@@ -181,10 +181,7 @@ function GameScenePage() {
               }
               focusRef={focusRef}
               onReady={handleReady}
-              facingMarker={
-                user?.settings.facingMarker ??
-                DEFAULT_USER_SETTINGS.facingMarker
-              }
+              settings={user?.settings ?? DEFAULT_USER_SETTINGS}
               objectImages={images}
               hideContainerContents={ready.view.contentsHidden}
               figures={figures.inputs}

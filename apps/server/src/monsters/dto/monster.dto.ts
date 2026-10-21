@@ -3,6 +3,7 @@ import {
   MONSTER_ROLES,
   MONSTER_TYPES,
   isMonsterStatBlock,
+  monsterStatBlockProblem,
   type MonsterRole,
   type MonsterStatBlock,
   type MonsterType,
@@ -19,9 +20,10 @@ export class MonsterDto extends CatalogEntryDto {
     name: 'monsterStatBlock',
     validator: {
       validate: isMonsterStatBlock,
-      // Общий текст на весь стат-блок: форма проверяет каждое поле сама, сюда доходит
-      // только запрос в обход неё.
-      defaultMessage: () => 'Стат-блок монстра задан неверно',
+      // Форма проверяет каждое поле сама, сюда доходит только запрос в обход неё (MCP):
+      // называем первое неверное поле, иначе неясно, что исправлять.
+      defaultMessage: (args) =>
+        `Стат-блок монстра задан неверно: ${monsterStatBlockProblem(args?.value)}`,
     },
   })
   statBlock: MonsterStatBlock;

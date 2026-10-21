@@ -37,7 +37,7 @@ const STAT_BLOCK = {
   hitPoints:
     '{average, dice: {count, die, bonus}} — «4 (1к8)» это {average: 4, dice: {count: 1, die: 8, bonus: 0}}',
   speed:
-    '{walk, burrow, climb, fly, swim, hover} в футах; null — такой скорости нет; hover — парит (только с fly)',
+    '{walk, burrow, climb, fly, swim, hover} в футах, кратно 5; walk обязательна — число, у летающего или плавающего без ходьбы 0; у остальных null — такой скорости нет; hover — парит (только с fly)',
   abilities:
     'по каждой характеристике {score, save}; save — готовый бонус спасброска (без владения равен модификатору)',
   skills: `[{skill, bonus}], skill: ${list(Object.keys(SKILL_ABILITIES))}`,

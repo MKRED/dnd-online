@@ -69,7 +69,7 @@ export const abilityGuide = () => [
   '',
   'ШАГ «ПРИМЕНЕНИЯ» {when, target, times, check, hit, miss, growth}',
   '- when: always у первого шага; у следующих — always, hit (при попадании или провале спасброска прошлого шага) или miss',
-  `- target: ${labeled(STEP_TARGET_LABELS)}. reach — {feet}, range — {feet, longFeet|null}, around — {feet}, area — {area: {shape, …}, origin: {kind: self} | {kind: point, feet}}; previous и around — только со второго шага`,
+  `- target: ${labeled(STEP_TARGET_LABELS)}. reach — {feet}, range — {feet, longFeet|null}, around — {feet} — футы от 5 и кратно 5 (досягаемость 0 фт., как у роя, — touch, а «0 фт.» оставь в description), area — {area: {shape, …}, origin: {kind: self} | {kind: point, feet}}; previous и around — только со второго шага`,
   `- area.shape: ${labeled(AREA_SHAPE_LABELS)}; размеры в футах: cone {length}, cube {size}, cylinder {radius, height}, emanation {distance}, line {length, width}, sphere {radius}`,
   '- times — сколько раз (лучи «Палящего луча»)',
   `- check: ${labeled(ABILITY_CHECK_LABELS)}. attack — {kind, attack: ${labeled(ATTACK_KIND_LABELS)}, bonus: {kind: ability, ability: ${list(ATTACK_ABILITIES)}} | {kind: fixed, value}}; save — {kind, ability, dc: {kind: ability, ability: ${list(SAVE_DC_ABILITIES)}} | {kind: fixed, value}}`,

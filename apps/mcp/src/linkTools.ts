@@ -2,6 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { INVENTORY_LOCATIONS } from 'shared';
 import { z } from 'zod';
 import { DndApiError, type ApiCall } from './apiClient.js';
+import { summarizeLinks } from './linkSummary.js';
 import { json, type Guarded } from './toolResult.js';
 
 // Связи записей (docs/plan/ai-access.md, этап 3): предметы, способности и эффекты у
@@ -95,7 +96,7 @@ export function registerLinkTools(
   server.registerTool(
     'link_add',
     {
-      description: `Добавить предмет, способность или эффект каталога персонажу, НПС или монстру. targetId — id из search. Поля по связи: предмет персонажу — quantity (по умолчанию 1), location (${INVENTORY_LOCATIONS.join(' или ')}, по умолчанию carried — при себе), unpack (набор кладётся своим составом); предмет монстру — quantity (повтор того же предмета — 409, меняй количество через link_update); способность монстру — perDay (заклинание N раз в день, иначе null), а способности категории monster бывают только у монстров; эффект — без полей, один эффект на существе один раз. Ответ — весь список связей этого вида с id строк.`,
+      description: `Добавить предмет, способность или эффект каталога персонажу, НПС или монстру. targetId — id из search. Поля по связи: предмет персонажу — quantity (по умолчанию 1), location (${INVENTORY_LOCATIONS.join(' или ')}, по умолчанию carried — при себе), unpack (набор кладётся своим составом); предмет монстру — quantity (повтор того же предмета — 409, меняй количество через link_update); способность монстру — perDay (заклинание N раз в день, иначе null), а способности категории monster бывают только у монстров; эффект — без полей, один эффект на существе один раз. Ответ — список связей этого вида коротко: id строки, её поля и id с названием записи; запись целиком — get.`,
       inputSchema: { ...link, targetId: z.uuid(), ...fields },
     },
     ({ owner, ownerId, target, targetId, ...given }) =>
@@ -107,10 +108,12 @@ export function registerLinkTools(
           [TARGET_ID[target]]: targetId,
         };
         return json(
-          await api<unknown>(linksPath(owner, ownerId, target), {
-            method: 'POST',
-            body,
-          }),
+          summarizeLinks(
+            await api<unknown>(linksPath(owner, ownerId, target), {
+              method: 'POST',
+              body,
+            }),
+          ),
         );
       }),
   );
@@ -132,12 +135,14 @@ export function registerLinkTools(
           );
         }
         return json(
-          await api<unknown>(
-            `${linksPath(owner, ownerId, target)}/${entryId}`,
-            {
-              method: 'PATCH',
-              body,
-            },
+          summarizeLinks(
+            await api<unknown>(
+              `${linksPath(owner, ownerId, target)}/${entryId}`,
+              {
+                method: 'PATCH',
+                body,
+              },
+            ),
           ),
         );
       }),
@@ -153,11 +158,13 @@ export function registerLinkTools(
     ({ owner, ownerId, target, entryId }) =>
       guarded(async () =>
         json(
-          await api<unknown>(
-            `${linksPath(owner, ownerId, target)}/${entryId}`,
-            {
-              method: 'DELETE',
-            },
+          summarizeLinks(
+            await api<unknown>(
+              `${linksPath(owner, ownerId, target)}/${entryId}`,
+              {
+                method: 'DELETE',
+              },
+            ),
           ),
         ),
       ),

@@ -59,6 +59,39 @@ describe('link_add', () => {
     });
   });
 
+  it('ответ — короткий список: id строки, её поля и id с названием записи', async () => {
+    const api = vi.fn().mockResolvedValue([
+      {
+        id: ENTRY,
+        perDay: null,
+        ability: {
+          id: TARGET,
+          name: 'Чумная пасть',
+          category: 'monster',
+          activation: { kind: 'action' },
+          costs: { uses: null, hitDie: false },
+        },
+        missing: null,
+        inactive: false,
+      },
+    ]);
+    const result = await run(api, 'link_add', {
+      owner: 'monster',
+      ownerId: OWNER,
+      target: 'ability',
+      targetId: TARGET,
+    });
+    expect(JSON.parse(result.text)).toEqual([
+      {
+        id: ENTRY,
+        perDay: null,
+        ability: { id: TARGET, name: 'Чумная пасть' },
+        missing: null,
+        inactive: false,
+      },
+    ]);
+  });
+
   it('поле, которого у связи нет, — ошибка без запроса', async () => {
     const api = vi.fn();
     const result = await run(api, 'link_add', {

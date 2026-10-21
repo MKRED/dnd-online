@@ -11,7 +11,10 @@ import {
   DEFAULT_MONSTER_STAT_BLOCK,
   type MonsterStatBlock,
 } from './monsters.js';
-import { isMonsterStatBlock } from './monsterStatBlockCheck.js';
+import {
+  isMonsterStatBlock,
+  monsterStatBlockProblem,
+} from './monsterStatBlockCheck.js';
 
 // Аболет книги 2024 (docs/dnd/monsters.md).
 const aboleth: MonsterStatBlock = {
@@ -152,5 +155,29 @@ describe('ПО монстра', () => {
     expect(formatXp(950)).toBe('950');
     expect(formatChallengeXp('10')).toBe('5 900');
     expect(formatChallengeXp('30')).toBe('155 000');
+  });
+});
+
+describe('monsterStatBlockProblem — что не так в стат-блоке', () => {
+  it('верный стат-блок — null', () => {
+    expect(monsterStatBlockProblem(aboleth)).toBeNull();
+  });
+
+  it('называет первое неверное поле с подсказкой', () => {
+    expect(
+      monsterStatBlockProblem({
+        ...aboleth,
+        speed: { ...aboleth.speed, walk: null },
+      }),
+    ).toMatch(/^speed — .*walk — число от 0 \(не null\)/);
+    expect(monsterStatBlockProblem({ ...aboleth, size: 'colossal' })).toMatch(
+      /^size — tiny, small/,
+    );
+    expect(
+      monsterStatBlockProblem({ ...aboleth, legendaryActions: null }),
+    ).toMatch(/^legendaryActionsLair — /);
+    expect(monsterStatBlockProblem({ ...aboleth, speedBonus: 5 })).toMatch(
+      /^нужны ровно поля abilities, alignment/,
+    );
   });
 });

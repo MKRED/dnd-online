@@ -95,8 +95,25 @@ describeCatalog(
             .post(url())
             .send(body({ statBlock: bad }))
             .expect(400);
-          expect(messages(res)).toContain('Стат-блок монстра задан неверно');
+          expect(messages(res).join('\n')).toContain(
+            'Стат-блок монстра задан неверно: ',
+          );
         }
+        // Ответ называет поле: запросу в обход формы (MCP) иначе неясно, что исправлять.
+        const walkRes = await author
+          .post(url())
+          .send(
+            body({
+              statBlock: {
+                ...statBlock,
+                speed: { ...statBlock.speed, walk: null },
+              },
+            }),
+          )
+          .expect(400);
+        expect(messages(walkRes).join('\n')).toContain(
+          'Стат-блок монстра задан неверно: speed — ',
+        );
       });
     });
   },

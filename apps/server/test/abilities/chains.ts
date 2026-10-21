@@ -75,9 +75,9 @@ export function describeAbilityStepChains(get: () => CatalogContext): void {
         [{ ...fireBolt, times: 21 }],
       ]) {
         const res = await author.post(url()).send(body({ steps })).expect(400);
-        expect((res.body as { message: string[] }).message).toContain(
-          'Применение способности задано неверно',
-        );
+        expect(
+          (res.body as { message: string[] }).message.join('\n'),
+        ).toContain('Применение способности задано неверно: ');
       }
     });
 

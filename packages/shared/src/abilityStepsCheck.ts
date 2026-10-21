@@ -58,7 +58,7 @@ function isAbilityOrFixed(
   );
 }
 
-function isCheck(value: unknown): value is AbilityCheck {
+export function isStepCheck(value: unknown): value is AbilityCheck {
   if (!isObject(value)) return false;
   switch (value.kind) {
     case 'attack':
@@ -87,7 +87,7 @@ function isCheck(value: unknown): value is AbilityCheck {
 
 // Цель должна подходить проверке и прошлому шагу (stepTargets); дальняя дистанция —
 // только у дальнобойного оружия и дальше обычной.
-function isTarget(
+export function isStepTarget(
   value: unknown,
   check: AbilityCheck,
   link: StepLink | null,
@@ -123,7 +123,10 @@ function isTarget(
   }
 }
 
-function isHit(value: unknown, check: AbilityCheck): value is HitOutcome {
+export function isStepHit(
+  value: unknown,
+  check: AbilityCheck,
+): value is HitOutcome {
   return (
     isObject(value) &&
     keysAre(value, 'addModifier,damage,effects') &&
@@ -135,7 +138,7 @@ function isHit(value: unknown, check: AbilityCheck): value is HitOutcome {
   );
 }
 
-function isMiss(
+export function isStepMiss(
   value: unknown,
   hit: HitOutcome,
   check: AbilityCheck,
@@ -164,10 +167,10 @@ export function isAbilityStep(
   return (
     stepWhens(link).includes(value.when as StepWhen) &&
     isIntIn(value.times, 1, STEP_TIMES_MAX) &&
-    isCheck(check) &&
-    isTarget(value.target, check, link) &&
-    isHit(value.hit, check) &&
-    isMiss(value.miss, value.hit, check) &&
+    isStepCheck(check) &&
+    isStepTarget(value.target, check, link) &&
+    isStepHit(value.hit, check) &&
+    isStepMiss(value.miss, value.hit, check) &&
     isStepGrowth(value.growth)
   );
 }

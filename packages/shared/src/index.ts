@@ -46,6 +46,7 @@ export * from './abilitySteps.js';
 export * from './abilityStepAreas.js';
 export * from './abilityStepLinks.js';
 export * from './abilityStepsCheck.js';
+export * from './abilityStepsProblem.js';
 export * from './abilityStepDamageCheck.js';
 export * from './abilityStepGrowth.js';
 export * from './abilityStepGrowthLabels.js';

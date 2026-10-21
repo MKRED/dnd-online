@@ -66,10 +66,18 @@ export function describeAbilitySteps(get: () => CatalogContext): void {
         {},
       ]) {
         const res = await author.post(url()).send(body({ steps })).expect(400);
-        expect((res.body as { message: string[] }).message).toContain(
-          'Применение способности задано неверно',
-        );
+        expect(
+          (res.body as { message: string[] }).message.join('\n'),
+        ).toContain('Применение способности задано неверно: ');
       }
+      // Ответ называет шаг и поле: запросу в обход формы (MCP) иначе неясно, что исправлять.
+      const touchRes = await author
+        .post(url())
+        .send(body({ steps: [{ ...fireBolt, target: { kind: 'touch' } }] }))
+        .expect(400);
+      expect(
+        (touchRes.body as { message: string[] }).message.join('\n'),
+      ).toContain('Применение способности задано неверно: шаг 1: target — ');
     });
 
     // Шаг, сохранённый до нового поля, читается с умолчанием (abilityStepsRead.ts), а

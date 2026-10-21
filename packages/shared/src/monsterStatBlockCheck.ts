@@ -156,32 +156,128 @@ const STAT_BLOCK_KEYS = [
   'vulnerabilities',
 ].join(',');
 
+// Поле, его проверка и подсказка для ответа сервера. Подсказка нужна запросам в обход
+// формы (MCP, этап 7 docs/plan/ai-access.md): общий «задан неверно» не говорил, что
+// исправлять. Порядок — порядок проверки.
+const FIELD_CHECKS: [string, (v: Obj) => boolean, string][] = [
+  [
+    'size',
+    (v) => MONSTER_SIZES.includes(v.size as 'tiny'),
+    MONSTER_SIZES.join(', '),
+  ],
+  [
+    'tags',
+    (v) => isText(v.tags, MONSTER_TAGS_MAX_LENGTH),
+    `строка до ${MONSTER_TAGS_MAX_LENGTH} символов`,
+  ],
+  [
+    'alignment',
+    (v) => isText(v.alignment, MONSTER_ALIGNMENT_MAX_LENGTH),
+    `строка до ${MONSTER_ALIGNMENT_MAX_LENGTH} символов`,
+  ],
+  [
+    'armorClass',
+    (v) => isInt(v.armorClass, 1, MONSTER_ARMOR_CLASS_MAX),
+    `целое от 1 до ${MONSTER_ARMOR_CLASS_MAX}`,
+  ],
+  [
+    'initiative',
+    (v) => isBonus(v.initiative),
+    `целое от ${MONSTER_BONUS_MIN} до ${MONSTER_BONUS_MAX}`,
+  ],
+  [
+    'hitPoints',
+    (v) => isHitPoints(v.hitPoints),
+    `{average от 1, dice: {count от 1, die: ${MONSTER_HIT_DICE.join('|')}, bonus}}`,
+  ],
+  [
+    'speed',
+    (v) => isSpeed(v.speed),
+    `{walk, burrow, climb, fly, swim, hover}: walk — число от 0 (не null), остальные — null или число от ${SPEED_FEET_STEP}, всё кратно ${SPEED_FEET_STEP}; hover — только при fly`,
+  ],
+  [
+    'abilities',
+    (v) => isAbilities(v.abilities),
+    `все шесть характеристик {score от 1 до ${MONSTER_ABILITY_SCORE_MAX}, save}`,
+  ],
+  [
+    'skills',
+    (v) => isSkills(v.skills),
+    'список {skill, bonus}, каждый навык один раз',
+  ],
+  [
+    'vulnerabilities',
+    (v) => isUniqueList(v.vulnerabilities, DAMAGE_TYPES),
+    'типы урона, каждый один раз',
+  ],
+  [
+    'resistances',
+    (v) => isUniqueList(v.resistances, DAMAGE_TYPES),
+    'типы урона, каждый один раз',
+  ],
+  [
+    'immunities',
+    (v) => isUniqueList(v.immunities, DAMAGE_TYPES),
+    'типы урона, каждый один раз',
+  ],
+  [
+    'conditionImmunities',
+    (v) => isUniqueList(v.conditionImmunities, CONDITION_KINDS),
+    'состояния, каждое один раз',
+  ],
+  [
+    'senses',
+    (v) => isSenses(v.senses),
+    'список {sense, range}, каждое чувство один раз',
+  ],
+  [
+    'passivePerception',
+    (v) => isInt(v.passivePerception, 0, MONSTER_PASSIVE_PERCEPTION_MAX),
+    `целое от 0 до ${MONSTER_PASSIVE_PERCEPTION_MAX}`,
+  ],
+  [
+    'languages',
+    (v) => isText(v.languages, MONSTER_LANGUAGES_MAX_LENGTH),
+    `строка до ${MONSTER_LANGUAGES_MAX_LENGTH} символов`,
+  ],
+  [
+    'challenge',
+    (v) => isMonsterChallenge(v.challenge),
+    'строка: 0, 1/8, 1/4, 1/2, 1…30',
+  ],
+  [
+    'lairXp',
+    (v) => isIntOrNull(v.lairXp, 0, MONSTER_LAIR_XP_MAX),
+    'null или целое от 0',
+  ],
+  [
+    'legendaryActions',
+    (v) => isIntOrNull(v.legendaryActions, 1, MONSTER_LEGENDARY_ACTIONS_MAX),
+    `null или целое от 1 до ${MONSTER_LEGENDARY_ACTIONS_MAX}`,
+  ],
+  // Число в логове — только у монстра с легендарными действиями.
+  [
+    'legendaryActionsLair',
+    (v) =>
+      isIntOrNull(v.legendaryActionsLair, 1, MONSTER_LEGENDARY_ACTIONS_MAX) &&
+      (v.legendaryActionsLair === null || v.legendaryActions !== null),
+    'null или целое от 1, и только при legendaryActions',
+  ],
+  [
+    'spellcasting',
+    (v) => isSpellcasting(v.spellcasting),
+    '{ability, saveDc, attackBonus}, каждое null или значение',
+  ],
+];
+
+// Первое неверное поле стат-блока с подсказкой; null — стат-блок верен.
+export function monsterStatBlockProblem(value: unknown): string | null {
+  if (!isObj(value) || !hasKeys(value, STAT_BLOCK_KEYS))
+    return `нужны ровно поля ${STAT_BLOCK_KEYS.split(',').join(', ')}`;
+  const failed = FIELD_CHECKS.find(([, check]) => !check(value));
+  return failed ? `${failed[0]} — ${failed[2]}` : null;
+}
+
 export function isMonsterStatBlock(value: unknown): value is MonsterStatBlock {
-  if (!isObj(value) || !hasKeys(value, STAT_BLOCK_KEYS)) return false;
-  const v = value;
-  return (
-    MONSTER_SIZES.includes(v.size as 'tiny') &&
-    isText(v.tags, MONSTER_TAGS_MAX_LENGTH) &&
-    isText(v.alignment, MONSTER_ALIGNMENT_MAX_LENGTH) &&
-    isInt(v.armorClass, 1, MONSTER_ARMOR_CLASS_MAX) &&
-    isBonus(v.initiative) &&
-    isHitPoints(v.hitPoints) &&
-    isSpeed(v.speed) &&
-    isAbilities(v.abilities) &&
-    isSkills(v.skills) &&
-    isUniqueList(v.vulnerabilities, DAMAGE_TYPES) &&
-    isUniqueList(v.resistances, DAMAGE_TYPES) &&
-    isUniqueList(v.immunities, DAMAGE_TYPES) &&
-    isUniqueList(v.conditionImmunities, CONDITION_KINDS) &&
-    isSenses(v.senses) &&
-    isInt(v.passivePerception, 0, MONSTER_PASSIVE_PERCEPTION_MAX) &&
-    isText(v.languages, MONSTER_LANGUAGES_MAX_LENGTH) &&
-    isMonsterChallenge(v.challenge) &&
-    isIntOrNull(v.lairXp, 0, MONSTER_LAIR_XP_MAX) &&
-    isIntOrNull(v.legendaryActions, 1, MONSTER_LEGENDARY_ACTIONS_MAX) &&
-    isIntOrNull(v.legendaryActionsLair, 1, MONSTER_LEGENDARY_ACTIONS_MAX) &&
-    // Число в логове — только у монстра с легендарными действиями.
-    (v.legendaryActionsLair === null || v.legendaryActions !== null) &&
-    isSpellcasting(v.spellcasting)
-  );
+  return monsterStatBlockProblem(value) === null;
 }

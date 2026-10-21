@@ -1,6 +1,7 @@
 import { IsBoolean, IsIn, IsOptional, ValidateBy } from 'class-validator';
 import {
   ABILITY_CATEGORIES,
+  abilityStepsProblem,
   activationFitsCategory,
   isAbilityActivation,
   isAbilityCosts,
@@ -82,7 +83,9 @@ export class AbilityDto extends CatalogEntryDto {
     name: 'abilitySteps',
     validator: {
       validate: isAbilitySteps,
-      defaultMessage: () => 'Применение способности задано неверно',
+      // Форма проверяет шаги сама, сюда доходит запрос в обход неё (MCP): называем поле.
+      defaultMessage: (args) =>
+        `Применение способности задано неверно: ${abilityStepsProblem(args?.value)}`,
     },
   })
   steps?: AbilityStep[];

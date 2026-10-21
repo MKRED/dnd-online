@@ -1,4 +1,5 @@
 import type { StylePreset } from './styles.js';
+import { addUpscale } from './upscale.js';
 
 // Граф ComfyUI в формате API: узлы по номерам, вход — значение или ссылка [узел, выход].
 type Input = string | number | boolean | [string, number];
@@ -19,8 +20,8 @@ export interface GenerateParams {
 
 // txt2img для моделей с одним чекпоинтом (SD 1.5, SDXL и их дообучения): чекпоинт,
 // цепочка LoRA, два текста, пустой латент, сэмплер, декодер, сохранение. Модели с
-// раздельными UNet и текстовыми кодировщиками (Flux) получат свой граф на этапе 6, когда
-// выберем модели.
+// раздельными UNet и текстовыми кодировщиками (Flux) потребуют своего графа; на этапе 6
+// выбрана SDXL-модель, и он не понадобился. Увеличение после — в upscale.ts.
 function txt2img(style: StylePreset, p: GenerateParams): ComfyGraph {
   const graph: ComfyGraph = {
     checkpoint: {
@@ -91,7 +92,7 @@ export const WORKFLOW_NAMES = Object.keys(WORKFLOWS) as [
 ];
 
 export const buildGraph = (style: StylePreset, params: GenerateParams) =>
-  WORKFLOWS[style.workflow](style, params);
+  addUpscale(WORKFLOWS[style.workflow](style, params), style, params);
 
 // Сюжет модели в обрамлении пресета: стиль задают префикс и суффикс.
 export const joinPrompt = (...parts: string[]) =>

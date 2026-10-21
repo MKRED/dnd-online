@@ -24,6 +24,16 @@ const presetSchema = z.object({
   promptPrefix: z.string().default(''),
   promptSuffix: z.string().default(''),
   negative: z.string().default(''),
+  // Увеличение после генерации (upscale.ts): модель апскейла, во сколько раз, и для hires
+  // fix — denoise и шаги второго прохода.
+  upscale: z
+    .object({
+      model: z.string().min(1),
+      scale: z.number().min(1).max(4),
+      denoise: z.number().gt(0).max(1).optional(),
+      steps: z.number().int().min(1).max(150).optional(),
+    })
+    .optional(),
 });
 
 export type StylePreset = z.infer<typeof presetSchema> & { name: string };

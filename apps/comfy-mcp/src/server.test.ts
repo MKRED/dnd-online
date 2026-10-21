@@ -251,7 +251,16 @@ describe('comfy_status', () => {
       'GET /queue': () => ({ queue_running: [], queue_pending: [[1]] }),
       'GET /models/checkpoints': () => ['darkModel.safetensors'],
       'GET /models/loras': () => [],
+      'GET /models/upscale_models': () => ['4x-UltraSharp.pth'],
     });
+    await writeFile(
+      join(dir, 'sharp.json'),
+      JSON.stringify({
+        ...PRESET,
+        loras: [],
+        upscale: { model: 'missing.pth', scale: 1.5 },
+      }),
+    );
     const result = await call(await connect(config, fetchFn), 'comfy_status');
     expect(result.isError).toBeFalsy();
     expect(JSON.parse(textOf(result))).toMatchObject({
@@ -259,8 +268,12 @@ describe('comfy_status', () => {
         available: true,
         devices: [{ name: 'NVIDIA GeForce RTX 5070 Ti', vramTotalGb: 16 }],
         queue: { running: 0, pending: 1 },
+        upscaleModels: ['4x-UltraSharp.pth'],
       },
-      styles: [{ name: 'grim', missing: ['grim.safetensors'] }],
+      styles: [
+        { name: 'grim', missing: ['grim.safetensors'] },
+        { name: 'sharp', missing: ['missing.pth'] },
+      ],
     });
   });
 

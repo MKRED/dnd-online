@@ -1,15 +1,20 @@
 {
-  "description": "Тёмное фэнтези: предметы — оружие, зелья, свитки, сокровища. Один предмет по центру на тёмном фоне, чтобы миниатюра читалась. Черновик до этапа 6 — модель взята из тех, что уже есть на ComfyUI, для первой проверки.",
+  "description": "Фэнтези в духе иллюстраций D&D: предметы — оружие, зелья, свитки, сокровища. Один предмет по центру на простом градиентном фоне со свечением, чтобы миниатюра читалась.",
   "workflow": "txt2img",
-  "checkpoint": "cyberrealisticPony_v150.safetensors",
+  "checkpoint": "MoonartCauldronMix_sdxlV10.safetensors",
   "loras": [],
-  "sampler": "dpmpp_2m",
-  "scheduler": "karras",
+  "sampler": "euler_ancestral",
+  "scheduler": "normal",
   "steps": 30,
-  "cfg": 6,
+  "cfg": 5,
   "width": 1024,
   "height": 1024,
-  "promptPrefix": "dark fantasy item illustration, single object, centered, plain dark background, dramatic rim lighting, muted desaturated colors, detailed painterly style",
-  "promptSuffix": "highly detailed, sharp focus",
-  "negative": "lowres, blurry, text, watermark, signature, logo, jpeg artifacts, hands, people, multiple objects, cluttered background, cartoon, anime, bright cheerful colors"
+  "promptPrefix": "masterpiece, best quality, very aesthetic, 4k, fantasy RPG item illustration, digital painting, still life, object focus, no humans, a single object, centered",
+  "promptSuffix": "simple smooth gradient background, soft vignette, soft magical glow, floating sparkle particles, highly detailed",
+  "negative": "worst quality, lowres, blurry, text, letters, label, watermark, signature, logo, jpeg artifacts, deformed, person, people, hands, holding, table, floor, rope, debris, busy background, detailed background, scenery, cluttered, multiple objects",
+  "upscale": {
+    "model": "4x-UltraSharp.pth",
+    "scale": 1.5,
+    "denoise": 0.35
+  }
 }

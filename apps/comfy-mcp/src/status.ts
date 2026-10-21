@@ -20,12 +20,16 @@ export async function readStatus(config: ComfyConfig, fetchFn: Fetch) {
   const styles = await loadStyles(config.stylesDir);
   try {
     const comfy = createComfyClient(config.url, fetchFn);
-    const [stats, queue, checkpoints, loras] = await Promise.all([
-      comfy.json<SystemStats>('/system_stats'),
-      comfy.json<QueueState>('/queue'),
-      comfy.json<string[]>('/models/checkpoints'),
-      comfy.json<string[]>('/models/loras'),
-    ]);
+    const [stats, queue, checkpoints, loras, upscaleModels] = await Promise.all(
+      [
+        comfy.json<SystemStats>('/system_stats'),
+        comfy.json<QueueState>('/queue'),
+        comfy.json<string[]>('/models/checkpoints'),
+        comfy.json<string[]>('/models/loras'),
+        comfy.json<string[]>('/models/upscale_models'),
+      ],
+    );
+    const installed = [...checkpoints, ...loras, ...upscaleModels];
     return {
       comfy: {
         available: true,
@@ -42,15 +46,18 @@ export async function readStatus(config: ComfyConfig, fetchFn: Fetch) {
         },
         checkpoints,
         loras,
+        upscaleModels,
       },
       styles: styles.map((s) => ({
         name: s.name,
         description: s.description,
         checkpoint: s.checkpoint,
         // Чего из пресета нет на ComfyUI: генерация с ним упадёт.
-        missing: [s.checkpoint, ...s.loras.map((l) => l.name)].filter(
-          (file) => !checkpoints.includes(file) && !loras.includes(file),
-        ),
+        missing: [
+          s.checkpoint,
+          ...s.loras.map((l) => l.name),
+          ...(s.upscale ? [s.upscale.model] : []),
+        ].filter((file) => !installed.includes(file)),
       })),
     };
   } catch (err) {

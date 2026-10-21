@@ -1,15 +1,20 @@
 {
-  "description": "Тёмное фэнтези: существа, монстры, персонажи и НПС. Черновик до этапа 6 — модель взята из тех, что уже есть на ComfyUI, для первой проверки.",
+  "description": "Фэнтези в духе иллюстраций D&D: существа, монстры, персонажи и НПС. Одна фигура по центру на простом градиентном фоне, без сцены, — для карточек.",
   "workflow": "txt2img",
-  "checkpoint": "cyberrealisticPony_v150.safetensors",
+  "checkpoint": "MoonartCauldronMix_sdxlV10.safetensors",
   "loras": [],
-  "sampler": "dpmpp_2m",
-  "scheduler": "karras",
+  "sampler": "euler_ancestral",
+  "scheduler": "normal",
   "steps": 30,
-  "cfg": 6,
+  "cfg": 5,
   "width": 832,
   "height": 1216,
-  "promptPrefix": "dark fantasy illustration, grim atmosphere, dramatic chiaroscuro lighting, muted desaturated colors, detailed painterly style",
-  "promptSuffix": "highly detailed, sharp focus",
-  "negative": "lowres, blurry, text, watermark, signature, logo, jpeg artifacts, deformed, bad anatomy, extra limbs, cartoon, anime, bright cheerful colors"
+  "promptPrefix": "masterpiece, best quality, very aesthetic, 4k, fantasy RPG character illustration, digital painting, solo, centered",
+  "promptSuffix": "simple smooth gradient background, soft vignette, dramatic rim lighting, highly detailed",
+  "negative": "worst quality, lowres, blurry, text, letters, watermark, signature, logo, jpeg artifacts, deformed, bad anatomy, extra limbs, extra fingers, busy background, detailed background, scenery, interior, furniture, cluttered, multiple characters",
+  "upscale": {
+    "model": "4x-UltraSharp.pth",
+    "scale": 1.5,
+    "denoise": 0.35
+  }
 }

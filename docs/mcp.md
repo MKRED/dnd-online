@@ -56,14 +56,36 @@ A second local stdio MCP server (`comfy` in `.mcp.json`, package `comfy-mcp`) th
 
 | Tool           | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `comfy_status` | Whether ComfyUI answers (`/system_stats`, `/queue`), its GPU and VRAM, the queue, the checkpoints and LoRAs it has (`/models/checkpoints`, `/models/loras`), and the style presets, each with `missing` — the preset's files ComfyUI doesn't have. The presets are listed even when ComfyUI is down.                                                                                                                                                                                                                          |
+| `comfy_status` | Whether ComfyUI answers (`/system_stats`, `/queue`), its GPU and VRAM, the queue, the checkpoints, LoRAs and upscale models it has (`/models/checkpoints`, `/models/loras`, `/models/upscale_models`), and the style presets, each with `missing` — the preset's files ComfyUI doesn't have. The presets are listed even when ComfyUI is down.                                                                                                                                                                                |
 | `generate`     | `style`, `prompt` (only the subject, in English), optional `negative`, `seed`, `width`, `height` and `count` (up to 4). Builds the preset's graph, queues it (`POST /prompt`), polls `/history/{id}` every second up to `COMFY_TIMEOUT_SEC`, downloads the images (`/view`) and saves them as PNG to `COMFY_OUTPUT_DIR`. The result is the file paths, the seed and a 512 px JPEG preview of each image, which the model looks at. A path goes on to `dnd`'s `upload_image`: the image itself never passes through the model. |
 
 ComfyUI errors come back as tool results with `isError`: unreachable (the real cause, a 30 s limit per request), a graph rejected by ComfyUI (the node and its message, such as a missing checkpoint), a failed run (`execution_error`, such as CUDA out of memory), a timeout.
 
 ## Style presets
 
-One file per style in `apps/comfy-mcp/styles/<name>.json` (in git), checked by `src/styles.ts` and read on every call, so editing one needs no restart: the graph (`workflow`, so far `txt2img` for single-checkpoint models such as SD 1.5 and SDXL, built in `src/workflow.ts`), `checkpoint`, `loras`, `sampler`, `scheduler`, `steps`, `cfg`, the default `width` and `height`, and `promptPrefix`, `promptSuffix` and `negative` around the model's subject. Two drafts ship until the models are picked (stage 6 of the plan): `dark-fantasy-creature` (portrait 832 × 1216) and `dark-fantasy-item` (one object on a dark background, 1024 × 1024).
+One file per style in `apps/comfy-mcp/styles/<name>.json` (in git), checked by `src/styles.ts` and read on every call, so editing one needs no restart: the graph (`workflow`, so far `txt2img` for single-checkpoint models such as SD 1.5 and SDXL, built in `src/workflow.ts`), `checkpoint`, `loras`, `sampler`, `scheduler`, `steps`, `cfg`, the default `width` and `height`, `promptPrefix`, `promptSuffix` and `negative` around the model's subject, and an optional `upscale` (`src/upscale.ts`).
+
+`upscale` runs after the first pass, because SDXL draws cleanly only near 1024 px and duplicates anatomy above that: an upscale model (`model`, such as `4x-UltraSharp.pth`) enlarges the image, which is then scaled to `width · scale` × `height · scale`. With `denoise` it is a hires fix: the checkpoint redraws the enlarged image in a second pass with the same seed, prompt and LoRAs (`steps` of its own if given), which adds real fine detail; without `denoise` it is the upscale model alone, sharper edges but nothing new.
+
+Two presets ship, both on MoonArt Cauldron Mix (`MoonartCauldronMix_sdxlV10.safetensors`, [civitai](https://civitai.com/models/1741447/moonart-cauldron-mix)) with Euler a, 30 steps, CFG 5 and a hires fix ×1.5 at denoise 0.35 through `4x-UltraSharp.pth` (~28 s an image on the RTX 5070 Ti, a 2–3 MB PNG):
+
+- `dark-fantasy-creature` — creatures, monsters, characters and NPCs: one figure in the centre, 832 × 1216 → 1248 × 1824.
+- `dark-fantasy-item` — weapons, potions, scrolls, treasure: one object in the centre with a soft glow, 1024 × 1024 → 1536 × 1536.
+
+The look is a D&D-style fantasy illustration on a plain gradient background with a vignette, with no scene behind, so a card or a 256 px thumbnail reads at a glance. The names say «dark fantasy» because that was the first brief; they were kept so the plan and earlier notes stay valid.
+
+### Why these models (stage 6 of the plan, 2026-10-21)
+
+Every candidate drew the same subjects with the same seed (a rat, a potion, an NPC portrait, a sword, then a goblin, an elf archmage, a potion and a scroll):
+
+- **MoonArt Cauldron Mix** — picked for both presets. It follows the subject (a goblin is a goblin, a scroll is a scroll), keeps the plain background, and creatures and items come out in one style. Its author's settings ([civitai](https://civitai.com/models/1741447/moonart-cauldron-mix)): quality tags `masterpiece, best quality, very aesthetic, 4k` and `worst quality` in the negative, 832 × 1216 or 1024 × 1024, Euler a or DPM++ 2M Karras, CFG 5–7, 28–35 steps. Euler a, unlike DPM++ 2M, also stopped the stray gems, corks and rings around items.
+- **ZavyChromaXL** draws creatures almost the same as MoonArt; with the **Zavy's Fantasy Icons** LoRA (trigger `zavy-fntscn`, strength 0.5–0.9) its items are clean icons, but MoonArt with Euler a got close without a second model.
+- **FantasyPrime 2.5D** — rich but ignores the plain background and swaps the subject (a jar for a bottle, a case for a scroll), anime-leaning faces.
+- **Juggernaut XL Ragnarok** with the Dark Grim Fantasy and Textured Painterly LoRAs — the grimmest look, but clutter and lettering on items and missing clothes on people.
+- **Fantastic Characters SDXL**, **DreamShaper XL alpha2** — nothing over MoonArt; DreamShaper puts a scene behind and mixes up props.
+- **novaAnimeXL / novaFurryXL** (Illustrious) — even and clean but anime; **cyberrealisticPony** — photoreal, turns monsters into people.
+
+Upscaling was compared on the same images: the upscale model alone ×2 (2048 px, ~13 s) is sharper but plasticky; the hires fix ×1.5 (1536 px, ~28 s) and ×2 (2048 px, ~45 s) add fur, skin and engraving detail, and ×1.5 was chosen for speed, since the site shows images far smaller. The denoise follows the usual advice for a pixel-space second pass after an upscale model, 0.25–0.5 and nearer the low end ([cubiq/ComfyUI_Workflows](https://github.com/cubiq/ComfyUI_Workflows/blob/main/upscale/README.md)); if faces drift, lower it first.
 
 ## The generate → look → upload loop
 

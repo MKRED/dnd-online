@@ -25,7 +25,7 @@ export interface SceneEditMessages {
 
 export interface SceneMessages {
   edits: Map<number, SceneEditMessages>;
-  // Туман игроков изменился без правки сцены (docs/plan/fog-of-war.md, этап 4).
+  // Туман игроков изменился без правки сцены (docs/plan/done/fog-of-war.md, этап 4).
   fog: Map<number, GameSceneFogMessage>;
 }
 

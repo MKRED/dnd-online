@@ -25,6 +25,31 @@ export const GAME_SOCKET = {
   figureDragged: 'game:figure-dragged',
 } as const;
 
+// События, после которых туман войны активной сцены пересчитывается (docs/plan/done/fog-of-war.md,
+// «Когда пересчитываем»): сервер пересчитывает его в записи журнала, а мастер в режиме
+// «Глазами игроков» перечитывает маски.
+export const FOG_EVENT_KINDS: ReadonlySet<GameEventKind> =
+  new Set<GameEventKind>([
+    // Сцена и её настройки.
+    'scene.activated',
+    'scene.restarted',
+    'scene.fog',
+    // Правки мастера: блоки (снесли стену — за ней видно), объекты, отмена и возврат.
+    'scene.edited',
+    'scene.undone',
+    'scene.redone',
+    'creature.moved',
+    // Фигурки и смотрящие.
+    'figures.placed',
+    'figure.placed',
+    'figure.moved',
+    'seat.freed',
+    'member.left',
+    'member.removed',
+    // Хиты персонажа: без сознания он не смотрит.
+    'character.changed',
+  ]);
+
 // Правки сцены, которые клиент применяет к своей копии, а не перечитывает её.
 export const SCENE_EDIT_KINDS: readonly GameEventKind[] = [
   'scene.edited',
@@ -112,7 +137,7 @@ export interface GameSceneEditMessage {
   changes: PackedChangeset;
   // Справочник ссылок затронутых объектов — из библиотеки игры.
   refs: MapObjectRefsView;
-  // Игроку под туманом войны (docs/plan/fog-of-war.md, этап 4): чанки масок, которые эта
+  // Игроку под туманом войны (docs/plan/done/fog-of-war.md, этап 4): чанки масок, которые эта
   // правка изменила, — целиком, взамен прежних. changes тогда уже включает и то, что
   // правка открыла (блоки как поставленные, существа как появившиеся).
   fog?: GameSceneFogView;

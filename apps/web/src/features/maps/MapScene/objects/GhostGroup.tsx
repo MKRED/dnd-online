@@ -51,7 +51,7 @@ function ghost(material: Material) {
 }
 
 // Предмет, который группа видела, но сейчас не видит (туман войны,
-// docs/plan/fog-of-war.md, этап 5), красится как серые блоки вокруг него (fogColor).
+// docs/plan/done/fog-of-war.md, этап 5), красится как серые блоки вокруг него (fogColor).
 // Исходный цвет — в userData: повторный обход не делает предмет всё темнее.
 function darken(material: Material) {
   const { color } = material as Material & { color?: Color };

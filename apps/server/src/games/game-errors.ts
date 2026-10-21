@@ -34,6 +34,8 @@ export const LIBRARY_NO_IMAGE = 'У записи нет картинки';
 export const LIBRARY_SOURCE_MISSING =
   'Записи нет в справочнике или она скрыта от вас — обновить нельзя';
 export const MASTER_ONLY_SCENES = 'Сценами управляет только мастер';
+export const MASTER_ONLY_FOG =
+  'Туман сцены глазами игроков видит только мастер';
 export const SCENE_NOT_FOUND = 'Сцена не найдена';
 export const SCENE_MAP_GONE =
   'Карты этой сцены больше нет — перезапустить сцену нельзя';

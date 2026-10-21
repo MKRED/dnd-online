@@ -171,7 +171,16 @@ describe('GameLobbyPage: сцены', () => {
     expect(screen.queryByText('Сцены')).not.toBeInTheDocument();
     expect(screen.queryByText(/Мастер открыл сцену/)).not.toBeInTheDocument();
 
-    game = { ...game, scene: { id: 's1', name: 'Пещера', open: true } };
+    game = {
+      ...game,
+      scene: {
+        id: 's1',
+        name: 'Пещера',
+        open: true,
+        fog: false,
+        sightRange: 60,
+      },
+    };
     act(() =>
       socket.current?.receive(GAME_SOCKET.changed, {
         gameId: GAME.id,

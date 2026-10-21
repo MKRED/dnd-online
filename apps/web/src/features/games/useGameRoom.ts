@@ -27,7 +27,7 @@ export interface GameRoomHandlers {
   onSceneEdit?: (message: GameSceneEditMessage) => void;
   // Кто-то тянет фигурку (этап 7): где она сейчас под его курсором.
   onFigureDrag?: (message: GameFigureDragMessage) => void;
-  // Игроку: туман войны изменился без правки сцены (docs/plan/fog-of-war.md, этап 4).
+  // Игроку: туман войны изменился без правки сцены (docs/plan/done/fog-of-war.md, этап 4).
   onSceneFog?: (message: GameSceneFogMessage) => void;
 }
 

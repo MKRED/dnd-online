@@ -2,6 +2,7 @@ import { useEffect, type RefObject } from 'react';
 import {
   CREATURE_KINDS,
   FIGURE_KINDS,
+  FOG_EVENT_KINDS,
   type GameFigureDragMessage,
   type GameSceneEditMessage,
   type GameSceneFogMessage,
@@ -42,6 +43,9 @@ interface SceneRoomProps {
   onSceneEdit: (message: GameSceneEditMessage) => void;
   // Туман войны игрока изменился без правки сцены.
   onSceneFog: (message: GameSceneFogMessage) => void;
+  // Мастеру: событие, после которого туман пересчитан, — «Глазами игроков» перечитывает
+  // маски.
+  onFogChanged?: () => void;
   // Фигурки изменились — перечитать их.
   onFigures: () => void;
   // Кто-то тянет фигурку — где она сейчас.
@@ -61,6 +65,7 @@ function SceneRoom({
   onReload,
   onSceneEdit,
   onSceneFog,
+  onFogChanged,
   onFigures,
   onFigureDrag,
   dragSenderRef,
@@ -70,6 +75,7 @@ function SceneRoom({
     gameId,
     {
       onChanged: (message) => {
+        if (FOG_EVENT_KINDS.has(message.kind)) onFogChanged?.();
         if (!master && message.kind === 'scene.closed') onLeave();
         else if (SCENE_CHANGES.has(message.kind)) onReload();
         else if (FIGURE_CHANGES.has(message.kind)) onFigures();

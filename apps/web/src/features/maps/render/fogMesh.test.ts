@@ -14,7 +14,7 @@ import { buildChunkMesh } from './buildChunkMesh';
 import { updateChunkMeshes } from './chunkMeshCache';
 import { fogColor } from './fogColor';
 
-// Туман войны в рендере (docs/plan/fog-of-war.md, этап 5): серые блоки вне поля зрения.
+// Туман войны в рендере (docs/plan/done/fog-of-war.md, этап 5): серые блоки вне поля зрения.
 
 function twoBlocks(): MapState {
   const map: MapState = {

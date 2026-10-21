@@ -88,6 +88,14 @@ export class GameScenesController {
     });
   }
 
+  @Get('scene/fog')
+  fog(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.viewService.fog(req.user.sub, id);
+  }
+
   @Get('scene')
   view(
     @Req() req: AuthenticatedRequest,

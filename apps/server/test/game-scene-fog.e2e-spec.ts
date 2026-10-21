@@ -8,6 +8,8 @@ import {
   type GameEventPage,
   type GameFigures,
   type GameScenes,
+  type GameSceneFogView,
+  type GameSceneView,
   type Vec3,
 } from 'shared';
 import { DatabaseService } from '../src/database/database.service.js';
@@ -17,7 +19,7 @@ import { pngImage } from './support/character-fixture.js';
 import { createSceneGame } from './support/scene-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Туман войны, этап 2 (docs/plan/fog-of-war.md): настройки тумана у сцены и маски
+// Туман войны, этап 2 (docs/plan/done/fog-of-war.md): настройки тумана у сцены и маски
 // «открыто» и «видно», которые пересчитывает запись журнала. Игроку туман ещё не
 // уходит (этап 3), поэтому маски читаются из базы.
 describe('game scene fog (e2e)', () => {
@@ -210,5 +212,32 @@ describe('game scene fog (e2e)', () => {
       .from(gameSceneFog)
       .where(eq(gameSceneFog.sceneId, g.sceneId));
     expect(old.length).toBeGreaterThan(0);
+  });
+
+  it('маски «глазами игроков» — только мастеру; настройки тумана — в статусе сцены', async () => {
+    const g = await setup('gfog_eyes');
+    const url = `/api/games/${g.gameId}/scene/fog`;
+    // Туман выключен — масок нет.
+    expect((await g.m.get(url).expect(200)).body).toEqual({ fog: null });
+    await g.m
+      .put(fogUrl(g.gameId, g.sceneId))
+      .send({ enabled: true, sightRange: 10 })
+      .expect(200);
+    const res = await g.m.get(url).expect(200);
+    const fog = (res.body as { fog: GameSceneFogView }).fog;
+    expect(fog.explored.length).toBeGreaterThan(0);
+    expect(fog.visible.length).toBeGreaterThan(0);
+    await g.player.agent.get(url).expect(403);
+    const stranger = await user('gfog_eyes_stranger');
+    await stranger.agent.get(url).expect(403);
+    await t.anonymous().get(url).expect(401);
+    // Статус сцены несёт настройки тумана — и мастеру, и игроку.
+    for (const agent of [g.m, g.player.agent]) {
+      const view = await agent.get(`/api/games/${g.gameId}/scene`).expect(200);
+      expect((view.body as GameSceneView).scene).toMatchObject({
+        fog: true,
+        sightRange: 10,
+      });
+    }
   });
 });

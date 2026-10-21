@@ -7,7 +7,7 @@ import { createPalette } from '../../palette.js';
 import { creatureBody } from '../creature.js';
 import { bodySeen, maskUnion, visibleCells, type Viewer } from './index.js';
 
-// Замер бюджета тумана войны (docs/plan/fog-of-war.md, «Как считаем видимое») на опорной
+// Замер бюджета тумана войны (docs/plan/done/fog-of-war.md, «Как считаем видимое») на опорной
 // карте 100×100×20. Не тест и в CI не идёт — только по запросу:
 // VISION_PERF=1 pnpm --filter shared exec vitest run src/map/rules/vision/vision.perf.test.ts
 

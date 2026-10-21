@@ -19,7 +19,7 @@ import {
 } from './support/socket-client.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Туман войны, этап 3 (docs/plan/fog-of-war.md, «Что получает игрок»): игроку не уходит
+// Туман войны, этап 3 (docs/plan/done/fog-of-war.md, «Что получает игрок»): игроку не уходит
 // то, чего группа не видит, — ни в чтении сцены, ни в рассылке правок, ни в существах,
 // картинках и пути.
 describe('game scene fog: player view (e2e)', () => {

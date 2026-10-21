@@ -100,7 +100,13 @@ describe('game scenes (e2e)', () => {
       })
       .expect(200);
     const scene = await view(m, gameId);
-    expect(scene.scene).toEqual({ id: sceneId, name: 'Логово', open: false });
+    expect(scene.scene).toEqual({
+      id: sceneId,
+      name: 'Логово',
+      open: false,
+      fog: false,
+      sightRange: 60,
+    });
     expect(scene.objects.map((o) => o.kind)).toEqual([
       'start',
       'monster',
@@ -157,6 +163,8 @@ describe('game scenes (e2e)', () => {
       id: sceneId,
       name: 'Логово',
       open: false,
+      fog: false,
+      sightRange: 60,
     });
     await player.agent.get(sceneUrl(gameId)).expect(403);
 
@@ -226,7 +234,13 @@ describe('game scenes (e2e)', () => {
 
     const lobby = (await player.agent.get(`/api/games/${gameId}`).expect(200))
       .body as GameDetail;
-    expect(lobby.scene).toEqual({ id: sceneId, name: 'Логово', open: true });
+    expect(lobby.scene).toEqual({
+      id: sceneId,
+      name: 'Логово',
+      open: true,
+      fog: false,
+      sightRange: 60,
+    });
     // С этого номера лобби входит в комнату сокета.
     expect(lobby.eventSeq).toBe((await lastEvent(m, gameId)).seq);
     const seen = await view(player.agent, gameId);

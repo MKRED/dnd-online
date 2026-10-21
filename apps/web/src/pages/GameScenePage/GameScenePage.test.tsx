@@ -108,7 +108,7 @@ const VIEW: GameSceneView = {
       },
     },
   },
-  scene: { id: 's1', name: 'Пещера', open: true },
+  scene: { id: 's1', name: 'Пещера', open: true, fog: false, sightRange: 60 },
   contentsHidden: true,
   fog: null,
 };
@@ -448,7 +448,13 @@ describe('GameScenePage', () => {
     view = {
       ...VIEW,
       refs: emptyRefsView(),
-      scene: { id: 's2', name: 'Подвал', open: true },
+      scene: {
+        id: 's2',
+        name: 'Подвал',
+        open: true,
+        fog: false,
+        sightRange: 60,
+      },
     };
     act(() =>
       socket.current?.receive(GAME_SOCKET.changed, {

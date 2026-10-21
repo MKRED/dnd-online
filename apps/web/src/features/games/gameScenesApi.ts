@@ -1,4 +1,10 @@
-import type { GameScenes, GameSceneView, MapEditResult } from 'shared';
+import type {
+  GameSceneFogInput,
+  GameSceneFogView,
+  GameScenes,
+  GameSceneView,
+  MapEditResult,
+} from 'shared';
 import type { ObjectImagePaths } from '../maps/MapScene';
 import type { MapEditApi } from '../maps/useMapEdits';
 import { apiRequest as request } from '../../lib/apiRequest';
@@ -49,6 +55,28 @@ export function setGameSceneOpen(
     method: 'PUT',
     body: JSON.stringify({ open }),
   });
+}
+
+// Туман войны сцены и дальность обзора (docs/plan/done/fog-of-war.md, этап 6).
+export function setGameSceneFog(
+  gameId: string,
+  sceneId: string,
+  input: GameSceneFogInput,
+): Promise<GameScenes> {
+  return request(`${scenesBase(gameId)}/${sceneId}/fog`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  });
+}
+
+// Маски тумана активной сцены — мастеру для «Глазами игроков»; null — туман выключен.
+export async function getGameSceneFog(
+  gameId: string,
+): Promise<GameSceneFogView | null> {
+  const { fog } = await request<{ fog: GameSceneFogView | null }>(
+    `/games/${gameId}/scene/fog`,
+  );
+  return fog;
 }
 
 // Активная сцена; закрытая игроку — 403, нет активной — 404.

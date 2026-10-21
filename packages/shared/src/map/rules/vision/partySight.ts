@@ -5,7 +5,7 @@ import { bodySeen } from './bodySeen.js';
 import { createMask, maskUnion, type CellMask } from './cellMask.js';
 import { revealBody, visibleCells, type Viewer } from './visibleCells.js';
 
-// Что видит группа сейчас (docs/plan/fog-of-war.md): клетки всех смотрящих вместе и
+// Что видит группа сейчас (docs/plan/done/fog-of-war.md): клетки всех смотрящих вместе и
 // клетки тел существ, которых видит хоть один из них. Скрытых мастером существ сюда
 // не передают: их клетки открыл бы сам факт, что их видно.
 export function partySight(

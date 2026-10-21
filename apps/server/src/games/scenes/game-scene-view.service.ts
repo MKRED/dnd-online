@@ -6,10 +6,15 @@ import {
 } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import type { CatalogImageVariant, GameSceneView } from 'shared';
+import type {
+  CatalogImageVariant,
+  GameSceneFogView,
+  GameSceneView,
+} from 'shared';
 import { DatabaseService } from '../../database/database.service.js';
 import { games } from '../../database/schema/index.js';
 import {
+  MASTER_ONLY_FOG,
   NO_ACTIVE_SCENE,
   SCENE_CLOSED,
   SCENE_MEMBERS_ONLY,
@@ -17,7 +22,7 @@ import {
 } from '../game-errors.js';
 import { findGameAccess } from '../game-read.js';
 import { readLibraryImage } from '../library/index.js';
-import { playerFog } from '../fog/fog-view.js';
+import { fogView, playerFog } from '../fog/fog-view.js';
 import { sceneShowsEntry, type SceneImageKind } from './scene-image-access.js';
 import { findActiveScene, readSceneView, sceneStatus } from './scene-read.js';
 
@@ -66,6 +71,40 @@ export class GameSceneViewService {
     } catch (err: unknown) {
       if (err instanceof HttpException) throw err;
       this.logger.error({ err, userId, gameId }, 'Game scene read failed');
+      throw err;
+    }
+  }
+
+  // Туман войны активной сцены для «Глазами игроков» (docs/plan/done/fog-of-war.md, этап 6):
+  // мастер видит сцену целиком, а маски — то, что сейчас видят игроки. Только мастеру:
+  // игрок получает свои маски вместе со сценой. fog: null — туман выключен (обёртка —
+  // чтобы ответ был JSON, а не пустым телом).
+  async fog(
+    userId: string,
+    gameId: string,
+  ): Promise<{ fog: GameSceneFogView | null }> {
+    const t0 = Date.now();
+    try {
+      const master = await this.assertParticipant(userId, gameId);
+      if (!master) throw new ForbiddenException(MASTER_ONLY_FOG);
+      const { db } = this.databaseService;
+      const scene = await findActiveScene(db, gameId);
+      if (!scene) throw new NotFoundException(NO_ACTIVE_SCENE);
+      const fog = await playerFog(db, scene);
+      this.logger.debug(
+        {
+          durationMs: Date.now() - t0,
+          userId,
+          gameId,
+          sceneId: scene.id,
+          chunks: fog?.explored.size ?? 0,
+        },
+        'Scene fog read',
+      );
+      return { fog: fog && fogView(fog) };
+    } catch (err: unknown) {
+      if (err instanceof HttpException) throw err;
+      this.logger.error({ err, userId, gameId }, 'Scene fog read failed');
       throw err;
     }
   }

@@ -3,7 +3,7 @@ import { CHUNK_VOLUME, type Vec3 } from '../../coords.js';
 import type { MapObject } from '../../objects/mapObject.js';
 import { maskHas, type CellMask } from './cellMask.js';
 
-// Сцена глазами игрока под туманом войны (docs/plan/fog-of-war.md, «Что получает игрок»).
+// Сцена глазами игрока под туманом войны (docs/plan/done/fog-of-war.md, «Что получает игрок»).
 // Одно правило на всё: чтение сцены, рассылка правок, существа, картинки и путь игрока.
 // Если каждое место считало бы по-своему, одно из них рано или поздно выдало бы лишнее.
 

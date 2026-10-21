@@ -79,7 +79,7 @@ interface MapSceneProps {
   figureDrag?: FigureDragHandlers;
   // Монстры и НПС сцены игры (этап 8): метки здоровья и выбор щелчком.
   creatures?: SceneCreaturesView;
-  // Туман войны игрока (docs/plan/fog-of-war.md, этап 5): блоки и предметы вне поля
+  // Туман войны игрока (docs/plan/done/fog-of-war.md, этап 5): блоки и предметы вне поля
   // зрения — серые. Неоткрытого в карте нет вовсе: его не присылает сервер.
   fog?: FogMasks | null;
 }

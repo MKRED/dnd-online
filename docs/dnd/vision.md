@@ -23,7 +23,7 @@ Unverified: the glossary text of Hide, Invisible and Heavily Obscured was read o
 
 ## How the app counts it
 
-Decided with the user on 2026-10-21, for the fog of war ([docs/plan/fog-of-war.md](../plan/fog-of-war.md)).
+Decided with the user on 2026-10-21, for the fog of war ([docs/plan/done/fog-of-war.md](../plan/done/fog-of-war.md)).
 
 - **Line of sight is the sight-mode ray** of the map rules (`packages/shared/src/map/rules/segment.ts`, `RayMode = 'sight'`): opaque blocks stop it, glass and ice don't. A creature counts as seen if it doesn't have Total Cover in sight mode from the viewer's eyes (`cover.ts`), the same test as for picking a target.
 - **Creatures don't block sight.** Following the book: they are only Half Cover.
@@ -32,4 +32,4 @@ Decided with the user on 2026-10-21, for the fog of war ([docs/plan/fog-of-war.m
 - **An Unconscious creature doesn't see.** The condition makes it unaware of its surroundings ([conditions.md](conditions.md)), so a down or dead character gives the fog no sight (range 0). This follows from the condition and isn't a house rule.
 - **Not counted yet:** light and darkness, Darkvision and other senses, Blinded, Invisible, the Hide action.
 
-Where it lives in code: `packages/shared/src/map/rules/vision/` (`visibleCells`, `bodySeen`, `revealBody`, `partySight`, cell masks); who looks and when the fog is recounted — `apps/server/src/games/fog/`; the rest of the fog is planned in [docs/plan/fog-of-war.md](../plan/fog-of-war.md). The default sight range is 60 ft, at most 120 ft (measured on 2026-10-21, see the plan).
+Where it lives in code: `packages/shared/src/map/rules/vision/` (`visibleCells`, `bodySeen`, `revealBody`, `partySight`, cell masks); who looks and when the fog is recounted — `apps/server/src/games/fog/`; the rest of the fog is planned in [docs/plan/done/fog-of-war.md](../plan/done/fog-of-war.md). The default sight range is 60 ft, at most 120 ft (measured on 2026-10-21, see the plan).

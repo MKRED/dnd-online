@@ -33,6 +33,7 @@ import SceneToolsPanel from './SceneToolsPanel';
 import { useGameScene } from './useGameScene';
 import { CreatureCards, useCreatureCards } from './creatures';
 import { FiguresPanel, useScenePlay } from './figures';
+import { FogPanel, playersView, useSceneFog } from './fog';
 import { useSceneOpen } from './useSceneOpen';
 import { SCENE_TOOLS, useSceneTools } from './useSceneTools';
 
@@ -53,7 +54,11 @@ function GameScenePage() {
   const ready = load.kind === 'ready' ? load : null;
   const view = ready?.view ?? null;
   // Туман войны игрока: что видно сейчас и что открыто (у мастера тумана нет).
-  const fog = useFogMasks(view?.fog ?? null);
+  const playerFog = useFogMasks(view?.fog ?? null);
+  // Мастеру: настройки тумана и «Глазами игроков» — маски игроков поверх его сцены.
+  const sceneFog = useSceneFog(id, view?.scene ?? null, master, setLoad);
+  const eyesFog = useFogMasks(sceneFog.masks);
+  const fog = eyesFog ?? playerFog;
   usePageTitle(view?.scene.name ?? 'Сцена');
   const open = useSceneOpen(id, setLoad);
   const { editor, objects } = useSceneTools({
@@ -130,12 +135,19 @@ function GameScenePage() {
   );
   // Выбор у страницы один: щелчки по клеткам ведут выбранную фигурку или (у мастера)
   // выбранного монстра (docs/plan/done/creature-movement.md).
-  const sceneEditor =
-    (master && ready ? editor.sceneEditor : null) ??
-    play.editor ??
-    cards.walk.editor;
+  // «Глазами игроков» — только просмотр: ни инструментов, ни ходов, ни выбора.
+  const viewOnly = sceneFog.eyes;
+  const sceneEditor = viewOnly
+    ? null
+    : ((master && ready ? editor.sceneEditor : null) ??
+      play.editor ??
+      cards.walk.editor);
   const handleReady = useCallback(() => setReadySceneId(sceneId), [sceneId]);
-  const tools = master && ready !== null;
+  const tools = master && ready !== null && !viewOnly;
+  const shownState = useMemo(
+    () => (state && eyesFog ? playersView(state, eyesFog) : state),
+    [state, eyesFog],
+  );
 
   const loader = (
     <div className={classes.placeholder}>
@@ -153,6 +165,7 @@ function GameScenePage() {
           onReload={reload}
           onSceneEdit={sceneEdit}
           onSceneFog={receiveFog}
+          onFogChanged={sceneFog.refresh}
           onFigures={cards.onChanged}
           onFigureDrag={play.ghosts.receive}
           dragSenderRef={play.dragSenderRef}
@@ -180,13 +193,13 @@ function GameScenePage() {
           <Suspense fallback={loader}>
             <MapScene
               key={ready.view.scene.id}
-              map={ready.state}
+              map={shownState ?? ready.state}
               refs={ready.view.refs}
               cutY={cutY === null ? Number.POSITIVE_INFINITY : sliderY}
               camera={camera}
               resizePreview={null}
               editor={sceneEditor}
-              walk={play.walk ?? cards.walk.scene}
+              walk={viewOnly ? null : (play.walk ?? cards.walk.scene)}
               objectTool={
                 tools && editor.tool === 'objects' ? objects.scene : null
               }
@@ -194,11 +207,13 @@ function GameScenePage() {
               onReady={handleReady}
               settings={user?.settings ?? DEFAULT_USER_SETTINGS}
               objectImages={images}
-              hideContainerContents={ready.view.contentsHidden}
+              hideContainerContents={ready.view.contentsHidden || viewOnly}
               figures={figures.inputs}
               figureGhosts={play.ghosts.ghosts}
-              figureDrag={play.drag}
-              creatures={cards.view}
+              figureDrag={viewOnly ? undefined : play.drag}
+              creatures={
+                viewOnly ? { ...cards.view, onPick: undefined } : cards.view
+              }
               fog={fog}
             />
           </Suspense>
@@ -241,6 +256,7 @@ function GameScenePage() {
           setCutY(bounds && y >= bounds.max[1] ? null : y)
         }
       >
+        {master && view && <FogPanel fog={sceneFog} />}
         {figures.figures && (
           <FiguresPanel
             figures={figures.figures}

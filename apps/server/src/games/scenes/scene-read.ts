@@ -80,7 +80,13 @@ export function sceneStatus(
   master: boolean,
 ): GameSceneStatus | null {
   if (!scene || (!master && !open)) return null;
-  return { id: scene.id, name: scene.name, open };
+  return {
+    id: scene.id,
+    name: scene.name,
+    open,
+    fog: scene.fog,
+    sightRange: scene.sightRange,
+  };
 }
 
 type ChunkRow = typeof gameSceneChunks.$inferSelect;

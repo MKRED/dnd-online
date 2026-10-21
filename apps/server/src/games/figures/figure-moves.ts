@@ -93,7 +93,7 @@ async function othersOf(
   characterId: string,
   withHidden: boolean,
   // Туман войны игрока: существо, которого группа не видит, его ходу не мешает — так
-  // же, как скрытое (docs/plan/fog-of-war.md).
+  // же, как скрытое (docs/plan/done/fog-of-war.md).
   fog: FogMasks | null = null,
 ): Promise<Occupant[]> {
   const figures = await actor.tx

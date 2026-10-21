@@ -16,7 +16,7 @@ export interface GameScene extends GameSceneRef {
   mapId: string | null;
   active: boolean;
   createdAt: string;
-  // Туман войны (docs/plan/fog-of-war.md): включён ли и дальность обзора в футах.
+  // Туман войны (docs/plan/done/fog-of-war.md): включён ли и дальность обзора в футах.
   fog: boolean;
   sightRange: number;
 }
@@ -43,6 +43,9 @@ export interface GameScenes {
 // даже её имя игрокам не уходит.
 export interface GameSceneStatus extends GameSceneRef {
   open: boolean;
+  // Туман войны сцены (docs/plan/done/fog-of-war.md): включён ли и дальность обзора в футах.
+  fog: boolean;
+  sightRange: number;
 }
 
 // Активная сцена для страницы сцены: блоки и объекты в форме ответа карты, справочник
@@ -52,7 +55,7 @@ export interface GameSceneView extends MapChunksResponse {
   scene: GameSceneStatus;
   // Содержимое контейнеров убрано (игроку): пустой список — не «пусто», а «неизвестно».
   contentsHidden: boolean;
-  // Туман войны игрока (docs/plan/fog-of-war.md): что группа открыла и что видит сейчас.
+  // Туман войны игрока (docs/plan/done/fog-of-war.md): что группа открыла и что видит сейчас.
   // null — тумана нет (выключен или смотрит мастер), видно всё. Чанков блоков вне
   // открытого игрок не получает вовсе.
   fog: GameSceneFogView | null;
@@ -72,7 +75,7 @@ export interface GameSceneFogView {
   visible: FogChunkBits[];
 }
 
-// Что запись журнала меняет у игроков под туманом (docs/plan/fog-of-war.md, этап 4):
+// Что запись журнала меняет у игроков под туманом (docs/plan/done/fog-of-war.md, этап 4):
 // посчитано в той же транзакции, что и сама запись, по маскам до и после. seq — номер
 // правки сцены, на который ложится changes; fog — изменившиеся чанки масок.
 export interface ScenePlayerFog {

@@ -21,7 +21,7 @@ import type { SceneRow } from '../scenes/scene-copy.js';
 import { findActiveScene } from '../scenes/scene-read.js';
 import { loadFog, saveFog, type SceneFog } from './fog-storage.js';
 
-// Пересчёт тумана войны активной сцены (docs/plan/fog-of-war.md, «Когда пересчитываем»).
+// Пересчёт тумана войны активной сцены (docs/plan/done/fog-of-war.md, «Когда пересчитываем»).
 // Вызывает запись журнала (game-journal.ts) для событий из FOG_EVENT_KINDS — в той же
 // транзакции, что и само изменение, после него.
 

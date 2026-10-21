@@ -132,7 +132,7 @@ export async function restartScene(
   return true;
 }
 
-// Туман войны сцены и дальность обзора (docs/plan/fog-of-war.md). Пересчёт тумана
+// Туман войны сцены и дальность обзора (docs/plan/done/fog-of-war.md). Пересчёт тумана
 // делает запись журнала (fog/fog-events.ts), если сцена активна.
 export async function setSceneFog(
   tx: DbTransaction,

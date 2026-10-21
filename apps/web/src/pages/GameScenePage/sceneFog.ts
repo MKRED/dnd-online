@@ -1,6 +1,6 @@
 import type { FogChunkBits, GameSceneFogView } from 'shared';
 
-// Туман войны игрока (docs/plan/fog-of-war.md, этап 4): сервер присылает только чанки
+// Туман войны игрока (docs/plan/done/fog-of-war.md, этап 4): сервер присылает только чанки
 // масок, которые изменились, — целиком. Они заменяют прежние с теми же координатами.
 
 const keyOf = ({ cx, cy, cz }: FogChunkBits) => `${cx},${cy},${cz}`;

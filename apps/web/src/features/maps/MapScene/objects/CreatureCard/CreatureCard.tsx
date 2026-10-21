@@ -4,9 +4,12 @@ import {
   facingAngle,
   type SceneObject,
   type SceneObjectLook,
-} from './objectLayout';
-import StandBase, { BLOCKED_COLOR } from './StandBase';
-import { useLabelTexture } from './useLabelTexture';
+} from '../objectLayout';
+import StandBase, { BLOCKED_COLOR } from '../StandBase';
+import { useLabelTexture } from '../useLabelTexture';
+import Coffin from './Coffin';
+import { coffinSize, creaturePose, lyingScale } from './creaturePose';
+import Spirit from './Spirit';
 
 type CreatureLook = Extract<SceneObjectLook, { kind: 'creature' }>;
 
@@ -28,7 +31,7 @@ interface CreatureCardProps {
   look: CreatureLook;
   // Миниатюра; null — нет картинки или она не загрузилась.
   texture: Texture | null;
-  // Здоровье в игре (этап 8): на нуле карточка лежит на спине, рамка серая.
+  // Здоровье в игре (этап 8): на нуле — серая рамка и поза из creaturePose.
   health?: CreatureHealth | null;
 }
 
@@ -38,8 +41,9 @@ interface CreatureCardProps {
 // жетону. Высота — рост размера, на полу — подставка во всё место. Без картинки —
 // первая буква имени, у заглушки — «?». Подставка на полу круглая, как у миниатюры.
 function CreatureCard({ object, look, texture, health }: CreatureCardProps) {
-  const down = health === 'down' || health === 'dead';
-  const frame = look.missing || down ? FRAME.missing : FRAME[look.side];
+  const pose = creaturePose(health, look.side === 'pc');
+  const frame =
+    look.missing || pose !== 'standing' ? FRAME.missing : FRAME[look.side];
   const letter = useLabelTexture(texture ? null : look.letter, frame);
   const width = object.footprint * 0.9;
   const height = CREATURE_SIZES[look.size].height * 0.95;
@@ -49,6 +53,38 @@ function CreatureCard({ object, look, texture, health }: CreatureCardProps) {
   const pictureY = height - width / 2;
   const face = THICKNESS / 2 + 0.002;
   const image = <meshBasicMaterial map={texture ?? letter} alphaTest={0.05} />;
+  const coffin = pose === 'coffin' ? coffinSize(object.footprint) : null;
+  // Лежащая карточка падает на спину (четверть оборота вокруг x — картинкой вверх) и
+  // ужимается так, чтобы целиком лечь в своё место, серединой в его центр.
+  const scale = pose === 'lying' ? lyingScale(height, object.footprint) : 1;
+  const card = (
+    <group
+      rotation={[pose === 'lying' ? Math.PI / 2 : 0, 0, 0]}
+      position={
+        pose === 'lying' ? [0, THICKNESS, (-height * scale) / 2] : [0, 0, 0]
+      }
+      scale={scale}
+    >
+      <mesh position={[0, height / 2, 0]}>
+        <boxGeometry args={[width, height, THICKNESS]} />
+        <meshStandardMaterial color={frame} />
+      </mesh>
+      <mesh position={[0, pictureY, -face]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[picture, picture]} />
+        {image}
+      </mesh>
+      <mesh position={[0, pictureY, face]}>
+        <planeGeometry args={[picture, picture]} />
+        {image}
+      </mesh>
+      <mesh position={[0, PLINTH_HEIGHT / 2, 0]}>
+        <boxGeometry
+          args={[width * 0.8, PLINTH_HEIGHT, 0.18 * object.footprint]}
+        />
+        <meshStandardMaterial color={PLINTH} />
+      </mesh>
+    </group>
+  );
   return (
     <group position={object.base}>
       <StandBase
@@ -57,33 +93,21 @@ function CreatureCard({ object, look, texture, health }: CreatureCardProps) {
         facing={look.facing}
         round
       />
-      {/* В повёрнутой группе взгляд — локальный −z: туда смотрит лицевая сторона.
-          Поверженный падает на спину: поворот на четверть вокруг x кладёт карточку
-          картинкой вверх, чуть над полом. */}
+      {/* В повёрнутой группе взгляд — локальный −z: туда смотрит лицевая сторона
+          карточки и изголовье гроба. */}
       <group rotation={[0, facingAngle(look.facing), 0]}>
-        <group
-          rotation={[down ? Math.PI / 2 : 0, 0, 0]}
-          position={[0, down ? THICKNESS : 0, 0]}
-        >
-          <mesh position={[0, height / 2, 0]}>
-            <boxGeometry args={[width, height, THICKNESS]} />
-            <meshStandardMaterial color={frame} />
-          </mesh>
-          <mesh position={[0, pictureY, -face]} rotation={[0, Math.PI, 0]}>
-            <planeGeometry args={[picture, picture]} />
-            {image}
-          </mesh>
-          <mesh position={[0, pictureY, face]}>
-            <planeGeometry args={[picture, picture]} />
-            {image}
-          </mesh>
-          <mesh position={[0, PLINTH_HEIGHT / 2, 0]}>
-            <boxGeometry
-              args={[width * 0.8, PLINTH_HEIGHT, 0.18 * object.footprint]}
+        {coffin ? (
+          <>
+            <Coffin size={coffin} picture={texture ?? letter} frame={frame} />
+            <Spirit
+              footprint={object.footprint}
+              floor={coffin.height}
+              picture={texture ?? letter}
             />
-            <meshStandardMaterial color={PLINTH} />
-          </mesh>
-        </group>
+          </>
+        ) : (
+          card
+        )}
       </group>
     </group>
   );

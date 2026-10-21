@@ -3,6 +3,7 @@ import type request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   maskHas,
+  maskSize,
   type CellMask,
   type GameEventPage,
   type GameFigures,
@@ -186,15 +187,24 @@ describe('game scene fog (e2e)', () => {
       .expect(200);
     expect(has((await fog(g.sceneId)).visible, [6, 0, 6])).toBe(true);
 
+    // Перед перезапуском обзор сужен: новая копия возьмёт эти настройки.
+    await g.m
+      .put(fogUrl(g.gameId, g.sceneId))
+      .send({ enabled: true, sightRange: 5 })
+      .expect(200);
     const restarted = await g.m
       .post(`/api/games/${g.gameId}/scenes/${g.sceneId}/restart`)
       .expect(201);
     const next = (restarted.body as GameScenes).scenes[0];
     expect(next.id).not.toBe(g.sceneId);
-    expect(next).toMatchObject({ fog: true, sightRange: 40 });
+    expect(next).toMatchObject({ fog: true, sightRange: 5 });
     // У новой копии — своё открытое, со стартовой точки; у старой строки остались.
     const fresh = await fog(next.id);
     expect(has(fresh.visible, [1, 0, 1])).toBe(true);
+    // Дальний угол открыла старая сцена; новая видит со старта на 5 футов и открытого
+    // старой не наследует.
+    expect(has(fresh.explored, [6, 0, 6])).toBe(false);
+    expect(maskSize(fresh.explored)).toBe(maskSize(fresh.visible));
     const old = await db()
       .select()
       .from(gameSceneFog)

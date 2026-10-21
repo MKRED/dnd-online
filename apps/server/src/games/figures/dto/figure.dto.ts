@@ -3,7 +3,7 @@ import type { Vec3 } from 'shared';
 
 const CELL_MESSAGE = 'Клетка — три целых числа [x, y, z]';
 
-// Ход фигурки: клетка ног, куда она идёт.
+// Ход фигурки или существа сцены: клетка ног, куда оно идёт.
 export class MoveFigureDto {
   @IsArray({ message: CELL_MESSAGE })
   @ArrayMinSize(3, { message: CELL_MESSAGE })

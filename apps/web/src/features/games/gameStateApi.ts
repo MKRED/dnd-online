@@ -3,6 +3,7 @@ import type {
   GameCharacterChange,
   GameCreatureChange,
   GameCreatures,
+  Vec3,
 } from 'shared';
 import { apiRequest as request } from '../../lib/apiRequest';
 
@@ -49,5 +50,28 @@ export function changeGameCreature(
   return request(`${creaturesBase(gameId)}/${objectId}/changes`, {
     method: 'POST',
     body: JSON.stringify(change),
+  });
+}
+
+// Ход монстра или НПС по пути и его запас (docs/plan/done/creature-movement.md) — ответ
+// существами сцены, как у правки хитов.
+export function moveGameCreature(
+  gameId: string,
+  objectId: number,
+  to: Vec3,
+): Promise<GameCreatures> {
+  return request(`${creaturesBase(gameId)}/${objectId}/move`, {
+    method: 'POST',
+    body: JSON.stringify({ to }),
+  });
+}
+
+export function changeGameCreatureAllowance(
+  gameId: string,
+  objectId: number,
+  change: 'refresh' | 'dash',
+): Promise<GameCreatures> {
+  return request(`${creaturesBase(gameId)}/${objectId}/${change}`, {
+    method: 'POST',
   });
 }

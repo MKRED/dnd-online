@@ -11,8 +11,9 @@ import { sceneRefs } from '../scenes/scene-refs.js';
 import { sceneStorage } from '../scenes/scene-storage.js';
 
 // Существо карты (монстр, НПС) как препятствие для фигурок. hidden — его не видят игроки:
-// их ход его не учитывает, иначе отказ сервера выдал бы засаду.
-export type SceneCreature = Occupant & { hidden: boolean };
+// их ход его не учитывает, иначе отказ сервера выдал бы засаду. objectId — чтобы ход
+// самого существа не упирался в него же.
+export type SceneCreature = Occupant & { hidden: boolean; objectId: number };
 
 // Сцена глазами правил хода: блоки, существа на ней и стартовые точки по номеру.
 export interface SceneWorld {
@@ -41,6 +42,7 @@ export async function loadSceneWorld(
               size: objectSize(object, refs),
               ally: false,
               hidden: object.hidden,
+              objectId: object.id,
             },
           ]
         : [],

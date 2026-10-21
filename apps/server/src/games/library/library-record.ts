@@ -280,6 +280,16 @@ export function libraryCreatureMaxHp(row: LibraryRow): number {
   return toMonsterFields(...variantArgs(row)).statBlock.hitPoints.average;
 }
 
+// Скорость экземпляра без эффектов (ход монстров — docs/plan/done/creature-movement.md): у
+// монстра — ходьба из стат-блока, у НПС — Скорость из его листа.
+export function libraryCreatureSpeed(row: LibraryRow): number {
+  if (row.kind === 'npc') {
+    const speed = row.record.speed;
+    return typeof speed === 'number' && speed >= 0 ? speed : 0;
+  }
+  return toMonsterFields(...variantArgs(row)).statBlock.speed.walk;
+}
+
 // Составляющие и длительность копии эффекта — для итога листа в игре.
 export function libraryEffectFields(row: LibraryRow) {
   return toEffectFields(...variantArgs(row));

@@ -33,10 +33,9 @@ describe('profile settings (e2e)', () => {
       .patch('/api/profile/settings')
       .send({ facingMarker: 'compass' })
       .expect(200);
-    expect(res.body).toEqual({ facingMarker: 'compass' });
-    await agent
-      .get('/api/profile/settings')
-      .expect(200, { facingMarker: 'compass' });
+    const compass = { ...DEFAULT_USER_SETTINGS, facingMarker: 'compass' };
+    expect(res.body).toEqual(compass);
+    await agent.get('/api/profile/settings').expect(200, compass);
     const me = await agent.get('/api/auth/me').expect(200);
     expect(
       (me.body as { user: { settings: { facingMarker: string } } }).user
@@ -49,7 +48,7 @@ describe('profile settings (e2e)', () => {
       .expect(200);
     expect(
       (login.body as { user: { settings: unknown } }).user.settings,
-    ).toEqual({ facingMarker: 'compass' });
+    ).toEqual(compass);
   });
 
   it('пустое тело ничего не меняет, лишние поля отбрасываются', async () => {
@@ -61,7 +60,28 @@ describe('profile settings (e2e)', () => {
     await agent
       .patch('/api/profile/settings')
       .send({ unknown: 1 })
-      .expect(200, { facingMarker: 'chevrons' });
+      .expect(200, { ...DEFAULT_USER_SETTINGS, facingMarker: 'chevrons' });
+  });
+
+  it('качество графики меняется отдельно от взгляда; «высокое» пока недоступно', async () => {
+    const agent = await t.loginAs('set_quality');
+    await agent
+      .patch('/api/profile/settings')
+      .send({ facingMarker: 'compass' })
+      .expect(200);
+    await agent
+      .patch('/api/profile/settings')
+      .send({ graphicsQuality: 'low' })
+      .expect(200, { facingMarker: 'compass', graphicsQuality: 'low' });
+    for (const graphicsQuality of ['high', 'ultra']) {
+      await agent
+        .patch('/api/profile/settings')
+        .send({ graphicsQuality })
+        .expect(400);
+    }
+    await agent
+      .get('/api/profile/settings')
+      .expect(200, { facingMarker: 'compass', graphicsQuality: 'low' });
   });
 
   it('настройки у каждого свои', async () => {

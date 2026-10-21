@@ -30,6 +30,7 @@ import {
   MASTER_ONLY_FIGURES,
   NO_ACTIVE_SCENE,
 } from '../game-errors.js';
+import { refreshSceneCreatures } from '../creatures/creature-moves.js';
 import { appendGameEvent } from '../game-journal.js';
 import type { SceneRow } from '../scenes/scene-copy.js';
 import { findActiveScene } from '../scenes/scene-read.js';
@@ -224,7 +225,8 @@ export async function placeFigure(
   });
 }
 
-// «Новый раунд»: запас движения всех фигурок снова полный.
+// «Новый раунд»: запас движения снова полный у всех фигурок и у монстров и НПС активной
+// сцены (docs/plan/done/creature-movement.md).
 export async function newRound(actor: FigureActor): Promise<void> {
   assertMaster(actor);
   const scene = await activeScene(actor);
@@ -233,13 +235,18 @@ export async function newRound(actor: FigureActor): Promise<void> {
     .set({ moved: 0, dashes: 0 })
     .where(eq(gameFigures.gameId, actor.gameId))
     .returning({ id: gameFigures.characterId });
+  const creatures = await refreshSceneCreatures(actor, scene.id);
   await appendGameEvent(actor.tx, actor.gameId, {
     kind: 'figures.round',
     actorId: actor.userId,
     as: { kind: 'master' },
     sceneId: scene.id,
     intent: null,
-    result: { scene: { id: scene.id, name: scene.name }, count: rows.length },
+    result: {
+      scene: { id: scene.id, name: scene.name },
+      count: rows.length,
+      creatures,
+    },
   });
 }
 

@@ -16,6 +16,13 @@ export function createMask(): CellMask {
   return new Map();
 }
 
+// Биты одного чанка — для обработки чанка целиком (вырезать неоткрытое из его
+// клеток, сравнить «видно» до и после) циклом по индексу, без ключа на клетку.
+// Индекс бита — тот же, что у клетки в чанке (localIndex).
+export function maskBits(mask: CellMask, key: string): Uint8Array | undefined {
+  return mask.get(key);
+}
+
 export function maskHas(mask: CellMask, cell: Vec3): boolean {
   const { key, index } = cellLocation(cell);
   const bits = mask.get(key);

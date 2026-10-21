@@ -19,6 +19,8 @@ import {
 } from './index.js';
 
 // Пол 21×21 на y = 0 вокруг начала координат; смотрящий — Средний на [0, 1, 0].
+// MAP — клетки карты с запасом по высоте и вниз (под полом пусто, но и туда смотрим).
+const MAP = { min: [-20, -5, -20], max: [20, 15, 20] } as const;
 const FLOOR: BlockOp = {
   op: 'fillBox',
   from: [-10, 0, -10],
@@ -52,7 +54,7 @@ const WALL: BlockOp = {
 describe('visibleCells', () => {
   it('sees the floor around and the air above it, within range', () => {
     const map = mapWith(FLOOR);
-    const seen = visibleCells(map, viewer(map, [0, 1, 0], 4));
+    const seen = visibleCells(map, viewer(map, [0, 1, 0], 4), MAP);
     expect(maskHas(seen, [4, 0, 4])).toBe(true);
     expect(maskHas(seen, [4, 1, -4])).toBe(true);
     // Дальность — Чебышёв: пятая клетка уже за пределом, даже по диагонали.
@@ -60,9 +62,16 @@ describe('visibleCells', () => {
     expect(maskHas(seen, [5, 1, 5])).toBe(false);
   });
 
+  it('drops a fraction of the range: 23 ft is 4 cells', () => {
+    const map = mapWith(FLOOR);
+    const seen = visibleCells(map, viewer(map, [0, 1, 0], 23 / 5), MAP);
+    expect(maskHas(seen, [4, 0, 0])).toBe(true);
+    expect(maskHas(seen, [5, 0, 0])).toBe(false);
+  });
+
   it('does not see through a wall, but sees its near face', () => {
     const map = mapWith(FLOOR, WALL);
-    const seen = visibleCells(map, viewer(map, [0, 1, 0]));
+    const seen = visibleCells(map, viewer(map, [0, 1, 0]), MAP);
     expect(maskHas(seen, [3, 1, 0])).toBe(true);
     expect(maskHas(seen, [4, 0, 0])).toBe(false);
     expect(maskHas(seen, [6, 0, 2])).toBe(false);
@@ -76,7 +85,7 @@ describe('visibleCells', () => {
       block: 'air',
     };
     const map = mapWith(FLOOR, WALL, door);
-    const seen = visibleCells(map, viewer(map, [0, 1, 0]));
+    const seen = visibleCells(map, viewer(map, [0, 1, 0]), MAP);
     expect(maskHas(seen, [6, 0, 0])).toBe(true);
     // Вбок за стену проём не показывает.
     expect(maskHas(seen, [4, 0, 8])).toBe(false);
@@ -85,7 +94,7 @@ describe('visibleCells', () => {
   it('sees through glass', () => {
     const glass: BlockOp = { ...WALL, block: 'glass' };
     const map = mapWith(FLOOR, glass);
-    const seen = visibleCells(map, viewer(map, [0, 1, 0]));
+    const seen = visibleCells(map, viewer(map, [0, 1, 0]), MAP);
     expect(maskHas(seen, [6, 0, 0])).toBe(true);
   });
 
@@ -97,10 +106,10 @@ describe('visibleCells', () => {
       block: 'stone',
     };
     const map = mapWith(FLOOR, balcony);
-    const seen = visibleCells(map, viewer(map, [0, 5, 0]));
+    const seen = visibleCells(map, viewer(map, [0, 5, 0]), MAP);
     expect(maskHas(seen, [6, 0, 0])).toBe(true);
     // Отступив от края, пол под балконом уже не видно: его закрывает сам балкон.
-    const back = visibleCells(map, viewer(map, [-4, 5, 0]));
+    const back = visibleCells(map, viewer(map, [-4, 5, 0]), MAP);
     expect(maskHas(back, [1, 0, 0])).toBe(false);
     expect(maskHas(back, [0, 5, 0])).toBe(true);
   });
@@ -116,7 +125,7 @@ describe('visibleCells', () => {
 
   it('sees nothing with no range (unconscious)', () => {
     const map = mapWith(FLOOR);
-    expect(maskSize(visibleCells(map, viewer(map, [0, 1, 0], 0)))).toBe(0);
+    expect(maskSize(visibleCells(map, viewer(map, [0, 1, 0], 0), MAP))).toBe(0);
   });
 });
 

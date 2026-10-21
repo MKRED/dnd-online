@@ -1,6 +1,7 @@
 export {
   createMask,
   maskAdd,
+  maskBits,
   maskCells,
   maskHas,
   maskSize,

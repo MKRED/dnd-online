@@ -15,7 +15,8 @@ import { createMask, maskAdd, type CellMask } from './cellMask.js';
 
 // Кто смотрит: тело фигурки и дальность обзора в клетках. Дальность своя у каждого:
 // сейчас это дальность сцены, потом её поменяют темнота, слепота, тёмное зрение
-// (docs/dnd/vision.md). 0 — не видит ничего (без сознания).
+// (docs/dnd/vision.md). 0 — не видит ничего (без сознания). Дробная часть
+// отбрасывается: дальность в футах не обязана делиться на 5.
 export interface Viewer {
   body: BodyBox;
   rangeCells: number;
@@ -43,8 +44,7 @@ export function bodyCells(body: BodyBox): Box3 {
   };
 }
 
-function clip(box: Box3, bounds: Box3 | undefined): Box3 {
-  if (!bounds) return box;
+function clip(box: Box3, bounds: Box3): Box3 {
   const { min, max } = box;
   return {
     min: [
@@ -67,6 +67,10 @@ function grow({ min, max }: Box3, by: number): Box3 {
   };
 }
 
+export function rangeOf(viewer: Viewer): number {
+  return Math.floor(viewer.rangeCells);
+}
+
 export function viewerEyes(map: MapState, viewer: Viewer): Point3[] {
   return eyePoints(viewer.body).filter((p) => !pointInSolid(map, p));
 }
@@ -75,18 +79,20 @@ export function viewerEyes(map: MapState, viewer: Viewer): Point3[] {
 // рогаликов: лучи идут только к воздуху у поверхности — клеткам воздуха, у которых
 // сосед по грани не воздух (пол, клетка у стены). Воздух посреди зала ничего не
 // показывает. Блок виден, если виден соседний с ним воздух: луч к центру самого
-// блока упёрся бы в этот блок. bounds — клетки карты: за её пределами (под полом на
-// y < 0) клеток нет, а лучи к ним упирались бы в пол всеми пятью глазами.
+// блока упёрся бы в этот блок. bounds — клетки карты, обязательны: за её пределами
+// (под полом, y < 0) клеток нет, а лучи к ним упирались бы в пол всеми пятью глазами —
+// замеренный бюджет (docs/plan/fog-of-war.md) держится только с границами.
 export function visibleCells(
   map: MapState,
   viewer: Viewer,
-  bounds?: Box3,
+  bounds: Box3,
 ): CellMask {
   const visible = createMask();
   const eyes = viewerEyes(map, viewer);
-  if (eyes.length === 0 || viewer.rangeCells <= 0) return visible;
+  const range = rangeOf(viewer);
+  if (eyes.length === 0 || range <= 0) return visible;
   // Чебышёв по трём осям, как дальность в правилах: «в пределах N клеток» — это куб.
-  const area = clip(grow(bodyCells(viewer.body), viewer.rangeCells), bounds);
+  const area = clip(grow(bodyCells(viewer.body), range), bounds);
   if ([0, 1, 2].some((a) => area.min[a] > area.max[a])) return visible;
   const [ax, ay, az] = area.min;
   const sizeX = area.max[0] - ax + 1;

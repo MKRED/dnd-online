@@ -1,6 +1,7 @@
 import {
   Alert,
   Card,
+  Divider,
   Group,
   Radio,
   SimpleGrid,
@@ -14,6 +15,7 @@ import { useAuth } from '../../features/auth';
 import { updateSettings } from '../../features/profile';
 import { errorMessage } from '../../lib/apiRequest';
 import FacingMarkerPreview from './FacingMarkerPreview';
+import GraphicsQualityField from './GraphicsQualityField';
 
 const MARKER_TEXT: Record<FacingMarker, { label: string; hint: string }> = {
   pointer: { label: 'Указатель', hint: 'Подставка вытянута носом по взгляду' },
@@ -80,6 +82,12 @@ function SettingsCard() {
           ))}
         </SimpleGrid>
       </Radio.Group>
+      <Divider my="md" />
+      <GraphicsQualityField
+        value={user.settings.graphicsQuality}
+        disabled={saving}
+        onChange={(graphicsQuality) => change({ graphicsQuality })}
+      />
       {error && (
         <Alert color="red" mt="sm">
           {error}

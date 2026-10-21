@@ -9,11 +9,22 @@ describe('readUserSettings', () => {
     expect(readUserSettings({ facingMarker: 'arrow' })).toEqual(
       DEFAULT_USER_SETTINGS,
     );
+    // «Высокое» качество пока недоступно — как и неизвестное, читается по умолчанию.
+    expect(readUserSettings({ graphicsQuality: 'high' })).toEqual(
+      DEFAULT_USER_SETTINGS,
+    );
+    expect(readUserSettings({ graphicsQuality: 'ultra' })).toEqual(
+      DEFAULT_USER_SETTINGS,
+    );
   });
 
   it('берёт допустимые значения и отбрасывает лишние поля', () => {
-    expect(readUserSettings({ facingMarker: 'compass', extra: 1 })).toEqual({
-      facingMarker: 'compass',
-    });
+    expect(
+      readUserSettings({
+        facingMarker: 'compass',
+        graphicsQuality: 'low',
+        extra: 1,
+      }),
+    ).toEqual({ facingMarker: 'compass', graphicsQuality: 'low' });
   });
 });

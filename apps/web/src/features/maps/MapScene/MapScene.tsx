@@ -2,7 +2,7 @@ import { useComputedColorScheme } from '@mantine/core';
 import { MapControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { useCallback, useRef, useState, type RefObject } from 'react';
-import type { FacingMarker, MapObjectRefsView, ResizeOp } from 'shared';
+import type { MapObjectRefsView, ResizeOp, UserSettings } from 'shared';
 import type { CameraPlacement, Point } from '../cameraView';
 import type { SceneEditor } from '../editor/editorTools';
 import type { ObjectToolScene } from '../editor/objects';
@@ -23,6 +23,7 @@ import FigureLayer, {
 import FirstFrame from './FirstFrame';
 import ObjectLayer, {
   FacingMarkerContext,
+  GraphicsQualityContext,
   MarkPortalContext,
   type SceneCreaturesView,
 } from './objects';
@@ -58,8 +59,8 @@ interface MapSceneProps {
   focusRef: RefObject<CameraFocusApi | null>;
   // Сцена отрисована с картинками объектов (см. FirstFrame).
   onReady: () => void;
-  // Вид отметки взгляда на подставках — из настроек пользователя.
-  facingMarker: FacingMarker;
+  // Настройки пользователя: вид отметки взгляда на подставках и качество графики.
+  settings: UserSettings;
   // Откуда миниатюры объектов: сцена игры берёт их из библиотеки игры. Без него — из
   // справочников. Держать один объект на сцену: новый перестраивает объекты.
   objectImages?: ObjectImagePaths;
@@ -86,7 +87,7 @@ function MapScene({
   objectTool,
   focusRef: focus,
   onReady,
-  facingMarker,
+  settings,
   objectImages,
   hideContainerContents,
   figures,
@@ -137,29 +138,31 @@ function MapScene({
             </group>
           ))}
         </EditLayer>
-        <FacingMarkerContext value={facingMarker}>
-          <MarkPortalContext value={overlay}>
-            <ObjectLayer
-              state={map}
-              refs={refs}
-              cutY={cutY}
-              onImagesSettled={settleImages}
-              tool={objectTool}
-              hover={hover}
-              images={objectImages}
-              hideContents={hideContainerContents}
-              creatures={creatures}
-            />
-            {figures && (
-              <FigureLayer
-                map={map}
-                figures={figures}
+        <FacingMarkerContext value={settings.facingMarker}>
+          <GraphicsQualityContext value={settings.graphicsQuality}>
+            <MarkPortalContext value={overlay}>
+              <ObjectLayer
+                state={map}
+                refs={refs}
                 cutY={cutY}
-                ghosts={figureGhosts}
-                {...figureDrag}
+                onImagesSettled={settleImages}
+                tool={objectTool}
+                hover={hover}
+                images={objectImages}
+                hideContents={hideContainerContents}
+                creatures={creatures}
               />
-            )}
-          </MarkPortalContext>
+              {figures && (
+                <FigureLayer
+                  map={map}
+                  figures={figures}
+                  cutY={cutY}
+                  ghosts={figureGhosts}
+                  {...figureDrag}
+                />
+              )}
+            </MarkPortalContext>
+          </GraphicsQualityContext>
         </FacingMarkerContext>
         {walk && <WalkLayer walk={walk} />}
         {resizePreview && (

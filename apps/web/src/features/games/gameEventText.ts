@@ -73,6 +73,12 @@ export function gameEventText(event: GameEvent): string {
       return event.result.scene
         ? `Сцена закрыта от игроков: ${event.result.scene.name}`
         : 'Сцена закрыта от игроков';
+    case 'scene.fog': {
+      const { enabled, sightRange } = event.intent;
+      return enabled
+        ? `Туман войны включён: ${event.result.scene.name}, обзор ${sightRange} фт`
+        : `Туман войны выключен: ${event.result.scene.name}`;
+    }
     case 'scene.edited': {
       const { libraryCopied } = event.result;
       const text = `Сцена изменена: ${sceneEdit(event.result)}`;

@@ -15,6 +15,20 @@ export interface GameScene extends GameSceneRef {
   mapId: string | null;
   active: boolean;
   createdAt: string;
+  // Туман войны (docs/plan/fog-of-war.md): включён ли и дальность обзора в футах.
+  fog: boolean;
+  sightRange: number;
+}
+
+// Дальность обзора — домашнее правило до появления света (docs/dnd/vision.md): по
+// умолчанию 60 футов, не больше 120 — предел выбран замером расчёта (план, этап 1).
+export const SIGHT_RANGE_DEFAULT = 60;
+export const SIGHT_RANGE_MAX = 120;
+export const SIGHT_RANGE_STEP = 5;
+
+export interface GameSceneFogInput {
+  enabled: boolean;
+  sightRange: number;
 }
 
 // Блок «Сцены» в лобби мастера: переключатель и список. Каждая правка сцен отвечает им.

@@ -16,3 +16,4 @@ export {
   type Viewer,
 } from './visibleCells.js';
 export { bodySeen } from './bodySeen.js';
+export { partySight } from './partySight.js';

@@ -11,7 +11,7 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
-import type { MapObjectKind, Palette } from 'shared';
+import { SIGHT_RANGE_DEFAULT, type MapObjectKind, type Palette } from 'shared';
 import { bytea } from './bytea.js';
 import { games } from './games.js';
 import { maps } from './maps.js';
@@ -40,6 +40,10 @@ export const gameScenes = pgTable(
     // Активная сцена игры одна (индекс ниже). Флаг у сцены, а не ссылка из games:
     // таблицы не ссылаются друг на друга по кругу.
     active: boolean('active').notNull().default(false),
+    // Туман войны (docs/plan/fog-of-war.md): включён ли и дальность обзора в футах.
+    // Выключен — игроки видят сцену целиком, как до тумана.
+    fog: boolean('fog').notNull().default(false),
+    sightRange: integer('sight_range').notNull().default(SIGHT_RANGE_DEFAULT),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -66,6 +70,26 @@ export const gameSceneChunks = pgTable(
     cy: integer('cy').notNull(),
     cz: integer('cz').notNull(),
     data: bytea('data').notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.sceneId, table.cx, table.cy, table.cz] }),
+  ],
+);
+
+// Туман войны сцены: что группа уже открыла и что видит сейчас — битовые маски по
+// чанку, 16³ бит = 512 байт, бит с тем же индексом, что у клетки в чанке
+// (shared/src/map/rules/vision). Строки нет — в чанке ничего не открыто.
+export const gameSceneFog = pgTable(
+  'game_scene_fog',
+  {
+    sceneId: uuid('scene_id')
+      .notNull()
+      .references(() => gameScenes.id, { onDelete: 'cascade' }),
+    cx: integer('cx').notNull(),
+    cy: integer('cy').notNull(),
+    cz: integer('cz').notNull(),
+    explored: bytea('explored').notNull(),
+    visible: bytea('visible').notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.sceneId, table.cx, table.cy, table.cz] }),

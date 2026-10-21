@@ -159,6 +159,26 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'scene.fog',
+        as: { kind: 'master' },
+        intent: { enabled: true, sightRange: 60 },
+        result: { scene: lair },
+      },
+      'Туман войны включён: Логово, обзор 60 фт',
+    ],
+    [
+      {
+        ...base,
+        kind: 'scene.fog',
+        as: { kind: 'master' },
+        intent: { enabled: false, sightRange: 60 },
+        result: { scene: lair },
+      },
+      'Туман войны выключен: Логово',
+    ],
+    [
+      {
+        ...base,
         kind: 'scene.edited',
         as: { kind: 'master' },
         intent: { ops: [] },

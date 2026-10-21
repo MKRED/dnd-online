@@ -18,6 +18,7 @@ import { CatalogImageFileQueryDto } from '../../catalog/images/dto/catalog-image
 import {
   ActivateSceneDto,
   AddSceneDto,
+  SceneFogDto,
   SceneImageParamsDto,
   SceneOpenDto,
   SceneParamsDto,
@@ -73,6 +74,18 @@ export class GameScenesController {
   @Post('scenes/:sceneId/restart')
   restart(@Req() req: AuthenticatedRequest, @Param() params: SceneParamsDto) {
     return this.scenesService.restart(req.user.sub, params.id, params.sceneId);
+  }
+
+  @Put('scenes/:sceneId/fog')
+  setFog(
+    @Req() req: AuthenticatedRequest,
+    @Param() params: SceneParamsDto,
+    @Body() dto: SceneFogDto,
+  ) {
+    return this.scenesService.setFog(req.user.sub, params.id, params.sceneId, {
+      enabled: dto.enabled,
+      sightRange: dto.sightRange,
+    });
   }
 
   @Get('scene')

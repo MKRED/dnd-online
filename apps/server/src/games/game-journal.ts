@@ -8,6 +8,8 @@ import type {
 } from 'shared';
 import type { DbTransaction } from '../database/database.service.js';
 import { gameEvents, games } from '../database/schema/index.js';
+import { FOG_EVENT_KINDS } from './fog/fog-events.js';
+import { recountFog } from './fog/fog-recount.js';
 import { GAME_NOT_FOUND } from './game-errors.js';
 
 // Запись журнала игры (docs/plan/done/game.md, «Журнал игры»). Простые функции от транзакции,
@@ -37,12 +39,15 @@ export type NewGameEvent<K extends GameEventKind> = {
   changes?: PackedChangeset;
 } & GameEventPayloads[K];
 
-// Добавляет запись со следующим номером игры и возвращает этот номер.
+// Добавляет запись со следующим номером игры и возвращает этот номер. Событие, которое
+// меняет то, что видят персонажи, пересчитывает туман войны активной сцены
+// (fog/fog-events.ts): запись пишут после самого изменения, в той же транзакции.
 export async function appendGameEvent<K extends GameEventKind>(
   tx: DbTransaction,
   gameId: string,
   event: NewGameEvent<K>,
 ): Promise<number> {
+  if (FOG_EVENT_KINDS.has(event.kind)) await recountFog(tx, gameId);
   const [row] = await tx
     .update(games)
     .set({ eventSeq: sql`${games.eventSeq} + 1` })

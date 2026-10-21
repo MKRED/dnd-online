@@ -41,6 +41,8 @@ const scene = (id: string, name: string, active: boolean) => ({
   mapId: 'map1',
   active,
   createdAt: '2026-10-20T10:00:00.000Z',
+  fog: false,
+  sightRange: 60,
 });
 
 describe('GameLobbyPage: сцены', () => {

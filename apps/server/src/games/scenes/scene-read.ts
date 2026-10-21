@@ -25,6 +25,8 @@ export async function listScenes(db: Db, gameId: string): Promise<GameScene[]> {
     mapId: row.mapId,
     active: row.active,
     createdAt: row.createdAt.toISOString(),
+    fog: row.fog,
+    sightRange: row.sightRange,
   }));
 }
 

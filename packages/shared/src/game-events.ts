@@ -119,6 +119,11 @@ export interface GameEventPayloads {
   // «Сцена открыта игрокам» включили или выключили; scene — активная в этот момент.
   'scene.opened': { intent: null; result: { scene: GameSceneRef } };
   'scene.closed': { intent: null; result: { scene: GameSceneRef | null } };
+  // Мастер включил или выключил туман войны сцены или сменил дальность обзора.
+  'scene.fog': {
+    intent: { enabled: boolean; sightRange: number };
+    result: { scene: GameSceneRef };
+  };
   // Мастер правит сцену в игре — блоки и объекты, как в редакторе карты. libraryCopied —
   // сколько новых записей справочников (монстр, НПС, предмет) скопировано в библиотеку.
   'scene.edited': {

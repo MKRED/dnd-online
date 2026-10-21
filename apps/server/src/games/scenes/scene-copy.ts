@@ -25,6 +25,9 @@ export async function createScene(
   masterId: string,
   map: MapRow,
   active: boolean,
+  // Настройки тумана перезапущенной сцены переходят в новую копию; у новой сцены —
+  // по умолчанию (туман выключен).
+  fog?: Pick<SceneRow, 'fog' | 'sightRange'>,
 ): Promise<{ scene: SceneRow; libraryCopied: number }> {
   const [scene] = await tx
     .insert(gameScenes)
@@ -37,6 +40,7 @@ export async function createScene(
       depth: map.depth,
       nextObjectId: map.nextObjectId,
       active,
+      ...fog,
     })
     .returning();
   // Чанки бывают большими — копируются внутри базы, не проходя через сервер.

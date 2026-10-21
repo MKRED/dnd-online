@@ -1,5 +1,6 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
+import type { GameSceneFogInput } from 'shared';
 import type { DbTransaction } from '../../database/database.service.js';
 import { gameScenes, games, maps } from '../../database/schema/index.js';
 import { findOwnedMap } from '../../maps/map-access.js';
@@ -112,6 +113,7 @@ export async function restartScene(
     masterId,
     map,
     old.active,
+    { fog: old.fog, sightRange: old.sightRange },
   );
   await appendGameEvent(tx, gameId, {
     kind: 'scene.restarted',
@@ -127,6 +129,35 @@ export async function restartScene(
   });
   // Перезапуск активной сцены — фигурки снова на стартовых точках новой копии.
   if (old.active) await placeFiguresOnScene(tx, scene, masterId);
+  return true;
+}
+
+// Туман войны сцены и дальность обзора (docs/plan/fog-of-war.md). Пересчёт тумана
+// делает запись журнала (fog/fog-events.ts), если сцена активна.
+export async function setSceneFog(
+  tx: DbTransaction,
+  gameId: string,
+  masterId: string,
+  sceneId: string,
+  input: GameSceneFogInput,
+): Promise<boolean> {
+  const scene = await findScene(tx, gameId, sceneId);
+  if (!scene) throw new NotFoundException(SCENE_NOT_FOUND);
+  if (scene.fog === input.enabled && scene.sightRange === input.sightRange) {
+    return false;
+  }
+  await tx
+    .update(gameScenes)
+    .set({ fog: input.enabled, sightRange: input.sightRange })
+    .where(eq(gameScenes.id, sceneId));
+  await appendGameEvent(tx, gameId, {
+    kind: 'scene.fog',
+    actorId: masterId,
+    as: asMaster,
+    sceneId,
+    intent: input,
+    result: { scene: { id: scene.id, name: scene.name } },
+  });
   return true;
 }
 

@@ -1,6 +1,6 @@
 import { ForbiddenException, HttpException, Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import type { GameScenes } from 'shared';
+import type { GameSceneFogInput, GameScenes } from 'shared';
 import {
   DatabaseService,
   type DbTransaction,
@@ -13,6 +13,7 @@ import {
   activateScene,
   addScene,
   restartScene,
+  setSceneFog,
   setSceneOpen,
 } from './scene-edits.js';
 import { listScenes } from './scene-read.js';
@@ -79,6 +80,21 @@ export class GameScenesService {
   ): Promise<GameScenes> {
     return this.change(userId, gameId, 'restart', { sceneId }, (tx, masterId) =>
       restartScene(tx, gameId, masterId, sceneId),
+    );
+  }
+
+  setFog(
+    userId: string,
+    gameId: string,
+    sceneId: string,
+    input: GameSceneFogInput,
+  ): Promise<GameScenes> {
+    return this.change(
+      userId,
+      gameId,
+      'fog',
+      { sceneId, ...input },
+      (tx, masterId) => setSceneFog(tx, gameId, masterId, sceneId, input),
     );
   }
 

@@ -13,6 +13,7 @@ import {
   maskHas,
   maskSize,
   maskUnion,
+  partySight,
   revealBody,
   visibleCells,
   type Viewer,
@@ -162,6 +163,26 @@ describe('bodySeen', () => {
     const body = creatureBody(map, [5, 1, 0], 'medium');
     const party = [viewer(map, [0, 1, 0]), viewer(map, [7, 1, 0])];
     expect(bodySeen(map, party, body)).toBe(true);
+  });
+});
+
+describe('partySight', () => {
+  it('unites the party and opens the cells of the creatures it sees', () => {
+    const map = mapWith(FLOOR, WALL);
+    const party = [viewer(map, [0, 1, 0], 6), viewer(map, [8, 1, 0], 1)];
+    const goblin = creatureBody(map, [6, 1, 5], 'medium');
+    const hiddenOne = creatureBody(map, [-5, 1, -5], 'medium');
+    const seen = partySight(map, party, [goblin], MAP);
+    expect(maskHas(seen, [-4, 0, 0])).toBe(true);
+    // За стеной — только то, что видит второй: рядом с ним и гоблин в 5 клетках
+    // уже за его дальностью.
+    expect(maskHas(seen, [9, 0, 0])).toBe(true);
+    expect(maskHas(seen, [6, 2, 5])).toBe(false);
+    // Не переданное существо (скрытое мастером) клеток не открывает, даже если видно.
+    expect(maskHas(partySight(map, party, [], MAP), [-5, 2, -5])).toBe(false);
+    expect(maskHas(partySight(map, party, [hiddenOne], MAP), [-5, 2, -5])).toBe(
+      true,
+    );
   });
 });
 

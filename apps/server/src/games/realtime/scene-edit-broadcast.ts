@@ -9,6 +9,7 @@ import {
 } from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
 import { games } from '../../database/schema/index.js';
+import { playerFog } from '../fog/fog-view.js';
 import { playerChanges } from '../scenes/scene-player-view.js';
 import { loadEventChanges } from '../scenes/scene-journal.js';
 import { findActiveScene } from '../scenes/scene-read.js';
@@ -44,6 +45,9 @@ export async function sceneEditMessages(
     .from(games)
     .where(eq(games.id, gameId));
   const active = await findActiveScene(db, gameId);
+  // Туман — на момент рассылки, как и «сцена открыта» (docs/plan/fog-of-war.md: этап 4
+  // привяжет его к записи журнала).
+  const fog = active ? await playerFog(db, active) : null;
   for (const event of edits) {
     const sceneId = event.sceneId!;
     const full = changes.get(event.seq) ?? { cells: [], paletteAdded: [] };
@@ -53,7 +57,7 @@ export async function sceneEditMessages(
       seq: (event.result as SceneEditResult).sceneSeq,
     };
     const visible = Boolean(game?.sceneOpen) && active?.id === sceneId;
-    const seen = visible ? playerChanges(full) : null;
+    const seen = visible ? playerChanges(full, fog) : null;
     messages.set(event.seq, {
       master: {
         ...base,

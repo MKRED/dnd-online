@@ -1,26 +1,44 @@
-import { sameObject, type MapObject, type PackedChangeset } from 'shared';
+import {
+  exploredCells,
+  objectSeen,
+  sameObject,
+  type FogMasks,
+  type MapObject,
+  type PackedChangeset,
+} from 'shared';
 
 // Сцена глазами игрока (решено с пользователем 2026-10-20 и 2026-10-21): скрытых
-// объектов нет вовсе, у контейнеров нет содержимого. Одно правило и для чтения сцены,
-// и для рассылки правок: копия игрока — проекция настоящей сцены, и правка, спроецированная
-// тем же правилом, ложится на неё без конфликтов.
-export function forPlayer(object: MapObject | null): MapObject | null {
-  if (!object || object.hidden) return null;
+// объектов нет вовсе, у контейнеров нет содержимого, а под туманом войны
+// (docs/plan/fog-of-war.md) — нет и того, чего группа не видит: существ вне поля зрения
+// и всего в неоткрытых клетках. Одно правило и для чтения сцены, и для рассылки правок:
+// копия игрока — проекция настоящей сцены, и правка, спроецированная тем же правилом,
+// ложится на неё без конфликтов. fog — null, когда тумана нет.
+export function forPlayer(
+  object: MapObject | null,
+  fog: FogMasks | null = null,
+): MapObject | null {
+  if (!object || object.hidden || !objectSeen(object, fog)) return null;
   return object.kind === 'container' ? { ...object, items: [] } : object;
 }
 
-// Правка для игрока: клетки как есть (блоки не скрываются), объекты — проекцией.
-// Объект, который стал скрытым, для игрока убран, «выведенный» — поставлен; правка,
-// которой игрок не видит (скрытый объект сдвинули, в сундук положили), выпадает.
-export function playerChanges(changes: PackedChangeset): PackedChangeset {
-  if (!changes.objects) return changes;
-  const objects = changes.objects.flatMap((change) => {
-    const before = forPlayer(change.before);
-    const after = forPlayer(change.after);
+// Правка для игрока: клетки — только в открытом, объекты — проекцией. Объект, который
+// стал скрытым или ушёл из поля зрения, для игрока убран, «выведенный» или попавший в
+// поле зрения — поставлен; правка, которой игрок не видит (скрытый объект сдвинули, в
+// сундук положили), выпадает.
+export function playerChanges(
+  changes: PackedChangeset,
+  fog: FogMasks | null = null,
+): PackedChangeset {
+  const cells = fog
+    ? exploredCells(changes.cells, fog.explored)
+    : changes.cells;
+  const objects = (changes.objects ?? []).flatMap((change) => {
+    const before = forPlayer(change.before, fog);
+    const after = forPlayer(change.after, fog);
     return sameObject(before, after) ? [] : [{ id: change.id, before, after }];
   });
   return {
-    cells: changes.cells,
+    cells,
     paletteAdded: changes.paletteAdded,
     ...(changes.size && { size: changes.size }),
     ...(objects.length > 0 && { objects }),

@@ -17,6 +17,7 @@ import {
 } from '../game-errors.js';
 import { findGameAccess } from '../game-read.js';
 import { readLibraryImage } from '../library/index.js';
+import { playerFog } from '../fog/fog-view.js';
 import { sceneShowsEntry, type SceneImageKind } from './scene-image-access.js';
 import { findActiveScene, readSceneView, sceneStatus } from './scene-read.js';
 
@@ -91,7 +92,13 @@ export class GameSceneViewService {
         const shown =
           sceneOpen &&
           scene !== undefined &&
-          (await sceneShowsEntry(db, scene.id, kind, sourceId));
+          (await sceneShowsEntry(
+            db,
+            scene.id,
+            kind,
+            sourceId,
+            await playerFog(db, scene),
+          ));
         if (!shown) throw new NotFoundException(SCENE_NO_IMAGE);
       }
       const data = await readLibraryImage(

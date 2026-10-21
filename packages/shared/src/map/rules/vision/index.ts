@@ -17,3 +17,10 @@ export {
 } from './visibleCells.js';
 export { bodySeen } from './bodySeen.js';
 export { partySight } from './partySight.js';
+export {
+  creatureSeen,
+  exploredCells,
+  maskChunk,
+  objectSeen,
+  type FogMasks,
+} from './fogView.js';

@@ -1,4 +1,5 @@
 import { and, eq, sql } from 'drizzle-orm';
+import { objectSeen, type FogMasks } from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
 import { gameSceneObjects } from '../../database/schema/index.js';
 
@@ -15,14 +16,21 @@ const REF_FIELD: Record<SceneImageKind, string> = {
 
 // Есть ли на сцене видимый игрокам объект с этой ссылкой (docs/plan/done/game.md, этап 5):
 // по нему игрок получает картинку копии, остальная библиотека ему закрыта.
+// Под туманом — только объект, который игрок видит (objectSeen): иначе картинка выдала
+// бы, кто стоит в тумане.
 export async function sceneShowsEntry(
   db: Db,
   sceneId: string,
   kind: SceneImageKind,
   sourceId: string,
+  fog: FogMasks | null = null,
 ): Promise<boolean> {
-  const [row] = await db
-    .select({ id: gameSceneObjects.id })
+  const rows = await db
+    .select({
+      x: gameSceneObjects.x,
+      y: gameSceneObjects.y,
+      z: gameSceneObjects.z,
+    })
     .from(gameSceneObjects)
     .where(
       and(
@@ -31,7 +39,6 @@ export async function sceneShowsEntry(
         eq(gameSceneObjects.hidden, false),
         sql`${gameSceneObjects.fields} ->> ${REF_FIELD[kind]} = ${sourceId}`,
       ),
-    )
-    .limit(1);
-  return row !== undefined;
+    );
+  return rows.some(({ x, y, z }) => objectSeen({ kind, at: [x, y, z] }, fog));
 }

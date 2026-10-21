@@ -1,8 +1,11 @@
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import {
   creatureHealth,
+  creatureSeen,
   type CharacterEffectEntry,
+  type FogMasks,
   type GameCreature,
+  type Vec3,
 } from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
 import {
@@ -22,6 +25,7 @@ import { creatureMovement } from './creature-movement.js';
 // Монстр или НПС сцены с тем, что о нём знает библиотека игры.
 export interface SceneCreature {
   objectId: number;
+  at: Vec3;
   hidden: boolean;
   name: string;
   max: number;
@@ -75,6 +79,7 @@ export async function loadSceneCreatures(
     );
     return {
       objectId: object.id,
+      at: [object.x, object.y, object.z],
       hidden: object.hidden,
       name: copy?.name ?? 'Неизвестное существо',
       max: copy ? libraryCreatureMaxHp(copy) : 1,
@@ -163,12 +168,13 @@ export async function loadCreatureEffects(
 }
 
 // Существа сцены глазами смотрящего: мастеру — все с хитами и эффектами, игроку — только
-// видимые и с меткой здоровья, без чисел.
+// не скрытые и видные группе сквозь туман (fog), с меткой здоровья, без чисел.
 export async function readSceneCreatures(
   db: Db,
   gameId: string,
   sceneId: string,
   master: boolean,
+  fog: FogMasks | null = null,
 ): Promise<GameCreature[]> {
   const creatures = await loadSceneCreatures(db, gameId, sceneId);
   const rows = await loadCreatureRows(db, sceneId);
@@ -180,7 +186,7 @@ export async function readSceneCreatures(
     const hp = hitPoints.get(creature.objectId)!;
     const health = creatureHealth({ ...hp, deathFailures: 0 });
     if (!master) {
-      return !creature.hidden && health
+      return !creature.hidden && health && creatureSeen(creature.at, fog)
         ? [{ objectId: creature.objectId, health, state: null }]
         : [];
     }

@@ -109,6 +109,7 @@ const VIEW: GameSceneView = {
   },
   scene: { id: 's1', name: 'Пещера', open: true },
   contentsHidden: true,
+  fog: null,
 };
 
 function stub(

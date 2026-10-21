@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { and, eq, ne } from 'drizzle-orm';
 import {
+  creatureSeen,
   FIGURE_SIZE,
   findPath,
   insideMap,
@@ -12,6 +13,7 @@ import {
   occupantsAt,
   standHeight,
   stepFacing,
+  type FogMasks,
   type GameEventAs,
   type Occupant,
   type Vec3,
@@ -31,6 +33,7 @@ import {
   NO_ACTIVE_SCENE,
 } from '../game-errors.js';
 import { refreshSceneCreatures } from '../creatures/creature-moves.js';
+import { playerFog } from '../fog/fog-view.js';
 import { appendGameEvent } from '../game-journal.js';
 import type { SceneRow } from '../scenes/scene-copy.js';
 import { findActiveScene } from '../scenes/scene-read.js';
@@ -89,6 +92,9 @@ async function othersOf(
   world: SceneWorld,
   characterId: string,
   withHidden: boolean,
+  // Туман войны игрока: существо, которого группа не видит, его ходу не мешает — так
+  // же, как скрытое (docs/plan/fog-of-war.md).
+  fog: FogMasks | null = null,
 ): Promise<Occupant[]> {
   const figures = await actor.tx
     .select({ x: gameFigures.x, y: gameFigures.y, z: gameFigures.z })
@@ -100,7 +106,10 @@ async function othersOf(
       ),
     );
   return [
-    ...world.creatures.filter((creature) => withHidden || !creature.hidden),
+    ...world.creatures.filter(
+      (creature) =>
+        withHidden || (!creature.hidden && creatureSeen(creature.at, fog)),
+    ),
     ...figures.map(({ x, y, z }): Occupant => ({
       at: [x, y, z],
       size: FIGURE_SIZE,
@@ -137,7 +146,13 @@ export async function moveFigure(
     dashes: figure.dashes,
   });
   const from: Vec3 = [figure.x, figure.y, figure.z];
-  const others = await othersOf(actor, world, characterId, isMaster(actor));
+  const others = await othersOf(
+    actor,
+    world,
+    characterId,
+    isMaster(actor),
+    isMaster(actor) ? null : await playerFog(actor.tx, scene),
+  );
   const path = findPath(world.map, from, to, FIGURE_SIZE, left, others);
   if (!path || path.path.length < 2) {
     throw new ConflictException(FIGURE_CANT_REACH);

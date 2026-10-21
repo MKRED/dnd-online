@@ -1,5 +1,15 @@
 import { and, asc, eq, isNull } from 'drizzle-orm';
-import type { GameScene, GameSceneStatus, GameSceneView } from 'shared';
+import {
+  chunkKey,
+  decodeChunk,
+  encodeChunk,
+  maskChunk,
+  type FogMasks,
+  type GameScene,
+  type GameSceneStatus,
+  type GameSceneView,
+  type MapChunkData,
+} from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
 import {
   gameSceneChunks,
@@ -7,6 +17,7 @@ import {
   gameScenes,
 } from '../../database/schema/index.js';
 import { toMapObject } from '../../maps/storage/index.js';
+import { fogView, playerFog } from '../fog/fog-view.js';
 import type { SceneRow } from './scene-copy.js';
 import { forPlayer } from './scene-player-view.js';
 import { sceneRefsView } from './scene-refs.js';
@@ -72,6 +83,31 @@ export function sceneStatus(
   return { id: scene.id, name: scene.name, open };
 }
 
+type ChunkRow = typeof gameSceneChunks.$inferSelect;
+
+// Байты чанка — уже в формате encodeChunk, перекодировать нечего.
+function chunkData(rows: ChunkRow[]): MapChunkData[] {
+  return rows.map(({ cx, cy, cz, data }) => ({
+    cx,
+    cy,
+    cz,
+    data: data.toString('base64'),
+  }));
+}
+
+// Под туманом — только открытые клетки; чанк без них не уходит вовсе.
+function fogChunks(rows: ChunkRow[], fog: FogMasks): MapChunkData[] {
+  return rows.flatMap(({ cx, cy, cz, data }) => {
+    const masked = maskChunk(
+      decodeChunk(data),
+      fog.explored.get(chunkKey(cx, cy, cz)),
+    );
+    if (!masked) return [];
+    const bytes = Buffer.from(encodeChunk(masked));
+    return [{ cx, cy, cz, data: bytes.toString('base64') }];
+  });
+}
+
 // Сцена для страницы сцены. Игроку не уходят скрытые объекты и содержимое контейнеров
 // (решено с пользователем 2026-10-20): ни того, ни другого он не должен видеть даже в
 // ответе сервера.
@@ -90,24 +126,20 @@ export async function readSceneView(
     .from(gameSceneObjects)
     .where(eq(gameSceneObjects.sceneId, scene.id))
     .orderBy(asc(gameSceneObjects.id));
+  const fog = master ? null : await playerFog(db, scene);
   const objects = objectRows
     .map(toMapObject)
-    .flatMap((object) => (master ? [object] : (forPlayer(object) ?? [])));
+    .flatMap((object) => (master ? [object] : (forPlayer(object, fog) ?? [])));
   return {
     seq: scene.seq,
     size: { width: scene.width, depth: scene.depth },
     palette: scene.palette,
-    // Байты чанка — уже в формате encodeChunk, перекодировать нечего.
-    chunks: chunkRows.map(({ cx, cy, cz, data }) => ({
-      cx,
-      cy,
-      cz,
-      data: data.toString('base64'),
-    })),
+    chunks: fog ? fogChunks(chunkRows, fog) : chunkData(chunkRows),
     objects,
     nextObjectId: scene.nextObjectId,
     refs: await sceneRefsView(db, scene.gameId, objects),
     scene: status,
     contentsHidden: !master,
+    fog: fog && fogView(fog),
   };
 }

@@ -51,6 +51,24 @@ export interface GameSceneView extends MapChunksResponse {
   scene: GameSceneStatus;
   // Содержимое контейнеров убрано (игроку): пустой список — не «пусто», а «неизвестно».
   contentsHidden: boolean;
+  // Туман войны игрока (docs/plan/fog-of-war.md): что группа открыла и что видит сейчас.
+  // null — тумана нет (выключен или смотрит мастер), видно всё. Чанков блоков вне
+  // открытого игрок не получает вовсе.
+  fog: GameSceneFogView | null;
+}
+
+// Биты одного чанка маски (512 байт в base64): бит с тем же индексом, что у клетки
+// в чанке. Чанка нет в списке — в нём ничего не отмечено.
+export interface FogChunkBits {
+  cx: number;
+  cy: number;
+  cz: number;
+  bits: string;
+}
+
+export interface GameSceneFogView {
+  explored: FogChunkBits[];
+  visible: FogChunkBits[];
 }
 
 export interface GameSceneAddInput {

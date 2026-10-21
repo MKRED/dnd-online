@@ -36,6 +36,7 @@ import {
   moveCreature,
   type CreatureMoveActor,
 } from './creature-moves.js';
+import { playerFog } from '../fog/fog-view.js';
 import { loadCreatureEffects, readSceneCreatures } from './creature-read.js';
 
 // Монстры и НПС активной сцены (docs/plan/done/game.md, этап 8). Видят их те же, кто видит
@@ -77,7 +78,13 @@ export class GameCreaturesService {
           return {
             sceneId: scene.id,
             eventSeq: row.eventSeq,
-            creatures: await readSceneCreatures(tx, gameId, scene.id, master),
+            creatures: await readSceneCreatures(
+              tx,
+              gameId,
+              scene.id,
+              master,
+              master ? null : await playerFog(tx, scene),
+            ),
           };
         },
         { isolationLevel: 'repeatable read', accessMode: 'read only' },

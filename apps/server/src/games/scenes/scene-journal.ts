@@ -2,9 +2,11 @@ import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import {
   packChangeset,
   type GameEventKind,
+  type GameEventPayloads,
   type MapOp,
   type PackedChangeset,
   type SceneEditResult,
+  type Vec3,
 } from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
 import type { DbTransaction } from '../../database/database.service.js';
@@ -19,14 +21,25 @@ import { sceneStorage } from './scene-storage.js';
 // отдельного журнала у сцены нет. Changeset лежит в колонке changes записи, в прямом
 // виде — и у правки, и у отмены, и у возврата: рассылка применяет их одинаково.
 
+// Ход монстра (creature.moved) — тоже правка сцены: отмена мастера снимает его, как
+// scene.edited (docs/plan/done/creature-movement.md).
 const EDIT_KINDS: GameEventKind[] = [
   'scene.edited',
   'scene.undone',
   'scene.redone',
+  'creature.moved',
 ];
 
 export type SceneJournalEntry =
   | { kind: 'scene.edited'; intent: { ops: MapOp[] }; libraryCopied: number }
+  | {
+      kind: 'creature.moved';
+      intent: { objectId: number; to: Vec3 };
+      move: Omit<
+        GameEventPayloads['creature.moved']['result'],
+        keyof SceneEditResult
+      >;
+    }
   | { kind: 'scene.undone'; intent: { seq: number }; conflicts: number }
   | {
       kind: 'scene.redone';
@@ -69,6 +82,13 @@ export async function commitSceneEdit(
       intent: entry.intent,
       result: { ...base, libraryCopied: entry.libraryCopied },
     });
+  } else if (entry.kind === 'creature.moved') {
+    await appendGameEvent(tx, gameId, {
+      ...common,
+      kind: entry.kind,
+      intent: entry.intent,
+      result: { ...base, ...entry.move },
+    });
   } else if (entry.kind === 'scene.undone') {
     await appendGameEvent(tx, gameId, {
       ...common,
@@ -106,7 +126,7 @@ export async function commitSceneEdit(
 // верх стека отмены в стек возврата, возврат — обратно. Перезапуск даёт новую сцену —
 // с пустыми стеками.
 export interface SceneUndoStacks {
-  // Запись scene.edited, которую снимет отмена.
+  // Запись scene.edited или creature.moved, которую снимет отмена.
   undo: number | null;
   // Отмена, которую откатит возврат, и правка, которую она сняла.
   redo: { undoSeq: number; editSeq: number } | null;
@@ -136,7 +156,7 @@ export async function loadSceneStacks(
   const done: number[] = [];
   const undone: { undoSeq: number; editSeq: number }[] = [];
   for (const row of rows) {
-    if (row.kind === 'scene.edited') {
+    if (row.kind === 'scene.edited' || row.kind === 'creature.moved') {
       done.push(row.seq);
       undone.length = 0;
     } else if (row.kind === 'scene.undone') {

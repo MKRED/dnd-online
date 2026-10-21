@@ -1,9 +1,14 @@
 import { useCallback, useMemo, useState } from 'react';
-import type { GameSceneEditMessage } from 'shared';
+import type {
+  GameFigures,
+  GameSceneEditMessage,
+  MapObjectRefsView,
+} from 'shared';
 import type { SceneCreaturesView } from '../../../features/maps/MapScene';
 import type { MapViewState } from '../../../features/maps/mapStateFromChunks';
 import { useKeyCodes } from '../../../features/maps/useKeyCodes';
 import type { SheetTarget } from './FullSheetDrawer';
+import { useCreatureWalk } from './useCreatureWalk';
 import { useSceneCreatures } from './useSceneCreatures';
 
 interface CreatureCardsOptions {
@@ -11,7 +16,10 @@ interface CreatureCardsOptions {
   sceneId: string | null;
   master: boolean;
   state: MapViewState | null;
-  // Выбор существа щелчком на карте: у мастера — только в «Просмотре».
+  refs: MapObjectRefsView | null;
+  // Фигурки персонажей мешают ходу монстра.
+  figures: GameFigures | null;
+  // Выбор существа щелчком на карте и его ход: у мастера — только в «Просмотре».
   canPick: boolean;
   // Выбранная фигурка: выбор у страницы один — фигурка снимает выбор существа.
   figureId: string | null;
@@ -28,6 +36,8 @@ export function useCreatureCards({
   sceneId,
   master,
   state,
+  refs,
+  figures,
   canPick,
   figureId,
   clearFigure,
@@ -89,6 +99,16 @@ export function useCreatureCards({
   const selected =
     creatures.creatures?.creatures.find((c) => c.objectId === selectedId) ??
     null;
+  const walk = useCreatureWalk({
+    gameId,
+    state,
+    refs,
+    creatures: creatures.creatures,
+    figures,
+    selectedId,
+    active: master && canPick,
+    onCreatures: creatures.apply,
+  });
   const view = useMemo<SceneCreaturesView>(
     () => ({
       health: creatures.health,
@@ -109,5 +129,6 @@ export function useCreatureCards({
     onChanged,
     onSceneEdit,
     view,
+    walk,
   };
 }

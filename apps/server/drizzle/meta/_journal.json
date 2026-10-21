@@ -337,6 +337,13 @@
       "when": 1792547255761,
       "tag": "0047_character_effect_source",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1792567284593,
+      "tag": "0048_creature_movement",
+      "breakpoints": true
     }
   ]
 }

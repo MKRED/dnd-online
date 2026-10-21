@@ -54,7 +54,10 @@ export const FIGURE_CANT_REACH =
   'Туда не дойти: путь перекрыт или не хватает движения';
 export const CREATURE_NOT_FOUND = 'Такого существа на сцене нет';
 export const MASTER_ONLY_CREATURES =
-  'Хиты и эффекты монстров и НПС меняет только мастер';
+  'Монстров и НПС ведёт только мастер: их хиты, эффекты и ход';
+export const CREATURE_CANT_REACH =
+  'Туда не дойти: путь перекрыт или не хватает движения';
+export const CREATURE_DOWN = 'Поверженное существо не ходит';
 export const GAME_CHARACTER_NOT_FOUND = 'Персонажа нет на местах этой игры';
 export const GAME_CHARACTER_NOT_YOURS = 'Этого персонажа ведёт другой игрок';
 export const CHARACTER_DEAD =

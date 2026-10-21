@@ -347,6 +347,46 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'figures.round',
+        as: { kind: 'master' },
+        intent: null,
+        result: { scene: lair, count: 2, creatures: 3 },
+      },
+      'Новый раунд: запас движения снова полный у фигурок: 2, у монстров и НПС: 3',
+    ],
+    [
+      {
+        ...base,
+        kind: 'creature.moved',
+        as: { kind: 'master' },
+        intent: { objectId: 2, to: [1, 1, 4] },
+        result: {
+          scene: lair,
+          sceneSeq: 4,
+          cells: 0,
+          objects: 2,
+          creature: { objectId: 2, name: 'Гоблин' },
+          from: [1, 1, 0],
+          to: [1, 1, 4],
+          cost: 20,
+          left: 10,
+        },
+      },
+      'Ход: Гоблин — 20 фт, осталось 10 фт',
+    ],
+    [
+      {
+        ...base,
+        kind: 'creature.dashed',
+        as: { kind: 'master' },
+        intent: { objectId: 2 },
+        result: { creature: { objectId: 2, name: 'Гоблин' }, dashes: 1 },
+      },
+      'Рывок: Гоблин',
+    ],
+    [
+      {
+        ...base,
         kind: 'creature.changed',
         as: { kind: 'master' },
         intent: { objectId: 2, change: { kind: 'damage', amount: 3 } },

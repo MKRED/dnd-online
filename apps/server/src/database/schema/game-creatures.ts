@@ -22,6 +22,10 @@ export const gameCreatures = pgTable(
     objectId: integer('object_id').notNull(),
     hitPointsCurrent: integer('hit_points_current').notNull(),
     hitPointsTemp: integer('hit_points_temp').notNull().default(0),
+    // Запас движения на раунд, как у фигурки: пройдено футов и взято «Рывков»
+    // (docs/plan/done/creature-movement.md). «Новый раунд» обнуляет.
+    moved: integer('moved').notNull().default(0),
+    dashes: integer('dashes').notNull().default(0),
   },
   (table) => [primaryKey({ columns: [table.sceneId, table.objectId] })],
 );

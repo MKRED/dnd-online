@@ -25,6 +25,10 @@ function CreatureCards({ gameId, master, cards, figure }: CreatureCardsProps) {
           creatures={cards.creatures.creatures.creatures}
           selectedId={figure ? null : (cards.selected?.objectId ?? null)}
           onSelect={cards.select}
+          onAllowance={cards.walk.allowance}
+          busy={cards.walk.busy}
+          moving={cards.walk.moving}
+          error={cards.walk.error}
         />
       )}
       {figure?.canMove && (

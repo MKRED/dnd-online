@@ -20,6 +20,8 @@ function setup() {
         sceneId: 's1',
         master: true,
         state: null,
+        refs: null,
+        figures: null,
         canPick: true,
         figureId,
         clearFigure,

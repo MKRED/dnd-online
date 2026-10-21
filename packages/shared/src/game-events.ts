@@ -158,10 +158,11 @@ export interface GameEventPayloads {
     intent: { characterId: string; at: Vec3 };
     result: { character: GameEventCharacter; from: Vec3 | null; to: Vec3 };
   };
-  // «Новый раунд»: запас движения всех фигурок снова полный; count — сколько их.
+  // «Новый раунд»: запас движения снова полный у всех фигурок (count) и у монстров и НПС
+  // активной сцены (creatures; в записях до хода монстров его нет).
   'figures.round': {
     intent: null;
-    result: { scene: GameSceneRef; count: number };
+    result: { scene: GameSceneRef; count: number; creatures?: number };
   };
   // Запас одной фигурки обновлён (её новый ход) или к нему добавлен «Рывок».
   'figure.refreshed': {
@@ -206,6 +207,28 @@ export interface GameEventPayloads {
       before: GameCreatureHitPoints;
       after: GameCreatureHitPoints;
     };
+  };
+  // Ход монстра или НПС по пути (ход монстров — docs/plan/done/creature-movement.md). Это и
+  // правка сцены: запись несёт changeset (moveObject и взгляд), игроки получают её
+  // рассылкой правок, «Отменить» мастера снимает её как scene.edited.
+  'creature.moved': {
+    intent: { objectId: number; to: Vec3 };
+    result: SceneEditResult & {
+      creature: GameEventCreature;
+      from: Vec3;
+      to: Vec3;
+      cost: number;
+      left: number;
+    };
+  };
+  // Запас одного существа обновлён или к нему добавлен «Рывок».
+  'creature.refreshed': {
+    intent: { objectId: number };
+    result: { creature: GameEventCreature };
+  };
+  'creature.dashed': {
+    intent: { objectId: number };
+    result: { creature: GameEventCreature; dashes: number };
   };
   'creature.effect_added': {
     intent: { objectId: number; effectId: string };

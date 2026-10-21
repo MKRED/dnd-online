@@ -94,8 +94,12 @@ export function gameEventText(event: GameEvent): string {
       return event.result.from
         ? `Фигурка переставлена: ${event.result.character.name}`
         : `Фигурка поставлена на сцену: ${event.result.character.name}`;
-    case 'figures.round':
-      return `Новый раунд: запас движения снова полный у фигурок: ${event.result.count}`;
+    case 'figures.round': {
+      const { count, creatures } = event.result;
+      return creatures
+        ? `Новый раунд: запас движения снова полный у фигурок: ${count}, у монстров и НПС: ${creatures}`
+        : `Новый раунд: запас движения снова полный у фигурок: ${count}`;
+    }
     case 'figure.refreshed':
       return `Запас движения обновлён: ${event.result.character.name}`;
     case 'figure.dashed': {
@@ -114,6 +118,18 @@ export function gameEventText(event: GameEvent): string {
         : `Эффект снят: ${event.result.character.name}`;
     case 'creature.changed':
       return creatureChangedText(event);
+    case 'creature.moved': {
+      const { creature, cost, left } = event.result;
+      return `Ход: ${creature.name} — ${cost} фт, осталось ${left} фт`;
+    }
+    case 'creature.refreshed':
+      return `Запас движения обновлён: ${event.result.creature.name}`;
+    case 'creature.dashed': {
+      const { creature, dashes } = event.result;
+      return dashes > 1
+        ? `Рывок: ${creature.name} (за ход: ${dashes})`
+        : `Рывок: ${creature.name}`;
+    }
     case 'creature.effect_added':
       return `Эффект наложен: ${event.result.creature.name} — ${event.result.effect.name}`;
     case 'creature.effect_removed':

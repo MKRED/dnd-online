@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   FIGURE_SIZE,
-  movementLeft,
+  movementAllowance,
   reachable,
   standHeight,
   type CreatureSize,
@@ -74,7 +74,7 @@ export function useCreatureWalk({
       id: object.id,
       at: object.at,
       size,
-      left: movementLeft(entry.state.movement),
+      left: movementAllowance(entry.state.movement),
     };
   }, [active, entry, object, refs]);
 
@@ -117,7 +117,7 @@ export function useCreatureWalk({
         reach.filter((r) => r.end),
         mover.size,
       ),
-      budget: mover.left,
+      budget: Math.max(mover.left.walk, mover.left.climb ?? 0),
     };
   }, [state, mover, reach]);
 

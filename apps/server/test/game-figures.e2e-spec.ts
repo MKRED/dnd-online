@@ -101,6 +101,7 @@ describe('game figures (e2e)', () => {
         at: [0, 1, 0],
         size: 'medium',
         speed: 30,
+        climb: null,
         moved: 0,
         dashes: 0,
         canMove: true,

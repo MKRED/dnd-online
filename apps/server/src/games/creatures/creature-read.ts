@@ -13,6 +13,7 @@ import {
 } from '../../database/schema/index.js';
 import {
   libraryCreatureMaxHp,
+  libraryCreatureClimb,
   libraryCreatureSpeed,
   libraryEffectFields,
 } from '../library/library-record.js';
@@ -24,8 +25,9 @@ export interface SceneCreature {
   hidden: boolean;
   name: string;
   max: number;
-  // Скорость без эффектов экземпляра.
+  // Скорость и скорость лазания (null — нет) без эффектов экземпляра.
   speed: number;
+  climb: number | null;
 }
 
 // Существа сцены (все или одно): объекты-монстры и НПС, их копии в библиотеке. Копии
@@ -77,6 +79,7 @@ export async function loadSceneCreatures(
       name: copy?.name ?? 'Неизвестное существо',
       max: copy ? libraryCreatureMaxHp(copy) : 1,
       speed: copy ? libraryCreatureSpeed(copy) : 0,
+      climb: copy ? libraryCreatureClimb(copy) : null,
     };
   });
 }

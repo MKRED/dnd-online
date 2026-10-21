@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import {
   FIGURE_SIZE,
   findPath,
-  movementLeft,
+  movementAllowance,
   stepFacing,
   type MapOp,
   type Occupant,
@@ -83,7 +83,7 @@ export async function moveCreature(
       ally: false,
     })),
   ];
-  const left = movementLeft(movement);
+  const left = movementAllowance(movement);
   const from = self.at;
   const path = findPath(world.map, from, to, self.size, left, others);
   if (!path || path.path.length < 2) {
@@ -116,7 +116,7 @@ export async function moveCreature(
         from,
         to,
         cost: path.cost,
-        left: left - path.cost,
+        left: Math.max(0, left.walk - path.cost),
       },
     },
     actor.limits.maxChunks,

@@ -51,7 +51,7 @@ describe('stepCost: ровная земля', () => {
 });
 
 describe('stepCost: перепад высоты', () => {
-  it('на плиту и с неё на блок — по полблока, на блок с земли — нельзя', () => {
+  it('на плиту и с неё на блок — по полблока, на блок с земли — лазанием', () => {
     const map = floorWith(
       { op: 'setBlock', at: [1, 0, 0], block: 'stone_slab' },
       { op: 'setBlock', at: [2, 0, 0], block: 'stone' },
@@ -59,7 +59,8 @@ describe('stepCost: перепад высоты', () => {
     );
     expect(both(map, [0, 0, 0], [1, 0, 0])).toEqual([5, 5]);
     expect(both(map, [1, 0, 0], [2, 1, 0])).toEqual([5, 5]);
-    expect(both(map, [1, 0, 2], [2, 1, 2])).toEqual([null, null]);
+    // Вверх на уступ — 5 футов и 5 за лазание, вниз — прыжок за обычный шаг.
+    expect(both(map, [1, 0, 2], [2, 1, 2])).toEqual([10, 5]);
   });
 
   it('по лестнице из ступеней — вверх и вниз', () => {
@@ -75,7 +76,7 @@ describe('stepCost: перепад высоты', () => {
     expect(both(map, [0, 1, 2], [0, 2, 3])).toEqual([5, 5]);
   });
 
-  it('на блок выше — только прямо по ступеням в сторону подъёма', () => {
+  it('ступени не в ту сторону — уступ: лазанием, а не шагом', () => {
     const map = floorWith(
       // Подъём к северу (−z): идти на юг по ним на блок вверх нельзя.
       { op: 'setBlock', at: [0, 0, 1], block: 'wood_stairs', rotation: 180 },
@@ -86,8 +87,37 @@ describe('stepCost: перепад высоты', () => {
       { op: 'setBlock', at: [4, 0, 1], block: 'stone' },
       { op: 'setBlock', at: [4, 1, 1], block: 'stone_slab' },
     );
-    expect(both(map, [0, 0, 1], [0, 1, 2])).toEqual([null, null]);
-    expect(both(map, [3, 0, 1], [4, 1, 1])).toEqual([null, null]);
+    expect(both(map, [0, 0, 1], [0, 1, 2])).toEqual([10, 5]);
+    expect(both(map, [3, 0, 1], [4, 1, 1])).toEqual([10, 5]);
+  });
+});
+
+describe('stepCost: уступ в блок', () => {
+  it('только прямо и не выше блока', () => {
+    const map = floorWith(
+      { op: 'setBlock', at: [1, 0, 1], block: 'stone' },
+      { op: 'fillBox', from: [4, 0, 0], to: [4, 1, 0], block: 'stone' },
+    );
+    expect(both(map, [0, 0, 0], [1, 1, 1])).toEqual([null, null]);
+    expect(both(map, [3, 0, 0], [4, 2, 0])).toEqual([null, null]);
+  });
+
+  it('под низким потолком на уступ не забраться и с него не спрыгнуть', () => {
+    // Над нижней клеткой потолок на высоте 3: Среднему (рост 2) не хватает блока сверху.
+    const map = floorWith(
+      { op: 'setBlock', at: [1, 0, 0], block: 'stone' },
+      { op: 'setBlock', at: [0, 2, 0], block: 'stone' },
+    );
+    expect(both(map, [0, 0, 0], [1, 1, 0])).toEqual([null, null]);
+  });
+
+  it('на труднопроходимую местность — цены складываются, угол через кочку не срезать', () => {
+    const map = floorWith(
+      { op: 'setBlock', at: [1, 0, 0], block: 'lava' },
+      { op: 'setBlock', at: [1, 0, 3], block: 'stone' },
+    );
+    expect(both(map, [0, 0, 0], [1, 1, 0])).toEqual([15, 5]);
+    expect(stepCost(map, [0, 0, 2], [1, 0, 4], 'medium')).toBeNull();
   });
 });
 

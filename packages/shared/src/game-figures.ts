@@ -4,6 +4,7 @@ import type { CreatureHealth } from './hitPoints.js';
 import type { Vec3 } from './map/coords.js';
 import type { Facing } from './map/objects/mapObject.js';
 import type { CreatureSize } from './map/rules/creature.js';
+import type { MoveAllowance } from './map/rules/path/search.js';
 
 // Фигурки персонажей на активной сцене (docs/plan/done/game.md, этап 7). Фигурка есть только
 // на активной сцене: когда сцена становится активной, фигурки встают на её стартовые
@@ -24,6 +25,8 @@ export interface GameFigure {
   image: CharacterMainImage | null;
   // Скорость из листа с эффектами, в футах.
   speed: number;
+  // Скорость лазания с эффектами (своей в листе нет — только от эффектов); null — нет.
+  climb: number | null;
   // Сколько футов пройдено с начала раунда и сколько раз взят «Рывок».
   moved: number;
   dashes: number;
@@ -47,6 +50,19 @@ export function movementLeft(
   figure: Pick<GameFigure, 'speed' | 'moved' | 'dashes'>,
 ): number {
   return Math.max(0, figure.speed * (1 + figure.dashes) - figure.moved);
+}
+
+// Запас по скоростям для поиска пути: из каждой вычитается всё пройденное (глоссарий
+// 2024, Speed). «Рывок» прибавляет и к скорости лазания — упрощение: по книге за «Рывок»
+// выбирают одну скорость (docs/dnd/movement.md).
+export function movementAllowance(
+  m: Pick<GameFigure, 'speed' | 'climb' | 'moved' | 'dashes'>,
+): MoveAllowance {
+  const left = (feet: number) => Math.max(0, feet * (1 + m.dashes) - m.moved);
+  return {
+    walk: left(m.speed),
+    climb: m.climb === null ? null : left(m.climb),
+  };
 }
 
 // Фигурка встала на сцену: при активации сцены, когда персонаж сел на место, или её

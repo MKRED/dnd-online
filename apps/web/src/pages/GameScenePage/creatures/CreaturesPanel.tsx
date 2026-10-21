@@ -8,12 +8,8 @@ import {
   UnstyledButton,
 } from '@mantine/core';
 import { IconRefresh, IconRun } from '@tabler/icons-react';
-import {
-  creatureHealthLabel,
-  movementLeft,
-  type GameCreature,
-  type GameCreatureState,
-} from 'shared';
+import { creatureHealthLabel, type GameCreature } from 'shared';
+import { allowanceLabel } from '../allowanceLabel';
 import classes from './creatures.module.css';
 
 interface CreaturesPanelProps {
@@ -26,11 +22,6 @@ interface CreaturesPanelProps {
   // Выбранное существо можно водить: подсказка про ход.
   moving: boolean;
   error: string | null;
-}
-
-function allowance({ movement }: GameCreatureState) {
-  const total = movement.speed * (1 + movement.dashes);
-  return `${movementLeft(movement)} из ${total} фт`;
 }
 
 // Монстры и НПС сцены у мастера (docs/plan/done/game.md, этап 8): хиты, метка здоровья и
@@ -74,7 +65,8 @@ function CreaturesPanel({
             <Text size="xs" c="dimmed">
               ХП {state!.hitPoints.current} / {state!.hitPoints.max}
               {health && ` · ${creatureHealthLabel(health, false)}`}
-              {health !== 'down' && ` · Осталось ${allowance(state!)}`}
+              {health !== 'down' &&
+                ` · Осталось ${allowanceLabel(state!.movement)}`}
             </Text>
           </UnstyledButton>
           <Tooltip label="Обновить запас: новый ход">

@@ -8,7 +8,7 @@ import {
   FIGURE_SIZE,
   findPath,
   insideMap,
-  movementLeft,
+  movementAllowance,
   occupantsAt,
   standHeight,
   stepFacing,
@@ -130,8 +130,9 @@ export async function moveFigure(
   const speeds = await figureSpeeds(actor.tx, actor.gameId, [
     { id: characterId, ownerId, speed },
   ]);
-  const left = movementLeft({
-    speed: speeds.get(characterId) ?? speed,
+  const left = movementAllowance({
+    speed: speeds.get(characterId)?.speed ?? speed,
+    climb: speeds.get(characterId)?.climb ?? null,
     moved: figure.moved,
     dashes: figure.dashes,
   });
@@ -163,7 +164,7 @@ export async function moveFigure(
       from,
       to,
       cost: path.cost,
-      left: left - path.cost,
+      left: Math.max(0, left.walk - path.cost),
     },
   });
 }

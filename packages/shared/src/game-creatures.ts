@@ -22,8 +22,14 @@ export interface GameCreatureState {
   hitPoints: { current: number; max: number; temp: number };
   effects: CharacterEffectEntry[];
   // Запас движения на раунд (docs/plan/done/creature-movement.md): Скорость с эффектами
-  // экземпляра, пройдено футов и взято «Рывков» — как у фигурки (movementLeft).
-  movement: { speed: number; moved: number; dashes: number };
+  // экземпляра, скорость лазания (null — нет), пройдено футов и взято «Рывков» — как
+  // у фигурки (movementLeft, movementAllowance).
+  movement: {
+    speed: number;
+    climb: number | null;
+    moved: number;
+    dashes: number;
+  };
 }
 
 export interface GameCreature {

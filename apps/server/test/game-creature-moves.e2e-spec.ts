@@ -1,6 +1,7 @@
 import type request from 'supertest';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import {
+  DEFAULT_MONSTER_STAT_BLOCK,
   GAME_SOCKET,
   type GameCreatures,
   type GameEventPage,
@@ -9,6 +10,7 @@ import {
   type GameSceneView,
 } from 'shared';
 import { pngImage } from './support/character-fixture.js';
+import { monsterBody } from './support/monster-fixture.js';
 import { createSceneGame } from './support/scene-fixture.js';
 import {
   join,
@@ -41,9 +43,14 @@ describe('game creature moves (e2e)', () => {
 
   // Сцена из карты фикстуры: поле 8×8, старт [0,1,0] с фигуркой игрока, объект 2 — гоблин
   // на [1,1,0] (Скорость 30), 3 — НПС «Трактирщик» на [2,1,0]. Сцена активная и открыта.
-  async function started(prefix: string) {
+  // prepare — правки карты и каталога до того, как сцена скопирует их.
+  async function started(
+    prefix: string,
+    prepare?: (g: Awaited<ReturnType<typeof createSceneGame>>) => Promise<void>,
+  ) {
     const g = await createSceneGame(user, png, prefix);
     const m = g.master.agent;
+    await prepare?.(g);
     const res = await m
       .post(`/api/games/${g.gameId}/scenes`)
       .send({ mapId: g.mapId })
@@ -95,12 +102,27 @@ describe('game creature moves (e2e)', () => {
     );
 
     const list = await g.m.get(g.url).expect(200);
-    expect(movementOf(list, 2)).toEqual({ speed: 30, moved: 0, dashes: 0 });
+    expect(movementOf(list, 2)).toEqual({
+      speed: 30,
+      climb: null,
+      moved: 0,
+      dashes: 0,
+    });
     // НПС — Скорость из листа копии.
-    expect(movementOf(list, 3)).toEqual({ speed: 30, moved: 0, dashes: 0 });
+    expect(movementOf(list, 3)).toEqual({
+      speed: 30,
+      climb: null,
+      moved: 0,
+      dashes: 0,
+    });
 
     const moved = await g.move(g.m, 2, [1, 1, 4]);
-    expect(movementOf(moved, 2)).toEqual({ speed: 30, moved: 20, dashes: 0 });
+    expect(movementOf(moved, 2)).toEqual({
+      speed: 30,
+      climb: null,
+      moved: 20,
+      dashes: 0,
+    });
     // Взгляд — по последнему шагу, на юг.
     expect(await positionOf(g.m, g.gameId, 2)).toEqual({
       at: [1, 1, 4],
@@ -136,13 +158,60 @@ describe('game creature moves (e2e)', () => {
     expect(movementOf(await g.m.get(g.url).expect(200), 2)?.moved).toBe(20);
   });
 
+  // Уступ в блок (docs/dnd/movement.md): вверх — лазание, 5 лишних футов; вниз — прыжок
+  // за обычный шаг; скорость лазания лишние футы снимает.
+  it('на уступ в блок — лазанием, вниз — прыжком; скорость лазания снимает лишние футы', async () => {
+    const ledge =
+      (climb: number | null) =>
+      async (g: {
+        mapId: string;
+        goblin: string;
+        master: { agent: request.Agent };
+      }) => {
+        await g.master.agent
+          .post(`/api/maps/${g.mapId}/ops`)
+          .send({ ops: [{ op: 'setBlock', at: [1, 1, 1], block: 'stone' }] })
+          .expect(200);
+        if (climb === null) return;
+        await g.master.agent
+          .put(`/api/monsters/${g.goblin}`)
+          .send({
+            ...monsterBody(),
+            name: 'Гоблин',
+            role: 'regular',
+            statBlock: {
+              ...DEFAULT_MONSTER_STAT_BLOCK,
+              speed: { ...DEFAULT_MONSTER_STAT_BLOCK.speed, climb },
+            },
+          })
+          .expect(200);
+      };
+
+    const plain = await started('gcm_ledge', ledge(null));
+    const up = await plain.move(plain.m, 2, [1, 2, 1]);
+    expect(movementOf(up, 2)).toMatchObject({ climb: null, moved: 10 });
+    const down = await plain.move(plain.m, 2, [1, 1, 2]);
+    expect(movementOf(down, 2)?.moved).toBe(15);
+
+    const climber = await started('gcm_climber', ledge(30));
+    const list = await climber.m.get(climber.url).expect(200);
+    expect(movementOf(list, 2)).toMatchObject({ speed: 30, climb: 30 });
+    const climbed = await climber.move(climber.m, 2, [1, 2, 1]);
+    expect(movementOf(climbed, 2)?.moved).toBe(5);
+  });
+
   it('запас: дальше не дойти, «Рывок» добавляет Скорость, «Новый раунд» и «Обновить» — полный', async () => {
     const g = await started('gcm_allowance');
     await g.move(g.m, 2, [1, 1, 4]);
     // Осталось 10 фт, а до [1,1,7] — 15.
     await g.move(g.m, 2, [1, 1, 7], 409);
     const dashed = await g.m.post(`${g.url}/2/dash`).expect(200);
-    expect(movementOf(dashed, 2)).toEqual({ speed: 30, moved: 20, dashes: 1 });
+    expect(movementOf(dashed, 2)).toEqual({
+      speed: 30,
+      climb: null,
+      moved: 20,
+      dashes: 1,
+    });
     expect(await lastEvent(g.m, g.gameId)).toMatchObject({
       kind: 'creature.dashed',
       result: { creature: { objectId: 2, name: 'Гоблин' }, dashes: 1 },
@@ -164,8 +233,18 @@ describe('game creature moves (e2e)', () => {
       .expect(200);
     expect(round.status).toBe(200);
     const after = await g.m.get(g.url).expect(200);
-    expect(movementOf(after, 2)).toEqual({ speed: 30, moved: 0, dashes: 0 });
-    expect(movementOf(after, 3)).toEqual({ speed: 30, moved: 0, dashes: 0 });
+    expect(movementOf(after, 2)).toEqual({
+      speed: 30,
+      climb: null,
+      moved: 0,
+      dashes: 0,
+    });
+    expect(movementOf(after, 3)).toEqual({
+      speed: 30,
+      climb: null,
+      moved: 0,
+      dashes: 0,
+    });
     expect(await lastEvent(g.m, g.gameId)).toMatchObject({
       kind: 'figures.round',
       result: { count: 1, creatures: 2 },
@@ -175,6 +254,7 @@ describe('game creature moves (e2e)', () => {
     const refreshed = await g.m.post(`${g.url}/2/refresh`).expect(200);
     expect(movementOf(refreshed, 2)).toEqual({
       speed: 30,
+      climb: null,
       moved: 0,
       dashes: 0,
     });

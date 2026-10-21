@@ -226,3 +226,44 @@ describe('другие существа на пути', () => {
     );
   });
 });
+
+describe('скорость лазания', () => {
+  // Стена в блок высотой поперёк пола на x = 1: за ней площадка на уровне 1.
+  const map = floorWith({
+    op: 'fillBox',
+    from: [1, 0, -6],
+    to: [6, 0, 6],
+    block: 'stone',
+  });
+  const goal: Vec3 = [1, 1, 0];
+
+  it('без неё подъём стоит 10, с ней — 5', () => {
+    expect(findPath(map, [0, 0, 0], goal, 'medium')?.cost).toBe(10);
+    expect(
+      findPath(map, [0, 0, 0], goal, 'medium', { walk: 30, climb: 30 })?.cost,
+    ).toBe(5);
+  });
+
+  it('скорости меняются на ходу: из новой вычитается пройденное', () => {
+    // Пройдено 25 из 30: лазанием 60 подняться можно (30 ≤ 60), обычным — нет (35 > 30).
+    const spent = { walk: 5, climb: 35 };
+    expect(findPath(map, [0, 0, 0], goal, 'medium', spent)?.cost).toBe(5);
+    expect(
+      findPath(map, [0, 0, 0], goal, 'medium', { walk: 5, climb: null }),
+    ).toBeNull();
+    // Лазания 10 при пройденных 25 уже нет — лезут за счёт Скорости, если хватает.
+    expect(
+      findPath(map, [0, 0, 0], goal, 'medium', { walk: 10, climb: 0 })?.cost,
+    ).toBe(10);
+  });
+
+  it('за подъёмом ходьба — снова в пределах обычной Скорости', () => {
+    const far: Vec3 = [3, 1, 0];
+    expect(
+      findPath(map, [0, 0, 0], far, 'medium', { walk: 10, climb: 60 }),
+    ).toBeNull();
+    expect(
+      findPath(map, [0, 0, 0], far, 'medium', { walk: 15, climb: 60 })?.cost,
+    ).toBe(15);
+  });
+});

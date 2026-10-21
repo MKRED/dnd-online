@@ -4,7 +4,7 @@ import type { CreatureSize } from '../creature.js';
 import { cellDistance, FEET_PER_CELL } from '../distance.js';
 import { crowdAt, type Crowd, type Occupant } from '../occupancy.js';
 import { standHeight } from '../standing.js';
-import { createStepper } from '../step.js';
+import { CLIMB_EXTRA_FEET, createStepper, type Step } from '../step.js';
 import { MinHeap } from './heap.js';
 
 // Позиция, до которой можно дойти, цена пути до неё в футах и предыдущая позиция
@@ -15,6 +15,13 @@ export interface Reach {
   from: Vec3 | null;
   // Здесь можно закончить ход: false — чужое место, сквозь которое путь только идёт.
   end: boolean;
+}
+
+// Запас движения по скоростям, в футах: walk — обычная Скорость, climb — скорость
+// лазания (null — её нет). Число вместо него — только обычная Скорость.
+export interface MoveAllowance {
+  walk: number;
+  climb: number | null;
 }
 
 export interface PathResult {
@@ -52,6 +59,28 @@ const stepLength = (d: Vec3) => Math.hypot(d[0], d[1], d[2]);
 
 const keyOf = (at: Vec3) => at.join(',');
 
+const allowanceOf = (max: number | MoveAllowance): MoveAllowance =>
+  typeof max === 'number' ? { walk: max, climb: null } : max;
+
+// Потрачено после шага или null, если запаса не хватает. Скорости меняются на ходу:
+// из новой вычитается уже пройденное (глоссарий 2024, Speed), поэтому предел каждой
+// проверяется по общей сумме. Подъём на уступ скоростью лазания — без лишних футов, но
+// в её пределах; иначе лазание за счёт обычной Скорости. Остальное — обычная Скорость.
+function spentAfter(
+  spent: number,
+  feet: number,
+  step: Step,
+  limits: MoveAllowance,
+): number | null {
+  if (step.kind === 'climb') {
+    if (limits.climb !== null && spent + feet <= limits.climb) {
+      return spent + feet;
+    }
+    feet += CLIMB_EXTRA_FEET;
+  }
+  return spent + feet <= limits.walk ? spent + feet : null;
+}
+
 // Другие существа на позициях пути, с кэшем: поиск проверяет одну позицию для каждого
 // из соседей (docs/dnd/movement.md).
 function createCrowd(
@@ -80,7 +109,7 @@ function explore(
   map: MapState,
   start: Vec3,
   size: CreatureSize,
-  maxCost: number,
+  limits: MoveAllowance,
   others: readonly Occupant[],
   goal?: Vec3,
 ): {
@@ -115,17 +144,17 @@ function explore(
         node.at[1] + d[1],
         node.at[2] + d[2],
       ];
-      const terrain = step(node.at, next);
-      if (terrain === null) continue;
+      const move = step(node.at, next);
+      if (move === null) continue;
       const near = crowd(next);
       if (!near.pass) continue;
       // Чужое место — труднопроходимая местность; с другой труднопроходимостью
-      // не складывается.
-      const cost = near.difficult
-        ? Math.max(terrain, 2 * FEET_PER_CELL)
-        : terrain;
-      const total = node.cost + cost;
-      if (total > maxCost) continue;
+      // не складывается (а с лазанием — складывается, это в spentAfter).
+      const feet = near.difficult
+        ? Math.max(move.feet, 2 * FEET_PER_CELL)
+        : move.feet;
+      const total = spentAfter(node.cost, feet, move, limits);
+      if (total === null) continue;
       const len = node.len + stepLength(d);
       const nextKey = keyOf(next);
       const known = nodes.get(nextKey);
@@ -142,7 +171,7 @@ function explore(
   return { nodes, closed, reached: false, crowd };
 }
 
-// Все позиции, до которых существо дойдёт, потратив не больше maxCost футов, — для
+// Все позиции, до которых существо дойдёт в пределах запаса maxCost, — для
 // подсветки «куда могу дойти». Начальная позиция входит с ценой 0; если в ней стоять
 // нельзя — пустой список. others — другие существа: сквозь их место путь идёт, где
 // правила пускают, но закончить ход там нельзя — у таких позиций end = false.
@@ -150,10 +179,16 @@ export function reachable(
   map: MapState,
   start: Vec3,
   size: CreatureSize,
-  maxCost: number,
+  maxCost: number | MoveAllowance,
   others: readonly Occupant[] = [],
 ): Reach[] {
-  const { nodes, closed, crowd } = explore(map, start, size, maxCost, others);
+  const { nodes, closed, crowd } = explore(
+    map,
+    start,
+    size,
+    allowanceOf(maxCost),
+    others,
+  );
   const startKey = keyOf(start);
   return [...closed].map((key) => {
     const { at, cost, prev } = nodes.get(key) as Node;
@@ -203,14 +238,14 @@ export function findPath(
   start: Vec3,
   goal: Vec3,
   size: CreatureSize,
-  maxCost = Infinity,
+  maxCost: number | MoveAllowance = Infinity,
   others: readonly Occupant[] = [],
 ): PathResult | null {
   const { nodes, reached, crowd } = explore(
     map,
     start,
     size,
-    maxCost,
+    allowanceOf(maxCost),
     others,
     goal,
   );

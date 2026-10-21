@@ -290,6 +290,13 @@ export function libraryCreatureSpeed(row: LibraryRow): number {
   return toMonsterFields(...variantArgs(row)).statBlock.speed.walk;
 }
 
+// Скорость лазания экземпляра без эффектов: у монстра — из стат-блока, у НПС своей нет
+// (в листе только Скорость, особые — от эффектов).
+export function libraryCreatureClimb(row: LibraryRow): number | null {
+  if (row.kind === 'npc') return null;
+  return toMonsterFields(...variantArgs(row)).statBlock.speed.climb;
+}
+
 // Составляющие и длительность копии эффекта — для итога листа в игре.
 export function libraryEffectFields(row: LibraryRow) {
   return toEffectFields(...variantArgs(row));

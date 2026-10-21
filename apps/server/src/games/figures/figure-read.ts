@@ -31,12 +31,13 @@ export function canMoveFigure(
   );
 }
 
-// Скорость из листа с эффектами — эффекты из библиотеки игры (game-character-effects.ts).
+// Скорость из листа с эффектами — эффекты из библиотеки игры (game-character-effects.ts);
+// скорость лазания у персонажа только от эффектов.
 export async function figureSpeeds(
   db: Db,
   gameId: string,
   rows: { id: string; ownerId: string; speed: number }[],
-): Promise<Map<string, number>> {
+): Promise<Map<string, { speed: number; climb: number | null }>> {
   const lists = await loadGameEffectLists(
     db,
     gameId,
@@ -45,7 +46,11 @@ export async function figureSpeeds(
   return new Map(
     rows.map((row) => {
       const effects = activeEffects(lists.get(row.id) ?? []);
-      return [row.id, totalSpeed({ speed: row.speed }, effects).speed];
+      const total = totalSpeed({ speed: row.speed }, effects);
+      return [
+        row.id,
+        { speed: total.speed, climb: total.special.climb ?? null },
+      ];
     }),
   );
 }
@@ -92,7 +97,8 @@ export async function readSceneFigures(
     facing: figure.facing,
     size: FIGURE_SIZE,
     image: images.get(figure.characterId) ?? null,
-    speed: speeds.get(figure.characterId) ?? speed,
+    speed: speeds.get(figure.characterId)?.speed ?? speed,
+    climb: speeds.get(figure.characterId)?.climb ?? null,
     moved: figure.moved,
     dashes: figure.dashes,
     canMove: canMoveFigure(viewerId, masterId, ownerId, controllerId),

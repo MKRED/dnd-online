@@ -9,7 +9,8 @@ import {
   UnstyledButton,
 } from '@mantine/core';
 import { IconRefresh, IconRun } from '@tabler/icons-react';
-import { movementLeft, type GameFigure, type GameFigures } from 'shared';
+import type { GameFigures } from 'shared';
+import { allowanceLabel } from '../allowanceLabel';
 import classes from '../GameScenePage.module.css';
 import type { FigureTool } from './useFigureTool';
 
@@ -17,11 +18,6 @@ interface FiguresPanelProps {
   figures: GameFigures;
   master: boolean;
   tool: FigureTool;
-}
-
-function allowance(figure: GameFigure) {
-  const total = figure.speed * (1 + figure.dashes);
-  return `${movementLeft(figure)} из ${total} фт`;
 }
 
 // Фигурки сцены в панели (docs/plan/done/game.md, этап 7): чья, сколько осталось движения,
@@ -79,7 +75,7 @@ function FiguresPanel({ figures, master, tool }: FiguresPanelProps) {
                 {figure.character.name}
               </Text>
               <Text size="xs" c="dimmed">
-                Осталось {allowance(figure)}
+                Осталось {allowanceLabel(figure)}
               </Text>
             </UnstyledButton>
             {master && (

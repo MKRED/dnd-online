@@ -158,6 +158,7 @@ const LIRA: GameFigure = {
   size: 'medium',
   image: { id: 'i1', thumbVersion: 3 },
   speed: 30,
+  climb: null,
   moved: 0,
   dashes: 0,
   canMove: true,

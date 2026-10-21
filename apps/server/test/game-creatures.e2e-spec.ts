@@ -83,7 +83,7 @@ describe('game creatures (e2e)', () => {
           name: 'Гоблин',
           hitPoints: { current: 4, max: 4, temp: 0 },
           effects: [],
-          movement: { speed: 30, moved: 0, dashes: 0 },
+          movement: { speed: 30, climb: null, moved: 0, dashes: 0 },
         },
       },
       {
@@ -93,7 +93,7 @@ describe('game creatures (e2e)', () => {
           name: 'Трактирщик',
           hitPoints: { current: 12, max: 12, temp: 0 },
           effects: [],
-          movement: { speed: 30, moved: 0, dashes: 0 },
+          movement: { speed: 30, climb: null, moved: 0, dashes: 0 },
         },
       },
     ]);

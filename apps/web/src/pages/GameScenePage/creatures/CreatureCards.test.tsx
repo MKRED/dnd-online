@@ -113,7 +113,7 @@ describe('существа у мастера', () => {
           name: 'Гоблин',
           hitPoints: { current: 2, max: 7, temp: 0 },
           effects: [],
-          movement: { speed: 30, moved: 10, dashes: 1 },
+          movement: { speed: 30, climb: null, moved: 10, dashes: 1 },
         },
       },
       {
@@ -123,7 +123,7 @@ describe('существа у мастера', () => {
           name: 'Орк',
           hitPoints: { current: 0, max: 15, temp: 0 },
           effects: [],
-          movement: { speed: 30, moved: 0, dashes: 0 },
+          movement: { speed: 30, climb: null, moved: 0, dashes: 0 },
         },
       },
     ],

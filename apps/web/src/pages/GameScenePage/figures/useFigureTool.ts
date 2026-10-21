@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   FIGURE_SIZE,
-  movementLeft,
+  movementAllowance,
   reachable,
   standHeight,
   type GameFigure,
@@ -76,7 +76,10 @@ export function useFigureTool({
     [state, refs, figures, selectedId],
   );
 
-  const left = figure ? movementLeft(figure) : 0;
+  const left = useMemo(
+    () => (figure ? movementAllowance(figure) : { walk: 0, climb: null }),
+    [figure],
+  );
   // Достижимые позиции — только когда фигурка выбрана: пересчёт на ход и правку карты,
   // не на движение мыши.
   const reach = useMemo<Reach[]>(
@@ -99,7 +102,7 @@ export function useFigureTool({
         reach.filter((r) => r.end),
         figure.size,
       ),
-      budget: left,
+      budget: Math.max(left.walk, left.climb ?? 0),
     };
   }, [state, figure, reach, left]);
 

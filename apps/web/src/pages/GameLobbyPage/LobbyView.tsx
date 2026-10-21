@@ -12,6 +12,7 @@ import { IconLock } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  CREATURE_KINDS,
   FIGURE_KINDS,
   SCENE_EDIT_KINDS,
   type GameDetail,
@@ -100,13 +101,18 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
           void navigate(scenePagePath(game.id));
           return;
         }
-        // Правки сцены (этап 6) и фигурки (этап 7) лобби не меняют: они идут часто, и
-        // каждая перечитывала бы лобби у всех. Запись мастеру всё равно придёт в журнал.
+        // Правки сцены (этап 6), фигурки (этап 7) и состояние персонажей (этап 8) лобби
+        // не меняют: они идут часто, и каждая перечитывала бы лобби у всех. Запись мастеру
+        // всё равно придёт в журнал; наложенный эффект мог лечь в библиотеку.
         if (
           SCENE_EDIT_KINDS.includes(message.kind) ||
-          FIGURE_KINDS.includes(message.kind)
-        )
+          FIGURE_KINDS.includes(message.kind) ||
+          CREATURE_KINDS.includes(message.kind)
+        ) {
+          if (message.kind === 'character.effect_added')
+            setLibraryVersion((version) => version + 1);
           return;
+        }
         reload();
         if (LIBRARY_CHANGES.has(message.kind))
           setLibraryVersion((version) => version + 1);

@@ -1,6 +1,7 @@
 import { and, asc, eq, isNotNull } from 'drizzle-orm';
 import {
   activeEffects,
+  creatureHealth,
   FIGURE_SIZE,
   totalSpeed,
   type GameEventCharacter,
@@ -8,12 +9,12 @@ import {
 } from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
 import { loadMainImages } from '../../character-images/character-image-access.js';
-import { loadCharacterEffectLists } from '../../characters/effects/character-effects-loader.js';
 import {
   characters,
   gameFigures,
   gameMembers,
 } from '../../database/schema/index.js';
+import { loadGameEffectLists } from '../characters/game-character-effects.js';
 
 export type FigureRow = typeof gameFigures.$inferSelect;
 
@@ -30,31 +31,29 @@ export function canMoveFigure(
   );
 }
 
-// Скорость из листа с эффектами — как её видит владелец в своём листе. Эффекты пока
-// читаются из справочника, а не из библиотеки игры: игра начнёт читать их оттуда на
-// этапе 8 (docs/plan/game.md).
+// Скорость из листа с эффектами — эффекты из библиотеки игры (game-character-effects.ts).
 export async function figureSpeeds(
   db: Db,
+  gameId: string,
   rows: { id: string; ownerId: string; speed: number }[],
 ): Promise<Map<string, number>> {
-  const speeds = new Map<string, number>();
-  const byOwner = new Map<string, string[]>();
-  for (const { id, ownerId } of rows) {
-    byOwner.set(ownerId, [...(byOwner.get(ownerId) ?? []), id]);
-  }
-  for (const [ownerId, ids] of byOwner) {
-    const lists = await loadCharacterEffectLists(db, ownerId, ids);
-    for (const row of rows.filter((r) => r.ownerId === ownerId)) {
+  const lists = await loadGameEffectLists(
+    db,
+    gameId,
+    new Map(rows.map((row) => [row.id, row.ownerId])),
+  );
+  return new Map(
+    rows.map((row) => {
       const effects = activeEffects(lists.get(row.id) ?? []);
-      speeds.set(row.id, totalSpeed({ speed: row.speed }, effects).speed);
-    }
-  }
-  return speeds;
+      return [row.id, totalSpeed({ speed: row.speed }, effects).speed];
+    }),
+  );
 }
 
 // Фигурки сцены глазами смотрящего.
 export async function readSceneFigures(
   db: Db,
+  gameId: string,
   sceneId: string,
   viewerId: string,
   masterId: string,
@@ -65,6 +64,9 @@ export async function readSceneFigures(
       name: characters.name,
       ownerId: characters.userId,
       speed: characters.speed,
+      current: characters.hitPointsCurrent,
+      max: characters.hitPointsMax,
+      deathFailures: characters.deathSaveFailures,
       controllerId: gameMembers.controllerId,
     })
     .from(gameFigures)
@@ -76,13 +78,14 @@ export async function readSceneFigures(
   const images = await loadMainImages(db, ids);
   const speeds = await figureSpeeds(
     db,
+    gameId,
     rows.map((row) => ({
       id: row.figure.characterId,
       ownerId: row.ownerId,
       speed: row.speed,
     })),
   );
-  return rows.map(({ figure, name, ownerId, speed, controllerId }) => ({
+  return rows.map(({ figure, name, ownerId, speed, controllerId, ...hp }) => ({
     character: { id: figure.characterId, name },
     ownerId,
     at: [figure.x, figure.y, figure.z],
@@ -93,6 +96,7 @@ export async function readSceneFigures(
     moved: figure.moved,
     dashes: figure.dashes,
     canMove: canMoveFigure(viewerId, masterId, ownerId, controllerId),
+    health: creatureHealth(hp),
   }));
 }
 

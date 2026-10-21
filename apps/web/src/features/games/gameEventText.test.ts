@@ -12,6 +12,14 @@ const base = {
 const lira = { id: 'c1', name: 'Лира' };
 
 const lair = { id: 's1', name: 'Логово' };
+const state = {
+  hitPointsCurrent: 12,
+  hitPointsMax: 12,
+  hitPointsTemp: 0,
+  deathSaveSuccesses: 0,
+  deathSaveFailures: 0,
+  spellSlots: {},
+};
 
 describe('gameEventText', () => {
   it.each<[GameEvent, string]>([
@@ -288,6 +296,53 @@ describe('gameEventText', () => {
         result: { character: lira, dashes: 2 },
       },
       'Рывок: Лира (за ход: 2)',
+    ],
+    [
+      {
+        ...base,
+        kind: 'character.changed',
+        as: { kind: 'master' },
+        intent: { characterId: 'c1', change: { kind: 'damage', amount: 7 } },
+        result: {
+          character: lira,
+          before: { ...state, hitPointsCurrent: 12 },
+          after: { ...state, hitPointsCurrent: 5 },
+          instantDeath: false,
+        },
+      },
+      'Урон: Лира — 7, хиты 12 → 5',
+    ],
+    [
+      {
+        ...base,
+        kind: 'character.changed',
+        as: { kind: 'character', id: 'c1' },
+        intent: {
+          characterId: 'c1',
+          change: { kind: 'spell_slots', expended: { 1: 1 } },
+        },
+        result: {
+          character: lira,
+          before: state,
+          after: { ...state, spellSlots: { 1: { total: 2, expended: 1 } } },
+          instantDeath: false,
+        },
+      },
+      'Ячейки заклинаний: Лира — осталось 1 круг: 1 из 2',
+    ],
+    [
+      {
+        ...base,
+        kind: 'character.effect_added',
+        as: { kind: 'master' },
+        intent: { characterId: 'c1', effectId: 'e1' },
+        result: {
+          character: lira,
+          effect: { id: 'e1', name: 'Благословение' },
+          libraryCopied: 1,
+        },
+      },
+      'Эффект наложен: Лира — Благословение',
     ],
     [
       {

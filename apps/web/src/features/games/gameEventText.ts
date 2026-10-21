@@ -4,6 +4,7 @@ import type {
   SceneReplayResult,
   SceneEditResult,
 } from 'shared';
+import { characterChangedText } from './characterEventText';
 
 // Строка журнала игры по-русски. Кто сделал, показывается рядом отдельно, поэтому здесь —
 // безличные фразы: пол автора по нику не угадать.
@@ -100,6 +101,14 @@ export function gameEventText(event: GameEvent): string {
         ? `Рывок: ${character.name} (за ход: ${dashes})`
         : `Рывок: ${character.name}`;
     }
+    case 'character.changed':
+      return characterChangedText(event);
+    case 'character.effect_added':
+      return `Эффект наложен: ${event.result.character.name} — ${event.result.effect.name}`;
+    case 'character.effect_removed':
+      return event.result.effect
+        ? `Эффект снят: ${event.result.character.name} — ${event.result.effect.name}`
+        : `Эффект снят: ${event.result.character.name}`;
     case 'member.left':
       return withCharacter('Выход из игры', event.result.character);
     case 'member.removed':

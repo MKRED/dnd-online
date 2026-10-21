@@ -267,5 +267,10 @@ function toAbility(row: LibraryRow, linked: LinkedRows): Ability {
 }
 
 function toEffect(row: LibraryRow): Effect {
-  return { ...entryFields(row), ...toEffectFields(...variantArgs(row)) };
+  return { ...entryFields(row), ...libraryEffectFields(row) };
+}
+
+// Составляющие и длительность копии эффекта — для итога листа в игре.
+export function libraryEffectFields(row: LibraryRow) {
+  return toEffectFields(...variantArgs(row));
 }

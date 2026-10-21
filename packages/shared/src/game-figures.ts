@@ -1,5 +1,6 @@
 import type { CharacterMainImage } from './characterImages.js';
 import type { GameEventCharacter } from './game-events.js';
+import type { CreatureHealth } from './hitPoints.js';
 import type { Vec3 } from './map/coords.js';
 import type { Facing } from './map/objects/mapObject.js';
 import type { CreatureSize } from './map/rules/creature.js';
@@ -26,8 +27,10 @@ export interface GameFigure {
   // Сколько футов пройдено с начала раунда и сколько раз взят «Рывок».
   moved: number;
   dashes: number;
-  // Смотрящий может водить эту фигурку.
+  // Смотрящий может водить эту фигурку — и править хиты, ячейки и эффекты персонажа.
   canMove: boolean;
+  // Что видно о здоровье всем: «Ранен», «Без сознания», «Погиб» (hitPoints.ts).
+  health: CreatureHealth | null;
 }
 
 export interface GameFigures {

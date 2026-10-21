@@ -1,5 +1,6 @@
 import { useEffect, type RefObject } from 'react';
 import {
+  CREATURE_KINDS,
   FIGURE_KINDS,
   type GameFigureDragMessage,
   type GameSceneEditMessage,
@@ -16,9 +17,11 @@ const SCENE_CHANGES = new Set<string>([
 ]);
 
 // После них перечитываются фигурки (этап 7): ход, расстановка, ушедший с места персонаж
-// и смена управляющего — кто может водить фигурку (canMove).
+// и смена управляющего — кто может водить фигурку (canMove); хиты персонажа (этап 8) —
+// метка здоровья и Скорость с эффектами.
 const FIGURE_CHANGES = new Set<string>([
   ...FIGURE_KINDS,
+  ...CREATURE_KINDS,
   'seat.controller',
   'seat.updated',
   'seat.freed',

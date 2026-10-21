@@ -1,3 +1,7 @@
+import type {
+  GameCharacterChange,
+  GameCharacterState,
+} from './game-characters.js';
 import type { GameFigurePlacement } from './game-figures.js';
 import type { GameUser } from './games.js';
 import type { GameLibraryRef } from './game-library.js';
@@ -15,6 +19,12 @@ export const GAME_EVENTS_PAGE_MAX = 100;
 
 // Персонаж, как он звался в момент события: журнал читается и после его удаления.
 export interface GameEventCharacter {
+  id: string;
+  name: string;
+}
+
+// Эффект, как он звался в момент события.
+export interface GameEventEffect {
   id: string;
   name: string;
 }
@@ -156,6 +166,32 @@ export interface GameEventPayloads {
   'figure.dashed': {
     intent: { characterId: string };
     result: { character: GameEventCharacter; dashes: number };
+  };
+  // Хиты, спасброски или ячейки персонажа в игре (этап 8). instantDeath — урон сверх
+  // нуля не меньше максимума хитов.
+  'character.changed': {
+    intent: { characterId: string; change: GameCharacterChange };
+    result: {
+      character: GameEventCharacter;
+      before: GameCharacterState;
+      after: GameCharacterState;
+      instantDeath: boolean;
+    };
+  };
+  // Эффект наложен на персонажа в игре; libraryCopied — сколько записей скопировано в
+  // библиотеку игры вместе с ним.
+  'character.effect_added': {
+    intent: { characterId: string; effectId: string };
+    result: {
+      character: GameEventCharacter;
+      effect: GameEventEffect;
+      libraryCopied: number;
+    };
+  };
+  // Эффект снят; effect — null, если его карточки уже нет ни в библиотеке, ни в справочнике.
+  'character.effect_removed': {
+    intent: { characterId: string; entryId: string };
+    result: { character: GameEventCharacter; effect: GameEventEffect | null };
   };
   // Мастер убрал игрока.
   'member.removed': {

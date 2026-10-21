@@ -54,6 +54,7 @@ export class GameFiguresReadService {
           }
           const figures = await readSceneFigures(
             tx,
+            gameId,
             scene.id,
             userId,
             masterId,

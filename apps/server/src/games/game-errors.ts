@@ -52,5 +52,12 @@ export const MASTER_ONLY_FIGURES =
   'Ставить фигурки и менять их запас движения может только мастер';
 export const FIGURE_CANT_REACH =
   'Туда не дойти: путь перекрыт или не хватает движения';
+export const GAME_CHARACTER_NOT_FOUND = 'Персонажа нет на местах этой игры';
+export const GAME_CHARACTER_NOT_YOURS = 'Этого персонажа ведёт другой игрок';
+export const CHARACTER_DEAD =
+  'Персонаж погиб: вылечить его нельзя, пока не убраны провалы спасбросков';
+export function characterNoHealing(sources: readonly string[]) {
+  return `Лечение запрещено: ${sources.join(', ')}`;
+}
 export const FIGURE_CANT_STAND =
   'Здесь фигурке не встать: нет опоры, тесно или место занято';

@@ -126,7 +126,7 @@ export async function moveFigure(
   }
   const scene = await activeScene(actor);
   const world = await loadSceneWorld(actor.tx, scene);
-  const speeds = await figureSpeeds(actor.tx, [
+  const speeds = await figureSpeeds(actor.tx, actor.gameId, [
     { id: characterId, ownerId, speed },
   ]);
   const left = movementLeft({

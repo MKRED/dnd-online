@@ -161,6 +161,7 @@ const LIRA: GameFigure = {
   moved: 0,
   dashes: 0,
   canMove: true,
+  health: null,
 };
 
 function figuresOf(eventSeq: number, figures: GameFigure[]): GameFigures {

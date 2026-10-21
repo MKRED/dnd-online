@@ -41,6 +41,14 @@ export const FIGURE_KINDS: readonly GameEventKind[] = [
   'figure.dashed',
 ];
 
+// Состояние персонажей в игре (этап 8): страница сцены перечитывает фигурки (метка
+// здоровья) и открытую карточку, лобби не меняется — как с фигурками.
+export const CREATURE_KINDS: readonly GameEventKind[] = [
+  'character.changed',
+  'character.effect_added',
+  'character.effect_removed',
+];
+
 // Сколько пропущенных записей журнала мастер получает при возвращении; больше —
 // журнал перечитывается целиком.
 export const GAME_SOCKET_MISSED_MAX = 100;

@@ -11,6 +11,7 @@ import {
   type MapObject,
   type MapObjectRefsView,
   type Point3,
+  type Vec3,
 } from 'shared';
 import type { MapViewState } from '../../mapStateFromChunks';
 import { CATALOG_OBJECT_IMAGES, type ObjectImagePaths } from './objectImages';
@@ -35,6 +36,8 @@ export type SceneObjectLook =
 
 export interface SceneObject {
   id: number;
+  // Клетка ног — по ней туман войны решает, видит ли объект группа.
+  at: Vec3;
   // Уровень клетки ног: выше среза по высоте объект не рисуется.
   level: number;
   // Середина места на высоте ног.
@@ -173,6 +176,7 @@ export function layoutObjects(
           : FLAT_TOP;
     result.push({
       id: object.id,
+      at: object.at,
       level: y,
       base: [x + middle, feet, z + middle],
       footprint,

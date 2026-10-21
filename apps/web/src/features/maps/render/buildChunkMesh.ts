@@ -10,6 +10,7 @@ import {
   type Vec3,
 } from 'shared';
 import type { BlockAppearance, BlockLookup } from './blockLookup';
+import { fogColor } from './fogColor';
 
 // Буферы одной геометрии: позиции, нормали и цвета по вершинам, индексы треугольников.
 export interface MeshBuffers {
@@ -32,6 +33,10 @@ export interface MeshOptions {
   // Размер карты: блоки за восточной и южной границей (скрытые сужением карты) не
   // рисуются и не закрывают грани соседей — у края карты видна стена, а не дыра.
   size?: MapSize;
+  // Туман войны игрока: биты «видно сейчас» этого чанка (индекс — как у клетки в чанке).
+  // Блок вне них группа видела раньше — он серый (fogColor). undefined — тумана нет;
+  // null — туман есть, а в чанке сейчас не видно ничего.
+  seen?: Uint8Array | null;
 }
 
 class BufferBuilder {
@@ -101,7 +106,7 @@ export function buildChunkMesh(
   store: ChunkStore,
   key: string,
   lookup: BlockLookup,
-  { cutY, size }: MeshOptions = {},
+  { cutY, size, seen }: MeshOptions = {},
 ): ChunkMeshes {
   const chunk = store.get(key);
   const opaque = new BufferBuilder();
@@ -122,6 +127,10 @@ export function buildChunkMesh(
     const cell = cellFromChunk(chunkCoord, index);
     if (isHidden(cell)) continue;
     const target = self.material.opaque ? opaque : transparent;
+    const dim =
+      seen !== undefined &&
+      (seen === null || (seen[index >> 3] & (1 << (index & 7))) === 0);
+    const color = dim ? fogColor(self.color) : self.color;
 
     for (const box of shapeBoxes(self.shape, cellRotation(value))) {
       for (let axis = 0; axis < 3; axis++) {
@@ -134,11 +143,7 @@ export function buildChunkMesh(
           }
           const normal: [number, number, number] = [0, 0, 0];
           normal[axis] = side;
-          target.addQuad(
-            faceCorners(cell, box, axis, side),
-            normal,
-            self.color,
-          );
+          target.addQuad(faceCorners(cell, box, axis, side), normal, color);
         }
       }
     }

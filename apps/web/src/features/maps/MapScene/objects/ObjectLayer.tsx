@@ -3,7 +3,9 @@ import { useThree, type ThreeEvent } from '@react-three/fiber';
 import { useEffect, useMemo, useState } from 'react';
 import {
   creatureHealthLabel,
+  maskHas,
   type CreatureHealth,
+  type FogMasks,
   type MapObjectRefsView,
 } from 'shared';
 import type { ObjectToolScene } from '../../editor/objects';
@@ -53,6 +55,9 @@ interface ObjectLayerProps {
   // Содержимое контейнеров смотрящему не отдают — подпись без него.
   hideContents?: boolean;
   creatures?: SceneCreaturesView;
+  // Туман войны игрока: предметы, контейнеры и точки старта вне поля зрения — темнее.
+  // Существ вне поля зрения сервер не присылает вовсе.
+  fog?: FogMasks | null;
 }
 
 // Обводка выделенного объекта во всё его место и рост.
@@ -103,6 +108,7 @@ function ObjectLayer({
   images,
   hideContents,
   creatures,
+  fog = null,
 }: ObjectLayerProps) {
   const all = useMemo(
     () => layoutObjects(state, refs, images, hideContents),
@@ -140,11 +146,17 @@ function ObjectLayer({
     <>
       {objects.map((object) => {
         const { look } = object;
+        const dim =
+          fog !== null &&
+          look.kind !== 'creature' &&
+          !maskHas(fog.visible, object.at);
         return (
-          // Смена признака «скрыт» пересоздаёт объект: материалы приходят чистыми.
+          // Смена признака «скрыт» или серой зоны пересоздаёт объект: материалы
+          // приходят чистыми.
           <GhostGroup
-            key={`${object.id}:${object.hidden}`}
+            key={`${object.id}:${object.hidden}:${dim}`}
             active={object.hidden}
+            dim={dim}
           >
             <group
               {...handlers(object.id)}

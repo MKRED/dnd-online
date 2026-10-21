@@ -22,6 +22,7 @@ import {
 import { useAuth } from '../../features/auth';
 import { sceneObjectImages } from '../../features/games';
 import { parseCameraParams, placeCamera } from '../../features/maps/cameraView';
+import { useFogMasks } from '../../features/maps/fogMasks';
 import { SceneToolbar } from '../../features/maps/editor';
 import type { CameraFocusApi } from '../../features/maps/MapScene';
 import { usePageTitle } from '../../lib/usePageTitle';
@@ -51,6 +52,8 @@ function GameScenePage() {
   const master = game?.role === 'master';
   const ready = load.kind === 'ready' ? load : null;
   const view = ready?.view ?? null;
+  // Туман войны игрока: что видно сейчас и что открыто (у мастера тумана нет).
+  const fog = useFogMasks(view?.fog ?? null);
   usePageTitle(view?.scene.name ?? 'Сцена');
   const open = useSceneOpen(id, setLoad);
   const { editor, objects } = useSceneTools({
@@ -196,6 +199,7 @@ function GameScenePage() {
               figureGhosts={play.ghosts.ghosts}
               figureDrag={play.drag}
               creatures={cards.view}
+              fog={fog}
             />
           </Suspense>
         )}

@@ -2,7 +2,12 @@ import { useComputedColorScheme } from '@mantine/core';
 import { MapControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { useCallback, useState, type RefObject } from 'react';
-import type { MapObjectRefsView, ResizeOp, UserSettings } from 'shared';
+import type {
+  FogMasks,
+  MapObjectRefsView,
+  ResizeOp,
+  UserSettings,
+} from 'shared';
 import type { CameraPlacement, Point } from '../cameraView';
 import type { SceneEditor } from '../editor/editorTools';
 import type { ObjectToolScene } from '../editor/objects';
@@ -74,6 +79,9 @@ interface MapSceneProps {
   figureDrag?: FigureDragHandlers;
   // Монстры и НПС сцены игры (этап 8): метки здоровья и выбор щелчком.
   creatures?: SceneCreaturesView;
+  // Туман войны игрока (docs/plan/fog-of-war.md, этап 5): блоки и предметы вне поля
+  // зрения — серые. Неоткрытого в карте нет вовсе: его не присылает сервер.
+  fog?: FogMasks | null;
 }
 
 function MapScene({
@@ -94,8 +102,9 @@ function MapScene({
   figureGhosts,
   figureDrag,
   creatures,
+  fog = null,
 }: MapSceneProps) {
-  const chunks = useChunkMeshes(map, cutY);
+  const chunks = useChunkMeshes(map, cutY, fog?.visible ?? null);
   const scheme = useComputedColorScheme('dark');
   // Центр камеры живёт внутри Canvas (CameraFocus), а подсказка с кнопками и клавиши
   // Q/E — снаружи, в обычном DOM; связывает их ref focus.
@@ -149,6 +158,7 @@ function MapScene({
                 images={objectImages}
                 hideContents={hideContainerContents}
                 creatures={creatures}
+                fog={fog}
               />
               {figures && (
                 <FigureLayer

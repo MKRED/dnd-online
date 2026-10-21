@@ -1,4 +1,5 @@
-import { getBlock, MATERIALS } from '../blocks.js';
+import { getBlock } from '../blocks.js';
+import { MATERIALS } from '../materials.js';
 import { cellRotation, cellTypeId } from '../cell.js';
 import { readCell } from '../chunkStore.js';
 import type { Vec3 } from '../coords.js';

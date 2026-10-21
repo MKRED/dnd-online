@@ -144,6 +144,9 @@ describe('dnd MCP server', () => {
     );
     expect(text).toContain('ОБЪЕКТЫ НА КАРТЕ');
     expect(text).toContain('placeObject {at, object}');
+    expect(text).toContain(
+      '- lava — Лава (непрозрачный, не разрушается атаками, труднопроходимый, опасный: 10к10 (Огонь))',
+    );
   });
 
   it('apply_ops пропускает операции объектов и отдаёт их номера без справочника', async () => {

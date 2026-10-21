@@ -1,4 +1,6 @@
 import {
+  HAZARD_TRIGGER,
+  hazardLabel,
   MATERIALS,
   RESIZE_SIDES,
   SHAPE_LABELS,
@@ -18,6 +20,7 @@ export function buildBlockGuide(): string {
         : 'не разрушается атаками',
       m.flammable ? 'горит' : null,
       m.movementCost === 2 ? 'труднопроходимый' : null,
+      m.hazard ? `опасный: ${hazardLabel(m.hazard)}` : null,
     ].filter(Boolean);
     return `- ${name} — ${m.label} (${traits.join(', ')})`;
   });
@@ -43,6 +46,7 @@ export function buildBlockGuide(): string {
     '',
     'МАТЕРИАЛЫ',
     ...materials,
+    `- Опасный блок наносит урон тому, ${HAZARD_TRIGGER}. Это твёрдый пол: на лаве, кислоте, топи и воде стоят и бредут, как по мелководью, а не плывут. Яма с лавой — пол из лавы на дне; переход — камень поверх.`,
     '',
     'ФИГУРЫ (коробки внутри клетки: [minX, minY, minZ, maxX, maxY, maxZ] от 0 до 1, при повороте 0)',
     ...shapes,

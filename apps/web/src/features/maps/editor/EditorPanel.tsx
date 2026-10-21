@@ -15,6 +15,7 @@ import {
   MATERIALS,
   ROTATIONS,
 } from 'shared';
+import { blockTraits } from './blockTraits';
 import { isRegionTool, type EditorTool } from './editorTools';
 import type { MapEditor } from './useMapEditor';
 
@@ -70,6 +71,12 @@ function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
           allowDeselect={false}
           maxDropdownHeight={320}
         />
+      )}
+
+      {builds && blockTraits(editor.block) && (
+        <Text size="xs" c="orange">
+          {blockTraits(editor.block)}
+        </Text>
       )}
 
       {builds && getBlock(editor.block)?.shape !== 'cube' && (

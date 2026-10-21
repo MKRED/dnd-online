@@ -5,5 +5,6 @@ export * from './cover.js';
 export * from './areas/index.js';
 export * from './standing.js';
 export * from './step.js';
+export { hazardsUnder, supportMaterials } from './support.js';
 export * from './path/index.js';
 export * from './occupancy.js';

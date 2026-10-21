@@ -2,6 +2,8 @@ export * from './coords.js';
 export * from './cell.js';
 export * from './shapes.js';
 export * from './blocks.js';
+export * from './materials.js';
+export * from './materialHazards.js';
 export * from './palette.js';
 export * from './chunkStore.js';
 export * from './mapState.js';

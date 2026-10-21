@@ -1,43 +1,17 @@
-import { getBlock, MATERIALS, type BlockDefinition } from '../blocks.js';
-import { cellRotation, cellTypeId } from '../cell.js';
-import { readCell } from '../chunkStore.js';
 import type { Vec3 } from '../coords.js';
 import type { MapState } from '../mapState.js';
-import { shapeBoxes, type ShapeBox } from '../shapes.js';
-import {
-  CREATURE_SIZES,
-  surfaceInCell,
-  type CreatureSize,
-} from './creature.js';
+import { MATERIALS } from '../materials.js';
+import type { ShapeBox } from '../shapes.js';
+import type { CreatureSize } from './creature.js';
 import { FEET_PER_CELL } from './distance.js';
 import { standHeight } from './standing.js';
+import { blockAt, footprintCells, supportMaterials } from './support.js';
 
 // Перепад высоты ног, который проходят шагом: плита, ступень.
 const MAX_STEP = 0.5;
 // По ступеням в сторону подъёма — до целого блока: соседние ступени лестницы стоят
 // на блок выше друг друга.
 const MAX_STAIRS_STEP = 1;
-
-function blockAt(
-  map: MapState,
-  cell: Vec3,
-): { block: BlockDefinition; boxes: readonly ShapeBox[] } | null {
-  const value = readCell(map.store, cell);
-  const block = getBlock(map.palette[cellTypeId(value)] ?? '');
-  if (!block) return null;
-  return { block, boxes: shapeBoxes(block.shape, cellRotation(value)) };
-}
-
-function footprintCells(anchor: Vec3, size: CreatureSize): Vec3[] {
-  const n = Math.ceil(CREATURE_SIZES[size].footprint);
-  const cells: Vec3[] = [];
-  for (let dx = 0; dx < n; dx++) {
-    for (let dz = 0; dz < n; dz++) {
-      cells.push([anchor[0] + dx, anchor[1], anchor[2] + dz]);
-    }
-  }
-  return cells;
-}
 
 // Направление подъёма ступеней по горизонтали — в сторону верхней ступени.
 // Берём из повёрнутых коробок, а не из таблицы поворотов: так оно не разойдётся с формой.
@@ -117,17 +91,14 @@ function cornerClear(
 }
 
 // Труднопроходимая местность — если хоть под одной клеткой основания опора из такого
-// материала (плита или ступени в самой клетке, иначе полный блок под ней).
+// материала (supportMaterials).
 function terrainCost(map: MapState, anchor: Vec3, size: CreatureSize): number {
-  let cost = 1;
-  for (const cell of footprintCells(anchor, size)) {
-    const support: Vec3 =
-      surfaceInCell(map, cell) > 0 ? cell : [cell[0], cell[1] - 1, cell[2]];
-    const found = blockAt(map, support);
-    if (found)
-      cost = Math.max(cost, MATERIALS[found.block.material].movementCost);
-  }
-  return cost;
+  return Math.max(
+    1,
+    ...supportMaterials(map, anchor, size).map(
+      (m) => MATERIALS[m].movementCost,
+    ),
+  );
 }
 
 export type Stepper = (from: Vec3, to: Vec3) => number | null;

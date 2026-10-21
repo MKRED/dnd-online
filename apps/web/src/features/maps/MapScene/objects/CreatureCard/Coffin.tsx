@@ -1,15 +1,13 @@
 import { useEffect, useMemo } from 'react';
-import { ExtrudeGeometry, Shape, type Texture } from 'three';
+import { ExtrudeGeometry, Shape } from 'three';
 import { coffinOutline, type CoffinSize } from './creaturePose';
+import { skullTexture } from './skullTexture';
 
 const WOOD = '#5a3a22';
 const LID = '#74502f';
 
 interface CoffinProps {
   size: CoffinSize;
-  // Картинка существа (или буква); рамка вокруг неё — серая, как у заглушки.
-  picture: Texture | null;
-  frame: string;
 }
 
 // Плоская призма по контуру гроба: контур лежит в плоскости XY с y = −z, поворот на
@@ -26,9 +24,10 @@ function extrude(size: CoffinSize, scale: number, depth: number) {
 }
 
 // Гроб поверженного существа (docs/dnd/hit-points.md, «Что видят другие»): низкий
-// деревянный ящик во всё место, изголовьем по взгляду, крышка чуть шире, на ней —
-// портрет в рамке, верх картинки к изголовью. Рисуется в повёрнутой по взгляду группе.
-function Coffin({ size, picture, frame }: CoffinProps) {
+// деревянный ящик во всё место, ногами по взгляду, крышка чуть шире, на ней — череп,
+// верхом к изголовью. Портрет — только у призрака над гробом. Рисуется в повёрнутой
+// по взгляду группе; контур (coffinOutline) — изголовьем к −z, поэтому гроб развёрнут.
+function Coffin({ size }: CoffinProps) {
   const lidThickness = size.height * 0.25;
   const bodyHeight = size.height - lidThickness;
   const body = useMemo(() => extrude(size, 1, bodyHeight), [size, bodyHeight]);
@@ -43,12 +42,12 @@ function Coffin({ size, picture, frame }: CoffinProps) {
     },
     [body, lid],
   );
-  const portrait = size.width * 0.62;
-  const top = size.height + 0.003;
-  // Портрет ближе к изголовью: там гроб шире всего.
-  const portraitZ = -size.length * 0.1;
+  const skull = skullTexture();
+  const skullSize = size.width * 0.7;
+  // Череп ближе к изголовью: там гроб шире всего.
+  const skullZ = -size.length * 0.12;
   return (
-    <group>
+    <group rotation={[0, Math.PI, 0]}>
       <mesh geometry={body} rotation={[-Math.PI / 2, 0, 0]}>
         <meshStandardMaterial color={WOOD} />
       </mesh>
@@ -59,17 +58,13 @@ function Coffin({ size, picture, frame }: CoffinProps) {
       >
         <meshStandardMaterial color={LID} />
       </mesh>
-      <mesh position={[0, top, portraitZ]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[portrait * 1.12, portrait * 1.12]} />
-        <meshStandardMaterial color={frame} />
-      </mesh>
-      {picture && (
+      {skull && (
         <mesh
-          position={[0, top + 0.002, portraitZ]}
+          position={[0, size.height + 0.003, skullZ]}
           rotation={[-Math.PI / 2, 0, 0]}
         >
-          <planeGeometry args={[portrait, portrait]} />
-          <meshBasicMaterial map={picture} alphaTest={0.05} />
+          <planeGeometry args={[skullSize, skullSize]} />
+          <meshStandardMaterial map={skull} transparent alphaTest={0.05} />
         </mesh>
       )}
     </group>

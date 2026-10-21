@@ -98,7 +98,7 @@ function CreatureCard({ object, look, texture, health }: CreatureCardProps) {
       <group rotation={[0, facingAngle(look.facing), 0]}>
         {coffin ? (
           <>
-            <Coffin size={coffin} picture={texture ?? letter} frame={frame} />
+            <Coffin size={coffin} />
             <Spirit
               footprint={object.footprint}
               floor={coffin.height}

@@ -46,9 +46,10 @@ describe('poseTop', () => {
     expect(poseTop('lying', 1, 1.8)).toBeLessThan(0.1);
   });
 
-  it('над гробом — выше призрака, у Большого не выше, чем гроб плюс призрак Среднего', () => {
+  it('над гробом — выше призрака; призрак растёт с местом существа', () => {
     const top = poseTop('coffin', 2, 1.8);
     expect(top).toBeGreaterThan(coffinSize(2).height + spiritSize(2).height);
-    expect(spiritSize(4)).toEqual(spiritSize(2));
+    expect(spiritSize(2).width).toBeCloseTo(2 * spiritSize(1).width);
+    expect(spiritSize(4).height).toBeGreaterThan(spiritSize(3).height);
   });
 });

@@ -7,7 +7,7 @@ import { createPalette } from '../palette.js';
 import { stepCost } from './step.js';
 import { hazardsUnder, supportMaterials } from './support.js';
 
-// Земля под y = 0, в ней клетка лавы [2, -1, 0] и плита кислоты в [0, 0, 3].
+// Земля под y = 0, в ней клетки лавы [2, -1, 0] и огня [-3, -1, 0], плита кислоты в [0, 0, 3].
 function hazardFloor(): MapState {
   const map = { store: new MemoryChunkStore(), palette: createPalette() };
   applyOp(map, {
@@ -18,6 +18,7 @@ function hazardFloor(): MapState {
   });
   applyOp(map, { op: 'setBlock', at: [2, -1, 0], block: 'lava' });
   applyOp(map, { op: 'setBlock', at: [0, 0, 3], block: 'acid_slab' });
+  applyOp(map, { op: 'setBlock', at: [-3, -1, 0], block: 'fire' });
   return map;
 }
 
@@ -44,13 +45,16 @@ describe('опасности под существом', () => {
     expect(hazardsUnder(map, [1, 0, -1], 'large')).toHaveLength(1);
   });
 
-  it('по лаве бредут как по труднопроходимой местности', () => {
+  it('по лаве бредут как по труднопроходимой местности, по огню — обычный шаг', () => {
     expect(stepCost(map, [1, 0, 0], [2, 0, 0], 'medium')).toBe(10);
     expect(stepCost(map, [2, 0, 0], [1, 0, 0], 'medium')).toBe(5);
+    expect(stepCost(map, [-2, 0, 0], [-3, 0, 0], 'medium')).toBe(5);
+    expect(hazardsUnder(map, [-3, 0, 0], 'medium')[0]?.material).toBe('fire');
   });
 
   it('подпись опасности — кости, тип и спасбросок', () => {
     expect(hazardLabel(HAZARDS.lava)).toBe('10к10 (Огонь)');
+    expect(hazardLabel(HAZARDS.fire)).toBe('4к10 (Огонь), поджигает');
     expect(hazardLabel(HAZARDS.swamp)).toBe(
       '1к10 (Яд), спасбросок Телосложения Сл 12, при успехе половина',
     );

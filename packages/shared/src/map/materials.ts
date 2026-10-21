@@ -102,7 +102,7 @@ export const MATERIALS = {
     hazard: null,
   },
   // Опасные блоки — твёрдый пол, по которому бредут (жидкостей-объёмов пока нет):
-  // все труднопроходимы, как жидкость от голени до пояса. Числа — docs/dnd/hazards.md.
+  // жидкости труднопроходимы, как жидкость от голени до пояса. Числа — docs/dnd/hazards.md.
   lava: {
     label: 'Лава',
     color: '#e8591a',
@@ -132,6 +132,17 @@ export const MATERIALS = {
     movementCost: 2,
     climbable: false,
     hazard: HAZARDS.swamp,
+  },
+  // Горящая земля, угли: не жидкость, поэтому шаг обычный.
+  fire: {
+    label: 'Огонь',
+    color: '#f2b233',
+    opaque: true,
+    durability: null,
+    flammable: false,
+    movementCost: 1,
+    climbable: false,
+    hazard: HAZARDS.fire,
   },
   water: {
     label: 'Вода',

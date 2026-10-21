@@ -11,9 +11,11 @@ import type {
   CharacterEffectEntry,
   GameCreatureChange,
   GameCreatures,
+  Vec3,
 } from 'shared';
 import { DatabaseService } from '../../database/database.service.js';
 import { games } from '../../database/schema/index.js';
+import { MapLimitsConfig } from '../../maps/map-limits.js';
 import {
   MASTER_ONLY_CREATURES,
   NO_ACTIVE_SCENE,
@@ -28,8 +30,12 @@ import {
   addCreatureEffect,
   changeCreature,
   removeCreatureEffect,
-  type CreatureActor,
 } from './creature-edits.js';
+import {
+  changeCreatureAllowance,
+  moveCreature,
+  type CreatureMoveActor,
+} from './creature-moves.js';
 import { loadCreatureEffects, readSceneCreatures } from './creature-read.js';
 
 // Монстры и НПС активной сцены (docs/plan/done/game.md, этап 8). Видят их те же, кто видит
@@ -41,6 +47,7 @@ export class GameCreaturesService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly realtime: GameRealtimeService,
+    private readonly limits: MapLimitsConfig,
     @InjectPinoLogger(GameCreaturesService.name)
     private readonly logger: PinoLogger,
   ) {}
@@ -104,6 +111,31 @@ export class GameCreaturesService {
     return this.list(userId, gameId);
   }
 
+  // Ход по пути (docs/plan/done/creature-movement.md); отвечает существами, как правка хитов.
+  async move(
+    userId: string,
+    gameId: string,
+    objectId: number,
+    to: Vec3,
+  ): Promise<GameCreatures> {
+    await this.edit(userId, gameId, objectId, 'move', (actor) =>
+      moveCreature(actor, objectId, to),
+    );
+    return this.list(userId, gameId);
+  }
+
+  async allowance(
+    userId: string,
+    gameId: string,
+    objectId: number,
+    change: 'refresh' | 'dash',
+  ): Promise<GameCreatures> {
+    await this.edit(userId, gameId, objectId, change, (actor) =>
+      changeCreatureAllowance(actor, objectId, change),
+    );
+    return this.list(userId, gameId);
+  }
+
   async addEffect(
     userId: string,
     gameId: string,
@@ -151,7 +183,7 @@ export class GameCreaturesService {
     gameId: string,
     objectId: number,
     kind: string,
-    run: (actor: CreatureActor) => Promise<void>,
+    run: (actor: CreatureMoveActor) => Promise<void>,
   ): Promise<string> {
     const t0 = Date.now();
     const { db } = this.databaseService;
@@ -165,7 +197,14 @@ export class GameCreaturesService {
         await lockGame(tx, gameId);
         const scene = await findActiveScene(tx, gameId);
         if (!scene) throw new ConflictException(NO_ACTIVE_SCENE);
-        await run({ tx, gameId, sceneId: scene.id, userId });
+        await run({
+          tx,
+          gameId,
+          sceneId: scene.id,
+          userId,
+          scene,
+          limits: this.limits,
+        });
         return scene.id;
       });
       this.realtime.publish(gameId);

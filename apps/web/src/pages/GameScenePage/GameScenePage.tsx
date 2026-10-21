@@ -109,6 +109,8 @@ function GameScenePage() {
     sceneId,
     master,
     state,
+    refs: view?.refs ?? null,
+    figures: figures.figures,
     canPick: master && editor.tool === 'view',
     figureId: play.tool.selectedId,
     clearFigure,
@@ -122,8 +124,12 @@ function GameScenePage() {
     },
     [receiveEdit, creaturesSceneEdit],
   );
+  // Выбор у страницы один: щелчки по клеткам ведут выбранную фигурку или (у мастера)
+  // выбранного монстра (docs/plan/done/creature-movement.md).
   const sceneEditor =
-    (master && ready ? editor.sceneEditor : null) ?? play.editor;
+    (master && ready ? editor.sceneEditor : null) ??
+    play.editor ??
+    cards.walk.editor;
   const handleReady = useCallback(() => setReadySceneId(sceneId), [sceneId]);
   const tools = master && ready !== null;
 
@@ -175,7 +181,7 @@ function GameScenePage() {
               camera={camera}
               resizePreview={null}
               editor={sceneEditor}
-              walk={play.walk}
+              walk={play.walk ?? cards.walk.scene}
               objectTool={
                 tools && editor.tool === 'objects' ? objects.scene : null
               }

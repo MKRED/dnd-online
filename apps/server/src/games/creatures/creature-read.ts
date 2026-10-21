@@ -13,8 +13,10 @@ import {
 } from '../../database/schema/index.js';
 import {
   libraryCreatureMaxHp,
+  libraryCreatureSpeed,
   libraryEffectFields,
 } from '../library/library-record.js';
+import { creatureMovement } from './creature-movement.js';
 
 // Монстр или НПС сцены с тем, что о нём знает библиотека игры.
 export interface SceneCreature {
@@ -22,6 +24,8 @@ export interface SceneCreature {
   hidden: boolean;
   name: string;
   max: number;
+  // Скорость без эффектов экземпляра.
+  speed: number;
 }
 
 // Существа сцены (все или одно): объекты-монстры и НПС, их копии в библиотеке. Копии
@@ -72,8 +76,17 @@ export async function loadSceneCreatures(
       hidden: object.hidden,
       name: copy?.name ?? 'Неизвестное существо',
       max: copy ? libraryCreatureMaxHp(copy) : 1,
+      speed: copy ? libraryCreatureSpeed(copy) : 0,
     };
   });
+}
+
+// Строки состояния экземпляров сцены.
+export function loadCreatureRows(db: Db, sceneId: string) {
+  return db
+    .select()
+    .from(gameCreatures)
+    .where(eq(gameCreatures.sceneId, sceneId));
 }
 
 // Хиты экземпляров: строки нет — полные. Максимум мог уменьшиться обновлением копии —
@@ -82,11 +95,9 @@ export async function loadCreatureHitPoints(
   db: Db,
   sceneId: string,
   creatures: readonly SceneCreature[],
+  loaded?: Awaited<ReturnType<typeof loadCreatureRows>>,
 ) {
-  const rows = await db
-    .select()
-    .from(gameCreatures)
-    .where(eq(gameCreatures.sceneId, sceneId));
+  const rows = loaded ?? (await loadCreatureRows(db, sceneId));
   return new Map(
     creatures.map((creature) => {
       const row = rows.find((r) => r.objectId === creature.objectId);
@@ -157,7 +168,8 @@ export async function readSceneCreatures(
   master: boolean,
 ): Promise<GameCreature[]> {
   const creatures = await loadSceneCreatures(db, gameId, sceneId);
-  const hitPoints = await loadCreatureHitPoints(db, sceneId, creatures);
+  const rows = await loadCreatureRows(db, sceneId);
+  const hitPoints = await loadCreatureHitPoints(db, sceneId, creatures, rows);
   const effects = master
     ? await loadCreatureEffects(db, gameId, sceneId)
     : new Map<number, CharacterEffectEntry[]>();
@@ -177,6 +189,11 @@ export async function readSceneCreatures(
           name: creature.name,
           hitPoints: hp,
           effects: effects.get(creature.objectId) ?? [],
+          movement: creatureMovement(
+            creature,
+            rows.find((row) => row.objectId === creature.objectId),
+            effects.get(creature.objectId) ?? [],
+          ),
         },
       },
     ];

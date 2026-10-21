@@ -44,7 +44,7 @@ export interface CreatureActor {
   userId: string;
 }
 
-async function findCreature(
+export async function findCreature(
   actor: CreatureActor,
   objectId: number,
 ): Promise<SceneCreature> {

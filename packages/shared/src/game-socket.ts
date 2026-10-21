@@ -28,6 +28,7 @@ export const SCENE_EDIT_KINDS: readonly GameEventKind[] = [
   'scene.edited',
   'scene.undone',
   'scene.redone',
+  'creature.moved',
 ];
 
 // Фигурки на сцене (этап 7): страница сцены перечитывает фигурки, а не всю сцену, лобби
@@ -51,6 +52,8 @@ export const CREATURE_KINDS: readonly GameEventKind[] = [
   'creature.changed',
   'creature.effect_added',
   'creature.effect_removed',
+  'creature.refreshed',
+  'creature.dashed',
 ];
 
 // Сколько пропущенных записей журнала мастер получает при возвращении; больше —

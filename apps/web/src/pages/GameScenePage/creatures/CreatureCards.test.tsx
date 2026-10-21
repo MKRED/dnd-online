@@ -113,23 +113,70 @@ describe('существа у мастера', () => {
           name: 'Гоблин',
           hitPoints: { current: 2, max: 7, temp: 0 },
           effects: [],
+          movement: { speed: 30, moved: 10, dashes: 1 },
+        },
+      },
+      {
+        objectId: 3,
+        health: 'down',
+        state: {
+          name: 'Орк',
+          hitPoints: { current: 0, max: 15, temp: 0 },
+          effects: [],
+          movement: { speed: 30, moved: 0, dashes: 0 },
         },
       },
     ],
   };
 
-  it('список — с хитами и меткой; щелчок выбирает', async () => {
+  const panel = (selectedId: number | null, moving = false) => {
     const onSelect = vi.fn();
+    const onAllowance = vi.fn();
     renderWithProviders(
       <CreaturesPanel
         creatures={creatures.creatures}
-        selectedId={null}
+        selectedId={selectedId}
         onSelect={onSelect}
+        onAllowance={onAllowance}
+        busy={false}
+        moving={moving}
+        error={null}
       />,
     );
-    expect(screen.getByText('ХП 2 / 7 · Ранен')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /Гоблин/ }));
+    return { onSelect, onAllowance };
+  };
+
+  it('список — с хитами, меткой и запасом движения; щелчок выбирает', async () => {
+    const { onSelect } = panel(null);
+    // Запас с «Рывком» — две Скорости; у поверженного запаса нет.
+    expect(
+      screen.getByText('ХП 2 / 7 · Ранен · Осталось 50 из 60 фт'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('ХП 0 / 15 · Повержен')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /^Гоблин/ }));
     expect(onSelect).toHaveBeenCalledWith(2);
+  });
+
+  it('запас у существа: «Обновить» и «Рывок»; подсказка про ход', async () => {
+    const { onAllowance } = panel(2, true);
+    expect(
+      screen.getByText(/Щёлкните подсвеченную клетку — существо пойдёт туда/),
+    ).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Рывок: Гоблин' }),
+    );
+    expect(onAllowance).toHaveBeenCalledWith(2, 'dash');
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Обновить запас: Гоблин' }),
+    );
+    expect(onAllowance).toHaveBeenCalledWith(2, 'refresh');
+  });
+
+  it('поверженный не ходит — так и сказано', () => {
+    panel(3);
+    expect(
+      screen.getByText(/Поверженное существо не ходит/),
+    ).toBeInTheDocument();
   });
 
   it('лечение монстра — правка экземпляра, ответ уходит странице', async () => {

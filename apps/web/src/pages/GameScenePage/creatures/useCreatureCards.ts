@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import type { GameSceneEditMessage } from 'shared';
 import type { SceneCreaturesView } from '../../../features/maps/MapScene';
 import type { MapViewState } from '../../../features/maps/mapStateFromChunks';
+import { useKeyCodes } from '../../../features/maps/useKeyCodes';
 import type { SheetTarget } from './FullSheetDrawer';
 import { useSceneCreatures } from './useSceneCreatures';
 
@@ -12,6 +13,8 @@ interface CreatureCardsOptions {
   state: MapViewState | null;
   // Выбор существа щелчком на карте: у мастера — только в «Просмотре».
   canPick: boolean;
+  // Выбранная фигурка: выбор у страницы один — фигурка снимает выбор существа.
+  figureId: string | null;
   // Выбрать существо — снять выбор фигурки.
   clearFigure: () => void;
   // Перечитать фигурки (их метки здоровья и Скорость).
@@ -26,6 +29,7 @@ export function useCreatureCards({
   master,
   state,
   canPick,
+  figureId,
   clearFigure,
   reloadFigures,
 }: CreatureCardsOptions) {
@@ -41,6 +45,20 @@ export function useCreatureCards({
       setSelectedId(objectId);
     },
     [clearFigure],
+  );
+  // Выбрали фигурку — на карте и в списке остаётся выделенной только она. Сброс во время
+  // отрисовки по смене фигурки, а не в эффекте: без лишнего кадра с двумя выделениями.
+  const [shownFigure, setShownFigure] = useState(figureId);
+  if (figureId !== shownFigure) {
+    setShownFigure(figureId);
+    if (figureId !== null) setSelectedId(null);
+  }
+  // Esc снимает выбор, как у фигурок.
+  useKeyCodes({ Escape: () => setSelectedId(null) });
+  // Щелчок по выбранному существу на карте снимает выбор, как в списке «Существа».
+  const pick = useCallback(
+    (objectId: number) => select(selectedId === objectId ? null : objectId),
+    [select, selectedId],
   );
 
   // Событие состояния существ или фигурок: всё, что показывает здоровье, перечитывается.
@@ -75,9 +93,9 @@ export function useCreatureCards({
     () => ({
       health: creatures.health,
       selectedId: master ? selectedId : null,
-      onPick: master && canPick ? select : undefined,
+      onPick: master && canPick ? pick : undefined,
     }),
-    [creatures.health, master, selectedId, canPick, select],
+    [creatures.health, master, selectedId, canPick, pick],
   );
 
   return {

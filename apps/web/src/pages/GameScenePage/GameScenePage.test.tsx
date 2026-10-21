@@ -9,6 +9,7 @@ import {
   type GameFigure,
   type GameFigures,
   type GameSceneEditMessage,
+  type GameSceneFogMessage,
   type GameSceneView,
   type MapObject,
   type MapObjectRefsView,
@@ -514,6 +515,56 @@ describe('GameScenePage', () => {
     expect(
       screen.queryByRole('button', { name: 'Отменить' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('туман без правки: ложится на копию с тем же номером, с другим — сцена перечитывается', async () => {
+    let reads = 0;
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'player' },
+      }),
+      [`GET ${base}/scene`]: () => {
+        reads++;
+        return {
+          status: 200,
+          body: { ...VIEW, fog: { explored: [], visible: [] } },
+        };
+      },
+    });
+    renderScene('u2');
+    expect(
+      await screen.findByText('Объектов: 0', {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    const goblin: MapObject = {
+      id: 1,
+      at: [1, 1, 1],
+      hidden: false,
+      kind: 'monster',
+      monsterId: 'g1',
+      facing: 0,
+    };
+    const fog = (seq: number): GameSceneFogMessage => ({
+      gameId: GAME.id,
+      sceneId: 's1',
+      seq,
+      changes: {
+        cells: [],
+        paletteAdded: [],
+        objects: [{ id: 1, before: null, after: goblin }],
+      },
+      refs: emptyRefsView(),
+      fog: {
+        explored: [{ cx: 0, cy: 0, cz: 0, bits: 'AQ==' }],
+        visible: [],
+      },
+    });
+    // Гоблин вошёл в поле зрения после хода фигурки.
+    act(() => socket.current?.receive(GAME_SOCKET.sceneFog, fog(0)));
+    expect(await screen.findByText('Объектов: 1')).toBeInTheDocument();
+    expect(reads).toBe(1);
+    act(() => socket.current?.receive(GAME_SOCKET.sceneFog, fog(4)));
+    await vi.waitFor(() => expect(reads).toBe(2), { timeout: 3000 });
   });
 
   it('мастер правит сцену инструментами редактора: без «Хода», отмена — запросом', async () => {

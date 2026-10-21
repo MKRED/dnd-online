@@ -10,6 +10,7 @@ import {
   type GameJoinAck,
   type GamePresenceMessage,
   type GameSceneEditMessage,
+  type GameSceneFogMessage,
 } from 'shared';
 import { acquireGameSocket, releaseGameSocket } from './gameSocket';
 
@@ -26,6 +27,8 @@ export interface GameRoomHandlers {
   onSceneEdit?: (message: GameSceneEditMessage) => void;
   // Кто-то тянет фигурку (этап 7): где она сейчас под его курсором.
   onFigureDrag?: (message: GameFigureDragMessage) => void;
+  // Игроку: туман войны изменился без правки сцены (docs/plan/fog-of-war.md, этап 4).
+  onSceneFog?: (message: GameSceneFogMessage) => void;
 }
 
 // Комната игры на сокете: живые изменения и кто сейчас в лобби. Одна комната на
@@ -97,6 +100,9 @@ export function useGameRoom(
     const onSceneEdit = (message: GameSceneEditMessage) => {
       if (message.gameId === gameId) handlersRef.current.onSceneEdit?.(message);
     };
+    const onSceneFog = (message: GameSceneFogMessage) => {
+      if (message.gameId === gameId) handlersRef.current.onSceneFog?.(message);
+    };
     const onFigureDrag = (message: GameFigureDragMessage) => {
       if (message.gameId === gameId)
         handlersRef.current.onFigureDrag?.(message);
@@ -109,6 +115,7 @@ export function useGameRoom(
     socket.on(GAME_SOCKET.presence, onPresence);
     socket.on(GAME_SOCKET.closed, onClosed);
     socket.on(GAME_SOCKET.sceneEdit, onSceneEdit);
+    socket.on(GAME_SOCKET.sceneFog, onSceneFog);
     socket.on(GAME_SOCKET.figureDragged, onFigureDrag);
     if (socket.connected) joinRoom();
 
@@ -121,6 +128,7 @@ export function useGameRoom(
       socket.off(GAME_SOCKET.presence, onPresence);
       socket.off(GAME_SOCKET.closed, onClosed);
       socket.off(GAME_SOCKET.sceneEdit, onSceneEdit);
+      socket.off(GAME_SOCKET.sceneFog, onSceneFog);
       socket.off(GAME_SOCKET.figureDragged, onFigureDrag);
       socketRef.current = null;
       if (socket.connected) socket.emit(GAME_SOCKET.leave, { gameId });

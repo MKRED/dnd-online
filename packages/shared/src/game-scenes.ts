@@ -1,4 +1,5 @@
 import type { MapChunksResponse } from './map/api.js';
+import type { PackedChangeset } from './map/changesetPacking.js';
 
 // Сцены игры (docs/plan/done/game.md, «Сцены и смена карты на ходу»): копия карты мастера
 // внутри игры. Активная сцена одна; игроки видят её, только пока мастер её не закрыл.
@@ -69,6 +70,16 @@ export interface FogChunkBits {
 export interface GameSceneFogView {
   explored: FogChunkBits[];
   visible: FogChunkBits[];
+}
+
+// Что запись журнала меняет у игроков под туманом (docs/plan/fog-of-war.md, этап 4):
+// посчитано в той же транзакции, что и сама запись, по маскам до и после. seq — номер
+// правки сцены, на который ложится changes; fog — изменившиеся чанки масок.
+export interface ScenePlayerFog {
+  sceneId: string;
+  seq: number;
+  changes: PackedChangeset;
+  fog: GameSceneFogView;
 }
 
 export interface GameSceneAddInput {

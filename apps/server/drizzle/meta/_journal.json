@@ -351,6 +351,13 @@
       "when": 1792592098408,
       "tag": "0049_scene_fog",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1792597817433,
+      "tag": "0050_event_player_fog",
+      "breakpoints": true
     }
   ]
 }

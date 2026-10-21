@@ -1,3 +1,4 @@
+import type { GameSceneFogView } from './game-scenes.js';
 import type { GameEvent, GameEventKind } from './game-events.js';
 import type { PackedChangeset } from './map/changesetPacking.js';
 import type { Vec3 } from './map/coords.js';
@@ -20,6 +21,7 @@ export const GAME_SOCKET = {
   presence: 'game:presence',
   closed: 'game:closed',
   sceneEdit: 'game:scene-edit',
+  sceneFog: 'game:scene-fog',
   figureDragged: 'game:figure-dragged',
 } as const;
 
@@ -110,6 +112,22 @@ export interface GameSceneEditMessage {
   changes: PackedChangeset;
   // Справочник ссылок затронутых объектов — из библиотеки игры.
   refs: MapObjectRefsView;
+  // Игроку под туманом войны (docs/plan/fog-of-war.md, этап 4): чанки масок, которые эта
+  // правка изменила, — целиком, взамен прежних. changes тогда уже включает и то, что
+  // правка открыла (блоки как поставленные, существа как появившиеся).
+  fog?: GameSceneFogView;
+}
+
+// Туман игрока изменился без правки сцены (ход фигурки, хиты персонажа): seq — номер
+// правки сцены, на котором он посчитан. Копия с этим номером применяет changes, не двигая
+// номер, и заменяет чанки масок; с другим номером — перечитывает сцену.
+export interface GameSceneFogMessage {
+  gameId: string;
+  sceneId: string;
+  seq: number;
+  changes: PackedChangeset;
+  refs: MapObjectRefsView;
+  fog: GameSceneFogView;
 }
 
 // Фигурку тянут (docs/plan/done/game.md, этап 7): промежуточные позиции идут только по сокету,

@@ -14,7 +14,7 @@ import { games } from '../../database/schema/index.js';
 import { readGameEvents } from '../game-event-read.js';
 import { findGameAccess } from '../game-read.js';
 import { GamePresence } from './game-presence.js';
-import { sceneEditMessages } from './scene-edit-broadcast.js';
+import { sceneMessages } from './scene-edit-broadcast.js';
 import {
   gameRoom,
   type GameRemoteSocket,
@@ -104,7 +104,7 @@ export class GameRealtimeService {
     if (!game) return;
     const events = await readGameEvents(db, gameId, { after }, PUBLISH_BATCH);
     if (events.length === 0) return;
-    const sceneEdits = await sceneEditMessages(db, gameId, events);
+    const scene = await sceneMessages(db, gameId, events);
     for (const event of events) {
       const changed: GameChangedMessage = {
         gameId,
@@ -113,14 +113,17 @@ export class GameRealtimeService {
       };
       server.to(gameRoom(gameId)).emit(GAME_SOCKET.changed, changed);
       const full: GameEventMessage = { gameId, event };
-      // Правка сцены (этап 6): мастеру — целиком, игрокам — то, что им видно.
-      const edit = sceneEdits.get(event.seq);
+      // Правка сцены (этап 6): мастеру — целиком, игрокам — то, что им видно; туман
+      // войны без правки — только игрокам (мастер видит всё).
+      const edit = scene.edits.get(event.seq);
+      const fog = scene.fog.get(event.seq);
       for (const socket of sockets) {
         if (socket.data.userId === game.masterId) {
           socket.emit(GAME_SOCKET.event, full);
           if (edit) socket.emit(GAME_SOCKET.sceneEdit, edit.master);
-        } else if (edit?.player) {
-          socket.emit(GAME_SOCKET.sceneEdit, edit.player);
+        } else {
+          if (edit?.player) socket.emit(GAME_SOCKET.sceneEdit, edit.player);
+          if (fog) socket.emit(GAME_SOCKET.sceneFog, fog);
         }
       }
     }

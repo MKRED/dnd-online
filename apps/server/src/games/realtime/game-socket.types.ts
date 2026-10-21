@@ -5,6 +5,7 @@ import type {
   GameFigureDragMessage,
   GamePresenceMessage,
   GameSceneEditMessage,
+  GameSceneFogMessage,
 } from 'shared';
 import type { RemoteSocket, Server, Socket } from 'socket.io';
 
@@ -16,6 +17,7 @@ export interface GameServerEvents {
   'game:presence': (message: GamePresenceMessage) => void;
   'game:closed': (message: GameClosedMessage) => void;
   'game:scene-edit': (message: GameSceneEditMessage) => void;
+  'game:scene-fog': (message: GameSceneFogMessage) => void;
   'game:figure-dragged': (message: GameFigureDragMessage) => void;
 }
 

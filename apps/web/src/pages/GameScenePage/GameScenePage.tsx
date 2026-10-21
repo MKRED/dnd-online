@@ -45,7 +45,8 @@ function GameScenePage() {
   const { id = '' } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { load, setLoad, reload, edits, receiveEdit } = useGameScene(id);
+  const { load, setLoad, reload, edits, receiveEdit, receiveFog } =
+    useGameScene(id);
   const game = load.kind === 'ready' || load.kind === 'none' ? load.game : null;
   const master = game?.role === 'master';
   const ready = load.kind === 'ready' ? load : null;
@@ -148,6 +149,7 @@ function GameScenePage() {
           master={master}
           onReload={reload}
           onSceneEdit={sceneEdit}
+          onSceneFog={receiveFog}
           onFigures={cards.onChanged}
           onFigureDrag={play.ghosts.receive}
           dragSenderRef={play.dragSenderRef}

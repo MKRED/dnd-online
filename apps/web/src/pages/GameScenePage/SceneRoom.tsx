@@ -4,16 +4,19 @@ import {
   FIGURE_KINDS,
   type GameFigureDragMessage,
   type GameSceneEditMessage,
+  type GameSceneFogMessage,
 } from 'shared';
 import { useGameRoom } from '../../features/games';
 
 // События, после которых страница перечитывает сцену: её сменили, перезапустили,
-// открыли или закрыли (мастеру — чтобы переключатель совпадал с другой вкладкой).
+// открыли или закрыли (мастеру — чтобы переключатель совпадал с другой вкладкой),
+// включили или выключили туман войны.
 const SCENE_CHANGES = new Set<string>([
   'scene.activated',
   'scene.restarted',
   'scene.opened',
   'scene.closed',
+  'scene.fog',
 ]);
 
 // После них перечитываются фигурки (этап 7): ход, расстановка, ушедший с места персонаж
@@ -37,6 +40,8 @@ interface SceneRoomProps {
   onReload: () => void;
   // Правка сцены мастером (этап 6): применить к копии или перечитать.
   onSceneEdit: (message: GameSceneEditMessage) => void;
+  // Туман войны игрока изменился без правки сцены.
+  onSceneFog: (message: GameSceneFogMessage) => void;
   // Фигурки изменились — перечитать их.
   onFigures: () => void;
   // Кто-то тянет фигурку — где она сейчас.
@@ -55,6 +60,7 @@ function SceneRoom({
   master,
   onReload,
   onSceneEdit,
+  onSceneFog,
   onFigures,
   onFigureDrag,
   dragSenderRef,
@@ -69,6 +75,7 @@ function SceneRoom({
         else if (FIGURE_CHANGES.has(message.kind)) onFigures();
       },
       onSceneEdit,
+      onSceneFog,
       onFigureDrag,
       onResync: () => {
         onReload();

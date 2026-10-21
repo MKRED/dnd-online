@@ -5,11 +5,14 @@ import type {
   GameEventKind,
   GameEventPayloads,
   PackedChangeset,
+  SceneEditResult,
+  ScenePlayerFog,
 } from 'shared';
 import type { DbTransaction } from '../database/database.service.js';
 import { gameEvents, games } from '../database/schema/index.js';
+import { emptyDelta, playerFogDelta } from './fog/fog-delta.js';
 import { FOG_EVENT_KINDS } from './fog/fog-events.js';
-import { recountFog } from './fog/fog-recount.js';
+import { recountFog, type FogRecount } from './fog/fog-recount.js';
 import { GAME_NOT_FOUND } from './game-errors.js';
 
 // Запись журнала игры (docs/plan/done/game.md, «Журнал игры»). Простые функции от транзакции,
@@ -39,6 +42,24 @@ export type NewGameEvent<K extends GameEventKind> = {
   changes?: PackedChangeset;
 } & GameEventPayloads[K];
 
+// Разница тумана для игроков (fog/fog-delta.ts). Правка сцены получает её всегда, когда
+// туман включён, даже пустую: игроку нужен номер каждой правки. Остальным записям она
+// нужна, только если что-то изменилось. Правка другой, не активной сцены игрокам не
+// уходит вовсе.
+function fogForPlayers(
+  event: NewGameEvent<GameEventKind>,
+  recount: FogRecount | null,
+): ScenePlayerFog | null {
+  if (!recount) return null;
+  if (event.changes) {
+    if (event.sceneId !== recount.scene.id) return null;
+    const { sceneSeq } = event.result as SceneEditResult;
+    return playerFogDelta(recount, sceneSeq, event.changes);
+  }
+  const delta = playerFogDelta(recount, recount.scene.seq, undefined);
+  return emptyDelta(delta) ? null : delta;
+}
+
 // Добавляет запись со следующим номером игры и возвращает этот номер. Событие, которое
 // меняет то, что видят персонажи, пересчитывает туман войны активной сцены
 // (fog/fog-events.ts): запись пишут после самого изменения, в той же транзакции.
@@ -47,7 +68,9 @@ export async function appendGameEvent<K extends GameEventKind>(
   gameId: string,
   event: NewGameEvent<K>,
 ): Promise<number> {
-  if (FOG_EVENT_KINDS.has(event.kind)) await recountFog(tx, gameId);
+  const playerFog = FOG_EVENT_KINDS.has(event.kind)
+    ? fogForPlayers(event, await recountFog(tx, gameId))
+    : null;
   const [row] = await tx
     .update(games)
     .set({ eventSeq: sql`${games.eventSeq} + 1` })
@@ -65,6 +88,7 @@ export async function appendGameEvent<K extends GameEventKind>(
     intent: event.intent,
     result: event.result,
     changes: event.changes ?? null,
+    playerFog,
   });
   return row.seq;
 }

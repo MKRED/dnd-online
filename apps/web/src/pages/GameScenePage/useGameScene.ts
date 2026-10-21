@@ -4,16 +4,20 @@ import {
   type Box3,
   type GameDetail,
   type GameSceneEditMessage,
+  type GameSceneFogMessage,
   type GameSceneView,
+  mergeRefsView,
 } from 'shared';
 import { getGame, getGameScene, sceneEditApi } from '../../features/games';
 import { mapStateFromChunks } from '../../features/maps';
+import { applyMapChanges } from '../../features/maps/applyMapChanges';
 import type { MapViewState } from '../../features/maps/mapStateFromChunks';
 import {
   useMapEdits,
   type EditableCopy,
 } from '../../features/maps/useMapEdits';
 import { ApiError, errorMessage } from '../../lib/apiRequest';
+import { mergeSceneFog } from './sceneFog';
 
 export type SceneLoad =
   | { kind: 'loading' }
@@ -126,15 +130,58 @@ export function useGameScene(gameId: string) {
     api,
   });
 
+  // Чанки масок тумана игрока заменяются вместе с правкой, которая их изменила.
+  const mergeFog = useCallback(
+    (fog: GameSceneFogMessage['fog'] | undefined) =>
+      setLoad((prev) =>
+        prev.kind === 'ready' && fog
+          ? {
+              ...prev,
+              view: { ...prev.view, fog: mergeSceneFog(prev.view.fog, fog) },
+            }
+          : prev,
+      ),
+    [],
+  );
+
   // Правка сцены по сокету: другой сцены (мастер правил неактивную) страница не ждёт.
+  // Туман правки — только если она легла на копию сразу; перечитанная сцена приходит
+  // уже со свежими масками.
   const { receive } = edits;
   const receiveEdit = useCallback(
     (message: GameSceneEditMessage) => {
       if (message.sceneId !== sceneId) return;
-      void receive(message.seq, message.changes, message.refs);
+      const pending = receive(message.seq, message.changes, message.refs);
+      if (!pending && seqRef.current === message.seq) mergeFog(message.fog);
     },
-    [receive, sceneId],
+    [receive, sceneId, mergeFog],
   );
 
-  return { load, setLoad, reload, edits, receiveEdit };
+  // Туман изменился без правки сцены (ход фигурки): ложится на копию с тем же номером
+  // правки, номер не двигает; с другим номером копия разошлась — перечитать.
+  const receiveFog = useCallback(
+    (message: GameSceneFogMessage) => {
+      if (message.sceneId !== sceneId) return;
+      const current = copyRef.current;
+      if (!current || seqRef.current !== message.seq) {
+        reload();
+        return;
+      }
+      try {
+        const next = {
+          state: applyMapChanges(current.state, message.changes),
+          refs: mergeRefsView(current.refs, message.refs),
+        };
+        copyRef.current = next;
+        onApplied(next, message.seq);
+        mergeFog(message.fog);
+      } catch (err) {
+        console.error('Fog changes did not apply locally, refetching', err);
+        reload();
+      }
+    },
+    [sceneId, reload, onApplied, mergeFog],
+  );
+
+  return { load, setLoad, reload, edits, receiveEdit, receiveFog };
 }

@@ -18,6 +18,8 @@ export type SceneCreature = Occupant & { hidden: boolean; objectId: number };
 // Сцена глазами правил хода: блоки, существа на ней и стартовые точки по номеру.
 export interface SceneWorld {
   map: MapState;
+  // Все объекты сцены по номеру — туману войны (что игрок увидел или потерял из виду).
+  objects: MapObject[];
   creatures: SceneCreature[];
   starts: Extract<MapObject, { kind: 'start' }>[];
 }
@@ -34,6 +36,7 @@ export async function loadSceneWorld(
   const { refs } = await sceneRefs(tx, scene.gameId, objectRefIds(objects));
   return {
     map: { store, palette: scene.palette },
+    objects,
     creatures: objects.flatMap((object) =>
       object.kind === 'monster' || object.kind === 'npc'
         ? [

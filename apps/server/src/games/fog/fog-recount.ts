@@ -16,7 +16,7 @@ import {
   gameFigures,
   gameMembers,
 } from '../../database/schema/index.js';
-import { loadSceneWorld } from '../figures/scene-world.js';
+import { loadSceneWorld, type SceneWorld } from '../figures/scene-world.js';
 import type { SceneRow } from '../scenes/scene-copy.js';
 import { findActiveScene } from '../scenes/scene-read.js';
 import { loadFog, saveFog, type SceneFog } from './fog-storage.js';
@@ -27,6 +27,8 @@ import { loadFog, saveFog, type SceneFog } from './fog-storage.js';
 
 export interface FogRecount {
   scene: SceneRow;
+  // Сцена после изменения: блоки и объекты — для разницы игрокам (fog-delta.ts).
+  world: SceneWorld;
   before: SceneFog;
   after: SceneFog;
   // Сколько чанков переписано.
@@ -95,5 +97,5 @@ export async function recountFog(
   maskUnion(explored, visible);
   const after = { explored, visible };
   const written = await saveFog(tx, scene.id, before, after);
-  return { scene, before, after, written };
+  return { scene, world, before, after, written };
 }

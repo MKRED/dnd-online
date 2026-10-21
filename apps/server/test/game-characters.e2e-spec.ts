@@ -302,6 +302,14 @@ describe('game characters (e2e)', () => {
       .send({ effectId: secret })
       .expect(409);
 
+    // Автор удалил эффект — в игре он действует копией (связь листа уже пуста).
+    await g.master.agent.delete(`/api/effects/${secret}`).expect(204);
+    const gone = await g.player.agent.get(g.url).expect(200);
+    expect(sheetOf(gone).effects[0]).toMatchObject({
+      effect: { id: secret, name: 'Тайный дар' },
+      inactive: false,
+    });
+
     // Запрет лечения — лечение отклонено с именем эффекта.
     await g.master.agent
       .post(`${g.url}/effects`)

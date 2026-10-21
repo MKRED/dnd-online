@@ -38,7 +38,8 @@ export async function loadGameEffectLists(
       and(
         eq(gameLibrary.gameId, gameId),
         eq(gameLibrary.kind, 'effect'),
-        eq(gameLibrary.sourceId, characterEffects.effectId),
+        // По исходному id: удалённый автором эффект остаётся в игре копией.
+        eq(gameLibrary.sourceId, characterEffects.sourceEffectId),
       ),
     )
     .leftJoin(effects, eq(effects.id, characterEffects.effectId))

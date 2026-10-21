@@ -16,6 +16,9 @@ export const characterEffects = pgTable(
     effectId: uuid('effect_id').references(() => effects.id, {
       onDelete: 'set null',
     }),
+    // Исходный id эффекта без внешнего ключа: удалённый автором эффект игра находит по
+    // нему в своей библиотеке (docs/plan/done/game.md, «Справочники не влияют на игру»).
+    sourceEffectId: uuid('source_effect_id'),
     // Порядок плашек — по времени наложения.
     addedAt: timestamp('added_at', { withTimezone: true })
       .notNull()

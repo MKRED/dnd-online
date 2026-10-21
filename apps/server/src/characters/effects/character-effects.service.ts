@@ -57,7 +57,11 @@ export class CharacterEffectsService {
         // кликах тоже.
         const inserted = await tx
           .insert(characterEffects)
-          .values({ characterId, effectId: effect.id })
+          .values({
+            characterId,
+            effectId: effect.id,
+            sourceEffectId: effect.id,
+          })
           .onConflictDoNothing()
           .returning({ id: characterEffects.id });
         if (inserted.length === 0) {

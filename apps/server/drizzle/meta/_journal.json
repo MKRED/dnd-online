@@ -330,6 +330,13 @@
       "when": 1792541922397,
       "tag": "0046_game_creatures",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1792547255761,
+      "tag": "0047_character_effect_source",
+      "breakpoints": true
     }
   ]
 }

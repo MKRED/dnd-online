@@ -40,7 +40,11 @@ export async function addCharacterEffect(
   if (!effect) throw new BadRequestException(CHARACTER_EFFECT_NOT_FOUND);
   const inserted = await tx
     .insert(characterEffects)
-    .values({ characterId: seated.id, effectId: effect.id })
+    .values({
+      characterId: seated.id,
+      effectId: effect.id,
+      sourceEffectId: effect.id,
+    })
     .onConflictDoNothing()
     .returning({ id: characterEffects.id });
   if (inserted.length === 0) {
@@ -77,7 +81,7 @@ export async function removeCharacterEffect(
         eq(characterEffects.characterId, seated.id),
       ),
     )
-    .returning({ effectId: characterEffects.effectId });
+    .returning({ effectId: characterEffects.sourceEffectId });
   if (!row) throw new NotFoundException(CHARACTER_EFFECT_ENTRY_NOT_FOUND);
   await appendGameEvent(tx, actor.gameId, {
     kind: 'character.effect_removed',

@@ -59,6 +59,19 @@ export function rotateBox(box: ShapeBox, rotation: Rotation): ShapeBox {
   return result;
 }
 
-export function shapeBoxes(shape: ShapeName, rotation: Rotation): ShapeBox[] {
-  return SHAPES[shape].map((box) => rotateBox(box, rotation));
+// Сочетаний фигуры и поворота всего 24, а лучи тумана войны спрашивают коробки тысячи
+// раз за пересчёт — поворачиваем один раз и отдаём общий массив.
+const rotatedBoxes = new Map<string, readonly ShapeBox[]>();
+
+export function shapeBoxes(
+  shape: ShapeName,
+  rotation: Rotation,
+): readonly ShapeBox[] {
+  const key = `${shape}|${rotation}`;
+  let boxes = rotatedBoxes.get(key);
+  if (!boxes) {
+    boxes = SHAPES[shape].map((box) => rotateBox(box, rotation));
+    rotatedBoxes.set(key, boxes);
+  }
+  return boxes;
 }

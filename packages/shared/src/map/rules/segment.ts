@@ -1,9 +1,10 @@
 import { getBlock } from '../blocks.js';
 import { MATERIALS } from '../materials.js';
-import { cellRotation, cellTypeId } from '../cell.js';
+import { AIR, cellRotation, cellTypeId } from '../cell.js';
 import { readCell } from '../chunkStore.js';
-import type { Vec3 } from '../coords.js';
+import { CHUNK_SIZE, chunkKey, localIndex, type Vec3 } from '../coords.js';
 import type { MapState } from '../mapState.js';
+import type { Palette } from '../palette.js';
 import { shapeBoxes, type ShapeBox } from '../shapes.js';
 import type { Point3 } from './creature.js';
 
@@ -15,23 +16,46 @@ export type RayMode = 'sight' | 'effect';
 // иначе исход зависел бы от ошибок округления на границе клетки.
 const MIN_OVERLAP = 1e-9;
 
-function obstacleBoxes(map: MapState, cell: Vec3, mode: RayMode): ShapeBox[] {
-  const value = readCell(map.store, cell);
-  const block = getBlock(map.palette[cellTypeId(value)] ?? '');
-  if (!block) return [];
-  if (mode === 'sight' && !MATERIALS[block.material].opaque) return [];
+const NO_BOXES: readonly ShapeBox[] = [];
+
+function boxesOf(
+  palette: Palette,
+  value: number,
+  mode: RayMode,
+): readonly ShapeBox[] {
+  const block = getBlock(palette[cellTypeId(value)] ?? '');
+  if (!block) return NO_BOXES;
+  if (mode === 'sight' && !MATERIALS[block.material].opaque) return NO_BOXES;
   return shapeBoxes(block.shape, cellRotation(value));
+}
+
+// Коробки по значению клетки (id типа и поворот) — на один вызов луча: туман войны
+// пускает тысячи лучей, и поиск блока по имени на каждой клетке был бы главной ценой.
+function boxCache(map: MapState, mode: RayMode) {
+  const cache = new Map<number, readonly ShapeBox[]>();
+  return (value: number) => {
+    if (value === AIR) return NO_BOXES;
+    let boxes = cache.get(value);
+    if (!boxes) {
+      boxes = boxesOf(map.palette, value, mode);
+      cache.set(value, boxes);
+    }
+    return boxes;
+  };
 }
 
 // Проходит ли отрезок from→to (t ∈ [0, 1]) сквозь коробку клетки — метод плит.
 function segmentHitsBox(
   from: Point3,
   dir: Point3,
-  cell: Vec3,
+  cx: number,
+  cy: number,
+  cz: number,
   box: ShapeBox,
 ): boolean {
   let enter = 0;
   let exit = 1;
+  const cell = [cx, cy, cz];
   for (let axis = 0; axis < 3; axis++) {
     const lo = cell[axis] + box[axis];
     const hi = cell[axis] + box[axis + 3];
@@ -55,7 +79,7 @@ export function pointInSolid(map: MapState, point: Point3): boolean {
     Math.floor(point[1]),
     Math.floor(point[2]),
   ];
-  return obstacleBoxes(map, cell, 'effect').some((box) =>
+  return boxesOf(map.palette, readCell(map.store, cell), 'effect').some((box) =>
     [0, 1, 2].every(
       (a) => point[a] > cell[a] + box[a] && point[a] < cell[a] + box[a + 3],
     ),
@@ -63,37 +87,76 @@ export function pointInSolid(map: MapState, point: Point3): boolean {
 }
 
 // Перекрыт ли отрезок блоками. Обход клеток вдоль отрезка — 3D DDA (Amanatides–Woo),
-// внутри клетки проверяются коробки её фигуры, а не клетка целиком.
+// внутри клетки проверяются коробки её фигуры, а не клетка целиком. Чанк берётся из
+// хранилища только при переходе в другой чанк: строковый ключ на каждую клетку
+// стоил больше самого обхода.
 export function segmentBlocked(
   map: MapState,
   from: Point3,
   to: Point3,
   mode: RayMode,
 ): boolean {
+  const boxes = boxCache(map, mode);
   const dir: Point3 = [to[0] - from[0], to[1] - from[1], to[2] - from[2]];
-  const cell = [0, 1, 2].map((a) => Math.floor(from[a]));
-  const end = [0, 1, 2].map((a) => Math.floor(to[a]));
-  const step = dir.map(Math.sign);
+  const [dx, dy, dz] = dir;
+  let x = Math.floor(from[0]);
+  let y = Math.floor(from[1]);
+  let z = Math.floor(from[2]);
+  const sx = Math.sign(dx);
+  const sy = Math.sign(dy);
+  const sz = Math.sign(dz);
   // Нулевая компонента направления: по этой оси клетку никогда не меняем.
-  const tDelta = dir.map((d) => (d === 0 ? Infinity : Math.abs(1 / d)));
-  const tMax = dir.map((d, a) => {
-    if (d === 0) return Infinity;
-    const boundary = d > 0 ? cell[a] + 1 : cell[a];
-    return (boundary - from[a]) / d;
-  });
+  const deltaX = dx === 0 ? Infinity : Math.abs(1 / dx);
+  const deltaY = dy === 0 ? Infinity : Math.abs(1 / dy);
+  const deltaZ = dz === 0 ? Infinity : Math.abs(1 / dz);
+  let maxX = dx === 0 ? Infinity : ((dx > 0 ? x + 1 : x) - from[0]) / dx;
+  let maxY = dy === 0 ? Infinity : ((dy > 0 ? y + 1 : y) - from[1]) / dy;
+  let maxZ = dz === 0 ? Infinity : ((dz > 0 ? z + 1 : z) - from[2]) / dz;
   // Ровно столько шагов, сколько границ клеток пересекает отрезок, — без риска зациклиться.
-  const steps = [0, 1, 2].reduce((n, a) => n + Math.abs(end[a] - cell[a]), 0);
+  const steps =
+    Math.abs(Math.floor(to[0]) - x) +
+    Math.abs(Math.floor(to[1]) - y) +
+    Math.abs(Math.floor(to[2]) - z);
 
+  let chunkX = NaN;
+  let chunkY = NaN;
+  let chunkZ = NaN;
+  let chunk: Uint16Array | undefined;
   for (let i = 0; ; i++) {
-    const current: Vec3 = [cell[0], cell[1], cell[2]];
-    const boxes = obstacleBoxes(map, current, mode);
-    if (boxes.some((box) => segmentHitsBox(from, dir, current, box))) {
-      return true;
+    const kx = Math.floor(x / CHUNK_SIZE);
+    const ky = Math.floor(y / CHUNK_SIZE);
+    const kz = Math.floor(z / CHUNK_SIZE);
+    if (kx !== chunkX || ky !== chunkY || kz !== chunkZ) {
+      chunkX = kx;
+      chunkY = ky;
+      chunkZ = kz;
+      chunk = map.store.get(chunkKey(kx, ky, kz));
+    }
+    if (chunk) {
+      const value =
+        chunk[
+          localIndex(
+            x - kx * CHUNK_SIZE,
+            y - ky * CHUNK_SIZE,
+            z - kz * CHUNK_SIZE,
+          )
+        ];
+      if (value !== AIR) {
+        for (const box of boxes(value)) {
+          if (segmentHitsBox(from, dir, x, y, z, box)) return true;
+        }
+      }
     }
     if (i >= steps) return false;
-    const axis =
-      tMax[0] <= tMax[1] && tMax[0] <= tMax[2] ? 0 : tMax[1] <= tMax[2] ? 1 : 2;
-    cell[axis] += step[axis];
-    tMax[axis] += tDelta[axis];
+    if (maxX <= maxY && maxX <= maxZ) {
+      x += sx;
+      maxX += deltaX;
+    } else if (maxY <= maxZ) {
+      y += sy;
+      maxY += deltaY;
+    } else {
+      z += sz;
+      maxZ += deltaZ;
+    }
   }
 }

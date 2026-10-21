@@ -8,3 +8,4 @@ export * from './step.js';
 export { hazardsUnder, supportMaterials } from './support.js';
 export * from './path/index.js';
 export * from './occupancy.js';
+export * from './vision/index.js';

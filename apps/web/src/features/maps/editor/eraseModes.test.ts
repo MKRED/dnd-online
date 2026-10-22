@@ -15,7 +15,7 @@ import {
   MAX_ERASE_BOXES,
   nextEraseMode,
   packBoxes,
-  wallBox,
+  planeBox,
 } from './eraseModes';
 
 function map(ops: BlockOp[], width = 20): SizedMapState {
@@ -31,25 +31,37 @@ function map(ops: BlockOp[], width = 20): SizedMapState {
 const sortCells = (cells: Vec3[]) =>
   cells.map((c) => c.join(',')).sort((a, b) => a.localeCompare(b));
 
-describe('wallBox', () => {
-  it('прижимает второй конец к оси, вдоль которой курсор ушёл дальше', () => {
-    expect(wallBox([2, 0, 3], [7, 2, 4], 2)).toEqual({
+describe('planeBox', () => {
+  it('стена 3 × 4 — ровно прямоугольник между противоположными углами', () => {
+    expect(planeBox([2, 1, 3], [4, 4, 3])).toEqual({
+      min: [2, 1, 3],
+      max: [4, 4, 3],
+    });
+  });
+
+  it('пол — прямоугольник на одном уровне', () => {
+    expect(planeBox([1, 2, 1], [4, 2, 3])).toEqual({
+      min: [1, 2, 1],
+      max: [4, 2, 3],
+    });
+  });
+
+  it('косой клик: толщину получает ось, вдоль которой клики ближе всего', () => {
+    // По z разошлись на 1 — это стена вдоль x.
+    expect(planeBox([2, 0, 3], [7, 2, 4])).toEqual({
       min: [2, 0, 3],
       max: [7, 2, 3],
     });
-    expect(wallBox([2, 1, 3], [3, 1, 9], 5)).toEqual({
-      min: [2, 1, 3],
-      max: [2, 5, 9],
+    // По y разошлись на 1 — это пол на уровне первого клика.
+    expect(planeBox([0, 2, 0], [5, 3, 4])).toEqual({
+      min: [0, 2, 0],
+      max: [5, 2, 4],
     });
   });
 
-  it('стирает от нижнего клика до верха постройки, а не до верхнего клика', () => {
-    expect(wallBox([1, 1, 5], [6, 1, 5], 4).max[1]).toBe(4);
-  });
-
-  it('стена одна и та же, с какого конца ни начать', () => {
-    expect(wallBox([1, 0, 5], [6, 3, 5], 6)).toEqual(
-      wallBox([6, 3, 5], [1, 0, 5], 6),
+  it('плоскость одна и та же, с какого угла ни начать', () => {
+    expect(planeBox([1, 0, 5], [6, 3, 5])).toEqual(
+      planeBox([6, 3, 5], [1, 0, 5]),
     );
   });
 });
@@ -148,7 +160,7 @@ describe('connectedEraseOps', () => {
 
 describe('nextEraseMode', () => {
   it('идёт по кругу', () => {
-    expect(nextEraseMode('block')).toBe('wall');
+    expect(nextEraseMode('block')).toBe('plane');
     expect(nextEraseMode('connected')).toBe('block');
   });
 });

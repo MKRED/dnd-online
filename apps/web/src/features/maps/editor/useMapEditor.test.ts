@@ -123,17 +123,17 @@ describe('useMapEditor, ластик', () => {
     expect(result.current.tool).toBe('erase');
     expect(result.current.eraseMode).toBe('block');
     press('Digit3');
-    expect(result.current.eraseMode).toBe('wall');
+    expect(result.current.eraseMode).toBe('plane');
     press('Digit3');
     press('Digit3');
     press('Digit3');
     expect(result.current.eraseMode).toBe('block');
   });
 
-  it('стена: два клика стирают прямоугольник вдоль оси одной операцией', () => {
+  it('плоскость: два угла стены стирают прямоугольник одной операцией', () => {
     const { result, apply } = setupWithMap();
     press('Digit3');
-    act(() => result.current.setEraseMode('wall'));
+    act(() => result.current.setEraseMode('plane'));
     act(() => result.current.sceneEditor?.onPick(onBlock([0, 0, 0])));
     expect(result.current.anchor?.cell).toEqual([0, 0, 0]);
     act(() => result.current.sceneEditor?.onPick(onBlock([4, 2, 1])));
@@ -143,14 +143,14 @@ describe('useMapEditor, ластик', () => {
     expect(result.current.anchor).toBeNull();
   });
 
-  it('стена: два клика по нижнему ряду стирают её до самого верха', () => {
+  it('плоскость: два угла на одном уровне стирают пол', () => {
     const { result, apply } = setupWithMap();
     press('Digit3');
-    act(() => result.current.setEraseMode('wall'));
-    act(() => result.current.sceneEditor?.onPick(onBlock([0, 0, 0])));
-    act(() => result.current.sceneEditor?.onPick(onBlock([4, 0, 0])));
+    act(() => result.current.setEraseMode('plane'));
+    act(() => result.current.sceneEditor?.onPick(onBlock([0, 2, 0])));
+    act(() => result.current.sceneEditor?.onPick(onBlock([3, 2, 0])));
     expect(apply).toHaveBeenCalledWith([
-      { op: 'fillBox', from: [0, 0, 0], to: [4, 2, 0], block: 'air' },
+      { op: 'fillBox', from: [0, 2, 0], to: [3, 2, 0], block: 'air' },
     ]);
   });
 

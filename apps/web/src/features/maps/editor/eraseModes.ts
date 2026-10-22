@@ -11,14 +11,14 @@ import {
   type Vec3,
 } from 'shared';
 
-// Режимы ластика: блок — один клик, стена и область — два угла, связное — всё, что
-// соединено с блоком под курсором и сделано из того же материала.
-export const ERASE_MODES = ['block', 'wall', 'region', 'connected'] as const;
+// Режимы ластика: блок — один клик; плоскость и область — два угла; связное — всё,
+// что соединено с блоком под курсором и сделано из того же материала.
+export const ERASE_MODES = ['block', 'plane', 'region', 'connected'] as const;
 export type EraseMode = (typeof ERASE_MODES)[number];
 
 export const ERASE_MODE_LABELS: Record<EraseMode, string> = {
   block: 'Блок',
-  wall: 'Стена',
+  plane: 'Плоскость',
   region: 'Область',
   connected: 'Связное',
 };
@@ -26,15 +26,23 @@ export const ERASE_MODE_LABELS: Record<EraseMode, string> = {
 export const nextEraseMode = (mode: EraseMode): EraseMode =>
   ERASE_MODES[(ERASE_MODES.indexOf(mode) + 1) % ERASE_MODES.length];
 
-// Стена — как столбец, только между двумя точками на плане (так решил пользователь
-// 2026-10-22): вертикальный прямоугольник толщиной в клетку от нижнего из двух кликов
-// до верха постройки top. Второй конец прижимается к оси, вдоль которой мышь ушла
-// дальше от первого, — так косой клик не стирает лишнего.
-export function wallBox(a: Vec3, b: Vec3, top: number): Box3 {
-  const alongX = Math.abs(b[0] - a[0]) >= Math.abs(b[2] - a[2]);
-  const end: Vec3 = alongX ? [b[0], b[1], a[2]] : [a[0], b[1], b[2]];
-  const { min, max } = boxFromCorners(a, end);
-  return { min, max: [max[0], Math.max(top, max[1]), max[2]] };
+// Порядок осей при равенстве: сначала y (пол), потом z и x (стена).
+const PLANE_AXES = [1, 2, 0] as const;
+
+// Плоскость — прямоугольник толщиной в клетку между двумя углами: стена или пол
+// (решено с пользователем 2026-10-22: один режим, плоскость определяется сама). Толщину
+// получает ось, вдоль которой клики разошлись меньше всего, — её второй угол берёт
+// у первого. Клики на одном уровне — пол, на одной линии плана — стена; косой клик
+// не стирает лишнего.
+export function planeBox(a: Vec3, b: Vec3): Box3 {
+  const spread = (axis: number) => Math.abs(b[axis] - a[axis]);
+  const flat = PLANE_AXES.reduce((best, axis) =>
+    spread(axis) < spread(best) ? axis : best,
+  );
+  const end = b.map((v, axis) =>
+    axis === flat ? a[axis] : v,
+  ) as unknown as Vec3;
+  return boxFromCorners(a, end);
 }
 
 // Связное стирание: сколько клеток самое большее обходим. Больше — это уже пол всей

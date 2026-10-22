@@ -1,7 +1,6 @@
 import {
   cellTypeId,
   insideMap,
-  mapBounds,
   readCell,
   type MapOp,
   type SizedMapState,
@@ -21,7 +20,7 @@ import {
 import {
   connectedEraseOps,
   eraseBoxOp,
-  wallBox,
+  planeBox,
   type EraseMode,
 } from './eraseModes';
 
@@ -42,9 +41,16 @@ interface BlockSceneEditorOptions {
   applyOps: (ops: MapOp[]) => void;
 }
 
-// Ластик стены и области стирает между двумя углами — как заливка воздухом.
+// Ластик плоскости и области стирает между двумя углами — как заливка воздухом.
 const erasesBetween = (tool: EditorTool, mode: EraseMode) =>
-  tool === 'erase' && (mode === 'wall' || mode === 'region');
+  tool === 'erase' && (mode === 'plane' || mode === 'region');
+
+// Коробка от первого угла до второго. Высоту из панели берёт только область: плоскость
+// толщиной в клетку, её размер задают сами клики.
+function eraseRegion(mode: EraseMode, height: number) {
+  return (a: Vec3, b: Vec3) =>
+    mode === 'plane' ? planeBox(a, b) : regionBox(a, b, height);
+}
 
 // Инструменты блоков на сцене: клик превращается в операцию карты, у инструментов
 // с двумя углами первый клик запоминает угол.
@@ -60,12 +66,7 @@ export function blockSceneEditor({
 }: BlockSceneEditorOptions): SceneEditor {
   const between = erasesBetween(tool, eraseMode);
   const { height } = settings;
-  // Верх стены — верхний блок карты: стена стирается до самого верха, как столбец.
-  const top = between ? (mapBounds(state.store)?.max[1] ?? 0) : 0;
-  const region = between
-    ? (a: Vec3, b: Vec3) =>
-        eraseMode === 'wall' ? wallBox(a, b, top) : regionBox(a, b, height)
-    : undefined;
+  const region = between ? eraseRegion(eraseMode, height) : undefined;
   // Угол стирания можно взять и на земле: иначе стену не стереть до самого низа.
   const pickCell = between
     ? (cells: PickedCells) => cells.hit ?? cells.place

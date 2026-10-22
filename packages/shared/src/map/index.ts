@@ -2,6 +2,7 @@ export * from './coords.js';
 export * from './cell.js';
 export * from './shapes.js';
 export * from './blocks.js';
+export * from './blockInfo.js';
 export * from './materials.js';
 export * from './materialHazards.js';
 export * from './palette.js';

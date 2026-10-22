@@ -1,8 +1,8 @@
 import {
   AIR,
+  BASE_BLOCKS,
   cellTypeId,
-  getBlock,
-  MATERIALS,
+  type BlockCatalog,
   type BlockMaterial,
   type MaterialName,
   type Palette,
@@ -17,21 +17,24 @@ export interface BlockAppearance {
 }
 
 // Внешний вид блоков по id палитры карты, с кэшем: сборщик спрашивает его на каждой грани.
-export function createBlockLookup(palette: Palette) {
+// Описания — из того же каталога, что у правил (docs/plan/blocks.md, этап 2).
+export function createBlockLookup(
+  palette: Palette,
+  catalog: BlockCatalog = BASE_BLOCKS,
+) {
   const cache = new Map<number, BlockAppearance | null>();
   return (cell: number): BlockAppearance | null => {
     if (cell === AIR) return null;
     const typeId = cellTypeId(cell);
     let appearance = cache.get(typeId);
     if (appearance === undefined) {
-      const block = getBlock(palette[typeId] ?? '');
+      const block = catalog.describe(palette[typeId] ?? '');
       if (block) {
-        const material = MATERIALS[block.material];
         appearance = {
           typeId,
           shape: block.shape,
           materialName: block.material,
-          material,
+          material: block.traits,
         };
       } else {
         // Неизвестный блок (палитра новее клиента) не рисуем, а не падаем.

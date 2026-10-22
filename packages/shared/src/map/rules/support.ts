@@ -1,10 +1,10 @@
-import { getBlock, type BlockDefinition } from '../blocks.js';
-import { cellRotation, cellTypeId } from '../cell.js';
+import { blockInfo, type BlockInfo } from '../blockInfo.js';
+import { cellRotation } from '../cell.js';
 import { readCell } from '../chunkStore.js';
 import type { Vec3 } from '../coords.js';
 import type { MapState } from '../mapState.js';
 import type { MaterialHazard } from '../materialHazards.js';
-import { MATERIALS, type MaterialName } from '../materials.js';
+import type { MaterialName } from '../materials.js';
 import { shapeBoxes, type ShapeBox } from '../shapes.js';
 import {
   CREATURE_SIZES,
@@ -15,9 +15,9 @@ import {
 export function blockAt(
   map: MapState,
   cell: Vec3,
-): { block: BlockDefinition; boxes: readonly ShapeBox[] } | null {
+): { block: BlockInfo; boxes: readonly ShapeBox[] } | null {
   const value = readCell(map.store, cell);
-  const block = getBlock(map.palette[cellTypeId(value)] ?? '');
+  const block = blockInfo(map, value);
   if (!block) return null;
   return { block, boxes: shapeBoxes(block.shape, cellRotation(value)) };
 }
@@ -33,21 +33,29 @@ export function footprintCells(anchor: Vec3, size: CreatureSize): Vec3[] {
   return cells;
 }
 
-// Материалы опоры под основанием существа, без повторов: плита или ступени в самой
-// клетке, иначе полный блок под ней. Из них берутся труднопроходимость и опасность.
+// Опора под основанием существа, по одному блоку на материал: плита или ступени в
+// самой клетке, иначе полный блок под ней. Из неё берутся труднопроходимость и опасность.
+export function supportBlocks(
+  map: MapState,
+  anchor: Vec3,
+  size: CreatureSize,
+): BlockInfo[] {
+  const found = new Map<MaterialName, BlockInfo>();
+  for (const cell of footprintCells(anchor, size)) {
+    const support: Vec3 =
+      surfaceInCell(map, cell) > 0 ? cell : [cell[0], cell[1] - 1, cell[2]];
+    const block = blockAt(map, support)?.block;
+    if (block && !found.has(block.material)) found.set(block.material, block);
+  }
+  return [...found.values()];
+}
+
 export function supportMaterials(
   map: MapState,
   anchor: Vec3,
   size: CreatureSize,
 ): MaterialName[] {
-  const found = new Set<MaterialName>();
-  for (const cell of footprintCells(anchor, size)) {
-    const support: Vec3 =
-      surfaceInCell(map, cell) > 0 ? cell : [cell[0], cell[1] - 1, cell[2]];
-    const block = blockAt(map, support);
-    if (block) found.add(block.block.material);
-  }
-  return [...found];
+  return supportBlocks(map, anchor, size).map((block) => block.material);
 }
 
 // Опасности под существом: Большой на краю лавы горит, даже если стоит на ней одной
@@ -57,8 +65,8 @@ export function hazardsUnder(
   anchor: Vec3,
   size: CreatureSize,
 ): { material: MaterialName; hazard: MaterialHazard }[] {
-  return supportMaterials(map, anchor, size).flatMap((material) => {
-    const hazard: MaterialHazard | null = MATERIALS[material].hazard;
+  return supportBlocks(map, anchor, size).flatMap(({ material, traits }) => {
+    const hazard: MaterialHazard | null = traits.hazard;
     return hazard ? [{ material, hazard }] : [];
   });
 }

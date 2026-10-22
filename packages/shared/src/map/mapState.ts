@@ -1,3 +1,4 @@
+import type { BlockCatalog } from './blockInfo.js';
 import type { ChunkStore } from './chunkStore.js';
 import type { Palette } from './palette.js';
 
@@ -6,4 +7,6 @@ import type { Palette } from './palette.js';
 export interface MapState {
   store: ChunkStore;
   palette: Palette;
+  // Откуда правила берут описания блоков палитры; без него — встроенные (BASE_BLOCKS).
+  blocks?: BlockCatalog;
 }

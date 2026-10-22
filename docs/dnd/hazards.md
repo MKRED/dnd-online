@@ -35,6 +35,6 @@
 ## Где в коде
 
 - `packages/shared/src/map/materialHazards.ts` — урон опасностей (`HAZARDS`, с флагом Горения `burning`), подпись `hazardLabel` и условие `HAZARD_TRIGGER`.
-- `packages/shared/src/map/materials.ts` — материалы с `hazard` и `movementCost`.
-- `packages/shared/src/map/rules/support.ts` — `supportMaterials` и `hazardsUnder`: что под основанием существа.
+- `packages/shared/src/map/materials.ts` — материалы с `hazard` и `movementCost`; правила берут их из описания блока (`blockInfo.ts`).
+- `packages/shared/src/map/rules/support.ts` — `supportBlocks`, `supportMaterials` и `hazardsUnder`: что под основанием существа.
 - `apps/web/src/features/maps/editor/blockTraits.ts` — подпись под выбором блока; `apps/mcp/src/blockGuide.ts` — справка.

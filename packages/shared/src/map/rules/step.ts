@@ -1,11 +1,10 @@
 import type { Vec3 } from '../coords.js';
 import type { MapState } from '../mapState.js';
-import { MATERIALS } from '../materials.js';
 import type { ShapeBox } from '../shapes.js';
 import { CREATURE_SIZES, type CreatureSize } from './creature.js';
 import { FEET_PER_CELL } from './distance.js';
 import { standHeight } from './standing.js';
-import { blockAt, footprintCells, supportMaterials } from './support.js';
+import { blockAt, footprintCells, supportBlocks } from './support.js';
 
 // Перепад высоты ног, который проходят шагом: плита, ступень.
 const MAX_STEP = 0.5;
@@ -108,12 +107,12 @@ function cornerClear(
 }
 
 // Труднопроходимая местность — если хоть под одной клеткой основания опора из такого
-// материала (supportMaterials).
+// материала (supportBlocks).
 function terrainCost(map: MapState, anchor: Vec3, size: CreatureSize): number {
   return Math.max(
     1,
-    ...supportMaterials(map, anchor, size).map(
-      (m) => MATERIALS[m].movementCost,
+    ...supportBlocks(map, anchor, size).map(
+      (block) => block.traits.movementCost,
     ),
   );
 }

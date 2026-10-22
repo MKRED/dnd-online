@@ -1,5 +1,5 @@
-import { getBlock } from '../blocks.js';
-import { cellRotation, cellTypeId } from '../cell.js';
+import { blockInfo } from '../blockInfo.js';
+import { cellRotation } from '../cell.js';
 import { readCell } from '../chunkStore.js';
 import type { Vec3 } from '../coords.js';
 import type { MapState } from '../mapState.js';
@@ -49,7 +49,7 @@ function bodyBlocked(map: MapState, body: BodyBox, feetLevel: number): boolean {
       for (let x = from[0]; x <= to[0]; x++) {
         const cell: Vec3 = [x, y, z];
         const value = readCell(map.store, cell);
-        const block = getBlock(map.palette[cellTypeId(value)] ?? '');
+        const block = blockInfo(map, value);
         if (!block) continue;
         if (y === feetLevel && block.shape === 'stairs') continue;
         const hit = shapeBoxes(block.shape, cellRotation(value)).some((box) =>

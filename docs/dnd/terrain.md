@@ -34,6 +34,6 @@
 
 ## Где в коде
 
-- `packages/shared/src/map/materials.ts` — свойства; `rules/step.ts` читает `movementCost`, `rules/segment.ts` — `opaque`.
+- `packages/shared/src/map/materials.ts` — свойства; правила читают их через `blockInfo` (`blockInfo.ts`): `rules/step.ts` — `movementCost`, `rules/segment.ts` — `opaque`.
 - `apps/web/src/features/maps/render/textures/` — текстуры: `stoneworkTextures.ts` (булыжник, тёмный и мшистый камень, обломки; камни по `voronoi.ts`), `groundTextures.ts` (выжженная земля, тропа, снег, листва), `bonesTexture.ts`, тёмное дерево в `buildingTextures.ts`.
 - Листва рисуется с непрозрачными блоками, дыры вырезает `alphaTest` (`CUTOUT_MATERIALS` в `materialTextures.ts`, `MapScene/blockMaterial.ts`).

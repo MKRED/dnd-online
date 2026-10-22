@@ -1,10 +1,8 @@
-import { getBlock } from '../blocks.js';
-import { MATERIALS } from '../materials.js';
-import { AIR, cellRotation, cellTypeId } from '../cell.js';
+import { blockInfo } from '../blockInfo.js';
+import { AIR, cellRotation } from '../cell.js';
 import { readCell } from '../chunkStore.js';
 import { CHUNK_SIZE, chunkKey, localIndex, type Vec3 } from '../coords.js';
 import type { MapState } from '../mapState.js';
-import type { Palette } from '../palette.js';
 import { shapeBoxes, type ShapeBox } from '../shapes.js';
 import type { Point3 } from './creature.js';
 
@@ -19,13 +17,13 @@ const MIN_OVERLAP = 1e-9;
 const NO_BOXES: readonly ShapeBox[] = [];
 
 function boxesOf(
-  palette: Palette,
+  map: MapState,
   value: number,
   mode: RayMode,
 ): readonly ShapeBox[] {
-  const block = getBlock(palette[cellTypeId(value)] ?? '');
+  const block = blockInfo(map, value);
   if (!block) return NO_BOXES;
-  if (mode === 'sight' && !MATERIALS[block.material].opaque) return NO_BOXES;
+  if (mode === 'sight' && !block.traits.opaque) return NO_BOXES;
   return shapeBoxes(block.shape, cellRotation(value));
 }
 
@@ -37,7 +35,7 @@ function boxCache(map: MapState, mode: RayMode) {
     if (value === AIR) return NO_BOXES;
     let boxes = cache.get(value);
     if (!boxes) {
-      boxes = boxesOf(map.palette, value, mode);
+      boxes = boxesOf(map, value, mode);
       cache.set(value, boxes);
     }
     return boxes;
@@ -79,7 +77,7 @@ export function pointInSolid(map: MapState, point: Point3): boolean {
     Math.floor(point[1]),
     Math.floor(point[2]),
   ];
-  return boxesOf(map.palette, readCell(map.store, cell), 'effect').some((box) =>
+  return boxesOf(map, readCell(map.store, cell), 'effect').some((box) =>
     [0, 1, 2].every(
       (a) => point[a] > cell[a] + box[a] && point[a] < cell[a] + box[a + 3],
     ),

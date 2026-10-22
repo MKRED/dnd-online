@@ -1,5 +1,5 @@
-import { cellRotation, cellTypeId } from '../cell.js';
-import { getBlock } from '../blocks.js';
+import { cellRotation } from '../cell.js';
+import { blockInfo } from '../blockInfo.js';
 import { readCell } from '../chunkStore.js';
 import type { Vec3 } from '../coords.js';
 import type { MapState } from '../mapState.js';
@@ -35,7 +35,7 @@ export const CREATURE_SIZES: Record<
 // столб опорой не считаются — существо стоит рядом с ними, а не на них.
 export function surfaceInCell(map: MapState, cell: Vec3): number {
   const value = readCell(map.store, cell);
-  const block = getBlock(map.palette[cellTypeId(value)] ?? '');
+  const block = blockInfo(map, value);
   if (!block) return 0;
   const floors = shapeBoxes(block.shape, cellRotation(value)).filter(
     ([minX, , minZ, maxX, , maxZ]) =>

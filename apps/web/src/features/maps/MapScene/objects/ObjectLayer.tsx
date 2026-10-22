@@ -14,10 +14,9 @@ import FrameBox from '../FrameBox';
 import type { HoverStore } from '../hoverStore';
 import classes from '../MapScene.module.css';
 import ContainerShape from './ContainerShape';
-import CreatureCard from './CreatureCard';
+import CreatureBody from './CreatureBody';
 import FloorItem from './FloorItem';
 import GhostGroup from './GhostGroup';
-import HealthMark from './HealthMark';
 import {
   layoutObjects,
   objectImagePaths,
@@ -173,20 +172,12 @@ function ObjectLayer({
               }
             >
               {look.kind === 'creature' && (
-                <CreatureCard
+                <CreatureBody
                   object={object}
                   look={look}
                   texture={texture(look.image)}
                   health={healthOf(object.id)}
-                />
-              )}
-              {look.kind === 'creature' && healthOf(object.id) && (
-                <HealthMark
-                  health={healthOf(object.id)!}
-                  pc={false}
-                  base={object.base}
-                  top={object.top}
-                  footprint={object.footprint}
+                  mark
                 />
               )}
               {look.kind === 'start' && (

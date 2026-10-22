@@ -1,5 +1,6 @@
 import type { CatalogImage } from '../../catalogImage.js';
 import type { CharacterMainImage } from '../../characterImages.js';
+import type { FigureModel } from '../../characterModels.js';
 import type { MonsterRole } from '../../monsters.js';
 import type { CreatureSize } from '../rules/creature.js';
 import type { MapObject } from './mapObject.js';
@@ -26,8 +27,15 @@ export type ItemRefView =
   | { missing: null; name: string; image: CatalogImage | null; weight: number }
   | { missing: RefMissing };
 
+// model — 3D-модель НПС (docs/plan/character-models.md, этап 4): с ней на карте стоит
+// она, а не карточка.
 export type NpcRefView =
-  | { missing: null; name: string; mainImage: CharacterMainImage | null }
+  | {
+      missing: null;
+      name: string;
+      mainImage: CharacterMainImage | null;
+      model: FigureModel | null;
+    }
   | { missing: RefMissing };
 
 // Справочник по id: в ответе /chunks — для всех объектов карты, в ответе правки — для

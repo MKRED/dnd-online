@@ -4,6 +4,7 @@ import type { CharacterImage } from 'shared';
 import { useImageUrl } from '../../../lib/useImageUrls';
 import { characterImagePath } from '../characterImagesApi';
 import { GalleryLightbox, useCharacterImages } from '../CharacterGallery';
+import { SheetModel } from '../CharacterModel';
 import classes from './CharacterSheet.module.css';
 
 interface SheetImagesProps {
@@ -35,7 +36,8 @@ function StripTile({
 }
 
 // Портрет (основная картинка) и остальные картинки полосой миниатюр; любая открывается
-// на весь экран. Только просмотр: правки галереи — на странице редактирования.
+// на весь экран, под ними — 3D-модель, если она есть. Только просмотр: правки — на
+// странице редактирования.
 function SheetImages({ characterId, characterName }: SheetImagesProps) {
   const { images, loadError } = useCharacterImages(characterId);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -92,6 +94,7 @@ function SheetImages({ characterId, characterName }: SheetImagesProps) {
           ))}
         </div>
       )}
+      <SheetModel characterId={characterId} />
       {openIndex !== null && (
         <GalleryLightbox
           characterId={characterId}

@@ -36,11 +36,15 @@ function renderViewPage(userId: string) {
   );
 }
 
+// Под галереей лист читает 3D-модель персонажа.
+const NO_MODEL = { status: 200, body: { model: null } };
+
 describe('CharacterViewPage', () => {
   it('показывает автору лист с посчитанными бонусами и его действия', async () => {
     stubFetch([
       { status: 200, body: sampleCharacter },
       { status: 200, body: [] },
+      NO_MODEL,
     ]);
     renderViewPage(sampleCharacter.userId);
 
@@ -64,6 +68,7 @@ describe('CharacterViewPage', () => {
     stubFetch([
       { status: 200, body: { ...sampleCharacter, linkAccess: 'link' } },
       { status: 200, body: [] },
+      NO_MODEL,
     ]);
     renderViewPage('someone-else');
 
@@ -86,6 +91,7 @@ describe('CharacterViewPage', () => {
         },
       },
       { status: 200, body: [] },
+      NO_MODEL,
     ]);
     renderViewPage(sampleCharacter.userId);
 

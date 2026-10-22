@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthGuard, type AuthenticatedRequest } from '../../auth/auth.guard.js';
+import { MODEL_CONTENT_TYPES } from '../../character-models/model-content-types.js';
 import { CatalogImageFileQueryDto } from '../../catalog/images/dto/catalog-image.dto.js';
 import {
   ActivateSceneDto,
@@ -125,6 +126,27 @@ export class GameScenesController {
     res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
     return new StreamableFile(data, {
       type: 'image/webp',
+      length: data.length,
+    });
+  }
+
+  // 3D-модель НПС на сцене (docs/plan/character-models.md, этап 4) — как его картинка:
+  // версия в адресе, кеш навсегда только у удачного ответа.
+  @Get('scene/models/npc/:sourceId')
+  async model(
+    @Req() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('sourceId', ParseUUIDPipe) sourceId: string,
+  ) {
+    const { data, format } = await this.viewService.modelFile(
+      req.user.sub,
+      id,
+      sourceId,
+    );
+    res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+    return new StreamableFile(data, {
+      type: MODEL_CONTENT_TYPES[format],
       length: data.length,
     });
   }

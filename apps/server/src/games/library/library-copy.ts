@@ -8,9 +8,10 @@ import type { DbTransaction } from '../../database/database.service.js';
 import {
   gameLibrary,
   gameLibraryImageFiles,
+  gameLibraryModelFiles,
 } from '../../database/schema/index.js';
 import { linkedRefs, type LibraryLinks } from './library-links.js';
-import { copyNpcImageFiles } from './library-npc-sources.js';
+import { copyNpcImageFiles, copyNpcModelFiles } from './library-npc-sources.js';
 import { loadSourceLinks } from './library-source-links.js';
 import {
   loadSources,
@@ -65,6 +66,7 @@ export async function copyToLibrary(
         })),
       );
       await copyImageFiles(tx, gameId, kind, sources);
+      await copyModelFiles(tx, gameId, sources);
       copied += sources.length;
       for (const stored of links.values())
         next.push(...linkedRefs(kind, stored));
@@ -107,7 +109,17 @@ export async function refreshLibraryEntry(
         eq(gameLibraryImageFiles.sourceId, ref.sourceId),
       ),
     );
+  await tx
+    .delete(gameLibraryModelFiles)
+    .where(
+      and(
+        eq(gameLibraryModelFiles.gameId, gameId),
+        eq(gameLibraryModelFiles.kind, ref.kind),
+        eq(gameLibraryModelFiles.sourceId, ref.sourceId),
+      ),
+    );
   await copyImageFiles(tx, gameId, ref.kind, [source]);
+  await copyModelFiles(tx, gameId, [source]);
   const stored = links.get(ref.sourceId);
   const copied = stored
     ? await copyToLibrary(tx, gameId, viewerId, linkedRefs(ref.kind, stored))
@@ -126,6 +138,7 @@ function libraryValues(
     record: source.record,
     links: { ...links },
     image: source.image ? { ...source.image, version: imageVersion } : null,
+    model: source.model ? { ...source.model, version: imageVersion } : null,
     sourceUpdatedAt: source.updatedAt,
   };
 }
@@ -149,6 +162,19 @@ async function notInLibrary(
     );
   const present = new Set(rows.map((row) => row.sourceId));
   return ids.filter((id) => !present.has(id));
+}
+
+// Модель есть только у НПС.
+async function copyModelFiles(
+  tx: DbTransaction,
+  gameId: string,
+  sources: readonly LibrarySource[],
+) {
+  await copyNpcModelFiles(
+    tx,
+    gameId,
+    sources.filter((source) => source.model).map((source) => source.sourceId),
+  );
 }
 
 // Байты картинок копируются внутри базы, не проходя через сервер: они бывают по

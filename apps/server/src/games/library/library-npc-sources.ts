@@ -4,8 +4,10 @@ import type { Db } from '../../catalog/catalog-access.js';
 import {
   characterImageFiles,
   characterImages,
+  characterModels,
   characters,
   gameLibraryImageFiles,
+  gameLibraryModelFiles,
   users,
 } from '../../database/schema/index.js';
 import type { LibrarySource } from './library-sources.js';
@@ -31,6 +33,12 @@ export async function loadNpcSources(
       character: characters,
       nickname: users.nickname,
       image: characterImages,
+      model: {
+        format: characterModels.format,
+        color: characterModels.color,
+        fit: characterModels.fit,
+        updatedAt: characterModels.updatedAt,
+      },
     })
     .from(characters)
     .innerJoin(users, eq(users.id, characters.userId))
@@ -41,10 +49,11 @@ export async function loadNpcSources(
         eq(characterImages.isMain, true),
       ),
     )
+    .leftJoin(characterModels, eq(characterModels.characterId, characters.id))
     .where(
       and(inArray(characters.id, [...ids]), eq(characters.userId, viewerId)),
     );
-  return rows.map(({ character, nickname, image }) => {
+  return rows.map(({ character, nickname, image, model }) => {
     // Лист без id, владельца, доступа по ссылке и времени — как у копий справочников.
     const sheet: Record<string, unknown> = { ...character };
     for (const key of NOT_SHEET) delete sheet[key];
@@ -62,25 +71,60 @@ export async function loadNpcSources(
             thumbCrop: image.thumbCrop,
           }
         : null,
-      updatedAt: character.updatedAt,
+      model: model
+        ? { format: model.format, color: model.color, fit: model.fit }
+        : null,
+      updatedAt: latest(character.updatedAt, model?.updatedAt),
     };
   });
 }
 
 // Когда лист правили последний раз — для сверки копии. Правка предметов, способностей
-// и эффектов листа updated_at не двигает, как и у монстров.
+// и эффектов листа updated_at не двигает, как и у монстров; правка 3D-модели — двигает:
+// у неё своё время, и копия берёт позднее из двух.
 export async function npcStamps(
   db: Db,
   ids: readonly string[],
   viewerId: string,
 ): Promise<Map<string, Date>> {
   const rows = await db
-    .select({ id: characters.id, updatedAt: characters.updatedAt })
+    .select({
+      id: characters.id,
+      updatedAt: characters.updatedAt,
+      modelUpdatedAt: characterModels.updatedAt,
+    })
     .from(characters)
+    .leftJoin(characterModels, eq(characterModels.characterId, characters.id))
     .where(
       and(inArray(characters.id, [...ids]), eq(characters.userId, viewerId)),
     );
-  return new Map(rows.map((row) => [row.id, row.updatedAt]));
+  return new Map(
+    rows.map((row) => [row.id, latest(row.updatedAt, row.modelUpdatedAt)]),
+  );
+}
+
+function latest(sheet: Date, model: Date | null | undefined): Date {
+  return model && model > sheet ? model : sheet;
+}
+
+// Байты 3D-моделей — тоже внутри базы, не проходя через сервер.
+export async function copyNpcModelFiles(
+  tx: DbTransaction,
+  gameId: string,
+  ids: readonly string[],
+) {
+  if (ids.length === 0) return;
+  await tx.insert(gameLibraryModelFiles).select(
+    tx
+      .select({
+        gameId: sql<string>`${gameId}::uuid`.as('game_id'),
+        kind: sql<'npc'>`'npc'`.as('kind'),
+        sourceId: characterModels.characterId,
+        data: characterModels.data,
+      })
+      .from(characterModels)
+      .where(inArray(characterModels.characterId, [...ids])),
+  );
 }
 
 // Полная картинка и миниатюра основной картинки — внутри базы. Средний вариант галереи

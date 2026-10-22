@@ -12,6 +12,7 @@ import {
 import type {
   CatalogImage,
   CatalogImageVariant,
+  FigureModel,
   GameLibraryKind,
 } from 'shared';
 import { bytea } from './bytea.js';
@@ -41,6 +42,9 @@ export const gameLibrary = pgTable(
     // Метаданные копии картинки; байты — в game_library_image_files. Версия своя, растёт
     // с каждым обновлением: по ней клиент не берёт старую картинку из кеша.
     image: jsonb('image').$type<CatalogImage>(),
+    // Метаданные копии 3D-модели НПС (docs/plan/character-models.md, этап 4); байты — в
+    // game_library_model_files. Версия — общая с картинкой: растёт с обновлением копии.
+    model: jsonb('model').$type<FigureModel>(),
     // updated_at записи справочника на момент копии: по нему видно, что автор её правил.
     sourceUpdatedAt: timestamp('source_updated_at', {
       withTimezone: true,
@@ -77,6 +81,29 @@ export const gameLibraryImageFiles = pgTable(
     }),
     foreignKey({
       name: 'game_library_image_files_entry_fk',
+      columns: [table.gameId, table.kind, table.sourceId],
+      foreignColumns: [
+        gameLibrary.gameId,
+        gameLibrary.kind,
+        gameLibrary.sourceId,
+      ],
+    }).onDelete('cascade'),
+  ],
+);
+
+// Байты копии 3D-модели НПС: одна на запись, отдельно от картинок — до 10 МБ.
+export const gameLibraryModelFiles = pgTable(
+  'game_library_model_files',
+  {
+    gameId: uuid('game_id').notNull(),
+    kind: varchar('kind', { length: 10 }).notNull().$type<GameLibraryKind>(),
+    sourceId: uuid('source_id').notNull(),
+    data: bytea('data').notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.gameId, table.kind, table.sourceId] }),
+    foreignKey({
+      name: 'game_library_model_files_entry_fk',
       columns: [table.gameId, table.kind, table.sourceId],
       foreignColumns: [
         gameLibrary.gameId,

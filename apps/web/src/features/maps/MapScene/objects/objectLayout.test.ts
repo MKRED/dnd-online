@@ -55,6 +55,12 @@ const refs: MapObjectRefsView = {
       missing: null,
       name: 'Аня',
       mainImage: { id: 'img', thumbVersion: 2 },
+      model: {
+        format: 'stl',
+        version: 4,
+        color: '#aa3311',
+        fit: { scale: 1, turn: 0, up: 'z' },
+      },
     },
   },
 };
@@ -108,6 +114,7 @@ describe('layoutObjects', () => {
         image: `/monsters/${OGRE}/image?variant=thumb&v=3`,
         letter: 'О',
         missing: false,
+        model: null,
       },
     });
   });
@@ -178,6 +185,13 @@ describe('layoutObjects', () => {
       look: {
         side: 'npc',
         image: `/characters/${HERO}/images/img/file?variant=thumb&v=2`,
+        // 3D-модель НПС (docs/plan/character-models.md, этап 4).
+        model: {
+          path: `/characters/${HERO}/model/file?v=4`,
+          format: 'stl',
+          color: '#aa3311',
+          fit: { scale: 1, turn: 0, up: 'z' },
+        },
       },
     });
     expect(objects[2]).toMatchObject({
@@ -195,6 +209,7 @@ describe('layoutObjects', () => {
       item: (id: string, v: number) => `lib/item/${id}/${v}`,
       npc: (id: string, image: { thumbVersion: number }) =>
         `lib/npc/${id}/${image.thumbVersion}`,
+      npcModel: (id: string, v: number) => `lib/npc-model/${id}/${v}`,
     };
     const objects = layoutObjects(
       mapWith([
@@ -223,6 +238,9 @@ describe('layoutObjects', () => {
       `lib/monster/${OGRE}/3`,
       `lib/npc/${HERO}/2`,
     ]);
+    expect(objects[1].look).toMatchObject({
+      model: { path: `lib/npc-model/${HERO}/4` },
+    });
   });
 
   it('без содержимого контейнера — подпись по имени, без числа предметов', () => {

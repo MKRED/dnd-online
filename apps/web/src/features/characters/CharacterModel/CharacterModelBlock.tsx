@@ -68,7 +68,7 @@ function CharacterModelBlock({ characterId }: { characterId: string }) {
         ) : (
           <Group align="flex-start" gap="xl">
             <Suspense fallback={<Loader size="sm" />}>
-              <ModelPreview characterId={characterId} model={model} />
+              <ModelPreview characterId={characterId} model={model} guides />
             </Suspense>
             <Stack gap="sm" style={{ flex: '1 1 260px' }}>
               <Text size="sm" c="dimmed">

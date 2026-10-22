@@ -8,6 +8,7 @@ import { eq } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type {
   CatalogImageVariant,
+  CharacterModelFormat,
   GameSceneFogView,
   GameSceneView,
 } from 'shared';
@@ -19,9 +20,10 @@ import {
   SCENE_CLOSED,
   SCENE_MEMBERS_ONLY,
   SCENE_NO_IMAGE,
+  SCENE_NO_MODEL,
 } from '../game-errors.js';
 import { findGameAccess } from '../game-read.js';
-import { readLibraryImage } from '../library/index.js';
+import { readLibraryImage, readLibraryModel } from '../library/index.js';
 import { fogView, playerFog } from '../fog/fog-view.js';
 import { sceneShowsEntry, type SceneImageKind } from './scene-image-access.js';
 import { findActiveScene, readSceneView, sceneStatus } from './scene-read.js';
@@ -121,25 +123,13 @@ export class GameSceneViewService {
     const t0 = Date.now();
     const { db } = this.databaseService;
     try {
-      const master = await this.assertParticipant(userId, gameId);
-      if (!master) {
-        const [{ sceneOpen }] = await db
-          .select({ sceneOpen: games.sceneOpen })
-          .from(games)
-          .where(eq(games.id, gameId));
-        const scene = await findActiveScene(db, gameId);
-        const shown =
-          sceneOpen &&
-          scene !== undefined &&
-          (await sceneShowsEntry(
-            db,
-            scene.id,
-            kind,
-            sourceId,
-            await playerFog(db, scene),
-          ));
-        if (!shown) throw new NotFoundException(SCENE_NO_IMAGE);
-      }
+      await this.assertEntryShown(
+        userId,
+        gameId,
+        kind,
+        sourceId,
+        SCENE_NO_IMAGE,
+      );
       const data = await readLibraryImage(
         db,
         gameId,
@@ -168,6 +158,78 @@ export class GameSceneViewService {
       );
       throw err;
     }
+  }
+
+  // 3D-модель НПС на сцене (docs/plan/character-models.md, этап 4) — тем же, кому его
+  // картинка.
+  async modelFile(
+    userId: string,
+    gameId: string,
+    sourceId: string,
+  ): Promise<{ data: Buffer; format: CharacterModelFormat }> {
+    const t0 = Date.now();
+    try {
+      await this.assertEntryShown(
+        userId,
+        gameId,
+        'npc',
+        sourceId,
+        SCENE_NO_MODEL,
+      );
+      const model = await readLibraryModel(this.databaseService.db, gameId, {
+        kind: 'npc',
+        sourceId,
+      });
+      this.logger.debug(
+        {
+          durationMs: Date.now() - t0,
+          userId,
+          gameId,
+          sourceId,
+          found: !!model,
+          bytes: model?.data.length,
+        },
+        'Game scene model lookup',
+      );
+      if (!model) throw new NotFoundException(SCENE_NO_MODEL);
+      return model;
+    } catch (err: unknown) {
+      if (err instanceof HttpException) throw err;
+      this.logger.error(
+        { err, userId, gameId, sourceId },
+        'Game scene model lookup failed',
+      );
+      throw err;
+    }
+  }
+
+  // Мастеру — любая копия; игроку — только того, что стоит на открытой активной сцене,
+  // не скрыто и не в тумане.
+  private async assertEntryShown(
+    userId: string,
+    gameId: string,
+    kind: SceneImageKind,
+    sourceId: string,
+    notFound: string,
+  ): Promise<void> {
+    const { db } = this.databaseService;
+    if (await this.assertParticipant(userId, gameId)) return;
+    const [{ sceneOpen }] = await db
+      .select({ sceneOpen: games.sceneOpen })
+      .from(games)
+      .where(eq(games.id, gameId));
+    const scene = await findActiveScene(db, gameId);
+    const shown =
+      sceneOpen &&
+      scene !== undefined &&
+      (await sceneShowsEntry(
+        db,
+        scene.id,
+        kind,
+        sourceId,
+        await playerFog(db, scene),
+      ));
+    if (!shown) throw new NotFoundException(notFound);
   }
 
   // Мастер или участник игры (вошёл в лобби); зритель без входа — открытый вопрос плана,

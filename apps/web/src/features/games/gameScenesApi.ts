@@ -103,7 +103,7 @@ export function scenePagePath(gameId: string): string {
   return `/games/${gameId}/scene`;
 }
 
-// Миниатюры объектов сцены — копии из библиотеки игры. У НПС путь — по самому НПС и
+// Миниатюры и 3D-модели объектов сцены — копии из библиотеки игры. У НПС путь — по самому НПС и
 // версии копии: id картинки галереи игре не нужен.
 export function sceneObjectImages(gameId: string): ObjectImagePaths {
   const path = (kind: string, id: string, version: number) =>
@@ -112,5 +112,7 @@ export function sceneObjectImages(gameId: string): ObjectImagePaths {
     monster: (id, version) => path('monster', id, version),
     item: (id, version) => path('item', id, version),
     npc: (id, image) => path('npc', id, image.thumbVersion),
+    npcModel: (id, version) =>
+      `/games/${gameId}/scene/models/npc/${id}?v=${version}`,
   };
 }

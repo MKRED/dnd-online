@@ -89,6 +89,8 @@ export async function sceneRefs(
         mainImage: row.image
           ? { id: row.sourceId, thumbVersion: row.image.version }
           : null,
+        // Модель — тоже копия: байты по НПС и версии (scene/models/npc/:id).
+        model: row.model ?? null,
       };
       refs.npcs.add(row.sourceId);
     }

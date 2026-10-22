@@ -1,5 +1,5 @@
 import { and, eq, inArray, or } from 'drizzle-orm';
-import type { CatalogImage, GameLibraryKind } from 'shared';
+import type { CatalogImage, FigureModel, GameLibraryKind } from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
 import { toCatalogImage } from '../../catalog/catalog-image.mapper.js';
 import {
@@ -43,6 +43,8 @@ export interface LibrarySource {
   authorNickname: string;
   record: Record<string, unknown>;
   image: CatalogImage | null;
+  // 3D-модель НПС; версию копии, как и у картинки, задаёт библиотека.
+  model?: Omit<FigureModel, 'version'> | null;
   updatedAt: Date;
 }
 

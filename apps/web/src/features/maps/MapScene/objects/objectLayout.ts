@@ -8,6 +8,7 @@ import {
   type ContainerLook,
   type CreatureSize,
   type Facing,
+  type FigureModel,
   type MapObject,
   type MapObjectRefsView,
   type Point3,
@@ -15,6 +16,13 @@ import {
 } from 'shared';
 import type { MapViewState } from '../../mapStateFromChunks';
 import { CATALOG_OBJECT_IMAGES, type ObjectImagePaths } from './objectImages';
+
+// 3D-модель существа (docs/plan/character-models.md): путь байтов в API (с версией) и
+// как её ставить.
+export type CreatureModelInput = Pick<
+  FigureModel,
+  'format' | 'color' | 'fit'
+> & { path: string };
 
 // Как объект выглядит в сцене (docs/plan/done/map-objects.md, «Как выглядят объекты»).
 // image — путь миниатюры в API или null; letter — что писать на карточке без картинки.
@@ -29,6 +37,8 @@ export type SceneObjectLook =
       letter: string;
       // Скрыт автором или удалён — серая карточка со знаком вопроса.
       missing: boolean;
+      // С ней на карте стоит модель, а не карточка; пока она грузится — карточка.
+      model: CreatureModelInput | null;
     }
   | { kind: 'start'; number: number; facing: Facing }
   | { kind: 'container'; look: ContainerLook; facing: Facing }
@@ -85,6 +95,7 @@ function creatureLook(
         : null,
       letter: found ? letterOf(found.name) : '?',
       missing: !found,
+      model: null,
     };
   }
   const ref = refs.npcs[object.characterId];
@@ -99,6 +110,14 @@ function creatureLook(
       : null,
     letter: found ? letterOf(found.name) : '?',
     missing: !found,
+    model: found?.model
+      ? {
+          path: images.npcModel(object.characterId, found.model.version),
+          format: found.model.format,
+          color: found.model.color,
+          fit: found.model.fit,
+        }
+      : null,
   };
 }
 

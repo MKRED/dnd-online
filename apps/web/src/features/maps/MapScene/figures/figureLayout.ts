@@ -5,15 +5,14 @@ import {
   type CreatureHealth,
   type CreatureSize,
   type Facing,
-  type FigureModel,
   type MapState,
   type Point3,
   type Vec3,
 } from 'shared';
 
-export type FigureModelInput = Pick<FigureModel, 'format' | 'color' | 'fit'> & {
-  path: string;
-};
+import type { CreatureModelInput } from '../objects/objectLayout';
+
+export type FigureModelInput = CreatureModelInput;
 
 // Фигурка персонажа для сцены (docs/plan/done/game.md, этап 7): что знает о ней карта — без
 // игры, запаса движения и прав.

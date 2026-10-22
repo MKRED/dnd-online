@@ -10,6 +10,7 @@ import { toCatalogImage } from '../../catalog/catalog-image.mapper.js';
 import type { Db } from '../../catalog/catalog-access.js';
 import {
   characterImages,
+  characterModels,
   characters,
   itemImages,
   items,
@@ -106,6 +107,13 @@ export async function loadRefs(
           id: characterImages.id,
           thumbVersion: characterImages.thumbVersion,
         },
+        // Метаданные модели, без байтов (docs/plan/character-models.md, этап 4).
+        model: {
+          format: characterModels.format,
+          version: characterModels.version,
+          color: characterModels.color,
+          fit: characterModels.fit,
+        },
       })
       .from(characters)
       .leftJoin(
@@ -115,13 +123,19 @@ export async function loadRefs(
           eq(characterImages.isMain, true),
         ),
       )
+      .leftJoin(characterModels, eq(characterModels.characterId, characters.id))
       .where(inArray(characters.id, [...ids.npcs]));
     for (const row of rows) {
       // Ставить можно только своего НПС; свой игровой персонаж на карте (тип сменили
       // после постановки) показывается как есть, но заново его не поставить.
       const own = row.userId === userId;
       view.npcs[row.id] = own
-        ? { missing: null, name: row.name, mainImage: row.mainImage }
+        ? {
+            missing: null,
+            name: row.name,
+            mainImage: row.mainImage,
+            model: row.model,
+          }
         : { missing: 'hidden' };
       if (own && row.kind === 'npc') refs.npcs.add(row.id);
     }

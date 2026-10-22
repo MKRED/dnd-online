@@ -2,6 +2,7 @@ import { and, asc, eq, or, type SQL } from 'drizzle-orm';
 import {
   GAME_LIBRARY_KINDS,
   type CatalogImageVariant,
+  type CharacterModelFormat,
   type GameLibraryEntry,
   type GameLibraryItem,
   type GameLibraryRef,
@@ -11,6 +12,7 @@ import type { Db } from '../../catalog/catalog-access.js';
 import {
   gameLibrary,
   gameLibraryImageFiles,
+  gameLibraryModelFiles,
 } from '../../database/schema/index.js';
 import { linkedRefs, readLinks } from './library-links.js';
 import {
@@ -93,6 +95,34 @@ export async function readLibraryImage(
     )
     .limit(1);
   return row?.data;
+}
+
+// Байты копии 3D-модели НПС и её формат (docs/plan/character-models.md, этап 4).
+export async function readLibraryModel(
+  db: Db,
+  gameId: string,
+  ref: GameLibraryRef,
+): Promise<{ data: Buffer; format: CharacterModelFormat } | undefined> {
+  const [row] = await db
+    .select({ data: gameLibraryModelFiles.data, model: gameLibrary.model })
+    .from(gameLibraryModelFiles)
+    .innerJoin(
+      gameLibrary,
+      and(
+        eq(gameLibrary.gameId, gameLibraryModelFiles.gameId),
+        eq(gameLibrary.kind, gameLibraryModelFiles.kind),
+        eq(gameLibrary.sourceId, gameLibraryModelFiles.sourceId),
+      ),
+    )
+    .where(
+      and(
+        eq(gameLibraryModelFiles.gameId, gameId),
+        eq(gameLibraryModelFiles.kind, ref.kind),
+        eq(gameLibraryModelFiles.sourceId, ref.sourceId),
+      ),
+    )
+    .limit(1);
+  return row?.model ? { data: row.data, format: row.model.format } : undefined;
 }
 
 function refWhere(gameId: string, ref: GameLibraryRef): SQL | undefined {

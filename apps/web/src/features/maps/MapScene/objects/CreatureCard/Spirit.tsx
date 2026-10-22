@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import { DoubleSide, type Group, type Texture } from 'three';
+import { ANIMATION_FPS, requestAnimationFrameAt } from '../animationFrames';
 import { useGraphicsQuality } from '../graphicsQualityContext';
 import { SPIRIT_GAP, SPIRIT_SWAY, spiritSize } from './creaturePose';
 
@@ -15,22 +16,21 @@ interface SpiritProps {
 }
 
 // Призрак над гробом поверженного: бледная полупрозрачная карточка с портретом, лицом по
-// взгляду. На качестве «среднее» медленно покачивается вверх-вниз и поворачивается; на
-// «низком» висит на месте.
+// взгляду. На качестве «среднее» медленно покачивается вверх-вниз и поворачивается
+// (18 кадров в секунду, animationFrames.ts); на «низком» висит на месте.
 function Spirit({ footprint, floor, picture }: SpiritProps) {
-  const animate = useGraphicsQuality() !== 'low';
+  const fps = ANIMATION_FPS[useGraphicsQuality()];
   const { width, height } = spiritSize(footprint);
   const rest = floor + SPIRIT_GAP + height / 2;
   const group = useRef<Group>(null);
-  // Сцена рисует кадры по требованию (frameloop="demand"). Пока на ней есть
-  // покачивающийся призрак, каждый кадр просит следующий — сцена перерисовывается
-  // непрерывно. Этого и избегает качество «низкое».
+  // Поза — по времени, а не по числу кадров: при любой частоте призрак качается с той же
+  // скоростью. Следующий кадр просит не сразу, а с частотой качества графики.
   useFrame((state) => {
-    if (!animate || !group.current) return;
+    if (fps <= 0 || !group.current) return;
     const t = state.clock.elapsedTime;
     group.current.position.y = rest + Math.sin(t * 1.4) * SPIRIT_SWAY;
     group.current.rotation.y = Math.sin(t * 0.7) * 0.15;
-    state.invalidate();
+    requestAnimationFrameAt(state.invalidate, fps);
   });
   // Прозрачный материал без записи глубины: иначе призрак закрывал бы портрет на
   // крышке и мерцал с ним.

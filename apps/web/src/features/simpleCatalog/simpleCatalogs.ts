@@ -5,10 +5,19 @@ import {
   effectComponentKinds,
   type Ability,
   type AbilityInput,
+  type BlockGroup,
+  type BlockGroupInput,
   type Effect,
   type EffectInput,
 } from 'shared';
 import { catalogApi, type CatalogSection } from '../catalog';
+import {
+  BLOCK_EXTRAS,
+  BLOCK_KIND_LABELS,
+  BLOCK_KINDS,
+  blockKinds,
+  loadBlockDeleteConfirm,
+} from './BlockGroup';
 import { effectDeleteConfirmText } from './deleteConfirmText';
 import {
   ABILITY_EXTRAS,
@@ -16,18 +25,19 @@ import {
   type CatalogExtras,
 } from './catalogExtras';
 
-// Запись простого каталога — способность или эффект (docs/plan/done/abilities-effects.md).
-// Страницы у них одни; чем разделы отличаются — виды записей для чипов и бейджей (kinds)
-// и свои поля раздела (extras).
-export type SimpleEntry = Ability | Effect;
-export type SimpleInput = AbilityInput | EffectInput;
+// Запись простого каталога — способность, эффект (docs/plan/done/abilities-effects.md)
+// или группа блоков (docs/plan/blocks.md, этап 4). Страницы у них одни; чем разделы
+// отличаются — виды записей для чипов и бейджей (kinds) и свои поля раздела (extras).
+export type SimpleEntry = Ability | Effect | BlockGroup;
+export type SimpleInput = AbilityInput | EffectInput | BlockGroupInput;
 
 // Чем раздел справочника отличается от другого: адрес, запросы, категории и тексты
 // (род у способности женский, у эффекта мужской).
 export interface SimpleCatalogDef {
   section: Exclude<CatalogSection, 'items' | 'monsters'>;
-  // Вид закладки на записи раздела (docs/plan/done/bookmarks.md).
-  bookmarkKind: 'ability' | 'effect';
+  // Вид закладки на записи раздела (docs/plan/done/bookmarks.md). Нет — нет и звёздочки:
+  // групп блоков в закладках пока нет.
+  bookmarkKind?: 'ability' | 'effect';
   path: string;
   api: ReturnType<typeof catalogApi<SimpleEntry, SimpleInput>>;
   // Категории способности — выбор в форме. У эффекта категории нет.
@@ -58,7 +68,8 @@ export interface SimpleCatalogDef {
     deleteFailed: string;
     // «Способность сохранена, а картинка — нет»
     imageNotSaved: string;
-    deleteConfirm: (entry: SimpleEntry) => string;
+    // Вопрос перед удалением; у групп блоков — после запроса, где стоят их блоки.
+    deleteConfirm: (entry: SimpleEntry) => string | Promise<string>;
     namePlaceholder: string;
     publicHint: string;
     descriptionPlaceholder: string;
@@ -147,6 +158,44 @@ export const EFFECTS: SimpleCatalogDef = {
       mine: 'У вас пока нет эффектов. Создайте первый — например, горение или тёмное зрение.',
       catalog:
         'В каталоге пока пусто. Опубликуйте свой эффект, чтобы его увидели другие.',
+    },
+  },
+};
+
+export const BLOCKS: SimpleCatalogDef = {
+  section: 'blocks',
+  path: '/blocks',
+  api: catalogApi<SimpleEntry, SimpleInput>('/block-groups'),
+  kinds: {
+    values: BLOCK_KINDS,
+    labels: BLOCK_KIND_LABELS,
+    of: (entry) => ('look' in entry ? blockKinds(entry) : []),
+  },
+  extras: BLOCK_EXTRAS,
+  loadTexts: {
+    notFound: 'Группа блоков не найдена',
+    failed: 'Не удалось загрузить группу блоков',
+  },
+  texts: {
+    title: 'Блоки',
+    newTitle: 'Новая группа блоков',
+    createLabel: 'Создать группу блоков',
+    back: '← К блокам',
+    hidden: 'Скрыта',
+    listFailed: 'Не удалось загрузить блоки',
+    saveFailed: 'Не удалось сохранить группу блоков',
+    deleteFailed: 'Не удалось удалить группу блоков',
+    imageNotSaved: 'Группа блоков сохранена, а картинка — нет',
+    deleteConfirm: loadBlockDeleteConfirm,
+    namePlaceholder: 'Например, Тлеющие угли',
+    publicHint:
+      'Скрытую группу видите только вы. Опубликованную видят все, но ставить её блоки на карты пока можете только вы: копирование появится позже.',
+    descriptionPlaceholder:
+      'Что это за блоки: где встречаются, чем опасны, как выглядят…',
+    empty: {
+      mine: 'У вас пока нет своих блоков. Создайте группу — например, тлеющие угли или ядовитый мох. Базовые блоки есть у всех и без неё.',
+      catalog:
+        'В каталоге пока пусто. Опубликуйте свою группу блоков, чтобы её увидели другие.',
     },
   },
 };

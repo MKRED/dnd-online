@@ -54,3 +54,20 @@
   text-align: right;
   white-space: nowrap;
 }
+
+/* Своя миниатюра раздела (у блоков — сам блок): квадрат того же размера, что картинка
+   записи, рисунок по центру. */
+.ownThumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  width: 100%;
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-default-hover);
+}
+
+.ownThumb > svg {
+  width: 75%;
+  height: auto;
+}

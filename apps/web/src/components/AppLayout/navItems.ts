@@ -1,5 +1,6 @@
 import {
   IconBackpack,
+  IconCube,
   IconFlame,
   IconMap,
   IconSkull,
@@ -28,6 +29,7 @@ const CATALOG_ICONS: Record<CatalogSection, Icon> = {
   abilities: IconSparkles,
   effects: IconFlame,
   monsters: IconSkull,
+  blocks: IconCube,
 };
 
 // Разделы боковой панели. Новый раздел добавляется сюда, шапку он не трогает.

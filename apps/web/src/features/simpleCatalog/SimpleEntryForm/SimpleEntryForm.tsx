@@ -105,13 +105,17 @@ function SimpleEntryForm({
       <Stack>
         <Grid gap="xl">
           <Grid.Col span={{ base: 12, sm: 'content' }}>
-            <ImageField
-              entryId={saved?.id ?? null}
-              entryName={form.values.name}
-              imagePath={def.api.imagePath}
-              draft={draft}
-              onChange={setDraft}
-            />
+            {def.extras.picture ? (
+              def.extras.picture.values(form.values)
+            ) : (
+              <ImageField
+                entryId={saved?.id ?? null}
+                entryName={form.values.name}
+                imagePath={def.api.imagePath}
+                draft={draft}
+                onChange={setDraft}
+              />
+            )}
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 'auto' }}>
             <Stack>

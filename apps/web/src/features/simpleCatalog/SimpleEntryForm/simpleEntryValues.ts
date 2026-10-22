@@ -3,6 +3,7 @@ import {
   CATALOG_NAME_MAX_LENGTH,
 } from 'shared';
 import { toSourcesInput } from '../../catalog';
+import { blockValidate, toBlockValues, type BlockValues } from '../BlockGroup';
 import {
   toDurationValues,
   validateDurationAmount,
@@ -43,6 +44,8 @@ export interface SimpleFormValues {
   spell: SpellValues;
   // Поля категории «Монстра» — так же.
   monster: MonsterAbilityValues;
+  // Вид и свойства группы блоков.
+  block: BlockValues;
 }
 
 // Те же правила и тексты, что у сервера (CatalogEntryDto, EffectDto, AbilityDto).
@@ -62,6 +65,7 @@ export const simpleFormValidate = {
   usage: usageValidate,
   steps: stepsValidate,
   spell: spellValidate,
+  block: blockValidate,
 };
 
 export function toSimpleFormValues(
@@ -93,6 +97,7 @@ export function toSimpleFormValues(
         ? entry.details
         : undefined,
     ),
+    block: toBlockValues(entry && 'look' in entry ? entry : undefined),
   };
 }
 

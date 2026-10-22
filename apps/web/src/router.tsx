@@ -28,6 +28,7 @@ import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
 import {
   ABILITIES,
+  BLOCKS,
   EFFECTS,
   SimpleCreatePage,
   SimpleEditPage,
@@ -36,7 +37,7 @@ import {
   type SimpleCatalogDef,
 } from './features/simpleCatalog';
 
-// Маршруты раздела справочника со способностями или эффектами. key — по разделу: у
+// Маршруты раздела справочника со способностями, эффектами или блоками. key — по разделу: у
 // разделов одни и те же компоненты, и без ключа React перенёс бы состояние страницы
 // способностей на страницу эффектов.
 function simpleCatalogRoutes(def: SimpleCatalogDef) {
@@ -80,6 +81,7 @@ export const router = createBrowserRouter([
           { path: '/monsters/new', element: <MonsterCreatePage /> },
           { path: '/monsters/:id', element: <MonsterViewPage /> },
           { path: '/monsters/:id/edit', element: <MonsterEditPage /> },
+          ...simpleCatalogRoutes(BLOCKS),
           { path: '/bookmarks', element: <BookmarksPage /> },
           { path: '/games', element: <GamesPage /> },
           { path: '/games/:id', element: <GameLobbyPage /> },

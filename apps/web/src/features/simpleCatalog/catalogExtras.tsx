@@ -47,6 +47,12 @@ export interface CatalogExtras {
   ) => SaveConfirmation | null;
   // Кнопка гайда по форме — в заголовке страницы создания и правки. Нет — нет и кнопки.
   Guide?: () => ReactNode;
+  // Своя картинка вместо картинки записи: у группы блоков это сами блоки. Есть — у
+  // формы нет поля картинки, а карточка и список рисуют её.
+  picture?: {
+    entry: (entry: SimpleEntry, size: 'card' | 'grid' | 'row') => ReactNode;
+    values: (values: SimpleFormValues) => ReactNode;
+  };
 }
 
 // Строки по одной на вид составляющей: несколько чувств — в одной строке «Чувство».

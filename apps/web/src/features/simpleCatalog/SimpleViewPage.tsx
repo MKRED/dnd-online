@@ -29,7 +29,7 @@ interface SimpleViewPageProps {
   def: SimpleCatalogDef;
 }
 
-// Карточка способности или эффекта так, как её видят все. У автора — «Редактировать»
+// Карточка способности, эффекта или группы блоков так, как её видят все. У автора — «Редактировать»
 // и «Удалить».
 function SimpleViewPage({ def }: SimpleViewPageProps) {
   const { id = '' } = useParams();
@@ -45,14 +45,21 @@ function SimpleViewPage({ def }: SimpleViewPageProps) {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const isAuthor = Boolean(entry && user && entry.authorId === user.id);
 
+  // Вопрос бывает готов не сразу: у группы блоков он называет карты, где она стоит, и
+  // их спрашиваем у сервера. Пока ждём ответа, кнопка крутится.
   const handleDelete = () => {
     if (!entry) return;
-    if (!window.confirm(def.texts.deleteConfirm(entry))) return;
     setDeleteError(null);
     setDeleting(true);
-    def.api
-      .remove(entry.id)
-      .then(() => navigate(def.path))
+    Promise.resolve(def.texts.deleteConfirm(entry))
+      .then(async (question) => {
+        if (!window.confirm(question)) {
+          setDeleting(false);
+          return;
+        }
+        await def.api.remove(entry.id);
+        await navigate(def.path);
+      })
       .catch((err: unknown) => {
         console.error('Failed to delete catalog entry', err);
         setDeleteError(errorMessage(err, def.texts.deleteFailed));
@@ -81,15 +88,25 @@ function SimpleViewPage({ def }: SimpleViewPageProps) {
       ) : (
         <Grid gap="xl">
           <Grid.Col span={{ base: 12, sm: 5 }}>
-            <EntryImage entry={entry} imagePath={def.api.imagePath} />
+            {def.extras.picture ? (
+              def.extras.picture.entry(entry, 'card')
+            ) : (
+              <EntryImage entry={entry} imagePath={def.api.imagePath} />
+            )}
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 7 }}>
             <Stack gap="sm">
-              <TitleWithBookmark kind={def.bookmarkKind} id={entry.id}>
+              {def.bookmarkKind ? (
+                <TitleWithBookmark kind={def.bookmarkKind} id={entry.id}>
+                  <Title order={1} style={{ overflowWrap: 'anywhere' }}>
+                    {entry.name}
+                  </Title>
+                </TitleWithBookmark>
+              ) : (
                 <Title order={1} style={{ overflowWrap: 'anywhere' }}>
                   {entry.name}
                 </Title>
-              </TitleWithBookmark>
+              )}
               <SimpleBadges def={def} entry={entry} showHidden />
               <DetailsField label="Автор">{entry.authorNickname}</DetailsField>
               {def.extras.rows(entry).map(({ label, value }) => (

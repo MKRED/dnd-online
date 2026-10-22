@@ -120,6 +120,10 @@ function SimpleListPage({ def }: SimpleListPageProps) {
               scope={scope}
               basePath={def.path}
               imagePath={def.api.imagePath}
+              thumb={
+                def.extras.picture &&
+                ((entry, size) => def.extras.picture?.entry(entry, size))
+              }
               // Главное общее поле раздела — в колонке списка, как вес у предметов.
               numbers={(entry) => {
                 const value = def.extras.listValue(entry);

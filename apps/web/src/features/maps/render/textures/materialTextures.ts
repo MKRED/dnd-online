@@ -76,8 +76,13 @@ const ONE_TILE: Record<
 // сверху свой слой, сбоку земля с его краем, снизу земля; у остальных одна плитка на
 // все грани. Средний цвет каждой плитки — основной цвет материала (matchMean), кроме
 // стекла: оно почти прозрачное, и его цвет задаёт рамка, а не среднее.
-export function materialTextures(material: MaterialName): MaterialTextures {
-  const base = hexToRgb(MATERIALS[material].color);
+// color — основной цвет своей группы блоков на этой основе (docs/plan/blocks.md, этап 4):
+// узор основы, перекрашенный в него.
+export function materialTextures(
+  material: MaterialName,
+  color: string = MATERIALS[material].color,
+): MaterialTextures {
+  const base = hexToRgb(color);
   if (material === 'grass' || material === 'path') {
     const dirt = hexToRgb(MATERIALS.dirt.color);
     const soil = matchMean(dirtTile(dirt), dirt);

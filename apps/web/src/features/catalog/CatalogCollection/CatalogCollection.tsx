@@ -30,6 +30,8 @@ interface CatalogCollectionProps<Entry extends CollectionEntry> {
   numbers?: (
     entry: Entry,
   ) => { primary: string; secondary?: string } | undefined;
+  // Своя миниатюра вместо картинки записи: у группы блоков — сам блок.
+  thumb?: (entry: Entry, size: 'grid' | 'row') => ReactNode;
 }
 
 // Записи каталога сеткой карточек (узнать по картинке) или списком (сравнить числа).
@@ -41,6 +43,7 @@ function CatalogCollection<Entry extends CollectionEntry>({
   imagePath,
   badges,
   numbers,
+  thumb,
 }: CatalogCollectionProps<Entry>) {
   const mine = scope === 'mine';
 
@@ -57,11 +60,17 @@ function CatalogCollection<Entry extends CollectionEntry>({
             >
               <Group wrap="nowrap" gap="sm">
                 <div className={classes.rowThumb}>
-                  <CatalogThumb
-                    entry={entry}
-                    imagePath={imagePath}
-                    placeholderSize="1.25rem"
-                  />
+                  {thumb ? (
+                    <div className={classes.ownThumb}>
+                      {thumb(entry, 'row')}
+                    </div>
+                  ) : (
+                    <CatalogThumb
+                      entry={entry}
+                      imagePath={imagePath}
+                      placeholderSize="1.25rem"
+                    />
+                  )}
                 </div>
                 <div className={classes.rowMain}>
                   <Text fw={600} truncate>
@@ -104,7 +113,11 @@ function CatalogCollection<Entry extends CollectionEntry>({
             to={`${basePath}/${entry.id}`}
             className={classes.card}
           >
-            <CatalogThumb entry={entry} imagePath={imagePath} />
+            {thumb ? (
+              <div className={classes.ownThumb}>{thumb(entry, 'grid')}</div>
+            ) : (
+              <CatalogThumb entry={entry} imagePath={imagePath} />
+            )}
             <Stack gap={4} mt="xs">
               <Text fw={600} size="sm" lineClamp={2} className={classes.name}>
                 {entry.name}

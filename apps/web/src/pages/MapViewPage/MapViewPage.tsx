@@ -24,6 +24,7 @@ import {
 } from '../../features/maps/editor';
 import type { CameraFocusApi } from '../../features/maps/MapScene';
 import { useWalkTest, WalkTestPanel } from '../../features/maps/walkTest';
+import CutRuler from '../../features/maps/CutRuler';
 import MapSidebar from './MapSidebar';
 import classes from './MapViewPage.module.css';
 import { usePageTitle } from '../../lib/usePageTitle';
@@ -155,6 +156,15 @@ function MapViewPage() {
             onRedo={redo}
           />
         )}
+        {/* Срез — когда есть что срезать: блоки больше чем на одном уровне. */}
+        {map && bounds && bounds.max[1] > bounds.min[1] && (
+          <CutRuler
+            min={bounds.min[1]}
+            max={bounds.max[1]}
+            value={sliderY}
+            onChange={handleCutChange}
+          />
+        )}
         {/* Готовность сцены не видна глазу, но её ждёт агент в браузере перед снимком
             (docs/mcp.md), а скринридер читает её как статус. */}
         {map && (
@@ -172,12 +182,6 @@ function MapViewPage() {
         panelTitle={sizeDraft ? 'Размер карты' : TOOL_LABELS[editor.tool]}
         loadError={loadError}
         editError={editError}
-        cut={
-          bounds
-            ? { min: bounds.min[1], max: bounds.max[1], value: sliderY }
-            : null
-        }
-        onCutChange={handleCutChange}
         loaded={map !== null}
         empty={map !== null && bounds === null}
       >

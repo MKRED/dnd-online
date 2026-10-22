@@ -23,6 +23,7 @@ import { useAuth } from '../../features/auth';
 import { sceneObjectImages } from '../../features/games';
 import { parseCameraParams, placeCamera } from '../../features/maps/cameraView';
 import { useFogMasks } from '../../features/maps/fogMasks';
+import CutRuler from '../../features/maps/CutRuler';
 import { SceneToolbar } from '../../features/maps/editor';
 import type { CameraFocusApi } from '../../features/maps/MapScene';
 import { usePageTitle } from '../../lib/usePageTitle';
@@ -228,6 +229,15 @@ function GameScenePage() {
             onRedo={edits.redo}
           />
         )}
+        {ready && bounds && bounds.max[1] > bounds.min[1] && (
+          <CutRuler
+            min={bounds.min[1]}
+            max={bounds.max[1]}
+            value={sliderY}
+            // Шкала на самом верху — «без среза», как в редакторе.
+            onChange={(y) => setCutY(y >= bounds.max[1] ? null : y)}
+          />
+        )}
         {/* Готовность сцены не видна глазу: её ждёт агент в браузере перед снимком,
             а скринридер читает её как статус. */}
         {view && (
@@ -246,15 +256,6 @@ function GameScenePage() {
         busy={open.busy}
         error={open.error}
         onOpenChange={open.setOpen}
-        cut={
-          bounds && bounds.max[1] > bounds.min[1]
-            ? { min: bounds.min[1], max: bounds.max[1], value: sliderY }
-            : null
-        }
-        onCutChange={(y) =>
-          // Ползунок на самом верху — «без среза», как в редакторе.
-          setCutY(bounds && y >= bounds.max[1] ? null : y)
-        }
       >
         {master && view && <FogPanel fog={sceneFog} />}
         {figures.figures && (

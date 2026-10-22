@@ -1,12 +1,4 @@
-import {
-  Alert,
-  Anchor,
-  Slider,
-  Stack,
-  Switch,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Alert, Anchor, Stack, Switch, Text, Title } from '@mantine/core';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { GameSceneStatus } from 'shared';
@@ -21,15 +13,12 @@ interface SceneSidebarProps {
   busy: boolean;
   error: string | null;
   onOpenChange: (open: boolean) => void;
-  // Пределы и значение среза по высоте; null — сцена пустая или не загружена.
-  cut: { min: number; max: number; value: number } | null;
-  onCutChange: (y: number) => void;
   // Инструменты мастера (этап 6); у игрока их нет.
   children?: ReactNode;
 }
 
 // Панель страницы сцены: где мы, дорога в лобби, у мастера — «Открыта игрокам» и свойства
-// инструмента, и срез по высоте, как в редакторе карты.
+// инструмента. Срез по высоте — на сцене (CutRuler), как в редакторе карты.
 function SceneSidebar({
   gameId,
   gameName,
@@ -38,8 +27,6 @@ function SceneSidebar({
   busy,
   error,
   onOpenChange,
-  cut,
-  onCutChange,
   children,
 }: SceneSidebarProps) {
   return (
@@ -80,20 +67,6 @@ function SceneSidebar({
         {error && <Alert color="red">{error}</Alert>}
 
         {children}
-
-        {cut && (
-          <Stack gap={4}>
-            <Text size="sm">Срез по высоте: {cut.value}</Text>
-            <Slider
-              min={cut.min}
-              max={cut.max}
-              value={cut.value}
-              onChange={onCutChange}
-              label={null}
-              thumbLabel="Срез по высоте"
-            />
-          </Stack>
-        )}
       </Stack>
     </aside>
   );

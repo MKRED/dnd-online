@@ -4,7 +4,6 @@ import {
   Anchor,
   Divider,
   Group,
-  Slider,
   Stack,
   Text,
   Title,
@@ -32,9 +31,6 @@ interface MapSidebarProps {
   loadError: string | null;
   // Правка не прошла; сцена остаётся на месте.
   editError: string | null;
-  // Пределы и текущее значение среза; null — карта ещё не загружена или пустая.
-  cut: { min: number; max: number; value: number } | null;
-  onCutChange: (y: number) => void;
   loaded: boolean;
   // Карта загружена, но в ней нет ни одного блока.
   empty: boolean;
@@ -42,8 +38,8 @@ interface MapSidebarProps {
   children: ReactNode;
 }
 
-// Правая панель страницы карты: карта, свойства инструмента и срез. Сами инструменты —
-// на сцене (SceneToolbar), чтобы до них было ближе от того, что правишь.
+// Правая панель страницы карты: карта и свойства инструмента. Сами инструменты и срез
+// по высоте — на сцене (SceneToolbar, CutRuler), чтобы до них было ближе от того, что правишь.
 function MapSidebar({
   name,
   size,
@@ -52,8 +48,6 @@ function MapSidebar({
   panelTitle,
   loadError,
   editError,
-  cut,
-  onCutChange,
   loaded,
   empty,
   children,
@@ -106,21 +100,6 @@ function MapSidebar({
             {editError && <Alert color="red">{editError}</Alert>}
             {children}
           </>
-        )}
-
-        {/* Срез — внизу, под свойствами инструмента: его трогают реже, чем блок и поворот. */}
-        {cut && (
-          <Stack gap={4}>
-            <Text size="sm">Срез по высоте: {cut.value}</Text>
-            <Slider
-              min={cut.min}
-              max={cut.max}
-              value={cut.value}
-              onChange={onCutChange}
-              label={null}
-              thumbLabel="Срез по высоте"
-            />
-          </Stack>
         )}
       </Stack>
     </aside>

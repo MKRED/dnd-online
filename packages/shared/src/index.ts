@@ -1,6 +1,7 @@
 export * from './character.js';
 export * from './images.js';
 export * from './characterImages.js';
+export * from './characterModels.js';
 export * from './map/index.js';
 export * from './apiTokens.js';
 export * from './weapons.js';

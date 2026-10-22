@@ -9,6 +9,7 @@ import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BookmarksModule } from './bookmarks/bookmarks.module.js';
 import { CharacterImagesModule } from './character-images/character-images.module.js';
+import { CharacterModelsModule } from './character-models/character-models.module.js';
 import { CharactersModule } from './characters/characters.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { BlockGroupsModule } from './block-groups/block-groups.module.js';
@@ -32,6 +33,7 @@ const level = process.env.LOG_LEVEL ?? 'info';
     AuthModule,
     CharactersModule,
     CharacterImagesModule,
+    CharacterModelsModule,
     MapsModule,
     ItemsModule,
     ItemImagesModule,

@@ -3,6 +3,7 @@ export * from './refresh-tokens.js';
 export * from './characters.js';
 export * from './character-images.js';
 export * from './character-image-files.js';
+export * from './character-models.js';
 export * from './maps.js';
 export * from './map-chunks.js';
 export * from './map-ops.js';

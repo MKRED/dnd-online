@@ -6,6 +6,7 @@ import EditPageTitle from '../components/EditPageTitle';
 import {
   CharacterForm,
   CharacterGallery,
+  CharacterModelBlock,
   SheetLockAlert,
   fromCharacter,
   getCharacter,
@@ -106,6 +107,10 @@ function CharacterEditPage() {
             key={`gallery-${character.id}`}
             characterId={character.id}
             characterName={character.name}
+          />
+          <CharacterModelBlock
+            key={`model-${character.id}`}
+            characterId={character.id}
           />
           {/* Галерея — не лист и открыта всегда, а форму во время встречи не показываем:
               сохранить её сервер всё равно не даст. */}

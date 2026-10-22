@@ -20,8 +20,9 @@ function stubFetch(responses: { status: number; body?: unknown }[]): FetchMock {
   return fetchMock;
 }
 
-// Вторым запросом страница читает галерею картинок персонажа.
+// Вторым запросом страница читает галерею картинок персонажа, третьим — его 3D-модель.
 const EMPTY_GALLERY = { status: 200, body: [] };
+const NO_MODEL = { status: 200, body: { model: null } };
 
 function renderEditPage(id = sampleCharacter.id) {
   return renderWithProviders(
@@ -37,7 +38,11 @@ function renderEditPage(id = sampleCharacter.id) {
 // а при параллельных прогонах не укладывалась в стандартные 5 с.
 describe('CharacterEditPage', { timeout: 15_000 }, () => {
   it('заполняет форму данными персонажа', async () => {
-    stubFetch([{ status: 200, body: sampleCharacter }, EMPTY_GALLERY]);
+    stubFetch([
+      { status: 200, body: sampleCharacter },
+      EMPTY_GALLERY,
+      NO_MODEL,
+    ]);
     renderEditPage();
 
     expect(await screen.findByLabelText(/Имя/)).toHaveValue('Арагорн');
@@ -57,6 +62,7 @@ describe('CharacterEditPage', { timeout: 15_000 }, () => {
         },
       },
       EMPTY_GALLERY,
+      NO_MODEL,
     ]);
     renderEditPage();
 
@@ -71,6 +77,7 @@ describe('CharacterEditPage', { timeout: 15_000 }, () => {
     const fetchMock = stubFetch([
       { status: 200, body: sampleCharacter },
       EMPTY_GALLERY,
+      NO_MODEL,
       { status: 200, body: { ...sampleCharacter, name: 'Странник' } },
     ]);
     renderEditPage();
@@ -84,7 +91,7 @@ describe('CharacterEditPage', { timeout: 15_000 }, () => {
     );
 
     expect(await screen.findByText('Лист персонажа')).toBeInTheDocument();
-    const [url, init] = fetchMock.mock.calls[2];
+    const [url, init] = fetchMock.mock.calls[3];
     expect(url).toMatch(new RegExp(`/characters/${sampleCharacter.id}$`));
     expect(init?.method).toBe('PUT');
     const body = JSON.parse(init?.body as string) as Record<string, unknown>;

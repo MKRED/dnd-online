@@ -1,5 +1,14 @@
-import { getBlock, MATERIALS, rotateBox, SHAPES, type Rotation } from 'shared';
+import {
+  getBlock,
+  MATERIALS,
+  rotateBox,
+  SHAPES,
+  type Rotation,
+  type ShapeBox,
+} from 'shared';
 import { isoFaces } from './isoFaces';
+
+const FULL_CELL: ShapeBox = [0, 0, 0, 1, 1, 1];
 
 interface BlockSwatchProps {
   block: string;
@@ -22,6 +31,20 @@ function BlockSwatch({ block, rotation = 0, size = 36 }: BlockSwatchProps) {
       aria-hidden
       style={{ flex: 'none' }}
     >
+      {/* Контур всей клетки — у неполных форм видно, где в клетке лежит деталь:
+          плита внизу или вверху, стена у северного края. */}
+      {definition.shape !== 'cube' &&
+        isoFaces([FULL_CELL], color).map((face, index) => (
+          <polygon
+            key={`cell-${index}`}
+            points={face.points}
+            fill="none"
+            stroke="currentColor"
+            strokeOpacity={0.3}
+            strokeWidth={0.03}
+            strokeDasharray="0.08 0.06"
+          />
+        ))}
       {isoFaces(boxes, color).map((face, index) => (
         <polygon
           key={index}

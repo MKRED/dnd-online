@@ -1,6 +1,6 @@
 import { Modal, Stack, Text, TextInput } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useRef, useState, type ReactNode, type Ref } from 'react';
 import { getBlock, MATERIALS, SHAPE_LABELS, type MaterialName } from 'shared';
 import { blockTraits } from '../blockTraits';
 import { blocksOf, materialGroups, searchBlocks } from './blockGroups';
@@ -32,6 +32,16 @@ function BlockPickerModal({
     current?.material ?? 'stone',
   );
   const [query, setQuery] = useState('');
+  // Ряд форм под материалами: на телефоне он ниже экрана — после выбора материала
+  // прокручиваем к нему, иначе непонятно, что делать дальше.
+  const shapesRef = useRef<HTMLDivElement>(null);
+  const chooseMaterial = (name: MaterialName) => {
+    setMaterial(name);
+    shapesRef.current?.scrollIntoView?.({
+      block: 'nearest',
+      behavior: 'smooth',
+    });
+  };
   const found = searchBlocks(query);
   const shapes = blocksOf(material);
   const sameShape = (name: MaterialName) =>
@@ -95,14 +105,17 @@ function BlockPickerModal({
                     block={name}
                     label={MATERIALS[name].label}
                     selected={name === material}
-                    onClick={() => setMaterial(name)}
+                    onClick={() => chooseMaterial(name)}
                     onDoubleClick={() => onPick(sameShape(name))}
                   />
                 ))}
               </Section>
             ))}
 
-            <Section title={`Форма — ${MATERIALS[material].label}`}>
+            <Section
+              title={`Форма — ${MATERIALS[material].label}`}
+              sectionRef={shapesRef}
+            >
               {shapes.map((b) => (
                 <BlockTile
                   key={b.name}
@@ -127,13 +140,15 @@ function BlockPickerModal({
 
 function Section({
   title,
+  sectionRef,
   children,
 }: {
   title: string;
-  children: React.ReactNode;
+  sectionRef?: Ref<HTMLDivElement>;
+  children: ReactNode;
 }) {
   return (
-    <Stack gap={4}>
+    <Stack gap={4} ref={sectionRef}>
       <Text size="sm" fw={500}>
         {title}
       </Text>

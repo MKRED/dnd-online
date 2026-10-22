@@ -5,6 +5,12 @@
   gap: var(--mantine-spacing-xs);
 }
 
+@media (max-width: 48em) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
+  }
+}
+
 .tile {
   display: flex;
   flex-direction: column;

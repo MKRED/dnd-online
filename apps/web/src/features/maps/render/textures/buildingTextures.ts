@@ -65,3 +65,17 @@ export function iceTile(base: Rgb): Tile {
     return [...color, crack ? 220 : 170];
   });
 }
+
+// Тёмное дерево: тот же настил, но почерневший, с пятнами гнили и шляпками гвоздей.
+export function darkPlanksTile(base: Rgb): Tile {
+  const planks = planksTile(base);
+  return paintTile((x, y) => {
+    const i = (y * 16 + x) * 4;
+    const color: Rgb = [planks[i], planks[i + 1], planks[i + 2]];
+    if (y % 4 === 1 && (x === 1 || x === 14))
+      return mix(base, [150, 150, 150], 0.5);
+    if (valueNoise(x, y, 4, 34) > 0.7)
+      return mix(scale(color, 0.7), [40, 60, 30], 0.3);
+    return color;
+  });
+}

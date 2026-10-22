@@ -77,6 +77,18 @@ describe('buildChunkMesh', () => {
     expect(faceCount(mesh(map, [0, 0, 0]).opaque)).toBe(10);
   });
 
+  it('листва идёт к непрозрачным и не скрывает соседнюю листву', () => {
+    const map = mapWith([
+      { op: 'fillBox', from: [0, 0, 0], to: [1, 0, 0], block: 'leaves' },
+      set([0, 1, 0], 'stone'),
+    ]);
+    const { opaque, transparent } = mesh(map, [0, 0, 0]);
+    expect(transparent).toBeNull();
+    // Два куба листвы по 6 граней; камень над листвой рисует и нижнюю грань,
+    // а у листвы под камнем верх скрыт.
+    expect(faceCount(opaque)).toBe(6 + 5 + 6);
+  });
+
   it('скрывает грани и через границу чанков', () => {
     const map = mapWith([
       { op: 'fillBox', from: [15, 0, 0], to: [16, 0, 0], block: 'stone' },

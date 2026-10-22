@@ -14,10 +14,12 @@ const GREY_ZONE = /* glsl */ `
 
 function createBlockMaterial(transparent: boolean): MeshLambertMaterial {
   // Прозрачность стекла и льда — в альфе их плиток (рамка стекла плотнее середины).
+  // У непрозрачного материала alphaTest вырезает дыры листвы (CUTOUT_MATERIALS).
   const material = new MeshLambertMaterial({
     map: blockAtlasTexture(),
     transparent,
     depthWrite: !transparent,
+    alphaTest: transparent ? 0 : 0.5,
   });
   material.onBeforeCompile = (shader) => {
     shader.vertexShader = shader.vertexShader

@@ -22,8 +22,8 @@ describe('searchBlocks', () => {
   const names = (query: string) => searchBlocks(query).map((b) => b.name);
 
   it('слова запроса — начала слов названия, в любом порядке', () => {
-    expect(names('кам ступ')).toEqual(['stone_stairs']);
-    expect(names('ступ кам')).toEqual(['stone_stairs']);
+    expect(names('кирп ступ')).toEqual(['brick_stairs']);
+    expect(names('ступ кирп')).toEqual(['brick_stairs']);
   });
 
   it('одно слово находит форму у всех материалов', () => {

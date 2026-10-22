@@ -12,6 +12,7 @@ import {
 import type { BlockAppearance, BlockLookup } from './blockLookup';
 import { BufferBuilder, type MeshBuffers } from './bufferBuilder';
 import { faceUvs } from './faceUv';
+import { CUTOUT_MATERIALS } from './textures/materialTextures';
 
 export type { MeshBuffers };
 
@@ -37,11 +38,13 @@ export interface MeshOptions {
 // Грань коробки на границе клетки скрыта, только если соседняя клетка закрывает её
 // целиком: сосед — полный куб, непрозрачный или того же прозрачного типа (стекло к стеклу).
 // Плита рядом с кубом не скрывает его боковую грань, куб рядом со стеклом — тоже.
+// Листва листву не скрывает: сквозь дыры видны листья в глубине кроны.
 function neighbourHidesFace(
   self: BlockAppearance,
   neighbour: BlockAppearance | null,
 ): boolean {
   if (!neighbour || neighbour.shape !== 'cube') return false;
+  if (CUTOUT_MATERIALS.has(neighbour.materialName)) return false;
   return neighbour.material.opaque || neighbour.typeId === self.typeId;
 }
 
@@ -94,7 +97,9 @@ export function buildChunkMesh(
     if (!self) continue;
     const cell = cellFromChunk(chunkCoord, index);
     if (isHidden(cell)) continue;
-    const target = self.material.opaque ? opaque : transparent;
+    const solid =
+      self.material.opaque || CUTOUT_MATERIALS.has(self.materialName);
+    const target = solid ? opaque : transparent;
     const dim =
       seen !== undefined &&
       (seen === null || (seen[index >> 3] & (1 << (index & 7))) === 0);

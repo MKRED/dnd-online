@@ -14,10 +14,34 @@ export interface MaterialGroup {
 // shared и забыли сюда), попадает в «Прочие» — не теряется.
 const GROUPS: readonly { label: string; materials: readonly MaterialName[] }[] =
   [
-    { label: 'Постройки', materials: ['stone', 'brick', 'wood', 'glass'] },
+    {
+      label: 'Постройки',
+      materials: [
+        'stone',
+        'cobble',
+        'darkstone',
+        'mossy',
+        'brick',
+        'wood',
+        'darkwood',
+        'glass',
+      ],
+    },
     {
       label: 'Природа',
-      materials: ['dirt', 'grass', 'sand', 'ice', 'water'],
+      materials: [
+        'dirt',
+        'grass',
+        'path',
+        'scorched',
+        'sand',
+        'snow',
+        'leaves',
+        'rubble',
+        'bones',
+        'ice',
+        'water',
+      ],
     },
     { label: 'Опасные', materials: ['lava', 'acid', 'swamp', 'fire'] },
   ];

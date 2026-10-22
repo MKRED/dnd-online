@@ -5,12 +5,16 @@ import { hexToRgb, TILE_SIZE } from './pixels';
 
 const MATERIAL_NAMES = Object.keys(MATERIALS) as MaterialName[];
 
+// Средний цвет без сквозных пикселей (дыры листвы цвета не имеют).
 function meanColor(tile: Uint8ClampedArray): number[] {
   const sum = [0, 0, 0];
+  let count = 0;
   for (let i = 0; i < tile.length; i += 4) {
+    if (tile[i + 3] === 0) continue;
     for (let c = 0; c < 3; c++) sum[c] += tile[i + c];
+    count++;
   }
-  return sum.map((value) => value / (tile.length / 4));
+  return sum.map((value) => value / count);
 }
 
 describe('materialTextures', () => {
@@ -46,6 +50,24 @@ describe('materialTextures', () => {
     const last = TILE_SIZE * (TILE_SIZE - 1) * 4;
     expect(g0).toBeGreaterThan(r0);
     expect(grass.side[last + 1]).toBeLessThan(grass.side[last]);
+  });
+
+  it('gives a path a trodden top and a dirt side with its rim on top', () => {
+    const path = materialTextures('path');
+    const dirt = materialTextures('dirt');
+    expect(path.side).not.toEqual(path.top);
+    expect(path.bottom).toEqual(dirt.top);
+    // Верхний ряд бока — край тропы, он светлее земли.
+    expect(path.side[0]).toBeGreaterThan(path.side[TILE_SIZE * 8 * 4]);
+  });
+
+  it('cuts holes through leaves and keeps the rest solid', () => {
+    const { top } = materialTextures('leaves');
+    const alphas = top.filter((_, i) => i % 4 === 3);
+    const holes = alphas.filter((alpha) => alpha === 0).length;
+    expect(holes).toBeGreaterThan(10);
+    expect(holes).toBeLessThan(80);
+    expect(alphas.every((alpha) => alpha === 0 || alpha === 255)).toBe(true);
   });
 
   it('keeps glass see-through in the middle and solid at the frame', () => {

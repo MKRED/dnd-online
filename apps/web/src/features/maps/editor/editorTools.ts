@@ -40,6 +40,11 @@ export function isRegionTool(tool: EditorTool): tool is RegionTool {
   return tool === 'fill' || tool === 'hollow' || tool === 'replace';
 }
 
+// Инструменты, которые ставят блок: у них в панели выбор блока и поворот.
+export function buildsBlocks(tool: EditorTool): boolean {
+  return tool === 'place' || isRegionTool(tool);
+}
+
 // Клетки под курсором: hit — блок, в который попал луч (null для земли),
 // place — соседняя клетка со стороны грани, куда встанет новый блок. point и
 // normal — сама точка попадания и целая нормаль грани: по ним проверка хода

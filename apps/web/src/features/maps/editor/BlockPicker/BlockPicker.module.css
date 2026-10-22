@@ -1,0 +1,72 @@
+/* Сетка плиток: сколько влезет в ширину окна, на телефоне — по три-четыре. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: var(--mantine-spacing-xs);
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 4px;
+  border: 1px solid transparent;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.tile:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 1px;
+}
+
+.tile[data-selected] {
+  border-color: var(--mantine-primary-color-filled);
+  background: var(--mantine-primary-color-light);
+}
+
+.tileLabel {
+  overflow-wrap: anywhere;
+}
+
+/* Кнопка текущего блока в панели: миниатюра, название и «Сменить (B)». */
+.current {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-default);
+}
+
+.current:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+/* Недавние в панели: маленькие плитки одной строкой. */
+.recent {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.recentTile {
+  display: flex;
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.recentTile:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.recentTile[data-selected] {
+  border-color: var(--mantine-primary-color-filled);
+}

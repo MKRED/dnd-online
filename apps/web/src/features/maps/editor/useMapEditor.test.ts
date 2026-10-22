@@ -153,3 +153,27 @@ describe('useMapEditor, ластик', () => {
     ]);
   });
 });
+
+describe('useMapEditor, выбор блока', () => {
+  it('B открывает окно у инструментов блоков; пока оно открыто, цифры молчат', () => {
+    const { result } = setup();
+    press('KeyB');
+    expect(result.current.pickerOpen).toBe(false);
+    press('Digit2');
+    press('KeyB');
+    expect(result.current.pickerOpen).toBe(true);
+    press('Digit4');
+    expect(result.current.tool).toBe('place');
+  });
+
+  it('блок из окна встаёт первым в недавние', () => {
+    const { result } = setup();
+    act(() => result.current.pickBlock('wood'));
+    act(() => result.current.pickBlock('brick_slab'));
+    expect(result.current.block).toBe('brick_slab');
+    expect(result.current.recentBlocks.slice(0, 2)).toEqual([
+      'brick_slab',
+      'wood',
+    ]);
+  });
+});

@@ -7,7 +7,13 @@ import {
   type Rotation,
 } from 'shared';
 import { useKeyCodes } from '../useKeyCodes';
-import { EDITOR_TOOLS, type EditorTool, type SceneEditor } from './editorTools';
+import {
+  buildsBlocks,
+  EDITOR_TOOLS,
+  type EditorTool,
+  type SceneEditor,
+} from './editorTools';
+import { readRecentBlocks, saveRecentBlocks, withRecent } from './BlockPicker';
 import { nextEraseMode, type EraseMode } from './eraseModes';
 import { blockSceneEditor, type Anchor } from './blockSceneEditor';
 import type { WalkTest } from '../walkTest';
@@ -57,6 +63,15 @@ export function useMapEditor({
   const [block, setBlock] = useState('stone');
   const [rotation, setRotation] = useState<Rotation>(0);
   const [height, setHeight] = useState(1);
+  // Недавние блоки и открытое окно выбора блока (BlockPicker).
+  const [recentBlocks, setRecentBlocks] = useState(readRecentBlocks);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickBlock = (name: string) => {
+    setBlock(name);
+    const next = withRecent(recentBlocks, name);
+    setRecentBlocks(next);
+    saveRecentBlocks(next);
+  };
   const [eraseMode, setEraseModeState] = useState<EraseMode>('block');
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   // Почему клик ничего не сделал (связное стирание слишком большой постройки).
@@ -68,6 +83,7 @@ export function useMapEditor({
     setToolState(next);
     setAnchor(null);
     setNotice(null);
+    setPickerOpen(false);
   };
   const setEraseMode = (next: EraseMode) => {
     setEraseModeState(next);
@@ -87,6 +103,8 @@ export function useMapEditor({
     [
       'Escape',
       () => {
+        // Esc закрывает окно выбора блока, начатую область оставляем.
+        if (pickerOpen) return;
         setAnchor(null);
         setNotice(null);
         if (tool === 'objects') objects.escape();
@@ -107,8 +125,12 @@ export function useMapEditor({
       Delete: () => {
         if (tool === 'objects') objects.remove();
       },
+      KeyB: () => {
+        if (buildsBlocks(tool)) setPickerOpen(true);
+      },
     },
-    keysActive,
+    // Пока открыто окно выбора блока, цифры не должны менять инструмент за ним.
+    keysActive && !pickerOpen,
   );
 
   const walkPick = walk?.pick;
@@ -165,6 +187,11 @@ export function useMapEditor({
     setTool,
     block,
     setBlock,
+    // Блок из окна выбора: становится первым в недавних.
+    pickBlock,
+    recentBlocks,
+    pickerOpen,
+    setPickerOpen,
     rotation,
     setRotation,
     height,

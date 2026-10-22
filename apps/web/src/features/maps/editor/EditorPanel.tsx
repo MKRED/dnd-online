@@ -3,30 +3,16 @@ import {
   Group,
   NumberInput,
   SegmentedControl,
-  Select,
   Stack,
   Text,
 } from '@mantine/core';
 import type { ReactNode } from 'react';
-import {
-  BLOCK_CATALOG,
-  getBlock,
-  isRotation,
-  MATERIALS,
-  ROTATIONS,
-} from 'shared';
+import { getBlock, isRotation, ROTATIONS } from 'shared';
+import BlockPicker from './BlockPicker';
 import { blockTraits } from './blockTraits';
-import { isRegionTool, type EditorTool } from './editorTools';
+import { buildsBlocks, isRegionTool, type EditorTool } from './editorTools';
 import { ERASE_MODE_LABELS, ERASE_MODES, type EraseMode } from './eraseModes';
 import type { MapEditor } from './useMapEditor';
-
-// Каталог блоков, сгруппированный по материалу.
-const BLOCK_OPTIONS = Object.values(MATERIALS).map((material) => ({
-  group: material.label,
-  items: [...BLOCK_CATALOG.values()]
-    .filter((block) => MATERIALS[block.material] === material)
-    .map((block) => ({ value: block.name, label: block.label })),
-}));
 
 // Подсказки ластика — по режиму, ниже (ERASE_HINTS).
 const HINTS: Record<Exclude<EditorTool, 'erase'>, string> = {
@@ -64,11 +50,7 @@ function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
   const { tool, anchor, eraseMode } = editor;
   const erasesBetween =
     tool === 'erase' && (eraseMode === 'wall' || eraseMode === 'region');
-  const builds =
-    tool !== 'view' &&
-    tool !== 'erase' &&
-    tool !== 'walk' &&
-    tool !== 'objects';
+  const builds = buildsBlocks(tool);
 
   return (
     <Stack gap="sm">
@@ -88,14 +70,15 @@ function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
       )}
 
       {builds && (
-        <Select
-          label="Блок"
-          data={BLOCK_OPTIONS}
-          value={editor.block}
-          onChange={(value) => value && editor.setBlock(value)}
-          searchable
-          allowDeselect={false}
-          maxDropdownHeight={320}
+        <BlockPicker
+          block={editor.block}
+          rotation={editor.rotation}
+          recent={editor.recentBlocks}
+          opened={editor.pickerOpen}
+          onOpen={() => editor.setPickerOpen(true)}
+          onClose={() => editor.setPickerOpen(false)}
+          onPick={editor.pickBlock}
+          onSelect={editor.setBlock}
         />
       )}
 

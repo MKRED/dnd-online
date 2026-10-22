@@ -39,7 +39,8 @@ function SceneToolbar({
             return (
               <Tooltip
                 key={value}
-                label={`${TOOL_LABELS[value]} (${index + 1})`}
+                // Клавиша ластика при ластике переключает его режим (useMapEditor).
+                label={`${TOOL_LABELS[value]} (${index + 1}${value === 'erase' ? ', ещё раз — режим' : ''})`}
                 position={tooltipSide}
                 withArrow
               >

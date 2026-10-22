@@ -1,6 +1,7 @@
 import {
   cellTypeId,
   insideMap,
+  mapBounds,
   readCell,
   type MapOp,
   type SizedMapState,
@@ -59,9 +60,11 @@ export function blockSceneEditor({
 }: BlockSceneEditorOptions): SceneEditor {
   const between = erasesBetween(tool, eraseMode);
   const { height } = settings;
+  // Верх стены — верхний блок карты: стена стирается до самого верха, как столбец.
+  const top = between ? (mapBounds(state.store)?.max[1] ?? 0) : 0;
   const region = between
     ? (a: Vec3, b: Vec3) =>
-        eraseMode === 'wall' ? wallBox(a, b, height) : regionBox(a, b, height)
+        eraseMode === 'wall' ? wallBox(a, b, top) : regionBox(a, b, height)
     : undefined;
   // Угол стирания можно взять и на земле: иначе стену не стереть до самого низа.
   const pickCell = between

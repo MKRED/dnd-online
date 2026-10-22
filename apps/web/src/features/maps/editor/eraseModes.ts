@@ -1,5 +1,6 @@
 import {
   AIR_NAME,
+  boxFromCorners,
   cellTypeId,
   getBlock,
   insideMap,
@@ -9,7 +10,6 @@ import {
   type SizedMapState,
   type Vec3,
 } from 'shared';
-import { regionBox } from './editorTools';
 
 // Режимы ластика: блок — один клик, стена и область — два угла, связное — всё, что
 // соединено с блоком под курсором и сделано из того же материала.
@@ -26,13 +26,15 @@ export const ERASE_MODE_LABELS: Record<EraseMode, string> = {
 export const nextEraseMode = (mode: EraseMode): EraseMode =>
   ERASE_MODES[(ERASE_MODES.indexOf(mode) + 1) % ERASE_MODES.length];
 
-// Стена — вертикальный прямоугольник толщиной в клетку: второй угол прижимается к оси,
-// вдоль которой мышь ушла дальше от первого, — так косой клик не стирает лишнего.
-// Высота, как у областей, наращивает её вверх от верхнего угла.
-export function wallBox(a: Vec3, b: Vec3, height: number): Box3 {
+// Стена — как столбец, только между двумя точками на плане (так решил пользователь
+// 2026-10-22): вертикальный прямоугольник толщиной в клетку от нижнего из двух кликов
+// до верха постройки top. Второй конец прижимается к оси, вдоль которой мышь ушла
+// дальше от первого, — так косой клик не стирает лишнего.
+export function wallBox(a: Vec3, b: Vec3, top: number): Box3 {
   const alongX = Math.abs(b[0] - a[0]) >= Math.abs(b[2] - a[2]);
   const end: Vec3 = alongX ? [b[0], b[1], a[2]] : [a[0], b[1], b[2]];
-  return regionBox(a, end, height);
+  const { min, max } = boxFromCorners(a, end);
+  return { min, max: [max[0], Math.max(top, max[1]), max[2]] };
 }
 
 // Связное стирание: сколько клеток самое большее обходим. Больше — это уже пол всей

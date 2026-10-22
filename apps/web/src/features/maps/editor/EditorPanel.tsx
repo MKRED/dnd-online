@@ -30,7 +30,7 @@ const HINTS: Record<Exclude<EditorTool, 'erase'>, string> = {
 
 const ERASE_HINTS: Record<EraseMode, string> = {
   block: 'Клик по блоку удаляет его.',
-  wall: 'Два клика задают концы стены: стирается вертикальный прямоугольник между ними, толщиной в клетку, вдоль той оси, куда курсор ушёл дальше.',
+  wall: 'Два клика задают концы стены: стирается всё между ними от нижнего клика до самого верха, толщиной в клетку, вдоль той оси, куда курсор ушёл дальше.',
   region: 'Два клика задают углы области: всё внутри стирается.',
   connected:
     'Клик по блоку стирает всю постройку из того же материала, соединённую с ним гранями.',
@@ -48,8 +48,8 @@ interface EditorPanelProps {
 // отмена и возврат — на сцене (SceneToolbar).
 function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
   const { tool, anchor, eraseMode } = editor;
-  const erasesBetween =
-    tool === 'erase' && (eraseMode === 'wall' || eraseMode === 'region');
+  // Высоту задают у области ластика; стена стирается до самого верха.
+  const erasesRegion = tool === 'erase' && eraseMode === 'region';
   const builds = buildsBlocks(tool);
 
   return (
@@ -103,7 +103,7 @@ function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
         </Stack>
       )}
 
-      {(isRegionTool(tool) || erasesBetween) && (
+      {(isRegionTool(tool) || erasesRegion) && (
         <NumberInput
           label="Высота области"
           description="Слоёв над верхним углом, включая его"

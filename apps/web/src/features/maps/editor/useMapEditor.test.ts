@@ -143,6 +143,37 @@ describe('useMapEditor, ластик', () => {
     expect(result.current.anchor).toBeNull();
   });
 
+  it('стена: два клика по нижнему ряду стирают её до самого верха', () => {
+    const { result, apply } = setupWithMap();
+    press('Digit3');
+    act(() => result.current.setEraseMode('wall'));
+    act(() => result.current.sceneEditor?.onPick(onBlock([0, 0, 0])));
+    act(() => result.current.sceneEditor?.onPick(onBlock([4, 0, 0])));
+    expect(apply).toHaveBeenCalledWith([
+      { op: 'fillBox', from: [0, 0, 0], to: [4, 2, 0], block: 'air' },
+    ]);
+  });
+
+  it('блок: клик стирает один блок', () => {
+    const { result, apply } = setupWithMap();
+    press('Digit3');
+    act(() => result.current.sceneEditor?.onPick(onBlock([1, 1, 0])));
+    expect(apply).toHaveBeenCalledWith([
+      { op: 'setBlock', at: [1, 1, 0], block: 'air' },
+    ]);
+  });
+
+  it('область: два угла стирают коробку между ними', () => {
+    const { result, apply } = setupWithMap();
+    press('Digit3');
+    act(() => result.current.setEraseMode('region'));
+    act(() => result.current.sceneEditor?.onPick(onBlock([3, 1, 0])));
+    act(() => result.current.sceneEditor?.onPick(onBlock([1, 0, 0])));
+    expect(apply).toHaveBeenCalledWith([
+      { op: 'fillBox', from: [1, 0, 0], to: [3, 1, 0], block: 'air' },
+    ]);
+  });
+
   it('связное: один клик стирает всю постройку', () => {
     const { result, apply } = setupWithMap();
     press('Digit3');

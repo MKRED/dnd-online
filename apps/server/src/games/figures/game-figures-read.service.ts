@@ -6,16 +6,18 @@ import {
 } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import type { GameFigures } from 'shared';
+import type { CharacterModelFormat, GameFigures } from 'shared';
 import { DatabaseService } from '../../database/database.service.js';
 import {
   characterImageFiles,
   characterImages,
+  characterModels,
   gameFigures,
   games,
 } from '../../database/schema/index.js';
 import {
   FIGURE_NO_IMAGE,
+  FIGURE_NO_MODEL,
   NO_ACTIVE_SCENE,
   SCENE_CLOSED,
   SCENE_MEMBERS_ONLY,
@@ -95,20 +97,12 @@ export class GameFiguresReadService {
     const t0 = Date.now();
     const { db } = this.databaseService;
     try {
-      const masterId = await this.assertParticipant(userId, gameId);
-      const [figure] = await db
-        .select({ sceneOpen: games.sceneOpen })
-        .from(gameFigures)
-        .innerJoin(games, eq(games.id, gameFigures.gameId))
-        .where(
-          and(
-            eq(gameFigures.gameId, gameId),
-            eq(gameFigures.characterId, characterId),
-          ),
-        );
-      if (!figure || (masterId !== userId && !figure.sceneOpen)) {
-        throw new NotFoundException(FIGURE_NO_IMAGE);
-      }
+      await this.assertFigureVisible(
+        userId,
+        gameId,
+        characterId,
+        FIGURE_NO_IMAGE,
+      );
       const [row] = await db
         .select({ data: characterImageFiles.data })
         .from(characterImageFiles)
@@ -142,6 +136,72 @@ export class GameFiguresReadService {
         'Game figure image lookup failed',
       );
       throw err;
+    }
+  }
+
+  // 3D-модель персонажа фигурки (docs/plan/character-models.md, этап 3) — тем же, кто
+  // видит фигурку, как и миниатюра: сам персонаж может быть закрыт.
+  async model(
+    userId: string,
+    gameId: string,
+    characterId: string,
+  ): Promise<{ data: Buffer; format: CharacterModelFormat }> {
+    const t0 = Date.now();
+    const { db } = this.databaseService;
+    try {
+      await this.assertFigureVisible(
+        userId,
+        gameId,
+        characterId,
+        FIGURE_NO_MODEL,
+      );
+      const [row] = await db
+        .select({ data: characterModels.data, format: characterModels.format })
+        .from(characterModels)
+        .where(eq(characterModels.characterId, characterId));
+      this.logger.debug(
+        {
+          durationMs: Date.now() - t0,
+          userId,
+          gameId,
+          characterId,
+          found: !!row,
+        },
+        'Game figure model lookup',
+      );
+      if (!row) throw new NotFoundException(FIGURE_NO_MODEL);
+      return row;
+    } catch (err: unknown) {
+      if (err instanceof HttpException) throw err;
+      this.logger.error(
+        { err, userId, gameId, characterId },
+        'Game figure model lookup failed',
+      );
+      throw err;
+    }
+  }
+
+  // Фигурка персонажа есть в игре, и смотрящий её видит: мастер — всегда, участник —
+  // пока сцена открыта. Иначе — 404 с текстом того, что искали.
+  private async assertFigureVisible(
+    userId: string,
+    gameId: string,
+    characterId: string,
+    notFound: string,
+  ): Promise<void> {
+    const masterId = await this.assertParticipant(userId, gameId);
+    const [figure] = await this.databaseService.db
+      .select({ sceneOpen: games.sceneOpen })
+      .from(gameFigures)
+      .innerJoin(games, eq(games.id, gameFigures.gameId))
+      .where(
+        and(
+          eq(gameFigures.gameId, gameId),
+          eq(gameFigures.characterId, characterId),
+        ),
+      );
+    if (!figure || (masterId !== userId && !figure.sceneOpen)) {
+      throw new NotFoundException(notFound);
     }
   }
 

@@ -1,5 +1,10 @@
 import type { Texture } from 'three';
-import { CREATURE_SIZES, type CreatureHealth } from 'shared';
+import {
+  CREATURE_SIZES,
+  type CharacterModelFit,
+  type CreatureHealth,
+} from 'shared';
+import { ModelFigure, type LoadedModel } from '../../../models';
 import {
   facingAngle,
   type SceneObject,
@@ -26,6 +31,13 @@ const PLINTH = '#2b2622';
 const THICKNESS = 0.05;
 const PLINTH_HEIGHT = 0.07;
 
+// 3D-модель вместо карточки (docs/plan/character-models.md, этап 3).
+export interface CardModel {
+  model: LoadedModel;
+  fit: CharacterModelFit;
+  color: string | null;
+}
+
 interface CreatureCardProps {
   object: Pick<SceneObject, 'base' | 'footprint' | 'blocked'>;
   look: CreatureLook;
@@ -33,6 +45,8 @@ interface CreatureCardProps {
   texture: Texture | null;
   // Здоровье в игре (этап 8): на нуле — серая рамка и поза из creaturePose.
   health?: CreatureHealth | null;
+  // Есть и загрузилась — стоит она, а не карточка; гроб у погибшего остаётся.
+  model?: CardModel | null;
 }
 
 // Существо — объёмный жетон, как фигурка на игровом поле: толстая карточка в
@@ -40,7 +54,13 @@ interface CreatureCardProps {
 // взгляду существа (туда же, куда стрелка на полу), так поворот виден по самому
 // жетону. Высота — рост размера, на полу — подставка во всё место. Без картинки —
 // первая буква имени, у заглушки — «?». Подставка на полу круглая, как у миниатюры.
-function CreatureCard({ object, look, texture, health }: CreatureCardProps) {
+function CreatureCard({
+  object,
+  look,
+  texture,
+  health,
+  model,
+}: CreatureCardProps) {
   const pose = creaturePose(health, look.side === 'pc');
   const frame =
     look.missing || pose !== 'standing' ? FRAME.missing : FRAME[look.side];
@@ -105,6 +125,14 @@ function CreatureCard({ object, look, texture, health }: CreatureCardProps) {
               picture={texture ?? letter}
             />
           </>
+        ) : model ? (
+          <ModelFigure
+            model={model.model}
+            footprint={object.footprint}
+            fit={model.fit}
+            color={model.color}
+            lying={pose === 'lying'}
+          />
         ) : (
           card
         )}

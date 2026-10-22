@@ -19,6 +19,16 @@ export function figureImagePath(
   return `/games/${gameId}/figures/${figure.character.id}/image?i=${image.id}&v=${image.thumbVersion}`;
 }
 
+// 3D-модель фигурки (docs/plan/character-models.md, этап 3): версия в адресе — новая
+// загрузка не берётся из кеша.
+export function figureModelPath(
+  gameId: string,
+  figure: Pick<GameFigure, 'character'>,
+  version: number,
+): string {
+  return `/games/${gameId}/figures/${figure.character.id}/model?v=${version}`;
+}
+
 // Правки отвечают фигурками глазами того, кто правил.
 const figuresBase = (gameId: string) => `/games/${gameId}/figures`;
 

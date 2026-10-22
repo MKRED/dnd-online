@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { GameFigures } from 'shared';
-import { figureImagePath, getGameFigures } from '../../../features/games';
+import {
+  figureImagePath,
+  figureModelPath,
+  getGameFigures,
+} from '../../../features/games';
 import type { FigureInput } from '../../../features/maps/MapScene';
 import { ApiError } from '../../../lib/apiRequest';
 
@@ -42,6 +46,12 @@ export function useSceneFigures(gameId: string, sceneId: string | null) {
         facing: figure.facing,
         size: figure.size,
         image: figureImagePath(gameId, figure),
+        model: figure.model && {
+          path: figureModelPath(gameId, figure, figure.model.version),
+          format: figure.model.format,
+          color: figure.model.color,
+          fit: figure.model.fit,
+        },
         selectable: figure.canMove,
         health: figure.health,
       })),

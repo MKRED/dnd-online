@@ -30,6 +30,13 @@ export interface CharacterModel {
   updatedAt: string;
 }
 
+// Модель фигурки на сцене — без размера файла и даты: байты берут по версии
+// маршрутом игры (docs/plan/character-models.md, этап 3).
+export type FigureModel = Pick<
+  CharacterModel,
+  'format' | 'version' | 'color' | 'fit'
+>;
+
 // Ответ GET /characters/:id/model.
 export interface CharacterModelView {
   model: CharacterModel | null;

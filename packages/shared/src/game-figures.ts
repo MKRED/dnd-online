@@ -1,4 +1,5 @@
 import type { CharacterMainImage } from './characterImages.js';
+import type { FigureModel } from './characterModels.js';
 import type { GameEventCharacter } from './game-events.js';
 import type { CreatureHealth } from './hitPoints.js';
 import type { Vec3 } from './map/coords.js';
@@ -23,6 +24,8 @@ export interface GameFigure {
   size: CreatureSize;
   // Миниатюра основной картинки персонажа; null — картинки нет.
   image: CharacterMainImage | null;
+  // 3D-модель персонажа — стоит вместо карточки (docs/plan/character-models.md); null — нет.
+  model: FigureModel | null;
   // Скорость из листа с эффектами, в футах.
   speed: number;
   // Скорость лазания с эффектами (своей в листе нет — только от эффектов); null — нет.

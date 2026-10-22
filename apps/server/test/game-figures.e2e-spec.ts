@@ -239,6 +239,45 @@ describe('game figures (e2e)', () => {
     await m.get(unknown).expect(404);
   });
 
+  // 3D-модель фигурки (docs/plan/character-models.md, этап 3): те же правила, что у
+  // миниатюры, и описание модели в списке фигурок.
+  it('модель фигурки видит мастер и участник открытой сцены', async () => {
+    const g = await createSceneGame(user, png, 'gfg_model');
+    const m = g.master.agent;
+    await addScene(m, g.gameId, g.mapId);
+    const [figure] = (await figures(m, g.gameId)).figures;
+    expect(figure.model).toBeNull();
+    const url = `/api/games/${g.gameId}/figures/${figure.character.id}/model?v=1`;
+    await m.get(url).expect(404);
+
+    // Двоичный STL из двух пустых треугольников.
+    const stl = Buffer.alloc(84 + 2 * 50);
+    stl.writeUInt32LE(2, 80);
+    await g.player.agent
+      .put(`/api/characters/${figure.character.id}/model`)
+      .attach('file', stl, 'hero.stl')
+      .expect(200);
+    expect((await figures(m, g.gameId)).figures[0].model).toEqual({
+      format: 'stl',
+      version: 1,
+      color: expect.stringMatching(/^#[0-9a-f]{6}$/) as unknown,
+      fit: { scale: 1, turn: 0, up: 'z' },
+    });
+
+    const res = await m.get(url).responseType('blob').expect(200);
+    expect(res.headers['content-type']).toContain('model/stl');
+    expect((res.body as Buffer).equals(stl)).toBe(true);
+    const second = await seatSecond(g.gameId, 'gfg_model');
+    // Сцена закрыта — участнику не отдают, постороннему — никогда.
+    await second.agent.get(url).expect(404);
+    await (await user('gfg_model_stranger')).agent.get(url).expect(403);
+    await m
+      .put(`/api/games/${g.gameId}/scenes/open`)
+      .send({ open: true })
+      .expect(200);
+    await second.agent.get(url).expect(200);
+  });
+
   // Игра с открытой активной сценой: фигурка игрока на стартовой точке [0, 1, 0],
   // гоблин — на [1, 1, 0], пол — камень на y = 0 (стоят на y = 1).
   async function opened(prefix: string) {

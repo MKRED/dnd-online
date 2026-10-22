@@ -5,10 +5,15 @@ import {
   type CreatureHealth,
   type CreatureSize,
   type Facing,
+  type FigureModel,
   type MapState,
   type Point3,
   type Vec3,
 } from 'shared';
+
+export type FigureModelInput = Pick<FigureModel, 'format' | 'color' | 'fit'> & {
+  path: string;
+};
 
 // Фигурка персонажа для сцены (docs/plan/done/game.md, этап 7): что знает о ней карта — без
 // игры, запаса движения и прав.
@@ -20,6 +25,8 @@ export interface FigureInput {
   size: CreatureSize;
   // Путь миниатюры в API; null — картинки нет.
   image: string | null;
+  // 3D-модель: путь байтов в API (с версией) и как её ставить; нет — карточка.
+  model?: FigureModelInput | null;
   // Смотрящий может выбрать фигурку и водить её.
   selectable: boolean;
   // Метка здоровья в игре (этап 8); у тени её нет.

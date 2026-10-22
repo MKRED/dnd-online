@@ -3,10 +3,10 @@ import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useState } from 'react';
 import type { MapState } from 'shared';
 import classes from '../MapScene.module.css';
-import CreatureCard from '../objects/CreatureCard';
 import { useObjectTextures } from '../objects/useObjectTextures';
 import GhostGroup from '../objects/GhostGroup';
 import HealthMark from '../objects/HealthMark';
+import FigureBody from './FigureBody';
 import { layoutFigures, type FigureInput } from './figureLayout';
 import { useFigureDrag, type FigureDragHandlers } from './useFigureDrag';
 
@@ -19,7 +19,7 @@ interface FigureLayerProps extends FigureDragHandlers {
 }
 
 // Фигурки персонажей на сцене игры (docs/plan/done/game.md, этап 7): стоячие карточки, как
-// существа карты, с зелёной рамкой. Наведение показывает имя и не перехватывает событие;
+// существа карты, с зелёной рамкой, или 3D-модель персонажа (docs/plan/character-models.md). Наведение показывает имя и не перехватывает событие;
 // фигурку, которую смотрящий водит, выбирают щелчком и тянут мышью (useFigureDrag).
 function FigureLayer({
   map,
@@ -50,19 +50,9 @@ function FigureLayer({
 
   const tip = visible.find((figure) => figure.id === hovered);
   const card = (figure: (typeof all)[number]) => (
-    <CreatureCard
-      object={figure}
-      look={{
-        kind: 'creature',
-        side: 'pc',
-        size: figure.size,
-        facing: figure.facing,
-        image: figure.image,
-        letter: figure.letter,
-        missing: false,
-      }}
+    <FigureBody
+      figure={figure}
       texture={(figure.image && textures.get(figure.image)) || null}
-      health={figure.health}
     />
   );
   return (

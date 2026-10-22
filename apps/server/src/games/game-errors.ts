@@ -48,6 +48,7 @@ export const SCENE_NO_RESIZE =
 export const SCENE_NOTHING_TO_UNDO = 'Нечего отменять';
 export const SCENE_NOTHING_TO_REDO = 'Нечего возвращать';
 export const FIGURE_NO_IMAGE = 'У фигурки нет картинки';
+export const FIGURE_NO_MODEL = 'У фигурки нет 3D-модели';
 export const FIGURE_NOT_FOUND = 'Фигурки нет на сцене';
 export const FIGURE_NOT_YOURS = 'Эту фигурку водит другой игрок';
 export const MASTER_ONLY_FIGURES =

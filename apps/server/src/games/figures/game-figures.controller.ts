@@ -15,6 +15,7 @@ import {
 import type { Response } from 'express';
 import { AuthGuard, type AuthenticatedRequest } from '../../auth/auth.guard.js';
 import { MoveFigureDto, PlaceFigureDto } from './dto/figure.dto.js';
+import { MODEL_CONTENT_TYPES } from '../../character-models/model-content-types.js';
 import { GameFiguresReadService } from './game-figures-read.service.js';
 import { GameFiguresService } from './game-figures.service.js';
 
@@ -105,6 +106,26 @@ export class GameFiguresController {
     res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
     return new StreamableFile(data, {
       type: 'image/webp',
+      length: data.length,
+    });
+  }
+
+  // Модель — как миниатюра: клиент добавляет версию в адрес, удачный ответ кешируется.
+  @Get('figures/:characterId/model')
+  async model(
+    @Req() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('characterId', ParseUUIDPipe) characterId: string,
+  ) {
+    const { data, format } = await this.readService.model(
+      req.user.sub,
+      id,
+      characterId,
+    );
+    res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+    return new StreamableFile(data, {
+      type: MODEL_CONTENT_TYPES[format],
       length: data.length,
     });
   }

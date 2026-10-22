@@ -9,6 +9,7 @@ import {
 } from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
 import { loadMainImages } from '../../character-images/character-image-access.js';
+import { loadFigureModels } from '../../character-models/character-model-row.js';
 import {
   characters,
   gameFigures,
@@ -81,6 +82,7 @@ export async function readSceneFigures(
     .orderBy(asc(characters.name), asc(gameFigures.characterId));
   const ids = rows.map((row) => row.figure.characterId);
   const images = await loadMainImages(db, ids);
+  const models = await loadFigureModels(db, ids);
   const speeds = await figureSpeeds(
     db,
     gameId,
@@ -97,6 +99,7 @@ export async function readSceneFigures(
     facing: figure.facing,
     size: FIGURE_SIZE,
     image: images.get(figure.characterId) ?? null,
+    model: models.get(figure.characterId) ?? null,
     speed: speeds.get(figure.characterId)?.speed ?? speed,
     climb: speeds.get(figure.characterId)?.climb ?? null,
     moved: figure.moved,

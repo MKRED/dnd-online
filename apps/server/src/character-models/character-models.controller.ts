@@ -25,12 +25,8 @@ import { SessionOrApiTokenGuard } from '../api-tokens/session-or-api-token.guard
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import { CharacterModelsService } from './character-models.service.js';
 import { PatchCharacterModelDto } from './dto/patch-character-model.dto.js';
+import { MODEL_CONTENT_TYPES } from './model-content-types.js';
 import { ModelTooLargeFilter } from './model-too-large.filter.js';
-
-export const MODEL_CONTENT_TYPES = {
-  glb: 'model/gltf-binary',
-  stl: 'model/stl',
-} as const;
 
 // 3D-модель персонажа (docs/plan/character-models.md): метаданные, файл, загрузка,
 // цвет и поправка, удаление.

@@ -1,119 +1,56 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
-import { DEFAULT_USER_SETTINGS } from 'shared';
 import { renderWithProviders } from '../../test/render';
 import ProfilePage from './ProfilePage';
 
-// У карточки токенов свои запросы и свой тест (ApiTokensCard.test.tsx); здесь она
-// сбила бы очередь ответов stubFetch.
-vi.mock('./ApiTokensCard', () => ({ default: () => null }));
+// У разделов свои запросы и свои тесты; здесь — только раскладка по разделам.
+vi.mock('./account/AccountSection', () => ({
+  default: () => <p>тело аккаунта</p>,
+}));
+vi.mock('./map/MapSection', () => ({ default: () => <p>тело карты</p> }));
+vi.mock('./graphics/GraphicsSection', () => ({ default: () => null }));
+vi.mock('./ai/ApiTokensCard', () => ({ default: () => null }));
 
-const lolkaProfile = {
-  login: null,
-  nickname: 'Арвен',
-  hasPassword: false,
-  providers: ['lolka'],
-};
-
-// Подменяем только сеть: GET /profile и запрос формы отвечают по очереди.
-function stubFetch(...responses: [number, unknown][]) {
-  const fetchMock = vi.fn(() => {
-    const [status, body] = responses.shift() ?? [500, {}];
-    return Promise.resolve(
-      status === 204
-        ? new Response(null, { status })
-        : new Response(JSON.stringify(body), { status }),
-    );
-  });
-  vi.stubGlobal('fetch', fetchMock);
-  return fetchMock;
+// В тестах matchMedia ничему не отвечает «да» — это узкий экран (test/setup.ts).
+function renderAt(route: string) {
+  return renderWithProviders(
+    <Routes>
+      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/profile/:section" element={<ProfilePage />} />
+    </Routes>,
+    { route },
+  );
 }
 
-describe('ProfilePage', () => {
-  it('аккаунт из лольки задаёт логин и пароль', async () => {
-    const fetchMock = stubFetch(
-      [200, lolkaProfile],
-      [200, { ...lolkaProfile, login: 'arwen', hasPassword: true }],
-    );
-    const { authValue } = renderWithProviders(<ProfilePage />, {
-      auth: {
-        user: {
-          id: 'u1',
-          login: 'lolka_ab12cd34',
-          nickname: 'Арвен',
-          settings: DEFAULT_USER_SETTINGS,
-        },
-      },
-    });
+describe('ProfilePage на узком экране', () => {
+  it('/profile — список разделов, раздел открывается отдельным экраном и ведёт назад', async () => {
+    renderAt('/profile');
     const user = userEvent.setup();
 
-    expect(await screen.findByText('подключён')).toBeInTheDocument();
-    await user.type(screen.getByRole('textbox', { name: 'Логин' }), 'arwen');
-    await user.type(screen.getByLabelText(/^Пароль/), 'secret123');
-    await user.type(screen.getByLabelText(/^Повторите пароль/), 'secret123');
-    await user.click(
-      screen.getByRole('button', { name: 'Сохранить логин и пароль' }),
-    );
+    const nav = screen.getByRole('navigation', { name: 'Разделы профиля' });
+    expect(nav).toHaveTextContent('Аккаунт');
+    expect(nav).toHaveTextContent('Нейросеть');
+    expect(screen.queryByText('тело аккаунта')).not.toBeInTheDocument();
 
-    expect(await screen.findByText('arwen')).toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: /Карта и игра/ }));
+    expect(screen.getByText('тело карты')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Сменить пароль' }),
+      screen.getByRole('heading', { name: 'Карта и игра' }),
     ).toBeInTheDocument();
-    const [url, init] = fetchMock.mock.calls[1] as unknown as [
-      string,
-      RequestInit,
-    ];
-    expect(url).toMatch(/\/profile\/credentials$/);
-    expect(JSON.parse(init.body as string)).toEqual({
-      login: 'arwen',
-      password: 'secret123',
-    });
-    expect(authValue.setUser).toHaveBeenCalledWith(
-      expect.objectContaining({ login: 'arwen' }),
-    );
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: 'Профиль' }));
+    expect(
+      screen.getByRole('navigation', { name: 'Разделы профиля' }),
+    ).toBeInTheDocument();
   });
 
-  it('показывает ошибку сервера, если логин занят', async () => {
-    stubFetch(
-      [200, lolkaProfile],
-      [409, { statusCode: 409, message: 'Этот логин уже занят' }],
-    );
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-    renderWithProviders(<ProfilePage />);
-    const user = userEvent.setup();
-
-    await user.type(
-      await screen.findByRole('textbox', { name: 'Логин' }),
-      'taken',
-    );
-    await user.type(screen.getByLabelText(/^Пароль/), 'secret123');
-    await user.type(screen.getByLabelText(/^Повторите пароль/), 'secret123');
-    await user.click(
-      screen.getByRole('button', { name: 'Сохранить логин и пароль' }),
-    );
-
-    expect(await screen.findByText('Этот логин уже занят')).toBeInTheDocument();
-  });
-
-  it('аккаунт с паролем меняет пароль', async () => {
-    stubFetch(
-      [
-        200,
-        { login: 'hero', nickname: 'Hero', hasPassword: true, providers: [] },
-      ],
-      [204, null],
-    );
-    renderWithProviders(<ProfilePage />);
-    const user = userEvent.setup();
-
-    expect(await screen.findByText('hero')).toBeInTheDocument();
-    expect(screen.queryByText('Вход через лольку:')).not.toBeInTheDocument();
-    await user.type(screen.getByLabelText(/^Текущий пароль/), 'old-pass');
-    await user.type(screen.getByLabelText(/^Новый пароль/), 'new-pass');
-    await user.type(screen.getByLabelText(/^Повторите новый/), 'new-pass');
-    await user.click(screen.getByRole('button', { name: 'Сменить пароль' }));
-
-    expect(await screen.findByText('Пароль изменён.')).toBeInTheDocument();
+  it('неизвестный раздел ведёт к списку', () => {
+    renderAt('/profile/nope');
+    expect(
+      screen.getByRole('navigation', { name: 'Разделы профиля' }),
+    ).toBeInTheDocument();
   });
 });

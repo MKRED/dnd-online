@@ -9,7 +9,6 @@ import {
   Stack,
   Text,
   TextInput,
-  Title,
 } from '@mantine/core';
 import { useEffect, useState, type FormEvent } from 'react';
 import type { ApiTokenInfo, CreatedApiToken } from 'shared';
@@ -17,8 +16,8 @@ import {
   createApiToken,
   listApiTokens,
   revokeApiToken,
-} from '../../features/apiTokens';
-import { errorMessage } from '../../lib/apiRequest';
+} from '../../../features/apiTokens';
+import { errorMessage } from '../../../lib/apiRequest';
 import ApiTokenRow from './ApiTokenRow';
 
 // Токены для внешних клиентов — MCP-серверов, через которые нейросеть работает с
@@ -79,10 +78,7 @@ function ApiTokensCard() {
   };
 
   return (
-    <Card withBorder padding="lg">
-      <Title order={3} mb="xs">
-        Токены для нейросети
-      </Title>
+    <Card withBorder padding="lg" radius="md">
       <Text size="sm" c="dimmed" mb="md">
         Токен нужен MCP-серверу: с ним нейросеть смотрит, создаёт и правит ваших
         персонажей, монстров, предметы, способности, эффекты и карты. Удалять,

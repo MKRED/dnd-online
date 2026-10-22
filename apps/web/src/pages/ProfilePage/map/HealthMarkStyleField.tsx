@@ -1,6 +1,7 @@
 import { Group, Radio, SimpleGrid, Stack, Text } from '@mantine/core';
 import { HEALTH_MARK_STYLES, type HealthMarkStyle } from 'shared';
 import HealthMarkPreview from './HealthMarkPreview';
+import { FIELD_HEADING_STYLES } from '../fieldHeading';
 
 const STYLE_TEXT: Record<HealthMarkStyle, { label: string; hint: string }> = {
   plate: { label: 'Табличка', hint: 'Тёмная, с рамкой цвета состояния' },
@@ -23,6 +24,7 @@ function HealthMarkStyleField({
   return (
     <Radio.Group
       label="Метка здоровья"
+      styles={FIELD_HEADING_STYLES}
       description="Как в игре подписаны раненые и поверженные существа"
       value={value}
       onChange={onChange}

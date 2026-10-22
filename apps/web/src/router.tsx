@@ -89,8 +89,9 @@ export const router = createBrowserRouter([
           { path: '/maps', element: <MapsPage /> },
           { path: '/maps/:id', element: <MapViewPage /> },
           // Токены переехали в профиль; старый адрес ведёт туда.
-          { path: '/tokens', element: <Navigate to="/profile" replace /> },
+          { path: '/tokens', element: <Navigate to="/profile/ai" replace /> },
           { path: '/profile', element: <ProfilePage /> },
+          { path: '/profile/:section', element: <ProfilePage /> },
           { path: '*', element: <NotFoundPage /> },
         ],
       },

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { HealthMarkStyle } from 'shared';
-import { drawHealthMark, MARK_FONTS } from '../../features/maps';
+import { drawHealthMark, MARK_FONTS } from '../../../features/maps';
 import classes from './HealthMarkPreview.module.css';
 
 // Две метки — «Ранен» и «Повержен» — на полоске цвета сцены, картинками с холста: так

@@ -1,9 +1,9 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { AuthUser } from '../../features/auth/authApi';
-import { renderWithProviders } from '../../test/render';
-import SettingsCard from './SettingsCard';
+import type { AuthUser } from '../../../features/auth/authApi';
+import { renderWithProviders } from '../../../test/render';
+import MapSection from './MapSection';
 
 const me: AuthUser = {
   id: 'u1',
@@ -29,14 +29,14 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('SettingsCard', () => {
+describe('MapSection', () => {
   it('показывает текущий выбор и сохраняет новый сразу', async () => {
     const fetchMock = stubFetch(200, {
       facingMarker: 'chevrons',
       graphicsQuality: 'medium',
       healthMarkStyle: 'plate',
     });
-    const { authValue } = renderWithProviders(<SettingsCard />, {
+    const { authValue } = renderWithProviders(<MapSection />, {
       auth: { user: me },
     });
     const user = userEvent.setup();
@@ -68,7 +68,7 @@ describe('SettingsCard', () => {
   it('при ошибке возвращает прежний выбор и показывает её', async () => {
     stubFetch(400, { statusCode: 400, message: 'Неизвестный вид' });
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    const { authValue } = renderWithProviders(<SettingsCard />, {
+    const { authValue } = renderWithProviders(<MapSection />, {
       auth: { user: me },
     });
     const user = userEvent.setup();
@@ -79,33 +79,12 @@ describe('SettingsCard', () => {
     expect(authValue.setUser).toHaveBeenLastCalledWith(me);
   });
 
-  it('качество графики: «Высокое» выбрать нельзя, «Низкое» сохраняется', async () => {
-    const fetchMock = stubFetch(200, {
-      facingMarker: 'compass',
-      graphicsQuality: 'low',
-      healthMarkStyle: 'plate',
-    });
-    renderWithProviders(<SettingsCard />, { auth: { user: me } });
-    const user = userEvent.setup();
-
-    expect(screen.getByRole('radio', { name: /Среднее/ })).toBeChecked();
-    expect(screen.getByRole('radio', { name: /Высокое/ })).toBeDisabled();
-    await user.click(screen.getByRole('radio', { name: /Низкое/ }));
-
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    const [, init] = fetchMock.mock.calls[0] as unknown as [
-      string,
-      RequestInit,
-    ];
-    expect(JSON.parse(init.body as string)).toEqual({ graphicsQuality: 'low' });
-  });
-
   it('вид метки здоровья: по умолчанию «Табличка», выбор сохраняется', async () => {
     const fetchMock = stubFetch(200, {
       ...me.settings,
       healthMarkStyle: 'ribbon',
     });
-    renderWithProviders(<SettingsCard />, { auth: { user: me } });
+    renderWithProviders(<MapSection />, { auth: { user: me } });
     const user = userEvent.setup();
 
     expect(screen.getByRole('radio', { name: /Табличка/ })).toBeChecked();

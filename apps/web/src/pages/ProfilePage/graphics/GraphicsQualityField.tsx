@@ -4,6 +4,7 @@ import {
   GRAPHICS_QUALITIES,
   type GraphicsQuality,
 } from 'shared';
+import { FIELD_HEADING_STYLES } from '../fieldHeading';
 
 const QUALITY_TEXT: Record<GraphicsQuality, { label: string; hint: string }> = {
   low: { label: 'Низкое', hint: 'Без анимаций — для слабых устройств' },
@@ -26,6 +27,7 @@ function GraphicsQualityField({
   return (
     <Radio.Group
       label="Качество графики"
+      styles={FIELD_HEADING_STYLES}
       description="Как подробно рисуется карта и сцена игры"
       value={value}
       onChange={onChange}

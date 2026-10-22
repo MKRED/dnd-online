@@ -1,9 +1,9 @@
 import { Alert, Button, PasswordInput, Stack } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
-import { validatePassword } from '../../features/auth';
-import { changePassword } from '../../features/profile';
-import { errorMessage } from '../../lib/apiRequest';
+import { validatePassword } from '../../../features/auth';
+import { changePassword } from '../../../features/profile';
+import { errorMessage } from '../../../lib/apiRequest';
 
 interface Values {
   currentPassword: string;

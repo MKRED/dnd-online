@@ -8,9 +8,9 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
-import { validateLogin, validatePassword } from '../../features/auth';
-import { setCredentials, type Profile } from '../../features/profile';
-import { errorMessage } from '../../lib/apiRequest';
+import { validateLogin, validatePassword } from '../../../features/auth';
+import { setCredentials, type Profile } from '../../../features/profile';
+import { errorMessage } from '../../../lib/apiRequest';
 
 interface Values {
   login: string;

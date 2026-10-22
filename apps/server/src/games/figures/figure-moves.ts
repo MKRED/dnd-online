@@ -34,6 +34,7 @@ import {
 } from '../game-errors.js';
 import { refreshSceneCreatures } from '../creatures/creature-moves.js';
 import { playerFog } from '../fog/fog-view.js';
+import { plainLogger } from '../plain-logger.js';
 import { appendGameEvent } from '../game-journal.js';
 import type { SceneRow } from '../scenes/scene-copy.js';
 import { findActiveScene } from '../scenes/scene-read.js';
@@ -134,8 +135,10 @@ export async function moveFigure(
   if (!canMoveFigure(actor.userId, actor.masterId, ownerId, controllerId)) {
     throw new ForbiddenException(FIGURE_NOT_YOURS);
   }
+  const t0 = Date.now();
   const scene = await activeScene(actor);
   const world = await loadSceneWorld(actor.tx, scene);
+  const tLoaded = Date.now();
   const speeds = await figureSpeeds(actor.tx, actor.gameId, [
     { id: characterId, ownerId, speed },
   ]);
@@ -153,7 +156,9 @@ export async function moveFigure(
     isMaster(actor),
     isMaster(actor) ? null : await playerFog(actor.tx, scene),
   );
+  const tReady = Date.now();
   const path = findPath(world.map, from, to, FIGURE_SIZE, left, others);
+  const tPath = Date.now();
   if (!path || path.path.length < 2) {
     throw new ConflictException(FIGURE_CANT_REACH);
   }
@@ -182,6 +187,21 @@ export async function moveFigure(
       left: Math.max(0, left.walk - path.cost),
     },
   });
+  // Замер по частям: сцена из базы, скорость и остальные существа (с туманом игрока),
+  // поиск пути, запись хода вместе с журналом (и пересчётом тумана в нём).
+  plainLogger('FigureMove')?.debug(
+    {
+      gameId: actor.gameId,
+      characterId,
+      steps: path.path.length - 1,
+      loadMs: tLoaded - t0,
+      prepareMs: tReady - tLoaded,
+      pathMs: tPath - tReady,
+      writeMs: Date.now() - tPath,
+      durationMs: Date.now() - t0,
+    },
+    'Figure move timed',
+  );
 }
 
 // Мастер ставит фигурку куда угодно, где она может стоять, — без пути и без запаса.

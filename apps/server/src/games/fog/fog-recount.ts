@@ -19,6 +19,7 @@ import {
 import { loadSceneWorld, type SceneWorld } from '../figures/scene-world.js';
 import type { SceneRow } from '../scenes/scene-copy.js';
 import { findActiveScene } from '../scenes/scene-read.js';
+import { plainLogger } from '../plain-logger.js';
 import { loadFog, saveFog, type SceneFog } from './fog-storage.js';
 
 // Пересчёт тумана войны активной сцены (docs/plan/done/fog-of-war.md, «Когда пересчитываем»).
@@ -84,18 +85,37 @@ export async function recountFog(
   tx: DbTransaction,
   gameId: string,
 ): Promise<FogRecount | null> {
+  const t0 = Date.now();
   const scene = await findActiveScene(tx, gameId);
   if (!scene?.fog) return null;
   const world = await loadSceneWorld(tx, scene);
   const viewers = await fogViewers(tx, scene, world.map);
+  const tLoaded = Date.now();
   const creatures = world.creatures
     .filter((creature) => !creature.hidden)
     .map(({ at, size }) => creatureBody(world.map, at, size));
   const visible = partySight(world.map, viewers, creatures, sceneBounds(scene));
+  const tSeen = Date.now();
   const before = await loadFog(tx, scene.id);
   const explored = maskUnion(new Map(), before.explored);
   maskUnion(explored, visible);
   const after = { explored, visible };
   const written = await saveFog(tx, scene.id, before, after);
+  // Замер по частям: загрузка сцены из базы, расчёт видимости, чтение и запись масок.
+  plainLogger('FogRecount')?.debug(
+    {
+      gameId,
+      sceneId: scene.id,
+      viewers: viewers.length,
+      creatures: creatures.length,
+      chunks: [...world.map.store.keys()].length,
+      written,
+      loadMs: tLoaded - t0,
+      sightMs: tSeen - tLoaded,
+      saveMs: Date.now() - tSeen,
+      durationMs: Date.now() - t0,
+    },
+    'Fog recounted',
+  );
   return { scene, world, before, after, written };
 }

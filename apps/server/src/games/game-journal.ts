@@ -14,6 +14,7 @@ import { emptyDelta, playerFogDelta } from './fog/fog-delta.js';
 import { FOG_EVENT_KINDS } from './fog/fog-events.js';
 import { recountFog, type FogRecount } from './fog/fog-recount.js';
 import { GAME_NOT_FOUND } from './game-errors.js';
+import { plainLogger } from './plain-logger.js';
 
 // Запись журнала игры (docs/plan/done/game.md, «Журнал игры»). Простые функции от транзакции,
 // а не провайдер: запись идёт в той же транзакции, что и изменение, и её пишет не только
@@ -51,13 +52,27 @@ function fogForPlayers(
   recount: FogRecount | null,
 ): ScenePlayerFog | null {
   if (!recount) return null;
-  if (event.changes) {
-    if (event.sceneId !== recount.scene.id) return null;
-    const { sceneSeq } = event.result as SceneEditResult;
-    return playerFogDelta(recount, sceneSeq, event.changes);
-  }
-  const delta = playerFogDelta(recount, recount.scene.seq, undefined);
-  return emptyDelta(delta) ? null : delta;
+  if (event.changes && event.sceneId !== recount.scene.id) return null;
+  const t0 = Date.now();
+  const delta = event.changes
+    ? playerFogDelta(
+        recount,
+        (event.result as SceneEditResult).sceneSeq,
+        event.changes,
+      )
+    : playerFogDelta(recount, recount.scene.seq, undefined);
+  plainLogger('FogDelta')?.debug(
+    {
+      kind: event.kind,
+      sceneId: recount.scene.id,
+      cells: delta.changes.cells.length / 5,
+      objects: delta.changes.objects?.length ?? 0,
+      maskChunks: delta.fog.explored.length + delta.fog.visible.length,
+      durationMs: Date.now() - t0,
+    },
+    'Fog delta for players counted',
+  );
+  return event.changes || !emptyDelta(delta) ? delta : null;
 }
 
 // Добавляет запись со следующим номером игры и возвращает этот номер. Событие, которое

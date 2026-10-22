@@ -16,6 +16,9 @@ interface HealthMarkProps {
   base: Point3;
   top: number;
   footprint: number;
+  // Верх позы над ногами, если его знает тот, кто рисует существо: у 3D-модели он свой,
+  // а не как у карточки (poseTop).
+  poseHeight?: number;
 }
 
 // Зазор между верхом позы и низом метки.
@@ -25,12 +28,20 @@ const GAP = 0.08;
 // «Повержен», «Без сознания», «Погиб». Объект сцены, а не HTML поверх холста: прячется
 // за стенами, не лезет на панели страницы и уменьшается с камерой (markSize.ts). Чисел
 // здесь нет — их видит только тот, кто ведёт существо.
-function HealthMark({ health, pc, base, top, footprint }: HealthMarkProps) {
+function HealthMark({
+  health,
+  pc,
+  base,
+  top,
+  footprint,
+  poseHeight,
+}: HealthMarkProps) {
   const style = useHealthMarkStyle();
   const mark = useMarkTexture(style, creatureHealthLabel(health, pc), health);
   const sprite = useRef<Sprite>(null);
   const pose = creaturePose(health, pc);
-  const y = base[1] + poseTop(pose, footprint, top - base[1]) + GAP;
+  const y =
+    base[1] + (poseHeight ?? poseTop(pose, footprint, top - base[1])) + GAP;
 
   // Размер — по тому, сколько пикселей занимает клетка там, где метка; прямо в объекте,
   // без перерисовки React на каждый кадр.

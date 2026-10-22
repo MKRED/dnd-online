@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { placedHeight, placeModel, type ModelBox } from './modelFit';
+import { modelTop, placedHeight, placeModel, type ModelBox } from './modelFit';
 
 const fit = { scale: 1, turn: 0 as const, up: 'y' as const };
 
@@ -42,5 +42,21 @@ describe('placeModel', () => {
   it('плоская модель без основания не уходит в бесконечность', () => {
     const box: ModelBox = { min: [0, 0, 0], max: [0, 2, 0] };
     expect(Number.isFinite(placeModel(box, 1, fit).scale)).toBe(true);
+  });
+});
+
+describe('modelTop', () => {
+  // Фигурка 1 × 2 × 0.5: основание вписывается в 0.9 клетки, рост 1.8.
+  const box: ModelBox = { min: [0, 0, 0], max: [1, 2, 0.5] };
+
+  it('стоя — рост модели', () => {
+    expect(modelTop(box, 1, fit, false)).toBeCloseTo(1.8);
+  });
+
+  it('лёжа — глубина, ужатая вместе с моделью в место', () => {
+    // Масштаб 0.9, ужатие 0.9 / 1.8 = 0.5: глубина 0.5 → 0.225.
+    expect(modelTop(box, 1, fit, true)).toBeCloseTo(0.225);
+    // Повёрнутая на четверть лежит боком: толщиной становится ширина.
+    expect(modelTop(box, 1, { ...fit, turn: 1 }, true)).toBeCloseTo(0.45);
   });
 });

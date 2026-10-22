@@ -3,7 +3,12 @@ import { Mesh, MeshStandardMaterial } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { STL_DEFAULT_COLOR, type CharacterModelFit } from 'shared';
 import type { LoadedModel } from './loadModel';
-import { placedHeight, placeModel } from './modelFit';
+import {
+  lyingShrink,
+  lyingThickness,
+  placedHeight,
+  placeModel,
+} from './modelFit';
 
 interface ModelFigureProps {
   model: LoadedModel;
@@ -66,11 +71,11 @@ function ModelFigure({
   );
   if (!lying) return standing;
   // Лёжа: четверть оборота вокруг x (макушкой назад, от взгляда), ужатая так, чтобы
-  // целиком лечь в место, серединой в его центр. Основание модели после поворота —
-  // её толщина над полом: приподнимаем на половину, чтобы не уходила в пол.
+  // целиком лечь в место, серединой в его центр. Глубина модели после поворота — её
+  // толщина над полом, серединой на нуле: приподнимаем на половину, чтобы не уходила в пол.
   const height = placedHeight(model.box, footprint, fit);
-  const shrink = Math.min(1, (footprint * 0.9) / height);
-  const thickness = footprint * 0.9 * fit.scale * shrink;
+  const shrink = lyingShrink(model.box, footprint, fit);
+  const thickness = lyingThickness(model.box, footprint, fit, shrink);
   return (
     <group
       rotation={[Math.PI / 2, 0, 0]}

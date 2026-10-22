@@ -5,7 +5,6 @@ import type { MapState } from 'shared';
 import classes from '../MapScene.module.css';
 import { useObjectTextures } from '../objects/useObjectTextures';
 import GhostGroup from '../objects/GhostGroup';
-import HealthMark from '../objects/HealthMark';
 import FigureBody from './FigureBody';
 import { layoutFigures, type FigureInput } from './figureLayout';
 import { useFigureDrag, type FigureDragHandlers } from './useFigureDrag';
@@ -49,9 +48,10 @@ function FigureLayer({
   useEffect(() => invalidate(), [textures, all, shadows, invalidate]);
 
   const tip = visible.find((figure) => figure.id === hovered);
-  const card = (figure: (typeof all)[number]) => (
+  const card = (figure: (typeof all)[number], mark = false) => (
     <FigureBody
       figure={figure}
+      mark={mark}
       texture={(figure.image && textures.get(figure.image)) || null}
     />
   );
@@ -66,16 +66,7 @@ function FigureLayer({
             setHovered((prev) => (prev === figure.id ? null : prev))
           }
         >
-          {card(figure)}
-          {figure.health && (
-            <HealthMark
-              health={figure.health}
-              pc
-              base={figure.base}
-              top={figure.top}
-              footprint={figure.footprint}
-            />
-          )}
+          {card(figure, true)}
         </group>
       ))}
       {shadows.map((figure) => (

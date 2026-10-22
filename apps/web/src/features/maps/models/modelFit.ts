@@ -66,3 +66,38 @@ export function placedHeight(
   const { min, max } = upright(box, fit.up);
   return (max[1] - min[1]) * placeModel(box, footprint, fit).scale;
 }
+
+// Толщина модели, лёгшей на спину, в клетках: её глубина вдоль взгляда после поворота
+// лицом (на нечётной четверти глубиной становится ширина) — над ней встаёт метка
+// здоровья. shrink — во сколько модель ужата, чтобы лечь в своё место.
+export function lyingThickness(
+  box: ModelBox,
+  footprint: number,
+  fit: CharacterModelFit,
+  shrink: number,
+): number {
+  const { min, max } = upright(box, fit.up);
+  const depth = fit.turn % 2 === 0 ? max[2] - min[2] : max[0] - min[0];
+  return depth * placeModel(box, footprint, fit).scale * shrink;
+}
+
+// Ужатие лежащей модели: целиком в место с полями, как лежащая карточка.
+export function lyingShrink(
+  box: ModelBox,
+  footprint: number,
+  fit: CharacterModelFit,
+): number {
+  return Math.min(1, (footprint * 0.9) / placedHeight(box, footprint, fit));
+}
+
+// Верх модели над ногами в позе — над ним встаёт метка здоровья.
+export function modelTop(
+  box: ModelBox,
+  footprint: number,
+  fit: CharacterModelFit,
+  lying: boolean,
+): number {
+  return lying
+    ? lyingThickness(box, footprint, fit, lyingShrink(box, footprint, fit))
+    : placedHeight(box, footprint, fit);
+}

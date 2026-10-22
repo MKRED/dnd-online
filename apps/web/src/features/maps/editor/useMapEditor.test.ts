@@ -1,4 +1,11 @@
 import { act, fireEvent, renderHook } from '@testing-library/react';
+import {
+  applyOps,
+  createPalette,
+  MemoryChunkStore,
+  type SizedMapState,
+  type Vec3,
+} from 'shared';
 import { describe, expect, it, vi } from 'vitest';
 import { useMapEditor } from './useMapEditor';
 
@@ -76,5 +83,73 @@ describe('useMapEditor, клавиши', () => {
     setup(objects);
     press('Delete');
     expect(objects.remove).not.toHaveBeenCalled();
+  });
+});
+
+describe('useMapEditor, ластик', () => {
+  function setupWithMap() {
+    const state: SizedMapState = {
+      store: new MemoryChunkStore(),
+      palette: createPalette(),
+      size: { width: 10, depth: 10 },
+    };
+    applyOps(state, [
+      { op: 'fillBox', from: [0, 0, 0], to: [4, 2, 0], block: 'stone' },
+    ]);
+    const apply = vi.fn();
+    const hook = renderHook(() =>
+      useMapEditor({
+        state,
+        applyOps: apply,
+        undo: vi.fn(),
+        redo: vi.fn(),
+        objects: objectsMock(),
+        keysActive: true,
+      }),
+    );
+    return { ...hook, apply };
+  }
+
+  const onBlock = (cell: Vec3) => ({
+    hit: cell,
+    place: [cell[0], cell[1] + 1, cell[2]] as Vec3,
+    point: [cell[0] + 0.5, cell[1] + 1, cell[2] + 0.5] as const,
+    normal: [0, 1, 0] as Vec3,
+  });
+
+  it('клавиша ластика при ластике переключает режим по кругу', () => {
+    const { result } = setupWithMap();
+    press('Digit3');
+    expect(result.current.tool).toBe('erase');
+    expect(result.current.eraseMode).toBe('block');
+    press('Digit3');
+    expect(result.current.eraseMode).toBe('wall');
+    press('Digit3');
+    press('Digit3');
+    press('Digit3');
+    expect(result.current.eraseMode).toBe('block');
+  });
+
+  it('стена: два клика стирают прямоугольник вдоль оси одной операцией', () => {
+    const { result, apply } = setupWithMap();
+    press('Digit3');
+    act(() => result.current.setEraseMode('wall'));
+    act(() => result.current.sceneEditor?.onPick(onBlock([0, 0, 0])));
+    expect(result.current.anchor?.cell).toEqual([0, 0, 0]);
+    act(() => result.current.sceneEditor?.onPick(onBlock([4, 2, 1])));
+    expect(apply).toHaveBeenCalledWith([
+      { op: 'fillBox', from: [0, 0, 0], to: [4, 2, 0], block: 'air' },
+    ]);
+    expect(result.current.anchor).toBeNull();
+  });
+
+  it('связное: один клик стирает всю постройку', () => {
+    const { result, apply } = setupWithMap();
+    press('Digit3');
+    act(() => result.current.setEraseMode('connected'));
+    act(() => result.current.sceneEditor?.onPick(onBlock([2, 1, 0])));
+    expect(apply).toHaveBeenCalledWith([
+      { op: 'fillBox', from: [0, 0, 0], to: [4, 2, 0], block: 'air' },
+    ]);
   });
 });

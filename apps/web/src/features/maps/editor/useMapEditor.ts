@@ -1,34 +1,17 @@
 import { useHotkeys } from '@mantine/hooks';
 import { useMemo, useState } from 'react';
 import {
-  cellTypeId,
-  insideMap,
-  readCell,
   ROTATIONS,
   type MapOp,
   type SizedMapState,
   type Rotation,
-  type Vec3,
 } from 'shared';
 import { useKeyCodes } from '../useKeyCodes';
-import {
-  cellOp,
-  EDITOR_TOOLS,
-  isRegionTool,
-  regionOp,
-  toolCell,
-  type EditorTool,
-  type PickedCells,
-  type SceneEditor,
-} from './editorTools';
+import { EDITOR_TOOLS, type EditorTool, type SceneEditor } from './editorTools';
+import { nextEraseMode, type EraseMode } from './eraseModes';
+import { blockSceneEditor, type Anchor } from './blockSceneEditor';
 import type { WalkTest } from '../walkTest';
 import type { ObjectTool } from './objects';
-
-interface Anchor {
-  cell: Vec3;
-  // Для замены: имя блока в первом углу — его и будем заменять.
-  match: string | null;
-}
 
 interface MapEditorOptions {
   state: SizedMapState | null;
@@ -46,7 +29,8 @@ interface MapEditorOptions {
   tools?: readonly EditorTool[];
 }
 
-// Клавиши 1–8 (и на цифровом блоке) — инструменты в порядке полосы.
+// Клавиши 1–8 (и на цифровом блоке) — инструменты в порядке полосы; клавиша уже
+// выбранного инструмента переключает его режим (у ластика).
 const toolKeys = (
   tools: readonly EditorTool[],
   setTool: (tool: EditorTool) => void,
@@ -73,13 +57,27 @@ export function useMapEditor({
   const [block, setBlock] = useState('stone');
   const [rotation, setRotation] = useState<Rotation>(0);
   const [height, setHeight] = useState(1);
+  const [eraseMode, setEraseModeState] = useState<EraseMode>('block');
   const [anchor, setAnchor] = useState<Anchor | null>(null);
+  // Почему клик ничего не сделал (связное стирание слишком большой постройки).
+  const [notice, setNotice] = useState<string | null>(null);
 
-  // Смена инструмента бросает начатую область: её первый угол относился к другому инструменту.
+  // Смена инструмента или режима бросает начатую область: её первый угол относился
+  // к другому инструменту.
   const setTool = (next: EditorTool) => {
     setToolState(next);
     setAnchor(null);
+    setNotice(null);
   };
+  const setEraseMode = (next: EraseMode) => {
+    setEraseModeState(next);
+    setAnchor(null);
+    setNotice(null);
+  };
+  const keyTool = (next: EditorTool) =>
+    next === 'erase' && tool === 'erase'
+      ? setEraseMode(nextEraseMode(eraseMode))
+      : setTool(next);
 
   // mod — Ctrl, на macOS Cmd. В полях ввода хоткеи не срабатывают (по умолчанию в Mantine).
   useHotkeys([
@@ -90,6 +88,7 @@ export function useMapEditor({
       'Escape',
       () => {
         setAnchor(null);
+        setNotice(null);
         if (tool === 'objects') objects.escape();
       },
     ],
@@ -98,7 +97,7 @@ export function useMapEditor({
   // У «Объектов» R поворачивает взгляд, у блоков — сам блок.
   useKeyCodes(
     {
-      ...toolKeys(tools, setTool),
+      ...toolKeys(tools, keyTool),
       KeyR: () =>
         tool === 'objects'
           ? objects.rotate()
@@ -136,34 +135,23 @@ export function useMapEditor({
         preview: walkPreview,
       };
     }
-    const settings = { block, rotation, height };
-    const onPick = (cells: PickedCells) => {
-      const cell = toolCell(tool, cells);
-      // За границей карты сервер правку отклонит — и не отправляем.
-      if (!cell || !insideMap(cell, state.size)) return;
-      if (tool === 'place' || tool === 'erase') {
-        applyOps([cellOp(tool, cell, settings)]);
-        return;
-      }
-      if (!isRegionTool(tool)) return;
-      if (!anchor) {
-        const match =
-          tool === 'replace'
-            ? (state.palette[cellTypeId(readCell(state.store, cell))] ?? null)
-            : null;
-        setAnchor({ cell, match });
-        return;
-      }
-      applyOps([regionOp(tool, anchor.cell, cell, settings, anchor.match)]);
-      setAnchor(null);
-    };
-    return { tool, anchor: anchor?.cell ?? null, height, onPick };
+    return blockSceneEditor({
+      tool,
+      eraseMode,
+      state,
+      settings: { block, rotation, height },
+      anchor,
+      setAnchor,
+      setNotice,
+      applyOps,
+    });
   }, [
     tool,
     state,
     block,
     rotation,
     height,
+    eraseMode,
     anchor,
     applyOps,
     walkPick,
@@ -181,6 +169,9 @@ export function useMapEditor({
     setRotation,
     height,
     setHeight,
+    eraseMode,
+    setEraseMode,
+    notice,
     // Начатая область: первый угол выбран, ждём второй.
     anchor,
     cancelRegion: () => setAnchor(null),

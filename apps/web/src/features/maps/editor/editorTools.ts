@@ -80,6 +80,24 @@ export function toolCell(tool: EditorTool, cells: PickedCells): Vec3 | null {
     : cells.hit;
 }
 
+// Клетка, с которой работает инструмент сцены под курсором.
+export function sceneEditorCell(
+  editor: SceneEditor,
+  cells: PickedCells,
+): Vec3 | null {
+  return editor.pickCell
+    ? editor.pickCell(cells)
+    : toolCell(editor.tool, cells);
+}
+
+// Область от первого угла сцены до cell; null — первый угол ещё не выбран.
+export function anchorBox(editor: SceneEditor, cell: Vec3): Box3 | null {
+  if (!editor.anchor) return null;
+  return editor.region
+    ? editor.region(editor.anchor, cell)
+    : regionBox(editor.anchor, cell, editor.height);
+}
+
 // Северо-западная клетка места объекта со стороной span, когда курсор над клеткой
 // cell: курсор — в середине места, как у фигурки крупного существа.
 export function spanAnchor(cell: Vec3, span: number): Vec3 {
@@ -146,6 +164,12 @@ export interface SceneEditor {
   anchor: Vec3 | null;
   height: number;
   onPick: (cells: PickedCells) => void;
+  // Клетка инструмента под курсором, если она не та, что даёт toolCell: ластик стены и
+  // области берёт угол и на земле.
+  pickCell?: (cells: PickedCells) => Vec3 | null;
+  // Область от первого угла до курсора; без него — regionBox с высотой. Подсветка и
+  // размер в строке координат считаются той же функцией, что и операция.
+  region?: (anchor: Vec3, cell: Vec3) => Box3;
   // Подсветка проверки хода вместо клеток: тело там, где встанет фигурка, путь
   // до него и цена.
   preview?: (cells: PickedCells) => WalkHover | null;

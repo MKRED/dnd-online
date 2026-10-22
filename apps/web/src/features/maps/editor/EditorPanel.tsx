@@ -17,6 +17,7 @@ import {
 } from 'shared';
 import { blockTraits } from './blockTraits';
 import { isRegionTool, type EditorTool } from './editorTools';
+import { ERASE_MODE_LABELS, ERASE_MODES, type EraseMode } from './eraseModes';
 import type { MapEditor } from './useMapEditor';
 
 // Каталог блоков, сгруппированный по материалу.
@@ -27,10 +28,10 @@ const BLOCK_OPTIONS = Object.values(MATERIALS).map((material) => ({
     .map((block) => ({ value: block.name, label: block.label })),
 }));
 
-const HINTS: Record<EditorTool, string> = {
+// Подсказки ластика — по режиму, ниже (ERASE_HINTS).
+const HINTS: Record<Exclude<EditorTool, 'erase'>, string> = {
   view: 'Левая кнопка мыши — перемещение, правая — поворот, колесо — масштаб к курсору. Двойной клик (в других инструментах — Alt+клик) переносит центр вращения, Q и E опускают и поднимают его.',
   place: 'Клик по грани ставит блок рядом с ней, клик по земле — на уровень 0.',
-  erase: 'Клик по блоку удаляет его.',
   fill: 'Два клика задают углы области, она заливается блоком.',
   hollow:
     'Два клика задают углы: стены, пол и потолок из блока, внутри — воздух.',
@@ -39,6 +40,14 @@ const HINTS: Record<EditorTool, string> = {
   objects:
     'Клик по клетке ставит выбранное. Клик по объекту выделяет его, перетаскивание переносит. R — взгляд, Del — удалить, Esc — снять выделение.',
   walk: 'Клик ставит фигурку. Зелёное — дойдёт: клик делает ход и списывает футы. Оранжевое — не дойдёт: клик переставляет фигурку. Карту инструмент не меняет, фигурка нигде не сохраняется.',
+};
+
+const ERASE_HINTS: Record<EraseMode, string> = {
+  block: 'Клик по блоку удаляет его.',
+  wall: 'Два клика задают концы стены: стирается вертикальный прямоугольник между ними, толщиной в клетку, вдоль той оси, куда курсор ушёл дальше.',
+  region: 'Два клика задают углы области: всё внутри стирается.',
+  connected:
+    'Клик по блоку стирает всю постройку из того же материала, соединённую с ним гранями.',
 };
 
 interface EditorPanelProps {
@@ -52,7 +61,9 @@ interface EditorPanelProps {
 // Свойства выбранного инструмента в правой панели страницы карты; сами инструменты,
 // отмена и возврат — на сцене (SceneToolbar).
 function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
-  const { tool, anchor } = editor;
+  const { tool, anchor, eraseMode } = editor;
+  const erasesBetween =
+    tool === 'erase' && (eraseMode === 'wall' || eraseMode === 'region');
   const builds =
     tool !== 'view' &&
     tool !== 'erase' &&
@@ -61,6 +72,21 @@ function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
 
   return (
     <Stack gap="sm">
+      {tool === 'erase' && (
+        <Stack gap={4}>
+          <Text size="sm">Режим (клавиша ластика — следующий)</Text>
+          <SegmentedControl
+            size="xs"
+            data={ERASE_MODES.map((mode) => ({
+              value: mode,
+              label: ERASE_MODE_LABELS[mode],
+            }))}
+            value={eraseMode}
+            onChange={(value) => editor.setEraseMode(value)}
+          />
+        </Stack>
+      )}
+
       {builds && (
         <Select
           label="Блок"
@@ -94,7 +120,7 @@ function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
         </Stack>
       )}
 
-      {isRegionTool(tool) && (
+      {(isRegionTool(tool) || erasesBetween) && (
         <NumberInput
           label="Высота области"
           description="Слоёв над верхним углом, включая его"
@@ -111,8 +137,14 @@ function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
       {tool === 'objects' && objectsPanel}
 
       <Text size="xs" c="dimmed">
-        {HINTS[tool]}
+        {tool === 'erase' ? ERASE_HINTS[eraseMode] : HINTS[tool]}
       </Text>
+
+      {editor.notice && (
+        <Text size="sm" c="orange">
+          {editor.notice}
+        </Text>
+      )}
 
       {anchor && (
         <Group

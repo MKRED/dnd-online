@@ -10,15 +10,10 @@ import {
   type Vec3,
 } from 'shared';
 import type { BlockAppearance, BlockLookup } from './blockLookup';
-import { fogColor } from './fogColor';
+import { BufferBuilder, type MeshBuffers } from './bufferBuilder';
+import { faceUvs } from './faceUv';
 
-// Буферы одной геометрии: позиции, нормали и цвета по вершинам, индексы треугольников.
-export interface MeshBuffers {
-  positions: Float32Array;
-  normals: Float32Array;
-  colors: Float32Array;
-  indices: Uint32Array;
-}
+export type { MeshBuffers };
 
 // Прозрачные блоки (стекло, лёд) — отдельная геометрия: им нужен свой материал.
 export interface ChunkMeshes {
@@ -34,36 +29,9 @@ export interface MeshOptions {
   // рисуются и не закрывают грани соседей — у края карты видна стена, а не дыра.
   size?: MapSize;
   // Туман войны игрока: биты «видно сейчас» этого чанка (индекс — как у клетки в чанке).
-  // Блок вне них группа видела раньше — он серый (fogColor). undefined — тумана нет;
+  // Блок вне них группа видела раньше — он серый (fogDim, сереет в шейдере). undefined — тумана нет;
   // null — туман есть, а в чанке сейчас не видно ничего.
   seen?: Uint8Array | null;
-}
-
-class BufferBuilder {
-  positions: number[] = [];
-  normals: number[] = [];
-  colors: number[] = [];
-  indices: number[] = [];
-
-  addQuad(corners: Vec3[], normal: Vec3, color: [number, number, number]) {
-    const base = this.positions.length / 3;
-    for (const corner of corners) {
-      this.positions.push(...corner);
-      this.normals.push(...normal);
-      this.colors.push(...color);
-    }
-    this.indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
-  }
-
-  build(): MeshBuffers | null {
-    if (this.indices.length === 0) return null;
-    return {
-      positions: new Float32Array(this.positions),
-      normals: new Float32Array(this.normals),
-      colors: new Float32Array(this.colors),
-      indices: new Uint32Array(this.indices),
-    };
-  }
 }
 
 // Грань коробки на границе клетки скрыта, только если соседняя клетка закрывает её
@@ -130,7 +98,7 @@ export function buildChunkMesh(
     const dim =
       seen !== undefined &&
       (seen === null || (seen[index >> 3] & (1 << (index & 7))) === 0);
-    const color = dim ? fogColor(self.color) : self.color;
+    const fogDim = dim ? 1 : 0;
 
     for (const box of shapeBoxes(self.shape, cellRotation(value))) {
       for (let axis = 0; axis < 3; axis++) {
@@ -143,7 +111,9 @@ export function buildChunkMesh(
           }
           const normal: [number, number, number] = [0, 0, 0];
           normal[axis] = side;
-          target.addQuad(faceCorners(cell, box, axis, side), normal, color);
+          const corners = faceCorners(cell, box, axis, side);
+          const uvs = faceUvs(cell, corners, axis, side, self.materialName);
+          target.addQuad(corners, normal, fogDim, uvs);
         }
       }
     }

@@ -1,8 +1,13 @@
 import type { ShapeBox } from 'shared';
 
+export type IsoFaceKind = 'top' | 'south' | 'east';
+
 export interface IsoFace {
   points: string;
   fill: string;
+  kind: IsoFaceKind;
+  // Плоскость грани: y верха, z южной грани, x восточной (для текстуры на значке).
+  plane: number;
 }
 
 const COS30 = Math.cos(Math.PI / 6);
@@ -42,6 +47,8 @@ export function isoFaces(boxes: readonly ShapeBox[], color: string): IsoFace[] {
           project(x0, y1, z1),
         ].join(' '),
         fill: top,
+        kind: 'top' as const,
+        plane: y1,
       },
       {
         points: [
@@ -51,6 +58,8 @@ export function isoFaces(boxes: readonly ShapeBox[], color: string): IsoFace[] {
           project(x0, y1, z1),
         ].join(' '),
         fill: south,
+        kind: 'south' as const,
+        plane: z1,
       },
       {
         points: [
@@ -60,6 +69,21 @@ export function isoFaces(boxes: readonly ShapeBox[], color: string): IsoFace[] {
           project(x1, y1, z0),
         ].join(' '),
         fill: east,
+        kind: 'east' as const,
+        plane: x1,
       },
     ]);
+}
+
+// Аффинное преобразование картинки 1 × 1 на грань клетки в изометрии (для <image>):
+// s и t картинки — её x и y, верх картинки — верх блока на боковых гранях и север на
+// верхней. Картинка ложится на всю грань клетки, а неполную форму обрезает контур
+// грани — так плита показывает нижнюю половину плитки, как на сцене.
+export function faceImageTransform({ kind, plane }: IsoFace): string {
+  const c = COS30.toFixed(4);
+  if (kind === 'top') return `matrix(${c} 0.5 -${c} 0.5 0 ${-plane})`;
+  if (kind === 'south') {
+    return `matrix(${c} 0.5 0 1 ${(-plane * COS30).toFixed(4)} ${plane / 2 - 1})`;
+  }
+  return `matrix(${c} -0.5 0 1 ${((plane - 1) * COS30).toFixed(4)} ${plane / 2 - 0.5})`;
 }

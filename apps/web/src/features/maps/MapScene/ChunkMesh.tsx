@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { BufferAttribute, BufferGeometry } from 'three';
 import type { MeshBuffers } from '../render/buildChunkMesh';
+import { blockMaterial } from './blockMaterial';
 
 interface ChunkMeshProps {
   buffers: MeshBuffers;
@@ -12,7 +13,8 @@ function ChunkMesh({ buffers, transparent }: ChunkMeshProps) {
     const result = new BufferGeometry();
     result.setAttribute('position', new BufferAttribute(buffers.positions, 3));
     result.setAttribute('normal', new BufferAttribute(buffers.normals, 3));
-    result.setAttribute('color', new BufferAttribute(buffers.colors, 3));
+    result.setAttribute('uv', new BufferAttribute(buffers.uvs, 2));
+    result.setAttribute('fogDim', new BufferAttribute(buffers.fogDims, 1));
     result.setIndex(new BufferAttribute(buffers.indices, 1));
     result.computeBoundingSphere();
     return result;
@@ -22,16 +24,7 @@ function ChunkMesh({ buffers, transparent }: ChunkMeshProps) {
   // (срез по высоте, новые данные) старая осталась бы в памяти видеокарты.
   useEffect(() => () => geometry.dispose(), [geometry]);
 
-  return (
-    <mesh geometry={geometry}>
-      <meshLambertMaterial
-        vertexColors
-        transparent={transparent}
-        opacity={transparent ? 0.5 : 1}
-        depthWrite={!transparent}
-      />
-    </mesh>
-  );
+  return <mesh geometry={geometry} material={blockMaterial(transparent)} />;
 }
 
 export default ChunkMesh;

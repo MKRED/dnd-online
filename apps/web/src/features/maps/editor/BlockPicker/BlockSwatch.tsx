@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import {
   getBlock,
   MATERIALS,
@@ -6,9 +7,17 @@ import {
   type Rotation,
   type ShapeBox,
 } from 'shared';
-import { isoFaces } from './isoFaces';
+import { tileImage } from '../../render/textures/tileImages';
+import { faceImageTransform, isoFaces, type IsoFaceKind } from './isoFaces';
 
 const FULL_CELL: ShapeBox = [0, 0, 0, 1, 1, 1];
+
+// Свет на значке, как на сцене: верх светлее, восточный бок в тени.
+const SHADING: Record<IsoFaceKind, string> = {
+  top: 'rgb(255 255 255 / 14%)',
+  south: 'none',
+  east: 'rgb(0 0 0 / 24%)',
+};
 
 interface BlockSwatchProps {
   block: string;
@@ -16,13 +25,18 @@ interface BlockSwatchProps {
   size?: number;
 }
 
-// Миниатюра блока: коробки его формы в изометрии, цветом материала. Рисуется из тех же
-// коробок, что и сцена (shared/map/shapes.ts), — новая форма получит миниатюру сама.
+// Миниатюра блока: коробки его формы в изометрии с текстурой материала
+// (docs/plan/blocks.md, этап 1). Рисуется из тех же коробок, что и сцена
+// (shared/map/shapes.ts), — новая форма получит миниатюру сама.
 function BlockSwatch({ block, rotation = 0, size = 36 }: BlockSwatchProps) {
+  // id обрезки граней — свои у каждого значка; двоеточия useId в url(#…) не годятся.
+  const clipPrefix = `swatch${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const definition = getBlock(block);
   if (!definition) return null;
-  const color = MATERIALS[definition.material].color;
+  const { material } = definition;
+  const color = MATERIALS[material].color;
   const boxes = SHAPES[definition.shape].map((box) => rotateBox(box, rotation));
+  const faces = isoFaces(boxes, color);
   return (
     <svg
       width={size}
@@ -45,15 +59,33 @@ function BlockSwatch({ block, rotation = 0, size = 36 }: BlockSwatchProps) {
             strokeDasharray="0.08 0.06"
           />
         ))}
-      {isoFaces(boxes, color).map((face, index) => (
-        <polygon
-          key={index}
-          points={face.points}
-          fill={face.fill}
-          stroke="rgb(0 0 0 / 35%)"
-          strokeWidth={0.03}
-          strokeLinejoin="round"
-        />
+      <defs>
+        {faces.map((face, index) => (
+          <clipPath key={index} id={`${clipPrefix}-${index}`}>
+            <polygon points={face.points} />
+          </clipPath>
+        ))}
+      </defs>
+      {faces.map((face, index) => (
+        <g key={index}>
+          <g clipPath={`url(#${clipPrefix}-${index})`}>
+            <image
+              href={tileImage(material, face.kind === 'top' ? 'top' : 'side')}
+              width={1}
+              height={1}
+              preserveAspectRatio="none"
+              transform={faceImageTransform(face)}
+              style={{ imageRendering: 'pixelated' }}
+            />
+          </g>
+          <polygon
+            points={face.points}
+            fill={SHADING[face.kind]}
+            stroke="rgb(0 0 0 / 35%)"
+            strokeWidth={0.03}
+            strokeLinejoin="round"
+          />
+        </g>
       ))}
     </svg>
   );

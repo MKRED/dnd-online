@@ -4,7 +4,8 @@ import { HAZARDS, type MaterialHazard } from './materialHazards.js';
 // а укрытие и проходимость правила выводят из коробок формы, а не хранят здесь.
 export interface BlockMaterial {
   label: string;
-  // Пока вместо текстур — цвет; атлас текстур появится позже.
+  // Основной цвет: средний цвет текстуры блока (её рисует веб, render/textures/), им же
+  // рисуются значки и серая зона тумана (docs/plan/blocks.md).
   color: string;
   // Перекрывает ли обзор (стекло и лёд — нет).
   opaque: boolean;

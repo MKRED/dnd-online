@@ -1,10 +1,10 @@
-import { Color } from 'three';
 import {
   AIR,
   cellTypeId,
   getBlock,
   MATERIALS,
   type BlockMaterial,
+  type MaterialName,
   type Palette,
   type ShapeName,
 } from 'shared';
@@ -12,10 +12,8 @@ import {
 export interface BlockAppearance {
   typeId: number;
   shape: ShapeName;
+  materialName: MaterialName;
   material: BlockMaterial;
-  // Линейный RGB для vertex colors. Через Color, а не hex/255: three считает
-  // вершинные цвета линейными, и «сырые» sRGB-значения выглядели бы блёкло.
-  color: [number, number, number];
 }
 
 // Внешний вид блоков по id палитры карты, с кэшем: сборщик спрашивает его на каждой грани.
@@ -29,12 +27,11 @@ export function createBlockLookup(palette: Palette) {
       const block = getBlock(palette[typeId] ?? '');
       if (block) {
         const material = MATERIALS[block.material];
-        const color = new Color(material.color);
         appearance = {
           typeId,
           shape: block.shape,
+          materialName: block.material,
           material,
-          color: [color.r, color.g, color.b],
         };
       } else {
         // Неизвестный блок (палитра новее клиента) не рисуем, а не падаем.

@@ -28,13 +28,13 @@ function twoBlocks(): MapState {
   return map;
 }
 
-// Цвета вершин сборки — по три числа на вершину.
-function colorsOf(map: MapState, seen: Uint8Array | null | undefined) {
+// Признак серой зоны у первой вершины сборки.
+function dimsOf(map: MapState, seen: Uint8Array | null | undefined) {
   const lookup = createBlockLookup(map.palette);
   const mesh = buildChunkMesh(map.store, chunkKey(0, 0, 0), lookup, {
     ...(seen !== undefined && { seen }),
   });
-  return [...mesh.opaque!.colors.slice(0, 3)];
+  return [...mesh.opaque!.fogDims.slice(0, 1)];
 }
 
 describe('fogColor', () => {
@@ -50,13 +50,13 @@ describe('fogColor', () => {
 describe('buildChunkMesh with fog', () => {
   it('greys a block the party does not see now', () => {
     const map = twoBlocks();
-    const plain = colorsOf(map, undefined);
+    // Признак серой зоны у вершин: вне тумана 0, сереет шейдер (blockMaterial.ts).
+    const plain = dimsOf(map, undefined);
+    expect(plain).toEqual([0]);
     const visible = createMask();
     maskAdd(visible, [0, 0, 0]);
-    expect(colorsOf(map, visible.get('0,0,0'))).toEqual(plain);
-    const grey = colorsOf(map, null);
-    expect(grey).not.toEqual(plain);
-    expect(grey[0]).toBeCloseTo(fogColor(plain as [number, number, number])[0]);
+    expect(dimsOf(map, visible.get('0,0,0'))).toEqual(plain);
+    expect(dimsOf(map, null)).toEqual([1]);
   });
 });
 

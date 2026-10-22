@@ -11,6 +11,7 @@ import { BookmarksModule } from './bookmarks/bookmarks.module.js';
 import { CharacterImagesModule } from './character-images/character-images.module.js';
 import { CharactersModule } from './characters/characters.module.js';
 import { DatabaseModule } from './database/database.module.js';
+import { BlockGroupsModule } from './block-groups/block-groups.module.js';
 import { EffectsModule } from './effects/effects.module.js';
 import { GamesModule } from './games/games.module.js';
 import { MonstersModule } from './monsters/monsters.module.js';
@@ -36,6 +37,7 @@ const level = process.env.LOG_LEVEL ?? 'info';
     ItemImagesModule,
     AbilitiesModule,
     EffectsModule,
+    BlockGroupsModule,
     MonstersModule,
     ApiTokensModule,
     BookmarksModule,

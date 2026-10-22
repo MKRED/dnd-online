@@ -358,6 +358,13 @@
       "when": 1792597817433,
       "tag": "0050_event_player_fog",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1792650496675,
+      "tag": "0051_block_groups",
+      "breakpoints": true
     }
   ]
 }

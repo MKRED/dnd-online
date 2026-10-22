@@ -93,6 +93,7 @@ const VIEW: GameSceneView = {
   seq: 0,
   size: { width: 4, depth: 4 },
   palette: ['air'],
+  blocks: [],
   chunks: [],
   objects: [],
   nextObjectId: 1,

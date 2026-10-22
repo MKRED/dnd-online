@@ -6,6 +6,7 @@ import {
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   chunkKeysInBox,
+  createBlockCatalog,
   encodeChunk,
   mapBounds,
   parseChunkKey,
@@ -18,6 +19,7 @@ import {
   type MapSliceResponse,
   type MapSummaryResponse,
 } from 'shared';
+import { BlockCatalogService } from '../block-groups/block-catalog.service.js';
 import {
   DatabaseService,
   type DbTransaction,
@@ -49,6 +51,7 @@ export class MapReadService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly limits: MapLimitsConfig,
+    private readonly blockCatalog: BlockCatalogService,
     @InjectPinoLogger(MapReadService.name) private readonly logger: PinoLogger,
   ) {}
 
@@ -69,6 +72,7 @@ export class MapReadService {
         objects: [...objects.byId.values()],
         nextObjectId: objects.nextId,
         refs: view,
+        blocks: await this.blockCatalog.groupsOf(map.ownerId, tx),
       };
     });
   }
@@ -76,9 +80,11 @@ export class MapReadService {
   getSummary(ownerId: string, mapId: string): Promise<MapSummaryResponse> {
     return this.read(ownerId, mapId, 'summary', async (tx, map) => {
       const store = await mapStorage(mapId).loadChunks(tx, 'all');
-      const summary = summarizeMap({ store, palette: map.palette });
+      const groups = await this.blockCatalog.groupsOf(map.ownerId, tx);
+      const blocks = createBlockCatalog(groups);
+      const summary = summarizeMap({ store, palette: map.palette, blocks });
       const { objects, view } = await loadObjectsWithView(tx, ownerId, map);
-      const sized = { store, palette: map.palette, size: sizeOf(map) };
+      const sized = { store, palette: map.palette, blocks, size: sizeOf(map) };
       return {
         seq: map.seq,
         size: sizeOf(map),
@@ -87,6 +93,7 @@ export class MapReadService {
         chunkCount: [...store.keys()].length,
         palette: map.palette,
         objects: summarizeObjects(sized, objects.byId.values(), view),
+        blocks: groups,
       };
     });
   }
@@ -106,8 +113,13 @@ export class MapReadService {
           max: [region.maxX, y, region.maxZ],
         }),
       );
-      const text = renderAsciiSlice({ store, palette: map.palette }, y, region);
-      const lines = await objectSliceText(tx, ownerId, map, y, region);
+      const blocks = await this.blockCatalog.catalogOf(map.ownerId, tx);
+      const text = renderAsciiSlice(
+        { store, palette: map.palette, blocks },
+        y,
+        region,
+      );
+      const lines = await objectSliceText(tx, ownerId, map, y, region, blocks);
       return { seq: map.seq, y, text: [text, ...lines].join('\n') };
     });
   }
@@ -133,8 +145,9 @@ export class MapReadService {
         tx,
         chunkKeysInBox(sectionBox(query, region)),
       );
+      const blocks = await this.blockCatalog.catalogOf(map.ownerId, tx);
       const text = renderAsciiSection(
-        { store, palette: map.palette },
+        { store, palette: map.palette, blocks },
         axis,
         at,
         region,

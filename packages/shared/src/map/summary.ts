@@ -1,7 +1,7 @@
-import { AIR, cellTypeId } from './cell.js';
+import { blockInfo } from './blockInfo.js';
+import { AIR } from './cell.js';
 import { cellFromChunk, parseChunkKey, type Box3 } from './coords.js';
 import type { ChunkStore } from './chunkStore.js';
-import { blockNameOf } from './palette.js';
 import type { MapState } from './mapState.js';
 
 // Перебирает все непустые клетки карты (воздух пропускается).
@@ -44,11 +44,12 @@ export interface MapSummary {
   blockCounts: Record<string, number>;
 }
 
-export function summarizeMap({ store, palette }: MapState): MapSummary {
+// Блоки удалённых групп не считаются: для правил и отрисовки это воздух.
+export function summarizeMap(map: MapState): MapSummary {
   const blockCounts: Record<string, number> = {};
-  for (const { value } of solidCells(store)) {
-    const name = blockNameOf(palette, cellTypeId(value));
-    blockCounts[name] = (blockCounts[name] ?? 0) + 1;
+  for (const { value } of solidCells(map.store)) {
+    const name = blockInfo(map, value)?.name;
+    if (name) blockCounts[name] = (blockCounts[name] ?? 0) + 1;
   }
-  return { bounds: mapBounds(store), blockCounts };
+  return { bounds: mapBounds(map.store), blockCounts };
 }

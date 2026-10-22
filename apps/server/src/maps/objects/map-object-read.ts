@@ -2,8 +2,7 @@ import {
   objectRefIds,
   objectSliceLines,
   summarizeObjects,
-  type MapSize,
-  type Palette,
+  type BlockCatalog,
   type SliceRegion,
 } from 'shared';
 import type { DbTransaction } from '../../database/database.service.js';
@@ -38,15 +37,12 @@ export async function objectSliceText(
   map: MapRow,
   y: number,
   region: SliceRegion,
+  blocks: BlockCatalog,
 ): Promise<string[]> {
   const { objects, view } = await loadObjectsWithView(tx, userId, map);
   if (![...objects.byId.values()].some((o) => o.at[1] === y)) return [];
   const store = await mapStorage(map.id).loadChunks(tx, 'all');
-  const sized: { store: typeof store; palette: Palette; size: MapSize } = {
-    store,
-    palette: map.palette,
-    size: sizeOf(map),
-  };
+  const sized = { store, palette: map.palette, blocks, size: sizeOf(map) };
   return objectSliceLines(
     summarizeObjects(sized, objects.byId.values(), view),
     y,

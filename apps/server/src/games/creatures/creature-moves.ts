@@ -96,7 +96,7 @@ export async function moveCreature(
   ];
   const run = await runOps(
     tx,
-    sceneTarget(scene),
+    sceneTarget(scene, world.map.blocks),
     ops,
     actor.limits,
     (objects) =>

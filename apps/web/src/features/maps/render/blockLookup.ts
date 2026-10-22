@@ -37,8 +37,8 @@ export function createBlockLookup(
           material: block.traits,
         };
       } else {
-        // Неизвестный блок (палитра новее клиента) не рисуем, а не падаем.
-        console.error('Unknown block in map palette', palette[typeId]);
+        // Блок, которого каталог не описывает, не рисуем: это блок удалённой группы
+        // (он теперь пустота, docs/plan/blocks.md) или палитра новее клиента.
         appearance = null;
       }
       cache.set(typeId, appearance);

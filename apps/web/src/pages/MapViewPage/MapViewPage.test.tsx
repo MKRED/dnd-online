@@ -70,6 +70,7 @@ function chunksOf(map: MapState, seq = 1): MapChunksResponse {
     seq,
     size: { width: 32, depth: 32 },
     palette: map.palette,
+    blocks: [],
     chunks: [...map.store.keys()].map((key) => {
       const [cx, cy, cz] = parseChunkKey(key);
       const bytes = encodeChunk(map.store.get(key)!);
@@ -85,6 +86,7 @@ const emptyChunks: MapChunksResponse = {
   seq: 0,
   size: { width: 32, depth: 32 },
   palette: createPalette(),
+  blocks: [],
   chunks: [],
   objects: [],
   nextObjectId: 1,

@@ -1,5 +1,6 @@
 import {
   chunkKey,
+  createBlockCatalog,
   createMapObjects,
   decodeChunk,
   MemoryChunkStore,
@@ -28,6 +29,8 @@ export function mapStateFromChunks(response: MapChunksResponse): MapViewState {
   return {
     store,
     palette: [...response.palette],
+    // Свои блоки владельца — тот же каталог, что у сервера (docs/plan/blocks.md, этап 3).
+    blocks: createBlockCatalog(response.blocks),
     size: { ...response.size },
     objects: createMapObjects(response.objects, response.nextObjectId),
   };

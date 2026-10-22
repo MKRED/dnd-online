@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyOp,
+  BASE_BLOCKS,
   createMask,
   maskAdd,
   MemoryChunkStore,
@@ -35,7 +36,12 @@ function recount(objects: MapObject[] = []): FogRecount {
   all.push([3, 1, 3]);
   return {
     scene: { id: 's1', seq: 3 } as SceneRow,
-    world: { map, objects, creatures: [], starts: [] },
+    world: {
+      map: { ...map, blocks: BASE_BLOCKS },
+      objects,
+      creatures: [],
+      starts: [],
+    },
     before: { explored: mask(corner), visible: mask(corner) },
     after: { explored: mask(all), visible: mask(all) },
     written: 1,

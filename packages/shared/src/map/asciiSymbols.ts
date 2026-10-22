@@ -1,6 +1,8 @@
-import { AIR, cellRotation, cellTypeId } from './cell.js';
+import { blockInfo } from './blockInfo.js';
+import { AIR, cellRotation } from './cell.js';
+import { parseCustomBlockName } from './customBlocks.js';
+import type { MapState } from './mapState.js';
 import { MapOpError } from './ops.js';
-import { blockNameOf, type Palette } from './palette.js';
 
 // Срез 256 × 256 «по границам карты» — уже 65 тыс. клеток, а прямоугольник из запроса
 // может быть любым. Больше этого нейросеть всё равно не прочитает.
@@ -11,18 +13,27 @@ const SYMBOLS =
   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#@$%&*+=?';
 
 // Символ выдаётся на каждое сочетание блок+поворот, встреченное в срезе, и
-// расшифровывается в легенде: так видно, куда смотрят ступени и стены.
-export function createSymbolTable(palette: Palette) {
+// расшифровывается в легенде: так видно, куда смотрят ступени и стены. Свой блок
+// подписан и именем для операций, и названием; блок удалённой группы — воздух.
+export function createSymbolTable(map: MapState) {
   const symbolByValue = new Map<number, string>([[AIR, AIR_SYMBOL]]);
   const legend: string[] = [`${AIR_SYMBOL} = воздух`];
   const symbolFor = (value: number) => {
     let symbol = symbolByValue.get(value);
     if (symbol === undefined) {
+      const block = blockInfo(map, value);
+      if (!block) {
+        symbolByValue.set(value, AIR_SYMBOL);
+        return AIR_SYMBOL;
+      }
       // Символы кончились (больше 70 разных блоков в срезе) — дальше общий «~».
-      symbol = SYMBOLS[symbolByValue.size - 1] ?? '~';
+      symbol = SYMBOLS[legend.length - 1] ?? '~';
       symbolByValue.set(value, symbol);
-      const name = blockNameOf(palette, cellTypeId(value));
-      legend.push(`${symbol} = ${name} (${cellRotation(value)}°)`);
+      // Имя своего блока — uuid, по нему не понять, что это; базовые имена говорящие.
+      const title = parseCustomBlockName(block.name) ? ` «${block.label}»` : '';
+      legend.push(
+        `${symbol} = ${block.name}${title} (${cellRotation(value)}°)`,
+      );
     }
     return symbol;
   };

@@ -32,14 +32,15 @@ const DESCRIPTION: Record<SectionAxis, (r: SectionRegion) => string> = {
 };
 
 export function renderAsciiSection(
-  { store, palette }: MapState,
+  map: MapState,
   axis: SectionAxis,
   at: number,
   region: SectionRegion,
 ): string {
   const { min, max, minY, maxY } = region;
   assertSliceArea(max - min + 1, maxY - minY + 1);
-  const { symbolFor, legend } = createSymbolTable(palette);
+  const { store } = map;
+  const { symbolFor, legend } = createSymbolTable(map);
   const cellAt = (h: number, y: number): Vec3 =>
     axis === 'x' ? [at, y, h] : [h, y, at];
 

@@ -7,10 +7,17 @@ export const ENTITY_KINDS = [
   'item',
   'ability',
   'effect',
+  'block_group',
 ] as const;
 export type EntityKind = (typeof ENTITY_KINDS)[number];
 
-export const CATALOG_KINDS = ['monster', 'item', 'ability', 'effect'] as const;
+export const CATALOG_KINDS = [
+  'monster',
+  'item',
+  'ability',
+  'effect',
+  'block_group',
+] as const;
 export type CatalogKind = (typeof CATALOG_KINDS)[number];
 
 export const isCatalogKind = (kind: EntityKind): kind is CatalogKind =>
@@ -23,6 +30,7 @@ const PATHS: Record<EntityKind, string> = {
   item: '/items',
   ability: '/abilities',
   effect: '/effects',
+  block_group: '/block-groups',
 };
 
 export const entityPath = (kind: EntityKind, id?: string) =>

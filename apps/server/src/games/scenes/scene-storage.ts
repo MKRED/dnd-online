@@ -1,3 +1,4 @@
+import type { BlockCatalog } from 'shared';
 import {
   gameSceneChunks,
   gameSceneObjects,
@@ -40,10 +41,12 @@ export function sceneStorage(sceneId: string): EditStorage {
   return tableStorage(SCENE_CHUNKS, SCENE_OBJECTS, sceneId);
 }
 
-export function sceneTarget(scene: SceneRow): EditTarget {
+// blocks — каталог мастера игры (loadGameBlockCatalog): какие свои блоки он может ставить.
+export function sceneTarget(scene: SceneRow, blocks: BlockCatalog): EditTarget {
   return {
     storage: sceneStorage(scene.id),
     palette: scene.palette,
+    blocks,
     size: { width: scene.width, depth: scene.depth },
     nextObjectId: scene.nextObjectId,
   };

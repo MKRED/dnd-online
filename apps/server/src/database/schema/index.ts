@@ -15,6 +15,7 @@ export * from './item-pack-entries.js';
 export * from './character-items.js';
 export * from './abilities.js';
 export * from './effects.js';
+export * from './block-groups.js';
 export * from './monsters.js';
 export * from './ability-step-effects.js';
 export * from './character-effects.js';

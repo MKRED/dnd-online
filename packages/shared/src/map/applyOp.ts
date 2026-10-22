@@ -46,7 +46,11 @@ export function applyOp(state: MapState, op: BlockOp): Changeset {
   let resolvedValue: number | null = null;
   const blockValue = () => {
     if (resolvedValue === null) {
-      const { id, added } = resolveBlockId(state.palette, op.block);
+      const { id, added } = resolveBlockId(
+        state.palette,
+        op.block,
+        state.blocks,
+      );
       if (added) paletteAdded.push({ id, name: op.block });
       resolvedValue = encodeCell(id, op.rotation);
     }

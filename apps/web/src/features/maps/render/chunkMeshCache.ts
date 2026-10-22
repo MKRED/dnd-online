@@ -2,6 +2,7 @@ import {
   chunkKey,
   parseChunkKey,
   sameSize,
+  type BlockCatalog,
   type CellMask,
   type ChunkStore,
   type MapSize,
@@ -24,6 +25,8 @@ export interface ChunkMeshCache {
   size: MapSize | undefined;
   // Есть ли туман: включился или пропал — перекрасить всё.
   fogged: boolean;
+  // Каталог блоков, по которому собрано: правка своей группы меняет вид без правки чанков.
+  blocks: BlockCatalog | undefined;
   chunks: Map<string, CachedChunk>;
 }
 
@@ -62,10 +65,13 @@ export function updateChunkMeshes(
     prev &&
     (prev.size && size ? sameSize(prev.size, size) : prev.size === size);
   const reuse =
-    prev?.cutY === cutY && sameMapSize && prev.fogged === fogged
+    prev?.cutY === cutY &&
+    sameMapSize &&
+    prev.fogged === fogged &&
+    prev.blocks === map.blocks
       ? prev.chunks
       : null;
-  const lookup = createBlockLookup(map.palette);
+  const lookup = createBlockLookup(map.palette, map.blocks);
   const chunks = new Map<string, CachedChunk>();
   for (const key of map.store.keys()) {
     const inputs = meshInputs(map.store, key);
@@ -90,5 +96,5 @@ export function updateChunkMeshes(
           },
     );
   }
-  return { cutY, size, fogged, chunks };
+  return { cutY, size, fogged, blocks: map.blocks, chunks };
 }

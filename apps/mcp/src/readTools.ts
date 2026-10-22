@@ -8,7 +8,7 @@ import { json, type Guarded } from './toolResult.js';
 const kind = z
   .enum(ENTITY_KINDS)
   .describe(
-    'character — персонаж игрока, npc — НПС, monster — монстр, item — предмет, ability — способность (в том числе заклинание), effect — эффект',
+    'character — персонаж игрока, npc — НПС, monster — монстр, item — предмет, ability — способность (в том числе заклинание), effect — эффект, block_group — группа своих блоков для карт',
   );
 
 // Поиск и чтение всего, что есть у пользователя (docs/plan/ai-access.md, этап 2).

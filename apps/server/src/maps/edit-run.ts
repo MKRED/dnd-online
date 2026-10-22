@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import {
   applyChangeset,
+  type BlockCatalog,
   cellLocation,
   chunkKeysInBox,
   editMap,
@@ -27,6 +28,8 @@ import type { EditStorage } from './storage/index.js';
 export interface EditTarget {
   storage: EditStorage;
   palette: Palette;
+  // Каталог владельца: какие свои блоки можно поставить (docs/plan/blocks.md, этап 3).
+  blocks: BlockCatalog;
   size: MapSize;
   nextObjectId: number;
 }
@@ -34,6 +37,7 @@ export interface EditTarget {
 export interface EditState {
   store: MemoryChunkStore;
   palette: Palette;
+  blocks: BlockCatalog;
   size: MapSize;
   // Объекты, если правка их загружала: из них берётся счётчик номеров. Не из
   // changeset — «поставил и убрал» в одной пачке двигает счётчик без объекта в changeset.
@@ -91,6 +95,7 @@ export async function runOps<R extends { refs: ObjectRefs }>(
   const state: EditState = {
     store,
     palette: [...target.palette],
+    blocks: target.blocks,
     size: { ...target.size },
     objects,
   };
@@ -118,6 +123,7 @@ export async function runReplay(
   const state: EditState = {
     store,
     palette: [...target.palette],
+    blocks: target.blocks,
     size: { ...target.size },
     objects,
   };

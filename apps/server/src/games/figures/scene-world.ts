@@ -1,10 +1,12 @@
 import {
   objectRefIds,
   objectSize,
+  type BlockCatalog,
   type MapObject,
   type MapState,
   type Occupant,
 } from 'shared';
+import { loadGameBlockCatalog } from '../../block-groups/block-catalog.js';
 import type { DbTransaction } from '../../database/database.service.js';
 import type { SceneRow } from '../scenes/scene-copy.js';
 import { sceneRefs } from '../scenes/scene-refs.js';
@@ -17,7 +19,8 @@ export type SceneCreature = Occupant & { hidden: boolean; objectId: number };
 
 // Сцена глазами правил хода: блоки, существа на ней и стартовые точки по номеру.
 export interface SceneWorld {
-  map: MapState;
+  // С каталогом мастера: свои блоки сцены правила читают так же, как базовые.
+  map: MapState & { blocks: BlockCatalog };
   // Все объекты сцены по номеру — туману войны (что игрок увидел или потерял из виду).
   objects: MapObject[];
   creatures: SceneCreature[];
@@ -35,7 +38,11 @@ export async function loadSceneWorld(
   ].sort((a, b) => a.id - b.id);
   const { refs } = await sceneRefs(tx, scene.gameId, objectRefIds(objects));
   return {
-    map: { store, palette: scene.palette },
+    map: {
+      store,
+      palette: scene.palette,
+      blocks: await loadGameBlockCatalog(tx, scene.gameId),
+    },
     objects,
     creatures: objects.flatMap((object) =>
       object.kind === 'monster' || object.kind === 'npc'

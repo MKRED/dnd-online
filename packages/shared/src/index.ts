@@ -10,6 +10,7 @@ export * from './carrying.js';
 export * from './spellSlots.js';
 export * from './catalogImage.js';
 export * from './catalog.js';
+export * from './blockGroups.js';
 export * from './catalogSources.js';
 export * from './abilities.js';
 export * from './effects.js';

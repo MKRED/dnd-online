@@ -16,13 +16,14 @@ export interface SliceRegion {
 
 // Текстовый срез уровня y — так нейросеть «видит» карту сверху.
 export function renderAsciiSlice(
-  { store, palette }: MapState,
+  map: MapState,
   y: number,
   region: SliceRegion,
 ): string {
   const { minX, maxX, minZ, maxZ } = region;
   assertSliceArea(maxX - minX + 1, maxZ - minZ + 1);
-  const { symbolFor, legend } = createSymbolTable(palette);
+  const { store } = map;
+  const { symbolFor, legend } = createSymbolTable(map);
 
   const zWidth = Math.max(String(minZ).length, String(maxZ).length);
   const rows: string[] = [];

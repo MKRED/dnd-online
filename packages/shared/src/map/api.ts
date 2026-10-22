@@ -1,3 +1,4 @@
+import type { BlockGroupInfo } from './customBlocks.js';
 import type { SectionAxis } from './asciiSection.js';
 import type { PackedChangeset } from './changesetPacking.js';
 import type { Box3 } from './coords.js';
@@ -47,6 +48,9 @@ export interface MapChunksResponse {
   // Следующий номер объекта: клиент держит его в состоянии карты, как сервер.
   nextObjectId: number;
   refs: MapObjectRefsView;
+  // Свои группы блоков владельца (docs/plan/blocks.md, этап 3): по ним клиент строит тот
+  // же каталог, что и сервер, — и рисует, и считает правила для своих блоков.
+  blocks: BlockGroupInfo[];
 }
 
 export interface MapEditResult {
@@ -83,6 +87,8 @@ export interface MapSummaryResponse {
   chunkCount: number;
   palette: Palette;
   objects: MapObjectSummary[];
+  // Свои группы владельца: имена своих блоков в палитре — это id групп.
+  blocks: BlockGroupInfo[];
 }
 
 export interface MapSectionResponse {

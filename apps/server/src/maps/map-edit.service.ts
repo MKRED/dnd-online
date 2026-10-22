@@ -9,10 +9,12 @@ import {
   MapOpError,
   parseMapOpBatch,
   unpackChangeset,
+  type BlockCatalog,
   type Changeset,
   type MapEditResult,
   type MapOp,
 } from 'shared';
+import { BlockCatalogService } from '../block-groups/block-catalog.service.js';
 import {
   DatabaseService,
   type DbTransaction,
@@ -39,10 +41,11 @@ import { mapStorage } from './storage/index.js';
 type MapRow = typeof maps.$inferSelect;
 type EditKind = 'op' | 'undo' | 'redo';
 
-function target(map: MapRow): EditTarget {
+function target(map: MapRow, blocks: BlockCatalog): EditTarget {
   return {
     storage: mapStorage(map.id),
     palette: map.palette,
+    blocks,
     size: sizeOf(map),
     nextObjectId: map.nextObjectId,
   };
@@ -55,14 +58,20 @@ export class MapEditService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly limits: MapLimitsConfig,
+    private readonly blockCatalog: BlockCatalogService,
     @InjectPinoLogger(MapEditService.name) private readonly logger: PinoLogger,
   ) {}
 
   applyBatch(ownerId: string, mapId: string, rawOps: unknown[]) {
     const ops = this.parse(rawOps);
     return this.edit(ownerId, mapId, 'op', async (tx, map) => {
-      const run = await runOps(tx, target(map), ops, this.limits, (objects) =>
-        loadOpsRefs(tx, ownerId, objects, ops),
+      const blocks = await this.blockCatalog.catalogOf(map.ownerId, tx);
+      const run = await runOps(
+        tx,
+        target(map, blocks),
+        ops,
+        this.limits,
+        (objects) => loadOpsRefs(tx, ownerId, objects, ops),
       );
       // Ничего не изменилось — запись в журнал не нужна, seq не двигается. Номер
       // объекта, поставленного и убранного в этой же пачке, в журнал не попал, и его
@@ -132,7 +141,8 @@ export class MapEditService {
     entry: { kind: 'undo' | 'redo'; targetSeq: number },
   ): Promise<MapEditResult> {
     // И undo, и redo откатывают запись журнала: undo — операцию, redo — отмену.
-    const run = await runReplay(tx, target(map), changeset);
+    const blocks = await this.blockCatalog.catalogOf(map.ownerId, tx);
+    const run = await runReplay(tx, target(map, blocks), changeset);
     // Запись пишется даже без изменений (всё в конфликтах): иначе флаг undone
     // разошёлся бы с журналом.
     const result = await commitEdit(tx, {

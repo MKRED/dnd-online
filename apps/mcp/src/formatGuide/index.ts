@@ -1,5 +1,6 @@
 import type { EntityKind } from '../entityKinds.js';
 import { abilityGuide } from './ability.js';
+import { blockGroupGuide } from './blockGroup.js';
 import { characterGuide } from './character.js';
 import { effectGuide } from './effect.js';
 import { itemGuide } from './item.js';
@@ -12,6 +13,7 @@ const GUIDES: Record<EntityKind, () => string[]> = {
   item: itemGuide,
   ability: abilityGuide,
   effect: effectGuide,
+  block_group: blockGroupGuide,
 };
 
 // Справка по полям для create и update (docs/plan/ai-access.md, этап 3). Значения

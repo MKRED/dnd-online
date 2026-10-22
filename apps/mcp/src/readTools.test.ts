@@ -35,6 +35,8 @@ const emptyCatalogs = {
   '/abilities?scope=catalog': [],
   '/effects?scope=mine': [],
   '/effects?scope=catalog': [],
+  '/block-groups?scope=mine': [],
+  '/block-groups?scope=catalog': [],
 };
 
 type SearchResult = Awaited<ReturnType<typeof searchEntities>>;

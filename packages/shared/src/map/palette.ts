@@ -1,5 +1,8 @@
-import { AIR, MAX_BLOCK_TYPE_ID } from './cell.js';
+import { BASE_BLOCKS, type BlockCatalog } from './blockInfo.js';
 import { getBlock } from './blocks.js';
+import { AIR, MAX_BLOCK_TYPE_ID } from './cell.js';
+import { parseCustomBlockName } from './customBlocks.js';
+import { MapOpError } from './mapOpError.js';
 
 export const AIR_NAME = 'air';
 
@@ -11,19 +14,31 @@ export function createPalette(): Palette {
   return [AIR_NAME];
 }
 
+// Похоже ли на имя блока: воздух, базовый блок или свой блок справочника. Есть ли такой
+// свой блок у владельца карты, решает каталог при записи (resolveBlockId).
 export function isKnownBlockName(name: string): boolean {
-  return name === AIR_NAME || getBlock(name) !== undefined;
+  return (
+    name === AIR_NAME ||
+    getBlock(name) !== undefined ||
+    parseCustomBlockName(name) !== null
+  );
 }
 
-// Возвращает id блока, при необходимости дописывая его в конец палитры.
+// Возвращает id блока, при необходимости дописывая его в конец палитры. Каталог
+// проверяется и для имени, которое уже в палитре: блок удалённой группы там остался,
+// но поставить его снова нельзя.
 export function resolveBlockId(
   palette: Palette,
   name: string,
+  catalog: BlockCatalog = BASE_BLOCKS,
 ): { id: number; added: boolean } {
   if (name === AIR_NAME) return { id: AIR, added: false };
+  // Ошибка запроса, а не программы: своё имя проходит разбор операции по виду, а есть
+  // ли такой блок у владельца карты, известно только здесь.
+  if (!catalog.describe(name))
+    throw new MapOpError(`Неизвестный блок: ${name}`);
   const existing = palette.indexOf(name);
   if (existing !== -1) return { id: existing, added: false };
-  if (!getBlock(name)) throw new RangeError(`Неизвестный блок: ${name}`);
   if (palette.length > MAX_BLOCK_TYPE_ID) {
     throw new RangeError('В палитре карты закончились id типов блоков');
   }

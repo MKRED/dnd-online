@@ -10,6 +10,10 @@ import {
   type GameSceneView,
   type MapChunkData,
 } from 'shared';
+import {
+  groupsInPalette,
+  loadGameBlockGroups,
+} from '../../block-groups/block-catalog.js';
 import type { Db } from '../../catalog/catalog-access.js';
 import {
   gameSceneChunks,
@@ -133,6 +137,7 @@ export async function readSceneView(
     .where(eq(gameSceneObjects.sceneId, scene.id))
     .orderBy(asc(gameSceneObjects.id));
   const fog = master ? null : await playerFog(db, scene);
+  const groups = await loadGameBlockGroups(db, scene.gameId);
   const objects = objectRows
     .map(toMapObject)
     .flatMap((object) => (master ? [object] : (forPlayer(object, fog) ?? [])));
@@ -147,5 +152,7 @@ export async function readSceneView(
     scene: status,
     contentsHidden: !master,
     fog: fog && fogView(fog),
+    // Игроку — только группы блоков этой сцены, мастеру — все свои (для правки сцены).
+    blocks: master ? groups : groupsInPalette(groups, scene.palette),
   };
 }

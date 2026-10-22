@@ -43,6 +43,7 @@ export function buildBlockGuide(): string {
     '',
     'ИМЕНА БЛОКОВ',
     '- Куб — имя материала (stone), другие фигуры — материал_фигура (stone_stairs, wood_slab_top). «air» — воздух, им очищают клетки.',
+    '- Свои блоки пользователя — группы справочника (search kind block_group, справка format_guide block_group): куб — id группы, другие фигуры — id_фигура. Ставить можно только свои группы; в map_summary они в поле blocks, в срезе — с названием в кавычках.',
     '',
     'МАТЕРИАЛЫ',
     ...materials,

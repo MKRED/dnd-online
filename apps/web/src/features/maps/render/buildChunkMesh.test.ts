@@ -1,5 +1,7 @@
 import {
   applyOps,
+  createBlockCatalog,
+  type BlockGroupInfo,
   cellLocation,
   createPalette,
   MemoryChunkStore,
@@ -87,6 +89,40 @@ describe('buildChunkMesh', () => {
     // Два куба листвы по 6 граней; камень над листвой рисует и нижнюю грань,
     // а у листвы под камнем верх скрыт.
     expect(faceCount(opaque)).toBe(6 + 5 + 6);
+  });
+
+  it('свой блок рисуется по каталогу карты, блок удалённой группы — нет', () => {
+    const group: BlockGroupInfo = {
+      id: '0b5c6f2e-8a1d-4c3b-9e7f-1a2b3c4d5e6f',
+      name: 'Угли',
+      look: 'scorched',
+      color: '#552211',
+      opaque: true,
+      durability: null,
+      flammable: false,
+      movementCost: 1,
+      climbable: false,
+      hazard: null,
+    };
+    const map: MapState = {
+      store: new MemoryChunkStore(),
+      palette: createPalette(),
+      blocks: createBlockCatalog([group]),
+    };
+    applyOps(map, [set([0, 0, 0], group.id)]);
+    const key = cellLocation([0, 0, 0]).key;
+    const drawn = buildChunkMesh(
+      map.store,
+      key,
+      createBlockLookup(map.palette, map.blocks),
+    );
+    expect(faceCount(drawn.opaque)).toBe(6);
+    const deleted = buildChunkMesh(
+      map.store,
+      key,
+      createBlockLookup(map.palette, createBlockCatalog([])),
+    );
+    expect(deleted.opaque).toBeNull();
   });
 
   it('скрывает грани и через границу чанков', () => {

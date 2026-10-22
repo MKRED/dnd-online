@@ -7,6 +7,7 @@ import {
   type MapEditResult,
   type MapOp,
 } from 'shared';
+import { loadGameBlockCatalog } from '../../block-groups/block-catalog.js';
 import type { DbTransaction } from '../../database/database.service.js';
 import {
   isEmptyEdit,
@@ -61,8 +62,13 @@ export async function editScene(
   if (ops.some((op) => op.op === 'resize')) {
     throw new BadRequestException(SCENE_NO_RESIZE);
   }
-  const run = await runOps(tx, sceneTarget(scene), ops, ctx.limits, (objects) =>
-    loadSceneEditRefs(tx, gameId, masterId, objects, ops),
+  const blocks = await loadGameBlockCatalog(tx, gameId);
+  const run = await runOps(
+    tx,
+    sceneTarget(scene, blocks),
+    ops,
+    ctx.limits,
+    (objects) => loadSceneEditRefs(tx, gameId, masterId, objects, ops),
   );
   if (isEmptyEdit(run.applied)) {
     return {
@@ -147,7 +153,8 @@ async function replay(
   entry: (conflicts: number) => SceneJournalEntry,
 ): Promise<SceneEditOutcome> {
   const { tx, gameId, masterId, scene } = ctx;
-  const run = await runReplay(tx, sceneTarget(scene), changeset);
+  const blocks = await loadGameBlockCatalog(tx, gameId);
+  const run = await runReplay(tx, sceneTarget(scene, blocks), changeset);
   const committed = await commitSceneEdit(
     tx,
     gameId,

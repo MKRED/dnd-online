@@ -29,6 +29,7 @@ const embers: BlockGroup = {
   movementCost: 2,
   climbable: false,
   hazard: 'fire',
+  textures: null,
 };
 
 const auth = {

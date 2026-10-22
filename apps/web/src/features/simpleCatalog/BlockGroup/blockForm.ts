@@ -3,6 +3,7 @@ import {
   BLOCK_HIT_POINTS_MAX,
   MATERIALS,
   type BlockGroupFields,
+  type BlockTextures,
   type HazardName,
   type MaterialName,
 } from 'shared';
@@ -20,6 +21,8 @@ export interface BlockValues {
   breakable: boolean;
   armorClass: number | string;
   hitPoints: number | string;
+  // Свои текстуры (этап 4б); null — узор основы в основном цвете.
+  textures: BlockTextures | null;
 }
 
 // Новая группа начинается как камень: самый частый блок, и у него все свойства обычные.
@@ -32,6 +35,7 @@ const NEW_GROUP: BlockGroupFields = {
   movementCost: 1,
   climbable: false,
   hazard: null,
+  textures: null,
 };
 
 export function toBlockValues(
@@ -49,6 +53,7 @@ export function toBlockValues(
     breakable: group.durability !== null,
     armorClass: durability?.armorClass ?? '',
     hitPoints: durability?.hitPoints ?? '',
+    textures: group.textures,
   };
 }
 
@@ -67,6 +72,7 @@ export function fromBlockValues(values: BlockValues): BlockGroupFields {
     movementCost: values.difficult ? 2 : 1,
     climbable: values.climbable,
     hazard: values.hazard === 'none' ? null : values.hazard,
+    textures: values.textures,
   };
 }
 

@@ -3,7 +3,7 @@ import { SHAPE_LABELS, SHAPE_NAMES, type BlockGroupFields } from 'shared';
 import { ShapeSwatch } from '../../maps';
 
 interface BlockShapesProps {
-  group: Pick<BlockGroupFields, 'look' | 'color'>;
+  group: Pick<BlockGroupFields, 'look' | 'color' | 'textures'>;
 }
 
 // Картинка группы блоков — сами блоки: большой куб и под ним все формы группы
@@ -15,6 +15,7 @@ function BlockShapes({ group }: BlockShapesProps) {
       <ShapeSwatch
         material={group.look}
         color={group.color}
+        textures={group.textures}
         shape="cube"
         size={160}
       />
@@ -24,6 +25,7 @@ function BlockShapes({ group }: BlockShapesProps) {
             <ShapeSwatch
               material={group.look}
               color={group.color}
+              textures={group.textures}
               shape={shape}
               size={40}
             />

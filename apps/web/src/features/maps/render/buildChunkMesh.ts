@@ -12,7 +12,6 @@ import {
 import type { BlockAppearance, BlockLookup } from './blockLookup';
 import { BufferBuilder, type MeshBuffers } from './bufferBuilder';
 import { faceUvs } from './faceUv';
-import { CUTOUT_MATERIALS } from './textures/materialTextures';
 
 export type { MeshBuffers };
 
@@ -36,7 +35,7 @@ export interface MeshOptions {
 }
 
 // Грань коробки на границе клетки скрыта, только если соседняя клетка закрывает её
-// целиком: сосед — полный куб, непрозрачный или того же прозрачного типа (стекло к стеклу).
+// целиком: сосед — полный куб, не полупрозрачный или того же типа (стекло к стеклу).
 // Плита рядом с кубом не скрывает его боковую грань, куб рядом со стеклом — тоже.
 // Листва листву не скрывает: сквозь дыры видны листья в глубине кроны.
 function neighbourHidesFace(
@@ -44,8 +43,8 @@ function neighbourHidesFace(
   neighbour: BlockAppearance | null,
 ): boolean {
   if (!neighbour || neighbour.shape !== 'cube') return false;
-  if (CUTOUT_MATERIALS.has(neighbour.materialName)) return false;
-  return neighbour.material.opaque || neighbour.typeId === self.typeId;
+  if (neighbour.cutout) return false;
+  return !neighbour.translucent || neighbour.typeId === self.typeId;
 }
 
 // Четыре угла грани против часовой стрелки при взгляде снаружи (со стороны нормали):
@@ -97,9 +96,7 @@ export function buildChunkMesh(
     if (!self) continue;
     const cell = cellFromChunk(chunkCoord, index);
     if (isHidden(cell)) continue;
-    const solid =
-      self.material.opaque || CUTOUT_MATERIALS.has(self.materialName);
-    const target = solid ? opaque : transparent;
+    const target = self.translucent ? transparent : opaque;
     const dim =
       seen !== undefined &&
       (seen === null || (seen[index >> 3] & (1 << (index & 7))) === 0);
@@ -117,7 +114,7 @@ export function buildChunkMesh(
           const normal: [number, number, number] = [0, 0, 0];
           normal[axis] = side;
           const corners = faceCorners(cell, box, axis, side);
-          const uvs = faceUvs(cell, corners, axis, side, self.materialName);
+          const uvs = faceUvs(cell, corners, axis, side, self.tileSet);
           target.addQuad(corners, normal, fogDim, uvs);
         }
       }

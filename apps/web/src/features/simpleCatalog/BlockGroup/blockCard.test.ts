@@ -12,6 +12,7 @@ const plain: BlockGroupFields = {
   movementCost: 1,
   climbable: false,
   hazard: null,
+  textures: null,
 };
 
 describe('blockCard', () => {

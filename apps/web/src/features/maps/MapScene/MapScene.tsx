@@ -1,12 +1,13 @@
 import { useComputedColorScheme } from '@mantine/core';
 import { MapControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { useCallback, useState, type RefObject } from 'react';
-import type {
-  FogMasks,
-  MapObjectRefsView,
-  ResizeOp,
-  UserSettings,
+import { useCallback, useEffect, useState, type RefObject } from 'react';
+import {
+  BASE_BLOCKS,
+  type FogMasks,
+  type MapObjectRefsView,
+  type ResizeOp,
+  type UserSettings,
 } from 'shared';
 import type { CameraPlacement, Point } from '../cameraView';
 import type { SceneEditor } from '../editor/editorTools';
@@ -34,6 +35,8 @@ import ObjectLayer, {
 } from './objects';
 import type { ObjectImagePaths } from './objects/objectImages';
 import ResizePreview from './ResizePreview';
+import { atlasFor } from '../render/textures/atlas';
+import { releaseBlockMaterials } from './blockMaterial';
 import ChunkMesh from './ChunkMesh';
 import { useChunkMeshes } from './useChunkMeshes';
 import classes from './MapScene.module.css';
@@ -105,6 +108,10 @@ function MapScene({
   fog = null,
 }: MapSceneProps) {
   const chunks = useChunkMeshes(map, cutY, fog?.visible ?? null);
+  // Атлас каталога этой карты: сборка чанков выше уже выдала места своим группам.
+  const atlas = atlasFor(map.blocks ?? BASE_BLOCKS);
+  // Старый атлас (каталог сменился или сцена ушла) — освободить его видеопамять.
+  useEffect(() => () => releaseBlockMaterials(atlas), [atlas]);
   const scheme = useComputedColorScheme('dark');
   // Центр камеры живёт внутри Canvas (CameraFocus), а подсказка с кнопками и клавиши
   // Q/E — снаружи, в обычном DOM; связывает их ref focus.
@@ -137,10 +144,18 @@ function MapScene({
           {[...chunks].map(([key, { meshes }]) => (
             <group key={key}>
               {meshes.opaque && (
-                <ChunkMesh buffers={meshes.opaque} transparent={false} />
+                <ChunkMesh
+                  buffers={meshes.opaque}
+                  transparent={false}
+                  atlas={atlas}
+                />
               )}
               {meshes.transparent && (
-                <ChunkMesh buffers={meshes.transparent} transparent />
+                <ChunkMesh
+                  buffers={meshes.transparent}
+                  transparent
+                  atlas={atlas}
+                />
               )}
             </group>
           ))}

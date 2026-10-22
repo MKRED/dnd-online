@@ -16,6 +16,7 @@ const embers: BlockGroupFields = {
   movementCost: 2,
   climbable: false,
   hazard: 'fire',
+  textures: null,
 };
 
 describe('blockForm', () => {
@@ -31,6 +32,7 @@ describe('blockForm', () => {
       movementCost: 1,
       climbable: false,
       hazard: null,
+      textures: null,
     });
   });
 

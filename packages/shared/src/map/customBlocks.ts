@@ -4,6 +4,18 @@ import type { MaterialName } from './materials.js';
 import { SHAPE_LABELS, SHAPE_NAMES, type ShapeName } from './shapes.js';
 
 export type HazardName = keyof typeof HAZARDS;
+
+// Свои текстуры группы (docs/plan/blocks.md, этап 4б): плитка 16×16 на верх, бока и низ,
+// каждая — base64 пикселей RGBA строками сверху вниз (1024 байта). Альфа только 0 или
+// 255: дыры, как у листвы, без полупрозрачности. Одна текстура на все грани — три
+// одинаковые строки.
+export interface BlockTextures {
+  top: string;
+  side: string;
+  bottom: string;
+}
+
+export const BLOCK_TEXTURE_FACES = ['top', 'side', 'bottom'] as const;
 export const HAZARD_NAMES = Object.keys(HAZARDS) as HazardName[];
 
 // Группа своих блоков из справочника (docs/plan/blocks.md, этап 3): свойства для правил
@@ -20,6 +32,8 @@ export interface BlockGroupInfo {
   movementCost: 1 | 2;
   climbable: boolean;
   hazard: HazardName | null;
+  // null — узор основы, перекрашенный в основной цвет.
+  textures: BlockTextures | null;
 }
 
 // Имя своего блока в палитре — как у базовых: id группы для куба, «id_форма» для
@@ -56,6 +70,7 @@ function describeCustom(
         : `${group.name}: ${SHAPE_LABELS[shape].toLowerCase()}`,
     shape,
     material: group.look,
+    ...(group.textures && { textures: group.textures }),
     traits: {
       label: group.name,
       color: group.color,

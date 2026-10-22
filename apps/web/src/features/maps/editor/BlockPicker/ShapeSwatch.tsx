@@ -4,11 +4,12 @@ import {
   rotateBox,
   SHAPES,
   type MaterialName,
+  type BlockTextures,
   type Rotation,
   type ShapeBox,
   type ShapeName,
 } from 'shared';
-import { tileImage } from '../../render/textures/tileImages';
+import { ownTileImage, tileImage } from '../../render/textures/tileImages';
 import { faceImageTransform, isoFaces, type IsoFaceKind } from './isoFaces';
 
 const FULL_CELL: ShapeBox = [0, 0, 0, 1, 1, 1];
@@ -25,6 +26,8 @@ export interface ShapeSwatchProps {
   shape: ShapeName;
   // Основной цвет своей группы блоков: узор основы перекрашен в него.
   color?: string;
+  // Свои текстуры группы — вместо узора основы.
+  textures?: BlockTextures | null;
   rotation?: Rotation;
   size?: number;
 }
@@ -37,6 +40,7 @@ function ShapeSwatch({
   material,
   shape,
   color = MATERIALS[material].color,
+  textures,
   rotation = 0,
   size = 36,
 }: ShapeSwatchProps) {
@@ -77,11 +81,15 @@ function ShapeSwatch({
         <g key={index}>
           <g clipPath={`url(#${clipPrefix}-${index})`}>
             <image
-              href={tileImage(
-                material,
-                face.kind === 'top' ? 'top' : 'side',
-                color,
-              )}
+              href={
+                textures
+                  ? ownTileImage(textures[face.kind === 'top' ? 'top' : 'side'])
+                  : tileImage(
+                      material,
+                      face.kind === 'top' ? 'top' : 'side',
+                      color,
+                    )
+              }
               width={1}
               height={1}
               preserveAspectRatio="none"

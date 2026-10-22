@@ -21,6 +21,7 @@ import {
 import { ShapeSwatch } from '../../maps';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import { colorAfterLookChange } from './blockForm';
+import BlockTexturesField from './BlockTexturesField';
 
 const LOOK_OPTIONS = (Object.keys(MATERIALS) as MaterialName[]).map(
   (value) => ({ value, label: MATERIALS[value].label }),
@@ -39,10 +40,14 @@ function BlockFields({ form }: { form: UseFormReturnType<SimpleFormValues> }) {
   return (
     <Stack gap="md">
       <Fieldset legend="Вид">
-        <Group align="flex-start" gap="md">
+        <Group align="flex-start" gap="md" mb="md">
           <Select
             label="Основа"
-            description="Текстуры этого базового блока, пока у группы нет своих"
+            description={
+              block.textures
+                ? 'Её узор вернётся, если убрать свои текстуры'
+                : 'Узор этого базового блока, пока у группы нет своих текстур'
+            }
             data={LOOK_OPTIONS}
             allowDeselect={false}
             searchable
@@ -73,12 +78,17 @@ function BlockFields({ form }: { form: UseFormReturnType<SimpleFormValues> }) {
           />
           <ColorInput
             label="Основной цвет"
-            description="Узор основы перекрашивается в него"
+            description={
+              block.textures
+                ? 'Средний цвет текстур; подставляется при загрузке'
+                : 'Узор основы перекрашивается в него'
+            }
             format="hex"
             w={200}
             {...form.getInputProps('block.color')}
           />
         </Group>
+        <BlockTexturesField form={form} />
       </Fieldset>
       <Fieldset legend="Свойства для правил — у всех форм группы">
         <Stack gap="sm">

@@ -37,6 +37,10 @@ export function blockTraitRows(
 ): { label: string; value: string }[] {
   const { durability, hazard } = group;
   return [
+    {
+      label: 'Текстуры',
+      value: group.textures ? 'Свои' : 'Узор основы в основном цвете',
+    },
     { label: 'Обзор', value: group.opaque ? 'Закрывает' : 'Не закрывает' },
     {
       label: 'Движение',

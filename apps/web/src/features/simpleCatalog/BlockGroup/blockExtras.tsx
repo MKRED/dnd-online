@@ -64,16 +64,18 @@ export const BLOCK_EXTRAS: CatalogExtras = {
         <ShapeSwatch
           material={entry.look}
           color={entry.color}
+          textures={entry.textures}
           shape="cube"
           size={size === 'grid' ? 120 : 36}
         />
       )),
     // Пока цвет набирают, он бывает недописан («#8a») — тогда образец в цвете основы.
-    values: ({ block: { look, color } }) => (
+    values: ({ block: { look, color, textures } }) => (
       <BlockShapes
         group={{
           look,
           color: isBlockColor(color) ? color : MATERIALS[look].color,
+          textures,
         }}
       />
     ),

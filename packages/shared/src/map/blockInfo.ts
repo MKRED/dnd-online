@@ -8,6 +8,7 @@ import {
 } from './materials.js';
 import type { Palette } from './palette.js';
 import type { ShapeName } from './shapes.js';
+import type { BlockTextures } from './customBlocks.js';
 
 // Описание блока для правил и отрисовки (docs/plan/blocks.md, этап 2). Правила читают
 // свойства только отсюда, а не из MATERIALS: так справочник на этапе 3 подставит свои
@@ -19,6 +20,8 @@ export interface BlockInfo {
   // Вид: базовый материал, чьи текстуры рисуются. По нему же опора под существом
   // считается одним материалом (лава-куб и лава-плита — одна опасность).
   material: MaterialName;
+  // Свои текстуры группы из справочника; нет — узор материала в основном цвете.
+  textures?: BlockTextures;
   // Свойства для правил и основной цвет.
   traits: BlockMaterial;
 }

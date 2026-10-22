@@ -27,7 +27,12 @@ const groupBody = {
   movementCost: 2,
   climbable: false,
   hazard: 'fire',
+  textures: null,
 };
+
+// Плитка 16×16 RGBA в base64 (docs/plan/blocks.md, этап 4б).
+const tile = (byte: number, bytes = 1024) =>
+  Buffer.alloc(bytes, byte).toString('base64');
 
 const idOf = (res: request.Response) => (res.body as { id: string }).id;
 
@@ -48,6 +53,31 @@ describeCatalog(
           hazard: 'fire',
           durability: { armorClass: 17, hitPoints: 27 },
         });
+        expect((card.body as { textures: unknown }).textures).toBeNull();
+      });
+
+      it('свои текстуры сохраняются и уходят в каталог карты', async () => {
+        const { author, url, create } = get();
+        const textures = { top: tile(10), side: tile(20), bottom: tile(30) };
+        const { id } = await create({ textures });
+        const card = await author.get(url(id)).expect(200);
+        expect((card.body as { textures: unknown }).textures).toEqual(textures);
+        const mapId = idOf(
+          await author
+            .post('/api/maps')
+            .send({ name: 'С текстурами' })
+            .expect(201),
+        );
+        await author
+          .post(`/api/maps/${mapId}/ops`)
+          .send({ ops: [{ op: 'setBlock', at: [0, 0, 0], block: id }] })
+          .expect(200);
+        const chunks = (
+          await author.get(`/api/maps/${mapId}/chunks`).expect(200)
+        ).body as MapChunksResponse;
+        expect(
+          chunks.blocks.find((group) => group.id === id)?.textures,
+        ).toEqual(textures);
       });
 
       it('без полей или с неверными — 400', async () => {
@@ -61,6 +91,9 @@ describeCatalog(
           { movementCost: 3 },
           { hazard: 'quicksand' },
           { hazard: undefined },
+          { textures: undefined },
+          { textures: { top: tile(1), side: tile(1) } },
+          { textures: { top: tile(1, 1023), side: tile(1), bottom: tile(1) } },
         ]) {
           await author.post(url()).send(body(over)).expect(400);
         }

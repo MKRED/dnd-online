@@ -1,6 +1,7 @@
 import { MeshLambertMaterial } from 'three';
 import { FOG_BRIGHTNESS, FOG_KEEP_COLOR } from '../render/fogColor';
-import { blockAtlasTexture } from './blockAtlasTexture';
+import type { BlockAtlas } from '../render/textures/atlas';
+import { blockAtlasTexture, releaseAtlasTexture } from './blockAtlasTexture';
 
 // Серая зона тумана попиксельно (docs/plan/done/fog-of-war.md, этап 5; docs/plan/blocks.md,
 // этап 1): та же формула, что fogColor, но для каждого пикселя текстуры. Множитель цвета
@@ -12,11 +13,14 @@ const GREY_ZONE = /* glsl */ `
   diffuseColor.rgb = mix(diffuseColor.rgb, fogged, vFogDim);
 `;
 
-function createBlockMaterial(transparent: boolean): MeshLambertMaterial {
+function createBlockMaterial(
+  atlas: BlockAtlas,
+  transparent: boolean,
+): MeshLambertMaterial {
   // Прозрачность стекла и льда — в альфе их плиток (рамка стекла плотнее середины).
-  // У непрозрачного материала alphaTest вырезает дыры листвы (CUTOUT_MATERIALS).
+  // У непрозрачного материала alphaTest вырезает дыры листвы и своих текстур.
   const material = new MeshLambertMaterial({
-    map: blockAtlasTexture(),
+    map: blockAtlasTexture(atlas),
     transparent,
     depthWrite: !transparent,
     alphaTest: transparent ? 0 : 0.5,
@@ -42,16 +46,36 @@ function createBlockMaterial(transparent: boolean): MeshLambertMaterial {
   return material;
 }
 
-let materials: {
-  opaque: MeshLambertMaterial;
-  transparent: MeshLambertMaterial;
-} | null = null;
+const materials = new WeakMap<
+  BlockAtlas,
+  { opaque: MeshLambertMaterial; transparent: MeshLambertMaterial }
+>();
 
-// Два материала на страницу — для непрозрачных и прозрачных блоков, общие для всех чанков.
-export function blockMaterial(transparent: boolean): MeshLambertMaterial {
-  materials ??= {
-    opaque: createBlockMaterial(false),
-    transparent: createBlockMaterial(true),
-  };
-  return transparent ? materials.transparent : materials.opaque;
+// Освобождает видеопамять атласа, который больше не нужен: правка группы приходит
+// новым каталогом, а с ним и новый атлас (MapScene). Понадобится снова — создастся.
+export function releaseBlockMaterials(atlas: BlockAtlas) {
+  const pair = materials.get(atlas);
+  if (!pair) return;
+  materials.delete(atlas);
+  pair.opaque.dispose();
+  pair.transparent.dispose();
+  releaseAtlasTexture(atlas);
+}
+
+// Два материала на атлас карты — для непрозрачных и прозрачных блоков, общие для всех
+// её чанков. Текстура сверяет версию атласа при каждом обращении (blockAtlasTexture).
+export function blockMaterial(
+  atlas: BlockAtlas,
+  transparent: boolean,
+): MeshLambertMaterial {
+  let pair = materials.get(atlas);
+  if (!pair) {
+    pair = {
+      opaque: createBlockMaterial(atlas, false),
+      transparent: createBlockMaterial(atlas, true),
+    };
+    materials.set(atlas, pair);
+  }
+  blockAtlasTexture(atlas);
+  return transparent ? pair.transparent : pair.opaque;
 }

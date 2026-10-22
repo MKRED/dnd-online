@@ -30,6 +30,7 @@ const embers: BlockGroupInfo = {
   movementCost: 2,
   climbable: false,
   hazard: 'fire',
+  textures: null,
 };
 
 function mapWith(groups: BlockGroupInfo[]): MapState {
@@ -72,6 +73,15 @@ describe('каталог карты со своими группами', () => {
       traits: { movementCost: 2, hazard: HAZARDS.fire, color: '#552211' },
     });
     expect(catalog.describe('stone')?.label).toBe('Камень');
+    // Без своих текстур — узор основы.
+    expect(catalog.describe(GROUP_ID)?.textures).toBeUndefined();
+  });
+
+  it('свои текстуры группы — у каждой её формы', () => {
+    const tile = btoa(String.fromCharCode(...new Uint8Array(1024)));
+    const textures = { top: tile, side: tile, bottom: tile };
+    const catalog = createBlockCatalog([{ ...embers, textures }]);
+    expect(catalog.describe(`${GROUP_ID}_slab`)?.textures).toBe(textures);
   });
 
   it('свой блок ставится, и правила читают его свойства', () => {

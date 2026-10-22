@@ -1,14 +1,16 @@
 import { useEffect, useMemo } from 'react';
 import { BufferAttribute, BufferGeometry } from 'three';
 import type { MeshBuffers } from '../render/buildChunkMesh';
+import type { BlockAtlas } from '../render/textures/atlas';
 import { blockMaterial } from './blockMaterial';
 
 interface ChunkMeshProps {
   buffers: MeshBuffers;
   transparent: boolean;
+  atlas: BlockAtlas;
 }
 
-function ChunkMesh({ buffers, transparent }: ChunkMeshProps) {
+function ChunkMesh({ buffers, transparent, atlas }: ChunkMeshProps) {
   const geometry = useMemo(() => {
     const result = new BufferGeometry();
     result.setAttribute('position', new BufferAttribute(buffers.positions, 3));
@@ -24,7 +26,9 @@ function ChunkMesh({ buffers, transparent }: ChunkMeshProps) {
   // (срез по высоте, новые данные) старая осталась бы в памяти видеокарты.
   useEffect(() => () => geometry.dispose(), [geometry]);
 
-  return <mesh geometry={geometry} material={blockMaterial(transparent)} />;
+  return (
+    <mesh geometry={geometry} material={blockMaterial(atlas, transparent)} />
+  );
 }
 
 export default ChunkMesh;

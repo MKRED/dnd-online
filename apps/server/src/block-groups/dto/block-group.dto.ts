@@ -5,8 +5,10 @@ import {
   isBlockColor,
   isBlockDurability,
   isBlockLook,
+  isBlockTextures,
   isHazardName,
   type BlockGroupFields,
+  type BlockTextures,
   type HazardName,
   type MaterialName,
 } from 'shared';
@@ -65,4 +67,15 @@ export class BlockGroupDto extends CatalogEntryDto implements BlockGroupFields {
     },
   })
   hazard: HazardName | null;
+
+  // null — узор основы в основном цвете (docs/plan/blocks.md, этап 4б).
+  @ValidateBy({
+    name: 'blockTextures',
+    validator: {
+      validate: isBlockTextures,
+      defaultMessage: () =>
+        'Текстуры — null или {top, side, bottom}: плитки 16×16 RGBA в base64 (по 1024 байта)',
+    },
+  })
+  textures: BlockTextures | null;
 }

@@ -1,4 +1,4 @@
-import type { MaterialName, Vec3 } from 'shared';
+import type { Vec3 } from 'shared';
 import { atlasUv } from './textures/atlas';
 import type { FaceKind } from './textures/materialTextures';
 
@@ -28,7 +28,7 @@ export function faceUvs(
   corners: Vec3[],
   axis: number,
   side: 1 | -1,
-  material: MaterialName,
+  tileSet: number,
 ): number[] {
   const face = faceKind(axis, side);
   return corners.flatMap((corner) => {
@@ -38,6 +38,6 @@ export function faceUvs(
       corner[2] - cell[2],
     ];
     const [s, t] = tileCoords(local, axis, side);
-    return atlasUv(material, face, s, t);
+    return atlasUv(tileSet, face, s, t);
   });
 }

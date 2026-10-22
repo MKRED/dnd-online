@@ -1,7 +1,9 @@
 import type { CatalogEntryFields, CatalogEntryInputFields } from './catalog.js';
 import {
+  BLOCK_TEXTURE_FACES,
   HAZARD_NAMES,
   type BlockGroupInfo,
+  type BlockTextures,
   type HazardName,
 } from './map/customBlocks.js';
 import { MATERIALS, type MaterialName } from './map/materials.js';
@@ -41,6 +43,22 @@ export function isBlockDurability(
   );
 }
 
+// 1024 байта в base64 — 1368 знаков, два последних — «==».
+const TEXTURE_TILE = /^[A-Za-z0-9+/]{1366}==$/;
+
+export function isBlockTextures(value: unknown): value is BlockTextures | null {
+  if (value === null) return true;
+  if (typeof value !== 'object') return false;
+  const faces = value as Record<string, unknown>;
+  return (
+    Object.keys(faces).length === BLOCK_TEXTURE_FACES.length &&
+    BLOCK_TEXTURE_FACES.every(
+      (face) =>
+        typeof faces[face] === 'string' && TEXTURE_TILE.test(faces[face]),
+    )
+  );
+}
+
 export function isHazardName(value: unknown): value is HazardName {
   return HAZARD_NAMES.includes(value as HazardName);
 }
@@ -63,6 +81,10 @@ export function readBlockGroupFields(
     movementCost: details.movementCost === 2 ? 2 : 1,
     climbable: details.climbable === true,
     hazard: isHazardName(details.hazard) ? details.hazard : null,
+    textures:
+      extra.textures !== undefined && isBlockTextures(extra.textures)
+        ? extra.textures
+        : null,
   };
 }
 
@@ -80,6 +102,7 @@ export function toBlockGroupInfo(
     movementCost: group.movementCost,
     climbable: group.climbable,
     hazard: group.hazard,
+    textures: group.textures,
   };
 }
 

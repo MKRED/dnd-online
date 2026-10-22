@@ -2,6 +2,7 @@ import type { Texture } from 'three';
 import type { CreatureHealth } from 'shared';
 import { modelTop, useModel } from '../../models';
 import CreatureCard, { creaturePose } from './CreatureCard';
+import { useGraphics } from './graphicsContext';
 import HealthMark from './HealthMark';
 import type { SceneObject, SceneObjectLook } from './objectLayout';
 
@@ -14,8 +15,8 @@ interface CreatureBodyProps {
   mark: boolean;
 }
 
-// Существо на карте: 3D-модель, если она есть и загрузилась (docs/plan/character-models.md),
-// иначе — карточка с картинкой. Пока модель грузится или если она не открылась, стоит
+// Существо на карте: 3D-модель, если она есть, разрешена настройками графики и загрузилась
+// (docs/plan/character-models.md), иначе — карточка с картинкой. Пока модель грузится или если она не открылась, стоит
 // карточка: существо не пропадает со сцены. Метка здоровья — здесь же: встаёт над тем,
 // что стоит на самом деле, а у модели свой рост и своя толщина лёжа.
 function CreatureBody({
@@ -25,12 +26,17 @@ function CreatureBody({
   health,
   mark,
 }: CreatureBodyProps) {
-  const state = useModel(look.model?.path ?? null, look.model?.format ?? null);
-  const model =
-    look.model && state?.status === 'ready'
-      ? { model: state.model, fit: look.model.fit, color: look.model.color }
-      : null;
   const pc = look.side === 'pc';
+  // У кого модели — по настройкам графики: у всех, только у отряда (фигурки персонажей
+  // игроков) или ни у кого. Без модели файл и не грузится.
+  const mode = useGraphics().creatureModels;
+  const wanted =
+    mode === 'all' || (mode === 'party' && pc) ? (look.model ?? null) : null;
+  const state = useModel(wanted?.path ?? null, wanted?.format ?? null);
+  const model =
+    wanted && state?.status === 'ready'
+      ? { model: state.model, fit: wanted.fit, color: wanted.color }
+      : null;
   const pose = creaturePose(health, pc);
   // У погибшего и поверженного гроб, а не модель — над ним метка как у карточки.
   const poseHeight =

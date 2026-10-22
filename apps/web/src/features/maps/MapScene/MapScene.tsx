@@ -27,9 +27,10 @@ import FigureLayer, {
   type FigureInput,
 } from './figures';
 import FirstFrame from './FirstFrame';
+import FrameLimiter from './FrameLimiter';
 import ObjectLayer, {
   FacingMarkerContext,
-  GraphicsQualityContext,
+  GraphicsContext,
   HealthMarkStyleContext,
   type SceneCreaturesView,
 } from './objects';
@@ -128,8 +129,13 @@ function MapScene({
 
   return (
     <div className={classes.canvas}>
+      {/* Сглаживание задаётся при создании контекста WebGL: сменили — Canvas создаётся
+          заново. Чёткость — доля плотности пикселей экрана (не больше 2, как у R3F). */}
       <Canvas
+        key={settings.antialias ? 'aa' : 'no-aa'}
         frameloop="demand"
+        gl={{ antialias: settings.antialias }}
+        dpr={settings.renderScale * Math.min(window.devicePixelRatio, 2)}
         camera={{ position: camera.position, fov: 45, near: 0.1, far: 5000 }}
       >
         <color attach="background" args={[SCENE_BACKGROUND[scheme]]} />
@@ -161,7 +167,7 @@ function MapScene({
           ))}
         </EditLayer>
         <FacingMarkerContext value={settings.facingMarker}>
-          <GraphicsQualityContext value={settings.graphicsQuality}>
+          <GraphicsContext value={settings}>
             <HealthMarkStyleContext value={settings.healthMarkStyle}>
               <ObjectLayer
                 state={map}
@@ -185,7 +191,7 @@ function MapScene({
                 />
               )}
             </HealthMarkStyleContext>
-          </GraphicsQualityContext>
+          </GraphicsContext>
         </FacingMarkerContext>
         {walk && <WalkLayer walk={walk} />}
         {resizePreview && (
@@ -198,6 +204,7 @@ function MapScene({
         {/* После CameraRig: первый уровень для подсказки берётся из уже поставленной камеры. */}
         <CameraFocus apiRef={focus} onLevel={setCenterLevel} />
         {imagesSettled && <FirstFrame onReady={onReady} />}
+        {settings.frameLimit > 0 && <FrameLimiter fps={settings.frameLimit} />}
       </Canvas>
       <CenterHint level={centerLevel} onShift={shiftLevel} />
       <CursorReadout hover={hover} editor={editor} />

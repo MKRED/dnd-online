@@ -1,8 +1,8 @@
 import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import { DoubleSide, type Group, type Texture } from 'three';
-import { ANIMATION_FPS, requestAnimationFrameAt } from '../animationFrames';
-import { useGraphicsQuality } from '../graphicsQualityContext';
+import { requestAnimationFrameAt } from '../animationFrames';
+import { useGraphics } from '../graphicsContext';
 import { SPIRIT_GAP, SPIRIT_SWAY, spiritSize } from './creaturePose';
 
 const SPIRIT = '#d8ecff';
@@ -16,15 +16,15 @@ interface SpiritProps {
 }
 
 // Призрак над гробом поверженного: бледная полупрозрачная карточка с портретом, лицом по
-// взгляду. На качестве «среднее» медленно покачивается вверх-вниз и поворачивается
-// (18 кадров в секунду, animationFrames.ts); на «низком» висит на месте.
+// взгляду. Медленно покачивается вверх-вниз и поворачивается с частотой анимаций из
+// настроек (animationFrames.ts); при частоте 0 висит на месте.
 function Spirit({ footprint, floor, picture }: SpiritProps) {
-  const fps = ANIMATION_FPS[useGraphicsQuality()];
+  const fps = useGraphics().animationFps;
   const { width, height } = spiritSize(footprint);
   const rest = floor + SPIRIT_GAP + height / 2;
   const group = useRef<Group>(null);
   // Поза — по времени, а не по числу кадров: при любой частоте призрак качается с той же
-  // скоростью. Следующий кадр просит не сразу, а с частотой качества графики.
+  // скоростью. Следующий кадр просит не сразу, а с частотой анимаций.
   useFrame((state) => {
     if (fps <= 0 || !group.current) return;
     const t = state.clock.elapsedTime;

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { DEFAULT_USER_SETTINGS } from 'shared';
+import { DEFAULT_USER_SETTINGS, GRAPHICS_PRESET_VALUES } from 'shared';
 import {
   createTestApp,
   TEST_PASSWORD,
@@ -63,31 +63,73 @@ describe('profile settings (e2e)', () => {
       .expect(200, { ...DEFAULT_USER_SETTINGS, facingMarker: 'chevrons' });
   });
 
-  it('качество графики меняется отдельно от взгляда; «высокое» пока недоступно', async () => {
+  it('набор графики задаёт значения; «своё» хранит свои; «высокое» недоступно', async () => {
     const agent = await t.loginAs('set_quality');
     await agent
       .patch('/api/profile/settings')
       .send({ facingMarker: 'compass' })
       .expect(200);
-    await agent
-      .patch('/api/profile/settings')
-      .send({ graphicsQuality: 'low' })
-      .expect(200, {
-        ...DEFAULT_USER_SETTINGS,
-        facingMarker: 'compass',
-        graphicsQuality: 'low',
-      });
-    for (const graphicsQuality of ['high', 'ultra']) {
-      await agent
-        .patch('/api/profile/settings')
-        .send({ graphicsQuality })
-        .expect(400);
-    }
-    await agent.get('/api/profile/settings').expect(200, {
+    const low = {
       ...DEFAULT_USER_SETTINGS,
       facingMarker: 'compass',
-      graphicsQuality: 'low',
-    });
+      graphicsPreset: 'low',
+      ...GRAPHICS_PRESET_VALUES.low,
+    };
+    await agent
+      .patch('/api/profile/settings')
+      .send({ graphicsPreset: 'low' })
+      .expect(200, low);
+
+    // Своё: значения по одному, вместе с набором.
+    const custom = {
+      ...low,
+      graphicsPreset: 'custom',
+      animationFps: 30,
+      creatureModels: 'party',
+      renderScale: 0.5,
+      antialias: true,
+      frameLimit: 60,
+    };
+    await agent
+      .patch('/api/profile/settings')
+      .send({
+        graphicsPreset: 'custom',
+        animationFps: 30,
+        creatureModels: 'party',
+        renderScale: 0.5,
+        antialias: true,
+        frameLimit: 60,
+      })
+      .expect(200, custom);
+    // Вернулись к набору — значения снова его, а свои лежат до следующего «своего».
+    await agent
+      .patch('/api/profile/settings')
+      .send({ graphicsPreset: 'medium' })
+      .expect(200, {
+        ...custom,
+        graphicsPreset: 'medium',
+        ...GRAPHICS_PRESET_VALUES.medium,
+      });
+
+    for (const body of [
+      { graphicsPreset: 'high' },
+      { graphicsPreset: 'ultra' },
+      { animationFps: 61 },
+      { animationFps: 2.5 },
+      { creatureModels: 'some' },
+      { renderScale: 0.3 },
+      { antialias: 'yes' },
+      { frameLimit: 45 },
+    ]) {
+      await agent.patch('/api/profile/settings').send(body).expect(400);
+    }
+    const bad = await agent
+      .patch('/api/profile/settings')
+      .send({ graphicsPreset: 'high' })
+      .expect(400);
+    expect((bad.body as { message: string[] }).message).toContain(
+      'Такой набор графики недоступен',
+    );
   });
 
   it('вид метки здоровья сохраняется; неизвестный — 400', async () => {

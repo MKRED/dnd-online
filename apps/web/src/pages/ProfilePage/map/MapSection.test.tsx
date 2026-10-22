@@ -2,6 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AuthUser } from '../../../features/auth/authApi';
+import { DEFAULT_USER_SETTINGS } from 'shared';
 import { renderWithProviders } from '../../../test/render';
 import MapSection from './MapSection';
 
@@ -9,11 +10,7 @@ const me: AuthUser = {
   id: 'u1',
   login: 'hero',
   nickname: 'Hero',
-  settings: {
-    facingMarker: 'compass',
-    graphicsQuality: 'medium',
-    healthMarkStyle: 'plate',
-  },
+  settings: { ...DEFAULT_USER_SETTINGS, facingMarker: 'compass' },
 };
 
 function stubFetch(status: number, body: unknown) {
@@ -32,9 +29,8 @@ afterEach(() => {
 describe('MapSection', () => {
   it('показывает текущий выбор и сохраняет новый сразу', async () => {
     const fetchMock = stubFetch(200, {
+      ...me.settings,
       facingMarker: 'chevrons',
-      graphicsQuality: 'medium',
-      healthMarkStyle: 'plate',
     });
     const { authValue } = renderWithProviders(<MapSection />, {
       auth: { user: me },
@@ -47,11 +43,7 @@ describe('MapSection', () => {
     // Сначала сразу, до ответа сервера, потом — тем, что ответил сервер.
     expect(authValue.setUser).toHaveBeenNthCalledWith(1, {
       ...me,
-      settings: {
-        facingMarker: 'chevrons',
-        graphicsQuality: 'medium',
-        healthMarkStyle: 'plate',
-      },
+      settings: { ...me.settings, facingMarker: 'chevrons' },
     });
     await waitFor(() => expect(authValue.setUser).toHaveBeenCalledTimes(2));
     const [url, init] = fetchMock.mock.calls[0] as unknown as [

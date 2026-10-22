@@ -9,6 +9,7 @@ import {
 } from 'vitest';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import { DEFAULT_USER_SETTINGS } from 'shared';
 import type { PinoLogger } from 'nestjs-pino';
 import { UsersService } from '../users/users.service.js';
 import { AuthService } from './auth.service.js';
@@ -103,11 +104,7 @@ describe('AuthService', () => {
       login: 'bob',
       nickname: 'Bob',
       // Чего нет в базе, readUserSettings берёт по умолчанию.
-      settings: {
-        facingMarker: 'compass',
-        graphicsQuality: 'medium',
-        healthMarkStyle: 'plate',
-      },
+      settings: { ...DEFAULT_USER_SETTINGS, facingMarker: 'compass' },
     });
     expect(result.tokens).toEqual({
       accessToken: 'access-jwt',

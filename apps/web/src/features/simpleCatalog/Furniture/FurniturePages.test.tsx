@@ -312,6 +312,27 @@ describe('раздел «Обстановка»', () => {
     expect(screen.getByText(/Золото ×50/)).toBeInTheDocument();
   });
 
+  it('«Начать со встроенного»: сундук открывается в редакторе и сохраняется своей моделью', async () => {
+    const fetchMock = stubFetch((url, init) =>
+      init?.method === 'POST' && url.endsWith('/voxel-models') ? table : [],
+    );
+    renderCreate();
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText(/Название/), 'Мой сундук');
+    await user.click(
+      screen.getByRole('button', { name: 'Начать со встроенного' }),
+    );
+    await user.click(await screen.findByRole('menuitem', { name: 'Сундук' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Готово в редакторе' }),
+    );
+    await waitFor(() =>
+      expect(posted(fetchMock, /\/voxel-models$/)).toEqual([
+        expect.objectContaining({ name: 'Мой сундук' }),
+      ]),
+    );
+  });
+
   it('карточка без модели: модель удалена', async () => {
     stubFetch(() => ({ ...furniture, model: null }));
     renderWithProviders(

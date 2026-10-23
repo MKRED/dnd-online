@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { builtinContainerModel } from '../../../voxelModel/builtinContainers.js';
 import { bytesToBase64, encodeVoxels } from '../../../voxelModel/voxelCodec.js';
 import {
   modelVoxelCount,
@@ -281,5 +282,40 @@ describe('дверь в проёме (этап 8г)', () => {
 
   it('положения нет в записи — вид первого', () => {
     expect(standHeight(room(door(5)), [3, 1, 3], 'medium')).toBeNull();
+  });
+});
+
+describe('встроенные контейнеры в правилах (этап 11)', () => {
+  const container = (look: 'chest' | 'barrel' | 'crate' | 'sack') =>
+    ({
+      id: 1,
+      kind: 'container',
+      at: [3, 1, 3],
+      name: look,
+      look,
+      items: [],
+      facing: 45,
+      hidden: false,
+    }) as MapObject;
+
+  it('на сундук, бочку и ящик встают сверху', () => {
+    for (const look of ['chest', 'barrel', 'crate'] as const) {
+      const height = standHeight(room(container(look)), [3, 1, 3], 'medium');
+      expect(height).toBeGreaterThan(1.4);
+      expect(height).toBeLessThan(2);
+    }
+  });
+
+  it('мешок — труднопроходимая клетка', () => {
+    const map = room(container('sack'));
+    expect(stepCost(map, [2, 1, 3], [3, 1, 3], 'medium')).toBe(10);
+  });
+
+  it('модели встроенных — в пределах клетки', () => {
+    for (const look of ['chest', 'barrel', 'crate', 'sack'] as const) {
+      const { size, voxels } = builtinContainerModel(look);
+      expect(size).toEqual([1, 1, 1]);
+      expect(modelCellShapes(size, voxels, 0)?.length).toBe(1);
+    }
   });
 });

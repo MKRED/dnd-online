@@ -6,3 +6,4 @@ export * from './furniture.js';
 export * from './modelMesh.js';
 export * from './meshVoxels.js';
 export * from './furnitureContainer.js';
+export * from './builtinContainers.js';

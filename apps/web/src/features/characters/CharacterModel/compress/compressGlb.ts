@@ -1,12 +1,6 @@
 import { WebIO, type Document } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
-import {
-  dedup,
-  prune,
-  simplify,
-  textureCompress,
-  weld,
-} from '@gltf-transform/functions';
+import { dedup, prune, simplify, weld } from '@gltf-transform/functions';
 import { MeshoptSimplifier } from 'meshoptimizer';
 import {
   COMPRESS_LIMIT_BYTES,
@@ -16,6 +10,7 @@ import {
   type CompressProgress,
   type CompressResult,
 } from './compressLimits';
+import { compressTextures } from './compressTextures';
 
 // Сторона текстуры: сначала 2048, если файл всё ещё велик — меньше. Фигурка на карте
 // мелкая, больше 2048 там не разглядеть.
@@ -63,12 +58,7 @@ export async function compressGlb(
   let side = 0;
   if (document.getRoot().listTextures().length > 0) {
     onProgress({ stage: 'textures' });
-    await document.transform(
-      textureCompress({
-        targetFormat: 'webp',
-        resize: [TEXTURE_SIDES[0], TEXTURE_SIDES[0]],
-      }),
-    );
+    await compressTextures(document, TEXTURE_SIDES[0]);
   }
 
   let data = await io.writeBinary(document);
@@ -82,9 +72,7 @@ export async function compressGlb(
       side < TEXTURE_SIDES.length - 1
     ) {
       side++;
-      await document.transform(
-        textureCompress({ resize: [TEXTURE_SIDES[side], TEXTURE_SIDES[side]] }),
-      );
+      await compressTextures(document, TEXTURE_SIDES[side]);
     } else {
       // Геометрия весит примерно пропорционально числу треугольников.
       const geometry = Math.max(1, data.length - textures);

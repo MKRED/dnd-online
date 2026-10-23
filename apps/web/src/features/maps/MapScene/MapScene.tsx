@@ -20,7 +20,7 @@ import CameraFocus, { type CameraFocusApi } from './CameraFocus';
 import CameraRig from './CameraRig';
 import CenterHint from './CenterHint';
 import CursorReadout from './CursorReadout';
-import { createHoverStore } from './hoverStore';
+import { createHoverStore, type HoverStore } from './hoverStore';
 import EditLayer from './EditLayer';
 import FigureLayer, {
   type FigureDragHandlers,
@@ -86,6 +86,9 @@ interface MapSceneProps {
   // Туман войны игрока (docs/plan/done/fog-of-war.md, этап 5): блоки и предметы вне поля
   // зрения — серые. Неоткрытого в карте нет вовсе: его не присылает сервер.
   fog?: FogMasks | null;
+  // Клетка под курсором для страницы: её панель показывает блок под курсором и подсчёт
+  // области (docs/plan/scene-page.md, этап 3). Без него сцена держит своё хранилище.
+  hover?: HoverStore;
 }
 
 function MapScene({
@@ -107,6 +110,7 @@ function MapScene({
   figureDrag,
   creatures,
   fog = null,
+  hover: pageHover,
 }: MapSceneProps) {
   const chunks = useChunkMeshes(map, cutY, fog?.visible ?? null);
   // Атлас каталога этой карты: сборка чанков выше уже выдала места своим группам.
@@ -117,7 +121,8 @@ function MapScene({
   // Центр камеры живёт внутри Canvas (CameraFocus), а подсказка с кнопками и клавиши
   // Q/E — снаружи, в обычном DOM; связывает их ref focus.
   const [centerLevel, setCenterLevel] = useState<number | null>(null);
-  const [hover] = useState(createHoverStore);
+  const [ownHover] = useState(createHoverStore);
+  const hover = pageHover ?? ownHover;
   // Миниатюры объектов догрузились (или не загрузились) — только после этого первый
   // кадр считается готовым, иначе на снимке пустые карточки.
   const [imagesSettled, setImagesSettled] = useState(false);

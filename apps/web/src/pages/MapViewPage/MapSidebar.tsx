@@ -25,8 +25,8 @@ interface MapSidebarProps {
   // Название и размер карты — только в «Просмотре»: с инструментом правки панель
   // отдана его свойствам, а название и так в заголовке вкладки.
   showInfo: boolean;
-  // Заголовок над панелью: название инструмента или «Размер карты».
-  panelTitle: string;
+  // Заголовок над панелью: «Размер карты»; null — у инструмента своя шапка.
+  panelTitle: string | null;
   // Карта не загрузилась — сцены нет.
   loadError: string | null;
   // Правка не прошла; сцена остаётся на месте.
@@ -96,7 +96,7 @@ function MapSidebar({
 
         {loaded && (
           <>
-            <Divider label={panelTitle} labelPosition="left" />
+            <Divider label={panelTitle ?? undefined} labelPosition="left" />
             {editError && <Alert color="red">{editError}</Alert>}
             {children}
           </>

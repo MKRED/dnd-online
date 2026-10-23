@@ -138,7 +138,7 @@ describe('MapViewPage', () => {
     ).toHaveAttribute('aria-valuenow', '4');
     expect(screen.getByText('Подземелье')).toBeInTheDocument();
     // Готовность — невидимый статус для агента в браузере, не текст на панели.
-    expect(await screen.findByRole('status')).toHaveTextContent('Сцена готова');
+    expect(await screen.findByText('Сцена готова')).toBeInTheDocument();
   });
 
   it('название и размер карты — только в «Просмотре»', async () => {
@@ -229,7 +229,7 @@ describe('MapViewPage', () => {
       ops: [{ op: 'setBlock', at: [1, 0, 1], block: 'stone', rotation: 0 }],
     });
     // Сцена не перемонтировалась — «Сцена готова» остаётся.
-    expect(screen.getByRole('status')).toHaveTextContent('Сцена готова');
+    expect(screen.getByText('Сцена готова')).toBeInTheDocument();
   });
 
   it('перечитывает карту, если между правками были чужие', async () => {
@@ -368,11 +368,12 @@ describe('MapViewPage', () => {
       screen.getByRole('button', { name }).getAttribute('aria-pressed');
 
     await screen.findByRole('button', { name: 'Ластик' });
-    expect(screen.getByRole('separator')).toHaveTextContent('Просмотр');
+    // Название инструмента — в шапке его свойств (docs/plan/scene-page.md, этап 3).
+    expect(screen.getByText('Просмотр', { selector: 'p' })).toBeInTheDocument();
     // По месту клавиши: цифры на основном ряду и на цифровом блоке.
     await user.keyboard('[Digit3]');
     expect(pressed('Ластик')).toBe('true');
-    expect(screen.getByRole('separator')).toHaveTextContent('Ластик');
+    expect(screen.getByText('Ластик', { selector: 'p' })).toBeInTheDocument();
     await user.keyboard('[Numpad2]');
     expect(pressed('Поставить')).toBe('true');
     // Размер карты меняется из «Просмотра»: только там видна ⚙.

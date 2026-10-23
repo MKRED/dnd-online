@@ -1,10 +1,10 @@
-import { Alert, Divider, Stack } from '@mantine/core';
+import { Alert, Stack } from '@mantine/core';
 import type { MapObjectRefsView } from 'shared';
+import type { HoverStore } from '../../features/maps/MapScene/hoverStore';
 import type { Point } from '../../features/maps/cameraView';
 import {
   EditorPanel,
   ObjectsPanel,
-  TOOL_LABELS,
   type MapEditor,
   type ObjectTool,
 } from '../../features/maps/editor';
@@ -20,10 +20,12 @@ interface SceneToolsPanelProps {
   editError: string | null;
   // Перенести центр камеры к объекту из списка «На карте».
   onFocus: (point: Point) => void;
+  // Клетка под курсором сцены — «Под курсором» и подсчёт области.
+  hover: HoverStore;
 }
 
 // Свойства инструмента мастера на странице сцены (docs/plan/done/game.md, этап 6) — как в
-// правой панели редактора карты: название инструмента, ошибка правки, блок или объекты.
+// правой панели редактора карты: ошибка правки, шапка инструмента, блок или объекты.
 function SceneToolsPanel({
   editor,
   objects,
@@ -32,14 +34,16 @@ function SceneToolsPanel({
   busy,
   editError,
   onFocus,
+  hover,
 }: SceneToolsPanelProps) {
   return (
     <Stack gap="sm">
-      <Divider label={TOOL_LABELS[editor.tool]} labelPosition="left" />
       {editError && <Alert color="red">{editError}</Alert>}
       <EditorPanel
         editor={editor}
         objectChoice={objects.settings.choice}
+        state={state}
+        hover={hover}
         objectsPanel={
           <ObjectsPanel
             tool={objects}

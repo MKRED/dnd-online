@@ -18,11 +18,12 @@ import {
   EditorPanel,
   ObjectsPanel,
   SceneToolbar,
-  TOOL_LABELS,
   useMapEditor,
   useObjectTool,
 } from '../../features/maps/editor';
 import type { CameraFocusApi } from '../../features/maps/MapScene';
+import { createHoverStore } from '../../features/maps/MapScene/hoverStore';
+import { ToolHint } from '../../features/maps/editor/ToolPanel';
 import { useWalkTest, WalkTestPanel } from '../../features/maps/walkTest';
 import CutRuler from '../../features/maps/CutRuler';
 import MapSidebar from './MapSidebar';
@@ -48,6 +49,8 @@ function MapViewPage() {
   });
   // Центр камеры: страница переносит его к объекту из списка «На карте».
   const focusRef = useRef<CameraFocusApi | null>(null);
+  // Клетка под курсором — и сцене, и панели инструмента (docs/plan/scene-page.md, этап 3).
+  const [hover] = useState(createHoverStore);
   // Открытая панель «Размер карты» с набранным изменением; null — панель закрыта.
   const [sizeDraft, setSizeDraft] = useState<ResizeDraft | null>(null);
   const editor = useMapEditor({
@@ -145,6 +148,7 @@ function MapViewPage() {
               focusRef={focusRef}
               onReady={handleSceneReady}
               settings={user?.settings ?? DEFAULT_USER_SETTINGS}
+              hover={hover}
             />
           </Suspense>
         )}
@@ -156,6 +160,14 @@ function MapViewPage() {
             busy={busy}
             onUndo={undo}
             onRedo={redo}
+          />
+        )}
+        {map && !sizeDraft && (
+          <ToolHint
+            editor={editor}
+            state={map.state}
+            hover={hover}
+            placesObject={objects.settings.choice !== null}
           />
         )}
         {/* Срез — когда есть что срезать: блоки больше чем на одном уровне. */}
@@ -181,7 +193,8 @@ function MapViewPage() {
         size={map?.state.size ?? null}
         onEditSize={sizeDraft ? null : () => setSizeDraft(EMPTY_DRAFT)}
         showInfo={editor.tool === 'view'}
-        panelTitle={sizeDraft ? 'Размер карты' : TOOL_LABELS[editor.tool]}
+        // Название инструмента — в шапке его свойств (ToolHeader).
+        panelTitle={sizeDraft ? 'Размер карты' : null}
         loadError={loadError}
         editError={editError}
         loaded={map !== null}
@@ -206,6 +219,8 @@ function MapViewPage() {
             editor={editor}
             walkPanel={<WalkTestPanel walk={walk} />}
             objectChoice={objects.settings.choice}
+            state={map?.state ?? null}
+            hover={hover}
             objectsPanel={
               map && (
                 <ObjectsPanel

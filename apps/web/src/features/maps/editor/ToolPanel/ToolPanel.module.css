@@ -1,0 +1,29 @@
+/* Плашка инструмента внизу по центру сцены, как плашка выбранного на сцене игры. */
+.hint {
+  position: absolute;
+  left: 50%;
+  /* Над строкой координат сцены (CursorReadout), чтобы не наезжать на неё. */
+  bottom: calc(var(--mantine-spacing-xs) * 2 + 1.75rem);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 2 * var(--mantine-spacing-md));
+  padding: 6px 12px;
+  border-radius: var(--mantine-radius-md);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* На телефоне внизу — полоса инструментов: плашка над ней, клавиши прячутся. */
+@media (max-width: 48em) {
+  .hint {
+    bottom: calc(var(--mantine-spacing-xs) * 3 + 4.5rem);
+    white-space: normal;
+  }
+
+  .hint :global(kbd),
+  .hintKey {
+    display: none;
+  }
+}

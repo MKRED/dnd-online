@@ -2,7 +2,8 @@
 .plaque {
   position: absolute;
   left: 50%;
-  bottom: var(--mantine-spacing-md);
+  /* Над строкой координат сцены (CursorReadout), чтобы не наезжать на неё. */
+  bottom: calc(var(--mantine-spacing-xs) * 2 + 1.75rem);
   transform: translateX(-50%);
   display: flex;
   align-items: center;
@@ -16,7 +17,7 @@
 /* На телефоне внизу — полоса инструментов «Правки»: плашка над ней, подсказка прячется. */
 @media (max-width: 48em) {
   .plaque {
-    bottom: calc(var(--mantine-spacing-xs) * 2 + 2.75rem);
+    bottom: calc(var(--mantine-spacing-xs) * 3 + 4.5rem);
   }
 
   .hint {

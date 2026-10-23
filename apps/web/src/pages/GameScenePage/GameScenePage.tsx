@@ -34,6 +34,8 @@ import { useRulesState } from '../../features/maps/useRulesState';
 import CutRuler from '../../features/maps/CutRuler';
 import { SceneToolbar } from '../../features/maps/editor';
 import type { CameraFocusApi } from '../../features/maps/MapScene';
+import { createHoverStore } from '../../features/maps/MapScene/hoverStore';
+import { ToolHint } from '../../features/maps/editor/ToolPanel';
 import { usePageTitle } from '../../lib/usePageTitle';
 import classes from './GameScenePage.module.css';
 import SceneRoom from './SceneRoom';
@@ -90,6 +92,8 @@ function GameScenePage() {
   const [readySceneId, setReadySceneId] = useState<string | null>(null);
   const [cutY, setCutY] = useState<number | null>(null);
   const focusRef = useRef<CameraFocusApi | null>(null);
+  // Клетка под курсором — и сцене, и панели инструмента (docs/plan/scene-page.md, этап 3).
+  const [hover] = useState(createHoverStore);
   const [searchParams] = useSearchParams();
   // Один объект путей на игру: новый перестраивал бы объекты сцены.
   const images = useMemo(() => sceneObjectImages(id), [id]);
@@ -174,6 +178,15 @@ function GameScenePage() {
     [state, eyesFog, rules.refs],
   );
 
+  // Выбранное на сцене важнее подсказки инструмента: плашка одна.
+  const plaque = plaqueState({
+    placing: play.tool.placing,
+    figure: play.tool.figure,
+    free: editing,
+    creature: play.tool.figure ? null : cards.selected,
+    creatureMoving: cards.walk.moving,
+  });
+
   const loader = (
     <div className={classes.placeholder}>
       <Loader />
@@ -240,6 +253,7 @@ function GameScenePage() {
                 viewOnly ? { ...cards.view, onPick: undefined } : cards.view
               }
               fog={fog}
+              hover={hover}
             />
           </Suspense>
         )}
@@ -255,17 +269,20 @@ function GameScenePage() {
             leading={<SceneModeSwitch mode={mode} onChange={setMode} />}
           />
         )}
-        {ready && !viewOnly && (
-          <ScenePlaque
-            state={plaqueState({
-              placing: play.tool.placing,
-              figure: play.tool.figure,
-              free: editing,
-              creature: play.tool.figure ? null : cards.selected,
-              creatureMoving: cards.walk.moving,
-            })}
-          />
-        )}
+        {ready &&
+          !viewOnly &&
+          (plaque ? (
+            <ScenePlaque state={plaque} />
+          ) : (
+            editTools && (
+              <ToolHint
+                editor={editor}
+                state={ready.state}
+                hover={hover}
+                placesObject={objects.settings.choice !== null}
+              />
+            )
+          ))}
         {ready && bounds && bounds.max[1] > bounds.min[1] && (
           <CutRuler
             min={bounds.min[1]}
@@ -313,6 +330,7 @@ function GameScenePage() {
                 busy={edits.busy}
                 editError={edits.editError}
                 onFocus={(point) => focusRef.current?.focusOn(point)}
+                hover={hover}
               />
             </Stack>
           )

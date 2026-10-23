@@ -1,41 +1,18 @@
-import {
-  Button,
-  Group,
-  NumberInput,
-  SegmentedControl,
-  Stack,
-  Text,
-} from '@mantine/core';
+import { NumberInput, SegmentedControl, Stack, Text } from '@mantine/core';
 import type { ReactNode } from 'react';
-import { isRotation, ROTATIONS } from 'shared';
+import { isRotation, ROTATIONS, type SizedMapState } from 'shared';
+import type { HoverStore } from '../MapScene/hoverStore';
 import PlaceChoicePanel from './PlacePicker/PlaceChoicePanel';
 import type { ObjectChoice } from './PlacePicker/placeChoice';
 import { blockTraits } from './blockTraits';
-import { buildsBlocks, isRegionTool, type EditorTool } from './editorTools';
-import { ERASE_MODE_LABELS, ERASE_MODES, type EraseMode } from './eraseModes';
+import { buildsBlocks, isRegionTool } from './editorTools';
+import {
+  AnchorCard,
+  CursorBlockCard,
+  EraseModePicker,
+  ToolHeader,
+} from './ToolPanel';
 import type { MapEditor } from './useMapEditor';
-
-// Подсказки ластика — по режиму, ниже (ERASE_HINTS).
-const HINTS: Record<Exclude<EditorTool, 'erase'>, string> = {
-  view: 'Левая кнопка мыши — перемещение, правая — поворот, колесо — масштаб к курсору. Двойной клик (в других инструментах — Alt+клик) переносит центр вращения, Q и E опускают и поднимают его.',
-  place:
-    'Блок: клик по грани ставит его рядом с ней, клик по земле — на уровень 0. Объект: клик по клетке ставит его. Клик по объекту выделяет его, перетаскивание переносит. R — поворот, Del — удалить, Esc — снять выделение.',
-  fill: 'Два клика задают углы области, она заливается блоком.',
-  hollow:
-    'Два клика задают углы: стены, пол и потолок из блока, внутри — воздух.',
-  replace:
-    'Два клика по блокам задают углы; блоки как в первом углу заменяются выбранным.',
-  walk: 'Клик ставит фигурку. Зелёное — дойдёт: клик делает ход и списывает футы. Оранжевое — не дойдёт: клик переставляет фигурку. Карту инструмент не меняет, фигурка нигде не сохраняется.',
-};
-
-const ERASE_HINTS: Record<EraseMode, string> = {
-  block: 'Клик по блоку удаляет его.',
-  plane:
-    'Два клика по противоположным углам стены или пола стирают прямоугольник между ними толщиной в клетку. Клики на одном уровне — пол, на одной линии — стена.',
-  region: 'Два клика задают углы области: всё внутри стирается.',
-  connected:
-    'Клик по блоку стирает всю постройку из того же материала, соединённую с ним гранями.',
-};
 
 interface EditorPanelProps {
   editor: MapEditor;
@@ -45,17 +22,24 @@ interface EditorPanelProps {
   objectsPanel: ReactNode;
   // Ставящийся объект; null — блок.
   objectChoice: ObjectChoice | null;
+  // Карта и клетка под курсором: «Под курсором» в «Просмотре» и подсчёт области до
+  // второго щелчка (docs/plan/scene-page.md, этап 3).
+  state: SizedMapState | null;
+  hover: HoverStore | null;
 }
 
-// Свойства выбранного инструмента в правой панели страницы карты; сами инструменты,
-// отмена и возврат — на сцене (SceneToolbar).
+// Свойства выбранного инструмента в правой панели страницы карты и сцены игры; сами
+// инструменты, отмена и возврат — на сцене (SceneToolbar), что сделает щелчок — на плашке
+// сцены (ToolHint, docs/plan/scene-page.md, этап 3).
 function EditorPanel({
   editor,
   walkPanel,
   objectsPanel,
   objectChoice,
+  state,
+  hover,
 }: EditorPanelProps) {
-  const { tool, anchor, eraseMode } = editor;
+  const { tool, eraseMode } = editor;
   // Высоту задают у области ластика; стена стирается до самого верха.
   const erasesRegion = tool === 'erase' && eraseMode === 'region';
   const builds = buildsBlocks(tool);
@@ -67,19 +51,12 @@ function EditorPanel({
 
   return (
     <Stack gap="sm">
+      <ToolHeader tool={tool} />
+
+      {tool === 'view' && <CursorBlockCard state={state} hover={hover} />}
+
       {tool === 'erase' && (
-        <Stack gap={4}>
-          <Text size="sm">Режим (клавиша ластика — следующий)</Text>
-          <SegmentedControl
-            size="xs"
-            data={ERASE_MODES.map((mode) => ({
-              value: mode,
-              label: ERASE_MODE_LABELS[mode],
-            }))}
-            value={eraseMode}
-            onChange={(value) => editor.setEraseMode(value)}
-          />
-        </Stack>
+        <EraseModePicker mode={eraseMode} onChange={editor.setEraseMode} />
       )}
 
       {builds && (
@@ -136,38 +113,13 @@ function EditorPanel({
       {tool === 'walk' && walkPanel}
       {tool === 'place' && objectsPanel}
 
-      <Text size="xs" c="dimmed">
-        {tool === 'erase' ? ERASE_HINTS[eraseMode] : HINTS[tool]}
-      </Text>
-
       {editor.notice && (
         <Text size="sm" c="orange">
           {editor.notice}
         </Text>
       )}
 
-      {anchor && (
-        <Group
-          gap="xs"
-          justify="space-between"
-          align="flex-start"
-          wrap="nowrap"
-        >
-          <Text size="sm" flex={1}>
-            Первый угол: {anchor.cell.join(', ')}
-            {anchor.match &&
-              ` — заменяем «${catalog.describe(anchor.match)?.label ?? anchor.match}»`}
-          </Text>
-          <Button
-            size="xs"
-            variant="subtle"
-            flex="none"
-            onClick={editor.cancelRegion}
-          >
-            Сбросить (Esc)
-          </Button>
-        </Group>
-      )}
+      <AnchorCard editor={editor} state={state} hover={hover} />
     </Stack>
   );
 }

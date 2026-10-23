@@ -46,6 +46,7 @@ const hidden = z
 const quarterTurn = rotation.describe(
   'Поворот обстановки по часовой: 0, 90, 180 или 270',
 );
+const locked = z.boolean().optional().describe('Дверь заперта (у обстановки)');
 // Shift+клик редактора: обстановка без проверок места.
 const force = z
   .boolean()
@@ -89,6 +90,7 @@ const objectBody = z.discriminatedUnion('kind', [
     kind: z.literal('furniture'),
     furnitureId: catalogId('обстановки'),
     facing: quarterTurn,
+    locked,
     hidden,
   }),
 ]);
@@ -147,9 +149,20 @@ export const mapOp = z.discriminatedUnion('op', [
         itemId: catalogId('предмета').optional(),
         quantity,
         furnitureId: catalogId('обстановки').optional(),
+        locked,
         hidden,
       })
       .describe('Только меняемые поля; вид объекта не меняется'),
+    force,
+  }),
+  z.object({
+    op: z.literal('setPosition'),
+    id: objectId,
+    position: z
+      .number()
+      .int()
+      .min(0)
+      .describe('Номер положения обстановки: 0 — первое (у двери «Закрыта»)'),
     force,
   }),
   z.object({ op: z.literal('removeObject'), id: objectId }),

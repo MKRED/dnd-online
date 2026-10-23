@@ -15,6 +15,8 @@ import type { Facing, MapObject } from '../../objects/mapObject.js';
 import { emptyObjectRefs, type ObjectRefs } from '../../objects/objectRefs.js';
 import { createPalette } from '../../palette.js';
 import { attackCover } from '../cover.js';
+import { maskHas } from '../vision/cellMask.js';
+import { partySight } from '../vision/index.js';
 import { creatureBody } from '../creature.js';
 import { findPath } from '../path/index.js';
 import { segmentBlocked } from '../segment.js';
@@ -251,6 +253,30 @@ describe('дверь в проёме (этап 8г)', () => {
     expect(
       segmentBlocked(open, [3.5, 1.5, 1.5], [3.5, 1.5, 5.5], 'sight'),
     ).toBe(false);
+  });
+
+  it('туман: за закрытой дверью в стене не видно, за открытой — видно', () => {
+    const walled = (position: number) => {
+      const map = room(door(position));
+      for (const x of [0, 1, 2, 4, 5, 6, 7])
+        applyOp(map, {
+          op: 'fillBox',
+          from: [x, 1, 3],
+          to: [x, 2, 3],
+          block: 'stone',
+        });
+      return map;
+    };
+    const bounds = { min: [0, 0, 0], max: [7, 4, 7] } as const;
+    const seen = (map: MapState) =>
+      partySight(
+        map,
+        [{ body: creatureBody(map, [3, 1, 1], 'medium'), rangeCells: 12 }],
+        [],
+        bounds,
+      );
+    expect(maskHas(seen(walled(0)), [3, 0, 6])).toBe(false);
+    expect(maskHas(seen(walled(1)), [3, 0, 6])).toBe(true);
   });
 
   it('положения нет в записи — вид первого', () => {

@@ -210,6 +210,8 @@ describe('dnd MCP server', () => {
       },
       { op: 'moveObject', id: 1, at: [4, 1, 3], force: true },
       { op: 'updateObject', id: 1, object: { furnitureId: MAP_ID } },
+      { op: 'setPosition', id: 1, position: 1, force: true },
+      { op: 'updateObject', id: 1, object: { locked: true } },
     ];
 
     const result = await call(client, 'apply_ops', { mapId: MAP_ID, ops });
@@ -250,6 +252,7 @@ describe('dnd MCP server', () => {
     const result = await call(client, 'block_guide', {});
     expect(result.text).toContain('{kind: "furniture", furnitureId, facing?}');
     expect(result.text).toContain('force: true');
+    expect(result.text).toContain('setPosition {id, position, force?}');
   });
 
   it('find_catalog ищет по виду и строке', async () => {

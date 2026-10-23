@@ -1,6 +1,11 @@
 import type { Box3, Vec3 } from '../../coords.js';
 import type { Facing, MapObject } from '../../objects/mapObject.js';
-import type { FurnitureRef, ObjectRefs } from '../../objects/objectRefs.js';
+import {
+  furnitureLook,
+  type FurnitureLook,
+  type FurnitureRef,
+  type ObjectRefs,
+} from '../../objects/objectRefs.js';
 import type { ShapeBox } from '../../shapes.js';
 import { isGroundMount } from '../../../voxelModel/furniture.js';
 import { modelCellKey } from '../../../voxelModel/voxelModel.js';
@@ -45,19 +50,20 @@ export function furnitureCellAt(
 }
 
 // Склейка вокселей — работа на модель, а не на объект: десять одинаковых стульев
-// считаются раз. Ключ — запись справочника: обновлённый справочник считается заново.
-const shapeCache = new WeakMap<FurnitureRef, Map<Facing, ModelCellShape[]>>();
+// считаются раз. Ключ — вид из справочника (положение двери — свой вид): обновлённый
+// справочник считается заново.
+const shapeCache = new WeakMap<FurnitureLook, Map<Facing, ModelCellShape[]>>();
 
-function shapesOf(ref: FurnitureRef, facing: Facing): ModelCellShape[] {
-  if (!ref.voxels) return [];
-  let byFacing = shapeCache.get(ref);
+function shapesOf(look: FurnitureLook, facing: Facing): ModelCellShape[] {
+  if (!look.voxels) return [];
+  let byFacing = shapeCache.get(look);
   if (!byFacing) {
     byFacing = new Map();
-    shapeCache.set(ref, byFacing);
+    shapeCache.set(look, byFacing);
   }
   let shapes = byFacing.get(facing);
   if (!shapes) {
-    shapes = modelCellShapes(ref.size, ref.voxels, facing) ?? [];
+    shapes = modelCellShapes(look.size, look.voxels, facing) ?? [];
     byFacing.set(facing, shapes);
   }
   return shapes;
@@ -65,10 +71,15 @@ function shapesOf(ref: FurnitureRef, facing: Facing): ModelCellShape[] {
 
 // Свойство клетки для пути: своё у модели, иначе клетка с вокселями — препятствие.
 // Обстановка на стене и потолке клеток для пути не занимает (план, «Крепление»): картина
-// и люстра только закрывают вид своими вокселями. Дверь в проёме — как на полу.
-function pathKind(ref: FurnitureRef, shape: ModelCellShape) {
+// и люстра только закрывают вид своими вокселями. Дверь в проёме — как на полу: открытая
+// проходима, потому что автор пометил клетку открытой модели «свободно».
+function pathKind(
+  ref: FurnitureRef,
+  look: FurnitureLook,
+  shape: ModelCellShape,
+) {
   if (!isGroundMount(ref.mount)) return 'free';
-  return ref.cells[modelCellKey(...shape.cell)] ?? 'obstacle';
+  return look.cells[modelCellKey(...shape.cell)] ?? 'obstacle';
 }
 
 // Слой с одной клеткой больше: две обстановки в клетке (поставлены с Shift) — коробки
@@ -107,14 +118,15 @@ export function buildFurnitureLayer(
     if (object.kind !== 'furniture') continue;
     const ref = refs.furniture.get(object.furnitureId);
     if (!ref) continue;
-    for (const shape of shapesOf(ref, object.facing)) {
+    const look = furnitureLook(ref, object);
+    for (const shape of shapesOf(look, object.facing)) {
       const [ox, oy, oz] = shape.offset;
       const at: Vec3 = [
         object.at[0] + ox,
         object.at[1] + oy,
         object.at[2] + oz,
       ];
-      const kind = pathKind(ref, shape);
+      const kind = pathKind(ref, look, shape);
       addCell(cells, furnitureCellKey(...at), {
         boxes: shape.boxes,
         body:

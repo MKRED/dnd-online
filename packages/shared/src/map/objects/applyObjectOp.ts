@@ -91,9 +91,45 @@ export function applyObjectOp(
       checkFurniture(ctx, updated, op.force);
       return write(objects, current, updated);
     }
+    case 'setPosition':
+      return write(objects, current, switchPosition(ctx, current, op));
     case 'removeObject':
       return write(objects, current, null);
   }
+}
+
+// Положение двери (этап 8г): номер из положений записи; новое место проверяется теми же
+// строгими пересечениями (открытая створка упёрлась в стену — отказ), с force — без них.
+function switchPosition(
+  ctx: ObjectEditContext,
+  current: MapObject,
+  op: ObjectOp & { op: 'setPosition' },
+): MapObject {
+  const ref =
+    current.kind === 'furniture'
+      ? ctx.refs.furniture.get(current.furnitureId)
+      : undefined;
+  if (current.kind !== 'furniture' || !ref?.positions.length)
+    throw new MapOpError(
+      `У объекта ${op.id} нет положений: они есть у обстановки с положениями, например у двери`,
+    );
+  const position = ref.positions[op.position];
+  if (!position)
+    throw new MapOpError(
+      `У «${ref.name}» положения от 0 до ${ref.positions.length - 1}, а не ${op.position}`,
+    );
+  const switched: MapObject = { ...current, position: op.position };
+  try {
+    assertFits(ctx, switched);
+    checkFurniture(ctx, switched, op.force);
+  } catch (err) {
+    if (err instanceof MapOpError)
+      throw new MapOpError(
+        `«${ref.name}»: положение «${position.name}» не поставить — ${err.message}`,
+      );
+    throw err;
+  }
+  return switched;
 }
 
 function write(

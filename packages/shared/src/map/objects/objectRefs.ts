@@ -17,17 +17,23 @@ export interface MonsterRef {
   usable: boolean;
 }
 
-// Обстановка (docs/plan/blocks.md, этап 8в): размер в клетках и свойства клеток — из её
-// модели, у обстановки без модели (модель удалили) — одна клетка без своих свойств.
-// usable — своя запись: чужую обстановку на свою карту не ставят, её копируют.
-export interface FurnitureRef {
-  name: string;
+// Вид обстановки в одном положении — из модели: размер в клетках и свойства клеток, у
+// положения без модели (модель удалили) — одна клетка без своих свойств.
+export interface FurnitureLook {
   size: Vec3;
-  mount: FurnitureMount;
   cells: Record<string, ModelCellKind>;
   // Сжатые воксели модели: по ним правила считают обзор, укрытие и высоту опоры
   // (rules/furniture). null — модели нет.
   voxels: string | null;
+}
+
+// Обстановка (docs/plan/blocks.md, этапы 8в и 8г): вид первого положения (или
+// единственный) — в самой записи, положения двери — в positions, пусто — без положений.
+// usable — своя запись: чужую обстановку на свою карту не ставят, её копируют.
+export interface FurnitureRef extends FurnitureLook {
+  name: string;
+  mount: FurnitureMount;
+  positions: (FurnitureLook & { name: string })[];
   usable: boolean;
 }
 
@@ -67,11 +73,23 @@ export function objectSpan(object: MapObject, refs: ObjectRefs): number {
   return footprintCells(objectSize(object, refs));
 }
 
+type FurnitureObject = MapObject & { kind: 'furniture' };
+
+// Вид обстановки в её текущем положении. Положения могли убрать из записи после
+// постановки — тогда вид первого: дверь не пропадает с карты.
+export function furnitureLook(
+  ref: FurnitureRef,
+  object: Pick<FurnitureObject, 'position'>,
+): FurnitureLook {
+  return ref.positions[object.position ?? 0] ?? ref;
+}
+
 // Размер обстановки на карте с поворотом: на 90° и 270° ширина и глубина меняются
 // местами. Удалённая обстановка — одна клетка: убрать или сдвинуть её всё равно нужно.
 export function furnitureExtent(object: MapObject, refs: ObjectRefs): Vec3 {
   if (object.kind !== 'furniture') return [1, 1, 1];
-  const [x, y, z] = refs.furniture.get(object.furnitureId)?.size ?? [1, 1, 1];
+  const ref = refs.furniture.get(object.furnitureId);
+  const [x, y, z] = ref ? furnitureLook(ref, object).size : [1, 1, 1];
   return object.facing % 180 === 0 ? [x, y, z] : [z, y, x];
 }
 

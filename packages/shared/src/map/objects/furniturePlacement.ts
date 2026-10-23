@@ -7,7 +7,7 @@ import { MapOpError } from '../mapOpError.js';
 import { surfaceInCell } from '../rules/creature.js';
 import { rotateModelCell } from '../rules/furniture/modelCellShapes.js';
 import type { MapObject, MapObjects } from './mapObject.js';
-import { objectBox, type ObjectRefs } from './objectRefs.js';
+import { furnitureLook, objectBox, type ObjectRefs } from './objectRefs.js';
 
 export { rotateModelCell };
 
@@ -50,11 +50,12 @@ function standableFurniture(
     if (other.id === self || other.kind !== 'furniture') continue;
     const ref = refs.furniture.get(other.furnitureId);
     if (!ref || !inside(cell, objectBox(other, refs))) continue;
-    for (const [key, kind] of Object.entries(ref.cells)) {
+    const look = furnitureLook(ref, other);
+    for (const [key, kind] of Object.entries(look.cells)) {
       if (kind !== 'stand') continue;
       const offset = rotateModelCell(
         key.split(',').map(Number) as unknown as Vec3,
-        ref.size,
+        look.size,
         other.facing,
       );
       if (offset.every((v, axis) => other.at[axis] + v === cell[axis]))

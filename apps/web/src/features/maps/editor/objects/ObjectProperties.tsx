@@ -20,6 +20,7 @@ import {
 import { NameInput, QuantityInput } from './CommitInputs';
 import ContainerItems from './ContainerItems';
 import FacingPicker from './FacingPicker';
+import FurniturePositions from './FurniturePositions';
 import type { ObjectTool } from './useObjectTool';
 
 const SIZE_OPTIONS = Object.entries(CREATURE_SIZES).map(([value, size]) => ({
@@ -41,7 +42,7 @@ interface ObjectPropertiesProps {
 }
 
 // Свойства выделенного объекта. Каждое изменение — своя операция журнала
-// (turnObject, updateObject), поэтому отменяется по одному.
+// (turnObject, updateObject, setPosition), поэтому отменяется по одному.
 function ObjectProperties({
   tool,
   object,
@@ -81,6 +82,15 @@ function ObjectProperties({
           </Text>
         )}
       </Stack>
+
+      {object.kind === 'furniture' && (
+        <FurniturePositions
+          tool={tool}
+          object={object}
+          view={refs.furniture[object.furnitureId]}
+          busy={busy}
+        />
+      )}
 
       {facing !== null && (
         <FacingPicker

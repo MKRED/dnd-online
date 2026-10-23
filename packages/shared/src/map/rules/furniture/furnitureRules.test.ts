@@ -42,6 +42,9 @@ function voxels(size: Vec3, fill: Fill): string {
 const table: Fill = (x, y, z) =>
   (y >= 10 && y < 12) || (y < 10 && (x < 2 || x >= 14) && (z < 2 || z >= 14));
 
+// Створка двери поперёк клетки: 2 вокселя толщиной посередине по z.
+const doorLeaf: Fill = (_x, _y, z) => z >= 7 && z < 9;
+
 const MODELS: Record<
   string,
   {
@@ -77,8 +80,34 @@ function refsFor(): ObjectRefs {
       mount: model.mount ?? 'floor',
       cells: model.cells ?? {},
       voxels: voxels(model.size, model.fill),
+      positions: [],
       usable: true,
     });
+  // Дверь в проёме (этап 8г): закрытая — створка поперёк клетки, открытая — у западной
+  // грани той же клетки, клетка помечена «свободно».
+  const closed = {
+    size: [1, 2, 1] as Vec3,
+    cells: {},
+    voxels: voxels([1, 2, 1], doorLeaf),
+  };
+  const open = {
+    size: [1, 2, 1] as Vec3,
+    cells: { '0,0,0': 'free', '0,1,0': 'free' } as Record<
+      string,
+      ModelCellKind
+    >,
+    voxels: voxels([1, 2, 1], (x) => x < 2),
+  };
+  refs.furniture.set('door', {
+    name: 'Дверь',
+    mount: 'doorway',
+    ...closed,
+    positions: [
+      { name: 'Закрыта', ...closed },
+      { name: 'Открыта', ...open },
+    ],
+    usable: true,
+  });
   return refs;
 }
 
@@ -200,5 +229,31 @@ describe('обстановка в обзоре и укрытии', () => {
     expect(cover).toBe(attackCover(stone, attacker, target, 'effect'));
     expect(cover).not.toBe('none');
     expect(attackCover(room(), attacker, target, 'effect')).toBe('none');
+  });
+});
+
+describe('дверь в проёме (этап 8г)', () => {
+  const door = (position: number) =>
+    ({ ...piece(1, 'door', [3, 1, 3]), position }) as MapObject;
+
+  it('закрытая — препятствие и закрывает вид; открытая — проход и вид у створки', () => {
+    const closed = room(door(0));
+    expect(standHeight(closed, [3, 1, 3], 'medium')).toBeNull();
+    expect(
+      segmentBlocked(closed, [3.5, 1.5, 1.5], [3.5, 1.5, 5.5], 'sight'),
+    ).toBe(true);
+
+    const open = room(door(1));
+    expect(standHeight(open, [3, 1, 3], 'medium')).toBe(1);
+    expect(findPath(open, [3, 1, 2], [3, 1, 4], 'medium')?.path).toContainEqual(
+      [3, 1, 3],
+    );
+    expect(
+      segmentBlocked(open, [3.5, 1.5, 1.5], [3.5, 1.5, 5.5], 'sight'),
+    ).toBe(false);
+  });
+
+  it('положения нет в записи — вид первого', () => {
+    expect(standHeight(room(door(5)), [3, 1, 3], 'medium')).toBeNull();
   });
 });

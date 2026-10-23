@@ -17,6 +17,13 @@ import { useObjectTool } from './useObjectTool';
 
 const CUP = '00000000-0000-4000-8000-000000000003';
 const OGRE = '00000000-0000-4000-8000-000000000001';
+const DOOR = '00000000-0000-4000-8000-000000000004';
+const doorModel = {
+  size: [1, 2, 1] as const,
+  palette: [],
+  voxels: '',
+  cells: {},
+};
 
 const objects: MapObject[] = [
   { id: 2, at: [1, 1, 1], hidden: false, kind: 'start', facing: 0 },
@@ -37,18 +44,38 @@ const objects: MapObject[] = [
     itemId: CUP,
     quantity: 1,
   },
+  {
+    id: 7,
+    at: [6, 1, 6],
+    hidden: false,
+    kind: 'furniture',
+    furnitureId: DOOR,
+    facing: 0,
+  },
 ];
 
 const refs: MapObjectRefsView = {
   ...emptyRefsView(),
   items: { [CUP]: { missing: null, name: 'Кубок', image: null, weight: 1 } },
+  furniture: {
+    [DOOR]: {
+      missing: null,
+      name: 'Дверь',
+      mount: 'doorway',
+      model: { ...doorModel, size: [1, 2, 1] },
+      positions: [
+        { name: 'Закрыта', model: { ...doorModel, size: [1, 2, 1] } },
+        { name: 'Открыта', model: { ...doorModel, size: [1, 2, 1] } },
+      ],
+    },
+  },
 };
 
 const state: MapViewState = {
   store: new MemoryChunkStore(),
   palette: createPalette(),
   size: { width: 8, depth: 8 },
-  objects: createMapObjects(objects, 7),
+  objects: createMapObjects(objects, 8),
 };
 
 // Панель с настоящим инструментом; «клик по клетке» — кнопка вместо луча по сцене.
@@ -128,7 +155,7 @@ describe('ObjectsPanel', () => {
 
   it('список выделяет объект и ведёт к нему камеру; клик мимо снимает выделение', async () => {
     const { applyOps, onFocus } = setup();
-    expect(screen.getByText('На карте: 3')).toBeInTheDocument();
+    expect(screen.getByText('На карте: 4')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /№2/ }));
     expect(onFocus).toHaveBeenCalledWith([1.5, 1, 1.5]);
 
@@ -208,6 +235,18 @@ describe('ObjectsPanel', () => {
       screen.getByRole('button', { name: 'Взгляд: запад' }),
     );
     expect(sent(applyOps)).toEqual([{ op: 'turnObject', id: 5, facing: 270 }]);
+  });
+
+  it('дверь: положение — операция setPosition, «Заперта» — правка объекта', async () => {
+    const { applyOps } = setup();
+    await userEvent.click(screen.getByRole('button', { name: /№7/ }));
+    expect(screen.getByRole('radio', { name: 'Закрыта' })).toBeChecked();
+    await userEvent.click(screen.getByRole('radio', { name: 'Открыта' }));
+    await userEvent.click(screen.getByRole('switch', { name: 'Заперта' }));
+    expect(sent(applyOps)).toEqual([
+      { op: 'setPosition', id: 7, position: 1 },
+      { op: 'updateObject', id: 7, object: { locked: true } },
+    ]);
   });
 
   it('количество пишется одной правкой по уходу из поля', async () => {

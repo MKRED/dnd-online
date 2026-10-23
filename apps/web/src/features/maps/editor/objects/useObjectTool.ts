@@ -191,6 +191,17 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
       if (selected)
         edit({ op: 'updateObject', id: selected.id, object: fields });
     },
+    // Положение двери (этап 8г); с Shift — без проверки места, как постановка.
+    setPosition: (position: number) => {
+      if (!selected) return;
+      const force = shift.current;
+      edit({
+        op: 'setPosition',
+        id: selected.id,
+        position,
+        ...(force && { force }),
+      });
+    },
     remove: () => {
       if (!selected) return;
       edit({ op: 'removeObject', id: selected.id });

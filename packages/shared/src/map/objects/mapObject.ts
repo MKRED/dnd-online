@@ -65,7 +65,16 @@ export type MapObjectBody =
   // Обстановка (docs/plan/blocks.md, этап 8в): запись справочника «Обстановка» с моделью.
   // Поворот — только на 90° (решено с пользователем 2026-10-23): воксели модели всегда
   // ложатся на сетку клеток.
-  | { kind: 'furniture'; furnitureId: string; facing: Facing };
+  // position — номер положения записи (этап 8г: дверь «Закрыта», «Открыта»), нет — первое;
+  // locked — дверь заперта, нет — не заперта. У поставленных раньше полей нет, как
+  // у старых контейнеров нет взгляда.
+  | {
+      kind: 'furniture';
+      furnitureId: string;
+      facing: Facing;
+      position?: number;
+      locked?: boolean;
+    };
 
 export type MapObjectKind = MapObjectBody['kind'];
 

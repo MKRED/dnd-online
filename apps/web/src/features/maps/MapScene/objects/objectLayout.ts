@@ -3,6 +3,7 @@ import {
   CREATURE_SIZES,
   feetHeight,
   footprintCells,
+  furnitureViewModel,
   standHeight,
   summarizeObjects,
   type ContainerLook,
@@ -150,8 +151,11 @@ function lookOf(
         facing: object.facing ?? 0,
       };
     case 'furniture': {
-      const ref = refs.furniture?.[object.furnitureId];
-      const model = ref?.missing === null ? ref.model : null;
+      // Модель текущего положения двери (этап 8г).
+      const model = furnitureViewModel(
+        refs.furniture?.[object.furnitureId],
+        object.position,
+      );
       const [x, y, z] = model?.size ?? [1, 1, 1];
       return {
         kind: 'furniture',

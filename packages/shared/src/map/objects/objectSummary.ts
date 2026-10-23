@@ -20,6 +20,7 @@ import {
   loadLabel,
 } from './containerLoad.js';
 import {
+  furnitureViewModel,
   itemWeight,
   type MapObjectRefsView,
   type RefMissing,
@@ -94,11 +95,18 @@ function describe(
           label: 'обстановка (удалена из справочника)',
           missing: ['обстановка удалена из справочника'],
         };
-      const [x, y, z] = view.model?.size ?? [1, 1, 1];
+      const model = furnitureViewModel(view, object.position);
+      const [x, y, z] = model?.size ?? [1, 1, 1];
       const where = FURNITURE_MOUNT_LABELS[view.mount].toLowerCase();
+      // Положение двери и «заперта» (этап 8г) — в подписи: по ним ИИ и мастер видят,
+      // открыта ли дверь.
+      const position = view.positions.length
+        ? `, положение: ${(view.positions[object.position ?? 0] ?? view.positions[0]).name}`
+        : '';
+      const locked = object.locked ? ', заперта' : '';
       return {
-        label: `${view.name} (обстановка ${x}×${z}×${y}, крепление: ${where})`,
-        missing: view.model ? [] : ['модель обстановки удалена — без вида'],
+        label: `${view.name} (обстановка ${x}×${z}×${y}, крепление: ${where}${position}${locked})`,
+        missing: model ? [] : ['модель обстановки удалена — без вида'],
       };
     }
     case 'container': {

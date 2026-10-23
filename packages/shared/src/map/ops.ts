@@ -125,6 +125,7 @@ export function parseMapOp(input: unknown, limits: MapLimits): MapOp {
     case 'moveObject':
     case 'turnObject':
     case 'updateObject':
+    case 'setPosition':
     case 'removeObject':
       return parseObjectOp(fields, limits);
     default:

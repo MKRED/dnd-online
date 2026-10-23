@@ -290,6 +290,7 @@ describe('layoutObjects', () => {
 
 describe('обстановка на сцене', () => {
   const TABLE = '00000000-0000-4000-8000-0000000000a1';
+  const GATE = '00000000-0000-4000-8000-0000000000a2';
   const furnitureRefs: MapObjectRefsView = {
     ...emptyRefsView(),
     furniture: {
@@ -298,6 +299,24 @@ describe('обстановка на сцене', () => {
         name: 'Стол',
         mount: 'floor',
         model: { size: [3, 1, 1], palette: [], voxels: '', cells: {} },
+        positions: [],
+      },
+      // Ворота: закрытые 1×2×1, открытые — 2×2×1 (этап 8г).
+      [GATE]: {
+        missing: null,
+        name: 'Ворота',
+        mount: 'doorway',
+        model: { size: [1, 2, 1], palette: [], voxels: '', cells: {} },
+        positions: [
+          {
+            name: 'Закрыты',
+            model: { size: [1, 2, 1], palette: [], voxels: '', cells: {} },
+          },
+          {
+            name: 'Открыты',
+            model: { size: [2, 2, 1], palette: [], voxels: '', cells: {} },
+          },
+        ],
       },
       [GONE]: { missing: 'deleted' },
     },
@@ -320,6 +339,15 @@ describe('обстановка на сцене', () => {
     expect(table.look).toMatchObject({ kind: 'furniture', extent: [1, 1, 3] });
     expect(table.base).toEqual([0.5, 1, 1.5]);
     expect(table.top).toBe(2);
+  });
+
+  it('ворота рисуются моделью текущего положения', () => {
+    const gate = (position?: number) =>
+      ({ ...furniture(1, GATE, 0), position }) as MapObject;
+    const [closed] = layoutObjects(mapWith([gate()]), furnitureRefs);
+    expect(closed.look).toMatchObject({ extent: [1, 2, 1] });
+    const [open] = layoutObjects(mapWith([gate(1)]), furnitureRefs);
+    expect(open.look).toMatchObject({ extent: [2, 2, 1] });
   });
 
   it('удалённая обстановка — без модели, одна клетка', () => {

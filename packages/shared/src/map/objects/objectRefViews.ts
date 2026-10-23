@@ -4,6 +4,7 @@ import type { FigureModel } from '../../characterModels.js';
 import type { MonsterRole } from '../../monsters.js';
 import type { FurnitureMount } from '../../voxelModel/furniture.js';
 import type { VoxelModelFields } from '../../voxelModel/voxelModel.js';
+import type { Vec3 } from '../coords.js';
 import type { CreatureSize } from '../rules/creature.js';
 import type { MapObject } from './mapObject.js';
 import { emptyObjectRefs, type ObjectRefs } from './objectRefs.js';
@@ -43,14 +44,32 @@ export type NpcRefView =
 // Обстановка (docs/plan/blocks.md, этап 8в) — с моделью целиком: её рисуют на карте.
 // Скрытой не бывает: на карту ставится только своя, а игроку на сцене она нужна вся,
 // как блоки мастера. model null — модель удалили, обстановка без вида.
+// positions — положения двери с их моделями (этап 8г), пусто — без положений.
 export type FurnitureRefView =
   | {
       missing: null;
       name: string;
       mount: FurnitureMount;
       model: VoxelModelFields | null;
+      positions: { name: string; model: VoxelModelFields | null }[];
     }
   | { missing: 'deleted' };
+
+// Модель обстановки в текущем положении объекта: положения могли убрать из записи после
+// постановки — тогда модель первого.
+export function furnitureViewModel(
+  view: FurnitureRefView | undefined,
+  position: number | undefined,
+): VoxelModelFields | null {
+  if (view?.missing !== null) return null;
+  return (view.positions[position ?? 0] ?? view).model;
+}
+
+const lookOf = (model: VoxelModelFields | null) => ({
+  size: model?.size ?? ([1, 1, 1] as Vec3),
+  cells: model?.cells ?? {},
+  voxels: model?.voxels ?? null,
+});
 
 // Справочник по id: в ответе /chunks — для всех объектов карты, в ответе правки — для
 // затронутых ею.
@@ -113,10 +132,12 @@ export function objectRefsFromView(view: MapObjectRefsView): ObjectRefs {
     if (furniture.missing !== null) continue;
     refs.furniture.set(id, {
       name: furniture.name,
-      size: furniture.model?.size ?? [1, 1, 1],
       mount: furniture.mount,
-      cells: furniture.model?.cells ?? {},
-      voxels: furniture.model?.voxels ?? null,
+      ...lookOf(furniture.model),
+      positions: furniture.positions.map((position) => ({
+        name: position.name,
+        ...lookOf(position.model),
+      })),
       usable: true,
     });
   }

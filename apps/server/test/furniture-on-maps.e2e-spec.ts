@@ -15,10 +15,11 @@ import { pngImage } from './support/character-fixture.js';
 import { createSceneGame } from './support/scene-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Обстановка на карте и сцене (docs/plan/blocks.md, этапы 8в1 и 8в2): объект «furniture» со
-// ссылкой на свою обстановку, место по модели, строгие пересечения и force (Shift), модель
-// целиком в справочнике ответа — и игроку на сцене, хотя записи мастера скрыты; заливка
-// обходит клетки обстановки, ход существа — её препятствия.
+// Обстановка на карте и сцене (docs/plan/blocks.md, этапы 8в1, 8в2 и 8г2): объект
+// «furniture» со ссылкой на свою обстановку, место по модели, строгие пересечения и force
+// (Shift), модель целиком в справочнике ответа — и игроку на сцене, хотя записи мастера
+// скрыты; заливка обходит клетки обстановки, ход существа — её препятствия; дверь
+// переключает положение операцией setPosition, и открытая пропускает.
 
 const idOf = (res: request.Response) => (res.body as { id: string }).id;
 
@@ -69,6 +70,51 @@ async function createFurniture(
         isPublic,
         modelId,
         mount: 'floor',
+      })
+      .expect(201),
+  );
+}
+
+// Открытая дверь в клетку: тонкая створка у западной грани, клетка помечена «свободно».
+function openDoorModel() {
+  const size = [1, 1, 1];
+  const voxels = new Uint8Array(modelVoxelCount([1, 1, 1]));
+  for (let i = 0; i < voxels.length; i++) if (i % 16 < 2) voxels[i] = 1;
+  return {
+    name: 'Дверь открыта',
+    description: '',
+    isPublic: false,
+    size,
+    palette: ['#6b4a2b'],
+    voxels: bytesToBase64(encodeVoxels(voxels)),
+    cells: { '0,0,0': 'free' },
+  };
+}
+
+// Дверь в проёме: закрытая — ящик во всю клетку, открытая — створка у грани.
+async function createDoor(agent: request.Agent) {
+  const closed = idOf(
+    await agent
+      .post('/api/voxel-models')
+      .send({ ...crateModel(), name: 'Дверь закрыта' })
+      .expect(201),
+  );
+  const open = idOf(
+    await agent.post('/api/voxel-models').send(openDoorModel()).expect(201),
+  );
+  return idOf(
+    await agent
+      .post('/api/furniture')
+      .send({
+        name: 'Дверь',
+        description: '',
+        isPublic: false,
+        modelId: closed,
+        mount: 'doorway',
+        positions: [
+          { name: 'Закрыта', modelId: closed },
+          { name: 'Открыта', modelId: open },
+        ],
       })
       .expect(201),
   );
@@ -248,5 +294,80 @@ describe('обстановка на карте (e2e)', () => {
       m.post(`/api/games/${gameId}/scene/creatures/2/move`).send({ to });
     await move([1, 1, 1]).expect(409);
     await move([1, 1, 2]).expect(200);
+  });
+
+  it('дверь: положения с моделями в справочнике, setPosition, «заперта» в сводке', async () => {
+    const { master, mapId } = await createSceneGame(user, png, 'fud');
+    const m = master.agent;
+    const ops = (list: unknown[]) =>
+      m.post(`/api/maps/${mapId}/ops`).send({ ops: list });
+    const door = await createDoor(m);
+    const table = await createFurniture(m);
+    const placed = await ops([
+      placeFurniture([3, 1, 3], door, { locked: true }),
+      placeFurniture([1, 1, 5], table),
+    ]).expect(200);
+    const [doorId, tableId] = (placed.body as { createdObjectIds: number[] })
+      .createdObjectIds;
+    const map = (await m.get(`/api/maps/${mapId}/chunks`).expect(200))
+      .body as MapChunksResponse;
+    const view = map.refs.furniture[door];
+    expect(view).toMatchObject({
+      missing: null,
+      positions: [
+        { name: 'Закрыта', model: { size: [1, 1, 1] } },
+        { name: 'Открыта', model: { cells: { '0,0,0': 'free' } } },
+      ],
+    });
+
+    await ops([{ op: 'setPosition', id: doorId, position: 1 }]).expect(200);
+    const after = (await m.get(`/api/maps/${mapId}/chunks`).expect(200))
+      .body as MapChunksResponse;
+    expect(after.objects.find((o) => o.id === doorId)).toMatchObject({
+      position: 1,
+      locked: true,
+    });
+    const summary = await m.get(`/api/maps/${mapId}/summary`).expect(200);
+    expect(JSON.stringify(summary.body)).toMatch(
+      /Дверь \(обстановка 1×1×1, крепление: проём, положение: Открыта, заперта\)/,
+    );
+
+    const noPositions = await ops([
+      { op: 'setPosition', id: tableId, position: 1 },
+    ]).expect(400);
+    expect(JSON.stringify(noPositions.body)).toMatch(/нет положений/);
+    await ops([{ op: 'setPosition', id: doorId, position: 2 }]).expect(400);
+    // Отмена возвращает дверь в прежнее положение.
+    await m.post(`/api/maps/${mapId}/undo`).expect(200);
+    const undone = (await m.get(`/api/maps/${mapId}/chunks`).expect(200))
+      .body as MapChunksResponse;
+    expect(undone.objects.find((o) => o.id === doorId)).not.toHaveProperty(
+      'position',
+    );
+  });
+
+  it('на сцене закрытая дверь не пропускает существо, открытая мастером — пропускает', async () => {
+    const { master, mapId, gameId } = await createSceneGame(user, png, 'fuo');
+    const m = master.agent;
+    const door = await createDoor(m);
+    // Гоблин (объект 2) стоит на [1, 1, 0]; дверь — прямо перед ним.
+    const placed = await m
+      .post(`/api/maps/${mapId}/ops`)
+      .send({ ops: [placeFurniture([1, 1, 1], door)] })
+      .expect(200);
+    const [doorId] = (placed.body as { createdObjectIds: number[] })
+      .createdObjectIds;
+    const scenes = (
+      await m.post(`/api/games/${gameId}/scenes`).send({ mapId }).expect(201)
+    ).body as GameScenes;
+    const sceneId = scenes.scenes[0].id;
+    const move = (to: number[]) =>
+      m.post(`/api/games/${gameId}/scene/creatures/2/move`).send({ to });
+    await move([1, 1, 1]).expect(409);
+    await m
+      .post(`/api/games/${gameId}/scenes/${sceneId}/ops`)
+      .send({ ops: [{ op: 'setPosition', id: doorId, position: 1 }] })
+      .expect(200);
+    await move([1, 1, 1]).expect(200);
   });
 });

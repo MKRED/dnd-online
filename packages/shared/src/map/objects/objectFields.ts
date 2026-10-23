@@ -27,8 +27,10 @@ export interface ObjectFields {
   items?: ObjectItem[];
   itemId?: string;
   quantity?: number;
-  // Запись справочника «Обстановка» (этап 8в).
+  // Запись справочника «Обстановка» (этап 8в) и «заперта» у двери (этап 8г). Положение
+  // меняет своя операция setPosition: её право проверяется отдельно.
   furnitureId?: string;
+  locked?: boolean;
   // «Скрыт от игроков» — у объекта любого вида (docs/plan/done/game.md, этап 6).
   hidden?: boolean;
 }
@@ -40,7 +42,7 @@ export const KIND_FIELDS: Record<MapObjectKind, (keyof ObjectFields)[]> = {
   npc: ['characterId', 'size', 'facing'],
   container: ['name', 'look', 'items', 'facing'],
   item: ['itemId', 'quantity'],
-  furniture: ['furnitureId', 'facing'],
+  furniture: ['furnitureId', 'facing', 'locked'],
 };
 
 // Поля, которые есть у объекта любого вида.
@@ -179,10 +181,11 @@ export function parseObjectFields(
         parsed.quantity = parseQuantity(value, 'quantity');
         break;
       case 'hidden':
+      case 'locked':
         if (typeof value !== 'boolean') {
-          throw new MapOpError('«hidden» — true или false');
+          throw new MapOpError(`«${key}» — true или false`);
         }
-        parsed.hidden = value;
+        parsed[key as 'hidden'] = value;
         break;
     }
   }

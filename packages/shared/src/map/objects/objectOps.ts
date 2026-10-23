@@ -20,6 +20,9 @@ export type ObjectOp =
   | { op: 'turnObject'; id: number; facing: Facing; force?: true }
   // Меняет только переданные поля; вид объекта не меняется.
   | { op: 'updateObject'; id: number; object: ObjectFields; force?: true }
+  // Положение обстановки (этап 8г: открыть или закрыть дверь) — своя операция, чтобы её
+  // право проверялось отдельно: позже её получит игрок рядом с незапертой дверью.
+  | { op: 'setPosition'; id: number; position: number; force?: true }
   | { op: 'removeObject'; id: number };
 
 export const OBJECT_OP_KINDS = [
@@ -27,6 +30,7 @@ export const OBJECT_OP_KINDS = [
   'moveObject',
   'turnObject',
   'updateObject',
+  'setPosition',
   'removeObject',
 ] as const;
 
@@ -102,6 +106,7 @@ function kindBody(kind: MapObjectKind, fields: ObjectFields): MapObjectBody {
         kind,
         furnitureId: required(fields.furnitureId, 'furnitureId'),
         facing,
+        ...(fields.locked && { locked: true }),
       };
   }
 }
@@ -157,6 +162,19 @@ export function parseObjectOp(
         op: 'updateObject',
         id: parseId(fields),
         object: parseObjectFields(object, null),
+        ...parseForce(fields),
+      };
+    }
+    case 'setPosition': {
+      const position = fields.position;
+      if (!Number.isSafeInteger(position) || (position as number) < 0)
+        throw new MapOpError(
+          '«position» — номер положения обстановки, целое число от 0',
+        );
+      return {
+        op: 'setPosition',
+        id: parseId(fields),
+        position: position as number,
         ...parseForce(fields),
       };
     }

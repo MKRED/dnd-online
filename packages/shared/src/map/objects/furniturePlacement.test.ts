@@ -15,6 +15,7 @@ const TABLE = '00000000-0000-4000-8000-0000000000a1';
 const PAINTING = '00000000-0000-4000-8000-0000000000a2';
 const LAMP = '00000000-0000-4000-8000-0000000000a3';
 const FOREIGN = '00000000-0000-4000-8000-0000000000a4';
+const GATE = '00000000-0000-4000-8000-0000000000a5';
 
 function refs(): ObjectRefs {
   const r = emptyObjectRefs();
@@ -25,6 +26,7 @@ function refs(): ObjectRefs {
     mount: 'floor',
     cells: { '0,0,0': 'stand', '1,0,0': 'stand' },
     voxels: null,
+    positions: [],
     usable: true,
   });
   r.furniture.set(PAINTING, {
@@ -33,6 +35,7 @@ function refs(): ObjectRefs {
     mount: 'wall',
     cells: {},
     voxels: null,
+    positions: [],
     usable: true,
   });
   r.furniture.set(LAMP, {
@@ -41,6 +44,7 @@ function refs(): ObjectRefs {
     mount: 'ceiling',
     cells: {},
     voxels: null,
+    positions: [],
     usable: true,
   });
   r.furniture.set(FOREIGN, {
@@ -49,7 +53,22 @@ function refs(): ObjectRefs {
     mount: 'floor',
     cells: {},
     voxels: null,
+    positions: [],
     usable: false,
+  });
+  // Ворота в проёме (этап 8г): закрытые — 1×1×1, открытые — створка уходит в соседнюю
+  // клетку на восток, 2×1×1.
+  const closed = { size: [1, 1, 1] as const, cells: {}, voxels: null };
+  r.furniture.set(GATE, {
+    name: 'Ворота',
+    mount: 'doorway',
+    ...closed,
+    size: [1, 1, 1],
+    positions: [
+      { name: 'Закрыты', ...closed, size: [1, 1, 1] },
+      { name: 'Открыты', size: [2, 1, 1], cells: {}, voxels: null },
+    ],
+    usable: true,
   });
   return r;
 }
@@ -188,5 +207,49 @@ describe('кисть и заливка мимо обстановки (этап 8
       edit(map, [{ op: 'setBlock', at: [2, 1, 1], block: 'stone' }]),
     ).toThrow('стоит обстановка «Стол»');
     edit(map, [{ op: 'setBlock', at: [2, 1, 1], block: 'air' }]);
+  });
+});
+
+describe('положения двери (этап 8г)', () => {
+  const open = (id: number, position: number, force?: true) =>
+    ({ op: 'setPosition', id, position, ...(force && { force }) }) as MapOp;
+
+  it('открытые ворота занимают клетки своей модели, закрытые — снова одну', () => {
+    const map = floorMap();
+    edit(map, [place([1, 1, 1], GATE)]);
+    edit(map, [open(1, 1)]);
+    const gate = map.objects.byId.get(1)!;
+    expect(gate).toMatchObject({ position: 1 });
+    expect(objectBox(gate, refs())).toEqual({ min: [1, 1, 1], max: [2, 1, 1] });
+    edit(map, [open(1, 0)]);
+    expect(objectBox(map.objects.byId.get(1)!, refs()).max).toEqual([1, 1, 1]);
+  });
+
+  it('створка упёрлась в блок — отказ с названием положения; с force — открывается', () => {
+    const map = floorMap();
+    edit(map, [
+      place([1, 1, 1], GATE),
+      { op: 'setBlock', at: [2, 1, 1], block: 'stone' },
+    ]);
+    expect(() => edit(map, [open(1, 1)])).toThrow(
+      /«Ворота»: положение «Открыты» не поставить — .*мешает/,
+    );
+    edit(map, [open(1, 1, true)]);
+    expect(map.objects.byId.get(1)).toMatchObject({ position: 1 });
+  });
+
+  it('нет такого положения или положений вовсе — отказ', () => {
+    const map = floorMap();
+    edit(map, [place([1, 1, 1], GATE), place([1, 1, 3], TABLE)]);
+    expect(() => edit(map, [open(1, 2)])).toThrow(/положения от 0 до 1/);
+    expect(() => edit(map, [open(2, 1)])).toThrow(/нет положений/);
+  });
+
+  it('«заперта» ставится при постановке и правкой', () => {
+    const map = floorMap();
+    edit(map, [place([1, 1, 1], GATE, { locked: true })]);
+    expect(map.objects.byId.get(1)).toMatchObject({ locked: true });
+    edit(map, [{ op: 'updateObject', id: 1, object: { locked: false } }]);
+    expect(map.objects.byId.get(1)).toMatchObject({ locked: false });
   });
 });

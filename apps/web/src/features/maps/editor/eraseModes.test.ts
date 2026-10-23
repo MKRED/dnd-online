@@ -1,8 +1,10 @@
 import {
   applyOps,
   boxVolume,
+  createBlockCatalog,
   createPalette,
   MemoryChunkStore,
+  type BlockGroupInfo,
   type BlockOp,
   type SizedMapState,
   type Vec3,
@@ -67,6 +69,42 @@ describe('planeBox', () => {
 });
 
 describe('connectedCells', () => {
+  it('своя группа — один материал во всех формах, другая группа — нет', () => {
+    const group = (id: string): BlockGroupInfo => ({
+      id,
+      name: id,
+      look: 'stone',
+      color: '#808080',
+      opaque: true,
+      durability: null,
+      flammable: false,
+      movementCost: 1,
+      climbable: false,
+      hazard: null,
+      textures: null,
+      shapes: {},
+    });
+    const a = '0b5c6f2e-8a1d-4c3b-9e7f-1a2b3c4d5e6f';
+    const b = '11111111-2222-4333-8444-555555555555';
+    const state: SizedMapState = {
+      store: new MemoryChunkStore(),
+      palette: createPalette(),
+      size: { width: 20, depth: 20 },
+      blocks: createBlockCatalog([group(a), group(b)]),
+    };
+    applyOps(state, [
+      { op: 'setBlock', at: [0, 0, 0], block: a },
+      { op: 'setBlock', at: [1, 0, 0], block: `${a}_stairs` },
+      { op: 'setBlock', at: [2, 0, 0], block: b },
+    ]);
+    expect(sortCells(connectedCells(state, [0, 0, 0]) ?? [])).toEqual(
+      sortCells([
+        [0, 0, 0],
+        [1, 0, 0],
+      ]),
+    );
+  });
+
   it('берёт соединённые блоки того же материала, ступени и плиты тоже', () => {
     const state = map([
       { op: 'fillBox', from: [0, 0, 0], to: [2, 0, 0], block: 'stone' },

@@ -4,6 +4,7 @@ import {
   cellTypeId,
   getBlock,
   insideMap,
+  parseCustomBlockName,
   readCell,
   type Box3,
   type BlockOp,
@@ -66,7 +67,11 @@ function materialAt(state: SizedMapState, cell: Vec3): string | null {
   const typeId = cellTypeId(readCell(state.store, cell));
   const name = state.palette[typeId];
   if (!name || name === AIR_NAME) return null;
-  return getBlock(name)?.material ?? name;
+  // Своя группа — один «материал» во всех формах, как камень со ступенями
+  // (docs/plan/blocks.md, этап 6а).
+  return (
+    parseCustomBlockName(name)?.groupId ?? getBlock(name)?.material ?? name
+  );
 }
 
 // Клетки, соединённые гранями с start и того же материала: ступени и плиты из камня —

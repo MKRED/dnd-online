@@ -1,4 +1,5 @@
-import { getBlock, type Rotation } from 'shared';
+import type { Rotation } from 'shared';
+import { useBlockCatalog } from './catalogContext';
 import ShapeSwatch from './ShapeSwatch';
 
 interface BlockSwatchProps {
@@ -7,14 +8,17 @@ interface BlockSwatchProps {
   size?: number;
 }
 
-// Миниатюра базового блока по его имени в палитре.
+// Миниатюра блока по его имени в палитре: базового или своего — с видом группы
+// (docs/plan/blocks.md, этап 6а).
 function BlockSwatch({ block, ...props }: BlockSwatchProps) {
-  const definition = getBlock(block);
-  if (!definition) return null;
+  const info = useBlockCatalog().describe(block);
+  if (!info) return null;
   return (
     <ShapeSwatch
-      material={definition.material}
-      shape={definition.shape}
+      material={info.material}
+      shape={info.shape}
+      color={info.traits.color}
+      textures={info.textures}
       {...props}
     />
   );

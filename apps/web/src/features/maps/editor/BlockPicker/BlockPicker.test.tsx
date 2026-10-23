@@ -1,22 +1,53 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import {
+  BASE_BLOCKS,
+  createBlockCatalog,
+  type BlockCatalog,
+  type BlockGroupInfo,
+} from 'shared';
 import { renderWithProviders } from '../../../../test/render';
 import BlockPicker from './BlockPicker';
+
+const EMBERS_ID = '0b5c6f2e-8a1d-4c3b-9e7f-1a2b3c4d5e6f';
+const OTHER_ID = '11111111-2222-4333-8444-555555555555';
+
+const embers: BlockGroupInfo = {
+  id: EMBERS_ID,
+  name: 'Тлеющие угли',
+  look: 'scorched',
+  color: '#552211',
+  opaque: true,
+  durability: null,
+  flammable: false,
+  movementCost: 2,
+  climbable: false,
+  hazard: 'fire',
+  textures: null,
+  shapes: {},
+};
 
 function Harness({
   onPick = vi.fn(),
   onSelect = vi.fn(),
+  catalog = BASE_BLOCKS,
+  block = 'stone_stairs',
+  recent = ['wood', 'stone_stairs'],
 }: {
   onPick?: (block: string) => void;
   onSelect?: (block: string) => void;
+  catalog?: BlockCatalog;
+  block?: string;
+  recent?: string[];
 }) {
   const [opened, setOpened] = useState(false);
   return (
     <BlockPicker
-      block="stone_stairs"
+      catalog={catalog}
+      block={block}
       rotation={0}
-      recent={['wood', 'stone_stairs']}
+      recent={recent}
       opened={opened}
       onOpen={() => setOpened(true)}
       onClose={() => setOpened(false)}
@@ -76,5 +107,62 @@ describe('BlockPicker', () => {
       target: { value: 'мрамор' },
     });
     expect(screen.getByText('Ничего не нашлось.')).toBeInTheDocument();
+  });
+
+  it('свои блоки: группа в «Мои блоки», её формы, двойной клик в текущей форме', () => {
+    const onPick = vi.fn();
+    renderWithProviders(
+      <Harness onPick={onPick} catalog={createBlockCatalog([embers])} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Выбрать блок' }));
+    const dialog = screen.getByRole('dialog', { name: 'Выбор блока' });
+    expect(dialog).toHaveTextContent('Мои блоки');
+    fireEvent.click(screen.getByRole('button', { name: 'Тлеющие угли' }));
+    expect(dialog).toHaveTextContent('Форма — Тлеющие угли');
+    expect(dialog).toHaveTextContent('Опасный');
+    fireEvent.click(screen.getByRole('button', { name: 'Ступени' }));
+    expect(onPick).toHaveBeenCalledWith(`${EMBERS_ID}_stairs`);
+  });
+
+  it('двойной клик по своей группе и поиск по своим блокам', () => {
+    const onPick = vi.fn();
+    renderWithProviders(
+      <Harness onPick={onPick} catalog={createBlockCatalog([embers])} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Выбрать блок' }));
+    fireEvent.doubleClick(screen.getByRole('button', { name: 'Тлеющие угли' }));
+    expect(onPick).toHaveBeenLastCalledWith(`${EMBERS_ID}_stairs`);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Выбрать блок' }));
+    const search = screen.getByRole('textbox', { name: 'Поиск блока' });
+    fireEvent.change(search, { target: { value: 'угли плит' } });
+    fireEvent.keyDown(search, { key: 'Enter' });
+    expect(onPick).toHaveBeenLastCalledWith(`${EMBERS_ID}_slab`);
+  });
+
+  it('своих нет — ссылка на создание блока', () => {
+    renderWithProviders(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: 'Выбрать блок' }));
+    expect(screen.getByText(/Своих блоков пока нет/)).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Создать в справочнике' }),
+    ).toHaveAttribute('href', '/blocks/new');
+  });
+
+  it('свой блок — с подписью группы, чужого нет в недавних', () => {
+    renderWithProviders(
+      <Harness
+        catalog={createBlockCatalog([embers])}
+        block={EMBERS_ID}
+        recent={[EMBERS_ID, OTHER_ID, 'wood']}
+      />,
+    );
+    expect(
+      screen.getByRole('button', { name: 'Выбрать блок' }),
+    ).toHaveTextContent('Тлеющие угли');
+    expect(
+      screen.getByRole('button', { name: 'Тлеющие угли' }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /./ })).toHaveLength(3);
   });
 });

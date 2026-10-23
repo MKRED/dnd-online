@@ -1,14 +1,30 @@
 import { Modal, Stack, Text, TextInput } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
-import { useRef, useState, type ReactNode, type Ref } from 'react';
-import { getBlock, MATERIALS, SHAPE_LABELS, type MaterialName } from 'shared';
+import { useRef, useState } from 'react';
+import {
+  customBlockName,
+  MATERIALS,
+  parseCustomBlockName,
+  SHAPE_LABELS,
+  type MaterialName,
+} from 'shared';
 import { blockTraits } from '../blockTraits';
-import { blocksOf, materialGroups, searchBlocks } from './blockGroups';
+import {
+  blocksOf,
+  materialGroups,
+  ownBlocksOf,
+  ownGroups,
+  searchBlocks,
+} from './blockGroups';
 import BlockTile from './BlockTile';
+import { useBlockCatalog } from './catalogContext';
+import OwnBlocksSection from './OwnBlocksSection';
+import PickerSection from './PickerSection';
+import { shownRecent } from './recentBlocks';
 import classes from './BlockPicker.module.css';
 
 interface BlockPickerModalProps {
-  // Текущий блок: с его материала окно и открывается.
+  // Текущий блок: с его материала или группы окно и открывается.
   block: string;
   recent: readonly string[];
   onPick: (block: string) => void;
@@ -17,36 +33,50 @@ interface BlockPickerModalProps {
 
 const GROUPS = materialGroups();
 
-// Окно выбора блока (docs/web.md, «BlockPicker»): поиск, недавние, материалы по группам
-// и формы выбранного материала. Клик по форме, недавнему или найденному блоку выбирает
-// его и закрывает окно; двойной клик по материалу берёт его в той же форме, что сейчас.
-// Монтируется только на время показа — каждый раз открывается с текущего блока.
+// Окно выбора блока (docs/web.md, «BlockPicker»): поиск, недавние, свои блоки, материалы
+// по группам и формы выбранного. Клик по форме, недавнему или найденному блоку выбирает
+// его и закрывает окно; двойной клик по материалу или своей группе берёт её в той же
+// форме, что сейчас. Монтируется только на время показа — каждый раз открывается с
+// текущего блока.
 function BlockPickerModal({
   block,
   recent,
   onPick,
   onClose,
 }: BlockPickerModalProps) {
-  const current = getBlock(block);
-  const [material, setMaterial] = useState<MaterialName>(
-    current?.material ?? 'stone',
+  const catalog = useBlockCatalog();
+  const current = catalog.describe(block);
+  // Выбранный ряд: имя материала или id своей группы — они не пересекаются (в uuid
+  // нет латинских слов-материалов).
+  const [selected, setSelected] = useState<string>(
+    parseCustomBlockName(block)?.groupId ?? current?.material ?? 'stone',
   );
   const [query, setQuery] = useState('');
-  // Ряд форм под материалами: на телефоне он ниже экрана — после выбора материала
-  // прокручиваем к нему, иначе непонятно, что делать дальше.
+  // Ряд форм под материалами: на телефоне он ниже экрана — после выбора прокручиваем
+  // к нему, иначе непонятно, что делать дальше.
   const shapesRef = useRef<HTMLDivElement>(null);
-  const chooseMaterial = (name: MaterialName) => {
-    setMaterial(name);
+  const choose = (key: string) => {
+    setSelected(key);
     shapesRef.current?.scrollIntoView?.({
       block: 'nearest',
       behavior: 'smooth',
     });
   };
-  const found = searchBlocks(query);
-  const shapes = blocksOf(material);
-  const sameShape = (name: MaterialName) =>
-    blocksOf(name).find((b) => b.shape === current?.shape)?.name ?? name;
-  const traits = blockTraits(material);
+  const groups = ownGroups(catalog);
+  const group = groups.find((g) => g.id === selected);
+  const found = searchBlocks(query, catalog);
+  const shapes = group
+    ? ownBlocksOf(catalog, group.id)
+    : blocksOf(selected as MaterialName);
+  const shape = current?.shape ?? 'cube';
+  const sameShape = (key: string) =>
+    groups.some((g) => g.id === key)
+      ? customBlockName(key, shape)
+      : (blocksOf(key as MaterialName).find((b) => b.shape === shape)?.name ??
+        key);
+  // Куб своей группы называется её id, базового — именем материала.
+  const traits = blockTraits(selected, catalog);
+  const recentShown = shownRecent(recent, catalog);
 
   return (
     <Modal opened onClose={onClose} title="Выбор блока" size="lg">
@@ -83,37 +113,44 @@ function BlockPickerModal({
           )
         ) : (
           <>
-            {recent.length > 0 && (
-              <Section title="Недавние">
-                {recent.map((name) => (
+            {recentShown.length > 0 && (
+              <PickerSection title="Недавние">
+                {recentShown.map((name) => (
                   <BlockTile
                     key={name}
                     block={name}
-                    label={getBlock(name)?.label ?? name}
+                    label={catalog.describe(name)?.label ?? name}
                     selected={name === block}
                     onClick={() => onPick(name)}
                   />
                 ))}
-              </Section>
+              </PickerSection>
             )}
 
-            {GROUPS.map((group) => (
-              <Section key={group.label} title={group.label}>
-                {group.materials.map((name) => (
+            <OwnBlocksSection
+              groups={groups}
+              selected={selected}
+              onChoose={choose}
+              onPickSameShape={(id) => onPick(sameShape(id))}
+            />
+
+            {GROUPS.map((materials) => (
+              <PickerSection key={materials.label} title={materials.label}>
+                {materials.materials.map((name) => (
                   <BlockTile
                     key={name}
                     block={name}
                     label={MATERIALS[name].label}
-                    selected={name === material}
-                    onClick={() => chooseMaterial(name)}
+                    selected={name === selected}
+                    onClick={() => choose(name)}
                     onDoubleClick={() => onPick(sameShape(name))}
                   />
                 ))}
-              </Section>
+              </PickerSection>
             ))}
 
-            <Section
-              title={`Форма — ${MATERIALS[material].label}`}
+            <PickerSection
+              title={`Форма — ${group?.name ?? MATERIALS[selected as MaterialName].label}`}
               sectionRef={shapesRef}
             >
               {shapes.map((b) => (
@@ -125,7 +162,7 @@ function BlockPickerModal({
                   onClick={() => onPick(b.name)}
                 />
               ))}
-            </Section>
+            </PickerSection>
             {traits && (
               <Text size="xs" c="orange">
                 {traits}
@@ -135,25 +172,6 @@ function BlockPickerModal({
         )}
       </Stack>
     </Modal>
-  );
-}
-
-function Section({
-  title,
-  sectionRef,
-  children,
-}: {
-  title: string;
-  sectionRef?: Ref<HTMLDivElement>;
-  children: ReactNode;
-}) {
-  return (
-    <Stack gap={4} ref={sectionRef}>
-      <Text size="sm" fw={500}>
-        {title}
-      </Text>
-      <div className={classes.grid}>{children}</div>
-    </Stack>
   );
 }
 

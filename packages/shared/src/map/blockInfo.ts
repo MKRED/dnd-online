@@ -8,7 +8,7 @@ import {
 } from './materials.js';
 import type { Palette } from './palette.js';
 import type { ShapeName } from './shapes.js';
-import type { BlockTextures } from './customBlocks.js';
+import type { BlockGroupInfo, BlockTextures } from './customBlocks.js';
 
 // Описание блока для правил и отрисовки (docs/plan/blocks.md, этап 2). Правила читают
 // свойства только отсюда, а не из MATERIALS: так справочник на этапе 3 подставит свои
@@ -31,6 +31,9 @@ export interface BlockInfo {
 
 export interface BlockCatalog {
   describe(name: string): BlockInfo | undefined;
+  // Свои группы каталога — для окна выбора блока (docs/plan/blocks.md, этап 6а); у
+  // каталога только базовых блоков их нет.
+  groups?: readonly BlockGroupInfo[];
 }
 
 function baseInfo(name: string): BlockInfo | undefined {

@@ -1,8 +1,17 @@
-import { BASE_BLOCKS, HAZARD_TRIGGER, hazardLabel } from 'shared';
+import {
+  BASE_BLOCKS,
+  HAZARD_TRIGGER,
+  hazardLabel,
+  type BlockCatalog,
+} from 'shared';
 
 // Что блок делает с тем, кто по нему идёт: в списке блоков этого не видно.
-export function blockTraits(name: string): string | null {
-  const block = BASE_BLOCKS.describe(name);
+// catalog — каталог карты: у своих блоков свойства группы.
+export function blockTraits(
+  name: string,
+  catalog: BlockCatalog = BASE_BLOCKS,
+): string | null {
+  const block = catalog.describe(name);
   if (!block) return null;
   const { hazard, movementCost } = block.traits;
   const traits = [

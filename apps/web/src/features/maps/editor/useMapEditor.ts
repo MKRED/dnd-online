@@ -1,6 +1,7 @@
 import { useHotkeys } from '@mantine/hooks';
 import { useMemo, useState } from 'react';
 import {
+  BASE_BLOCKS,
   ROTATIONS,
   type MapOp,
   type SizedMapState,
@@ -183,6 +184,8 @@ export function useMapEditor({
   ]);
 
   return {
+    // Каталог блоков карты для окна выбора и подписей панели (docs/plan/blocks.md, этап 6а).
+    catalog: state?.blocks ?? BASE_BLOCKS,
     tool,
     setTool,
     block,

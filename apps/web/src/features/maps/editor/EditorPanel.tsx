@@ -7,7 +7,7 @@ import {
   Text,
 } from '@mantine/core';
 import type { ReactNode } from 'react';
-import { getBlock, isRotation, ROTATIONS } from 'shared';
+import { isRotation, ROTATIONS } from 'shared';
 import BlockPicker from './BlockPicker';
 import { blockTraits } from './blockTraits';
 import { buildsBlocks, isRegionTool, type EditorTool } from './editorTools';
@@ -52,6 +52,9 @@ function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
   // Высоту задают у области ластика; стена стирается до самого верха.
   const erasesRegion = tool === 'erase' && eraseMode === 'region';
   const builds = buildsBlocks(tool);
+  // Блоки описывает каталог карты: у своих блоков подписи, форма и свойства группы.
+  const { catalog } = editor;
+  const traits = blockTraits(editor.block, catalog);
 
   return (
     <Stack gap="sm">
@@ -72,6 +75,7 @@ function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
 
       {builds && (
         <BlockPicker
+          catalog={catalog}
           block={editor.block}
           rotation={editor.rotation}
           recent={editor.recentBlocks}
@@ -83,13 +87,13 @@ function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
         />
       )}
 
-      {builds && blockTraits(editor.block) && (
+      {builds && traits && (
         <Text size="xs" c="orange">
-          {blockTraits(editor.block)}
+          {traits}
         </Text>
       )}
 
-      {builds && getBlock(editor.block)?.shape !== 'cube' && (
+      {builds && catalog.describe(editor.block)?.shape !== 'cube' && (
         <Stack gap={4}>
           <Text size="sm">Поворот (R) — по часовой, 0° — к северу</Text>
           <SegmentedControl
@@ -140,7 +144,7 @@ function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
           <Text size="sm" flex={1}>
             Первый угол: {anchor.cell.join(', ')}
             {anchor.match &&
-              ` — заменяем «${getBlock(anchor.match)?.label ?? anchor.match}»`}
+              ` — заменяем «${catalog.describe(anchor.match)?.label ?? anchor.match}»`}
           </Text>
           <Button
             size="xs"

@@ -1,7 +1,13 @@
 import {
+  BASE_BLOCKS,
   BLOCK_CATALOG,
+  customBlockName,
   PLACEABLE_MATERIALS,
+  SHAPE_NAMES,
+  type BlockCatalog,
   type BlockDefinition,
+  type BlockGroupInfo,
+  type BlockInfo,
   type MaterialName,
 } from 'shared';
 
@@ -68,12 +74,36 @@ export function blocksOf(material: MaterialName): BlockDefinition[] {
 const normalize = (text: string) =>
   text.toLocaleLowerCase('ru').replaceAll('ё', 'е');
 
+// Свои группы каталога карты по названию (docs/plan/blocks.md, этап 6а).
+export function ownGroups(catalog: BlockCatalog): BlockGroupInfo[] {
+  return [...(catalog.groups ?? [])].sort((a, b) =>
+    a.name.localeCompare(b.name, 'ru'),
+  );
+}
+
+// Блоки своей группы во всех формах, куб первым — как blocksOf у базовых.
+export function ownBlocksOf(
+  catalog: BlockCatalog,
+  groupId: string,
+): BlockInfo[] {
+  return SHAPE_NAMES.flatMap(
+    (shape) => catalog.describe(customBlockName(groupId, shape)) ?? [],
+  );
+}
+
 // Поиск по названию: каждое слово запроса — начало какого-то слова названия, в любом
-// порядке. «кам ступ» находит «Камень: ступени», «плит» — все плиты.
-export function searchBlocks(query: string): BlockDefinition[] {
+// порядке. «кам ступ» находит «Камень: ступени», «плит» — все плиты. Свои блоки
+// ищутся вместе с базовыми, первыми.
+export function searchBlocks(
+  query: string,
+  catalog: BlockCatalog = BASE_BLOCKS,
+): { name: string; label: string }[] {
   const words = normalize(query).split(/\s+/).filter(Boolean);
   if (!words.length) return [];
-  return [...BLOCK_CATALOG.values()].filter((block) => {
+  const own = ownGroups(catalog).flatMap((group) =>
+    ownBlocksOf(catalog, group.id),
+  );
+  return [...own, ...BLOCK_CATALOG.values()].filter((block) => {
     const labelWords = normalize(block.label).split(/[\s:]+/);
     return words.every((word) =>
       labelWords.some((labelWord) => labelWord.startsWith(word)),

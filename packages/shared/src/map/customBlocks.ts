@@ -113,6 +113,7 @@ export function createBlockCatalog(groups: BlockGroupInfo[]): BlockCatalog {
   const byId = new Map(groups.map((group) => [group.id, group]));
   const described = new Map<string, BlockInfo | undefined>();
   return {
+    groups,
     describe(name) {
       const base = BASE_BLOCKS.describe(name);
       if (base) return base;

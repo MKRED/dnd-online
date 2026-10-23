@@ -1,4 +1,4 @@
-export { ABILITIES, BLOCKS, EFFECTS } from './simpleCatalogs';
+export { ABILITIES, BLOCKS, EFFECTS, MODELS } from './simpleCatalogs';
 export type { SimpleCatalogDef } from './simpleCatalogs';
 export { SimpleCreatePage, SimpleEditPage } from './SimpleFormPage';
 export { default as SimpleListPage } from './SimpleListPage';

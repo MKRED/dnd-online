@@ -1,0 +1,39 @@
+/* Редактор модели на весь экран: холст слева, панель справа; на узком — столбиком,
+   холст сверху на большую часть экрана, панель под ним прокручивается. */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  gap: var(--mantine-spacing-md);
+  height: calc(100dvh - 5rem);
+}
+
+.scene {
+  position: relative;
+  min-height: 0;
+  border-radius: var(--mantine-radius-sm);
+  overflow: hidden;
+  background: var(--mantine-color-dark-7);
+}
+
+.hint {
+  position: absolute;
+  left: var(--mantine-spacing-xs);
+  bottom: var(--mantine-spacing-xs);
+  right: var(--mantine-spacing-xs);
+  pointer-events: none;
+  color: var(--mantine-color-gray-4);
+}
+
+.panel {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+@media (max-width: 48em) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 60dvh auto;
+    height: auto;
+  }
+}

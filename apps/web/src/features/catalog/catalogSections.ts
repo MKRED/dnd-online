@@ -6,5 +6,6 @@ export const CATALOG_SECTIONS = [
   { value: 'effects', path: '/effects', label: 'Эффекты' },
   { value: 'monsters', path: '/monsters', label: 'Монстры' },
   { value: 'blocks', path: '/blocks', label: 'Блоки' },
+  { value: 'models', path: '/models', label: 'Модели' },
 ] as const;
 export type CatalogSection = (typeof CATALOG_SECTIONS)[number]['value'];

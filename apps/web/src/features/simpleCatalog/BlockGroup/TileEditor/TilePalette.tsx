@@ -7,6 +7,8 @@ interface TilePaletteProps {
   // Цвета, которые уже есть в плитке: дорисовывать теми же.
   tileColors: string[];
   onColor: (color: string) => void;
+  // Подпись своих цветов: у редактора моделей — «Цвета модели».
+  ownLabel?: string;
 }
 
 function Swatches({
@@ -34,10 +36,10 @@ function Swatches({
   );
 }
 
-// Палитра: готовые ряды, цвета самой плитки и свой цвет (поле с пипеткой экрана там,
-// где браузер её умеет).
+// Палитра: готовые ряды, цвета самой плитки (у редактора моделей, этап 8а, — модели) и
+// свой цвет (поле с пипеткой экрана там, где браузер её умеет).
 function TilePalette(props: TilePaletteProps) {
-  const { color, tileColors, onColor } = props;
+  const { color, tileColors, onColor, ownLabel = 'Цвета плитки' } = props;
   return (
     <Stack gap="xs">
       {PIXEL_PALETTE.map((row) => (
@@ -51,9 +53,9 @@ function TilePalette(props: TilePaletteProps) {
       {tileColors.length > 0 && (
         <Stack gap={4}>
           <Text size="xs" c="dimmed">
-            Цвета плитки
+            {ownLabel}
           </Text>
-          <Swatches {...props} colors={tileColors} label="Цвета плитки" />
+          <Swatches {...props} colors={tileColors} label={ownLabel} />
         </Stack>
       )}
       <ColorInput

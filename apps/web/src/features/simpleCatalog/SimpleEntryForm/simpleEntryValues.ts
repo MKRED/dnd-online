@@ -1,6 +1,8 @@
 import {
   CATALOG_DESCRIPTION_MAX_LENGTH,
   CATALOG_NAME_MAX_LENGTH,
+  emptyVoxelModel,
+  type VoxelModelFields,
 } from 'shared';
 import { toSourcesInput } from '../../catalog';
 import { blockValidate, toBlockValues, type BlockValues } from '../BlockGroup';
@@ -46,6 +48,8 @@ export interface SimpleFormValues {
   monster: MonsterAbilityValues;
   // Вид и свойства группы блоков.
   block: BlockValues;
+  // Модель из вокселей (docs/plan/blocks.md, этап 8а): её правит редактор целиком.
+  model: VoxelModelFields;
 }
 
 // Те же правила и тексты, что у сервера (CatalogEntryDto, EffectDto, AbilityDto).
@@ -98,6 +102,15 @@ export function toSimpleFormValues(
         : undefined,
     ),
     block: toBlockValues(entry && 'look' in entry ? entry : undefined),
+    model:
+      entry && 'voxels' in entry
+        ? {
+            size: entry.size,
+            palette: entry.palette,
+            voxels: entry.voxels,
+            cells: entry.cells,
+          }
+        : emptyVoxelModel(),
   };
 }
 

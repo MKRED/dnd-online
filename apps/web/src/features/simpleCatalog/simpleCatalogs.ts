@@ -9,6 +9,8 @@ import {
   type BlockGroupInput,
   type Effect,
   type EffectInput,
+  type VoxelModel,
+  type VoxelModelInput,
 } from 'shared';
 import type { ComponentType } from 'react';
 import { catalogApi, type CatalogSection } from '../catalog';
@@ -22,16 +24,25 @@ import {
 } from './BlockGroup';
 import { effectDeleteConfirmText } from './deleteConfirmText';
 import {
+  MODEL_EXTRAS,
+  MODEL_KIND_LABELS,
+  MODEL_KINDS,
+  ModelCopyPanel,
+  modelKinds,
+} from './VoxelModel';
+import {
   ABILITY_EXTRAS,
   EFFECT_EXTRAS,
   type CatalogExtras,
 } from './catalogExtras';
 
-// Запись простого каталога — способность, эффект (docs/plan/done/abilities-effects.md)
-// или группа блоков (docs/plan/blocks.md, этап 4). Страницы у них одни; чем разделы
-// отличаются — виды записей для чипов и бейджей (kinds) и свои поля раздела (extras).
-export type SimpleEntry = Ability | Effect | BlockGroup;
-export type SimpleInput = AbilityInput | EffectInput | BlockGroupInput;
+// Запись простого каталога — способность, эффект (docs/plan/done/abilities-effects.md),
+// группа блоков (docs/plan/blocks.md, этап 4) или модель (этап 8а). Страницы у них
+// одни; чем разделы отличаются — виды записей для чипов и бейджей (kinds) и свои поля
+// раздела (extras).
+export type SimpleEntry = Ability | Effect | BlockGroup | VoxelModel;
+export type SimpleInput =
+  AbilityInput | EffectInput | BlockGroupInput | VoxelModelInput;
 
 // Действия раздела на карточке записи для всех, а не только для автора: у групп блоков —
 // «Скопировать себе» и обновление копии (docs/plan/blocks.md, этап 6б). onChange —
@@ -209,6 +220,45 @@ export const BLOCKS: SimpleCatalogDef = {
       mine: 'У вас пока нет своих блоков. Создайте группу — например, тлеющие угли или ядовитый мох. Базовые блоки есть у всех и без неё.',
       catalog:
         'В каталоге пока пусто. Опубликуйте свою группу блоков, чтобы её увидели другие.',
+    },
+  },
+};
+
+export const MODELS: SimpleCatalogDef = {
+  section: 'models',
+  path: '/models',
+  api: catalogApi<SimpleEntry, SimpleInput>('/voxel-models'),
+  kinds: {
+    values: MODEL_KINDS,
+    labels: MODEL_KIND_LABELS,
+    of: (entry) => ('voxels' in entry ? modelKinds(entry) : []),
+  },
+  extras: MODEL_EXTRAS,
+  CardActions: ModelCopyPanel,
+  loadTexts: {
+    notFound: 'Модель не найдена',
+    failed: 'Не удалось загрузить модель',
+  },
+  texts: {
+    title: 'Модели',
+    newTitle: 'Новая модель',
+    createLabel: 'Создать модель',
+    back: '← К моделям',
+    hidden: 'Скрыта',
+    listFailed: 'Не удалось загрузить модели',
+    saveFailed: 'Не удалось сохранить модель',
+    deleteFailed: 'Не удалось удалить модель',
+    imageNotSaved: 'Модель сохранена, а картинка — нет',
+    deleteConfirm: ({ name }) => `Удалить модель «${name}» безвозвратно?`,
+    namePlaceholder: 'Например, Бочка',
+    publicHint:
+      'Скрытую модель видите только вы. Опубликованную видят все и могут скопировать себе — со ссылкой на вас и вашими обновлениями по их желанию.',
+    descriptionPlaceholder:
+      'Что это: мебель, дверь, статуя… Где встречается, из чего сделано.',
+    empty: {
+      mine: 'У вас пока нет моделей. Нарисуйте первую — например, бочку, стол или дверь. Позже их можно будет ставить на карту как обстановку.',
+      catalog:
+        'В каталоге пока пусто. Опубликуйте свою модель, чтобы её увидели другие.',
     },
   },
 };

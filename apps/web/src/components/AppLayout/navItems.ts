@@ -1,4 +1,5 @@
 import {
+  IconArmchair,
   IconBackpack,
   IconCube,
   IconFlame,
@@ -30,6 +31,7 @@ const CATALOG_ICONS: Record<CatalogSection, Icon> = {
   effects: IconFlame,
   monsters: IconSkull,
   blocks: IconCube,
+  models: IconArmchair,
 };
 
 // Разделы боковой панели. Новый раздел добавляется сюда, шапку он не трогает.

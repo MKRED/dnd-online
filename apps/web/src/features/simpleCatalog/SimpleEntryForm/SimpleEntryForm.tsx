@@ -51,7 +51,8 @@ function SimpleEntryForm({
 }: SimpleEntryFormProps) {
   const form = useForm<SimpleFormValues>({
     initialValues: toSimpleFormValues(def, entry),
-    validate: simpleFormValidate,
+    // Правила своих полей раздела — только в форме этого раздела.
+    validate: { ...simpleFormValidate, ...def.extras.validate },
   });
   const [draft, setDraft] = useImageDraft(entry?.image ?? null);
   // Запись на сервере. При создании она появляется после первого «Сохранить»: если

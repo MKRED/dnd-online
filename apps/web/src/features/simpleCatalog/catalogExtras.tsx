@@ -1,4 +1,4 @@
-import type { UseFormReturnType } from '@mantine/form';
+import type { FormRulesRecord, UseFormReturnType } from '@mantine/form';
 import type { ReactNode } from 'react';
 import {
   ACTIVATION_LABELS,
@@ -45,6 +45,9 @@ export interface CatalogExtras {
     values: SimpleFormValues,
     saved: SimpleEntry | null,
   ) => SaveConfirmation | null;
+  // Правила своих полей, которые срабатывают только в форме этого раздела: у
+  // обстановки «выберите модель» (в форме других разделов modelId всегда пуст).
+  validate?: FormRulesRecord<SimpleFormValues>;
   // Кнопка гайда по форме — в заголовке страницы создания и правки. Нет — нет и кнопки.
   Guide?: () => ReactNode;
   // Своя картинка вместо картинки записи: у группы блоков это сами блоки. Есть — у

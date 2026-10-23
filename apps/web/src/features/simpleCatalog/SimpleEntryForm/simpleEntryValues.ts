@@ -5,6 +5,7 @@ import {
   type VoxelModelFields,
 } from 'shared';
 import { toSourcesInput } from '../../catalog';
+import { toFurnitureValues, type FurnitureValues } from '../Furniture';
 import { blockValidate, toBlockValues, type BlockValues } from '../BlockGroup';
 import {
   toDurationValues,
@@ -50,6 +51,8 @@ export interface SimpleFormValues {
   block: BlockValues;
   // Модель из вокселей (docs/plan/blocks.md, этап 8а): её правит редактор целиком.
   model: VoxelModelFields;
+  // Модель и крепление обстановки (этап 8б).
+  furniture: FurnitureValues;
 }
 
 // Те же правила и тексты, что у сервера (CatalogEntryDto, EffectDto, AbilityDto).
@@ -111,6 +114,7 @@ export function toSimpleFormValues(
             cells: entry.cells,
           }
         : emptyVoxelModel(),
+    furniture: toFurnitureValues(entry && 'mount' in entry ? entry : undefined),
   };
 }
 

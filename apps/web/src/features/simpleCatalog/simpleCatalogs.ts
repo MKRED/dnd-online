@@ -9,6 +9,8 @@ import {
   type BlockGroupInput,
   type Effect,
   type EffectInput,
+  type Furniture,
+  type FurnitureInput,
   type VoxelModel,
   type VoxelModelInput,
 } from 'shared';
@@ -24,10 +26,18 @@ import {
 } from './BlockGroup';
 import { effectDeleteConfirmText } from './deleteConfirmText';
 import {
+  FURNITURE_EXTRAS,
+  FURNITURE_KIND_LABELS,
+  FURNITURE_KINDS,
+  FurnitureCopyPanel,
+  furnitureKinds,
+} from './Furniture';
+import {
   MODEL_EXTRAS,
   MODEL_KIND_LABELS,
   MODEL_KINDS,
   ModelCopyPanel,
+  loadModelDeleteConfirm,
   modelKinds,
 } from './VoxelModel';
 import {
@@ -37,12 +47,17 @@ import {
 } from './catalogExtras';
 
 // Запись простого каталога — способность, эффект (docs/plan/done/abilities-effects.md),
-// группа блоков (docs/plan/blocks.md, этап 4) или модель (этап 8а). Страницы у них
-// одни; чем разделы отличаются — виды записей для чипов и бейджей (kinds) и свои поля
-// раздела (extras).
-export type SimpleEntry = Ability | Effect | BlockGroup | VoxelModel;
+// группа блоков (docs/plan/blocks.md, этап 4), модель (этап 8а) или обстановка (этап
+// 8б). Страницы у них одни; чем разделы отличаются — виды записей для чипов и бейджей
+// (kinds) и свои поля раздела (extras).
+export type SimpleEntry =
+  Ability | Effect | BlockGroup | VoxelModel | Furniture;
 export type SimpleInput =
-  AbilityInput | EffectInput | BlockGroupInput | VoxelModelInput;
+  | AbilityInput
+  | EffectInput
+  | BlockGroupInput
+  | VoxelModelInput
+  | FurnitureInput;
 
 // Действия раздела на карточке записи для всех, а не только для автора: у групп блоков —
 // «Скопировать себе» и обновление копии (docs/plan/blocks.md, этап 6б). onChange —
@@ -249,7 +264,7 @@ export const MODELS: SimpleCatalogDef = {
     saveFailed: 'Не удалось сохранить модель',
     deleteFailed: 'Не удалось удалить модель',
     imageNotSaved: 'Модель сохранена, а картинка — нет',
-    deleteConfirm: ({ name }) => `Удалить модель «${name}» безвозвратно?`,
+    deleteConfirm: loadModelDeleteConfirm,
     namePlaceholder: 'Например, Бочка',
     publicHint:
       'Скрытую модель видите только вы. Опубликованную видят все и могут скопировать себе — со ссылкой на вас и вашими обновлениями по их желанию.',
@@ -259,6 +274,46 @@ export const MODELS: SimpleCatalogDef = {
       mine: 'У вас пока нет моделей. Нарисуйте первую — например, бочку, стол или дверь. Позже их можно будет ставить на карту как обстановку.',
       catalog:
         'В каталоге пока пусто. Опубликуйте свою модель, чтобы её увидели другие.',
+    },
+  },
+};
+
+export const FURNITURE: SimpleCatalogDef = {
+  section: 'furniture',
+  path: '/furniture',
+  api: catalogApi<SimpleEntry, SimpleInput>('/furniture'),
+  kinds: {
+    values: FURNITURE_KINDS,
+    labels: FURNITURE_KIND_LABELS,
+    of: (entry) => ('mount' in entry ? furnitureKinds(entry) : []),
+  },
+  extras: FURNITURE_EXTRAS,
+  CardActions: FurnitureCopyPanel,
+  loadTexts: {
+    notFound: 'Обстановка не найдена',
+    failed: 'Не удалось загрузить обстановку',
+  },
+  texts: {
+    title: 'Обстановка',
+    newTitle: 'Новая обстановка',
+    createLabel: 'Создать обстановку',
+    back: '← К обстановке',
+    hidden: 'Скрыта',
+    listFailed: 'Не удалось загрузить обстановку',
+    saveFailed: 'Не удалось сохранить обстановку',
+    deleteFailed: 'Не удалось удалить обстановку',
+    imageNotSaved: 'Обстановка сохранена, а картинка — нет',
+    deleteConfirm: ({ name }) =>
+      `Удалить обстановку «${name}» безвозвратно? Её модель останется в «Моделях».`,
+    namePlaceholder: 'Например, Обеденный стол',
+    publicHint:
+      'Скрытую обстановку видите только вы. Опубликованную видят все вместе с её моделью и могут скопировать себе.',
+    descriptionPlaceholder:
+      'Что это: стол, статуя, факел на стене… Где стоит, из чего сделано.',
+    empty: {
+      mine: 'У вас пока нет обстановки. Создайте первую — например, стол или факел на стене: выберите свою модель или нарисуйте новую прямо в форме.',
+      catalog:
+        'В каталоге пока пусто. Опубликуйте свою обстановку, чтобы её увидели другие.',
     },
   },
 };

@@ -7,4 +7,9 @@ export const VoxelEditorModal = lazy(
 );
 export const ModelPreview = lazy(() => import('./ModelPreview/ModelPreview'));
 export { default as ModelThumbnail } from './ModelPreview/ModelThumbnail';
-export { copyVoxelModel, pullVoxelModel } from './voxelModelApi';
+export {
+  copyVoxelModel,
+  pullVoxelModel,
+  voxelModelsApi,
+  voxelModelUsage,
+} from './voxelModelApi';

@@ -129,13 +129,31 @@ function ropeCoil() {
   return m.cell(0, 0, 0, 'difficult');
 }
 
-function seaChest() {
-  const m = new Model([1, 1, 1]);
-  m.box(1, 0, 4, 15, 8, 12, '#2c3f73').box(1, 8, 4, 15, 10, 12, '#34558a');
-  for (const x of [1, 14]) m.box(x, 0, 4, x + 1, 10, 12, 'woodDark');
-  m.box(1, 3, 3, 15, 4, 4, 'woodDark').box(7, 6, 3, 9, 9, 4, 'gold');
+function seaChestBody(m) {
+  m.box(1, 0, 4, 15, 8, 12, '#2c3f73');
+  for (const x of [1, 14]) m.box(x, 0, 4, x + 1, 8, 12, 'woodDark');
+  m.box(1, 3, 3, 15, 4, 4, 'woodDark');
   m.box(0, 5, 7, 1, 6, 9, 'iron').box(15, 5, 7, 16, 6, 9, 'iron');
+}
+
+function seaChestClosed() {
+  const m = new Model([1, 1, 1]);
+  seaChestBody(m);
+  m.box(1, 8, 4, 15, 10, 12, '#34558a').box(1, 8, 4, 2, 10, 12, 'woodDark');
+  m.box(14, 8, 4, 15, 10, 12, 'woodDark').box(7, 6, 3, 9, 9, 4, 'gold');
   return m.cell(0, 0, 0, 'stand');
+}
+
+// Крышка откинута к спине; внутри свёрнутая одежда, бутылка и карта.
+function seaChestOpen() {
+  const m = new Model([1, 1, 1]);
+  seaChestBody(m);
+  m.box(2, 1, 5, 14, 8, 11, null).box(2, 1, 5, 14, 2, 11, 'woodDark');
+  m.box(3, 2, 6, 8, 5, 10, 'linen').box(9, 2, 6, 11, 7, 8, 'bookGreen');
+  m.box(9, 7, 6, 10, 8, 7, 'woodDark').box(11, 2, 8, 13, 4, 10, '#d8c27a');
+  m.box(1, 8, 12, 15, 16, 14, '#34558a').box(1, 8, 12, 2, 16, 14, 'woodDark');
+  m.box(14, 8, 12, 15, 16, 14, 'woodDark');
+  return m;
 }
 
 function fishingNet() {
@@ -202,8 +220,11 @@ export default [
   [
     'Матросский рундук',
     'floor',
-    'Синий окованный сундук моряка. На него можно встать.',
-    seaChest,
+    'Синий окованный сундук моряка. На закрытый можно встать; у открытого крышка откинута, внутри вещи моряка.',
+    [
+      ['Закрыт', seaChestClosed],
+      ['Открыт', seaChestOpen],
+    ],
   ],
   [
     'Рыболовная сеть',

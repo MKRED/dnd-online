@@ -76,6 +76,7 @@ Read the relevant file before working in that area:
   - open questions
   - stage checklist — tick items off as they land
 - [docs/mcp.md](docs/mcp.md) covers both MCP servers: `dnd` (tools, connecting it, the build → look → fix loop) and `comfy` (tools, style presets, the generate → look → upload loop, connecting ComfyUI)
+- [docs/voxel-modeling.md](docs/voxel-modeling.md) covers how an AI draws voxel models in code (in Russian): primitives (box, cylinder, ball, line, speckle), axes and "forward", style and palette, mounts and cell properties, positions for things that open, the check loop and pitfalls — read it before adding model drawing to the `dnd` MCP
 - [docs/dnd/classes.md](docs/dnd/classes.md) covers the character classes: the 13 classes and their 2024 subclasses (Russian and English names, source book), where that data lives in code, and what in it is unverified
 - [docs/dnd/species.md](docs/dnd/species.md) covers the character species: the 22 species: those of the 2024 books plus the Tabaxi and a homebrew Half-Tabaxi (Russian and English names, source book), where that data lives in code, and what was left out
 - [docs/dnd/items.md](docs/dnd/items.md) covers the item rules data: weight in pounds (fractional, or none), cost as an amount and a coin, the coin abbreviations, and where that data lives in code

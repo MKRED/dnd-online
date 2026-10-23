@@ -31,6 +31,7 @@ const embers: BlockGroup = {
   hazard: 'fire',
   textures: null,
   shapes: {},
+  origin: null,
 };
 
 const auth = {
@@ -179,5 +180,100 @@ describe('раздел «Блоки»', () => {
     const { textures, color } = body.shapes.stairs;
     expect(textures.top).toBe(textures.side);
     expect(color).toMatch(/^#[0-9a-f]{6}$/);
+  });
+
+  it('чужая опубликованная — «Скопировать себе» ведёт на копию', async () => {
+    const copyId = '33333333-3333-4333-8333-333333333333';
+    const foreign = { ...embers, authorId: 'someone', isPublic: true };
+    const fetchMock = stubFetch((_url, init) =>
+      init?.method === 'POST' ? { ...foreign, id: copyId } : foreign,
+    );
+    renderWithProviders(
+      <Routes>
+        <Route path="/blocks/:id" element={<SimpleViewPage def={BLOCKS} />} />
+      </Routes>,
+      { route: `/blocks/${embers.id}`, auth },
+    );
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Скопировать себе' }),
+    );
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(
+          ([url, init]) =>
+            (url as string).endsWith(`/block-groups/${embers.id}/copy`) &&
+            init?.method === 'POST',
+        ),
+      ).toBe(true),
+    );
+    expect(screen.queryByRole('button', { name: 'Редактировать' })).toBeNull();
+  });
+
+  it('копия с обновлённым оригиналом — «Подтянуть обновления» после вопроса', async () => {
+    const origin = {
+      id: '44444444-4444-4444-8444-444444444444',
+      name: 'Угли мастера',
+      authorNickname: 'Мастер 2',
+      version: 'v1',
+      available: true,
+      updated: true,
+    };
+    const copy = { ...embers, origin };
+    const fetchMock = stubFetch((_url, init) =>
+      init?.method === 'POST'
+        ? { ...copy, color: '#ff8800', origin: { ...origin, updated: false } }
+        : copy,
+    );
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    renderWithProviders(
+      <Routes>
+        <Route path="/blocks/:id" element={<SimpleViewPage def={BLOCKS} />} />
+      </Routes>,
+      { route: `/blocks/${embers.id}`, auth },
+    );
+
+    expect(await screen.findByText('Автор обновил блок')).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: '«Угли мастера»' }),
+    ).toHaveAttribute('href', `/blocks/${origin.id}`);
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Подтянуть обновления' }),
+    );
+    expect(confirm.mock.calls[0][0]).toContain('ваши правки в них пропадут');
+    expect(await screen.findByText(/Обновлено/)).toBeInTheDocument();
+    expect(screen.queryByText('Автор обновил блок')).toBeNull();
+    expect(screen.getByText('#ff8800')).toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.some(([url]) => (url as string).endsWith('/pull')),
+    ).toBe(true);
+  });
+
+  it('оригинал недоступен — так и написано, кнопки обновления нет', async () => {
+    stubFetch(() => ({
+      ...embers,
+      origin: {
+        id: '44444444-4444-4444-8444-444444444444',
+        name: 'Угли мастера',
+        authorNickname: 'Мастер 2',
+        version: 'v1',
+        available: false,
+        updated: false,
+      },
+    }));
+    renderWithProviders(
+      <Routes>
+        <Route path="/blocks/:id" element={<SimpleViewPage def={BLOCKS} />} />
+      </Routes>,
+      { route: `/blocks/${embers.id}`, auth },
+    );
+    expect(
+      await screen.findByText(
+        /оригинал недоступен: автор скрыл или удалил его/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Подтянуть обновления' }),
+    ).toBeNull();
   });
 });

@@ -3,6 +3,7 @@ import {
   isBlockShapeLooks,
   isBlockTextures,
   readBlockGroupFields,
+  readBlockGroupOrigin,
 } from './blockGroups.js';
 
 // Плитка 16×16 RGBA в base64: 1024 байта.
@@ -80,5 +81,20 @@ describe('isBlockShapeLooks', () => {
     );
     const shapes = { pillar: { textures, color: '#123456' } };
     expect(readBlockGroupFields({}, { shapes }).shapes).toEqual(shapes);
+  });
+});
+
+describe('readBlockGroupOrigin', () => {
+  it('читает ссылку на оригинал, испорченная — не копия', () => {
+    const origin = {
+      id: '0b5c6f2e-8a1d-4c3b-9e7f-1a2b3c4d5e6f',
+      name: 'Угли',
+      authorNickname: 'Мастер',
+      version: 'abc123',
+    };
+    expect(readBlockGroupOrigin({ origin })).toEqual(origin);
+    expect(readBlockGroupOrigin({})).toBeNull();
+    expect(readBlockGroupOrigin({ origin: { ...origin, id: 5 } })).toBeNull();
+    expect(readBlockGroupOrigin({ origin: 'x' })).toBeNull();
   });
 });

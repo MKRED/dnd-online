@@ -41,6 +41,9 @@ export interface CatalogEntriesConfig<
   access: CatalogAccess;
   toVariant: ToVariant<V>;
   toStored: ToStored<D>;
+  // Ключи extra, которых нет в теле запроса и которые полное редактирование (PUT) не
+  // должно стирать: ссылка копии группы блоков на оригинал (docs/plan/blocks.md, этап 6б).
+  keptExtra?: readonly string[];
 }
 
 // CRUD простого каталога (способности, эффекты): доступ как у предметов, без их веса,
@@ -177,9 +180,12 @@ export abstract class CatalogEntriesService<
     try {
       await db.transaction(async (tx) => {
         await keepPublicationForToken(tx, access, userId, id, dto, options);
+        const values = toCatalogEntryValues(dto, toStored);
+        if (this.config.keptExtra?.length)
+          values.extra = await this.withKeptExtra(tx, userId, id, values.extra);
         const [row] = await tx
           .update(table)
-          .set(toCatalogEntryValues(dto, toStored))
+          .set(values)
           .where(authoredEntry(access, userId, id))
           .returning({ id: table.id });
         if (!row) await rejectCatalogEdit(tx, access, userId, id);
@@ -241,6 +247,27 @@ export abstract class CatalogEntriesService<
     entries: (V & CatalogEntryFields)[],
     detail: boolean,
   ) => Promise<void>;
+
+  // extra из тела запроса плюс сохраняемые ключи прежней записи автора. Чужой или
+  // несуществующей записи нет — тогда правка ниже ничего не найдёт и объяснит почему.
+  private async withKeptExtra(
+    tx: DbTransaction,
+    userId: string,
+    id: string,
+    extra: Record<string, unknown> | undefined,
+  ): Promise<Record<string, unknown>> {
+    const { table, access, keptExtra = [] } = this.config;
+    const [previous] = await tx
+      .select({ extra: table.extra })
+      .from(table)
+      .where(authoredEntry(access, userId, id));
+    const kept = Object.fromEntries(
+      keptExtra.flatMap((key) =>
+        previous && key in previous.extra ? [[key, previous.extra[key]]] : [],
+      ),
+    );
+    return { ...extra, ...kept };
+  }
 
   // Ник автора и метаданные картинки нужны и в каталоге, и в карточке, поэтому запись
   // всегда читаем с ними.

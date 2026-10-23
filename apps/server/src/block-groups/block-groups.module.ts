@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ApiTokensModule } from '../api-tokens/api-tokens.module.js';
 import { BlockCatalogService } from './block-catalog.service.js';
+import { BlockGroupCopyService } from './block-group-copy.service.js';
 import { BlockGroupImageEditService } from './block-group-image-edit.service.js';
 import { BlockGroupImagesController } from './block-group-images.controller.js';
 import { BlockGroupImagesService } from './block-group-images.service.js';
@@ -18,6 +19,7 @@ import { BlockGroupsService } from './block-groups.service.js';
     BlockGroupImagesService,
     BlockGroupImageEditService,
     BlockGroupUsageService,
+    BlockGroupCopyService,
     BlockCatalogService,
   ],
   exports: [BlockCatalogService],

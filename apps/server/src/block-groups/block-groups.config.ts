@@ -1,4 +1,9 @@
-import { readBlockGroupFields, type BlockGroupFields } from 'shared';
+import {
+  readBlockGroupFields,
+  readBlockGroupOrigin,
+  type BlockGroupFields,
+  type BlockGroupOrigin,
+} from 'shared';
 import type { CatalogAccess } from '../catalog/catalog-access.js';
 import type { CatalogEntriesConfig } from '../catalog/entries/catalog-entries.service.js';
 import type { CatalogImageConfig } from '../catalog/images/catalog-image.config.js';
@@ -18,19 +23,32 @@ export const BLOCK_GROUP_ACCESS: CatalogAccess = {
   authorOnly: 'Менять группу блоков может только её автор',
 };
 
+// Группа в ответах API: поля формы и ссылка копии на оригинал (этап 6б). Видим ли
+// оригинал и менялся ли он, toVariant не знает — это дописывает attachLinks сервиса.
+export type BlockGroupVariant = BlockGroupFields & {
+  origin: BlockGroupOrigin | null;
+};
+
 // Категорий у групп нет; колонка обязательна для заготовки каталога.
 const STORED_CATEGORY = 'block';
 
 export const BLOCK_GROUPS_CONFIG: CatalogEntriesConfig<
-  BlockGroupFields,
+  BlockGroupVariant,
   BlockGroupDto
 > = {
   catalog: 'blockGroup',
   table: blockGroups,
   images: blockGroupImageTables,
   access: BLOCK_GROUP_ACCESS,
-  toVariant: (_category, details, extra) =>
-    readBlockGroupFields(details, extra),
+  toVariant: (_category, details, extra) => {
+    const origin = readBlockGroupOrigin(extra);
+    return {
+      ...readBlockGroupFields(details, extra),
+      origin: origin && { ...origin, available: false, updated: false },
+    };
+  },
+  // Правка копии в форме не теряет её ссылку на оригинал.
+  keptExtra: ['origin'],
   toStored: (dto) => ({
     category: STORED_CATEGORY,
     details: {

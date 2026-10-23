@@ -10,9 +10,11 @@ import {
   type Effect,
   type EffectInput,
 } from 'shared';
+import type { ComponentType } from 'react';
 import { catalogApi, type CatalogSection } from '../catalog';
 import {
   BLOCK_EXTRAS,
+  BlockCopyPanel,
   BLOCK_KIND_LABELS,
   BLOCK_KINDS,
   blockKinds,
@@ -30,6 +32,15 @@ import {
 // отличаются — виды записей для чипов и бейджей (kinds) и свои поля раздела (extras).
 export type SimpleEntry = Ability | Effect | BlockGroup;
 export type SimpleInput = AbilityInput | EffectInput | BlockGroupInput;
+
+// Действия раздела на карточке записи для всех, а не только для автора: у групп блоков —
+// «Скопировать себе» и обновление копии (docs/plan/blocks.md, этап 6б). onChange —
+// запись, которую сервер вернул после действия.
+export interface CardActionsProps {
+  entry: SimpleEntry;
+  isAuthor: boolean;
+  onChange: (entry: SimpleEntry) => void;
+}
 
 // Чем раздел справочника отличается от другого: адрес, запросы, категории и тексты
 // (род у способности женский, у эффекта мужской).
@@ -54,6 +65,7 @@ export interface SimpleCatalogDef {
   // Свои поля раздела: составляющие, длительность и снятие спасброском у эффекта;
   // категория, активация и затраты у способности.
   extras: CatalogExtras;
+  CardActions?: ComponentType<CardActionsProps>;
   // Тексты ошибок загрузки записи — один объект на раздел: useCatalogEntry ждёт
   // постоянный объект, иначе перезапускает загрузку.
   loadTexts: { notFound: string; failed: string };
@@ -172,6 +184,7 @@ export const BLOCKS: SimpleCatalogDef = {
     of: (entry) => ('look' in entry ? blockKinds(entry) : []),
   },
   extras: BLOCK_EXTRAS,
+  CardActions: BlockCopyPanel,
   loadTexts: {
     notFound: 'Группа блоков не найдена',
     failed: 'Не удалось загрузить группу блоков',
@@ -189,7 +202,7 @@ export const BLOCKS: SimpleCatalogDef = {
     deleteConfirm: loadBlockDeleteConfirm,
     namePlaceholder: 'Например, Тлеющие угли',
     publicHint:
-      'Скрытую группу видите только вы. Опубликованную видят все, но ставить её блоки на карты пока можете только вы: копирование появится позже.',
+      'Скрытую группу видите только вы. Опубликованную видят все и могут скопировать себе — со ссылкой на вас и вашими обновлениями по их желанию.',
     descriptionPlaceholder:
       'Что это за блоки: где встречаются, чем опасны, как выглядят…',
     empty: {

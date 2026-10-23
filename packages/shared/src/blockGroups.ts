@@ -14,8 +14,29 @@ import { MATERIALS, type MaterialName } from './map/materials.js';
 // Группа своих блоков в справочнике (docs/plan/blocks.md, этап 3): запись каталога с
 // видом (базовый материал и основной цвет) и свойствами для правил, общими для всех форм.
 export type BlockGroupFields = Omit<BlockGroupInfo, 'id' | 'name'>;
-export type BlockGroup = CatalogEntryFields & BlockGroupFields;
 export type BlockGroupInput = CatalogEntryInputFields & BlockGroupFields;
+
+// Откуда скопирована группа (docs/plan/blocks.md, этап 6б): id оригинала, его название
+// и автор на момент копирования (для пометки, когда оригинал скрыт или удалён) и
+// version — отпечаток вида и свойств оригинала, взятых в копию. По отпечатку, а не по
+// времени правки: время записи ставят то часы базы, то часы сервера, и правка могла
+// выглядеть «раньше» копии. Хранится в extra.origin; в BlockGroupFields не входит.
+export interface BlockGroupOriginLink {
+  id: string;
+  name: string;
+  authorNickname: string;
+  version: string;
+}
+
+// Ссылка на оригинал в карточке: available — оригинал виден копирующему (свой или
+// опубликован), updated — вид или свойства оригинала уже не те, что в копии.
+export interface BlockGroupOrigin extends BlockGroupOriginLink {
+  available: boolean;
+  updated: boolean;
+}
+
+export type BlockGroup = CatalogEntryFields &
+  BlockGroupFields & { origin: BlockGroupOrigin | null };
 
 // Пределы прочности: КД объектов в глоссарии 2024 — от 11 до 23 (docs/dnd/terrain.md),
 // ХП крупного прочного — 27; запас сверху — для магических стен и домашних правил.
@@ -108,6 +129,24 @@ export function readBlockGroupFields(
         : null,
     shapes: isBlockShapeLooks(extra.shapes) ? extra.shapes : {},
   };
+}
+
+const isText = (value: unknown): value is string =>
+  typeof value === 'string' && value.length > 0;
+
+// Ссылка на оригинал из extra; испорченная или её нет — группа не копия.
+export function readBlockGroupOrigin(
+  extra: Record<string, unknown>,
+): BlockGroupOriginLink | null {
+  const origin = extra.origin;
+  if (typeof origin !== 'object' || origin === null) return null;
+  const { id, name, authorNickname, version } = origin as Record<
+    string,
+    unknown
+  >;
+  return isText(id) && isText(name) && isText(authorNickname) && isText(version)
+    ? { id, name, authorNickname, version }
+    : null;
 }
 
 export function toBlockGroupInfo(

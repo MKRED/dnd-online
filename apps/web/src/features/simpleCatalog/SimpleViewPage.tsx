@@ -35,11 +35,11 @@ function SimpleViewPage({ def }: SimpleViewPageProps) {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { entry, error: loadError } = useCatalogEntry(
-    def.api.get,
-    id,
-    def.loadTexts,
-  );
+  const {
+    entry,
+    error: loadError,
+    update,
+  } = useCatalogEntry(def.api.get, id, def.loadTexts);
   usePageTitle(entry?.name ?? def.texts.title);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -122,6 +122,13 @@ function SimpleViewPage({ def }: SimpleViewPageProps) {
                 </Text>
               )}
               <SourcesList sources={entry.sources} />
+              {def.CardActions && (
+                <def.CardActions
+                  entry={entry}
+                  isAuthor={isAuthor}
+                  onChange={(next) => update(() => next)}
+                />
+              )}
               {isAuthor && (
                 <>
                   {deleteError && (

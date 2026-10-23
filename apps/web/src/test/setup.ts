@@ -37,3 +37,7 @@ window.ResizeObserver = ResizeObserverStub;
 Object.defineProperty(document, 'fonts', {
   value: { addEventListener: vi.fn(), removeEventListener: vi.fn() },
 });
+
+// И scrollIntoView нет: Combobox Mantine прокручивает к выбранному пункту по таймеру,
+// уже после теста, — без заглушки это необработанная ошибка, и прогон падает целиком.
+Element.prototype.scrollIntoView = vi.fn();

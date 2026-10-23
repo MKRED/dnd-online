@@ -17,7 +17,7 @@ import {
   GAME_SEATS_MAX,
   GAME_SEATS_MIN,
 } from 'shared';
-import { createGame } from '../../features/games';
+import { createGame } from './gamesApi';
 import { errorMessage } from '../../lib/apiRequest';
 
 interface CreateGameModalProps {

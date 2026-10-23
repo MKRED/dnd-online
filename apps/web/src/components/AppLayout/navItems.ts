@@ -4,6 +4,7 @@ import {
   IconBox,
   IconCube,
   IconFlame,
+  IconHome,
   IconMap,
   IconSkull,
   IconSparkles,
@@ -40,6 +41,7 @@ const CATALOG_ICONS: Record<CatalogSection, Icon> = {
 export const NAV_GROUPS: NavGroup[] = [
   {
     items: [
+      { to: '/', label: 'Главная', icon: IconHome },
       { to: '/games', label: 'Игры', icon: IconSwords },
       { to: '/characters', label: 'Персонажи', icon: IconUsers },
       { to: '/maps', label: 'Карты', icon: IconMap },
@@ -57,6 +59,8 @@ export const NAV_GROUPS: NavGroup[] = [
 ];
 
 // Раздел подсвечен и на своих вложенных страницах: /characters/123/edit — «Персонажи».
+// Главная — только сама: с «/» начинается любой адрес.
 export function isNavActive(pathname: string, to: string): boolean {
+  if (to === '/') return pathname === '/';
   return pathname === to || pathname.startsWith(`${to}/`);
 }

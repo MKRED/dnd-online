@@ -11,10 +11,9 @@ import {
 import { IconPlus } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 import type { GameListItem } from 'shared';
-import { listGames } from '../../features/games';
+import { CreateGameModal, listGames } from '../../features/games';
 import { errorMessage } from '../../lib/apiRequest';
 import { usePageTitle } from '../../lib/usePageTitle';
-import CreateGameModal from './CreateGameModal';
 import GameCard from './GameCard';
 
 // Общий список игр (docs/plan/done/game.md): свои сверху, закрытые — с замком.

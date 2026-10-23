@@ -7,3 +7,4 @@ export * from './libraryLabels';
 export * from './gameScenesApi';
 export * from './gameFiguresApi';
 export * from './gameStateApi';
+export { default as CreateGameModal } from './CreateGameModal';

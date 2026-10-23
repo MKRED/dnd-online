@@ -1,6 +1,7 @@
 import {
   isFurnitureMount,
   readCatalogOrigin,
+  readFurniturePositions,
   type CatalogOrigin,
   type FurnitureFields,
   type FurnitureModel,
@@ -22,9 +23,10 @@ export const FURNITURE_ACCESS: CatalogAccess = {
 };
 
 // Обстановка в ответах API: поля формы, модель целиком и ссылка копии на оригинал.
-// Модель и видимость оригинала дописывает attachLinks сервиса.
+// Модели и видимость оригинала дописывает attachLinks сервиса.
 export type FurnitureVariant = FurnitureFields & {
   model: FurnitureModel | null;
+  models: Record<string, FurnitureModel>;
   origin: CatalogOrigin | null;
 };
 
@@ -44,7 +46,9 @@ export const FURNITURE_CONFIG: CatalogEntriesConfig<
     return {
       modelId: typeof extra.modelId === 'string' ? extra.modelId : '',
       mount: isFurnitureMount(extra.mount) ? extra.mount : 'floor',
+      positions: readFurniturePositions(extra.positions),
       model: null,
+      models: {},
       origin: origin && { ...origin, available: false, updated: false },
     };
   },
@@ -53,7 +57,14 @@ export const FURNITURE_CONFIG: CatalogEntriesConfig<
   toStored: (dto) => ({
     category: STORED_CATEGORY,
     details: {},
-    extra: { modelId: dto.modelId, mount: dto.mount },
+    extra: {
+      modelId: dto.modelId,
+      mount: dto.mount,
+      positions: dto.positions.map(({ name, modelId }) => ({
+        name: name.trim(),
+        modelId,
+      })),
+    },
   }),
 };
 

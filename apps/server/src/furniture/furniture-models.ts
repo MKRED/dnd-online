@@ -39,15 +39,17 @@ export async function loadFurnitureModels(
   );
 }
 
-// Своя ли модель: в обстановку ставится только своя (решено с пользователем 2026-10-23).
-export async function isOwnModel(
+// Свои ли все модели: в обстановку ставится только своя (решено с пользователем
+// 2026-10-23), и у каждого положения тоже.
+export async function areOwnModels(
   db: Db,
   userId: string,
-  modelId: string,
+  modelIds: string[],
 ): Promise<boolean> {
-  const [row] = await db
+  const ids = [...new Set(modelIds)];
+  const rows = await db
     .select({ id: voxelModels.id })
     .from(voxelModels)
-    .where(and(eq(voxelModels.id, modelId), eq(voxelModels.authorId, userId)));
-  return Boolean(row);
+    .where(and(inArray(voxelModels.id, ids), eq(voxelModels.authorId, userId)));
+  return rows.length === ids.length;
 }

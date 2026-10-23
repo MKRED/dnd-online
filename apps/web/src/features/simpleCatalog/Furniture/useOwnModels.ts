@@ -35,3 +35,5 @@ export function useOwnModels() {
 
   return { models, error, put };
 }
+
+export type OwnModels = ReturnType<typeof useOwnModels>;

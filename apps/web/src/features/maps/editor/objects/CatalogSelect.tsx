@@ -23,6 +23,7 @@ const MOUNT_SHORT: Record<string, string> = {
   floor: 'на полу',
   wall: 'на стене',
   ceiling: 'на потолке',
+  doorway: 'в проёме',
 };
 
 interface Found extends MapCatalogEntry {

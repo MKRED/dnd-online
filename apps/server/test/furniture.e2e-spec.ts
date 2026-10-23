@@ -11,8 +11,9 @@ import {
 import { describeCatalog } from './support/catalog-scenario/index.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Справочник «Обстановка» (docs/plan/blocks.md, этап 8б): роль поверх своей модели —
-// модель целиком в ответе, крепление; копия чужой обстановки копирует и модель.
+// Справочник «Обстановка» (docs/plan/blocks.md, этапы 8б и 8г): роль поверх своей
+// модели — модель целиком в ответе, крепление, положения со своими моделями (дверь);
+// копия чужой обстановки копирует и модели.
 
 // Модель 1×1×1 с одним вокселем первого цвета.
 const modelBody = (palette = ['#8a5a2b']) => {
@@ -92,6 +93,75 @@ describeCatalog(
           .post(url())
           .send(body({ modelId: 'не id' }))
           .expect(400);
+      });
+
+      it('дверь: положения со своими моделями, все модели — в models', async () => {
+        const { author, url, create, body } = get();
+        const openId = await createModel(author, { name: 'Открытая дверь' });
+        const positions = [
+          { name: 'Закрыта', modelId: body().modelId },
+          { name: ' Открыта ', modelId: openId },
+        ];
+        const { id } = await create({ mount: 'doorway', positions });
+        const card = (await author.get(url(id)).expect(200)).body as Furniture;
+        expect(card.mount).toBe('doorway');
+        expect(card.positions).toEqual([
+          positions[0],
+          { name: 'Открыта', modelId: openId },
+        ]);
+        expect(Object.keys(card.models).sort()).toEqual(
+          [body().modelId, openId].sort(),
+        );
+        expect(card.models[openId].name).toBe('Открытая дверь');
+        const usage = (
+          await author.get(`/api/voxel-models/${openId}/usage`).expect(200)
+        ).body as VoxelModelUsage;
+        expect(usage.furniture.map((entry) => entry.id)).toEqual([id]);
+        // Без поля положений — обычная обстановка.
+        const plain = await create();
+        const read = (await author.get(url(plain.id)).expect(200))
+          .body as Furniture;
+        expect(read.positions).toEqual([]);
+      });
+
+      it('неверные положения и чужая модель положения — 400', async () => {
+        const { author, stranger, url, body } = get();
+        const own = body().modelId;
+        const one = await author
+          .post(url())
+          .send(body({ positions: [{ name: 'Закрыта', modelId: own }] }))
+          .expect(400);
+        expect(JSON.stringify(one.body)).toMatch(/от 2 до 8/);
+        const twice = [
+          { name: 'Закрыта', modelId: own },
+          { name: 'Закрыта', modelId: own },
+        ];
+        await author
+          .post(url())
+          .send(body({ positions: twice }))
+          .expect(400);
+        const notFirst = [
+          { name: 'Открыта', modelId: await createModel(author) },
+          { name: 'Закрыта', modelId: own },
+        ];
+        const res = await author
+          .post(url())
+          .send(body({ positions: notFirst }))
+          .expect(400);
+        expect(JSON.stringify(res.body)).toMatch(/первого положения/);
+        const foreign = await createModel(stranger, { isPublic: true });
+        const other = await author
+          .post(url())
+          .send(
+            body({
+              positions: [
+                { name: 'Закрыта', modelId: own },
+                { name: 'Открыта', modelId: foreign },
+              ],
+            }),
+          )
+          .expect(400);
+        expect(JSON.stringify(other.body)).toMatch(/скопируйте себе/);
       });
 
       it('«где используется» у модели; после её удаления обстановка без вида', async () => {
@@ -184,5 +254,55 @@ describe('копии обстановки (e2e)', () => {
       .post('/api/furniture')
       .send({ ...furnitureBody, modelId })
       .expect(400);
+  });
+
+  it('копия двери забирает модели всех положений; обновление — на месте', async () => {
+    const closedId = await createModel(author, { name: 'Закрытая' });
+    const openId = await createModel(author, { name: 'Открытая' });
+    const door = {
+      ...furnitureBody,
+      name: 'Дверь',
+      mount: 'doorway',
+      modelId: closedId,
+      isPublic: true,
+      positions: [
+        { name: 'Закрыта', modelId: closedId },
+        { name: 'Открыта', modelId: openId },
+      ],
+    };
+    const originalId = idOf(
+      await author.post('/api/furniture').send(door).expect(201),
+    );
+    const copy = (
+      await copier.post(`/api/furniture/${originalId}/copy`).expect(201)
+    ).body as Furniture;
+    const [closedCopy, openCopy] = copy.positions.map((p) => p.modelId);
+    expect(closedCopy).toBe(copy.modelId);
+    expect([closedCopy, openCopy]).not.toContain(closedId);
+    expect(openCopy).not.toBe(openId);
+    expect(copy.models[openCopy]).toMatchObject({
+      name: 'Открытая',
+      origin: { id: openId },
+    });
+
+    // Автор перекрасил модель второго положения — копия «обновлена».
+    await author
+      .put(`/api/voxel-models/${openId}`)
+      .send({ ...modelBody(['#00ff00']), name: 'Открытая' })
+      .expect(200);
+    const seen = (await copier.get(`/api/furniture/${copy.id}`).expect(200))
+      .body as Furniture;
+    expect(seen.origin).toMatchObject({ updated: true });
+
+    // Обновление: обе модели копии — на месте, вторая перекрашена.
+    const pulled = (
+      await copier.post(`/api/furniture/${copy.id}/pull`).expect(200)
+    ).body as Furniture;
+    expect(pulled.positions.map((p) => p.modelId)).toEqual([
+      closedCopy,
+      openCopy,
+    ]);
+    expect(pulled.models[openCopy].palette).toEqual(['#00ff00']);
+    expect(pulled.origin).toMatchObject({ updated: false });
   });
 });

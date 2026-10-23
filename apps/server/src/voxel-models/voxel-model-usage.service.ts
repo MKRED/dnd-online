@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, or, sql } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { VoxelModelUsage } from 'shared';
 import { authoredEntry } from '../catalog/catalog-access.js';
@@ -7,9 +7,9 @@ import { DatabaseService } from '../database/database.service.js';
 import { furniture, voxelModels } from '../database/schema/index.js';
 import { VOXEL_MODEL_ACCESS } from './voxel-models.config.js';
 
-// Где стоит модель (docs/plan/blocks.md, этап 8б): обстановка автора с этой моделью —
-// для вопроса перед удалением. Чужой обстановки с ней не бывает: модель в обстановке
-// только своя.
+// Где стоит модель (docs/plan/blocks.md, этапы 8б и 8г): обстановка автора с этой моделью
+// — своей или одного из положений — для вопроса перед удалением. Чужой обстановки с ней
+// не бывает: модель в обстановке только своя.
 @Injectable()
 export class VoxelModelUsageService {
   constructor(
@@ -33,7 +33,10 @@ export class VoxelModelUsageService {
         .where(
           and(
             eq(furniture.authorId, userId),
-            sql`${furniture.extra}->>'modelId' = ${id}`,
+            or(
+              sql`${furniture.extra}->>'modelId' = ${id}`,
+              sql`${furniture.extra}->'positions' @> ${JSON.stringify([{ modelId: id }])}::jsonb`,
+            ),
           ),
         )
         .orderBy(furniture.name);

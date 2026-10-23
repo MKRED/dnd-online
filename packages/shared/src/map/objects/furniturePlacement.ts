@@ -1,3 +1,4 @@
+import { isGroundMount } from '../../voxelModel/furniture.js';
 import { blockInfo } from '../blockInfo.js';
 import { readCell } from '../chunkStore.js';
 import type { Box3, Vec3 } from '../coords.js';
@@ -89,7 +90,8 @@ export function assertFurnitureFits(
   const mount = ref?.mount ?? 'floor';
   const [x0, y0, z0] = box.min;
   const [x1, y1, z1] = box.max;
-  if (mount === 'floor') {
+  // Дверь в проёме стоит на полу проёма (этап 8г).
+  if (isGroundMount(mount)) {
     for (let z = z0; z <= z1; z++)
       for (let x = x0; x <= x1; x++) {
         const below: Vec3 = [x, y0 - 1, z];

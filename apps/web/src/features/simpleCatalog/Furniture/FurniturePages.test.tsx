@@ -80,7 +80,17 @@ const furniture: Furniture = {
   name: 'Обеденный стол',
   modelId: table.id,
   mount: 'floor',
+  positions: [],
   model: { id: table.id, name: 'Стол', ...drawn, origin: null },
+  models: {
+    [table.id]: { id: table.id, name: 'Стол', ...drawn, origin: null },
+  },
+};
+
+const openDoor: VoxelModel = {
+  ...table,
+  id: '44444444-4444-4444-8444-444444444444',
+  name: 'Открытая дверь',
 };
 
 function stubFetch(handler: (url: string, init?: RequestInit) => unknown) {
@@ -170,6 +180,78 @@ describe('раздел «Обстановка»', () => {
     expect(posted(fetchMock, /\/furniture$/)).toEqual([
       expect.objectContaining({ modelId: table.id }),
     ]);
+  });
+
+  it('«Проём» включает положения «Закрыта» и «Открыта»; у каждого — своя модель', async () => {
+    const fetchMock = stubFetch((url, init) =>
+      init?.method === 'POST'
+        ? furniture
+        : url.includes('/voxel-models')
+          ? [table, openDoor]
+          : [],
+    );
+    renderCreate();
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText(/Название/), 'Дверь');
+    await user.click(screen.getByRole('radio', { name: 'Проём' }));
+    const names = screen.getAllByRole('textbox', { name: /Положение/ });
+    expect(names.map((input) => (input as HTMLInputElement).value)).toEqual([
+      'Закрыта',
+      'Открыта',
+    ]);
+    await user.click(screen.getByRole('button', { name: 'Создать' }));
+    expect(
+      await screen.findAllByText('Выберите модель или нарисуйте новую'),
+    ).toHaveLength(2);
+    expect(posted(fetchMock, /\/furniture$/)).toHaveLength(0);
+
+    const pickers = screen.getAllByRole('combobox', {
+      name: /Модель положения/,
+    });
+    await user.click(pickers[0]);
+    await user.click(await screen.findByRole('option', { name: 'Стол' }));
+    await user.click(pickers[1]);
+    await user.click(
+      await screen.findByRole('option', { name: 'Открытая дверь' }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Создать' }));
+    await screen.findByText('Карточка');
+    const [body] = posted(fetchMock, /\/furniture$/);
+    expect(body).toMatchObject({
+      modelId: table.id,
+      mount: 'doorway',
+      positions: [
+        { name: 'Закрыта', modelId: table.id },
+        { name: 'Открыта', modelId: openDoor.id },
+      ],
+    });
+  });
+
+  it('карточка двери: строка на положение и переключатель над моделью', async () => {
+    stubFetch(() => ({
+      ...furniture,
+      mount: 'doorway',
+      positions: [
+        { name: 'Закрыта', modelId: table.id },
+        { name: 'Открыта', modelId: openDoor.id },
+      ],
+      models: {
+        ...furniture.models,
+        [openDoor.id]: { ...furniture.model!, id: openDoor.id },
+      },
+    }));
+    renderWithProviders(
+      <Routes>
+        <Route
+          path="/furniture/:id"
+          element={<SimpleViewPage def={FURNITURE} />}
+        />
+      </Routes>,
+      { route: `/furniture/${furniture.id}`, auth },
+    );
+    expect(await screen.findByText(/Закрыта —/)).toBeInTheDocument();
+    expect(screen.getByText(/Открыта —/)).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Открыта' })).toBeInTheDocument();
   });
 
   it('карточка без модели: модель удалена', async () => {

@@ -10,6 +10,7 @@ export const FURNITURE_KIND_LABELS: Record<string, string> = {
   floor: 'На полу',
   wall: 'На стене',
   ceiling: 'На потолке',
+  doorway: 'В проёме',
 };
 
 export const furnitureKinds = (entry: Furniture) => [entry.mount];
@@ -20,6 +21,8 @@ export const MOUNT_HINTS: Record<Furniture['mount'], string> = {
   floor: 'Стоит на блоке или на верхе другой обстановки, где можно встать.',
   wall: 'Висит на грани блока и не занимает клетки для пути — картина, факел.',
   ceiling: 'Висит под блоком — люстра, клетка на цепи.',
+  doorway:
+    'Дверь или ворота: стоит на полу проёма и занимает его клетки, положения переключают на карте.',
 };
 
 export const mountText = (mount: Furniture['mount']) =>

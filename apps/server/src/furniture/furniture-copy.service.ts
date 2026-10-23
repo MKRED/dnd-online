@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { readCatalogOrigin } from 'shared';
+import {
+  furnitureModelIds,
+  readCatalogOrigin,
+  readFurniturePositions,
+} from 'shared';
 import {
   CatalogCopyService,
   contentOf,
@@ -17,9 +21,10 @@ import { FurnitureService } from './furniture.service.js';
 
 type EntryRow = typeof furniture.$inferSelect;
 
-// Копирование чужой обстановки и «Подтянуть обновления» (docs/plan/blocks.md, этап 8б):
-// в обстановке — только своя модель, поэтому вместе с записью копируется и модель
-// оригинала (своя копия модели со ссылкой на автора), а обновление подтягивает и её.
+// Копирование чужой обстановки и «Подтянуть обновления» (docs/plan/blocks.md, этапы 8б
+// и 8г): в обстановке — только свои модели, поэтому вместе с записью копируются и модели
+// оригинала — основная и всех положений (свои копии со ссылкой на автора), а обновление
+// подтягивает и их.
 @Injectable()
 export class FurnitureCopyService extends CatalogCopyService<
   Awaited<ReturnType<FurnitureService['findOne']>>
@@ -50,38 +55,83 @@ export class FurnitureCopyService extends CatalogCopyService<
     source: EntryRow,
     copy: EntryRow | null,
   ): Promise<Record<string, unknown>> => {
-    const sourceModelId = source.extra.modelId;
-    if (typeof sourceModelId !== 'string') return {};
+    if (typeof source.extra.modelId !== 'string') return {};
+    const fields = {
+      modelId: source.extra.modelId,
+      positions: readFurniturePositions(source.extra.positions),
+    };
+    // Прежние копии моделей — по id оригинала, с которого скопированы.
+    const previous = await this.previousModels(tx, userId, copy);
+    const copied = new Map<string, string>();
+    for (const sourceId of furnitureModelIds(fields))
+      copied.set(
+        sourceId,
+        await this.copyModel(tx, userId, sourceId, previous.get(sourceId)),
+      );
+    const idOf = (id: string) => copied.get(id) ?? id;
+    return {
+      modelId: idOf(fields.modelId),
+      positions: fields.positions.map(({ name, modelId }) => ({
+        name,
+        modelId: idOf(modelId),
+      })),
+    };
+  };
+
+  // Свои копии моделей прежней копии обстановки: оригинал модели → id копии.
+  private async previousModels(
+    tx: DbTransaction,
+    userId: string,
+    copy: EntryRow | null,
+  ): Promise<Map<string, string>> {
+    const ids =
+      copy && typeof copy.extra.modelId === 'string'
+        ? furnitureModelIds({
+            modelId: copy.extra.modelId,
+            positions: readFurniturePositions(copy.extra.positions),
+          })
+        : [];
+    if (!ids.length) return new Map();
+    const rows = await tx
+      .select({ id: voxelModels.id, extra: voxelModels.extra })
+      .from(voxelModels)
+      .where(
+        and(inArray(voxelModels.id, ids), eq(voxelModels.authorId, userId)),
+      );
+    const found = new Map<string, string>();
+    for (const row of rows) {
+      const origin = readCatalogOrigin(row.extra);
+      if (origin) found.set(origin.id, row.id);
+    }
+    return found;
+  }
+
+  // Модель оригинала — в свою копию: прежняя копия обновляется на месте, иначе
+  // создаётся новая. Модель оригинала удалена — ссылка остаётся и читается как null.
+  private async copyModel(
+    tx: DbTransaction,
+    userId: string,
+    sourceId: string,
+    previousId: string | undefined,
+  ): Promise<string> {
     const [found] = await tx
       .select({ model: voxelModels, authorNickname: users.nickname })
       .from(voxelModels)
       .innerJoin(users, eq(users.id, voxelModels.authorId))
-      .where(eq(voxelModels.id, sourceModelId));
-    // Модель оригинала удалена — у копии тоже нет вида: ссылка читается как null.
-    if (!found) return { modelId: sourceModelId };
+      .where(eq(voxelModels.id, sourceId));
+    if (!found) return sourceId;
     const { model, authorNickname } = found;
     const origin = originOf(model, authorNickname);
-    // Прежняя копия модели — своя и скопирована с той же модели: обновляем её на месте.
-    const previousId = copy?.extra.modelId;
-    if (typeof previousId === 'string') {
-      const [previous] = await tx
-        .select()
-        .from(voxelModels)
+    if (previousId) {
+      await tx
+        .update(voxelModels)
+        .set(contentOf(model, origin))
         .where(eq(voxelModels.id, previousId));
-      if (
-        previous?.authorId === userId &&
-        readCatalogOrigin(previous.extra)?.id === model.id
-      ) {
-        await tx
-          .update(voxelModels)
-          .set(contentOf(model, origin))
-          .where(eq(voxelModels.id, previous.id));
-        this.log.info(
-          { userId, modelId: previous.id },
-          'Furniture model pulled from origin',
-        );
-        return { modelId: previous.id };
-      }
+      this.log.info(
+        { userId, modelId: previousId },
+        'Furniture model pulled from origin',
+      );
+      return previousId;
     }
     const [inserted] = await tx
       .insert(voxelModels)
@@ -98,6 +148,6 @@ export class FurnitureCopyService extends CatalogCopyService<
       { userId, sourceModelId: model.id, modelId: inserted.id },
       'Furniture model copied',
     );
-    return { modelId: inserted.id };
-  };
+    return inserted.id;
+  }
 }

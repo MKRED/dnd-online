@@ -2,6 +2,7 @@ import type { Box3, Vec3 } from '../../coords.js';
 import type { Facing, MapObject } from '../../objects/mapObject.js';
 import type { FurnitureRef, ObjectRefs } from '../../objects/objectRefs.js';
 import type { ShapeBox } from '../../shapes.js';
+import { isGroundMount } from '../../../voxelModel/furniture.js';
 import { modelCellKey } from '../../../voxelModel/voxelModel.js';
 import { modelCellShapes, type ModelCellShape } from './modelCellShapes.js';
 
@@ -64,9 +65,9 @@ function shapesOf(ref: FurnitureRef, facing: Facing): ModelCellShape[] {
 
 // Свойство клетки для пути: своё у модели, иначе клетка с вокселями — препятствие.
 // Обстановка на стене и потолке клеток для пути не занимает (план, «Крепление»): картина
-// и люстра только закрывают вид своими вокселями.
+// и люстра только закрывают вид своими вокселями. Дверь в проёме — как на полу.
 function pathKind(ref: FurnitureRef, shape: ModelCellShape) {
-  if (ref.mount !== 'floor') return 'free';
+  if (!isGroundMount(ref.mount)) return 'free';
   return ref.cells[modelCellKey(...shape.cell)] ?? 'obstacle';
 }
 

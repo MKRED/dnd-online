@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- Кубик d20 логотипа (src/components/AppLayout/D20Icon.tsx) на тёмной плашке:
+       латунь видна и на светлой, и на тёмной полосе вкладок. -->
+  <rect width="24" height="24" rx="5" fill="#221e1a"/>
+  <g fill="rgba(193,154,71,.18)" stroke="#d6bb79" stroke-width="1.5" stroke-linejoin="round" transform="translate(1.2 1.2) scale(0.9)">
+    <path d="M12 2L21 7V17L12 22L3 17V7Z"/>
+    <path d="M12 7.5L17.5 16H6.5Z"/>
+    <path d="M3 7L12 7.5L21 7"/>
+    <path d="M3 7L6.5 16L3 17"/>
+    <path d="M21 7L17.5 16L21 17"/>
+    <path d="M6.5 16L12 22L17.5 16"/>
+    <path d="M12 2V7.5"/>
+  </g>
+</svg>

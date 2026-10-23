@@ -14,6 +14,8 @@ import {
 import { furniture, voxelModels } from '../database/schema/index.js';
 import type { FurnitureDto } from './dto/furniture.dto.js';
 import { FURNITURE_CONFIG, type FurnitureVariant } from './furniture.config.js';
+import { assertFurnitureContainer } from './furniture-container-check.js';
+import { attachContentItems } from './furniture-content-items.js';
 import { markModelUpdates } from './furniture-model-updates.js';
 import { areOwnModels, loadFurnitureModels } from './furniture-models.js';
 
@@ -32,8 +34,9 @@ export class FurnitureService extends CatalogEntriesService<
     super(database, log, FURNITURE_CONFIG);
   }
 
-  // Модели — только свои, и у положений тоже: чужую сначала копируют, как блоки. В
-  // транзакции записи — отказ откатывает её целиком.
+  // Модели — только свои, и у положений тоже: чужую сначала копируют, как блоки; у
+  // контейнера — его поля и содержимое (этап 11). В транзакции записи — отказ откатывает
+  // её целиком.
   protected override writeLinks = async (
     tx: DbTransaction,
     userId: string,
@@ -46,6 +49,7 @@ export class FurnitureService extends CatalogEntriesService<
       throw new BadRequestException(
         'Модель не найдена среди ваших: чужую модель сначала скопируйте себе',
       );
+    await assertFurnitureContainer(tx, userId, dto.container);
   };
 
   // Модели целиком (основная и положений) и ссылки копий на оригиналы — у обстановки и у
@@ -72,6 +76,7 @@ export class FurnitureService extends CatalogEntriesService<
       ...models.values(),
     ]);
     await markModelUpdates(this.database.db, entries);
+    await attachContentItems(this.database.db, userId, entries);
     this.log.debug(
       {
         durationMs: Date.now() - t0,

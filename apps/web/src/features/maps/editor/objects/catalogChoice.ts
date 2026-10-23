@@ -43,6 +43,7 @@ export const toCatalogChoice = (entry: CatalogFound): CatalogChoice => ({
   name: entry.name,
   label: catalogLabel(entry),
   ...(isSize(entry.size) && { size: entry.size }),
+  ...(entry.weight !== undefined && { weight: entry.weight }),
   ...(entry.modelSize?.length === 3 && {
     modelSize: entry.modelSize as unknown as [number, number, number],
   }),

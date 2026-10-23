@@ -5,3 +5,4 @@ export * from './voxelModels.js';
 export * from './furniture.js';
 export * from './modelMesh.js';
 export * from './meshVoxels.js';
+export * from './furnitureContainer.js';

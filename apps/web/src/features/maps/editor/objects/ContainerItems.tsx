@@ -1,25 +1,25 @@
 import { ActionIcon, Box, Group, Stack, Text } from '@mantine/core';
 import { IconX } from '@tabler/icons-react';
 import {
-  CONTAINER_CAPACITY,
   containerLoad,
   loadLabel,
   OBJECT_QUANTITY_MAX,
-  type ContainerLook,
   type ItemRefView,
   type ObjectItem,
 } from 'shared';
 import ItemThumb from '../../../items/ItemThumb';
 import CatalogSelect from './CatalogSelect';
+import type { CatalogChoice } from './objectPlacement';
 import { QuantityInput } from './CommitInputs';
 
 interface ContainerItemsProps {
   items: ObjectItem[];
-  // Вид: по нему вместимость.
-  look: ContainerLook;
+  // Вместимость в фунтах: у вида контейнера на карте или у контейнера-обстановки.
+  capacity: number;
   refs: Record<string, ItemRefView>;
-  // Новый список целиком: updateObject заменяет содержимое, а не дописывает.
-  onChange: (items: ObjectItem[]) => void;
+  // Новый список целиком: updateObject заменяет содержимое, а не дописывает. added —
+  // предмет, найденный в поиске: форма обстановки запоминает его имя и вес.
+  onChange: (items: ObjectItem[], added?: CatalogChoice) => void;
   disabled: boolean;
 }
 
@@ -35,12 +35,13 @@ function itemName(ref: ItemRefView | undefined): string {
 // покажет редактор.
 function ContainerItems({
   items,
-  look,
+  capacity,
   refs,
   onChange,
   disabled,
 }: ContainerItemsProps) {
-  const add = (itemId: string) => {
+  const add = (choice: CatalogChoice) => {
+    const itemId = choice.id;
     const present = items.find((entry) => entry.itemId === itemId);
     onChange(
       present
@@ -53,6 +54,7 @@ function ContainerItems({
               : entry,
           )
         : [...items, { itemId, quantity: 1 }],
+      choice,
     );
   };
 
@@ -60,7 +62,6 @@ function ContainerItems({
     const ref = refs[itemId];
     return ref?.missing === null ? ref.weight : 0;
   });
-  const capacity = CONTAINER_CAPACITY[look];
 
   return (
     <Stack gap={6}>
@@ -127,7 +128,7 @@ function ContainerItems({
       <CatalogSelect
         kinds={['item']}
         value={null}
-        onChange={(choice) => add(choice.id)}
+        onChange={add}
         label="Добавить предмет"
         placeholder="Найти по названию"
       />

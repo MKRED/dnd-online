@@ -9,6 +9,7 @@ import {
   type VoxelModelUsage,
 } from 'shared';
 import { describeCatalog } from './support/catalog-scenario/index.js';
+import { createItem } from './support/item-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
 // Справочник «Обстановка» (docs/plan/blocks.md, этапы 8б и 8г): роль поверх своей
@@ -122,6 +123,56 @@ describeCatalog(
         const read = (await author.get(url(plain.id)).expect(200))
           .body as Furniture;
         expect(read.positions).toEqual([]);
+      });
+
+      it('контейнер: вместимость, Сл замка и содержимое с предметами', async () => {
+        const { author, url, create } = get();
+        const gold = await createItem(author, { name: 'Золото', weight: 0.02 });
+        const container = {
+          capacity: 360,
+          lockDc: 15,
+          contents: [{ itemId: gold.id, quantity: 50 }],
+        };
+        const { id } = await create({ container });
+        const card = (await author.get(url(id)).expect(200)).body as Furniture;
+        expect(card.container).toEqual(container);
+        expect(card.contentItems[gold.id]).toMatchObject({
+          missing: null,
+          name: 'Золото',
+          weight: 0.02,
+        });
+        // Обычная обстановка — без контейнера.
+        const plain = await create();
+        expect(
+          ((await author.get(url(plain.id)).expect(200)).body as Furniture)
+            .container,
+        ).toBeNull();
+      });
+
+      it('контейнер: неверные поля, чужой скрытый предмет и перегруз — 400', async () => {
+        const { author, stranger, url, body } = get();
+        const bad = (container: unknown) =>
+          author.post(url()).send(body({ container })).expect(400);
+        await bad({ capacity: 0, lockDc: null, contents: [] });
+        await bad({ capacity: 30, lockDc: 12, contents: [] });
+        await bad({ capacity: 30, lockDc: null, contents: 'нет' });
+        const hidden = await createItem(stranger, { name: 'Тайна' });
+        const res = await bad({
+          capacity: 30,
+          lockDc: null,
+          contents: [{ itemId: hidden.id, quantity: 1 }],
+        });
+        expect(JSON.stringify(res.body)).toMatch(/не найден в каталоге/);
+        const anvil = await createItem(author, {
+          name: 'Наковальня',
+          weight: 25,
+        });
+        const heavy = await bad({
+          capacity: 30,
+          lockDc: null,
+          contents: [{ itemId: anvil.id, quantity: 2 }],
+        });
+        expect(JSON.stringify(heavy.body)).toMatch(/не влезет: 50 из 30/);
       });
 
       it('неверные положения и чужая модель положения — 400', async () => {

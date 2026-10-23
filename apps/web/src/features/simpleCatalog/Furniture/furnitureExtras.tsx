@@ -6,6 +6,7 @@ import { ModelThumbnail } from '../../voxelModels';
 import type { CatalogExtras } from '../catalogExtras';
 import type { SimpleEntry } from '../simpleCatalogs';
 import { modelCellsText, modelSizeText } from '../VoxelModel/modelCard';
+import { containerRows } from './containerRows';
 import { mountText } from './furnitureCard';
 import FurnitureFields from './FurnitureFields';
 import { furnitureValidate, toFurnitureInput } from './furnitureForm';
@@ -66,6 +67,7 @@ export const FURNITURE_EXTRAS: CatalogExtras = {
           ]
         : []),
       { label: 'Крепление', value: mountText(entry.mount) },
+      ...(entry.container ? containerRows(entry) : []),
     ];
   },
   listValue: (entry) =>

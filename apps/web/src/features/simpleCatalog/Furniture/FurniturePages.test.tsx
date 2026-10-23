@@ -81,6 +81,8 @@ const furniture: Furniture = {
   modelId: table.id,
   mount: 'floor',
   positions: [],
+  container: null,
+  contentItems: {},
   model: { id: table.id, name: 'Стол', ...drawn, origin: null },
   models: {
     [table.id]: { id: table.id, name: 'Стол', ...drawn, origin: null },
@@ -252,6 +254,62 @@ describe('раздел «Обстановка»', () => {
     expect(await screen.findByText(/Закрыта —/)).toBeInTheDocument();
     expect(screen.getByText(/Открыта —/)).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'Открыта' })).toBeInTheDocument();
+  });
+
+  it('контейнер: вид, вместимость и замок уходят в запрос', async () => {
+    const fetchMock = stubFetch((url, init) =>
+      init?.method === 'POST'
+        ? furniture
+        : url.includes('/voxel-models')
+          ? [table]
+          : [],
+    );
+    renderCreate();
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText(/Название/), 'Сундук');
+    await user.click(screen.getByRole('combobox', { name: /Модель/ }));
+    await user.click(await screen.findByRole('option', { name: 'Стол' }));
+    await user.click(screen.getByRole('radio', { name: 'Контейнер' }));
+    expect(screen.getByText('Груз: 0 из 360 фнт.')).toBeInTheDocument();
+    await user.click(screen.getByRole('combobox', { name: /Замок/ }));
+    await user.click(
+      await screen.findByRole('option', { name: 'Хороший замок (Сл 15)' }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Создать' }));
+    await screen.findByText('Карточка');
+    const [body] = posted(fetchMock, /\/furniture$/);
+    expect(body).toMatchObject({
+      container: { capacity: 360, lockDc: 15, contents: [] },
+    });
+  });
+
+  it('карточка контейнера: груз, замок и содержимое', async () => {
+    const GOLD = '55555555-5555-4555-8555-555555555555';
+    stubFetch(() => ({
+      ...furniture,
+      container: {
+        capacity: 360,
+        lockDc: 20,
+        contents: [{ itemId: GOLD, quantity: 50 }],
+      },
+      contentItems: {
+        [GOLD]: { missing: null, name: 'Золото', image: null, weight: 0.02 },
+      },
+    }));
+    renderWithProviders(
+      <Routes>
+        <Route
+          path="/furniture/:id"
+          element={<SimpleViewPage def={FURNITURE} />}
+        />
+      </Routes>,
+      { route: `/furniture/${furniture.id}`, auth },
+    );
+    expect(
+      await screen.findByText('Груз по умолчанию: 1 из 360 фнт.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Отличный замок (Сл 20)')).toBeInTheDocument();
+    expect(screen.getByText(/Золото ×50/)).toBeInTheDocument();
   });
 
   it('карточка без модели: модель удалена', async () => {

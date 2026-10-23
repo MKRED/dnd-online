@@ -5,15 +5,18 @@ import {
 } from 'shared';
 
 // Виды записей для чипов и бейджей раздела «Обстановка» — по креплению.
-export const FURNITURE_KINDS = FURNITURE_MOUNTS;
+export const FURNITURE_KINDS = [...FURNITURE_MOUNTS, 'container'] as const;
 export const FURNITURE_KIND_LABELS: Record<string, string> = {
   floor: 'На полу',
   wall: 'На стене',
   ceiling: 'На потолке',
   doorway: 'В проёме',
+  container: 'Контейнер',
 };
 
-export const furnitureKinds = (entry: Furniture) => [entry.mount];
+// Контейнер (этап 11) — своим чипом рядом с креплением.
+export const furnitureKinds = (entry: Furniture) =>
+  entry.container ? [entry.mount, 'container'] : [entry.mount];
 
 // Что даёт крепление на карте (docs/plan/blocks.md, «Понятия»): подсказка в форме и
 // строка карточки.

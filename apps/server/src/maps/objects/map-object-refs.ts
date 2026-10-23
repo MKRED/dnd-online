@@ -76,26 +76,9 @@ export async function loadRefs(
     }
   }
 
-  if (ids.items.size > 0) {
-    const rows = await db
-      .select({ entry: items, image: itemImages })
-      .from(items)
-      .leftJoin(itemImages, eq(itemImages.ownerId, items.id))
-      .where(inArray(items.id, [...ids.items]));
-    for (const { entry, image } of rows) {
-      const visible = entry.authorId === userId || entry.isPublic;
-      view.items[entry.id] = visible
-        ? {
-            missing: null,
-            name: entry.name,
-            image: toCatalogImage(image),
-            weight: entry.weight,
-          }
-        : { missing: 'hidden' };
-      if (visible) refs.items.set(entry.id, entry.weight);
-    }
-    for (const id of ids.items) view.items[id] ??= { missing: 'deleted' };
-  }
+  const items = await loadItemRefs(db, userId, ids.items);
+  view.items = items.view;
+  refs.items = items.weights;
 
   if (ids.npcs.size > 0) {
     const rows = await db
@@ -148,4 +131,39 @@ export async function loadRefs(
   refs.furniture = furnitureRefs.refs;
 
   return { view, refs };
+}
+
+// Предметы по id, как их видит пользователь: свой или опубликованный — имя, картинка и
+// вес, чужой скрытый — заглушка «скрыт», не найденный — «удалён». weights — вес видимых:
+// по нему считается груз контейнера. Общее с содержимым контейнера-обстановки (этап 11).
+export async function loadItemRefs(
+  db: Db,
+  userId: string,
+  ids: Set<string>,
+): Promise<{
+  view: MapObjectRefsView['items'];
+  weights: ObjectRefs['items'];
+}> {
+  const view: MapObjectRefsView['items'] = {};
+  const weights: ObjectRefs['items'] = new Map();
+  if (ids.size === 0) return { view, weights };
+  const rows = await db
+    .select({ entry: items, image: itemImages })
+    .from(items)
+    .leftJoin(itemImages, eq(itemImages.ownerId, items.id))
+    .where(inArray(items.id, [...ids]));
+  for (const { entry, image } of rows) {
+    const visible = entry.authorId === userId || entry.isPublic;
+    view[entry.id] = visible
+      ? {
+          missing: null,
+          name: entry.name,
+          image: toCatalogImage(image),
+          weight: entry.weight,
+        }
+      : { missing: 'hidden' };
+    if (visible) weights.set(entry.id, entry.weight);
+  }
+  for (const id of ids) view[id] ??= { missing: 'deleted' };
+  return { view, weights };
 }

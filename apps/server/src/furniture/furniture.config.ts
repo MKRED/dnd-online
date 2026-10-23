@@ -1,10 +1,12 @@
 import {
   isFurnitureMount,
   readCatalogOrigin,
+  readFurnitureContainer,
   readFurniturePositions,
   type CatalogOrigin,
   type FurnitureFields,
   type FurnitureModel,
+  type ItemRefView,
 } from 'shared';
 import type { CatalogAccess } from '../catalog/catalog-access.js';
 import type { CatalogEntriesConfig } from '../catalog/entries/catalog-entries.service.js';
@@ -27,6 +29,7 @@ export const FURNITURE_ACCESS: CatalogAccess = {
 export type FurnitureVariant = FurnitureFields & {
   model: FurnitureModel | null;
   models: Record<string, FurnitureModel>;
+  contentItems: Record<string, ItemRefView>;
   origin: CatalogOrigin | null;
 };
 
@@ -47,8 +50,10 @@ export const FURNITURE_CONFIG: CatalogEntriesConfig<
       modelId: typeof extra.modelId === 'string' ? extra.modelId : '',
       mount: isFurnitureMount(extra.mount) ? extra.mount : 'floor',
       positions: readFurniturePositions(extra.positions),
+      container: readFurnitureContainer(extra.container),
       model: null,
       models: {},
+      contentItems: {},
       origin: origin && { ...origin, available: false, updated: false },
     };
   },
@@ -64,6 +69,9 @@ export const FURNITURE_CONFIG: CatalogEntriesConfig<
         name: name.trim(),
         modelId,
       })),
+      // Поля проверяет сервис (writeLinks) в той же транзакции; здесь — только
+      // нормализация, чтобы испорченное тело не уронило запись до проверки.
+      container: dto.container && readFurnitureContainer(dto.container),
     },
   }),
 };

@@ -8,6 +8,7 @@ import {
   Text,
 } from '@mantine/core';
 import {
+  CONTAINER_CAPACITY,
   CONTAINER_LOOK_LABELS,
   CONTAINER_LOOKS,
   CREATURE_SIZES,
@@ -132,7 +133,7 @@ function ObjectProperties({
           />
           <ContainerItems
             items={object.items}
-            look={object.look}
+            capacity={CONTAINER_CAPACITY[object.look]}
             refs={refs.items}
             onChange={(items) => tool.update({ items })}
             disabled={busy}

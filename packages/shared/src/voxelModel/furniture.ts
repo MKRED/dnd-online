@@ -3,6 +3,8 @@ import type {
   CatalogEntryInputFields,
 } from '../catalog.js';
 import type { CatalogOrigin } from '../catalogOrigin.js';
+import type { ItemRefView } from '../map/objects/objectRefViews.js';
+import type { FurnitureContainer } from './furnitureContainer.js';
 import type { VoxelModelFields } from './voxelModel.js';
 
 // Роль «обстановка» (docs/plan/blocks.md, этап 8б): стол, стул, статуя — модель из
@@ -49,10 +51,12 @@ export const FURNITURE_POSITION_NAME_MAX = 40;
 // Тело записи: модель — только своя (чужую сначала копируют, как блоки). positions
 // пустой — у обстановки один вид; иначе от двух положений, и первое — то, в котором
 // объект ставится на карту: его модель и есть modelId.
+// container — вид «Контейнер» (этап 11), null — обычная обстановка.
 export interface FurnitureFields {
   modelId: string;
   mount: FurnitureMount;
   positions: FurniturePosition[];
+  container: FurnitureContainer | null;
 }
 
 // Что не так с положениями — для сервера (400) и формы; null — всё в порядке.
@@ -92,11 +96,13 @@ export type FurnitureModel = VoxelModelFields & {
 };
 
 // model null — модель удалили: обстановка остаётся, но без вида. models — модели всех
-// положений по id (удалённых в нём нет).
+// положений по id (удалённых в нём нет). contentItems — предметы содержимого контейнера по
+// id, как их видит читающий: имя, картинка и вес или заглушка.
 export type Furniture = CatalogEntryFields &
   FurnitureFields & {
     model: FurnitureModel | null;
     models: Record<string, FurnitureModel>;
+    contentItems: Record<string, ItemRefView>;
     origin: CatalogOrigin | null;
   };
 

@@ -1,9 +1,12 @@
 import { randomId } from '@mantine/hooks';
-import type {
-  Furniture,
-  FurnitureMount,
-  FurnitureFields,
-  VoxelModelFields,
+import {
+  checkFurnitureContainer,
+  type Furniture,
+  type FurnitureContainer,
+  type FurnitureMount,
+  type FurnitureFields,
+  type ItemRefView,
+  type VoxelModelFields,
 } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 
@@ -25,6 +28,10 @@ export interface FurnitureValues {
   mount: FurnitureMount;
   model: VoxelModelFields | null;
   positions: PositionValues[];
+  // Вид «Контейнер» (этап 11); null — обычная обстановка. contentItems — имена и вес
+  // предметов содержимого для списка и груза; в запрос не уходят.
+  container: FurnitureContainer | null;
+  contentItems: Record<string, ItemRefView>;
 }
 
 export const positionValues = (
@@ -41,7 +48,16 @@ export const toFurnitureValues = (entry?: Furniture): FurnitureValues => ({
     const model = entry?.models[modelId] ?? null;
     return positionValues(name, model ? modelId : '', model);
   }),
+  container: entry?.container ?? null,
+  contentItems: entry?.contentItems ?? {},
 });
+
+// Новый контейнер в форме: вместимость сундука (docs/dnd/items.md), без замка и пустой.
+export const NEW_CONTAINER: FurnitureContainer = {
+  capacity: 360,
+  lockDc: null,
+  contents: [],
+};
 
 // Первые два положения, когда их включают: у двери — «Закрыта» и «Открыта», первое —
 // с уже выбранной моделью.
@@ -58,11 +74,13 @@ export function startPositions(values: FurnitureValues): PositionValues[] {
 
 export function toFurnitureInput(values: FurnitureValues): FurnitureFields {
   const { positions, mount } = values;
+  const { container } = values;
   if (!positions.length)
-    return { modelId: values.modelId, mount, positions: [] };
+    return { modelId: values.modelId, mount, positions: [], container };
   return {
     modelId: positions[0].modelId,
     mount,
+    container,
     positions: positions.map(({ name, modelId }) => ({
       name: name.trim(),
       modelId,
@@ -72,7 +90,11 @@ export function toFurnitureInput(values: FurnitureValues): FurnitureFields {
 
 const sameName = (a: string, b: string) => a.trim() === b.trim();
 
+const containerError = (container: FurnitureContainer | null) =>
+  container && checkFurnitureContainer(container);
+
 export const furnitureValidate = {
+  container: (value: FurnitureContainer | null) => containerError(value),
   modelId: (value: string, values: SimpleFormValues) =>
     value || values.furniture.positions.length
       ? null

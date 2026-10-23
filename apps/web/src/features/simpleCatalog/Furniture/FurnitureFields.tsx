@@ -7,7 +7,8 @@ import {
 } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import { MOUNT_HINTS } from './furnitureCard';
-import { startPositions } from './furnitureForm';
+import ContainerFields from './ContainerFields';
+import { NEW_CONTAINER, startPositions } from './furnitureForm';
 import FurnitureModelField from './FurnitureModelField';
 
 // Поля обстановки (docs/plan/blocks.md, этапы 8б и 8г): модель или модели положений —
@@ -49,6 +50,28 @@ function FurnitureFields({
             {MOUNT_HINTS[mount]}
           </Text>
         </Stack>
+        <Stack gap={4}>
+          <Text size="sm" fw={500}>
+            Вид
+          </Text>
+          <SegmentedControl
+            w="fit-content"
+            value={furniture.container ? 'container' : 'plain'}
+            onChange={(value) =>
+              form.setFieldValue(
+                'furniture.container',
+                value === 'container' ? NEW_CONTAINER : null,
+              )
+            }
+            data={[
+              { value: 'plain', label: 'Обычная' },
+              { value: 'container', label: 'Контейнер' },
+            ]}
+          />
+        </Stack>
+        {furniture.container && (
+          <ContainerFields form={form} container={furniture.container} />
+        )}
       </Stack>
     </Fieldset>
   );

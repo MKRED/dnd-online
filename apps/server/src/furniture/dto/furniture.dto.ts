@@ -2,6 +2,7 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsIn,
+  IsObject,
   IsOptional,
   IsString,
   IsUUID,
@@ -9,6 +10,7 @@ import {
 } from 'class-validator';
 import {
   FURNITURE_MOUNTS,
+  type FurnitureContainer,
   type FurnitureFields,
   type FurnitureMount,
   type FurniturePosition,
@@ -42,4 +44,12 @@ export class FurnitureDto extends CatalogEntryDto implements FurnitureFields {
   @ValidateNested({ each: true })
   @Type(() => FurniturePositionDto)
   positions: FurniturePositionDto[] = [];
+
+  // Вид «Контейнер» (этап 11); без поля или null — обычная обстановка. Поля контейнера
+  // проверяет сервис (checkFurnitureContainer) — там же видимость и вес предметов.
+  @IsOptional()
+  @IsObject({
+    message: 'Контейнер — объект {capacity, lockDc, contents} или null',
+  })
+  container: FurnitureContainer | null = null;
 }

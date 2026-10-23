@@ -23,6 +23,8 @@ export interface CatalogChoice {
   label: string;
   size?: CreatureSize;
   modelSize?: Vec3;
+  // Вес предмета в фунтах — для груза контейнера.
+  weight?: number;
 }
 
 // Какой объект ставит инструмент «Поставить» (docs/plan/blocks.md, этап 10); блок

@@ -8,13 +8,16 @@ type Plain = Record<string, unknown>;
 const isPlain = (value: unknown): value is Plain =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-// Объекты сливаются вглубь, массивы и details заменяются целиком. details зависит от
-// категории: при смене категории старые ключи details сервер бы отклонил.
+// Объекты сливаются вглубь, массивы, details и cells заменяются целиком. details зависит
+// от категории: при смене категории старые ключи details сервер бы отклонил. cells модели —
+// словарь клеток: при слиянии свойство клетки было бы не убрать.
+const REPLACED = new Set(['details', 'cells']);
+
 export function mergePatch(base: Plain, patch: Plain, top = true): Plain {
   const result: Plain = { ...base };
   for (const [key, value] of Object.entries(patch)) {
     const old = result[key];
-    const replace = top && key === 'details';
+    const replace = top && REPLACED.has(key);
     result[key] =
       !replace && isPlain(old) && isPlain(value)
         ? mergePatch(old, value, false)

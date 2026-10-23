@@ -3,8 +3,10 @@ import { abilityGuide } from './ability.js';
 import { blockGroupGuide } from './blockGroup.js';
 import { characterGuide } from './character.js';
 import { effectGuide } from './effect.js';
+import { furnitureGuide } from './furniture.js';
 import { itemGuide } from './item.js';
 import { monsterGuide } from './monster.js';
+import { voxelModelGuide } from './voxelModel.js';
 
 const GUIDES: Record<EntityKind, () => string[]> = {
   character: () => characterGuide('pc'),
@@ -14,6 +16,8 @@ const GUIDES: Record<EntityKind, () => string[]> = {
   ability: abilityGuide,
   effect: effectGuide,
   block_group: blockGroupGuide,
+  voxel_model: voxelModelGuide,
+  furniture: furnitureGuide,
 };
 
 // Справка по полям для create и update (docs/plan/ai-access.md, этап 3). Значения

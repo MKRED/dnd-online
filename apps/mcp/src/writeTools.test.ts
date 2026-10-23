@@ -16,6 +16,25 @@ async function run(
 }
 
 describe('create', () => {
+  it('создаёт обстановку по своему пути, скрытой', async () => {
+    const api = vi.fn().mockResolvedValue({ id: ID });
+    await run(api, 'create', {
+      kind: 'furniture',
+      data: { name: 'Стол', modelId: EFFECT_ID, mount: 'floor' },
+    });
+    expect(api).toHaveBeenCalledWith('/furniture', {
+      method: 'POST',
+      body: {
+        isPublic: false,
+        description: '',
+        sources: [],
+        name: 'Стол',
+        modelId: EFFECT_ID,
+        mount: 'floor',
+      },
+    });
+  });
+
   it('создаёт запись каталога скрытой и с пустыми описанием и источниками', async () => {
     const api = vi.fn().mockResolvedValue({ id: ID });
     await run(api, 'create', {
@@ -102,6 +121,22 @@ describe('update', () => {
     });
   });
 
+  it('свойства клеток модели заменяет целиком: убранная клетка не остаётся', async () => {
+    const api = vi
+      .fn()
+      .mockResolvedValueOnce({ name: 'Стол', cells: { '0,0,0': 'stand' } })
+      .mockResolvedValueOnce({ id: ID });
+    await run(api, 'update', {
+      kind: 'voxel_model',
+      id: ID,
+      data: { cells: { '1,0,0': 'free' } },
+    });
+    expect(api).toHaveBeenLastCalledWith(`/voxel-models/${ID}`, {
+      method: 'PUT',
+      body: { name: 'Стол', cells: { '1,0,0': 'free' } },
+    });
+  });
+
   it('у набора оставляет в составе только itemId и quantity', async () => {
     const api = vi
       .fn()
@@ -158,5 +193,10 @@ describe('format_guide', () => {
     expect(monster.text).toContain('"hitPoints":{"average":4');
     const effect = await run(vi.fn(), 'format_guide', { kind: 'effect' });
     expect(effect.text).toContain('poisoned (Отравленный)');
+    const model = await run(vi.fn(), 'format_guide', { kind: 'voxel_model' });
+    expect(model.text).toContain('stand (Можно встать сверху)');
+    expect(model.text).toContain('"voxels":"AIAg"');
+    const furniture = await run(vi.fn(), 'format_guide', { kind: 'furniture' });
+    expect(furniture.text).toContain('wall (Стена)');
   });
 });

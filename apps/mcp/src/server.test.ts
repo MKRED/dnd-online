@@ -198,6 +198,60 @@ describe('dnd MCP server', () => {
     expect(api).not.toHaveBeenCalled();
   });
 
+  it('apply_ops пропускает обстановку с поворотом и force', async () => {
+    const api = vi.fn().mockResolvedValue({ seq: 1, createdObjectIds: [1] });
+    const client = await connect(api as unknown as ApiCall);
+    const ops = [
+      {
+        op: 'placeObject',
+        at: [2, 1, 3],
+        object: { kind: 'furniture', furnitureId: MAP_ID, facing: 90 },
+        force: true,
+      },
+      { op: 'moveObject', id: 1, at: [4, 1, 3], force: true },
+      { op: 'updateObject', id: 1, object: { furnitureId: MAP_ID } },
+    ];
+
+    const result = await call(client, 'apply_ops', { mapId: MAP_ID, ops });
+
+    expect(result.isError).toBe(false);
+    expect(api).toHaveBeenCalledWith(`/maps/${MAP_ID}/ops`, {
+      method: 'POST',
+      body: { ops },
+    });
+  });
+
+  it('apply_ops не пропускает обстановку наискосок', async () => {
+    const api = vi.fn();
+    const client = await connect(api as unknown as ApiCall);
+    const result = await call(client, 'apply_ops', {
+      mapId: MAP_ID,
+      ops: [
+        {
+          op: 'placeObject',
+          at: [0, 1, 0],
+          object: { kind: 'furniture', furnitureId: MAP_ID, facing: 45 },
+        },
+      ],
+    });
+    expect(result.isError).toBe(true);
+    expect(api).not.toHaveBeenCalled();
+  });
+
+  it('find_catalog ищет обстановку', async () => {
+    const api = vi.fn().mockResolvedValue([]);
+    const client = await connect(api as unknown as ApiCall);
+    await call(client, 'find_catalog', { kind: 'furniture' });
+    expect(api).toHaveBeenCalledWith('/map-catalog?kind=furniture');
+  });
+
+  it('block_guide описывает обстановку на карте', async () => {
+    const client = await connect(vi.fn());
+    const result = await call(client, 'block_guide', {});
+    expect(result.text).toContain('{kind: "furniture", furnitureId, facing?}');
+    expect(result.text).toContain('force: true');
+  });
+
   it('find_catalog ищет по виду и строке', async () => {
     const api = vi
       .fn()

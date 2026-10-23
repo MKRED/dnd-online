@@ -42,6 +42,15 @@ const hidden = z
   .boolean()
   .optional()
   .describe('Скрыт от игроков: в игре его видит только мастер');
+// Обстановка поворачивается только на 90° (docs/plan/blocks.md, этап 8в).
+const quarterTurn = rotation.describe(
+  'Поворот обстановки по часовой: 0, 90, 180 или 270',
+);
+// Shift+клик редактора: обстановка без проверок места.
+const force = z
+  .boolean()
+  .optional()
+  .describe('Обстановку — без проверки места и опоры (как Shift+клик)');
 const objectBody = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('start'), facing, hidden }),
   z.object({
@@ -76,6 +85,12 @@ const objectBody = z.discriminatedUnion('kind', [
     quantity,
     hidden,
   }),
+  z.object({
+    kind: z.literal('furniture'),
+    furnitureId: catalogId('обстановки'),
+    facing: quarterTurn,
+    hidden,
+  }),
 ]);
 const objectId = z.number().int().min(1).describe('Номер объекта на карте');
 
@@ -104,12 +119,18 @@ export const mapOp = z.discriminatedUnion('op', [
     grow,
     cut: z.enum(RESIZE_CUTS).optional(),
   }),
-  z.object({ op: z.literal('placeObject'), at: cell, object: objectBody }),
-  z.object({ op: z.literal('moveObject'), id: objectId, at: cell }),
+  z.object({
+    op: z.literal('placeObject'),
+    at: cell,
+    object: objectBody,
+    force,
+  }),
+  z.object({ op: z.literal('moveObject'), id: objectId, at: cell, force }),
   z.object({
     op: z.literal('turnObject'),
     id: objectId,
     facing: facingValue,
+    force,
   }),
   z.object({
     op: z.literal('updateObject'),
@@ -125,9 +146,11 @@ export const mapOp = z.discriminatedUnion('op', [
         items: z.array(objectItem).optional(),
         itemId: catalogId('предмета').optional(),
         quantity,
+        furnitureId: catalogId('обстановки').optional(),
         hidden,
       })
       .describe('Только меняемые поля; вид объекта не меняется'),
+    force,
   }),
   z.object({ op: z.literal('removeObject'), id: objectId }),
 ]);

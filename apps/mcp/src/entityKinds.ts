@@ -8,6 +8,8 @@ export const ENTITY_KINDS = [
   'ability',
   'effect',
   'block_group',
+  'voxel_model',
+  'furniture',
 ] as const;
 export type EntityKind = (typeof ENTITY_KINDS)[number];
 
@@ -17,6 +19,8 @@ export const CATALOG_KINDS = [
   'ability',
   'effect',
   'block_group',
+  'voxel_model',
+  'furniture',
 ] as const;
 export type CatalogKind = (typeof CATALOG_KINDS)[number];
 
@@ -31,6 +35,8 @@ const PATHS: Record<EntityKind, string> = {
   ability: '/abilities',
   effect: '/effects',
   block_group: '/block-groups',
+  voxel_model: '/voxel-models',
+  furniture: '/furniture',
 };
 
 export const entityPath = (kind: EntityKind, id?: string) =>

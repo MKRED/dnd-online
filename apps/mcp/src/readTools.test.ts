@@ -37,6 +37,10 @@ const emptyCatalogs = {
   '/effects?scope=catalog': [],
   '/block-groups?scope=mine': [],
   '/block-groups?scope=catalog': [],
+  '/voxel-models?scope=mine': [],
+  '/voxel-models?scope=catalog': [],
+  '/furniture?scope=mine': [],
+  '/furniture?scope=catalog': [],
 };
 
 type SearchResult = Awaited<ReturnType<typeof searchEntities>>;
@@ -137,6 +141,22 @@ describe('search', () => {
       ['character', 'p', 'link'],
       ['npc', 'n', 'hidden'],
       ['monster', 'm', 'hidden'],
+    ]);
+  });
+
+  it('находит модели и обстановку', async () => {
+    const api = fakeApi({
+      ...emptyCatalogs,
+      '/characters': [],
+      '/voxel-models?scope=mine': [catalogEntry('m', 'Стол')],
+      '/furniture?scope=mine': [catalogEntry('f', 'Стол')],
+    });
+
+    const { body } = await search(api, { q: 'стол' });
+
+    expect(body.results.map((hit) => [hit.kind, hit.id])).toEqual([
+      ['voxel_model', 'm'],
+      ['furniture', 'f'],
     ]);
   });
 

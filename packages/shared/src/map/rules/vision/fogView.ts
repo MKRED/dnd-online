@@ -1,5 +1,5 @@
 import { AIR } from '../../cell.js';
-import { CHUNK_VOLUME, type Vec3 } from '../../coords.js';
+import { CHUNK_VOLUME, type Box3, type Vec3 } from '../../coords.js';
 import type { MapObject } from '../../objects/mapObject.js';
 import { maskHas, type CellMask } from './cellMask.js';
 
@@ -14,14 +14,24 @@ export interface FogMasks {
 
 // Существо игрок видит, только пока на него смотрит группа: ушедшее из поля зрения
 // исчезает. Остальное (предметы, контейнеры, точки старта) — пока клетка открыта.
+// box — место объекта в несколько клеток (обстановка, docs/plan/blocks.md, этап 8в2): его
+// видно, когда открыта любая из них, — стол виден, даже если открыт только его край.
 // fog === null — туман выключен, видно всё.
 export function objectSeen(
   object: Pick<MapObject, 'kind' | 'at'>,
   fog: FogMasks | null,
+  box?: Box3,
 ): boolean {
   if (!fog) return true;
   const creature = object.kind === 'monster' || object.kind === 'npc';
-  return maskHas(creature ? fog.visible : fog.explored, object.at);
+  if (creature) return maskHas(fog.visible, object.at);
+  if (!box) return maskHas(fog.explored, object.at);
+  const { min, max } = box;
+  for (let y = min[1]; y <= max[1]; y++)
+    for (let z = min[2]; z <= max[2]; z++)
+      for (let x = min[0]; x <= max[0]; x++)
+        if (maskHas(fog.explored, [x, y, z])) return true;
+  return false;
 }
 
 export function creatureSeen(at: Vec3, fog: FogMasks | null): boolean {

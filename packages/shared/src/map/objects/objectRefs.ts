@@ -25,6 +25,9 @@ export interface FurnitureRef {
   size: Vec3;
   mount: FurnitureMount;
   cells: Record<string, ModelCellKind>;
+  // Сжатые воксели модели: по ним правила считают обзор, укрытие и высоту опоры
+  // (rules/furniture). null — модели нет.
+  voxels: string | null;
   usable: boolean;
 }
 

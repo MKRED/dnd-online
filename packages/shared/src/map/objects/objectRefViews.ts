@@ -116,6 +116,7 @@ export function objectRefsFromView(view: MapObjectRefsView): ObjectRefs {
       size: furniture.model?.size ?? [1, 1, 1],
       mount: furniture.mount,
       cells: furniture.model?.cells ?? {},
+      voxels: furniture.model?.voxels ?? null,
       usable: true,
     });
   }

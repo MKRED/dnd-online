@@ -1,7 +1,9 @@
 import {
   exploredCells,
+  objectBox,
   objectSeen,
   sameObject,
+  type ObjectRefs,
   type FogMasks,
   type MapObject,
   type PackedChangeset,
@@ -12,12 +14,17 @@ import {
 // (docs/plan/done/fog-of-war.md) — нет и того, чего группа не видит: существ вне поля зрения
 // и всего в неоткрытых клетках. Одно правило и для чтения сцены, и для рассылки правок:
 // копия игрока — проекция настоящей сцены, и правка, спроецированная тем же правилом,
-// ложится на неё без конфликтов. fog — null, когда тумана нет.
+// ложится на неё без конфликтов. fog — null, когда тумана нет. refs — справочник
+// обстановки: под туманом её место берётся из модели (objectSeen).
 export function forPlayer(
   object: MapObject | null,
   fog: FogMasks | null = null,
+  refs?: ObjectRefs,
 ): MapObject | null {
-  if (!object || object.hidden || !objectSeen(object, fog)) return null;
+  if (!object || object.hidden) return null;
+  const box =
+    refs && object.kind === 'furniture' ? objectBox(object, refs) : undefined;
+  if (!objectSeen(object, fog, box)) return null;
   return object.kind === 'container' ? { ...object, items: [] } : object;
 }
 

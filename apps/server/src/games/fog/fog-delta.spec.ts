@@ -6,6 +6,7 @@ import {
   maskAdd,
   MemoryChunkStore,
   createPalette,
+  emptyObjectRefs,
   type MapObject,
   type Vec3,
 } from 'shared';
@@ -41,6 +42,7 @@ function recount(objects: MapObject[] = []): FogRecount {
       objects,
       creatures: [],
       starts: [],
+      refs: emptyObjectRefs(),
     },
     before: { explored: mask(corner), visible: mask(corner) },
     after: { explored: mask(all), visible: mask(all) },

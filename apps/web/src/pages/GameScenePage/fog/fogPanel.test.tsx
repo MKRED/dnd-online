@@ -4,6 +4,7 @@ import {
   createMask,
   createMapObjects,
   createPalette,
+  emptyObjectRefs,
   maskAdd,
   MemoryChunkStore,
   readCell,
@@ -109,12 +110,12 @@ describe('playersView', () => {
     }
     // Гоблин в открытом, но сейчас его не видно; скрытый — виден, но скрыт мастером.
     maskAdd(fog.visible, [0, 1, 1]);
-    const seen = playersView(map, fog);
+    const seen = playersView(map, fog, emptyObjectRefs());
     expect(readCell(seen.store, [0, 0, 0])).not.toBe(0);
     expect(readCell(seen.store, [5, 0, 5])).toBe(0);
     expect([...seen.objects.byId.keys()]).toEqual([1]);
     // Повтор с теми же масками — те же массивы чанков: сцена их не пересобирает.
-    const again = playersView(map, fog);
+    const again = playersView(map, fog, emptyObjectRefs());
     expect(again.store.get('0,0,0')).toBe(seen.store.get('0,0,0'));
   });
 });

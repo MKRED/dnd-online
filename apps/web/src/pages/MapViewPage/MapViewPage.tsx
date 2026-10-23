@@ -3,7 +3,7 @@ import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { DEFAULT_USER_SETTINGS, mapBounds } from 'shared';
 import { useAuth } from '../../features/auth';
-import { useMapData } from '../../features/maps';
+import { useMapData, useRulesState } from '../../features/maps';
 import {
   EMPTY_DRAFT,
   MapSizePanel,
@@ -38,7 +38,9 @@ function MapViewPage() {
   const { map, loadError, editError, busy, applyOps, editOps, undo, redo } =
     useMapData(id);
   usePageTitle(map?.info.name ?? 'Карта');
-  const walk = useWalkTest(map?.state ?? null);
+  // Карта для правил «Хода» и фигурок — с клетками обстановки.
+  const rules = useRulesState(map?.state ?? null, map?.refs ?? null);
+  const walk = useWalkTest(rules.state);
   const objects = useObjectTool({
     state: map?.state ?? null,
     refs: map?.refs ?? null,
@@ -130,7 +132,7 @@ function MapViewPage() {
           <Suspense fallback={loader}>
             <MapScene
               key={id}
-              map={map.state}
+              map={rules.state ?? map.state}
               refs={map.refs}
               cutY={cutY}
               camera={camera}

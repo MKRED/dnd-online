@@ -14,6 +14,7 @@ export { drawHealthMark, MARK_FONTS } from './healthMarkDraw';
 export { mapSizeLabel } from './mapSizeLabel';
 export { mapStateFromChunks } from './mapStateFromChunks';
 export { useMapData, type LoadedMap } from './useMapData';
+export { useRulesState } from './useRulesState';
 export { ShapeSwatch } from './editor/BlockPicker';
 // Текстуры своих групп блоков для раздела «Блоки» (docs/plan/blocks.md, этап 4б).
 export {

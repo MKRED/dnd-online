@@ -1,9 +1,11 @@
 import {
   maskChunk,
   MemoryChunkStore,
+  objectBox,
   objectSeen,
   type FogMasks,
   type MapObject,
+  type ObjectRefs,
 } from 'shared';
 import type { MapViewState } from '../../../features/maps/mapStateFromChunks';
 
@@ -27,7 +29,12 @@ function maskedChunk(chunk: Uint16Array, bits: Uint8Array | undefined) {
   return next;
 }
 
-export function playersView(state: MapViewState, fog: FogMasks): MapViewState {
+// refs — справочник обстановки: её видно, когда открыта любая клетка её места.
+export function playersView(
+  state: MapViewState,
+  fog: FogMasks,
+  refs: ObjectRefs,
+): MapViewState {
   const store = new MemoryChunkStore();
   for (const key of state.store.keys()) {
     const chunk = maskedChunk(state.store.get(key)!, fog.explored.get(key));
@@ -35,7 +42,9 @@ export function playersView(state: MapViewState, fog: FogMasks): MapViewState {
   }
   const byId = new Map<number, MapObject>();
   for (const [id, object] of state.objects.byId) {
-    if (!object.hidden && objectSeen(object, fog)) byId.set(id, object);
+    const box =
+      object.kind === 'furniture' ? objectBox(object, refs) : undefined;
+    if (!object.hidden && objectSeen(object, fog, box)) byId.set(id, object);
   }
   return {
     ...state,

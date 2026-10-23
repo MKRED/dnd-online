@@ -1,9 +1,11 @@
 import {
+  buildFurnitureLayer,
   objectRefIds,
   objectSize,
   type BlockCatalog,
   type MapObject,
   type MapState,
+  type ObjectRefs,
   type Occupant,
 } from 'shared';
 import { loadGameBlockCatalog } from '../../block-groups/block-catalog.js';
@@ -19,8 +21,11 @@ export type SceneCreature = Occupant & { hidden: boolean; objectId: number };
 
 // Сцена глазами правил хода: блоки, существа на ней и стартовые точки по номеру.
 export interface SceneWorld {
-  // С каталогом мастера: свои блоки сцены правила читают так же, как базовые.
+  // С каталогом мастера: свои блоки сцены правила читают так же, как базовые, и с
+  // клетками обстановки (docs/plan/blocks.md, этап 8в2) — путь, обзор и туман их видят.
   map: MapState & { blocks: BlockCatalog };
+  // Справочник объектов сцены: место обстановки под туманом (fog-delta.ts).
+  refs: ObjectRefs;
   // Все объекты сцены по номеру — туману войны (что игрок увидел или потерял из виду).
   objects: MapObject[];
   creatures: SceneCreature[];
@@ -42,7 +47,9 @@ export async function loadSceneWorld(
       store,
       palette: scene.palette,
       blocks: await loadGameBlockCatalog(tx, scene.gameId),
+      furniture: buildFurnitureLayer(objects, refs),
     },
+    refs,
     objects,
     creatures: objects.flatMap((object) =>
       object.kind === 'monster' || object.kind === 'npc'

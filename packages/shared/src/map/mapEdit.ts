@@ -1,5 +1,6 @@
 import { applyOp } from './applyOp.js';
 import { applyResize } from './applyResize.js';
+import { furnitureKeep } from './furnitureCells.js';
 import type { Changeset } from './changeset.js';
 import { mergeChangesets } from './changesetMerge.js';
 import {
@@ -61,7 +62,7 @@ export function editMap(
         return { cells: [], paletteAdded: [], objects };
       }
       assertInsideMap(opRegion(op), map.size);
-      return applyOp(map, op);
+      return applyOp(map, op, furnitureKeep(map.objects, refs, op));
     }),
   );
   return mergeChangesets(parts);

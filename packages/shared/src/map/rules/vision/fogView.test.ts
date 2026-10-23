@@ -16,6 +16,19 @@ function fogWith(explored: [number, number, number][], visible = explored) {
   return fog;
 }
 
+describe('objectSeen с местом в несколько клеток', () => {
+  it('обстановку видно, когда открыта любая клетка её места', () => {
+    const fog = fogWith([[2, 1, 0]], []);
+    const table = { kind: 'furniture' as const, at: [1, 1, 0] as const };
+    const box = { min: [1, 1, 0] as const, max: [2, 1, 0] as const };
+    expect(objectSeen(table, fog)).toBe(false);
+    expect(objectSeen(table, fog, box)).toBe(true);
+    expect(objectSeen(table, fog, { min: [0, 1, 0], max: [1, 1, 0] })).toBe(
+      false,
+    );
+  });
+});
+
 describe('objectSeen', () => {
   // Открыто [0..1], видно только [0].
   const fog = fogWith(

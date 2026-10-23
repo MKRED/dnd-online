@@ -3,7 +3,7 @@ import { cellRotation } from '../cell.js';
 import { readCell } from '../chunkStore.js';
 import type { Vec3 } from '../coords.js';
 import type { MapState } from '../mapState.js';
-import { shapeBoxes } from '../shapes.js';
+import { shapeBoxes, type ShapeBox } from '../shapes.js';
 import {
   CREATURE_SIZES,
   creatureBody,
@@ -11,6 +11,7 @@ import {
   type BodyBox,
   type CreatureSize,
 } from './creature.js';
+import { furnitureCellAt } from './furniture/furnitureLayer.js';
 
 // Касание гранью — не пересечение, как у лучей: иначе существо не встало бы на пол.
 const MIN_OVERLAP = 1e-9;
@@ -37,10 +38,20 @@ function hasSupport(
   return supported;
 }
 
+function bodyHits(body: BodyBox, cell: Vec3, box: ShapeBox): boolean {
+  return [0, 1, 2].every(
+    (a) =>
+      Math.min(body.max[a], cell[a] + box[a + 3]) -
+        Math.max(body.min[a], cell[a] + box[a]) >
+      MIN_OVERLAP,
+  );
+}
+
 // Пересекает ли тело хоть одну коробку блока. Пока любой блок в объёме тела мешает
 // (тонкая стена, столб, верхняя плита у головы, стекло) — частичные фигуры решим отдельно.
 // Исключение — ступени на уровне ног: на нижней ступени стоят, а верхняя иначе упиралась бы
-// в тело, и по лестнице было бы не пройти.
+// в тело, и по лестнице было бы не пройти. Обстановка мешает по клеткам (план, «Путь — по
+// клеткам»): препятствие — вся клетка, «можно встать сверху» — до верха вокселей.
 function bodyBlocked(map: MapState, body: BodyBox, feetLevel: number): boolean {
   const from = body.min.map(Math.floor);
   const to = body.max.map((v) => Math.ceil(v) - 1);
@@ -48,17 +59,14 @@ function bodyBlocked(map: MapState, body: BodyBox, feetLevel: number): boolean {
     for (let z = from[2]; z <= to[2]; z++) {
       for (let x = from[0]; x <= to[0]; x++) {
         const cell: Vec3 = [x, y, z];
+        const furniture = furnitureCellAt(map.furniture, cell)?.body;
+        if (furniture && bodyHits(body, cell, furniture)) return true;
         const value = readCell(map.store, cell);
         const block = blockInfo(map, value);
         if (!block) continue;
         if (y === feetLevel && block.shape === 'stairs') continue;
         const hit = shapeBoxes(block.shape, cellRotation(value)).some((box) =>
-          [0, 1, 2].every(
-            (a) =>
-              Math.min(body.max[a], cell[a] + box[a + 3]) -
-                Math.max(body.min[a], cell[a] + box[a]) >
-              MIN_OVERLAP,
-          ),
+          bodyHits(body, cell, box),
         );
         if (hit) return true;
       }

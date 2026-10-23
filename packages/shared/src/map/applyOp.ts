@@ -38,8 +38,13 @@ function targetValue(
 }
 
 // Применяет уже проверенную (parseMapOp) операцию. Без I/O: всё через MapState.
-// Размер карты здесь не проверяется — это делает editMap.
-export function applyOp(state: MapState, op: BlockOp): Changeset {
+// Размер карты здесь не проверяется — это делает editMap. keep — клетки, куда блок не
+// ставится (клетки обстановки, docs/plan/blocks.md, этап 8в2); воздух ставится везде.
+export function applyOp(
+  state: MapState,
+  op: BlockOp,
+  keep?: (cell: Vec3) => boolean,
+): Changeset {
   const paletteAdded: PaletteAddition[] = [];
   // Блок дописывается в палитру при первой реальной записи: replace, ничего не
   // нашедший, не должен раздувать палитру, которая никогда не сжимается.
@@ -65,6 +70,7 @@ export function applyOp(state: MapState, op: BlockOp): Changeset {
     const before = readCell(state.store, cell);
     const after = targetValue(op, cell, region, before, blockValue, matchId);
     if (after === null || after === before) continue;
+    if (after !== AIR && keep?.(cell)) continue;
     writeCell(state.store, cell, after);
     cells.push({ at: cell, before, after });
   }

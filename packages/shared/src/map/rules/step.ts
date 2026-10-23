@@ -3,6 +3,7 @@ import type { MapState } from '../mapState.js';
 import type { ShapeBox } from '../shapes.js';
 import { CREATURE_SIZES, type CreatureSize } from './creature.js';
 import { FEET_PER_CELL } from './distance.js';
+import { furnitureCellAt } from './furniture/furnitureLayer.js';
 import { standHeight } from './standing.js';
 import { blockAt, footprintCells, supportBlocks } from './support.js';
 
@@ -107,8 +108,15 @@ function cornerClear(
 }
 
 // Труднопроходимая местность — если хоть под одной клеткой основания опора из такого
-// материала (supportBlocks).
+// материала (supportBlocks) или в клетке основания труднопроходимая обстановка (кусты,
+// обломки — план, «Путь — по клеткам»).
 function terrainCost(map: MapState, anchor: Vec3, size: CreatureSize): number {
+  if (
+    footprintCells(anchor, size).some(
+      (cell) => furnitureCellAt(map.furniture, cell)?.difficult,
+    )
+  )
+    return 2;
   return Math.max(
     1,
     ...supportBlocks(map, anchor, size).map(

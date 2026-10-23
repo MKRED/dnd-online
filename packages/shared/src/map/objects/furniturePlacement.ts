@@ -4,28 +4,11 @@ import type { Box3, Vec3 } from '../coords.js';
 import type { MapState } from '../mapState.js';
 import { MapOpError } from '../mapOpError.js';
 import { surfaceInCell } from '../rules/creature.js';
-import type { Facing, MapObject, MapObjects } from './mapObject.js';
+import { rotateModelCell } from '../rules/furniture/modelCellShapes.js';
+import type { MapObject, MapObjects } from './mapObject.js';
 import { objectBox, type ObjectRefs } from './objectRefs.js';
 
-// Клетка модели [x, y, z] → сдвиг от опорной клетки обстановки, повёрнутой на facing.
-// По часовой, если смотреть сверху: на 90° север модели («вперёд») смотрит на восток —
-// как поворот в редакторе моделей (rotateGrid).
-export function rotateModelCell(
-  [mx, my, mz]: Vec3,
-  [sx, , sz]: Vec3,
-  facing: Facing,
-): Vec3 {
-  switch (facing) {
-    case 90:
-      return [sz - 1 - mz, my, mx];
-    case 180:
-      return [sx - 1 - mx, my, sz - 1 - mz];
-    case 270:
-      return [mz, my, sx - 1 - mx];
-    default:
-      return [mx, my, mz];
-  }
-}
+export { rotateModelCell };
 
 // Шаг «за спину» обстановки: спина — сторона, противоположная «вперёд».
 const BACK: Record<number, [number, number]> = {

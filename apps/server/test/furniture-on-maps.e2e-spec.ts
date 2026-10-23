@@ -2,7 +2,10 @@ import type request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   bytesToBase64,
+  cellTypeId,
+  decodeChunk,
   encodeVoxels,
+  localIndex,
   modelVoxelCount,
   type GameScenes,
   type GameSceneView,
@@ -12,9 +15,10 @@ import { pngImage } from './support/character-fixture.js';
 import { createSceneGame } from './support/scene-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// Обстановка на карте и сцене (docs/plan/blocks.md, этап 8в1): объект «furniture» со
+// Обстановка на карте и сцене (docs/plan/blocks.md, этапы 8в1 и 8в2): объект «furniture» со
 // ссылкой на свою обстановку, место по модели, строгие пересечения и force (Shift), модель
-// целиком в справочнике ответа — и игроку на сцене, хотя записи мастера скрыты.
+// целиком в справочнике ответа — и игроку на сцене, хотя записи мастера скрыты; заливка
+// обходит клетки обстановки, ход существа — её препятствия.
 
 const idOf = (res: request.Response) => (res.body as { id: string }).id;
 
@@ -33,15 +37,34 @@ function tableModel() {
   };
 }
 
-async function createFurniture(agent: request.Agent, isPublic = false) {
+// Ящик в клетку: воксели во всю клетку, своих свойств нет — препятствие.
+function crateModel() {
+  const voxels = new Uint8Array(modelVoxelCount([1, 1, 1])).fill(1);
+  return {
+    name: 'Ящик',
+    description: '',
+    isPublic: false,
+    size: [1, 1, 1],
+    palette: ['#6b4a2b'],
+    voxels: bytesToBase64(encodeVoxels(voxels)),
+    cells: {},
+  };
+}
+
+async function createFurniture(
+  agent: request.Agent,
+  isPublic = false,
+  model: object = tableModel(),
+  name = 'Обеденный стол',
+) {
   const modelId = idOf(
-    await agent.post('/api/voxel-models').send(tableModel()).expect(201),
+    await agent.post('/api/voxel-models').send(model).expect(201),
   );
   return idOf(
     await agent
       .post('/api/furniture')
       .send({
-        name: 'Обеденный стол',
+        name,
         description: '',
         isPublic,
         modelId,
@@ -181,5 +204,49 @@ describe('обстановка на карте (e2e)', () => {
       .post(`/api/games/${gameId}/scenes/${sceneId}/ops`)
       .send({ ops: [placeFurniture([5, 1, 5], table)] })
       .expect(400);
+  });
+
+  it('заливка обходит клетки стола, блок в его клетку — 400', async () => {
+    const { master, mapId } = await createSceneGame(user, png, 'fub');
+    const m = master.agent;
+    const ops = (list: unknown[]) =>
+      m.post(`/api/maps/${mapId}/ops`).send({ ops: list });
+    const table = await createFurniture(m);
+    await ops([placeFurniture([3, 1, 5], table)]).expect(200);
+    await ops([
+      { op: 'fillBox', from: [2, 1, 5], to: [5, 1, 5], block: 'stone' },
+    ]).expect(200);
+    const slice = (await m.get(`/api/maps/${mapId}/chunks`).expect(200))
+      .body as MapChunksResponse;
+    const stone = slice.palette.indexOf('stone');
+    const chunk = decodeChunk(Buffer.from(slice.chunks[0].data, 'base64'));
+    const at = (x: number, y: number, z: number) =>
+      cellTypeId(chunk[localIndex(x, y, z)]);
+    expect([at(2, 1, 5), at(3, 1, 5), at(4, 1, 5), at(5, 1, 5)]).toEqual([
+      stone,
+      0,
+      0,
+      stone,
+    ]);
+    const refused = await ops([
+      { op: 'setBlock', at: [4, 1, 5], block: 'stone' },
+    ]).expect(400);
+    expect(JSON.stringify(refused.body)).toMatch(/стоит обстановка/);
+  });
+
+  it('на сцене существо не встаёт в клетку ящика и обходит его', async () => {
+    const { master, mapId, gameId } = await createSceneGame(user, png, 'fuw');
+    const m = master.agent;
+    const crate = await createFurniture(m, false, crateModel(), 'Ящик');
+    // Гоблин (объект 2) стоит на [1, 1, 0]; ящик — прямо перед ним.
+    await m
+      .post(`/api/maps/${mapId}/ops`)
+      .send({ ops: [placeFurniture([1, 1, 1], crate)] })
+      .expect(200);
+    await m.post(`/api/games/${gameId}/scenes`).send({ mapId }).expect(201);
+    const move = (to: number[]) =>
+      m.post(`/api/games/${gameId}/scene/creatures/2/move`).send({ to });
+    await move([1, 1, 1]).expect(409);
+    await move([1, 1, 2]).expect(200);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MemoryChunkStore } from '../chunkStore.js';
+import { MemoryChunkStore, readCell } from '../chunkStore.js';
 import { editMap, type EditableMap } from '../mapEdit.js';
 import type { MapOp } from '../ops.js';
 import { createPalette } from '../palette.js';
@@ -24,6 +24,7 @@ function refs(): ObjectRefs {
     size: [2, 1, 1],
     mount: 'floor',
     cells: { '0,0,0': 'stand', '1,0,0': 'stand' },
+    voxels: null,
     usable: true,
   });
   r.furniture.set(PAINTING, {
@@ -31,6 +32,7 @@ function refs(): ObjectRefs {
     size: [1, 1, 1],
     mount: 'wall',
     cells: {},
+    voxels: null,
     usable: true,
   });
   r.furniture.set(LAMP, {
@@ -38,6 +40,7 @@ function refs(): ObjectRefs {
     size: [1, 1, 1],
     mount: 'ceiling',
     cells: {},
+    voxels: null,
     usable: true,
   });
   r.furniture.set(FOREIGN, {
@@ -45,6 +48,7 @@ function refs(): ObjectRefs {
     size: [1, 1, 1],
     mount: 'floor',
     cells: {},
+    voxels: null,
     usable: false,
   });
   return r;
@@ -158,5 +162,31 @@ describe('обстановка на карте', () => {
   it('за границей карты — отказ по всем клеткам модели', () => {
     const map = floorMap();
     expect(() => edit(map, [place([5, 1, 1], TABLE)])).toThrow();
+  });
+});
+
+describe('кисть и заливка мимо обстановки (этап 8в2)', () => {
+  it('заливка обходит клетки стола, стирание их не обходит', () => {
+    const map = floorMap();
+    edit(map, [place([1, 1, 1], TABLE)]);
+    edit(map, [
+      { op: 'fillBox', from: [0, 1, 0], to: [3, 1, 3], block: 'stone' },
+    ]);
+    expect(readCell(map.store, [1, 1, 1])).toBe(0);
+    expect(readCell(map.store, [2, 1, 1])).toBe(0);
+    expect(readCell(map.store, [3, 1, 1])).not.toBe(0);
+    edit(map, [
+      { op: 'fillBox', from: [0, 1, 0], to: [3, 1, 3], block: 'air' },
+    ]);
+    expect(readCell(map.store, [3, 1, 1])).toBe(0);
+  });
+
+  it('одиночный блок в клетку обстановки — отказ с её именем', () => {
+    const map = floorMap();
+    edit(map, [place([1, 1, 1], TABLE)]);
+    expect(() =>
+      edit(map, [{ op: 'setBlock', at: [2, 1, 1], block: 'stone' }]),
+    ).toThrow('стоит обстановка «Стол»');
+    edit(map, [{ op: 'setBlock', at: [2, 1, 1], block: 'air' }]);
   });
 });

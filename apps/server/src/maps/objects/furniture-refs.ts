@@ -53,6 +53,7 @@ export async function loadFurnitureRefs(
       size: model?.size ?? [1, 1, 1],
       mount,
       cells: model?.cells ?? {},
+      voxels: model?.voxels ?? null,
       usable: row.authorId === ownerId,
     });
   }

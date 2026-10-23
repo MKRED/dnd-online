@@ -4,6 +4,7 @@ import {
   decodeChunk,
   encodeChunk,
   maskChunk,
+  objectRefIds,
   type FogMasks,
   type GameScene,
   type GameSceneStatus,
@@ -24,7 +25,7 @@ import { toMapObject } from '../../maps/storage/index.js';
 import { fogView, playerFog } from '../fog/fog-view.js';
 import type { SceneRow } from './scene-copy.js';
 import { forPlayer } from './scene-player-view.js';
-import { sceneRefsView } from './scene-refs.js';
+import { sceneRefs, sceneRefsView } from './scene-refs.js';
 
 // Чтение сцен игры: список мастера, активная сцена и сама сцена для страницы сцены.
 
@@ -138,9 +139,16 @@ export async function readSceneView(
     .orderBy(asc(gameSceneObjects.id));
   const fog = master ? null : await playerFog(db, scene);
   const groups = await loadGameBlockGroups(db, scene.gameId);
-  const objects = objectRows
-    .map(toMapObject)
-    .flatMap((object) => (master ? [object] : (forPlayer(object, fog) ?? [])));
+  const all = objectRows.map(toMapObject);
+  // Под туманом место обстановки — из её модели (docs/plan/blocks.md, этап 8в2).
+  const furniture = all.filter((object) => object.kind === 'furniture');
+  const refs =
+    fog && furniture.length > 0
+      ? (await sceneRefs(db, scene.gameId, objectRefIds(furniture))).refs
+      : undefined;
+  const objects = all.flatMap((object) =>
+    master ? [object] : (forPlayer(object, fog, refs) ?? []),
+  );
   return {
     seq: scene.seq,
     size: { width: scene.width, depth: scene.depth },

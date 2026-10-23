@@ -315,7 +315,7 @@ describe('game scene edits (e2e)', () => {
       sceneId: g.sceneId,
       seq: 2,
       changes: { cells: [], paletteAdded: [] },
-      refs: { monsters: {}, items: {}, npcs: {} },
+      refs: { monsters: {}, items: {}, npcs: {}, furniture: {} },
     });
 
     // Мастер выводит засаду: игроку гоблин «ставится», со ссылкой из библиотеки.

@@ -4,6 +4,7 @@ import { readCell } from '../chunkStore.js';
 import type { Vec3 } from '../coords.js';
 import type { MapState } from '../mapState.js';
 import { shapeBoxes } from '../shapes.js';
+import { furnitureCellAt } from './furniture/furnitureLayer.js';
 
 // Точка в непрерывных координатах карты: клетка [x, y, z] занимает [x, x+1) по каждой оси.
 export type Point3 = readonly [x: number, y: number, z: number];
@@ -33,15 +34,17 @@ export const CREATURE_SIZES: Record<
 
 // Опора внутри клетки (0…1): верх коробки во всю площадь клетки. Тонкая стена и
 // столб опорой не считаются — существо стоит рядом с ними, а не на них.
+// Обстановка «можно встать сверху» — опора до верха своих вокселей (стол, ящик).
 export function surfaceInCell(map: MapState, cell: Vec3): number {
+  const furniture = furnitureCellAt(map.furniture, cell)?.surface ?? 0;
   const value = readCell(map.store, cell);
   const block = blockInfo(map, value);
-  if (!block) return 0;
+  if (!block) return furniture;
   const floors = shapeBoxes(block.shape, cellRotation(value)).filter(
     ([minX, , minZ, maxX, , maxZ]) =>
       minX === 0 && minZ === 0 && maxX === 1 && maxZ === 1,
   );
-  return Math.max(0, ...floors.map((box) => box[4]));
+  return Math.max(furniture, ...floors.map((box) => box[4]));
 }
 
 // Высота ног: существо, стоящее в клетке с плитой или ступенями, стоит на их верху,

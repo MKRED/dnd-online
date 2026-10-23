@@ -5,6 +5,11 @@ import { CHUNK_SIZE, chunkKey, localIndex, type Vec3 } from '../coords.js';
 import type { MapState } from '../mapState.js';
 import { shapeBoxes, type ShapeBox } from '../shapes.js';
 import type { Point3 } from './creature.js';
+import {
+  furnitureCellAt,
+  furnitureCellKey,
+  type FurnitureLayer,
+} from './furniture/furnitureLayer.js';
 
 // «Обзор» — видно ли (стекло и лёд пропускают взгляд), «эффект» — пройдёт ли стрела
 // или заклинание (для них любой блок — полное укрытие).
@@ -70,21 +75,41 @@ function segmentHitsBox(
   return exit - enter > MIN_OVERLAP;
 }
 
-// Лежит ли точка строго внутри фигуры блока (любого, и стекла тоже).
+// Лежит ли точка строго внутри фигуры блока (любого, и стекла тоже) или вокселей обстановки.
 export function pointInSolid(map: MapState, point: Point3): boolean {
   const cell: Vec3 = [
     Math.floor(point[0]),
     Math.floor(point[1]),
     Math.floor(point[2]),
   ];
-  return boxesOf(map, readCell(map.store, cell), 'effect').some((box) =>
+  const inside = (box: ShapeBox) =>
     [0, 1, 2].every(
       (a) => point[a] > cell[a] + box[a] && point[a] < cell[a] + box[a + 3],
-    ),
+    );
+  return (
+    boxesOf(map, readCell(map.store, cell), 'effect').some(inside) ||
+    (furnitureCellAt(map.furniture, cell)?.boxes.some(inside) ?? false)
   );
 }
 
-// Перекрыт ли отрезок блоками. Обход клеток вдоль отрезка — 3D DDA (Amanatides–Woo),
+// Слой обстановки, если отрезок вообще задевает её границы, иначе null: лучи тумана
+// вдали от обстановки не ищут её клетки.
+function furnitureNear(
+  layer: FurnitureLayer | undefined,
+  from: Point3,
+  to: Point3,
+): FurnitureLayer | null {
+  const bounds = layer?.bounds;
+  if (!bounds) return null;
+  for (let a = 0; a < 3; a++) {
+    if (Math.max(from[a], to[a]) < bounds.min[a]) return null;
+    if (Math.min(from[a], to[a]) >= bounds.max[a] + 1) return null;
+  }
+  return layer;
+}
+
+// Перекрыт ли отрезок блоками или вокселями обстановки (её видно и сквозь неё не
+// стреляют в обоих режимах: стеклянной обстановки нет). Обход клеток вдоль отрезка — 3D DDA (Amanatides–Woo),
 // внутри клетки проверяются коробки её фигуры, а не клетка целиком. Чанк берётся из
 // хранилища только при переходе в другой чанк: строковый ключ на каждую клетку
 // стоил больше самого обхода.
@@ -95,6 +120,7 @@ export function segmentBlocked(
   mode: RayMode,
 ): boolean {
   const boxes = boxCache(map, mode);
+  const furniture = furnitureNear(map.furniture, from, to);
   const dir: Point3 = [to[0] - from[0], to[1] - from[1], to[2] - from[2]];
   const [dx, dy, dz] = dir;
   let x = Math.floor(from[0]);
@@ -141,6 +167,14 @@ export function segmentBlocked(
         ];
       if (value !== AIR) {
         for (const box of boxes(value)) {
+          if (segmentHitsBox(from, dir, x, y, z, box)) return true;
+        }
+      }
+    }
+    if (furniture && x >= 0 && y >= 0 && z >= 0) {
+      const cell = furniture.cells.get(furnitureCellKey(x, y, z));
+      if (cell) {
+        for (const box of cell.boxes) {
           if (segmentHitsBox(from, dir, x, y, z, box)) return true;
         }
       }

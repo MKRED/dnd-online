@@ -66,8 +66,14 @@ export function isEmptyEdit(applied: Changeset): boolean {
   return applied.cells.length === 0 && !applied.size && !applied.objects;
 }
 
+// Ставит ли пачка блоки (не воздух): им нужны клетки обстановки — кисть и заливка их
+// обходят (docs/plan/blocks.md, этап 8в2).
+const placesBlocks = (ops: MapOp[]) =>
+  ops.some((op) => isBlockOp(op) && op.block !== 'air');
+
 // Применяет пачку. Ссылки объектов (loadRefs) читаются, только если пачка трогает
-// объекты: операциями объектов или resize. При ошибке бросает — транзакция откатится.
+// объекты (операциями объектов или resize) или ставит блоки на карту с обстановкой. При
+// ошибке бросает — транзакция откатится.
 export async function runOps<R extends { refs: ObjectRefs }>(
   tx: DbTransaction,
   target: EditTarget,
@@ -83,6 +89,12 @@ export async function runOps<R extends { refs: ObjectRefs }>(
   if (resizes || ops.some(isObjectOp)) {
     objects = await target.storage.loadObjects(tx, target.nextObjectId);
     loaded = await loadRefs(objects);
+  } else if (placesBlocks(ops)) {
+    objects = await target.storage.loadObjects(tx, target.nextObjectId);
+    const hasFurniture = [...objects.byId.values()].some(
+      (object) => object.kind === 'furniture',
+    );
+    if (hasFurniture) loaded = await loadRefs(objects);
   }
   const keys = resizes
     ? 'all'

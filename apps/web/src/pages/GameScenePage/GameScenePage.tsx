@@ -23,6 +23,7 @@ import { useAuth } from '../../features/auth';
 import { sceneObjectImages } from '../../features/games';
 import { parseCameraParams, placeCamera } from '../../features/maps/cameraView';
 import { useFogMasks } from '../../features/maps/fogMasks';
+import { useRulesState } from '../../features/maps/useRulesState';
 import CutRuler from '../../features/maps/CutRuler';
 import { SceneToolbar } from '../../features/maps/editor';
 import type { CameraFocusApi } from '../../features/maps/MapScene';
@@ -94,7 +95,9 @@ function GameScenePage() {
         : null,
     [frame, viewParam, cam, target],
   );
-  const state = ready?.state ?? null;
+  // Карта для правил хода и фигурок — с клетками обстановки (этап 8в2 плана блоков).
+  const rules = useRulesState(ready?.state ?? null, view?.refs ?? null);
+  const state = rules.state;
   const bounds = useMemo(
     () => (state ? mapBounds(state.store) : null),
     [state],
@@ -146,8 +149,11 @@ function GameScenePage() {
   const handleReady = useCallback(() => setReadySceneId(sceneId), [sceneId]);
   const tools = master && ready !== null && !viewOnly;
   const shownState = useMemo(
-    () => (state && eyesFog ? playersView(state, eyesFog) : state),
-    [state, eyesFog],
+    () =>
+      state && eyesFog && rules.refs
+        ? playersView(state, eyesFog, rules.refs)
+        : state,
+    [state, eyesFog, rules.refs],
   );
 
   const loader = (

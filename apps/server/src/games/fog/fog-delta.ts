@@ -70,8 +70,8 @@ function objectChanges(
   const { before, after, world } = recount;
   const changes: ObjectChange[] = [];
   const push = (id: number, was: MapObject | null, now: MapObject | null) => {
-    const b = forPlayer(was, before);
-    const a = forPlayer(now, after);
+    const b = forPlayer(was, before, world.refs);
+    const a = forPlayer(now, after, world.refs);
     if (!sameObject(b, a)) changes.push({ id, before: b, after: a });
   };
   for (const change of edit) push(change.id, change.before, change.after);

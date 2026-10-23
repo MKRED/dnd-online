@@ -97,7 +97,7 @@ export async function readLibraryImage(
   return row?.data;
 }
 
-// Байты копии 3D-модели НПС и её формат (docs/plan/character-models.md, этап 4).
+// Байты копии 3D-модели НПС и её формат (docs/plan/done/character-models.md, этап 4).
 export async function readLibraryModel(
   db: Db,
   gameId: string,

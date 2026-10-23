@@ -19,7 +19,7 @@ export function figureImagePath(
   return `/games/${gameId}/figures/${figure.character.id}/image?i=${image.id}&v=${image.thumbVersion}`;
 }
 
-// 3D-модель фигурки (docs/plan/character-models.md, этап 3): версия в адресе — новая
+// 3D-модель фигурки (docs/plan/done/character-models.md, этап 3): версия в адресе — новая
 // загрузка не берётся из кеша.
 export function figureModelPath(
   gameId: string,

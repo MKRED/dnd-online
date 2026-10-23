@@ -17,7 +17,7 @@ import {
 import type { MapViewState } from '../../mapStateFromChunks';
 import { CATALOG_OBJECT_IMAGES, type ObjectImagePaths } from './objectImages';
 
-// 3D-модель существа (docs/plan/character-models.md): путь байтов в API (с версией) и
+// 3D-модель существа (docs/plan/done/character-models.md): путь байтов в API (с версией) и
 // как её ставить.
 export type CreatureModelInput = Pick<
   FigureModel,

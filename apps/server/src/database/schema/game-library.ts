@@ -42,7 +42,7 @@ export const gameLibrary = pgTable(
     // Метаданные копии картинки; байты — в game_library_image_files. Версия своя, растёт
     // с каждым обновлением: по ней клиент не берёт старую картинку из кеша.
     image: jsonb('image').$type<CatalogImage>(),
-    // Метаданные копии 3D-модели НПС (docs/plan/character-models.md, этап 4); байты — в
+    // Метаданные копии 3D-модели НПС (docs/plan/done/character-models.md, этап 4); байты — в
     // game_library_model_files. Версия — общая с картинкой: растёт с обновлением копии.
     model: jsonb('model').$type<FigureModel>(),
     // updated_at записи справочника на момент копии: по нему видно, что автор её правил.

@@ -185,7 +185,7 @@ describe('layoutObjects', () => {
       look: {
         side: 'npc',
         image: `/characters/${HERO}/images/img/file?variant=thumb&v=2`,
-        // 3D-модель НПС (docs/plan/character-models.md, этап 4).
+        // 3D-модель НПС (docs/plan/done/character-models.md, этап 4).
         model: {
           path: `/characters/${HERO}/model/file?v=4`,
           format: 'stl',

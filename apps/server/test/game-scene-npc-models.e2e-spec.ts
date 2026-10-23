@@ -5,7 +5,7 @@ import { pngImage } from './support/character-fixture.js';
 import { createSceneGame } from './support/scene-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// 3D-модель НПС на карте и сцене (docs/plan/character-models.md, этап 4): карта мастера
+// 3D-модель НПС на карте и сцене (docs/plan/done/character-models.md, этап 4): карта мастера
 // берёт модель из персонажа, сцена — из копии в библиотеке игры.
 
 // Наименьший двоичный STL: заголовок, число треугольников и по 50 байт на каждый.

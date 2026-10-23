@@ -24,7 +24,7 @@ export interface GameFigure {
   size: CreatureSize;
   // Миниатюра основной картинки персонажа; null — картинки нет.
   image: CharacterMainImage | null;
-  // 3D-модель персонажа — стоит вместо карточки (docs/plan/character-models.md); null — нет.
+  // 3D-модель персонажа — стоит вместо карточки (docs/plan/done/character-models.md); null — нет.
   model: FigureModel | null;
   // Скорость из листа с эффектами, в футах.
   speed: number;

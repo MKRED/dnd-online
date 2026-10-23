@@ -22,7 +22,7 @@ interface ModelFigureProps {
 }
 
 // Модель, вписанная в место существа: центр основания — в начале координат группы,
-// нижняя грань — на полу (docs/plan/character-models.md). Поворот по взгляду и позу
+// нижняя грань — на полу (docs/plan/done/character-models.md). Поворот по взгляду и позу
 // задаёт тот, кто ставит группу.
 function ModelFigure({
   model,

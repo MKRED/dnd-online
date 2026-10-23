@@ -10,6 +10,11 @@ import {
 } from '@mantine/core';
 import { lazy, Suspense } from 'react';
 import { CHARACTER_MODEL_MAX_BYTES } from 'shared';
+import {
+  CompressPanel,
+  MODEL_UPLOAD_MAX_BYTES,
+  useModelCompression,
+} from './compress';
 import ModelFitControls from './ModelFitControls';
 import { useCharacterModel } from './useCharacterModel';
 
@@ -17,6 +22,7 @@ import { useCharacterModel } from './useCharacterModel';
 const ModelPreview = lazy(() => import('./ModelPreview'));
 
 const MAX_MB = CHARACTER_MODEL_MAX_BYTES / (1024 * 1024);
+const UPLOAD_MAX_MB = MODEL_UPLOAD_MAX_BYTES / (1024 * 1024);
 // .glb и STL: по типу браузеры их не знают, поэтому и по расширению.
 const ACCEPT = '.glb,.stl,model/gltf-binary,model/stl';
 
@@ -25,21 +31,30 @@ const fileSize = (bytes: number) =>
     ? `${Math.max(1, Math.round(bytes / 1024))} КБ`
     : `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} МБ`;
 
-// 3D-модель персонажа (docs/plan/character-models.md, этап 2): с ней на карте стоит
+// 3D-модель персонажа (docs/plan/done/character-models.md, этап 2): с ней на карте стоит
 // модель, а не карточка. Как галерея, правится сразу и открыта и во время встречи —
 // модель не часть листа.
 function CharacterModelBlock({ characterId }: { characterId: string }) {
   const { model, busy, error, upload, remove, change } =
     useCharacterModel(characterId);
+  // Файл больше 10 МБ сначала сжимается в браузере (этап 5).
+  const compression = useModelCompression(upload);
+  const compressing = compression.state.kind === 'working';
 
   const fileButton = (label: string) => (
-    <FileButton accept={ACCEPT} onChange={(file) => file && upload(file)}>
+    <FileButton
+      accept={ACCEPT}
+      onChange={(file) => file && compression.choose(file)}
+    >
       {(props) => (
         <Button
           {...props}
           variant={model ? 'default' : 'filled'}
-          loading={busy === 'upload'}
-          disabled={busy !== null && busy !== 'upload' && busy !== 'save'}
+          loading={busy === 'upload' || compressing}
+          disabled={
+            compression.state.kind === 'offer' ||
+            (busy !== null && busy !== 'upload' && busy !== 'save')
+          }
         >
           {label}
         </Button>
@@ -61,7 +76,7 @@ function CharacterModelBlock({ characterId }: { characterId: string }) {
           <Stack gap="xs" align="flex-start">
             <Text size="sm" c="dimmed">
               Подойдёт .glb (с цветами и текстурами) или STL (одного цвета), до{' '}
-              {MAX_MB} МБ.
+              {MAX_MB} МБ. Файл до {UPLOAD_MAX_MB} МБ сожмём прямо в браузере.
             </Text>
             {fileButton('Загрузить модель')}
           </Stack>
@@ -98,6 +113,11 @@ function CharacterModelBlock({ characterId }: { characterId: string }) {
             </Stack>
           </Group>
         )}
+        <CompressPanel
+          state={compression.state}
+          onCompress={compression.compress}
+          onCancel={compression.cancel}
+        />
         {error && (
           <Alert color="red" p="xs">
             {error}

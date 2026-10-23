@@ -160,7 +160,7 @@ export class GameSceneViewService {
     }
   }
 
-  // 3D-модель НПС на сцене (docs/plan/character-models.md, этап 4) — тем же, кому его
+  // 3D-модель НПС на сцене (docs/plan/done/character-models.md, этап 4) — тем же, кому его
   // картинка.
   async modelFile(
     userId: string,

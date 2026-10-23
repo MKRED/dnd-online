@@ -10,7 +10,7 @@ import type { CharacterModelFit, CharacterModelFormat } from 'shared';
 import { bytea } from './bytea.js';
 import { characters } from './characters.js';
 
-// 3D-модель персонажа (docs/plan/character-models.md): одна на персонажа, загрузка
+// 3D-модель персонажа (docs/plan/done/character-models.md): одна на персонажа, загрузка
 // заменяет. Байты в базе, как у картинок: dev и prod смотрят в одну базу. Чтения
 // метаданных выбирают колонки явно, без data.
 export const characterModels = pgTable('character_models', {

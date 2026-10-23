@@ -8,7 +8,7 @@ import {
 } from './support/character-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// 3D-модель персонажа (docs/plan/character-models.md, этап 1).
+// 3D-модель персонажа (docs/plan/done/character-models.md, этап 1).
 
 // Наименьший двоичный STL: заголовок, число треугольников и по 50 байт на каждый.
 function stl(triangles = 2): Buffer {

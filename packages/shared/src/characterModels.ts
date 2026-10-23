@@ -1,4 +1,4 @@
-// 3D-модель персонажа или НПС (docs/plan/character-models.md): `.glb` или STL, одна на
+// 3D-модель персонажа или НПС (docs/plan/done/character-models.md): `.glb` или STL, одна на
 // персонажа. На карте она стоит вместо карточки, вписанная в место существа.
 
 export const CHARACTER_MODEL_FORMATS = ['glb', 'stl'] as const;
@@ -31,7 +31,7 @@ export interface CharacterModel {
 }
 
 // Модель фигурки на сцене — без размера файла и даты: байты берут по версии
-// маршрутом игры (docs/plan/character-models.md, этап 3).
+// маршрутом игры (docs/plan/done/character-models.md, этап 3).
 export type FigureModel = Pick<
   CharacterModel,
   'format' | 'version' | 'color' | 'fit'

@@ -130,7 +130,7 @@ export class GameScenesController {
     });
   }
 
-  // 3D-модель НПС на сцене (docs/plan/character-models.md, этап 4) — как его картинка:
+  // 3D-модель НПС на сцене (docs/plan/done/character-models.md, этап 4) — как его картинка:
   // версия в адресе, кеш навсегда только у удачного ответа.
   @Get('scene/models/npc/:sourceId')
   async model(

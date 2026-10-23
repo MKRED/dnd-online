@@ -139,7 +139,7 @@ export class GameFiguresReadService {
     }
   }
 
-  // 3D-модель персонажа фигурки (docs/plan/character-models.md, этап 3) — тем же, кто
+  // 3D-модель персонажа фигурки (docs/plan/done/character-models.md, этап 3) — тем же, кто
   // видит фигурку, как и миниатюра: сам персонаж может быть закрыт.
   async model(
     userId: string,

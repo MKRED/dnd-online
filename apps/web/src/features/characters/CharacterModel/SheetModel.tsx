@@ -8,7 +8,7 @@ const ModelPreview = lazy(() => import('./ModelPreview'));
 
 const SIZE = 240;
 
-// 3D-модель на листе персонажа (docs/plan/character-models.md, этап 4): только просмотр,
+// 3D-модель на листе персонажа (docs/plan/done/character-models.md, этап 4): только просмотр,
 // под портретом. Нет модели — ничего; правки — на странице редактирования.
 function SheetModel({ characterId }: { characterId: string }) {
   const [model, setModel] = useState<CharacterModel | null>(null);

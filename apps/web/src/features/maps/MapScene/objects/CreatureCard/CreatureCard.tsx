@@ -31,7 +31,7 @@ const PLINTH = '#2b2622';
 const THICKNESS = 0.05;
 const PLINTH_HEIGHT = 0.07;
 
-// 3D-модель вместо карточки (docs/plan/character-models.md, этап 3).
+// 3D-модель вместо карточки (docs/plan/done/character-models.md, этап 3).
 export interface CardModel {
   model: LoadedModel;
   fit: CharacterModelFit;

@@ -107,7 +107,7 @@ export async function loadRefs(
           id: characterImages.id,
           thumbVersion: characterImages.thumbVersion,
         },
-        // Метаданные модели, без байтов (docs/plan/character-models.md, этап 4).
+        // Метаданные модели, без байтов (docs/plan/done/character-models.md, этап 4).
         model: {
           format: characterModels.format,
           version: characterModels.version,

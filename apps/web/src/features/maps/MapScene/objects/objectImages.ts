@@ -10,7 +10,7 @@ export interface ObjectImagePaths {
   monster: (monsterId: string, version: number) => string;
   item: (itemId: string, version: number) => string;
   npc: (characterId: string, image: CharacterMainImage) => string;
-  // Байты 3D-модели НПС (docs/plan/character-models.md, этап 4).
+  // Байты 3D-модели НПС (docs/plan/done/character-models.md, этап 4).
   npcModel: (characterId: string, version: number) => string;
 }
 

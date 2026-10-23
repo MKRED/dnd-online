@@ -28,7 +28,7 @@ import {
 } from './character-model-row.js';
 import type { PatchCharacterModelDto } from './dto/patch-character-model.dto.js';
 
-// 3D-модель персонажа (docs/plan/character-models.md). Смотреть может тот, кто видит
+// 3D-модель персонажа (docs/plan/done/character-models.md). Смотреть может тот, кто видит
 // персонажа (автор или зритель по ссылке); загружать, править и удалять — автор.
 @Injectable()
 export class CharacterModelsService {

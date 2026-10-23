@@ -28,7 +28,7 @@ import { PatchCharacterModelDto } from './dto/patch-character-model.dto.js';
 import { MODEL_CONTENT_TYPES } from './model-content-types.js';
 import { ModelTooLargeFilter } from './model-too-large.filter.js';
 
-// 3D-модель персонажа (docs/plan/character-models.md): метаданные, файл, загрузка,
+// 3D-модель персонажа (docs/plan/done/character-models.md): метаданные, файл, загрузка,
 // цвет и поправка, удаление.
 @Controller('characters/:characterId/model')
 @UseGuards(SessionOrApiTokenGuard)

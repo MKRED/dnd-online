@@ -27,7 +27,7 @@ export type ItemRefView =
   | { missing: null; name: string; image: CatalogImage | null; weight: number }
   | { missing: RefMissing };
 
-// model — 3D-модель НПС (docs/plan/character-models.md, этап 4): с ней на карте стоит
+// model — 3D-модель НПС (docs/plan/done/character-models.md, этап 4): с ней на карте стоит
 // она, а не карточка.
 export type NpcRefView =
   | {

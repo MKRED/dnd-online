@@ -239,7 +239,7 @@ describe('game figures (e2e)', () => {
     await m.get(unknown).expect(404);
   });
 
-  // 3D-модель фигурки (docs/plan/character-models.md, этап 3): те же правила, что у
+  // 3D-модель фигурки (docs/plan/done/character-models.md, этап 3): те же правила, что у
   // миниатюры, и описание модели в списке фигурок.
   it('модель фигурки видит мастер и участник открытой сцены', async () => {
     const g = await createSceneGame(user, png, 'gfg_model');

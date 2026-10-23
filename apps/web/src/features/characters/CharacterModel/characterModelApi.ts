@@ -5,7 +5,7 @@ import type {
 } from 'shared';
 import { apiRequest } from '../../../lib/apiRequest';
 
-// 3D-модель персонажа (docs/plan/character-models.md, этап 1).
+// 3D-модель персонажа (docs/plan/done/character-models.md, этап 1).
 const base = (characterId: string) => `/characters/${characterId}/model`;
 
 export const getCharacterModel = (characterId: string) =>

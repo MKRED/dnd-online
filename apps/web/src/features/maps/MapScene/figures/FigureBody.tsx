@@ -10,7 +10,7 @@ interface FigureBodyProps {
 }
 
 // Фигурка персонажа: существо с зелёной рамкой — карточка или 3D-модель персонажа
-// (docs/plan/character-models.md, этап 3).
+// (docs/plan/done/character-models.md, этап 3).
 function FigureBody({ figure, texture, mark = false }: FigureBodyProps) {
   return (
     <CreatureBody

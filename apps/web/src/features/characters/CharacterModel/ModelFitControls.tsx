@@ -30,7 +30,7 @@ const fromSlider = (value: number) => Math.round(2 ** value * 100) / 100;
 const turned = (turn: CharacterModelFit['turn'], step: 1 | -1) =>
   ((turn + step + 4) % 4) as CharacterModelFit['turn'];
 
-// Цвет фигурки из STL и поправка к вписыванию (docs/plan/character-models.md).
+// Цвет фигурки из STL и поправка к вписыванию (docs/plan/done/character-models.md).
 function ModelFitControls({ model, onChange }: ModelFitControlsProps) {
   const { fit } = model;
   const setFit = (next: Partial<CharacterModelFit>) =>

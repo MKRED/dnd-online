@@ -1,4 +1,4 @@
-// 3D-модели существ на сцене (docs/plan/character-models.md). Грузит three — поэтому
+// 3D-модели существ на сцене (docs/plan/done/character-models.md). Грузит three — поэтому
 // не реэкспортируется из features/maps: подключать только из ленивых модулей сцены.
 export { default as ModelFigure } from './ModelFigure';
 export { modelTop, placedHeight, placeModel } from './modelFit';

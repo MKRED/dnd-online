@@ -15,6 +15,7 @@ import {
   HAZARD_TRIGGER,
   HAZARDS,
   hazardLabel,
+  LOOK_ONLY_MATERIALS,
   MATERIALS,
   type MaterialName,
 } from 'shared';
@@ -23,9 +24,14 @@ import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import { colorAfterLookChange } from './blockForm';
 import BlockTexturesField from './BlockTexturesField';
 
-const LOOK_OPTIONS = (Object.keys(MATERIALS) as MaterialName[]).map(
-  (value) => ({ value, label: MATERIALS[value].label }),
-);
+// Однотонная основа — первой: с неё удобно начинать блок своего цвета или свою
+// текстуру с чистого листа (docs/plan/blocks.md, «Однотонная основа»).
+const LOOK_OPTIONS = [
+  ...LOOK_ONLY_MATERIALS,
+  ...(Object.keys(MATERIALS) as MaterialName[]).filter(
+    (value) => !LOOK_ONLY_MATERIALS.includes(value),
+  ),
+].map((value) => ({ value, label: MATERIALS[value].label }));
 
 const HAZARD_OPTIONS = [
   { value: 'none', label: 'Нет' },

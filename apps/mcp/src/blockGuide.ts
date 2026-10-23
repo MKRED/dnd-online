@@ -2,6 +2,7 @@ import {
   HAZARD_TRIGGER,
   hazardLabel,
   MATERIALS,
+  PLACEABLE_MATERIALS,
   RESIZE_SIDES,
   SHAPE_LABELS,
   SHAPE_NAMES,
@@ -12,7 +13,8 @@ import { buildObjectGuide } from './objectGuide.js';
 // Справка для модели: как устроены координаты, какие есть блоки и операции.
 // Собирается из shared, чтобы не расходиться с тем, что реально принимает сервер.
 export function buildBlockGuide(): string {
-  const materials = Object.entries(MATERIALS).map(([name, m]) => {
+  const materials = PLACEABLE_MATERIALS.map((name) => {
+    const m = MATERIALS[name];
     const traits = [
       m.opaque ? 'непрозрачный' : 'прозрачный',
       m.durability

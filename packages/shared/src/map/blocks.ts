@@ -1,4 +1,5 @@
-import { MATERIALS, type MaterialName } from './materials.js';
+import { MATERIALS, PLACEABLE_MATERIALS } from './materials.js';
+import type { MaterialName } from './materials.js';
 import { SHAPE_LABELS, SHAPE_NAMES, type ShapeName } from './shapes.js';
 
 export interface BlockDefinition {
@@ -12,7 +13,8 @@ export interface BlockDefinition {
 // Каталог — все сочетания; позже сюда добавятся блоки из билдера.
 function buildCatalog(): Map<string, BlockDefinition> {
   const catalog = new Map<string, BlockDefinition>();
-  for (const material of Object.keys(MATERIALS) as MaterialName[]) {
+  // Основы только для групп (однотонная) базовыми блоками не становятся.
+  for (const material of PLACEABLE_MATERIALS) {
     for (const shape of SHAPE_NAMES) {
       const name = shape === 'cube' ? material : `${material}_${shape}`;
       const label =

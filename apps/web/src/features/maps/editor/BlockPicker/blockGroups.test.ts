@@ -1,11 +1,12 @@
-import { MATERIALS } from 'shared';
+import { PLACEABLE_MATERIALS } from 'shared';
 import { describe, expect, it } from 'vitest';
 import { blocksOf, materialGroups, searchBlocks } from './blockGroups';
 
 describe('materialGroups', () => {
-  it('каждый материал — ровно в одной группе', () => {
+  it('каждый материал карты — ровно в одной группе, однотонной основы нет', () => {
     const listed = materialGroups().flatMap((group) => group.materials);
-    expect([...listed].sort()).toEqual(Object.keys(MATERIALS).sort());
+    expect([...listed].sort()).toEqual([...PLACEABLE_MATERIALS].sort());
+    expect(listed).not.toContain('plain');
   });
 });
 
@@ -27,7 +28,7 @@ describe('searchBlocks', () => {
   });
 
   it('одно слово находит форму у всех материалов', () => {
-    expect(names('ступени')).toHaveLength(Object.keys(MATERIALS).length);
+    expect(names('ступени')).toHaveLength(PLACEABLE_MATERIALS.length);
   });
 
   it('ё и е — одно и то же, регистр не важен', () => {

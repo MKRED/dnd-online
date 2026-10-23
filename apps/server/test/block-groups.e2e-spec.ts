@@ -112,6 +112,27 @@ describeCatalog(
         });
       });
 
+      it('однотонная основа годится группе, но не карте', async () => {
+        const { author, url, create } = get();
+        const { id } = await create({ look: 'plain', color: '#3366cc' });
+        const card = await author.get(url(id)).expect(200);
+        expect(card.body).toMatchObject({ look: 'plain', color: '#3366cc' });
+        const mapId = idOf(
+          await author
+            .post('/api/maps')
+            .send({ name: 'Однотонная' })
+            .expect(201),
+        );
+        await author
+          .post(`/api/maps/${mapId}/ops`)
+          .send({ ops: [{ op: 'setBlock', at: [0, 0, 0], block: 'plain' }] })
+          .expect(400);
+        await author
+          .post(`/api/maps/${mapId}/ops`)
+          .send({ ops: [{ op: 'setBlock', at: [0, 0, 0], block: id }] })
+          .expect(200);
+      });
+
       it('без полей или с неверными — 400', async () => {
         const { author, url, body } = get();
         for (const over of [

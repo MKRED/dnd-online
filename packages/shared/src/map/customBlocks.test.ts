@@ -152,3 +152,18 @@ describe('свой вид формы', () => {
     }
   });
 });
+
+describe('однотонная основа', () => {
+  it('базовым блоком на карту не ставится, а группа на ней — ставится', () => {
+    expect(isKnownBlockName('plain')).toBe(false);
+    expect(isKnownBlockName('plain_stairs')).toBe(false);
+    const map = mapWith([{ ...embers, look: 'plain', color: '#3366cc' }]);
+    expect(() =>
+      applyOp(map, { op: 'setBlock', at: [0, 0, 0], block: 'plain' }),
+    ).toThrow(MapOpError);
+    applyOp(map, { op: 'setBlock', at: [0, 0, 0], block: GROUP_ID });
+    const block = blockInfo(map, readCell(map.store, [0, 0, 0]));
+    expect(block?.material).toBe('plain');
+    expect(block?.traits.color).toBe('#3366cc');
+  });
+});

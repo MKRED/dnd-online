@@ -1,6 +1,6 @@
 import {
   BLOCK_CATALOG,
-  MATERIALS,
+  PLACEABLE_MATERIALS,
   type BlockDefinition,
   type MaterialName,
 } from 'shared';
@@ -48,9 +48,7 @@ const GROUPS: readonly { label: string; materials: readonly MaterialName[] }[] =
 
 export function materialGroups(): MaterialGroup[] {
   const listed = new Set(GROUPS.flatMap((group) => group.materials));
-  const rest = (Object.keys(MATERIALS) as MaterialName[]).filter(
-    (material) => !listed.has(material),
-  );
+  const rest = PLACEABLE_MATERIALS.filter((material) => !listed.has(material));
   const groups = GROUPS.map((group) => ({
     label: group.label,
     materials: [...group.materials],

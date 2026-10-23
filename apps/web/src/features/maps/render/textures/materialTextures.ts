@@ -24,6 +24,7 @@ import {
   waterTile,
 } from './natureTextures';
 import { hexToRgb, matchMean, type Rgb, type Tile } from './pixels';
+import { plainTile } from './plainTexture';
 import {
   cobbleTile,
   darkstoneTile,
@@ -69,6 +70,7 @@ const ONE_TILE: Record<
   rubble: rubbleTile,
   bones: bonesTile,
   leaves: leavesTile,
+  plain: plainTile,
 };
 
 // Текстуры базовых блоков рисует код, а не файлы (docs/plan/blocks.md, этап 1): атлас

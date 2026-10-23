@@ -259,6 +259,29 @@ export const MATERIALS = {
     climbable: false,
     hazard: null,
   },
+  // Однотонный — только основа своих групп блоков (docs/plan/blocks.md, «Однотонная
+  // основа»): ровная светлая плитка, которую основной цвет группы перекрашивает в
+  // блок любого цвета, и чистый лист для своих текстур. Базовым блоком на карту не
+  // ставится (PLACEABLE_MATERIALS), поэтому свойства для правил у него ни на что не
+  // влияют: их задаёт группа.
+  plain: {
+    label: 'Однотонный',
+    color: '#e6e6e6',
+    opaque: true,
+    durability: null,
+    flammable: false,
+    movementCost: 1,
+    climbable: false,
+    hazard: null,
+  },
 } as const satisfies Record<string, BlockMaterial>;
 
 export type MaterialName = keyof typeof MATERIALS;
+
+// Материалы, которые есть только как основа своих групп, а не как базовые блоки карты.
+export const LOOK_ONLY_MATERIALS: readonly MaterialName[] = ['plain'];
+
+// Базовые блоки карты: всё, кроме основ только для групп.
+export const PLACEABLE_MATERIALS = (
+  Object.keys(MATERIALS) as MaterialName[]
+).filter((material) => !LOOK_ONLY_MATERIALS.includes(material));

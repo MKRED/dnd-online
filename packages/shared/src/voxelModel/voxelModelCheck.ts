@@ -1,3 +1,4 @@
+import { isModelMesh } from './modelMesh.js';
 import { base64ToBytes, decodeVoxels } from './voxelCodec.js';
 import {
   isModelCells,
@@ -59,5 +60,6 @@ export function readVoxelModelFields(
     voxels: extra.voxels,
     cells: extra.cells,
   } as VoxelModelFields;
-  return checkVoxelModel(model) === null ? model : emptyVoxelModel();
+  const fields = checkVoxelModel(model) === null ? model : emptyVoxelModel();
+  return isModelMesh(extra.mesh) ? { ...fields, mesh: extra.mesh } : fields;
 }

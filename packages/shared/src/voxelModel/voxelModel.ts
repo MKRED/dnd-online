@@ -1,4 +1,5 @@
 import type { Vec3 } from '../map/coords.js';
+import type { ModelMesh } from './modelMesh.js';
 
 // Модель из вокселей — справочник «Модели» (docs/plan/blocks.md, «Модели и двери»,
 // этап 8а). Только вид и свойства клеток для пути; что это в игре (обстановка, дверь,
@@ -42,6 +43,9 @@ export interface VoxelModelFields {
   voxels: string;
   // Свои свойства клеток: ключ «x,y,z» в клетках модели.
   cells: Record<string, ModelCellKind>;
+  // Загруженный файл (этап 9): есть — модель рисуется им, а воксели посчитаны из него для
+  // правил. Меняют его только маршруты файла, не тело записи.
+  mesh?: ModelMesh;
 }
 
 // Воксели модели по каждой оси.

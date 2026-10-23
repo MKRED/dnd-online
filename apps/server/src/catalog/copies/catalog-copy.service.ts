@@ -82,6 +82,14 @@ export abstract class CatalogCopyService<T> {
     copy: EntryRow | null,
   ) => Promise<Record<string, unknown>>;
 
+  // После записи копии, в той же транзакции: то, что лежит не в строке записи, — у модели
+  // байты загруженного файла (этап 9).
+  protected copyFiles?: (
+    tx: DbTransaction,
+    sourceId: string,
+    copyId: string,
+  ) => Promise<void>;
+
   // Оригинал, видимый пользователю (свой или опубликованный), с ником автора.
   private async visibleSource(tx: DbTransaction, userId: string, id: string) {
     const { table, access } = this.config;
@@ -119,6 +127,7 @@ export abstract class CatalogCopyService<T> {
             ),
           })
           .returning({ id: table.id });
+        await this.copyFiles?.(tx, entry.id, inserted.id);
         return inserted.id;
       });
       this.logger.info(
@@ -167,6 +176,7 @@ export abstract class CatalogCopyService<T> {
             ),
           )
           .where(eq(table.id, id));
+        await this.copyFiles?.(tx, entry.id, id);
       });
       this.logger.info(
         { durationMs: Date.now() - t0, catalog, userId, entryId: id },

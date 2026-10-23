@@ -3,11 +3,12 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { CatalogCopyService } from '../catalog/copies/catalog-copy.service.js';
 import { DatabaseService } from '../database/database.service.js';
 import { voxelModels } from '../database/schema/index.js';
+import { copyModelMesh } from './mesh/model-mesh-files.js';
 import { VOXEL_MODEL_ACCESS } from './voxel-models.config.js';
 import { VoxelModelsService } from './voxel-models.service.js';
 
 // Копирование чужих моделей и «Подтянуть обновления» — как у групп блоков
-// (docs/plan/blocks.md, этапы 6б и 8а).
+// (docs/plan/blocks.md, этапы 6б и 8а), с загруженным файлом (этап 9).
 @Injectable()
 export class VoxelModelCopyService extends CatalogCopyService<
   Awaited<ReturnType<VoxelModelsService['findOne']>>
@@ -31,4 +32,7 @@ export class VoxelModelCopyService extends CatalogCopyService<
       (userId, id) => models.findOne(userId, id),
     );
   }
+
+  // Загруженный файл модели — вместе с копией (этап 9).
+  protected override copyFiles = copyModelMesh;
 }

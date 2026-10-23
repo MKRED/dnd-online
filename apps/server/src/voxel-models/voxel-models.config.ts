@@ -47,8 +47,9 @@ export const VOXEL_MODELS_CONFIG: CatalogEntriesConfig<
       origin: origin && { ...origin, available: false, updated: false },
     };
   },
-  // Правка копии в форме не теряет её ссылку на оригинал.
-  keptExtra: ['origin'],
+  // Правка копии в форме не теряет её ссылку на оригинал, а правка модели с файлом — сам
+  // файл: его меняют свои маршруты (этап 9).
+  keptExtra: ['origin', 'mesh'],
   toStored: (dto) => ({
     category: STORED_CATEGORY,
     details: {},

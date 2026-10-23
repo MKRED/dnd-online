@@ -16,6 +16,7 @@ import {
   type DbTransaction,
 } from '../database/database.service.js';
 import { furniture, users, voxelModels } from '../database/schema/index.js';
+import { copyModelMesh } from '../voxel-models/mesh/model-mesh-files.js';
 import { FURNITURE_ACCESS } from './furniture.config.js';
 import { FurnitureService } from './furniture.service.js';
 
@@ -127,6 +128,7 @@ export class FurnitureCopyService extends CatalogCopyService<
         .update(voxelModels)
         .set(contentOf(model, origin))
         .where(eq(voxelModels.id, previousId));
+      await copyModelMesh(tx, model.id, previousId);
       this.log.info(
         { userId, modelId: previousId },
         'Furniture model pulled from origin',
@@ -144,6 +146,7 @@ export class FurnitureCopyService extends CatalogCopyService<
         ...contentOf(model, origin),
       })
       .returning({ id: voxelModels.id });
+    await copyModelMesh(tx, model.id, inserted.id);
     this.log.info(
       { userId, sourceModelId: model.id, modelId: inserted.id },
       'Furniture model copied',

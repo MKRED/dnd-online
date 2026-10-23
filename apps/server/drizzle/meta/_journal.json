@@ -393,6 +393,13 @@
       "when": 1792739699375,
       "tag": "0055_furniture",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1792754209035,
+      "tag": "0056_voxel_model_meshes",
+      "breakpoints": true
     }
   ]
 }

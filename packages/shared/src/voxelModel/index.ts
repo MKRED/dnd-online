@@ -3,3 +3,5 @@ export * from './voxelModel.js';
 export * from './voxelModelCheck.js';
 export * from './voxelModels.js';
 export * from './furniture.js';
+export * from './modelMesh.js';
+export * from './meshVoxels.js';

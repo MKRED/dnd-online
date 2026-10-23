@@ -26,12 +26,18 @@ export function compressInWorker(
           if (message.type === 'done') resolve(message.result);
           else reject(new ModelCompressError(message.message));
         };
+        // Сюда попадает всё, что поток не поймал сам: не загрузился, браузер не пустил
+        // WebAssembly, кончилась память. Причину отсюда не узнать — она в консоли.
         worker.onerror = (event) => {
           finish();
-          console.error('Model compression worker crashed', event);
+          console.error(
+            'Model compression worker crashed',
+            event.message,
+            event,
+          );
           reject(
             new ModelCompressError(
-              'Не удалось сжать модель: не хватило памяти браузера или файл повреждён.',
+              'Браузер не смог сжать модель. Обновите страницу и попробуйте ещё раз; если не выйдет — упростите модель в Blender до 10 МБ.',
             ),
           );
         };

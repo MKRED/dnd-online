@@ -17,10 +17,14 @@ export function configureApp(app: NestExpressApplication): void {
   // сервера по http браузер иначе пытался бы грузить ассеты по https.
   // blob: в img-src — для картинок персонажей: их байты приходят через fetch (тег <img>
   // не умеет обновлять истёкшую сессию) и показываются как object URL.
+  // 'wasm-unsafe-eval' в script-src — для сжатия моделей в браузере: meshoptimizer
+  // работает на WebAssembly, а без этого источника браузер не компилирует его модуль.
+  // Обычный eval он не разрешает (docs/plan/done/character-models.md, этап 5).
   app.use(
     helmet({
       contentSecurityPolicy: {
         directives: {
+          scriptSrc: ["'self'", "'wasm-unsafe-eval'"],
           imgSrc: ["'self'", 'data:', 'blob:'],
           upgradeInsecureRequests:
             process.env.NODE_ENV === 'production' ? [] : null,

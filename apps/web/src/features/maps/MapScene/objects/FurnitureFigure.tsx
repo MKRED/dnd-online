@@ -2,7 +2,9 @@ import { useMemo } from 'react';
 import { MODEL_CELL_VOXELS } from 'shared';
 import type { MeshChange } from '../../../voxelModels/voxelGeometry';
 import { gridFromFields } from '../../../voxelModels/voxelGrid';
+import MeshModel from '../../../voxelModels/mesh/MeshModel';
 import VoxelMeshes from '../../../voxelModels/VoxelMeshes';
+import { useModel } from '../../models';
 import FrameBox from '../FrameBox';
 import {
   facingAngle,
@@ -16,7 +18,8 @@ type FurnitureLook = Extract<SceneObjectLook, { kind: 'furniture' }>;
 // те же сетки по клеткам модели, что в редакторе, в масштабе 16 вокселей на клетку.
 // Модель стоит серединой основания в середине своего места и поворачивается вокруг
 // неё: на 90° её ширина и глубина меняются местами, как место в правилах (objectBox).
-// Без модели (удалили её или саму обстановку) — серая рамка места.
+// Без модели (удалили её или саму обстановку) — серая рамка места. Модель с загруженным
+// файлом (этап 9) рисуется файлом.
 function FurnitureFigure({
   object,
   look,
@@ -34,6 +37,8 @@ function FurnitureFigure({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [grid],
   );
+  // Файл грузится по своему адресу; пока грузится или не прочитался — воксели.
+  const mesh = useModel(look.mesh?.path ?? null, look.mesh?.format ?? null);
   const [x, y, z] = object.base;
   if (!grid) {
     const [ex, ey, ez] = look.extent;
@@ -49,9 +54,22 @@ function FurnitureFigure({
   const [sx, , sz] = grid.size;
   return (
     <group position={object.base} rotation={[0, facingAngle(look.facing), 0]}>
-      <group position={[-sx / 2, 0, -sz / 2]} scale={1 / MODEL_CELL_VOXELS}>
-        <VoxelMeshes grid={grid} change={change} sliceTop={grid.dims[1]} />
-      </group>
+      {mesh?.status === 'ready' && look.mesh && look.model ? (
+        // Загруженный файл (этап 9) — вписанный в клетки так же, как его воксели.
+        <group position={[-sx / 2, 0, -sz / 2]}>
+          <MeshModel
+            model={mesh.model}
+            fit={look.mesh.fit}
+            size={look.model.size}
+            color={look.mesh.color}
+            voxelUnit={1 / MODEL_CELL_VOXELS}
+          />
+        </group>
+      ) : (
+        <group position={[-sx / 2, 0, -sz / 2]} scale={1 / MODEL_CELL_VOXELS}>
+          <VoxelMeshes grid={grid} change={change} sliceTop={grid.dims[1]} />
+        </group>
+      )}
     </group>
   );
 }

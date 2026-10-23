@@ -120,6 +120,13 @@ async function createDoor(agent: request.Agent) {
   );
 }
 
+// Наименьший двоичный STL: заголовок, число треугольников и по 50 байт на каждый.
+function stl(triangles: number): Buffer {
+  const bytes = Buffer.alloc(84 + triangles * 50);
+  bytes.writeUInt32LE(triangles, 80);
+  return bytes;
+}
+
 const placeFurniture = (
   at: number[],
   furnitureId: string,
@@ -250,6 +257,60 @@ describe('обстановка на карте (e2e)', () => {
       .post(`/api/games/${gameId}/scenes/${sceneId}/ops`)
       .send({ ops: [placeFurniture([5, 1, 5], table)] })
       .expect(400);
+  });
+
+  it('файл модели на сцене: игроку — у видимой обстановки, мастеру — и у скрытой', async () => {
+    const { master, player, mapId, gameId } = await createSceneGame(
+      user,
+      png,
+      'fum9',
+    );
+    const m = master.agent;
+    const withMesh = async (name: string) => {
+      const furnitureId = await createFurniture(m, false, crateModel(), name);
+      const record = (await m.get(`/api/furniture/${furnitureId}`).expect(200))
+        .body as { modelId: string };
+      await m
+        .put(`/api/voxel-models/${record.modelId}/mesh`)
+        .attach('file', stl(2), 'a.stl')
+        .expect(200);
+      return { furnitureId, modelId: record.modelId };
+    };
+    const shown = await withMesh('Статуя');
+    const hidden = await withMesh('Тайник');
+    await m
+      .post(`/api/maps/${mapId}/ops`)
+      .send({
+        ops: [
+          placeFurniture([3, 1, 3], shown.furnitureId),
+          placeFurniture([5, 1, 5], hidden.furnitureId, { hidden: true }),
+        ],
+      })
+      .expect(200);
+    await m.post(`/api/games/${gameId}/scenes`).send({ mapId }).expect(201);
+    const mesh = (agent: request.Agent, modelId: string) =>
+      agent.get(`/api/games/${gameId}/scene/models/mesh/${modelId}?v=1`);
+
+    // Закрытая сцена игроку ничего не отдаёт, мастеру — да.
+    await mesh(player.agent, shown.modelId).expect(404);
+    await mesh(m, hidden.modelId).expect(200);
+    await m
+      .put(`/api/games/${gameId}/scenes/open`)
+      .send({ open: true })
+      .expect(200);
+    const view = (
+      await player.agent.get(`/api/games/${gameId}/scene`).expect(200)
+    ).body as GameSceneView;
+    expect(view.refs.furniture[shown.furnitureId]).toMatchObject({
+      model: { id: shown.modelId, mesh: { format: 'stl', version: 1 } },
+    });
+    const file = await mesh(player.agent, shown.modelId)
+      .responseType('blob')
+      .expect(200);
+    expect(file.headers['content-type']).toBe('model/stl');
+    await mesh(player.agent, hidden.modelId).expect(404);
+    const outsider = await t.loginAs('fum9_out');
+    await mesh(outsider, shown.modelId).expect(403);
   });
 
   it('заливка обходит клетки стола, блок в его клетку — 400', async () => {

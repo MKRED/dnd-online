@@ -11,9 +11,10 @@ import type {
   CharacterModelFormat,
   GameSceneFogView,
   GameSceneView,
+  ModelMeshFormat,
 } from 'shared';
 import { DatabaseService } from '../../database/database.service.js';
-import { games } from '../../database/schema/index.js';
+import { games, voxelModelMeshes } from '../../database/schema/index.js';
 import {
   MASTER_ONLY_FOG,
   NO_ACTIVE_SCENE,
@@ -26,6 +27,7 @@ import { findGameAccess } from '../game-read.js';
 import { readLibraryImage, readLibraryModel } from '../library/index.js';
 import { fogView, playerFog } from '../fog/fog-view.js';
 import { sceneShowsEntry, type SceneImageKind } from './scene-image-access.js';
+import { sceneShowsMesh } from './scene-mesh-access.js';
 import { findActiveScene, readSceneView, sceneStatus } from './scene-read.js';
 
 // Страница сцены (docs/plan/done/game.md, этап 5): активная сцена мастеру и участникам игры,
@@ -198,6 +200,51 @@ export class GameSceneViewService {
       this.logger.error(
         { err, userId, gameId, sourceId },
         'Game scene model lookup failed',
+      );
+      throw err;
+    }
+  }
+
+  // Загруженный файл модели обстановки на сцене (docs/plan/blocks.md, этап 9): мастеру —
+  // файл модели с его сцены; игроку — если открытая активная сцена показывает обстановку
+  // с этой моделью (sceneShowsMesh).
+  async meshFile(
+    userId: string,
+    gameId: string,
+    modelId: string,
+  ): Promise<{ data: Buffer; format: ModelMeshFormat }> {
+    const t0 = Date.now();
+    try {
+      const { db } = this.databaseService;
+      const master = await this.assertParticipant(userId, gameId);
+      const [{ sceneOpen }] = await db
+        .select({ sceneOpen: games.sceneOpen })
+        .from(games)
+        .where(eq(games.id, gameId));
+      const scene = await findActiveScene(db, gameId);
+      const shown =
+        scene !== undefined &&
+        (master || sceneOpen) &&
+        (await sceneShowsMesh(db, scene.id, modelId, master));
+      if (!shown) throw new NotFoundException(SCENE_NO_MODEL);
+      const [row] = await db
+        .select({
+          data: voxelModelMeshes.data,
+          format: voxelModelMeshes.format,
+        })
+        .from(voxelModelMeshes)
+        .where(eq(voxelModelMeshes.modelId, modelId));
+      this.logger.debug(
+        { durationMs: Date.now() - t0, userId, gameId, modelId, found: !!row },
+        'Game scene mesh lookup',
+      );
+      if (!row) throw new NotFoundException(SCENE_NO_MODEL);
+      return row;
+    } catch (err: unknown) {
+      if (err instanceof HttpException) throw err;
+      this.logger.error(
+        { err, userId, gameId, modelId },
+        'Game scene mesh lookup failed',
       );
       throw err;
     }

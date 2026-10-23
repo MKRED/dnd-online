@@ -19,6 +19,7 @@ const CUP = '00000000-0000-4000-8000-000000000003';
 const OGRE = '00000000-0000-4000-8000-000000000001';
 const DOOR = '00000000-0000-4000-8000-000000000004';
 const doorModel = {
+  id: 'door-model',
   size: [1, 2, 1] as const,
   palette: [],
   voxels: '',

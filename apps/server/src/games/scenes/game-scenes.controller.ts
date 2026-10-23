@@ -150,4 +150,25 @@ export class GameScenesController {
       length: data.length,
     });
   }
+
+  // Загруженный файл модели обстановки на сцене (docs/plan/blocks.md, этап 9): версия в
+  // адресе, кеш навсегда только у удачного ответа.
+  @Get('scene/models/mesh/:modelId')
+  async mesh(
+    @Req() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('modelId', ParseUUIDPipe) modelId: string,
+  ) {
+    const { data, format } = await this.viewService.meshFile(
+      req.user.sub,
+      id,
+      modelId,
+    );
+    res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+    return new StreamableFile(data, {
+      type: MODEL_CONTENT_TYPES[format],
+      length: data.length,
+    });
+  }
 }

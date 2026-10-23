@@ -12,6 +12,8 @@ import {
   type FigureModel,
   type MapObject,
   type MapObjectRefsView,
+  type ModelMeshFit,
+  type ModelMeshFormat,
   type Point3,
   type Vec3,
   type VoxelModelFields,
@@ -52,6 +54,13 @@ export type SceneObjectLook =
       facing: Facing;
       model: VoxelModelFields | null;
       extent: Vec3;
+      // Загруженный файл модели (этап 9): есть — рисуется он, пока грузится — воксели.
+      mesh: {
+        path: string;
+        format: ModelMeshFormat;
+        fit: ModelMeshFit;
+        color: string | null;
+      } | null;
     };
 
 export interface SceneObject {
@@ -162,6 +171,14 @@ function lookOf(
         facing: object.facing,
         model,
         extent: object.facing % 180 === 0 ? [x, y, z] : [z, y, x],
+        mesh: model?.mesh
+          ? {
+              path: images.furnitureMesh(model.id, model.mesh.version),
+              format: model.mesh.format,
+              fit: model.mesh.fit,
+              color: model.mesh.color,
+            }
+          : null,
       };
     }
     case 'item': {

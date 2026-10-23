@@ -44,14 +44,17 @@ export type NpcRefView =
 // Обстановка (docs/plan/blocks.md, этап 8в) — с моделью целиком: её рисуют на карте.
 // Скрытой не бывает: на карту ставится только своя, а игроку на сцене она нужна вся,
 // как блоки мастера. model null — модель удалили, обстановка без вида.
+// Модель с id: по нему берут байты загруженного файла (этап 9).
+export type FurnitureViewModel = VoxelModelFields & { id: string };
+
 // positions — положения двери с их моделями (этап 8г), пусто — без положений.
 export type FurnitureRefView =
   | {
       missing: null;
       name: string;
       mount: FurnitureMount;
-      model: VoxelModelFields | null;
-      positions: { name: string; model: VoxelModelFields | null }[];
+      model: FurnitureViewModel | null;
+      positions: { name: string; model: FurnitureViewModel | null }[];
     }
   | { missing: 'deleted' };
 
@@ -60,7 +63,7 @@ export type FurnitureRefView =
 export function furnitureViewModel(
   view: FurnitureRefView | undefined,
   position: number | undefined,
-): VoxelModelFields | null {
+): FurnitureViewModel | null {
   if (view?.missing !== null) return null;
   return (view.positions[position ?? 0] ?? view).model;
 }

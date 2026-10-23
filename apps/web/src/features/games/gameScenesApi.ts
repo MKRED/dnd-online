@@ -114,5 +114,7 @@ export function sceneObjectImages(gameId: string): ObjectImagePaths {
     npc: (id, image) => path('npc', id, image.thumbVersion),
     npcModel: (id, version) =>
       `/games/${gameId}/scene/models/npc/${id}?v=${version}`,
+    furnitureMesh: (id, version) =>
+      `/games/${gameId}/scene/models/mesh/${id}?v=${version}`,
   };
 }

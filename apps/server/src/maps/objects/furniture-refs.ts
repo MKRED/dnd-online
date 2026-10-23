@@ -51,7 +51,10 @@ export async function loadFurnitureRefs(
         .where(inArray(voxelModels.id, [...new Set(modelIds)]))
     : [];
   const modelById = new Map(
-    models.map((row) => [row.id, readVoxelModelFields(row.extra)]),
+    models.map((row) => [
+      row.id,
+      { id: row.id, ...readVoxelModelFields(row.extra) },
+    ]),
   );
   const look = (model: VoxelModelFields | null) => ({
     size: model?.size ?? ([1, 1, 1] as Vec3),

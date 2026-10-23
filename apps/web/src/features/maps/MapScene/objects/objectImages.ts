@@ -3,6 +3,7 @@ import { characterImagePath } from '../../../characters/characterImagesApi';
 import { characterModelPath } from '../../../characters/CharacterModel/characterModelApi';
 import { itemImagePath } from '../../../items';
 import { monstersApi } from '../../../monsters/monstersApi';
+import { storedMeshPath } from '../../../voxelModels/mesh/meshSource';
 
 // Откуда брать миниатюры объектов. Редактор карты берёт их из справочников и галереи
 // персонажа; сцена игры — из копий в библиотеке игры (docs/plan/done/game.md, этап 5).
@@ -12,6 +13,8 @@ export interface ObjectImagePaths {
   npc: (characterId: string, image: CharacterMainImage) => string;
   // Байты 3D-модели НПС (docs/plan/done/character-models.md, этап 4).
   npcModel: (characterId: string, version: number) => string;
+  // Байты загруженного файла модели обстановки (docs/plan/blocks.md, этап 9).
+  furnitureMesh: (modelId: string, version: number) => string;
 }
 
 export const CATALOG_OBJECT_IMAGES: ObjectImagePaths = {
@@ -20,4 +23,5 @@ export const CATALOG_OBJECT_IMAGES: ObjectImagePaths = {
   npc: (characterId, image) =>
     characterImagePath(characterId, image.id, 'thumb', image.thumbVersion),
   npcModel: characterModelPath,
+  furnitureMesh: storedMeshPath,
 };

@@ -210,6 +210,7 @@ describe('layoutObjects', () => {
       npc: (id: string, image: { thumbVersion: number }) =>
         `lib/npc/${id}/${image.thumbVersion}`,
       npcModel: (id: string, v: number) => `lib/npc-model/${id}/${v}`,
+      furnitureMesh: (id: string, v: number) => `lib/mesh/${id}/${v}`,
     };
     const objects = layoutObjects(
       mapWith([
@@ -298,7 +299,7 @@ describe('обстановка на сцене', () => {
         missing: null,
         name: 'Стол',
         mount: 'floor',
-        model: { size: [3, 1, 1], palette: [], voxels: '', cells: {} },
+        model: { id: 'm', size: [3, 1, 1], palette: [], voxels: '', cells: {} },
         positions: [],
       },
       // Ворота: закрытые 1×2×1, открытые — 2×2×1 (этап 8г).
@@ -306,15 +307,27 @@ describe('обстановка на сцене', () => {
         missing: null,
         name: 'Ворота',
         mount: 'doorway',
-        model: { size: [1, 2, 1], palette: [], voxels: '', cells: {} },
+        model: { id: 'm', size: [1, 2, 1], palette: [], voxels: '', cells: {} },
         positions: [
           {
             name: 'Закрыты',
-            model: { size: [1, 2, 1], palette: [], voxels: '', cells: {} },
+            model: {
+              id: 'm',
+              size: [1, 2, 1],
+              palette: [],
+              voxels: '',
+              cells: {},
+            },
           },
           {
             name: 'Открыты',
-            model: { size: [2, 2, 1], palette: [], voxels: '', cells: {} },
+            model: {
+              id: 'm',
+              size: [2, 2, 1],
+              palette: [],
+              voxels: '',
+              cells: {},
+            },
           },
         ],
       },
@@ -339,6 +352,41 @@ describe('обстановка на сцене', () => {
     expect(table.look).toMatchObject({ kind: 'furniture', extent: [1, 1, 3] });
     expect(table.base).toEqual([0.5, 1, 1.5]);
     expect(table.top).toBe(2);
+  });
+
+  it('модель с загруженным файлом — путь к файлу по версии', () => {
+    const STATUE = '00000000-0000-4000-8000-0000000000a3';
+    const refs: MapObjectRefsView = {
+      ...furnitureRefs,
+      furniture: {
+        [STATUE]: {
+          missing: null,
+          name: 'Статуя',
+          mount: 'floor',
+          model: {
+            id: 'statue-model',
+            size: [1, 2, 1],
+            palette: [],
+            voxels: '',
+            cells: {},
+            mesh: {
+              format: 'stl',
+              version: 3,
+              color: '#9a948a',
+              fit: { up: 'z', turn: 0 },
+            },
+          },
+          positions: [],
+        },
+      },
+    };
+    const [statue] = layoutObjects(mapWith([furniture(1, STATUE, 0)]), refs);
+    expect(statue.look).toMatchObject({
+      mesh: {
+        path: '/voxel-models/statue-model/mesh/file?v=3',
+        format: 'stl',
+      },
+    });
   });
 
   it('ворота рисуются моделью текущего положения', () => {

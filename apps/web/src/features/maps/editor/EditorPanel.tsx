@@ -59,10 +59,15 @@ function EditorPanel({
         tool={tool}
         hint={
           narrow
-            ? firstClickHint(tool, eraseMode, objectChoice !== null, true)
+            ? editor.anchor
+              ? 'Касание — второй угол'
+              : firstClickHint(tool, eraseMode, objectChoice !== null, true)
             : undefined
         }
       />
+
+      {/* Начатая область — сразу под шапкой: на телефоне иначе её не видно за режимами. */}
+      <AnchorCard editor={editor} state={state} hover={hover} />
 
       {tool === 'view' && <CursorBlockCard state={state} hover={hover} />}
 
@@ -129,8 +134,6 @@ function EditorPanel({
           {editor.notice}
         </Text>
       )}
-
-      <AnchorCard editor={editor} state={state} hover={hover} />
     </Stack>
   );
 }

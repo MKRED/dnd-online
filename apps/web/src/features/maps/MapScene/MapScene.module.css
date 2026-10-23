@@ -35,11 +35,11 @@
   left: calc(var(--mantine-spacing-xs) * 2 + 2.75rem);
 }
 
-/* На телефоне полоса — строкой внизу, подпись поднимается над ней. */
+/* На телефоне строки координат нет: над полосой инструментов она занимала место сцены, а
+   размер области и так в панели (docs/plan/scene-page.md, «Телефон»). */
 @media (max-width: 48em) {
   .readout {
-    left: var(--mantine-spacing-xs);
-    bottom: calc(var(--mantine-spacing-xs) * 2 + 2.75rem);
+    display: none;
   }
 }
 

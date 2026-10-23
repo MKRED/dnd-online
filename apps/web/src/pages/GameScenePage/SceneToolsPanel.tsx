@@ -39,6 +39,7 @@ function SceneToolsPanel({
       {editError && <Alert color="red">{editError}</Alert>}
       <EditorPanel
         editor={editor}
+        objectChoice={objects.settings.choice}
         objectsPanel={
           <ObjectsPanel
             tool={objects}

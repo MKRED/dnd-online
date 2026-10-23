@@ -30,11 +30,7 @@ const TABLE = {
 };
 
 const settings = (patch: Partial<PlaceSettings>): PlaceSettings => ({
-  kind: 'start',
-  creature: null,
-  item: null,
-  furniture: null,
-  look: 'chest',
+  choice: { kind: 'start' },
   facing: 90,
   hidden: false,
   ...patch,
@@ -45,7 +41,9 @@ const size = { width: 6, depth: 6 };
 describe('placeBody', () => {
   it('старт и контейнер — без выбора в каталоге, контейнер зовётся по виду', () => {
     expect(placeBody(settings({}))).toEqual({ kind: 'start', facing: 90 });
-    expect(placeBody(settings({ kind: 'container', look: 'barrel' }))).toEqual({
+    expect(
+      placeBody(settings({ choice: { kind: 'container', look: 'barrel' } })),
+    ).toEqual({
       kind: 'container',
       name: 'Бочка',
       look: 'barrel',
@@ -55,12 +53,16 @@ describe('placeBody', () => {
   });
 
   it('монстр или НПС из одного поиска; НПС — Средний', () => {
-    expect(placeBody(settings({ kind: 'creature', creature: OGRE }))).toEqual({
+    expect(
+      placeBody(settings({ choice: { kind: 'creature', entry: OGRE } })),
+    ).toEqual({
       kind: 'monster',
       monsterId: OGRE.id,
       facing: 90,
     });
-    expect(placeBody(settings({ kind: 'creature', creature: HERO }))).toEqual({
+    expect(
+      placeBody(settings({ choice: { kind: 'creature', entry: HERO } })),
+    ).toEqual({
       kind: 'npc',
       characterId: HERO.id,
       size: 'medium',
@@ -74,37 +76,41 @@ describe('placeBody', () => {
       facing: 90,
       hidden: true,
     });
-    expect(placeBody(settings({ kind: 'item', hidden: true }))).toBeNull();
+    expect(placeBody(settings({ choice: null, hidden: true }))).toBeNull();
   });
 
-  it('существо или предмет не выбраны — ставить нечего', () => {
-    expect(placeBody(settings({ kind: 'creature' }))).toBeNull();
-    expect(placeBody(settings({ kind: 'item' }))).toBeNull();
-    expect(placeBody(settings({ kind: 'furniture' }))).toBeNull();
+  it('ставится блок — объекта нет', () => {
+    expect(placeBody(settings({ choice: null }))).toBeNull();
+    expect(placeExtent(settings({ choice: null }))).toEqual([1, 1, 1]);
   });
 
   it('обстановка поворачивается на 90°: 45° округляется назад', () => {
     expect(
-      placeBody(settings({ kind: 'furniture', furniture: TABLE, facing: 135 })),
+      placeBody(
+        settings({ choice: { kind: 'furniture', entry: TABLE }, facing: 135 }),
+      ),
     ).toEqual({ kind: 'furniture', furnitureId: TABLE.id, facing: 90 });
   });
 });
 
 describe('место на карте', () => {
   it('место Большого — 2 клетки, курсор в его середине', () => {
-    expect(placeExtent(settings({ kind: 'creature', creature: OGRE }))).toEqual(
-      [2, 1, 2],
-    );
-    expect(placeExtent(settings({ kind: 'creature', creature: HERO }))).toEqual(
-      [1, 1, 1],
-    );
+    expect(
+      placeExtent(settings({ choice: { kind: 'creature', entry: OGRE } })),
+    ).toEqual([2, 1, 2]);
+    expect(
+      placeExtent(settings({ choice: { kind: 'creature', entry: HERO } })),
+    ).toEqual([1, 1, 1]);
     expect(objectCell([3, 1, 3], [2, 1, 2], size)).toEqual([3, 1, 3]);
     // Огромный (3): курсор в средней клетке.
     expect(objectCell([3, 1, 3], [3, 1, 3], size)).toEqual([2, 1, 2]);
   });
 
   it('стол 3×1×1: повёрнутый на 90° — вдоль глубины', () => {
-    const table = settings({ kind: 'furniture', furniture: TABLE, facing: 0 });
+    const table = settings({
+      choice: { kind: 'furniture', entry: TABLE },
+      facing: 0,
+    });
     expect(placeExtent(table)).toEqual([3, 1, 1]);
     expect(placeExtent({ ...table, facing: 270 })).toEqual([1, 1, 3]);
     expect(objectCell([3, 1, 3], [3, 1, 1], size)).toEqual([2, 1, 3]);

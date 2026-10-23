@@ -208,7 +208,7 @@ function GameScenePage() {
               editor={sceneEditor}
               walk={viewOnly ? null : (play.walk ?? cards.walk.scene)}
               objectTool={
-                tools && editor.tool === 'objects' ? objects.scene : null
+                tools && editor.tool === 'place' ? objects.scene : null
               }
               focusRef={focusRef}
               onReady={handleReady}

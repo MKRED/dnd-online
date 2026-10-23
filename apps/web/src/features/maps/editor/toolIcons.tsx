@@ -1,7 +1,6 @@
 import {
   IconBox,
   IconBucketDroplet,
-  IconChess,
   IconCubePlus,
   IconEraser,
   IconEye,
@@ -19,5 +18,4 @@ export const TOOL_ICONS: Record<EditorTool, Icon> = {
   hollow: IconBox,
   replace: IconReplace,
   walk: IconWalk,
-  objects: IconChess,
 };

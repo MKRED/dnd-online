@@ -14,7 +14,13 @@ import {
   type EditorTool,
   type SceneEditor,
 } from './editorTools';
-import { readRecentBlocks, saveRecentBlocks, withRecent } from './BlockPicker';
+import {
+  readRecentPlace,
+  saveRecentPlace,
+  withRecentPlace,
+  type ObjectChoice,
+  type RecentPlace,
+} from './PlacePicker/placeChoice';
 import { nextEraseMode, type EraseMode } from './eraseModes';
 import { blockSceneEditor, type Anchor } from './blockSceneEditor';
 import type { WalkTest } from '../walkTest';
@@ -28,8 +34,19 @@ interface MapEditorOptions {
   // Проверка хода: клики инструмента «Ход» уходят ей, а не в операции карты. Нет — нет
   // и инструмента (страница сцены игры).
   walk?: Pick<WalkTest, 'pick' | 'preview'>;
-  // Инструмент «Объекты»: клики по клеткам и клавиши R, Del, Esc при нём уходят ему.
-  objects: Pick<ObjectTool, 'pick' | 'extent' | 'rotate' | 'remove' | 'escape'>;
+  // Объекты инструмента «Поставить»: клики по клеткам, когда ставится объект, и клавиши
+  // R, Del, Esc при выделенном объекте уходят ему.
+  objects: Pick<
+    ObjectTool,
+    | 'pick'
+    | 'extent'
+    | 'rotate'
+    | 'remove'
+    | 'escape'
+    | 'choose'
+    | 'settings'
+    | 'selected'
+  >;
   // false — инструменты спрятаны (открыта панель размера): клавиши 1–8, R и Del молчат.
   keysActive: boolean;
   // Инструменты на полосе, по порядку; без него — все (EDITOR_TOOLS).
@@ -64,15 +81,24 @@ export function useMapEditor({
   const [block, setBlock] = useState('stone');
   const [rotation, setRotation] = useState<Rotation>(0);
   const [height, setHeight] = useState(1);
-  // Недавние блоки и открытое окно выбора блока (BlockPicker).
-  const [recentBlocks, setRecentBlocks] = useState(readRecentBlocks);
+  // Недавнее (блоки и объекты вперемешку) и открытое окно «Что поставить» (этап 10).
+  const [recentPlace, setRecentPlace] = useState(readRecentPlace);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const pickBlock = (name: string) => {
-    setBlock(name);
-    const next = withRecent(recentBlocks, name);
-    setRecentBlocks(next);
-    saveRecentBlocks(next);
+  const remember = (recent: RecentPlace) => {
+    const next = withRecentPlace(recentPlace, recent);
+    setRecentPlace(next);
+    saveRecentPlace(next);
   };
+  // Блок из окна: у «Поставить» он сменяет объект; у заливки, коробки и замены объект
+  // «Поставить» остаётся каким был.
+  const applyBlock = (name: string) => {
+    setBlock(name);
+    if (tool === 'place') objects.choose(null);
+  };
+  const applyRecent = (recent: RecentPlace) =>
+    recent.type === 'block'
+      ? applyBlock(recent.name)
+      : objects.choose(recent.choice);
   const [eraseMode, setEraseModeState] = useState<EraseMode>('block');
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   // Почему клик ничего не сделал (связное стирание слишком большой постройки).
@@ -108,38 +134,47 @@ export function useMapEditor({
         if (pickerOpen) return;
         setAnchor(null);
         setNotice(null);
-        if (tool === 'objects') objects.escape();
+        if (tool === 'place') objects.escape();
       },
     ],
   ]);
   // Цифры и R — по месту клавиши (useKeyCodes): R в русской раскладке — это К.
-  // У «Объектов» R поворачивает взгляд, у блоков — сам блок.
+  // У «Поставить» R поворачивает выделенный или ставящийся объект, у блоков — сам блок.
+  const objectFirst =
+    tool === 'place' &&
+    (objects.selected !== null || objects.settings.choice !== null);
   useKeyCodes(
     {
       ...toolKeys(tools, keyTool),
       KeyR: () =>
-        tool === 'objects'
+        objectFirst
           ? objects.rotate()
           : setRotation(
               (r) => ROTATIONS[(ROTATIONS.indexOf(r) + 1) % ROTATIONS.length],
             ),
       Delete: () => {
-        if (tool === 'objects') objects.remove();
+        if (tool === 'place') objects.remove();
       },
       KeyB: () => {
         if (buildsBlocks(tool)) setPickerOpen(true);
       },
     },
-    // Пока открыто окно выбора блока, цифры не должны менять инструмент за ним.
+    // Пока открыто окно «Что поставить», цифры не должны менять инструмент за ним.
     keysActive && !pickerOpen,
   );
 
   const walkPick = walk?.pick;
   const walkPreview = walk?.preview;
-  const { pick: objectPick, extent: objectExtent } = objects;
+  const {
+    pick: objectPick,
+    extent: objectExtent,
+    escape: objectEscape,
+  } = objects;
+  const placesObject = objects.settings.choice !== null;
+  const hasSelection = objects.selected !== null;
   const sceneEditor = useMemo<SceneEditor | null>(() => {
     if (tool === 'view' || !state) return null;
-    if (tool === 'objects') {
+    if (tool === 'place' && placesObject) {
       return {
         tool,
         anchor: null,
@@ -158,7 +193,7 @@ export function useMapEditor({
         preview: walkPreview,
       };
     }
-    return blockSceneEditor({
+    const blocks = blockSceneEditor({
       tool,
       eraseMode,
       state,
@@ -168,6 +203,11 @@ export function useMapEditor({
       setNotice,
       applyOps,
     });
+    // Клик мимо при выделенном объекте только снимает выделение, как у объектов: иначе
+    // после правки свойств следующий клик поставил бы лишний блок.
+    return tool === 'place' && hasSelection && blocks
+      ? { ...blocks, onPick: () => objectEscape() }
+      : blocks;
   }, [
     tool,
     state,
@@ -181,6 +221,9 @@ export function useMapEditor({
     walkPreview,
     objectPick,
     objectExtent,
+    objectEscape,
+    placesObject,
+    hasSelection,
   ]);
 
   return {
@@ -190,9 +233,18 @@ export function useMapEditor({
     setTool,
     block,
     setBlock,
-    // Блок из окна выбора: становится первым в недавних.
-    pickBlock,
-    recentBlocks,
+    // Выбор в окне «Что поставить»: становится первым в недавних.
+    pickBlock: (name: string) => {
+      applyBlock(name);
+      remember({ type: 'block', name });
+    },
+    pickObject: (choice: ObjectChoice) => {
+      objects.choose(choice);
+      remember({ type: 'object', choice });
+    },
+    // Из недавних в панели — порядок не меняется.
+    selectRecent: applyRecent,
+    recentPlace,
     pickerOpen,
     setPickerOpen,
     rotation,

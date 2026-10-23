@@ -8,7 +8,8 @@ import {
 } from '@mantine/core';
 import type { ReactNode } from 'react';
 import { isRotation, ROTATIONS } from 'shared';
-import BlockPicker from './BlockPicker';
+import PlaceChoicePanel from './PlacePicker/PlaceChoicePanel';
+import type { ObjectChoice } from './PlacePicker/placeChoice';
 import { blockTraits } from './blockTraits';
 import { buildsBlocks, isRegionTool, type EditorTool } from './editorTools';
 import { ERASE_MODE_LABELS, ERASE_MODES, type EraseMode } from './eraseModes';
@@ -17,14 +18,13 @@ import type { MapEditor } from './useMapEditor';
 // Подсказки ластика — по режиму, ниже (ERASE_HINTS).
 const HINTS: Record<Exclude<EditorTool, 'erase'>, string> = {
   view: 'Левая кнопка мыши — перемещение, правая — поворот, колесо — масштаб к курсору. Двойной клик (в других инструментах — Alt+клик) переносит центр вращения, Q и E опускают и поднимают его.',
-  place: 'Клик по грани ставит блок рядом с ней, клик по земле — на уровень 0.',
+  place:
+    'Блок: клик по грани ставит его рядом с ней, клик по земле — на уровень 0. Объект: клик по клетке ставит его. Клик по объекту выделяет его, перетаскивание переносит. R — поворот, Del — удалить, Esc — снять выделение.',
   fill: 'Два клика задают углы области, она заливается блоком.',
   hollow:
     'Два клика задают углы: стены, пол и потолок из блока, внутри — воздух.',
   replace:
     'Два клика по блокам задают углы; блоки как в первом углу заменяются выбранным.',
-  objects:
-    'Клик по клетке ставит выбранное. Клик по объекту выделяет его, перетаскивание переносит. R — взгляд, Del — удалить, Esc — снять выделение.',
   walk: 'Клик ставит фигурку. Зелёное — дойдёт: клик делает ход и списывает футы. Оранжевое — не дойдёт: клик переставляет фигурку. Карту инструмент не меняет, фигурка нигде не сохраняется.',
 };
 
@@ -41,17 +41,26 @@ interface EditorPanelProps {
   editor: MapEditor;
   // Настройки проверки хода — показываются при инструменте «Ход»; на сцене игры его нет.
   walkPanel?: ReactNode;
-  // Панель инструмента «Объекты»: что ставить, свойства выделенного, список.
+  // Объекты инструмента «Поставить»: как ставить, свойства выделенного, список.
   objectsPanel: ReactNode;
+  // Ставящийся объект; null — блок.
+  objectChoice: ObjectChoice | null;
 }
 
 // Свойства выбранного инструмента в правой панели страницы карты; сами инструменты,
 // отмена и возврат — на сцене (SceneToolbar).
-function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
+function EditorPanel({
+  editor,
+  walkPanel,
+  objectsPanel,
+  objectChoice,
+}: EditorPanelProps) {
   const { tool, anchor, eraseMode } = editor;
   // Высоту задают у области ластика; стена стирается до самого верха.
   const erasesRegion = tool === 'erase' && eraseMode === 'region';
   const builds = buildsBlocks(tool);
+  // «Поставить» ставит блок или объект; заливка, коробка и замена — всегда блок.
+  const placesBlock = builds && (tool !== 'place' || objectChoice === null);
   // Блоки описывает каталог карты: у своих блоков подписи, форма и свойства группы.
   const { catalog } = editor;
   const traits = blockTraits(editor.block, catalog);
@@ -74,26 +83,29 @@ function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
       )}
 
       {builds && (
-        <BlockPicker
+        <PlaceChoicePanel
           catalog={catalog}
           block={editor.block}
           rotation={editor.rotation}
-          recent={editor.recentBlocks}
+          choice={objectChoice}
+          recent={editor.recentPlace}
+          blocksOnly={tool !== 'place'}
           opened={editor.pickerOpen}
           onOpen={() => editor.setPickerOpen(true)}
           onClose={() => editor.setPickerOpen(false)}
-          onPick={editor.pickBlock}
-          onSelect={editor.setBlock}
+          onPickBlock={editor.pickBlock}
+          onPickObject={editor.pickObject}
+          onSelectRecent={editor.selectRecent}
         />
       )}
 
-      {builds && traits && (
+      {placesBlock && traits && (
         <Text size="xs" c="orange">
           {traits}
         </Text>
       )}
 
-      {builds && catalog.describe(editor.block)?.shape !== 'cube' && (
+      {placesBlock && catalog.describe(editor.block)?.shape !== 'cube' && (
         <Stack gap={4}>
           <Text size="sm">Поворот (R) — по часовой, 0° — к северу</Text>
           <SegmentedControl
@@ -122,7 +134,7 @@ function EditorPanel({ editor, walkPanel, objectsPanel }: EditorPanelProps) {
       )}
 
       {tool === 'walk' && walkPanel}
-      {tool === 'objects' && objectsPanel}
+      {tool === 'place' && objectsPanel}
 
       <Text size="xs" c="dimmed">
         {tool === 'erase' ? ERASE_HINTS[eraseMode] : HINTS[tool]}

@@ -140,7 +140,7 @@ function MapViewPage() {
               editor={sizeDraft ? null : editor.sceneEditor}
               walk={walk.scene}
               objectTool={
-                !sizeDraft && editor.tool === 'objects' ? objects.scene : null
+                !sizeDraft && editor.tool === 'place' ? objects.scene : null
               }
               focusRef={focusRef}
               onReady={handleSceneReady}
@@ -205,6 +205,7 @@ function MapViewPage() {
           <EditorPanel
             editor={editor}
             walkPanel={<WalkTestPanel walk={walk} />}
+            objectChoice={objects.settings.choice}
             objectsPanel={
               map && (
                 <ObjectsPanel

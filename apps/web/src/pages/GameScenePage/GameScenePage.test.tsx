@@ -209,7 +209,9 @@ describe('GameScenePage', () => {
       ),
     ).toBe(true);
 
-    await user.click(screen.getByRole('button', { name: 'Поставить' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Поставить на сцену: Борн' }),
+    );
     expect(
       screen.getByText('Щёлкните клетку, куда поставить: Борн.'),
     ).toBeInTheDocument();
@@ -599,7 +601,11 @@ describe('GameScenePage', () => {
     const user = userEvent.setup();
 
     await user.click(
-      await screen.findByRole('button', { name: 'Объекты' }, { timeout: 3000 }),
+      await screen.findByRole(
+        'button',
+        { name: 'Поставить' },
+        { timeout: 3000 },
+      ),
     );
     expect(screen.getByText('На карте: 0')).toBeInTheDocument();
     expect(

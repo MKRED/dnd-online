@@ -9,7 +9,8 @@ import {
 } from 'shared';
 import type { WalkHover } from '../walkTest';
 
-// walk — проверка хода: карту не меняет, водит фигурку по правилам пути.
+// walk — проверка хода: карту не меняет, водит фигурку по правилам пути. place —
+// «Поставить»: блок или объект карты (docs/plan/blocks.md, этап 10).
 export const EDITOR_TOOLS = [
   'view',
   'place',
@@ -18,19 +19,17 @@ export const EDITOR_TOOLS = [
   'hollow',
   'replace',
   'walk',
-  'objects',
 ] as const;
 export type EditorTool = (typeof EDITOR_TOOLS)[number];
 
 export const TOOL_LABELS: Record<EditorTool, string> = {
   view: 'Просмотр',
-  place: 'Блок',
+  place: 'Поставить',
   erase: 'Ластик',
   fill: 'Заливка',
   hollow: 'Коробка',
   replace: 'Замена',
   walk: 'Ход',
-  objects: 'Объекты',
 };
 
 // Инструменты, которым нужны два угла области.
@@ -77,10 +76,7 @@ export function cellsFromHit(
 // клетке, а ластик и замена берут уже стоящий блок. Объект ставится в клетку ног —
 // над блоком, по которому кликнули.
 export function toolCell(tool: EditorTool, cells: PickedCells): Vec3 | null {
-  return tool === 'place' ||
-    tool === 'fill' ||
-    tool === 'hollow' ||
-    tool === 'objects'
+  return tool === 'place' || tool === 'fill' || tool === 'hollow'
     ? cells.place
     : cells.hit;
 }

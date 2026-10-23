@@ -13,19 +13,6 @@ import {
 } from 'shared';
 import { extentAnchor } from '../editorTools';
 
-// Что ставит инструмент «Объекты» (docs/plan/done/map-objects.md, «Редактор»). «Существо» —
-// монстр или НПС из одного поиска, поэтому выбор хранит вид записи каталога.
-export type PlaceKind =
-  'start' | 'creature' | 'container' | 'item' | 'furniture';
-
-export const PLACE_KIND_LABELS: Record<PlaceKind, string> = {
-  start: 'Старт',
-  creature: 'Существо',
-  container: 'Контейнер',
-  item: 'Предмет',
-  furniture: 'Обстановка',
-};
-
 // Запись каталога, выбранная в поиске. size — у монстра: по нему место на карте;
 // modelSize и mount — у обстановки (этап 8в).
 export interface CatalogChoice {
@@ -38,59 +25,59 @@ export interface CatalogChoice {
   modelSize?: Vec3;
 }
 
+// Какой объект ставит инструмент «Поставить» (docs/plan/blocks.md, этап 10); блок
+// берётся из редактора. «Существо» — монстр или НПС из одного поиска.
+export type ObjectChoice =
+  | { kind: 'start' }
+  | { kind: 'container'; look: ContainerLook }
+  | { kind: 'creature' | 'item' | 'furniture'; entry: CatalogChoice };
+
+// choice null — ставится блок, объектов инструмент не ставит.
 export interface PlaceSettings {
-  kind: PlaceKind;
-  creature: CatalogChoice | null;
-  item: CatalogChoice | null;
-  furniture: CatalogChoice | null;
-  look: ContainerLook;
+  choice: ObjectChoice | null;
   facing: Facing;
   // Ставить скрытым от игроков (docs/plan/done/game.md, этап 6).
   hidden: boolean;
 }
 
-// Новый объект по настройкам панели; null — существо, предмет или обстановка ещё не
-// выбраны.
+// Новый объект по настройкам панели; null — ставится блок.
 export function placeBody(settings: PlaceSettings): PlacedObject | null {
   const body = kindBody(settings);
   return body && settings.hidden ? { ...body, hidden: true } : body;
 }
 
 // НПС ставится Средним: размер меняют в свойствах (у персонажа размера нет).
-function kindBody(settings: PlaceSettings): MapObjectBody | null {
-  const { kind, creature, item, furniture, look, facing } = settings;
-  switch (kind) {
+function kindBody({ choice, facing }: PlaceSettings): MapObjectBody | null {
+  if (!choice) return null;
+  switch (choice.kind) {
     case 'start':
       return { kind: 'start', facing };
-    case 'creature':
-      if (!creature) return null;
-      return creature.kind === 'monster'
-        ? { kind: 'monster', monsterId: creature.id, facing }
-        : {
-            kind: 'npc',
-            characterId: creature.id,
-            size: 'medium',
-            facing,
-          };
     case 'container':
       return {
         kind: 'container',
-        name: CONTAINER_LOOK_LABELS[look],
-        look,
+        name: CONTAINER_LOOK_LABELS[choice.look],
+        look: choice.look,
         items: [],
         facing,
       };
+    case 'creature':
+      return choice.entry.kind === 'monster'
+        ? { kind: 'monster', monsterId: choice.entry.id, facing }
+        : {
+            kind: 'npc',
+            characterId: choice.entry.id,
+            size: 'medium',
+            facing,
+          };
     case 'item':
-      return item && { kind: 'item', itemId: item.id, quantity: 1 };
+      return { kind: 'item', itemId: choice.entry.id, quantity: 1 };
     case 'furniture':
       // Обстановка поворачивается только на 90°: 45° округляем назад.
-      return (
-        furniture && {
-          kind: 'furniture',
-          furnitureId: furniture.id,
-          facing: rightFacing(facing),
-        }
-      );
+      return {
+        kind: 'furniture',
+        furnitureId: choice.entry.id,
+        facing: rightFacing(facing),
+      };
   }
 }
 
@@ -104,13 +91,14 @@ export function turnedExtent([x, y, z]: Vec3, facing: Facing): Vec3 {
 
 // Место ставящегося объекта [ширина, высота, глубина]: у монстра — по размеру из
 // каталога, у обстановки — по модели с поворотом.
-export function placeExtent(settings: PlaceSettings): Vec3 {
-  const { kind, creature, furniture, facing } = settings;
-  if (kind === 'furniture' && furniture?.modelSize)
-    return turnedExtent(furniture.modelSize, rightFacing(facing));
+export function placeExtent({ choice, facing }: PlaceSettings): Vec3 {
+  if (choice?.kind === 'furniture' && choice.entry.modelSize)
+    return turnedExtent(choice.entry.modelSize, rightFacing(facing));
   const span =
-    kind === 'creature' && creature?.kind === 'monster' && creature.size
-      ? footprintCells(creature.size)
+    choice?.kind === 'creature' &&
+    choice.entry.kind === 'monster' &&
+    choice.entry.size
+      ? footprintCells(choice.entry.size)
       : 1;
   return [span, 1, span];
 }

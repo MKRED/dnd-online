@@ -7,6 +7,7 @@ import {
   type Vec3,
 } from 'shared';
 import { describe, expect, it, vi } from 'vitest';
+import type { ObjectChoice } from './objects/objectPlacement';
 import { useMapEditor } from './useMapEditor';
 
 function setup(objects = objectsMock()) {
@@ -30,6 +31,13 @@ function objectsMock() {
     rotate: vi.fn(),
     remove: vi.fn(),
     escape: vi.fn(),
+    choose: vi.fn(),
+    settings: {
+      choice: null as ObjectChoice | null,
+      facing: 0 as const,
+      hidden: false,
+    },
+    selected: null,
   };
 }
 
@@ -62,11 +70,18 @@ describe('useMapEditor, клавиши', () => {
     expect(result.current.tool).toBe('walk');
   });
 
-  it('у «Объектов» (8) R, Del и Esc уходят инструменту, а не блоку', () => {
-    const objects = objectsMock();
+  it('у «Поставить» (2) с объектом R, Del и Esc уходят объектам, а не блоку', () => {
+    const objects = {
+      ...objectsMock(),
+      settings: {
+        choice: { kind: 'start' as const },
+        facing: 0 as const,
+        hidden: false,
+      },
+    };
     const { result } = setup(objects);
-    press('Digit8');
-    expect(result.current.tool).toBe('objects');
+    press('Digit2');
+    expect(result.current.tool).toBe('place');
     press('KeyR');
     press('Delete');
     act(() => {
@@ -76,6 +91,15 @@ describe('useMapEditor, клавиши', () => {
     expect(objects.remove).toHaveBeenCalledTimes(1);
     expect(objects.escape).toHaveBeenCalledTimes(1);
     expect(result.current.rotation).toBe(0);
+  });
+
+  it('у «Поставить» с блоком R поворачивает блок', () => {
+    const objects = objectsMock();
+    const { result } = setup(objects);
+    press('Digit2');
+    press('KeyR');
+    expect(objects.rotate).not.toHaveBeenCalled();
+    expect(result.current.rotation).toBe(90);
   });
 
   it('Del в других инструментах объекты не трогает', () => {
@@ -197,14 +221,20 @@ describe('useMapEditor, выбор блока', () => {
     expect(result.current.tool).toBe('place');
   });
 
-  it('блок из окна встаёт первым в недавние', () => {
-    const { result } = setup();
+  it('блок и объект из окна встают первыми в недавние', () => {
+    const objects = objectsMock();
+    const { result } = setup(objects);
+    act(() => result.current.setTool('place'));
     act(() => result.current.pickBlock('wood'));
+    act(() => result.current.pickObject({ kind: 'start' }));
     act(() => result.current.pickBlock('brick_slab'));
     expect(result.current.block).toBe('brick_slab');
-    expect(result.current.recentBlocks.slice(0, 2)).toEqual([
-      'brick_slab',
-      'wood',
+    expect(result.current.recentPlace.slice(0, 3)).toEqual([
+      { type: 'block', name: 'brick_slab' },
+      { type: 'object', choice: { kind: 'start' } },
+      { type: 'block', name: 'wood' },
     ]);
+    // Блок у «Поставить» сменяет объект.
+    expect(objects.choose).toHaveBeenLastCalledWith(null);
   });
 });

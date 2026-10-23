@@ -97,6 +97,10 @@ function Harness({
         busy={false}
         onFocus={onFocus}
       />
+      {/* Что ставить выбирают в окне «Что поставить» (этап 10) — здесь кнопкой. */}
+      <button onClick={() => tool.choose({ kind: 'start' })}>
+        Выбрать старт
+      </button>
       <button
         onClick={() =>
           tool.pick({
@@ -117,6 +121,7 @@ function setup() {
   const applyOps = vi.fn<(ops: MapOp[]) => void>();
   const onFocus = vi.fn();
   renderWithProviders(<Harness applyOps={applyOps} onFocus={onFocus} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Выбрать старт' }));
   return { applyOps, onFocus };
 }
 
@@ -126,7 +131,7 @@ const sent = (applyOps: ReturnType<typeof setup>['applyOps']) =>
 afterEach(() => vi.unstubAllGlobals());
 
 describe('ObjectsPanel', () => {
-  it('ставит старт со взглядом; существо без выбора — подсказка, без правки', async () => {
+  it('ставит выбранный старт со взглядом', async () => {
     const { applyOps } = setup();
     await userEvent.click(
       screen.getByRole('button', { name: 'Взгляд: восток' }),
@@ -141,17 +146,6 @@ describe('ObjectsPanel', () => {
         object: { kind: 'start', facing: 90 },
       },
     ]);
-
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() => Promise.resolve(new Response('[]', { status: 200 }))),
-    );
-    await userEvent.click(screen.getByRole('radio', { name: 'Существо' }));
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Клик по клетке' }),
-    );
-    expect(applyOps).toHaveBeenCalledTimes(1);
-    expect(screen.getByText('Выберите, что ставить')).toBeInTheDocument();
   });
 
   it('список выделяет объект и ведёт к нему камеру; клик мимо снимает выделение', async () => {
@@ -168,15 +162,19 @@ describe('ObjectsPanel', () => {
       { op: 'turnObject', id: 2, facing: 180 },
       { op: 'removeObject', id: 2 },
     ]);
-    // После удаления панель снова предлагает, что ставить.
-    expect(screen.getByRole('radio', { name: 'Старт' })).toBeInTheDocument();
+    // После удаления панель снова показывает, как ставить выбранное.
+    expect(
+      screen.getByRole('checkbox', { name: /Ставить скрытым/ }),
+    ).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: /№6/ }));
     await userEvent.click(
       screen.getByRole('button', { name: 'Клик по клетке' }),
     );
     expect(applyOps).toHaveBeenCalledTimes(2);
-    expect(screen.getByRole('radio', { name: 'Старт' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('checkbox', { name: /Ставить скрытым/ }),
+    ).toBeInTheDocument();
   });
 
   it('«скрыт от игроков»: ставит скрытым, помечает в списке, снимается в свойствах', async () => {

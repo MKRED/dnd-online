@@ -150,7 +150,7 @@ describe('MapViewPage', () => {
     const user = userEvent.setup();
 
     expect(await screen.findByText('Подземелье')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Блок' }));
+    await user.click(screen.getByRole('button', { name: 'Поставить' }));
     expect(screen.queryByText('Подземелье')).toBeNull();
     expect(screen.queryByText('32 × 32 клеток (160 × 160 фт)')).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Просмотр' }));
@@ -216,7 +216,7 @@ describe('MapViewPage', () => {
     renderPage();
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole('button', { name: 'Блок' }));
+    await user.click(await screen.findByRole('button', { name: 'Поставить' }));
     await user.click(screen.getByRole('button', { name: 'Клик по земле' }));
 
     await waitFor(() =>
@@ -253,7 +253,7 @@ describe('MapViewPage', () => {
     renderPage();
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole('button', { name: 'Блок' }));
+    await user.click(await screen.findByRole('button', { name: 'Поставить' }));
     await user.click(screen.getByRole('button', { name: 'Клик по земле' }));
 
     expect(
@@ -314,7 +314,7 @@ describe('MapViewPage', () => {
     expect(apply).toBeDisabled();
     // Пока панель открыта, инструменты спрятаны и сцена ничего не правит.
     expect(
-      screen.queryByRole('button', { name: 'Блок' }),
+      screen.queryByRole('button', { name: 'Поставить' }),
     ).not.toBeInTheDocument();
     await user.clear(screen.getByRole('textbox', { name: 'Восток' }));
     await user.type(screen.getByRole('textbox', { name: 'Восток' }), '2');
@@ -352,7 +352,9 @@ describe('MapViewPage', () => {
 
     expect(screen.getByText(/Удалится блоков: 5/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Отмена' }));
-    expect(screen.getByRole('button', { name: 'Блок' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Поставить' }),
+    ).toBeInTheDocument();
   });
 
   it('клавиши 1–7 выбирают инструмент, пока не открыта панель размера', async () => {
@@ -372,7 +374,7 @@ describe('MapViewPage', () => {
     expect(pressed('Ластик')).toBe('true');
     expect(screen.getByRole('separator')).toHaveTextContent('Ластик');
     await user.keyboard('[Numpad2]');
-    expect(pressed('Блок')).toBe('true');
+    expect(pressed('Поставить')).toBe('true');
     // Размер карты меняется из «Просмотра»: только там видна ⚙.
     await user.keyboard('[Digit1]');
 

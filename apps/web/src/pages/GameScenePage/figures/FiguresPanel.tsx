@@ -118,6 +118,8 @@ function FiguresPanel({ figures, master, tool }: FiguresPanelProps) {
               <Button
                 size="compact-xs"
                 variant={tool.selectedId === character.id ? 'filled' : 'light'}
+                // Своё имя у кнопки: «Поставить» — ещё и инструмент редактора сцены.
+                aria-label={`Поставить на сцену: ${character.name}`}
                 onClick={() => toggle(character.id)}
               >
                 Поставить

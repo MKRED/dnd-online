@@ -4,7 +4,6 @@ import {
   objectRefsFromView,
   objectBox,
   objectFacing,
-  type ContainerLook,
   type Facing,
   type MapObject,
   type MapObjectRefsView,
@@ -20,8 +19,7 @@ import {
   placeBody,
   placeExtent,
   rightFacing,
-  type CatalogChoice,
-  type PlaceKind,
+  type ObjectChoice,
 } from './objectPlacement';
 import { useShiftKey } from './useShiftKey';
 
@@ -41,24 +39,20 @@ export interface ObjectToolScene {
   drop: (cell: Vec3 | null) => void;
 }
 
-// Инструмент «Объекты» (docs/plan/done/map-objects.md, «Редактор: один инструмент»).
+// Объекты в инструменте «Поставить» (docs/plan/done/map-objects.md, «Редактор: один
+// инструмент»; с этапа 10 docs/plan/blocks.md — вместе с блоками).
 // Клик по пустой клетке ставит выбранное, а при выделенном объекте — только снимает
 // выделение: иначе после правки свойств следующий клик мимо поставил бы лишний
 // объект. Поставленный объект не выделяется — так ставят несколько подряд.
 export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
-  const [kind, setKind] = useState<PlaceKind>('start');
-  const [creature, setCreature] = useState<CatalogChoice | null>(null);
-  const [item, setItem] = useState<CatalogChoice | null>(null);
-  const [furniture, setFurniture] = useState<CatalogChoice | null>(null);
-  const [look, setLook] = useState<ContainerLook>('chest');
+  // null — инструмент «Поставить» ставит блок (этап 10).
+  const [choice, setChoice] = useState<ObjectChoice | null>(null);
   const [facing, setFacing] = useState<Facing>(0);
   const [hidden, setHidden] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   // «Перенести» в свойствах: следующий клик по клетке переносит выделенный объект.
   const [moving, setMoving] = useState(false);
   const [draggingId, setDraggingId] = useState<number | null>(null);
-  // Клик по клетке, когда ставить нечего (существо или предмет не выбраны).
-  const [missingChoice, setMissingChoice] = useState(false);
   // Shift зажат — обстановка ставится, переносится и поворачивается без проверок места
   // (этап 8в; Alt+клик уже переносит центр камеры).
   const shift = useShiftKey();
@@ -81,7 +75,7 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
     [objectRefs],
   );
 
-  const settings = { kind, creature, item, furniture, look, facing, hidden };
+  const settings = { choice, facing, hidden };
   const dragged =
     (draggingId !== null && state?.objects.byId.get(draggingId)) || null;
   const carried = dragged ?? (moving ? selected : null);
@@ -109,7 +103,6 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
       return;
     }
     const body = placeBody(settings);
-    setMissingChoice(body === null);
     const at = objectCell(cells.place, extent, state.size);
     const force = shift.current && body?.kind === 'furniture';
     if (body && at)
@@ -136,23 +129,10 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
 
   return {
     settings,
-    setKind,
-    setCreature: (choice: CatalogChoice | null) => {
-      setCreature(choice);
-      setMissingChoice(false);
-    },
-    setItem: (choice: CatalogChoice | null) => {
-      setItem(choice);
-      setMissingChoice(false);
-    },
-    setFurniture: (choice: CatalogChoice | null) => {
-      setFurniture(choice);
-      setMissingChoice(false);
-    },
-    setLook,
+    // Что ставить: объект или null — блок (выбор в окне «Что поставить»).
+    choose: setChoice,
     setFacing,
     setHidden,
-    missingChoice,
     selected,
     select,
     moving,
@@ -166,7 +146,7 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
     rotate: () => {
       if (!selected) {
         setFacing((current) =>
-          kind === 'furniture'
+          choice?.kind === 'furniture'
             ? nextRight(rightFacing(current))
             : nextFacing(current),
         );

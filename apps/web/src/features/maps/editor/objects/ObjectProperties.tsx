@@ -21,6 +21,7 @@ import {
 import { NameInput, QuantityInput } from './CommitInputs';
 import ContainerItems from './ContainerItems';
 import FacingPicker from './FacingPicker';
+import FurnitureContainerProps from './FurnitureContainerProps';
 import FurniturePositions from './FurniturePositions';
 import type { ObjectTool } from './useObjectTool';
 
@@ -85,12 +86,21 @@ function ObjectProperties({
       </Stack>
 
       {object.kind === 'furniture' && (
-        <FurniturePositions
-          tool={tool}
-          object={object}
-          view={refs.furniture[object.furnitureId]}
-          busy={busy}
-        />
+        <>
+          <FurniturePositions
+            tool={tool}
+            object={object}
+            view={refs.furniture[object.furnitureId]}
+            busy={busy}
+          />
+          <FurnitureContainerProps
+            tool={tool}
+            object={object}
+            view={refs.furniture[object.furnitureId]}
+            refs={refs}
+            busy={busy}
+          />
+        </>
       )}
 
       {facing !== null && (

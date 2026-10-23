@@ -198,16 +198,30 @@ function PlacePickerModal({
                   />
                 </Tabs.Panel>
                 <Tabs.Panel value="container" pt="sm">
-                  <div className={classes.grid}>
-                    {CONTAINERS.map((choice) => (
-                      <ObjectTile
-                        key={recentKey({ type: 'object', choice })}
-                        choice={choice}
-                        selected={isCurrent(choice)}
-                        onClick={() => onPickObject(choice)}
+                  <Stack gap="md">
+                    <PickerSection title="Встроенные">
+                      {CONTAINERS.map((choice) => (
+                        <ObjectTile
+                          key={recentKey({ type: 'object', choice })}
+                          choice={choice}
+                          selected={isCurrent(choice)}
+                          onClick={() => onPickObject(choice)}
+                        />
+                      ))}
+                    </PickerSection>
+                    {/* Свои — обстановка вида «Контейнер» (этап 11). */}
+                    <Stack gap={4}>
+                      <Text size="sm" fw={500}>
+                        Свои
+                      </Text>
+                      <CatalogTab
+                        kinds={['furniture']}
+                        onlyContainers
+                        current={current}
+                        onPick={onPickObject}
                       />
-                    ))}
-                  </div>
+                    </Stack>
+                  </Stack>
                 </Tabs.Panel>
                 <Tabs.Panel value="item" pt="sm">
                   <CatalogTab

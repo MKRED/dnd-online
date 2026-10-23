@@ -2,6 +2,7 @@ import { inArray } from 'drizzle-orm';
 import {
   furnitureModelIds,
   isFurnitureMount,
+  readFurnitureContainer,
   readFurniturePositions,
   readVoxelModelFields,
   type FurnitureRef,
@@ -69,12 +70,25 @@ export async function loadFurnitureRefs(
       name,
       model: modelById.get(modelId) ?? null,
     }));
-    view[row.id] = { missing: null, name: row.name, mount, model, positions };
+    const stored = readFurnitureContainer(row.extra.container);
+    const container = stored && {
+      capacity: stored.capacity,
+      lockDc: stored.lockDc,
+    };
+    view[row.id] = {
+      missing: null,
+      name: row.name,
+      mount,
+      model,
+      positions,
+      container,
+    };
     refs.set(row.id, {
       name: row.name,
       mount,
       ...look(model),
       positions: positions.map((p) => ({ name: p.name, ...look(p.model) })),
+      container,
       usable: row.authorId === ownerId,
     });
   }

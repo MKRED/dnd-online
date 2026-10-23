@@ -104,9 +104,27 @@ function describe(
         ? `, положение: ${(view.positions[object.position ?? 0] ?? view.positions[0]).name}`
         : '';
       const locked = object.locked ? ', заперта' : '';
+      const missing = model ? [] : ['модель обстановки удалена — без вида'];
+      // Контейнер-обстановка (этап 11): своё название, число предметов и замок.
+      if (view.container) {
+        const items = object.items ?? [];
+        const lock = view.container.lockDc
+          ? `, замок Сл ${view.container.lockDc}`
+          : '';
+        return {
+          label: `${object.name ?? view.name} (контейнер «${view.name}» ${x}×${z}×${y}, предметов: ${items.length}${position}${locked}${lock})`,
+          missing: [
+            ...missing,
+            ...items.flatMap(
+              ({ itemId }) =>
+                ref(refs.items[itemId], `предмет ${itemId}`).missing,
+            ),
+          ],
+        };
+      }
       return {
         label: `${view.name} (обстановка ${x}×${z}×${y}, крепление: ${where}${position}${locked})`,
-        missing: model ? [] : ['модель обстановки удалена — без вида'],
+        missing,
       };
     }
     case 'container': {
@@ -153,9 +171,22 @@ function placementWarnings(
 // Контейнер тяжелее вместимости: правка такого не пропустит, но вес предмета могли
 // поменять в каталоге уже после.
 function loadWarnings(object: MapObject, refs: MapObjectRefsView): string[] {
-  if (object.kind !== 'container') return [];
-  const load = containerLoad(object.items, (id) => itemWeight(refs, id));
-  const capacity = CONTAINER_CAPACITY[object.look];
+  const view =
+    object.kind === 'furniture' ? refs.furniture?.[object.furnitureId] : null;
+  const items =
+    object.kind === 'container'
+      ? object.items
+      : object.kind === 'furniture'
+        ? object.items
+        : undefined;
+  const capacity =
+    object.kind === 'container'
+      ? CONTAINER_CAPACITY[object.look]
+      : view?.missing === null
+        ? view.container?.capacity
+        : undefined;
+  if (!items || capacity === undefined) return [];
+  const load = containerLoad(items, (id) => itemWeight(refs, id));
   return load > capacity ? [`перегружен: ${loadLabel(load, capacity)}`] : [];
 }
 

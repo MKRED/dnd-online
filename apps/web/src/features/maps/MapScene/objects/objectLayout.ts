@@ -232,8 +232,12 @@ export function layoutObjects(
         base: [x + ex / 2, y, z + ez / 2],
         footprint: Math.max(ex, ez),
         top: y + ey,
-        label: summary.label,
-        warnings: summary.warnings,
+        // Игроку — только название контейнера-обстановки, без содержимого (этап 11).
+        label:
+          hideContents && object.kind === 'furniture' && object.name
+            ? object.name
+            : summary.label,
+        warnings: hideContents ? [] : summary.warnings,
         blocked: false,
         hidden: object.hidden,
         look,

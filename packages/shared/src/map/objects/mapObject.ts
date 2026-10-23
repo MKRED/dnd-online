@@ -74,6 +74,10 @@ export type MapObjectBody =
       facing: Facing;
       position?: number;
       locked?: boolean;
+      // Контейнер-обстановка (этап 11): своё название и содержимое на карте; у обычной
+      // обстановки их нет.
+      name?: string;
+      items?: ObjectItem[];
     };
 
 export type MapObjectKind = MapObjectBody['kind'];

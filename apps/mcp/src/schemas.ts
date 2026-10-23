@@ -91,6 +91,14 @@ const objectBody = z.discriminatedUnion('kind', [
     furnitureId: catalogId('обстановки'),
     facing: quarterTurn,
     locked,
+    name: z
+      .string()
+      .optional()
+      .describe('Название на карте — только у контейнера-обстановки'),
+    items: z
+      .array(objectItem)
+      .optional()
+      .describe('Содержимое — только у контейнера-обстановки'),
     hidden,
   }),
 ]);

@@ -84,6 +84,7 @@ function refsFor(): ObjectRefs {
       cells: model.cells ?? {},
       voxels: voxels(model.size, model.fill),
       positions: [],
+      container: null,
       usable: true,
     });
   // Дверь в проёме (этап 8г): закрытая — створка поперёк клетки, открытая — у западной
@@ -109,6 +110,7 @@ function refsFor(): ObjectRefs {
       { name: 'Закрыта', ...closed },
       { name: 'Открыта', ...open },
     ],
+    container: null,
     usable: true,
   });
   return refs;

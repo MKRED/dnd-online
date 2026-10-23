@@ -30,6 +30,8 @@ interface CatalogTabProps {
   q?: string;
   current: ObjectChoice | null;
   onPick: (choice: ObjectChoice) => void;
+  // Только контейнеры-обстановка — для вкладки «Контейнеры» (этап 11).
+  onlyContainers?: boolean;
 }
 
 const CATALOG_PAGE = 20;
@@ -39,7 +41,13 @@ const sameEntry = (a: ObjectChoice | null, kind: CatalogKind, id: string) =>
 
 // Записи каталога для постановки плитками: своя обстановка, предметы, монстры и НПС.
 // Ищет сервер, по 20 записей на вид — как в поиске окна.
-function CatalogTab({ kinds, q = '', current, onPick }: CatalogTabProps) {
+function CatalogTab({
+  kinds,
+  q = '',
+  current,
+  onPick,
+  onlyContainers = false,
+}: CatalogTabProps) {
   const { found, last, error } = useMapCatalogSearch(kinds, q);
   if (error)
     return (
@@ -48,11 +56,16 @@ function CatalogTab({ kinds, q = '', current, onPick }: CatalogTabProps) {
       </Text>
     );
   if (!found && !last.length) return <Loader size="sm" />;
-  const list = found ?? last;
+  const all = found ?? last;
+  const list = onlyContainers ? all.filter((entry) => entry.container) : all;
   if (!list.length)
     return (
       <Text size="sm" c="dimmed">
-        {q ? 'Ничего не нашлось.' : EMPTY[choiceKind(kinds[0])]}
+        {q
+          ? 'Ничего не нашлось.'
+          : onlyContainers
+            ? 'Своих контейнеров нет — в «Обстановке» выберите вид «Контейнер».'
+            : EMPTY[choiceKind(kinds[0])]}
       </Text>
     );
   return (
@@ -74,7 +87,7 @@ function CatalogTab({ kinds, q = '', current, onPick }: CatalogTabProps) {
         })}
       </div>
       {/* Сервер отдаёт по 20 записей на вид — остальное находит поиск окна. */}
-      {!q && list.length >= CATALOG_PAGE && (
+      {!q && all.length >= CATALOG_PAGE && (
         <Text size="xs" c="dimmed">
           Показаны первые {CATALOG_PAGE} по алфавиту — остальное найдёт поиск
           сверху.

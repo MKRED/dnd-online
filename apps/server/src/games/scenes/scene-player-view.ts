@@ -25,7 +25,11 @@ export function forPlayer(
   const box =
     refs && object.kind === 'furniture' ? objectBox(object, refs) : undefined;
   if (!objectSeen(object, fog, box)) return null;
-  return object.kind === 'container' ? { ...object, items: [] } : object;
+  // Содержимое контейнера игроку не уходит — и у контейнера-обстановки (этап 11).
+  if (object.kind === 'container') return { ...object, items: [] };
+  if (object.kind === 'furniture' && object.items)
+    return { ...object, items: [] };
+  return object;
 }
 
 // Правка для игрока: клетки — только в открытом, объекты — проекцией. Объект, который

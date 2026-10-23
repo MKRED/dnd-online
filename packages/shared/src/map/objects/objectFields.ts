@@ -42,7 +42,7 @@ export const KIND_FIELDS: Record<MapObjectKind, (keyof ObjectFields)[]> = {
   npc: ['characterId', 'size', 'facing'],
   container: ['name', 'look', 'items', 'facing'],
   item: ['itemId', 'quantity'],
-  furniture: ['furnitureId', 'facing', 'locked'],
+  furniture: ['furnitureId', 'facing', 'locked', 'name', 'items'],
 };
 
 // Поля, которые есть у объекта любого вида.

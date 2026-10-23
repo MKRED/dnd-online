@@ -3,6 +3,7 @@ import type { CharacterMainImage } from '../../characterImages.js';
 import type { FigureModel } from '../../characterModels.js';
 import type { MonsterRole } from '../../monsters.js';
 import type { FurnitureMount } from '../../voxelModel/furniture.js';
+import type { LockDc } from '../../voxelModel/furnitureContainer.js';
 import type { VoxelModelFields } from '../../voxelModel/voxelModel.js';
 import type { Vec3 } from '../coords.js';
 import type { CreatureSize } from '../rules/creature.js';
@@ -55,6 +56,8 @@ export type FurnitureRefView =
       mount: FurnitureMount;
       model: FurnitureViewModel | null;
       positions: { name: string; model: FurnitureViewModel | null }[];
+      // Вместимость и Сл взлома контейнера (этап 11); null — обычная обстановка.
+      container: { capacity: number; lockDc: LockDc | null } | null;
     }
   | { missing: 'deleted' };
 
@@ -100,8 +103,8 @@ export function objectRefIds(objects: Iterable<MapObject>) {
     if (object.kind === 'monster') ids.monsters.add(object.monsterId);
     if (object.kind === 'npc') ids.npcs.add(object.characterId);
     if (object.kind === 'item') ids.items.add(object.itemId);
-    if (object.kind === 'container') {
-      for (const { itemId } of object.items) ids.items.add(itemId);
+    if (object.kind === 'container' || object.kind === 'furniture') {
+      for (const { itemId } of object.items ?? []) ids.items.add(itemId);
     }
   }
   return ids;
@@ -141,6 +144,7 @@ export function objectRefsFromView(view: MapObjectRefsView): ObjectRefs {
         name: position.name,
         ...lookOf(position.model),
       })),
+      container: furniture.container,
       usable: true,
     });
   }

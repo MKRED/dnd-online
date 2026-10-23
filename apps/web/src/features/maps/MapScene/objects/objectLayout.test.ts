@@ -301,6 +301,7 @@ describe('обстановка на сцене', () => {
         mount: 'floor',
         model: { id: 'm', size: [3, 1, 1], palette: [], voxels: '', cells: {} },
         positions: [],
+        container: null,
       },
       // Ворота: закрытые 1×2×1, открытые — 2×2×1 (этап 8г).
       [GATE]: {
@@ -330,6 +331,7 @@ describe('обстановка на сцене', () => {
             },
           },
         ],
+        container: null,
       },
       [GONE]: { missing: 'deleted' },
     },
@@ -377,6 +379,7 @@ describe('обстановка на сцене', () => {
             },
           },
           positions: [],
+          container: null,
         },
       },
     };

@@ -1,3 +1,4 @@
+import type { FurnitureContainer } from '../voxelModel/furnitureContainer.js';
 import type { BlockGroupInfo } from './customBlocks.js';
 import type { SectionAxis } from './asciiSection.js';
 import type { PackedChangeset } from './changesetPacking.js';
@@ -110,7 +111,9 @@ export interface MapCatalogEntry {
   role?: string;
   category?: string;
   weight?: number;
-  // Обстановка (этап 8в): размер модели [x, y, z] в клетках и крепление.
+  // Обстановка (этап 8в): размер модели [x, y, z] в клетках и крепление; у контейнера
+  // (этап 11) — его вместимость, замок и содержимое по умолчанию.
   modelSize?: number[];
   mount?: string;
+  container?: FurnitureContainer | null;
 }

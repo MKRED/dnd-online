@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { and, asc, eq, ilike, type SQL } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import type { MapCatalogEntry, MapCatalogKind } from 'shared';
+import {
+  readFurnitureContainer,
+  type MapCatalogEntry,
+  type MapCatalogKind,
+} from 'shared';
 import { entryVisibleTo } from '../../catalog/catalog-access.js';
 import { DatabaseService } from '../../database/database.service.js';
 import {
@@ -102,7 +106,11 @@ export class MapCatalogService {
     }
     if (kind === 'furniture') {
       const rows = await db
-        .select({ id: furniture.id, name: furniture.name })
+        .select({
+          id: furniture.id,
+          name: furniture.name,
+          extra: furniture.extra,
+        })
         .from(furniture)
         .where(
           where(eq(furniture.authorId, userId), contains(furniture.name, q)),
@@ -114,10 +122,12 @@ export class MapCatalogService {
         userId,
         new Set(rows.map((row) => row.id)),
       );
-      return rows.map((row) => ({
-        ...row,
-        modelSize: [...(refs.get(row.id)?.size ?? [1, 1, 1])],
-        mount: refs.get(row.id)?.mount ?? 'floor',
+      return rows.map(({ id, name, extra }) => ({
+        id,
+        name,
+        modelSize: [...(refs.get(id)?.size ?? [1, 1, 1])],
+        mount: refs.get(id)?.mount ?? 'floor',
+        container: readFurnitureContainer(extra.container),
       }));
     }
     return db

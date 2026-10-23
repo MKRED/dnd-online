@@ -182,6 +182,7 @@ export function builtinContainerRef(look: ContainerLook): FurnitureRef {
       cells,
       voxels,
       positions: [],
+      container: null,
       usable: true,
     };
     refs.set(look, found);

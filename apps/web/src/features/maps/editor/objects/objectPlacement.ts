@@ -5,6 +5,7 @@ import {
   type ContainerLook,
   type CreatureSize,
   type Facing,
+  type FurnitureContainer,
   type MapObjectBody,
   type MapSize,
   type ObjectOp,
@@ -25,6 +26,8 @@ export interface CatalogChoice {
   modelSize?: Vec3;
   // Вес предмета в фунтах — для груза контейнера.
   weight?: number;
+  // Контейнер-обстановка (этап 11): ставится со своим названием и содержимым по умолчанию.
+  container?: FurnitureContainer | null;
 }
 
 // Какой объект ставит инструмент «Поставить» (docs/plan/blocks.md, этап 10); блок
@@ -79,6 +82,10 @@ function kindBody({ choice, facing }: PlaceSettings): MapObjectBody | null {
         kind: 'furniture',
         furnitureId: choice.entry.id,
         facing: rightFacing(facing),
+        ...(choice.entry.container && {
+          name: choice.entry.name,
+          items: choice.entry.container.contents,
+        }),
       };
   }
 }

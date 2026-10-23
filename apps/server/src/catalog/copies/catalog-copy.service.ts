@@ -33,16 +33,21 @@ export interface CatalogCopyConfig {
 }
 
 // Вид и свойства оригинала для копии: всё, кроме ссылки самого оригинала на его
-// собственный оригинал (копия копии ссылается на того, у кого скопировали).
-function contentOf(source: EntryRow, origin: CatalogOriginLink) {
+// собственный оригинал (копия копии ссылается на того, у кого скопировали). adapted —
+// поля extra, которые каталог подменяет для копии (у обстановки — своя копия модели).
+export function contentOf(
+  source: EntryRow,
+  origin: CatalogOriginLink,
+  adapted: Record<string, unknown> = {},
+) {
   return {
     category: source.category,
     details: source.details,
-    extra: { ...source.extra, origin },
+    extra: { ...source.extra, ...adapted, origin },
   };
 }
 
-const originOf = (
+export const originOf = (
   source: EntryRow,
   authorNickname: string,
 ): CatalogOriginLink => ({
@@ -66,6 +71,16 @@ export abstract class CatalogCopyService<T> {
 
   // После обновления копии — например, разослать новый вид блоков на сцены (этап 7).
   protected afterPull?: (userId: string, id: string, entry: T) => Promise<void>;
+
+  // Поля extra копии вместо оригинальных, в той же транзакции: обстановка копирует себе
+  // модель оригинала и ссылается на копию (этап 8б). copy — прежняя копия при обновлении,
+  // null — при первом копировании.
+  protected adaptExtra?: (
+    tx: DbTransaction,
+    userId: string,
+    source: EntryRow,
+    copy: EntryRow | null,
+  ) => Promise<Record<string, unknown>>;
 
   // Оригинал, видимый пользователю (свой или опубликованный), с ником автора.
   private async visibleSource(tx: DbTransaction, userId: string, id: string) {
@@ -97,7 +112,11 @@ export abstract class CatalogCopyService<T> {
             description: entry.description,
             sources: entry.sources,
             isPublic: false,
-            ...contentOf(entry, originOf(entry, authorNickname)),
+            ...contentOf(
+              entry,
+              originOf(entry, authorNickname),
+              await this.adaptExtra?.(tx, userId, entry, null),
+            ),
           })
           .returning({ id: table.id });
         return inserted.id;
@@ -140,7 +159,13 @@ export abstract class CatalogCopyService<T> {
         // описание, источники и публикация копии остаются её собственными.
         await tx
           .update(table)
-          .set(contentOf(entry, originOf(entry, authorNickname)))
+          .set(
+            contentOf(
+              entry,
+              originOf(entry, authorNickname),
+              await this.adaptExtra?.(tx, userId, entry, copy),
+            ),
+          )
           .where(eq(table.id, id));
       });
       this.logger.info(

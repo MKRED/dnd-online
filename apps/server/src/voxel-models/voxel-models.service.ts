@@ -11,8 +11,8 @@ import {
   type VoxelModelVariant,
 } from './voxel-models.config.js';
 
-// Модели пока ни на что не ссылаются и ни в чём не стоят: роли (обстановка) появятся
-// на этапе 8б, тогда же — «где используется» перед удалением.
+// Удаление — общее: обстановка с удалённой моделью остаётся без вида (модель читается
+// как null, docs/plan/blocks.md, этап 8б); перед удалением веб спрашивает /usage.
 @Injectable()
 export class VoxelModelsService extends CatalogEntriesService<
   VoxelModelVariant,

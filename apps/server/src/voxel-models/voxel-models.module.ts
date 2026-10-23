@@ -4,6 +4,7 @@ import { VoxelModelCopyService } from './voxel-model-copy.service.js';
 import { VoxelModelImageEditService } from './voxel-model-image-edit.service.js';
 import { VoxelModelImagesController } from './voxel-model-images.controller.js';
 import { VoxelModelImagesService } from './voxel-model-images.service.js';
+import { VoxelModelUsageService } from './voxel-model-usage.service.js';
 import { VoxelModelsController } from './voxel-models.controller.js';
 import { VoxelModelsService } from './voxel-models.service.js';
 
@@ -16,6 +17,7 @@ import { VoxelModelsService } from './voxel-models.service.js';
     VoxelModelCopyService,
     VoxelModelImagesService,
     VoxelModelImageEditService,
+    VoxelModelUsageService,
   ],
 })
 export class VoxelModelsModule {}

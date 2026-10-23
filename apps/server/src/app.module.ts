@@ -14,6 +14,7 @@ import { CharactersModule } from './characters/characters.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { BlockGroupsModule } from './block-groups/block-groups.module.js';
 import { VoxelModelsModule } from './voxel-models/voxel-models.module.js';
+import { FurnitureModule } from './furniture/furniture.module.js';
 import { EffectsModule } from './effects/effects.module.js';
 import { GamesModule } from './games/games.module.js';
 import { MonstersModule } from './monsters/monsters.module.js';
@@ -42,6 +43,7 @@ const level = process.env.LOG_LEVEL ?? 'info';
     EffectsModule,
     BlockGroupsModule,
     VoxelModelsModule,
+    FurnitureModule,
     MonstersModule,
     ApiTokensModule,
     BookmarksModule,

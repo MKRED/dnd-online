@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   Param,
   ParseUUIDPipe,
@@ -15,6 +16,7 @@ import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import { CatalogEntriesController } from '../catalog/entries/catalog-entries.controller.js';
 import { VoxelModelDto } from './dto/voxel-model.dto.js';
 import { VoxelModelCopyService } from './voxel-model-copy.service.js';
+import { VoxelModelUsageService } from './voxel-model-usage.service.js';
 import type { VoxelModelVariant } from './voxel-models.config.js';
 import { VoxelModelsService } from './voxel-models.service.js';
 
@@ -28,6 +30,7 @@ export class VoxelModelsController extends CatalogEntriesController<
   constructor(
     service: VoxelModelsService,
     private readonly copyService: VoxelModelCopyService,
+    private readonly usageService: VoxelModelUsageService,
   ) {
     super(service);
   }
@@ -50,6 +53,16 @@ export class VoxelModelsController extends CatalogEntriesController<
     return this.service.replace(req.user.sub, id, dto, {
       viaApiToken: req.viaApiToken,
     });
+  }
+
+  // Где стоит модель — для вопроса перед удалением; только автору (этап 8б).
+  @AllowApiToken()
+  @Get(':id/usage')
+  usage(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.usageService.usage(req.user.sub, id);
   }
 
   // Скопировать себе чужую модель — свою копию со ссылкой на оригинал.

@@ -9,6 +9,9 @@ export interface CatalogScenario {
   body: Record<string, unknown>;
   // Свои поля каталога, которые сервер обязан отклонить (400).
   invalid: Record<string, unknown>;
+  // Записи, без которых тело не примут, — до всех тестов, от имени автора: у
+  // обстановки это своя модель (docs/plan/blocks.md, этап 8б). Возвращает поля поверх body.
+  prepare?: (author: request.Agent) => Promise<Record<string, unknown>>;
 }
 
 export interface CatalogContext {

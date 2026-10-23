@@ -25,10 +25,12 @@ export function describeCatalog(
       t = await createTestApp();
       const author = await t.loginAs('author');
       const stranger = await t.loginAs('stranger');
+      const prepared = (await scenario.prepare?.(author)) ?? {};
       const url = (id?: string) =>
         id ? `/api/${scenario.path}/${id}` : `/api/${scenario.path}`;
       const body = (over: Record<string, unknown> = {}) => ({
         ...scenario.body,
+        ...prepared,
         ...over,
       });
       ctx = {

@@ -1,0 +1,134 @@
+/* Шапка по варианту Е: тёплое свечение за логотипом и латунная линия вместо рамки.
+   Цвета — из палитр src/theme/palettes.ts: латунь в тёмной схеме, кожа в светлой. */
+.header {
+  --logo-glow: rgba(205, 147, 82, 0.22);
+  --logo-die: var(--mantine-color-leather-7);
+  --logo-die-fill: rgba(197, 132, 61, 0.14);
+  --logo-die-halo: rgba(205, 147, 82, 0.5);
+  --logo-word: linear-gradient(180deg, #b0702f 0%, #925a26 50%, #5b3616 100%);
+  --logo-sub: #6b5845;
+  --header-rule-edge: var(--mantine-color-leather-4);
+  --header-rule-mid: var(--mantine-color-leather-7);
+
+  /* Шапка чуть светлее пергамента страницы, как в макете. */
+  background: #f8f1e2;
+
+  /* Линия — псевдоэлемент: обычная рамка не умеет гаснуть к краям. */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 -1px;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--header-rule-edge) 15%,
+      var(--header-rule-mid) 50%,
+      var(--header-rule-edge) 85%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  @mixin dark {
+    --logo-glow: rgba(193, 154, 71, 0.16);
+    --logo-die: var(--mantine-color-brass-3);
+    --logo-die-fill: rgba(193, 154, 71, 0.14);
+    --logo-die-halo: rgba(214, 187, 121, 0.45);
+    --logo-word: linear-gradient(180deg, #f1e6c8 0%, #d6bb79 45%, #a9843a 100%);
+    --logo-sub: #a8998a;
+    --header-rule-edge: var(--mantine-color-brass-6);
+    --header-rule-mid: var(--mantine-color-brass-3);
+
+    background: var(--mantine-color-body);
+  }
+}
+
+.logo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  white-space: nowrap;
+
+  /* Свечение — за логотипом, а не на всю шапку: так оно едет вместе с ним,
+     когда на телефоне слева встаёт бургер. Шапка — свой контекст наложения,
+     поэтому z-index -1 кладёт его поверх её фона, но под логотип. */
+  &::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 50%;
+    top: 50%;
+    width: 340px;
+    height: 90px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(closest-side, var(--logo-glow), transparent);
+    pointer-events: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mantine-primary-color-filled);
+    outline-offset: 4px;
+    border-radius: var(--mantine-radius-sm);
+  }
+
+  @media (max-width: $mantine-breakpoint-xs) {
+    gap: 10px;
+
+    &::before {
+      width: 170px;
+      height: 60px;
+    }
+  }
+}
+
+.die {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  color: var(--logo-die);
+  fill: var(--logo-die-fill);
+  filter: drop-shadow(0 0 6px var(--logo-die-halo));
+
+  @media (max-width: $mantine-breakpoint-xs) {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* «DnD» и «ONLINE» — на общей базовой линии, как надпись на обложке. */
+.wordmark {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+/* Cinzel — только для латиницы логотипа; кириллица интерфейса — Golos и Unbounded. */
+.word {
+  font:
+    800 27px / 1 Cinzel,
+    serif;
+  letter-spacing: 0.02em;
+  background: var(--logo-word);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+
+  @media (max-width: $mantine-breakpoint-xs) {
+    font-size: 22px;
+  }
+}
+
+.sub {
+  font:
+    700 11px / 1 Cinzel,
+    serif;
+  letter-spacing: 0.42em;
+  color: var(--logo-sub);
+
+  @media (max-width: $mantine-breakpoint-xs) {
+    display: none;
+  }
+}

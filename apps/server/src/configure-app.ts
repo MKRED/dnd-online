@@ -38,6 +38,10 @@ export function configureApp(app: NestExpressApplication): void {
   // Все API-роуты под /api: в проде SPA отдаётся с того же origin, и без префикса
   // SPA-роут /characters конфликтовал бы с API-роутом /characters.
   app.setGlobalPrefix('api');
+  // JSON до 2 МБ, а не 100 КБ по умолчанию: модель из вокселей приходит одним телом
+  // (до 1,5 млн знаков сжатых вокселей, docs/plan/blocks.md, этап 8а). Файлы (картинки,
+  // 3D-модели персонажей) идут multipart и этого предела не касаются.
+  app.useBodyParser('json', { limit: '2mb' });
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.enableCors({

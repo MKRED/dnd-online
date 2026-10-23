@@ -379,6 +379,13 @@
       "when": 1792667375419,
       "tag": "0053_library_models",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1792735686328,
+      "tag": "0054_voxel_models",
+      "breakpoints": true
     }
   ]
 }

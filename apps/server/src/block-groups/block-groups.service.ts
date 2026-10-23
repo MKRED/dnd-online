@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { eq, inArray } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { CatalogEntryFields } from 'shared';
+import { attachOrigins } from '../catalog/copies/catalog-origins.js';
 import { CatalogEntriesService } from '../catalog/entries/catalog-entries.service.js';
 import type { CatalogWriteOptions } from '../catalog/token-publication.js';
 import { DatabaseService } from '../database/database.service.js';
@@ -10,7 +11,6 @@ import {
   BLOCK_GROUPS_CONFIG,
   type BlockGroupVariant,
 } from './block-groups.config.js';
-import { blockGroupVersion } from './block-group-version.js';
 import { BlockSceneNotifier } from './block-scene-notifier.service.js';
 import type { BlockGroupDto } from './dto/block-group.dto.js';
 
@@ -67,44 +67,9 @@ export class BlockGroupsService extends CatalogEntriesService<
       );
   }
 
-  // У копий — виден ли оригинал тому, кто читает, и другие ли у него теперь вид и
-  // свойства, чем взяты в копию (docs/plan/blocks.md, этап 6б). Скрытый или удалённый оригинал — «недоступен», сама
-  // копия при этом не меняется.
-  protected override attachLinks = async (
+  // Ссылка копии на оригинал: виден ли он и обновлялся ли (этап 6б).
+  protected override attachLinks = (
     userId: string,
     entries: (BlockGroupVariant & CatalogEntryFields)[],
-  ): Promise<void> => {
-    const copies = entries.filter((entry) => entry.origin);
-    if (!copies.length) return;
-    const t0 = Date.now();
-    const ids = [...new Set(copies.map((entry) => entry.origin!.id))];
-    const originals = await this.database.db
-      .select({
-        id: blockGroups.id,
-        authorId: blockGroups.authorId,
-        isPublic: blockGroups.isPublic,
-        details: blockGroups.details,
-        extra: blockGroups.extra,
-      })
-      .from(blockGroups)
-      .where(inArray(blockGroups.id, ids));
-    const byId = new Map(originals.map((row) => [row.id, row]));
-    for (const entry of copies) {
-      const origin = entry.origin!;
-      const row = byId.get(origin.id);
-      origin.available = Boolean(
-        row && (row.isPublic || row.authorId === userId),
-      );
-      origin.updated =
-        origin.available && blockGroupVersion(row!) !== origin.version;
-    }
-    this.log.debug(
-      {
-        durationMs: Date.now() - t0,
-        copies: copies.length,
-        found: originals.length,
-      },
-      'Block group origins attached',
-    );
-  };
+  ) => attachOrigins(this.database, blockGroups, this.log, userId, entries);
 }

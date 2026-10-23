@@ -12,7 +12,9 @@ function VoxelToolbar({ editor }: { editor: VoxelEditorState }) {
   return (
     <Group gap="xs" justify="space-between">
       <Group gap={4} role="radiogroup" aria-label="Инструмент">
-        {VOXEL_TOOLS.map(({ tool, label, key, icon: ToolIcon }) => (
+        {VOXEL_TOOLS.filter(
+          ({ tool }) => !editor.cellsOnly || tool === 'cells',
+        ).map(({ tool, label, key, icon: ToolIcon }) => (
           <Tooltip key={tool} label={`${label} (${key})`}>
             <ActionIcon
               size="lg"
@@ -50,16 +52,18 @@ function VoxelToolbar({ editor }: { editor: VoxelEditorState }) {
             <IconArrowForwardUp size={18} />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label="Повернуть модель на 90° по часовой — «вперёд» всегда к стрелке">
-          <ActionIcon
-            size="lg"
-            variant="default"
-            aria-label="Повернуть на 90°"
-            onClick={editor.rotate}
-          >
-            <IconRotateClockwise size={18} />
-          </ActionIcon>
-        </Tooltip>
+        {!editor.cellsOnly && (
+          <Tooltip label="Повернуть модель на 90° по часовой — «вперёд» всегда к стрелке">
+            <ActionIcon
+              size="lg"
+              variant="default"
+              aria-label="Повернуть на 90°"
+              onClick={editor.rotate}
+            >
+              <IconRotateClockwise size={18} />
+            </ActionIcon>
+          </Tooltip>
+        )}
       </Group>
     </Group>
   );

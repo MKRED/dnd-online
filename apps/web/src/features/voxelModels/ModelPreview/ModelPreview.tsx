@@ -1,23 +1,36 @@
 import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { useMemo } from 'react';
-import type { Vec3, VoxelModelFields } from 'shared';
+import type { ModelMeshFit, Vec3, VoxelModelFields } from 'shared';
+import type { MeshSource } from '../mesh/meshSource';
+import MeshModel from '../mesh/MeshModel';
+import { useMeshModel } from '../mesh/useMeshModel';
 import { cameraFor } from '../voxelCamera';
 import type { MeshChange } from '../voxelGeometry';
 import { gridFromFields } from '../voxelGrid';
 import VoxelGuides from '../VoxelGuides';
 import VoxelMeshes from '../VoxelMeshes';
 
+// Загруженный файл модели (этап 9): есть — рисуется он, пока грузится или не прочитался —
+// воксели.
+export interface PreviewMesh {
+  source: MeshSource;
+  fit: ModelMeshFit;
+  color: string | null;
+}
+
 interface ModelPreviewProps {
   model: VoxelModelFields;
   size?: number;
+  mesh?: PreviewMesh | null;
 }
 
 // Модель на карточке и в форме: медленно вращается, мышью её можно покрутить и
 // приблизить; под ней — клетки, которые она займёт, и стрелка «вперёд».
 // Модуль грузится лениво (voxelModels/index.ts): three не должен попасть в общий бандл.
-function ModelPreview({ model, size = 260 }: ModelPreviewProps) {
+function ModelPreview({ model, size = 260, mesh = null }: ModelPreviewProps) {
   const grid = useMemo(() => gridFromFields(model), [model]);
+  const loaded = useMeshModel(mesh?.source ?? null);
   const change = useMemo<MeshChange>(
     () => ({ version: 0, cells: 'all' }),
     // Новая модель — новая сборка всех клеток.
@@ -37,7 +50,17 @@ function ModelPreview({ model, size = 260 }: ModelPreviewProps) {
         <directionalLight position={[60, 120, -80]} intensity={1.4} />
         <directionalLight position={[-80, 40, 60]} intensity={0.4} />
         <group position={offset}>
-          <VoxelMeshes grid={grid} change={change} sliceTop={grid.dims[1]} />
+          {mesh && loaded?.status === 'ready' ? (
+            <MeshModel
+              model={loaded.model}
+              fit={mesh.fit}
+              size={model.size}
+              color={mesh.color}
+              voxelUnit={1}
+            />
+          ) : (
+            <VoxelMeshes grid={grid} change={change} sliceTop={grid.dims[1]} />
+          )}
           <VoxelGuides dims={grid.dims} />
         </group>
         <OrbitControls

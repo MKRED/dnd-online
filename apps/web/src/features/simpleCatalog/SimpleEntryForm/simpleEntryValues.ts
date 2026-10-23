@@ -24,6 +24,7 @@ import {
 import { spellValidate, toSpellValues, type SpellValues } from '../SpellFields';
 import { stepsValidate, toStepValues, type StepValues } from '../StepsField';
 import { toUsageValues, usageValidate, type UsageValues } from '../UsageField';
+import { toMeshDraft, type MeshDraft } from '../VoxelModel/mesh/meshDraft';
 import type {
   SimpleCatalogDef,
   SimpleEntry,
@@ -51,6 +52,8 @@ export interface SimpleFormValues {
   block: BlockValues;
   // Модель из вокселей (docs/plan/blocks.md, этап 8а): её правит редактор целиком.
   model: VoxelModelFields;
+  // Загруженный файл модели (этап 9); null — файла нет.
+  modelMesh: MeshDraft | null;
   // Модель и крепление обстановки (этап 8б).
   furniture: FurnitureValues;
 }
@@ -114,6 +117,7 @@ export function toSimpleFormValues(
             cells: entry.cells,
           }
         : emptyVoxelModel(),
+    modelMesh: toMeshDraft(entry && 'voxels' in entry ? entry : null),
     furniture: toFurnitureValues(entry && 'mount' in entry ? entry : undefined),
   };
 }

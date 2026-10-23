@@ -32,6 +32,17 @@ async function parse(
   return new Mesh(geometry, new MeshStandardMaterial());
 }
 
+// Модель из байтов в памяти — файл, выбранный в форме и ещё не загруженный
+// (docs/plan/blocks.md, этап 9): без кэша, у файла нет адреса.
+export async function parseModelData(
+  data: ArrayBuffer,
+  format: CharacterModelFormat,
+): Promise<LoadedModel> {
+  const object = await parse(data, format);
+  const { min, max } = new Box3().setFromObject(object);
+  return { format, object, box: { min: min.toArray(), max: max.toArray() } };
+}
+
 export function loadModel(
   path: string,
   format: CharacterModelFormat,

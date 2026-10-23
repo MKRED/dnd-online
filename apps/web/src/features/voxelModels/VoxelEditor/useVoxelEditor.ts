@@ -36,9 +36,12 @@ export type CellTool = ModelCellKind | 'auto';
 // шаг указателя была бы слишком дорогой) — React узнаёт о правке по номеру версии, а
 // сцена пересобирает только тронутые клетки. Новый объект сетки — только у размера,
 // поворота и свойств клеток.
+// cellsOnly — модель с загруженным файлом (этап 9): воксели считаются из файла, править
+// можно только свойства клеток.
 export function useVoxelEditor(
   initial: VoxelModelFields,
   initialColor: string,
+  cellsOnly = false,
 ) {
   const [grid, setGrid] = useState(() => gridFromFields(initial));
   const [history, setHistory] = useState<VoxelHistory>(emptyHistory);
@@ -46,7 +49,10 @@ export function useVoxelEditor(
     version: 0,
     cells: 'all',
   });
-  const [tool, setTool] = useState<VoxelTool>('place');
+  const [tool, setAnyTool] = useState<VoxelTool>(cellsOnly ? 'cells' : 'place');
+  const setTool = (next: VoxelTool) => {
+    if (!cellsOnly) setAnyTool(next);
+  };
   const [color, setColor] = useState(initialColor);
   const [brush, setBrush] = useState<BrushSize>(1);
   const [mirror, setMirror] = useState<Mirror>({ x: false, z: false });
@@ -183,6 +189,7 @@ export function useVoxelEditor(
   return {
     grid,
     change,
+    cellsOnly,
     tool,
     setTool,
     color,

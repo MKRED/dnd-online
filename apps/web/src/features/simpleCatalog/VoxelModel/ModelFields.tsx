@@ -1,19 +1,21 @@
-import { Button, Fieldset, Stack, Text } from '@mantine/core';
+import { Button, Fieldset, Group, Stack, Text } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import { IconCube } from '@tabler/icons-react';
 import { Suspense, useState } from 'react';
 import type { VoxelModelFields } from 'shared';
 import { VoxelEditorModal } from '../../voxelModels';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
+import MeshFields from './mesh/MeshFields';
+import MeshFileButton from './mesh/MeshFileButton';
 import { modelCellsText, modelColorsText, modelSizeText } from './modelCard';
 
 const lowerFirst = (text: string) => text[0].toLowerCase() + text.slice(1);
 
-// Поле модели в форме (docs/plan/blocks.md, этап 8а): что сейчас в модели и кнопка
-// редактора. Редактор открывается поверх формы, «Готово» кладёт модель в форму, а
+// Поле модели в форме (docs/plan/blocks.md, этапы 8а и 9): что сейчас в модели и кнопка
+// редактора или загрузки файла; у модели с файлом — его настройки (MeshFields). Редактор открывается поверх формы, «Готово» кладёт модель в форму, а
 // сохраняет её кнопка формы.
 function ModelFields({ form }: { form: UseFormReturnType<SimpleFormValues> }) {
-  const { model } = form.getValues();
+  const { model, modelMesh } = form.getValues();
   const [editing, setEditing] = useState<VoxelModelFields | null>(null);
   const empty = model.palette.length === 0;
   return (
@@ -24,14 +26,21 @@ function ModelFields({ form }: { form: UseFormReturnType<SimpleFormValues> }) {
           {modelColorsText(model)}. Свойства клеток:{' '}
           {lowerFirst(modelCellsText(model))}.
         </Text>
-        <Button
-          leftSection={<IconCube size={18} />}
-          variant={empty ? 'filled' : 'light'}
-          w="fit-content"
-          onClick={() => setEditing(model)}
-        >
-          {empty ? 'Нарисовать модель' : 'Открыть редактор'}
-        </Button>
+        {modelMesh ? (
+          <MeshFields form={form} draft={modelMesh} />
+        ) : (
+          <Group gap="xs" align="flex-start">
+            <Button
+              leftSection={<IconCube size={18} />}
+              variant={empty ? 'filled' : 'light'}
+              w="fit-content"
+              onClick={() => setEditing(model)}
+            >
+              {empty ? 'Нарисовать модель' : 'Открыть редактор'}
+            </Button>
+            <MeshFileButton form={form} label="Загрузить .glb или STL" />
+          </Group>
+        )}
       </Stack>
       <Suspense fallback={null}>
         {editing && (

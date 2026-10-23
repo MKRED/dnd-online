@@ -10,12 +10,38 @@ type Turn = ModelMeshFit['turn'];
 
 // Ось «вверх» файла — в Y модели, потом поворот вокруг вертикали по часовой (вид сверху):
 // север (−z) уходит на восток (+x), как у клеток воксельной модели.
-function orient(x: number, y: number, z: number, fit: ModelMeshFit): Vec3 {
+export function orientMeshPoint(
+  x: number,
+  y: number,
+  z: number,
+  fit: ModelMeshFit,
+): Vec3 {
   const [ux, uy, uz] = fit.up === 'z' ? [x, z, -y] : [x, y, z];
   let px = ux;
   let pz = uz;
   for (let i = 0; i < (fit.turn as Turn); i++) [px, pz] = [-pz, px];
   return [px, uy, pz];
+}
+
+// Как вписать коробку файла (уже повёрнутую) в клетки модели: равномерный масштаб во весь
+// размер и сдвиг — стоит на дне, по середине по x и z. В вокселях модели.
+export function meshPlacement(
+  min: readonly number[],
+  max: readonly number[],
+  size: Vec3,
+): { scale: number; shift: Vec3 } | null {
+  const dims = modelVoxelSize(size);
+  const extent = [0, 1, 2].map((a) => max[a] - min[a]);
+  const scale = Math.min(
+    ...[0, 1, 2].map((a) => (extent[a] > 0 ? dims[a] / extent[a] : Infinity)),
+  );
+  if (!Number.isFinite(scale)) return null;
+  const shift: Vec3 = [
+    (dims[0] - extent[0] * scale) / 2 - min[0] * scale,
+    -min[1] * scale,
+    (dims[2] - extent[2] * scale) / 2 - min[2] * scale,
+  ];
+  return { scale, shift };
 }
 
 // Треугольники в координатах вокселей: модель повёрнута, равномерно уменьшена или
@@ -29,24 +55,21 @@ export function fitMeshTriangles(
   const min = [Infinity, Infinity, Infinity];
   const max = [-Infinity, -Infinity, -Infinity];
   for (let i = 0; i < positions.length; i += 3) {
-    const p = orient(positions[i], positions[i + 1], positions[i + 2], fit);
+    const p = orientMeshPoint(
+      positions[i],
+      positions[i + 1],
+      positions[i + 2],
+      fit,
+    );
     for (let a = 0; a < 3; a++) {
       out[i + a] = p[a];
       min[a] = Math.min(min[a], p[a]);
       max[a] = Math.max(max[a], p[a]);
     }
   }
-  const dims = modelVoxelSize(size);
-  const extent = [0, 1, 2].map((a) => max[a] - min[a]);
-  const scale = Math.min(
-    ...[0, 1, 2].map((a) => (extent[a] > 0 ? dims[a] / extent[a] : Infinity)),
-  );
-  if (!Number.isFinite(scale)) return new Float32Array();
-  const shift = [0, 1, 2].map((a) =>
-    a === 1
-      ? -min[1] * scale
-      : (dims[a] - extent[a] * scale) / 2 - min[a] * scale,
-  );
+  const placement = meshPlacement(min, max, size);
+  if (!placement) return new Float32Array();
+  const { scale, shift } = placement;
   for (let i = 0; i < out.length; i += 3)
     for (let a = 0; a < 3; a++) out[i + a] = out[i + a] * scale + shift[a];
   return out;

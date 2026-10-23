@@ -9,6 +9,8 @@ export interface VoxelEditorModalProps {
   title: string;
   onDone: (model: VoxelModelFields) => void;
   onClose: () => void;
+  // Модель с загруженным файлом: только свойства клеток (этап 9).
+  cellsOnly?: boolean;
 }
 
 // Воксельный редактор поверх формы (docs/plan/blocks.md, этап 8а) — на весь экран:
@@ -19,6 +21,7 @@ function VoxelEditorModal({
   title,
   onDone,
   onClose,
+  cellsOnly = false,
 }: VoxelEditorModalProps) {
   const [confirmClose, setConfirmClose] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -41,6 +44,7 @@ function VoxelEditorModal({
       {model && (
         <VoxelEditorBody
           model={model}
+          cellsOnly={cellsOnly}
           confirmClose={confirmClose}
           onDirty={setDirty}
           onKeepEditing={() => setConfirmClose(false)}

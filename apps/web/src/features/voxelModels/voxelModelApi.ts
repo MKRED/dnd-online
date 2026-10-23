@@ -1,4 +1,10 @@
-import type { VoxelModel, VoxelModelInput, VoxelModelUsage } from 'shared';
+import type {
+  ModelMesh,
+  ModelMeshFit,
+  VoxelModel,
+  VoxelModelInput,
+  VoxelModelUsage,
+} from 'shared';
 import { apiRequest } from '../../lib/apiRequest';
 import { catalogApi } from '../catalog';
 
@@ -18,3 +24,23 @@ export const pullVoxelModel = (id: string): Promise<VoxelModel> =>
 // Обстановка с этой моделью — для вопроса перед удалением модели.
 export const voxelModelUsage = (id: string): Promise<VoxelModelUsage> =>
   apiRequest(`/voxel-models/${id}/usage`);
+
+// Загруженный файл модели (этап 9): загрузка заменяет прежний, цвет STL и вписывание —
+// отдельной правкой, удаление оставляет воксели.
+export function uploadModelMesh(id: string, file: File): Promise<ModelMesh> {
+  const body = new FormData();
+  body.append('file', file);
+  return apiRequest(`/voxel-models/${id}/mesh`, { method: 'PUT', body });
+}
+
+export const patchModelMesh = (
+  id: string,
+  patch: { color?: string; fit?: ModelMeshFit },
+): Promise<ModelMesh> =>
+  apiRequest(`/voxel-models/${id}/mesh`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  });
+
+export const removeModelMesh = (id: string): Promise<void> =>
+  apiRequest(`/voxel-models/${id}/mesh`, { method: 'DELETE' });

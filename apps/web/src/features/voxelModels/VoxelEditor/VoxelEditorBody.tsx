@@ -17,6 +17,7 @@ import { VOXEL_TOOLS } from './voxelTools';
 
 export interface VoxelEditorBodyProps {
   model: VoxelModelFields;
+  cellsOnly: boolean;
   confirmClose: boolean;
   onDirty: (dirty: boolean) => void;
   onKeepEditing: () => void;
@@ -28,10 +29,11 @@ export interface VoxelEditorBodyProps {
 // Содержимое окна редактора модели: монтируется заново на каждое открытие, поэтому
 // сетка и история всегда начинаются с модели формы.
 function VoxelEditorBody(props: VoxelEditorBodyProps) {
-  const { model, confirmClose, onDirty } = props;
+  const { model, confirmClose, onDirty, cellsOnly } = props;
   const editor = useVoxelEditor(
     model,
     model.palette[0] ?? PIXEL_PALETTE[1].colors[2],
+    cellsOnly,
   );
   useEffect(() => onDirty(editor.dirty), [onDirty, editor.dirty]);
   const { grid, change } = editor;
@@ -83,7 +85,14 @@ function VoxelEditorBody(props: VoxelEditorBodyProps) {
           </>
         )}
         <Divider />
-        <VoxelSizeControls editor={editor} />
+        {cellsOnly ? (
+          <Text size="sm" c="dimmed">
+            Модель загружена файлом: воксели считаются из него. Размер, верх и
+            поворот меняются в форме модели.
+          </Text>
+        ) : (
+          <VoxelSizeControls editor={editor} />
+        )}
         {confirmClose ? (
           <Stack gap="xs">
             <Text size="sm">

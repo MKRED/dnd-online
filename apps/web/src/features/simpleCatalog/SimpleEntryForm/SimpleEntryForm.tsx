@@ -78,14 +78,20 @@ function SimpleEntryForm({
       draft,
       saved?.image ?? null,
     )
-      .then(({ entry: result, imageError }) => {
-        if (!imageError) {
+      .then(async ({ entry: result, imageError }) => {
+        // Своё сохранение раздела — и после неудачной картинки: запись уже есть.
+        const extraError =
+          (await def.extras.afterSave?.(result, values)) ?? null;
+        const problem = imageError
+          ? `${def.texts.imageNotSaved}: ${imageError}`
+          : extraError;
+        if (!problem) {
           onSaved(result);
           return;
         }
         setSaved(result);
         setError(
-          `${def.texts.imageNotSaved}: ${imageError}. Нажмите «${submitLabel}», чтобы попробовать ещё раз.`,
+          `${problem}. Нажмите «${submitLabel}», чтобы попробовать ещё раз.`,
         );
       })
       .catch((err: unknown) => {

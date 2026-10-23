@@ -26,6 +26,9 @@ export function configureApp(app: NestExpressApplication): void {
         directives: {
           scriptSrc: ["'self'", "'wasm-unsafe-eval'"],
           imgSrc: ["'self'", 'data:', 'blob:'],
+          // blob: в connect-src — для текстур .glb: GLTFLoader достаёт картинку из файла
+          // в object URL и читает её через fetch. Без этого модель выходит без текстур.
+          connectSrc: ["'self'", 'blob:'],
           upgradeInsecureRequests:
             process.env.NODE_ENV === 'production' ? [] : null,
         },

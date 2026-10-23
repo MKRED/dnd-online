@@ -14,12 +14,19 @@ describe('заголовки безопасности (e2e)', () => {
     await t.close();
   });
 
-  it('CSP пускает WebAssembly для сжатия моделей, но не eval', async () => {
+  const directive = async (name: string) => {
     const res = await t.anonymous().get('/api/auth/me').expect(401);
     const csp = res.headers['content-security-policy'];
-    const scriptSrc = csp
-      .split(';')
-      .find((directive) => directive.startsWith('script-src '));
-    expect(scriptSrc).toBe("script-src 'self' 'wasm-unsafe-eval'");
+    return csp.split(';').find((part) => part.startsWith(`${name} `));
+  };
+
+  it('CSP пускает WebAssembly для сжатия моделей, но не eval', async () => {
+    expect(await directive('script-src')).toBe(
+      "script-src 'self' 'wasm-unsafe-eval'",
+    );
+  });
+
+  it('CSP пускает fetch blob: — так GLTFLoader читает текстуры .glb', async () => {
+    expect(await directive('connect-src')).toBe("connect-src 'self' blob:");
   });
 });

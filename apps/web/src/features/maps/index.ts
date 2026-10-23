@@ -16,10 +16,17 @@ export { mapStateFromChunks } from './mapStateFromChunks';
 export { useMapData, type LoadedMap } from './useMapData';
 export { ShapeSwatch } from './editor/BlockPicker';
 // Текстуры своих групп блоков для раздела «Блоки» (docs/plan/blocks.md, этап 4б).
-export { decodeTextures, tileToBase64 } from './render/textures/customTiles';
+export {
+  decodeTextures,
+  tileFromBase64,
+  tileToBase64,
+} from './render/textures/customTiles';
 export {
   downscaleTile,
   meanTextureColor,
 } from './render/textures/downscaleTile';
 export { materialTextures } from './render/textures/materialTextures';
 export { ownTileImage } from './render/textures/tileImages';
+export { TILE_SIZE, type Tile } from './render/textures/pixels';
+export { pngDataUrl } from './render/textures/encodePng';
+export { useKeyCodes } from './useKeyCodes';

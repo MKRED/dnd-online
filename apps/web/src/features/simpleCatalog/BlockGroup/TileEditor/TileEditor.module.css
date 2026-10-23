@@ -1,0 +1,83 @@
+/* Редактор текстуры: холст слева, инструменты справа; на узком экране — столбиком. */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+  gap: var(--mantine-spacing-lg);
+  align-items: start;
+}
+
+@media (max-width: 48em) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.canvasFrame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--mantine-radius-sm);
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--mantine-color-default-border);
+  /* Шахматка под прозрачными пикселями: 2×2 клетки шахматки на пиксель плитки.
+     Свои серые для каждой темы — фон страницы с ней почти сливался, и дыры терялись. */
+  --checker-light: var(--mantine-color-gray-0);
+  --checker-dark: var(--mantine-color-gray-4);
+  background: repeating-conic-gradient(
+      var(--checker-dark) 0 25%,
+      var(--checker-light) 0 50%
+    )
+    0 0 / calc(100% / 16) calc(100% / 16);
+}
+
+:global([data-mantine-color-scheme='dark']) .canvasFrame {
+  --checker-light: var(--mantine-color-dark-4);
+  --checker-dark: var(--mantine-color-dark-6);
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  cursor: crosshair;
+  /* Палец рисует, а не прокручивает страницу. */
+  touch-action: none;
+}
+
+/* Сетка пикселей поверх холста; события проходят сквозь неё к canvas. */
+.grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgb(128 128 128 / 0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(128 128 128 / 0.35) 1px, transparent 1px);
+  background-size: calc(100% / 16) calc(100% / 16);
+}
+
+.swatch {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--mantine-radius-xs);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.25);
+}
+
+.swatch[data-active] {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+.tiled {
+  width: 7.5rem;
+  height: 7.5rem;
+  border-radius: var(--mantine-radius-xs);
+  image-rendering: pixelated;
+  box-shadow: 0 0 0 1px var(--mantine-color-default-border);
+  background-color: var(--mantine-color-gray-3);
+  background-repeat: repeat;
+  background-size: calc(100% / 3) calc(100% / 3);
+}

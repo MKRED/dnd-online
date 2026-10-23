@@ -1,19 +1,10 @@
-import {
-  Alert,
-  Button,
-  FileButton,
-  Group,
-  SegmentedControl,
-  Stack,
-  Text,
-} from '@mantine/core';
+import { Alert, Group, SegmentedControl, Stack, Text } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import { useState } from 'react';
 import {
   decodeTextures,
   downscaleTile,
   meanTextureColor,
-  ownTileImage,
   tileToBase64,
 } from '../../maps';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
@@ -25,6 +16,8 @@ import {
   type TextureMode,
 } from './blockTextureForm';
 import { ImageTooLargeError, readImagePixels } from './readImagePixels';
+import TextureTileCard from './TextureTileCard';
+import { TileEditorModal, type TileEditorTarget } from './TileEditor';
 
 const MODES: { value: TextureMode; label: string }[] = [
   { value: 'pattern', label: 'Узор основы' },
@@ -38,10 +31,9 @@ const FACE_LABELS: Record<TextureFace, string> = {
   bottom: 'Низ',
 };
 
-const IMAGE_TYPES = 'image/png,image/jpeg,image/webp,image/gif';
-
-// Свои текстуры группы (docs/plan/blocks.md, этап 4б). Картинка сжимается до 16×16 в
-// браузере и уходит вместе с формой; основной цвет становится её средним цветом.
+// Свои текстуры группы (docs/plan/blocks.md, этапы 4б и 5). Плитку загружают картинкой
+// (сжимается до 16×16 в браузере) или рисуют в пиксельном редакторе; она уходит вместе
+// с формой, а основной цвет становится средним цветом текстур.
 function BlockTexturesField({
   form,
 }: {
@@ -55,6 +47,16 @@ function BlockTexturesField({
   const shown = chosen === 'faces' && textures ? 'faces' : mode;
   const [error, setError] = useState<string | null>(null);
   const [reading, setReading] = useState<TextureFace | null>(null);
+  const [drawing, setDrawing] = useState<TileEditorTarget | null>(null);
+
+  // Новая плитка грани — из загрузки или из редактора; текстуры берутся свежие из формы.
+  const applyTile = (face: TextureFace, tile: string) => {
+    const current = form.getValues().block.textures;
+    if (!current) return;
+    const next = withUploadedTile(shown, current, face, tile);
+    form.setFieldValue('block.textures', next);
+    form.setFieldValue('block.color', meanTextureColor(decodeTextures(next)));
+  };
 
   // Переход к «одной на все» оставляет боковую плитку, к узору — убирает свои
   // текстуры совсем; до сохранения формы это отменяется кнопкой «Отмена».
@@ -75,17 +77,9 @@ function BlockTexturesField({
     setError(null);
     setReading(face);
     readImagePixels(file)
-      .then(({ rgba, width, height }) => {
-        const current = form.getValues().block.textures;
-        if (!current) return;
-        const tile = tileToBase64(downscaleTile(rgba, width, height));
-        const next = withUploadedTile(shown, current, face, tile);
-        form.setFieldValue('block.textures', next);
-        form.setFieldValue(
-          'block.color',
-          meanTextureColor(decodeTextures(next)),
-        );
-      })
+      .then(({ rgba, width, height }) =>
+        applyTile(face, tileToBase64(downscaleTile(rgba, width, height))),
+      )
       .catch((err: unknown) => {
         console.error('Failed to read block texture image', err);
         setError(
@@ -117,59 +111,49 @@ function BlockTexturesField({
       {textures && (
         <>
           <Group gap="md" align="flex-start">
-            {faces.map((face) => (
-              <Stack key={face} gap={4} align="center">
-                <img
-                  src={ownTileImage(textures[face])}
+            {faces.map((face) => {
+              const single = shown === 'single';
+              const faceName = FACE_LABELS[face].toLowerCase();
+              return (
+                <TextureTileCard
+                  key={face}
+                  tile={textures[face]}
+                  label={single ? 'Все грани' : FACE_LABELS[face]}
                   alt={
-                    shown === 'single'
-                      ? 'Текстура всех граней'
-                      : `Текстура: ${FACE_LABELS[face].toLowerCase()}`
+                    single ? 'Текстура всех граней' : `Текстура: ${faceName}`
                   }
-                  width={64}
-                  height={64}
-                  style={{
-                    imageRendering: 'pixelated',
-                    borderRadius: 4,
-                    boxShadow:
-                      'inset 0 0 0 1px var(--mantine-color-default-border)',
-                    background:
-                      'repeating-conic-gradient(var(--mantine-color-default-hover) 0 25%, transparent 0 50%) 0 0 / 16px 16px',
-                  }}
+                  target={single ? 'текстуру' : `текстуру: ${faceName}`}
+                  reading={reading === face}
+                  disabled={reading !== null && reading !== face}
+                  onUpload={(file) => upload(face, file)}
+                  onDraw={() =>
+                    setDrawing({
+                      face,
+                      mode: shown,
+                      title: single
+                        ? 'Текстура всех граней'
+                        : `Текстура: ${faceName}`,
+                    })
+                  }
                 />
-                <Text size="xs" c="dimmed">
-                  {shown === 'single' ? 'Все грани' : FACE_LABELS[face]}
-                </Text>
-                <FileButton
-                  accept={IMAGE_TYPES}
-                  onChange={(file) => upload(face, file)}
-                >
-                  {(props) => (
-                    <Button
-                      {...props}
-                      size="compact-xs"
-                      variant="default"
-                      loading={reading === face}
-                      disabled={reading !== null && reading !== face}
-                      aria-label={
-                        shown === 'single'
-                          ? 'Загрузить текстуру'
-                          : `Загрузить текстуру: ${FACE_LABELS[face].toLowerCase()}`
-                      }
-                    >
-                      Загрузить
-                    </Button>
-                  )}
-                </FileButton>
-              </Stack>
-            ))}
+              );
+            })}
           </Group>
           <Text size="xs" c="dimmed">
-            Картинка сожмётся до 16×16 пикселей: возьмётся квадрат из середины.
-            Прозрачные пиксели станут дырами насквозь, как у листвы.
+            Нарисуйте плитку 16×16 или загрузите картинку — она сожмётся до
+            16×16, возьмётся квадрат из середины. Прозрачные пиксели станут
+            дырами насквозь, как у листвы.
           </Text>
         </>
       )}
+      <TileEditorModal
+        target={drawing}
+        textures={textures}
+        look={form.getValues().block.look}
+        color={form.getValues().block.color}
+        onDone={applyTile}
+        onClose={() => setDrawing(null)}
+      />
       {error && (
         <Alert color="red" p="xs">
           {error}

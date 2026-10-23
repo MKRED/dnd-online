@@ -39,6 +39,8 @@ export const FOG_EVENT_KINDS: ReadonlySet<GameEventKind> =
     'scene.undone',
     'scene.redone',
     'creature.moved',
+    // Свои блоки мастера на сцене стали другими: закрывают обзор иначе или пропали.
+    'blocks.changed',
     // Фигурки и смотрящие.
     'figures.placed',
     'figure.placed',

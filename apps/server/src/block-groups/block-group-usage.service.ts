@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { and, eq, isNull, sql } from 'drizzle-orm';
-import type { AnyPgColumn } from 'drizzle-orm/pg-core';
+import { and, eq, isNull } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { BlockGroupUsage } from 'shared';
 import { authoredEntry } from '../catalog/catalog-access.js';
@@ -11,12 +10,8 @@ import {
   games,
   maps,
 } from '../database/schema/index.js';
+import { usesGroup } from './block-group-palette.js';
 import { BLOCK_GROUP_ACCESS } from './block-groups.config.js';
-
-// Палитра хранит имена форм группы: id группы для куба и «id_форма» для остальных
-// (shared/customBlocks.ts), поэтому ищем по началу имени, а не по точному совпадению.
-const usesGroup = (palette: AnyPgColumn, groupId: string) =>
-  sql<boolean>`exists (select 1 from jsonb_array_elements_text(${palette}) as entry(name) where entry.name = ${groupId} or starts_with(entry.name, ${`${groupId}_`}))`;
 
 @Injectable()
 export class BlockGroupUsageService {

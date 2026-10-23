@@ -21,6 +21,7 @@ import { blockGroups, users } from '../database/schema/index.js';
 import { blockGroupVersion } from './block-group-version.js';
 import { BLOCK_GROUP_ACCESS } from './block-groups.config.js';
 import { BlockGroupsService } from './block-groups.service.js';
+import { BlockSceneNotifier } from './block-scene-notifier.service.js';
 
 type GroupRow = typeof blockGroups.$inferSelect;
 
@@ -52,6 +53,7 @@ export class BlockGroupCopyService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly groups: BlockGroupsService,
+    private readonly notifier: BlockSceneNotifier,
     @InjectPinoLogger(BlockGroupCopyService.name)
     private readonly logger: PinoLogger,
   ) {}
@@ -138,7 +140,15 @@ export class BlockGroupCopyService {
         { durationMs: Date.now() - t0, userId, entryId: id },
         'Block group pulled from origin',
       );
-      return this.groups.findOne(userId, id);
+      const pulled = await this.groups.findOne(userId, id);
+      // Новый вид и свойства копии — сразу на сценах игр (этап 7).
+      await this.notifier.changed(
+        userId,
+        { id, name: pulled.name },
+        false,
+        await this.notifier.scenesUsing(userId, id),
+      );
+      return pulled;
     } catch (err: unknown) {
       if (err instanceof HttpException) throw err;
       this.logger.error(

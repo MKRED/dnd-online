@@ -7,6 +7,7 @@ import {
   type GameSceneFogMessage,
   type GameSceneView,
   mergeRefsView,
+  parseCustomBlockName,
 } from 'shared';
 import { getGame, getGameScene, sceneEditApi } from '../../features/games';
 import { mapStateFromChunks } from '../../features/maps';
@@ -151,10 +152,23 @@ export function useGameScene(gameId: string) {
   const receiveEdit = useCallback(
     (message: GameSceneEditMessage) => {
       if (message.sceneId !== sceneId) return;
+      // Мастер впервые поставил блок своей группы: правка несёт только имя блока, а
+      // описание группы приходит со сценой — перечитываем (docs/plan/blocks.md, этап 7).
+      const catalog = copyRef.current?.state.blocks;
+      if (
+        message.changes.paletteAdded.some(
+          ({ name }) =>
+            parseCustomBlockName(name) !== null &&
+            catalog?.describe(name) === undefined,
+        )
+      ) {
+        reload();
+        return;
+      }
       const pending = receive(message.seq, message.changes, message.refs);
       if (!pending && seqRef.current === message.seq) mergeFog(message.fog);
     },
-    [receive, sceneId, mergeFog],
+    [receive, sceneId, mergeFog, reload],
   );
 
   // Туман изменился без правки сцены (ход фигурки): ложится на копию с тем же номером

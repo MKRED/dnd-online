@@ -149,6 +149,13 @@ export function gameEventText(event: GameEvent): string {
         `Убран из игры: ${event.result.member.nickname}`,
         event.result.character,
       );
+    case 'blocks.changed': {
+      const { group, deleted, scenes } = event.result;
+      const where = scenes.map((scene) => scene.name).join(', ');
+      return deleted
+        ? `Блок «${group.name}» удалён — на сценах он стал пустотой: ${where}`
+        : `Блок «${group.name}» изменён, сцены с ним обновлены: ${where}`;
+    }
   }
 }
 

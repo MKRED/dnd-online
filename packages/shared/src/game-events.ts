@@ -252,6 +252,17 @@ export interface GameEventPayloads {
     intent: { userId: string };
     result: { member: GameUser; character: GameEventCharacter | null };
   };
+  // Мастер изменил, обновил из оригинала или удалил свою группу блоков, которая стоит на
+  // сценах игры (docs/plan/blocks.md, этап 7): клиенты перечитывают сцену с новыми
+  // описаниями блоков, сервер пересчитывает туман. Удалённая группа на сценах — пустота.
+  'blocks.changed': {
+    intent: { groupId: string };
+    result: {
+      group: { id: string; name: string };
+      deleted: boolean;
+      scenes: GameSceneRef[];
+    };
+  };
 }
 
 export type GameEventKind = keyof GameEventPayloads;

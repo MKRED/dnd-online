@@ -26,6 +26,32 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'blocks.changed',
+        intent: { groupId: 'g1' },
+        result: {
+          group: { id: 'g1', name: 'Угли' },
+          deleted: false,
+          scenes: [lair],
+        },
+      },
+      'Блок «Угли» изменён, сцены с ним обновлены: Логово',
+    ],
+    [
+      {
+        ...base,
+        kind: 'blocks.changed',
+        intent: { groupId: 'g1' },
+        result: {
+          group: { id: 'g1', name: 'Угли' },
+          deleted: true,
+          scenes: [lair],
+        },
+      },
+      'Блок «Угли» удалён — на сценах он стал пустотой: Логово',
+    ],
+    [
+      {
+        ...base,
         kind: 'game.created',
         intent: { name: 'Логово', seatCount: 4, hasPassword: false },
         result: null,

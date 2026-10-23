@@ -22,6 +22,7 @@ import {
 import { ShapeSwatch } from '../../maps';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import { colorAfterLookChange } from './blockForm';
+import BlockSceneWarning from './BlockSceneWarning';
 import BlockTexturesField from './BlockTexturesField';
 
 // Однотонная основа — первой: с неё удобно начинать блок своего цвета или свою
@@ -45,6 +46,7 @@ function BlockFields({ form }: { form: UseFormReturnType<SimpleFormValues> }) {
   const hazard = block.hazard === 'none' ? null : HAZARDS[block.hazard];
   return (
     <Stack gap="md">
+      <BlockSceneWarning />
       <Fieldset legend="Вид">
         <Group align="flex-start" gap="md" mb="md">
           <Select

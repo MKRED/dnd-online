@@ -1,22 +1,30 @@
-import type { Vec3 } from '../coords.js';
 import { assertInsideMap, type MapSize } from '../mapSize.js';
+import type { MapState } from '../mapState.js';
 import { MapOpError } from '../mapOpError.js';
 import {
   CONTAINER_CAPACITY,
   containerLoad,
   loadLabel,
 } from './containerLoad.js';
-import { objectFacing, type MapObject, type MapObjects } from './mapObject.js';
+import { assertFurnitureFits } from './furniturePlacement.js';
+import {
+  isRightFacing,
+  objectFacing,
+  type MapObject,
+  type MapObjects,
+} from './mapObject.js';
 import type { ObjectChange } from './objectChanges.js';
 import { fieldsOfKind } from './objectFields.js';
 import type { ObjectOp } from './objectOps.js';
-import { objectSpan, type ObjectRefs } from './objectRefs.js';
+import { objectBox, type ObjectRefs } from './objectRefs.js';
 
 export interface ObjectEditContext {
   objects: MapObjects;
   refs: ObjectRefs;
   size: MapSize;
   maxObjects: number;
+  // Блоки карты — для строгих пересечений обстановки (этап 8в). Нет — не проверяются.
+  world?: MapState;
 }
 
 // Применяет операцию объекта к объектам карты и возвращает, что изменилось.
@@ -41,6 +49,7 @@ export function applyObjectOp(
     checkRefs(ctx, object, null);
     checkLoad(ctx, object, null);
     assertFits(ctx, object);
+    checkFurniture(ctx, object, op.force);
     objects.nextId++;
     return write(objects, null, object);
   }
@@ -51,6 +60,7 @@ export function applyObjectOp(
     case 'moveObject': {
       const moved = { ...current, at: op.at };
       assertFits(ctx, moved);
+      checkFurniture(ctx, moved, op.force);
       return write(objects, current, moved);
     }
     case 'turnObject':
@@ -59,10 +69,12 @@ export function applyObjectOp(
           `У объекта ${op.id} нет направления взгляда: оно есть у старта, существ и контейнеров`,
         );
       }
-      return write(objects, current, {
-        ...current,
-        facing: op.facing,
-      } as MapObject);
+      {
+        const turned = { ...current, facing: op.facing } as MapObject;
+        assertFits(ctx, turned);
+        checkFurniture(ctx, turned, op.force);
+        return write(objects, current, turned);
+      }
     case 'updateObject': {
       const allowed = fieldsOfKind(current.kind);
       for (const key of Object.keys(op.object)) {
@@ -76,6 +88,7 @@ export function applyObjectOp(
       checkRefs(ctx, updated, current);
       checkLoad(ctx, updated, current);
       assertFits(ctx, updated);
+      checkFurniture(ctx, updated, op.force);
       return write(objects, current, updated);
     }
     case 'removeObject':
@@ -94,12 +107,26 @@ function write(
   return [{ id, before, after }];
 }
 
-// Место объекта целиком внутри карты: у крупного существа — весь квадрат.
+// Место объекта целиком внутри карты: у крупного существа — весь квадрат, у
+// обстановки — все клетки её модели.
 function assertFits(ctx: ObjectEditContext, object: MapObject) {
-  const span = objectSpan(object, ctx.refs);
-  const [x, y, z] = object.at;
-  const max: Vec3 = [x + span - 1, y, z + span - 1];
-  assertInsideMap({ min: object.at, max }, ctx.size);
+  assertInsideMap(objectBox(object, ctx.refs), ctx.size);
+}
+
+// Обстановка поворачивается только на 90°; её место — по строгим пересечениям, если
+// не стоит force (Shift в редакторе) и правке известны блоки карты.
+function checkFurniture(
+  ctx: ObjectEditContext,
+  object: MapObject,
+  force: true | undefined,
+) {
+  if (object.kind !== 'furniture') return;
+  if (!isRightFacing(object.facing))
+    throw new MapOpError(
+      'Обстановка поворачивается только на 90°: facing — 0, 90, 180 или 270',
+    );
+  if (!force && ctx.world)
+    assertFurnitureFits(ctx.world, ctx.objects, ctx.refs, object);
 }
 
 // Ссылки проверяются, только когда они новые: то, что уже стоит на карте, могли
@@ -139,6 +166,16 @@ function checkRefs(
   ) {
     throw new MapOpError(
       `НПС ${object.characterId} не найден среди ваших персонажей`,
+    );
+  }
+  if (
+    object.kind === 'furniture' &&
+    (previous?.kind !== 'furniture' ||
+      previous.furnitureId !== object.furnitureId) &&
+    !refs.furniture.get(object.furnitureId)?.usable
+  ) {
+    throw new MapOpError(
+      `Обстановка ${object.furnitureId} не найдена среди вашей: чужую сначала скопируйте себе`,
     );
   }
   const before = new Set(itemIds(previous));

@@ -4,7 +4,7 @@ import { MapOpError } from '../mapOpError.js';
 import { resizeFate, type ResizeFate } from '../resizeOp.js';
 import type { MapObject, MapObjects } from './mapObject.js';
 import type { ObjectChange } from './objectChanges.js';
-import { objectSpan, type ObjectRefs } from './objectRefs.js';
+import { objectBox, type ObjectRefs } from './objectRefs.js';
 
 // Куда объект попадёт после resize и что с ним будет — по тому же правилу, что блоки
 // (resizeFate): ушёл в отрицательные координаты — срезан, место хоть частью за
@@ -21,8 +21,8 @@ export function objectResizeFate(
     object.at[2] + shift[2],
   ];
   if (resizeFate(at, after) === 'cut') return { at, fate: 'cut' };
-  const span = objectSpan(object, refs);
-  const far: Vec3 = [at[0] + span - 1, at[1], at[2] + span - 1];
+  const { min, max } = objectBox(object, refs);
+  const far: Vec3 = [at[0] + max[0] - min[0], at[1], at[2] + max[2] - min[2]];
   return { at, fate: resizeFate(far, after) };
 }
 

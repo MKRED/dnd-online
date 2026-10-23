@@ -27,6 +27,8 @@ export interface ObjectFields {
   items?: ObjectItem[];
   itemId?: string;
   quantity?: number;
+  // Запись справочника «Обстановка» (этап 8в).
+  furnitureId?: string;
   // «Скрыт от игроков» — у объекта любого вида (docs/plan/done/game.md, этап 6).
   hidden?: boolean;
 }
@@ -38,6 +40,7 @@ export const KIND_FIELDS: Record<MapObjectKind, (keyof ObjectFields)[]> = {
   npc: ['characterId', 'size', 'facing'],
   container: ['name', 'look', 'items', 'facing'],
   item: ['itemId', 'quantity'],
+  furniture: ['furnitureId', 'facing'],
 };
 
 // Поля, которые есть у объекта любого вида.
@@ -147,6 +150,7 @@ export function parseObjectFields(
       case 'monsterId':
       case 'characterId':
       case 'itemId':
+      case 'furnitureId':
         parsed[key as 'monsterId'] = parseUuid(value, key);
         break;
       case 'size':

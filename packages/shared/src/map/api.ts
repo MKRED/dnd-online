@@ -99,7 +99,7 @@ export interface MapSectionResponse {
 }
 
 // Поиск по каталогу для расстановки объектов (нейросеть через MCP, редактор).
-export type MapCatalogKind = 'monster' | 'item' | 'npc';
+export type MapCatalogKind = 'monster' | 'item' | 'npc' | 'furniture';
 
 export interface MapCatalogEntry {
   id: string;
@@ -110,4 +110,7 @@ export interface MapCatalogEntry {
   role?: string;
   category?: string;
   weight?: number;
+  // Обстановка (этап 8в): размер модели [x, y, z] в клетках и крепление.
+  modelSize?: number[];
+  mount?: string;
 }

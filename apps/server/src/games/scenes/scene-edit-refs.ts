@@ -33,6 +33,8 @@ export async function loadSceneEditRefs(
     monsters: without(wanted.monsters, present.monsters),
     items: without(wanted.items, present.items),
     npcs: without(wanted.npcs, present.npcs),
+    // Обстановка в библиотеку не копируется: её берут из справочника мастера (этап 8в).
+    furniture: new Set(),
   };
   const libraryCopied = await copyFresh(tx, gameId, masterId, fresh);
   const all = unionIds(objectRefIds(objects.byId.values()), wanted);

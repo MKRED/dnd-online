@@ -54,6 +54,7 @@ export function editMap(
             refs,
             size: map.size,
             maxObjects: context.maxObjects ?? DEFAULT_MAX_OBJECTS,
+            world: map,
           },
           op,
         );

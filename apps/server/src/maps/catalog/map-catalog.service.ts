@@ -4,7 +4,13 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { MapCatalogEntry, MapCatalogKind } from 'shared';
 import { entryVisibleTo } from '../../catalog/catalog-access.js';
 import { DatabaseService } from '../../database/database.service.js';
-import { characters, items, monsters } from '../../database/schema/index.js';
+import {
+  characters,
+  furniture,
+  items,
+  monsters,
+} from '../../database/schema/index.js';
+import { loadFurnitureRefs } from '../objects/furniture-refs.js';
 import { ITEM_ACCESS } from '../../items/item-access.js';
 import {
   MONSTER_ACCESS,
@@ -20,7 +26,7 @@ function contains(column: Parameters<typeof ilike>[0], q: string | undefined) {
 }
 
 // Поиск того, что можно поставить на карту: монстры и предметы — свои и опубликованные,
-// НПС — свои. Только чтение. Открыт и API-токену, чтобы нейросеть через MCP находила id
+// НПС и обстановка — свои (чужую обстановку сначала копируют, docs/plan/blocks.md, этап 8в). Только чтение. Открыт и API-токену, чтобы нейросеть через MCP находила id
 // для операций объектов (docs/plan/done/map-objects.md, «Нейросеть»); остальной каталог токену
 // по-прежнему закрыт.
 @Injectable()
@@ -93,6 +99,26 @@ export class MapCatalogService {
         .orderBy(asc(items.name))
         .limit(LIMIT);
       return rows;
+    }
+    if (kind === 'furniture') {
+      const rows = await db
+        .select({ id: furniture.id, name: furniture.name })
+        .from(furniture)
+        .where(
+          where(eq(furniture.authorId, userId), contains(furniture.name, q)),
+        )
+        .orderBy(asc(furniture.name))
+        .limit(LIMIT);
+      const { refs } = await loadFurnitureRefs(
+        db,
+        userId,
+        new Set(rows.map((row) => row.id)),
+      );
+      return rows.map((row) => ({
+        ...row,
+        modelSize: [...(refs.get(row.id)?.size ?? [1, 1, 1])],
+        mount: refs.get(row.id)?.mount ?? 'floor',
+      }));
     }
     return db
       .select({ id: characters.id, name: characters.name })

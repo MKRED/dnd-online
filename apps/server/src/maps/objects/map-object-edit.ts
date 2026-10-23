@@ -23,6 +23,8 @@ export function opsRefIds(ops: MapOp[]): RefIds {
     if (typeof fields.characterId === 'string')
       ids.npcs.add(fields.characterId);
     if (typeof fields.itemId === 'string') ids.items.add(fields.itemId);
+    if (typeof fields.furnitureId === 'string')
+      ids.furniture.add(fields.furnitureId);
     for (const { itemId } of (fields.items as { itemId: string }[]) ?? []) {
       ids.items.add(itemId);
     }
@@ -35,6 +37,7 @@ export function unionIds(a: RefIds, b: RefIds): RefIds {
     monsters: new Set([...a.monsters, ...b.monsters]),
     items: new Set([...a.items, ...b.items]),
     npcs: new Set([...a.npcs, ...b.npcs]),
+    furniture: new Set([...a.furniture, ...b.furniture]),
   };
 }
 
@@ -65,6 +68,7 @@ export function touchedRefsView(
   for (const id of ids.monsters) result.monsters[id] = view.monsters[id];
   for (const id of ids.items) result.items[id] = view.items[id];
   for (const id of ids.npcs) result.npcs[id] = view.npcs[id];
+  for (const id of ids.furniture) result.furniture[id] = view.furniture[id];
   return result;
 }
 

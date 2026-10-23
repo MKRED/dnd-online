@@ -38,6 +38,7 @@ function refs(): ObjectRefs {
       [TORCH, 1],
     ]),
     npcs: new Set([NPC]),
+    furniture: new Map(),
   };
 }
 

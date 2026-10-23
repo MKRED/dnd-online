@@ -1,0 +1,162 @@
+import { describe, expect, it } from 'vitest';
+import { MemoryChunkStore } from '../chunkStore.js';
+import { editMap, type EditableMap } from '../mapEdit.js';
+import type { MapOp } from '../ops.js';
+import { createPalette } from '../palette.js';
+import { rotateModelCell } from './furniturePlacement.js';
+import { createMapObjects } from './mapObject.js';
+import { emptyObjectRefs, objectBox, type ObjectRefs } from './objectRefs.js';
+
+// Обстановка на карте (docs/plan/blocks.md, этап 8в): место по модели с поворотом на
+// 90°, строгие пересечения и опора по креплению, force (Shift) — без проверок.
+
+const limits = { maxSize: 64, maxHeight: 16 };
+const TABLE = '00000000-0000-4000-8000-0000000000a1';
+const PAINTING = '00000000-0000-4000-8000-0000000000a2';
+const LAMP = '00000000-0000-4000-8000-0000000000a3';
+const FOREIGN = '00000000-0000-4000-8000-0000000000a4';
+
+function refs(): ObjectRefs {
+  const r = emptyObjectRefs();
+  // Стол 2×1×1 (ширина 2, высота 1, глубина 1), на верх можно встать.
+  r.furniture.set(TABLE, {
+    name: 'Стол',
+    size: [2, 1, 1],
+    mount: 'floor',
+    cells: { '0,0,0': 'stand', '1,0,0': 'stand' },
+    usable: true,
+  });
+  r.furniture.set(PAINTING, {
+    name: 'Картина',
+    size: [1, 1, 1],
+    mount: 'wall',
+    cells: {},
+    usable: true,
+  });
+  r.furniture.set(LAMP, {
+    name: 'Люстра',
+    size: [1, 1, 1],
+    mount: 'ceiling',
+    cells: {},
+    usable: true,
+  });
+  r.furniture.set(FOREIGN, {
+    name: 'Чужая',
+    size: [1, 1, 1],
+    mount: 'floor',
+    cells: {},
+    usable: false,
+  });
+  return r;
+}
+
+// Карта с полом из камня на y = 0 по всей площади 6×6.
+function floorMap(): EditableMap & {
+  objects: NonNullable<EditableMap['objects']>;
+} {
+  const map = {
+    store: new MemoryChunkStore(),
+    palette: createPalette(),
+    size: { width: 6, depth: 6 },
+    objects: createMapObjects(),
+  };
+  editMap(
+    map,
+    [{ op: 'fillBox', from: [0, 0, 0], to: [5, 0, 5], block: 'stone' }],
+    limits,
+  );
+  return map;
+}
+
+const edit = (map: EditableMap, ops: MapOp[]) =>
+  editMap(map, ops, limits, { refs: refs() });
+
+const place = (
+  at: [number, number, number],
+  furnitureId: string,
+  extra: object = {},
+  force?: true,
+) =>
+  ({
+    op: 'placeObject',
+    at,
+    // facing по умолчанию ставит разбор операции; здесь операции собраны вручную.
+    object: { kind: 'furniture', furnitureId, facing: 0, ...extra },
+    ...(force && { force }),
+  }) as MapOp;
+
+describe('поворот клеток модели', () => {
+  it('по часовой: север модели уходит на восток', () => {
+    const size = [2, 1, 3] as const;
+    expect(rotateModelCell([0, 0, 0], size, 0)).toEqual([0, 0, 0]);
+    expect(rotateModelCell([0, 0, 0], size, 90)).toEqual([2, 0, 0]);
+    expect(rotateModelCell([0, 0, 0], size, 180)).toEqual([1, 0, 2]);
+    expect(rotateModelCell([0, 0, 0], size, 270)).toEqual([0, 0, 1]);
+  });
+});
+
+describe('обстановка на карте', () => {
+  it('стол на полу; повёрнутый на 90° занимает клетки по глубине', () => {
+    const map = floorMap();
+    edit(map, [place([1, 1, 1], TABLE)]);
+    const table = map.objects.byId.get(1)!;
+    expect(objectBox(table, refs())).toEqual({
+      min: [1, 1, 1],
+      max: [2, 1, 1],
+    });
+    edit(map, [{ op: 'turnObject', id: 1, facing: 90 }]);
+    expect(objectBox(map.objects.byId.get(1)!, refs()).max).toEqual([1, 1, 2]);
+  });
+
+  it('поворот на 45° и чужая обстановка — отказ', () => {
+    const map = floorMap();
+    expect(() => edit(map, [place([1, 1, 1], TABLE, { facing: 45 })])).toThrow(
+      /только на 90°/,
+    );
+    expect(() => edit(map, [place([1, 1, 1], FOREIGN)])).toThrow(
+      /скопируйте себе/,
+    );
+  });
+
+  it('мешают блок и объект в клетках; с force — ставится', () => {
+    const map = floorMap();
+    edit(map, [{ op: 'setBlock', at: [2, 1, 1], block: 'stone' }]);
+    expect(() => edit(map, [place([1, 1, 1], TABLE)])).toThrow(
+      /мешает блок в клетке \[2, 1, 1\]/,
+    );
+    edit(map, [place([1, 1, 3], TABLE)]);
+    expect(() => edit(map, [place([2, 1, 3], TABLE)])).toThrow(
+      /мешает объект #1/,
+    );
+    edit(map, [place([1, 1, 1], TABLE, {}, true)]);
+    expect(map.objects.byId.size).toBe(2);
+  });
+
+  it('на полу нужна опора под каждой клеткой — блок или верх стола', () => {
+    const map = floorMap();
+    expect(() => edit(map, [place([4, 2, 4], TABLE)])).toThrow(/нужна опора/);
+    edit(map, [place([1, 1, 1], TABLE)]);
+    // Лампа на полу не бывает — ставим «стол» на стол: верх стола — опора.
+    edit(map, [place([1, 2, 1], TABLE)]);
+    expect(map.objects.byId.size).toBe(2);
+  });
+
+  it('картина — блок за спиной; люстра — блок над ней', () => {
+    const map = floorMap();
+    // Спина картины, смотрящей на север, — юг (+z).
+    expect(() => edit(map, [place([2, 1, 2], PAINTING)])).toThrow(/за спиной/);
+    edit(map, [{ op: 'setBlock', at: [2, 1, 3], block: 'stone' }]);
+    edit(map, [place([2, 1, 2], PAINTING)]);
+    expect(() => edit(map, [place([4, 1, 4], LAMP)])).toThrow(
+      /на потолке нужен блок/,
+    );
+    edit(map, [{ op: 'setBlock', at: [4, 2, 4], block: 'stone' }]);
+    edit(map, [place([4, 1, 4], LAMP)]);
+    expect(map.objects.byId.size).toBe(2);
+  });
+
+  it('за границей карты — отказ по всем клеткам модели', () => {
+    const map = floorMap();
+    expect(() => edit(map, [place([5, 1, 1], TABLE)])).toThrow();
+  });
+});

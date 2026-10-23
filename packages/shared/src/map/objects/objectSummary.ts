@@ -5,6 +5,7 @@ import type { SizedMapState } from '../mapSize.js';
 import { surfaceInCell, type CreatureSize } from '../rules/creature.js';
 import { standHeight } from '../rules/standing.js';
 import type { SliceRegion } from '../asciiSlice.js';
+import { FURNITURE_MOUNT_LABELS } from '../../voxelModel/furniture.js';
 import {
   CONTAINER_LOOK_LABELS,
   footprintCells,
@@ -86,6 +87,20 @@ function describe(
       const { name, missing } = ref(refs.items[object.itemId], 'предмет');
       return { label: `${name} ×${object.quantity}`, missing };
     }
+    case 'furniture': {
+      const view = refs.furniture?.[object.furnitureId];
+      if (view?.missing !== null)
+        return {
+          label: 'обстановка (удалена из справочника)',
+          missing: ['обстановка удалена из справочника'],
+        };
+      const [x, y, z] = view.model?.size ?? [1, 1, 1];
+      const where = FURNITURE_MOUNT_LABELS[view.mount].toLowerCase();
+      return {
+        label: `${view.name} (обстановка ${x}×${z}×${y}, крепление: ${where})`,
+        missing: view.model ? [] : ['модель обстановки удалена — без вида'],
+      };
+    }
     case 'container': {
       const missing = object.items.flatMap(
         ({ itemId }) => ref(refs.items[itemId], `предмет ${itemId}`).missing,
@@ -113,6 +128,8 @@ function placementWarnings(
   if (x + span > map.size.width || z + span > map.size.depth) {
     return ['за границей карты — не рисуется'];
   }
+  // Место обстановки строго проверяет сама постановка; без Shift она и стоит как надо.
+  if (object.kind === 'furniture') return [];
   if (object.kind === 'start' || size) {
     return standHeight(map, object.at, size ?? 'medium') === null
       ? ['здесь нельзя стоять: стена, нет опоры или не хватает высоты']

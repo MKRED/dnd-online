@@ -18,6 +18,7 @@ import {
   monsters,
 } from '../../database/schema/index.js';
 import { toMonsterFields } from '../../monsters/monsters.config.js';
+import { loadFurnitureRefs } from './furniture-refs.js';
 
 export type RefIds = ReturnType<typeof objectRefIds>;
 
@@ -141,6 +142,10 @@ export async function loadRefs(
     }
     for (const id of ids.npcs) view.npcs[id] ??= { missing: 'deleted' };
   }
+
+  const furnitureRefs = await loadFurnitureRefs(db, userId, ids.furniture);
+  view.furniture = furnitureRefs.view;
+  refs.furniture = furnitureRefs.refs;
 
   return { view, refs };
 }

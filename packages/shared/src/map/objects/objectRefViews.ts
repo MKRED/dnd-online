@@ -2,6 +2,8 @@ import type { CatalogImage } from '../../catalogImage.js';
 import type { CharacterMainImage } from '../../characterImages.js';
 import type { FigureModel } from '../../characterModels.js';
 import type { MonsterRole } from '../../monsters.js';
+import type { FurnitureMount } from '../../voxelModel/furniture.js';
+import type { VoxelModelFields } from '../../voxelModel/voxelModel.js';
 import type { CreatureSize } from '../rules/creature.js';
 import type { MapObject } from './mapObject.js';
 import { emptyObjectRefs, type ObjectRefs } from './objectRefs.js';
@@ -38,16 +40,29 @@ export type NpcRefView =
     }
   | { missing: RefMissing };
 
+// Обстановка (docs/plan/blocks.md, этап 8в) — с моделью целиком: её рисуют на карте.
+// Скрытой не бывает: на карту ставится только своя, а игроку на сцене она нужна вся,
+// как блоки мастера. model null — модель удалили, обстановка без вида.
+export type FurnitureRefView =
+  | {
+      missing: null;
+      name: string;
+      mount: FurnitureMount;
+      model: VoxelModelFields | null;
+    }
+  | { missing: 'deleted' };
+
 // Справочник по id: в ответе /chunks — для всех объектов карты, в ответе правки — для
 // затронутых ею.
 export interface MapObjectRefsView {
   monsters: Record<string, MonsterRefView>;
   items: Record<string, ItemRefView>;
   npcs: Record<string, NpcRefView>;
+  furniture: Record<string, FurnitureRefView>;
 }
 
 export function emptyRefsView(): MapObjectRefsView {
-  return { monsters: {}, items: {}, npcs: {} };
+  return { monsters: {}, items: {}, npcs: {}, furniture: {} };
 }
 
 // Id, на которые ссылаются объекты: по ним сервер собирает справочник.
@@ -56,8 +71,10 @@ export function objectRefIds(objects: Iterable<MapObject>) {
     monsters: new Set<string>(),
     items: new Set<string>(),
     npcs: new Set<string>(),
+    furniture: new Set<string>(),
   };
   for (const object of objects) {
+    if (object.kind === 'furniture') ids.furniture.add(object.furnitureId);
     if (object.kind === 'monster') ids.monsters.add(object.monsterId);
     if (object.kind === 'npc') ids.npcs.add(object.characterId);
     if (object.kind === 'item') ids.items.add(object.itemId);
@@ -92,6 +109,16 @@ export function objectRefsFromView(view: MapObjectRefsView): ObjectRefs {
     if (view.items[id].missing === null)
       refs.items.set(id, itemWeight(view, id));
   }
+  for (const [id, furniture] of Object.entries(view.furniture ?? {})) {
+    if (furniture.missing !== null) continue;
+    refs.furniture.set(id, {
+      name: furniture.name,
+      size: furniture.model?.size ?? [1, 1, 1],
+      mount: furniture.mount,
+      cells: furniture.model?.cells ?? {},
+      usable: true,
+    });
+  }
   return refs;
 }
 
@@ -104,5 +131,6 @@ export function mergeRefsView(
     monsters: { ...base.monsters, ...added.monsters },
     items: { ...base.items, ...added.items },
     npcs: { ...base.npcs, ...added.npcs },
+    furniture: { ...base.furniture, ...added.furniture },
   };
 }

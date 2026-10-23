@@ -19,6 +19,7 @@ import {
 } from 'shared';
 import type { DbTransaction } from '../database/database.service.js';
 import type { EditStorage } from './storage/index.js';
+import { furnitureChunkKeys } from './furniture-chunks.js';
 
 // Правка в памяти, общая для карты в редакторе и сцены игры (docs/plan/done/game.md, этап 6):
 // загрузить задетые чанки и объекты из хранилища, применить пачку или откатить запись
@@ -74,24 +75,27 @@ export async function runOps<R extends { refs: ObjectRefs }>(
   limits: EditLimits,
   loadRefs: (objects: MapObjects) => Promise<R>,
 ): Promise<EditRun & { loaded: R | null }> {
-  // resize сдвигает и срезает все блоки — ему нужны все чанки, а операциям объектов
-  // чанки не нужны вовсе.
+  // resize сдвигает и срезает все блоки — ему нужны все чанки; операциям объектов —
+  // только чанки вокруг обстановки (строгие пересечения, этап 8в), остальным не нужны.
   const resizes = ops.some((op) => op.op === 'resize');
-  const keys = resizes
-    ? 'all'
-    : [
-        ...new Set(
-          ops.filter(isBlockOp).flatMap((op) => chunkKeysInBox(opRegion(op))),
-        ),
-      ];
-  const store = await target.storage.loadChunks(tx, keys);
-  const loadedKeys = new Set(store.keys());
   let objects: MapObjects | undefined;
   let loaded: R | null = null;
   if (resizes || ops.some(isObjectOp)) {
     objects = await target.storage.loadObjects(tx, target.nextObjectId);
     loaded = await loadRefs(objects);
   }
+  const keys = resizes
+    ? 'all'
+    : [
+        ...new Set([
+          ...ops
+            .filter(isBlockOp)
+            .flatMap((op) => chunkKeysInBox(opRegion(op))),
+          ...(objects ? furnitureChunkKeys(ops, objects) : []),
+        ]),
+      ];
+  const store = await target.storage.loadChunks(tx, keys);
+  const loadedKeys = new Set(store.keys());
   const state: EditState = {
     store,
     palette: [...target.palette],

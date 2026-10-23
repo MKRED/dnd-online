@@ -8,14 +8,16 @@ import {
   type MapObjectRefsView,
 } from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
-import { gameLibrary } from '../../database/schema/index.js';
+import { gameLibrary, games } from '../../database/schema/index.js';
+import { loadFurnitureRefs } from '../../maps/objects/furniture-refs.js';
 import type { LoadedRefs, RefIds } from '../../maps/objects/map-object-refs.js';
 import { toMonsterFields } from '../../monsters/monsters.config.js';
 
 // Справочник ссылок объектов сцены — из библиотеки игры, а не из справочников: правка
 // справочника идущую игру не трогает (docs/plan/done/game.md, «Справочники не влияют на
 // игру»). Чего в библиотеке нет (скрыто от мастера или удалено до копии), для игры нет
-// вовсе — заглушка «удалено».
+// вовсе — заглушка «удалено». Исключение — обстановка: она, как свои блоки мастера,
+// читается из его справочника (docs/plan/blocks.md, этап 8в).
 export async function sceneRefsView(
   db: Db,
   gameId: string,
@@ -99,6 +101,19 @@ export async function sceneRefs(
     view.monsters[id] ??= { missing: 'deleted', size: 'medium' };
   for (const id of ids.items) view.items[id] ??= { missing: 'deleted' };
   for (const id of ids.npcs) view.npcs[id] ??= { missing: 'deleted' };
+  if (ids.furniture.size > 0) {
+    const [game] = await db
+      .select({ masterId: games.masterId })
+      .from(games)
+      .where(eq(games.id, gameId));
+    const loaded = await loadFurnitureRefs(
+      db,
+      game?.masterId ?? '',
+      ids.furniture,
+    );
+    view.furniture = loaded.view;
+    refs.furniture = loaded.refs;
+  }
   return { view, refs };
 }
 

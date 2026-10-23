@@ -61,7 +61,11 @@ export type MapObjectBody =
       // и отмена старой правки сочла бы его чужим изменением.
       facing?: Facing;
     }
-  | ({ kind: 'item' } & ObjectItem);
+  | ({ kind: 'item' } & ObjectItem)
+  // Обстановка (docs/plan/blocks.md, этап 8в): запись справочника «Обстановка» с моделью.
+  // Поворот — только на 90° (решено с пользователем 2026-10-23): воксели модели всегда
+  // ложатся на сетку клеток.
+  | { kind: 'furniture'; furnitureId: string; facing: Facing };
 
 export type MapObjectKind = MapObjectBody['kind'];
 
@@ -71,7 +75,15 @@ export const MAP_OBJECT_KINDS: readonly MapObjectKind[] = [
   'npc',
   'container',
   'item',
+  'furniture',
 ];
+
+// Повороты обстановки — на 90°: север, восток, юг, запад.
+export const RIGHT_FACINGS = [0, 90, 180, 270] as const;
+
+export function isRightFacing(facing: Facing): boolean {
+  return facing % 90 === 0;
+}
 
 export type MapObject = {
   // Номер внутри карты: выдаёт счётчик карты, номера не переиспользуются.

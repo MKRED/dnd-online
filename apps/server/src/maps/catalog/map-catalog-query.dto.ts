@@ -2,10 +2,17 @@ import { Transform } from 'class-transformer';
 import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 import type { MapCatalogKind } from 'shared';
 
-export const MAP_CATALOG_KINDS: MapCatalogKind[] = ['monster', 'item', 'npc'];
+export const MAP_CATALOG_KINDS: MapCatalogKind[] = [
+  'monster',
+  'item',
+  'npc',
+  'furniture',
+];
 
 export class MapCatalogQueryDto {
-  @IsIn(MAP_CATALOG_KINDS, { message: 'kind — monster, item или npc' })
+  @IsIn(MAP_CATALOG_KINDS, {
+    message: 'kind — monster, item, npc или furniture',
+  })
   kind: MapCatalogKind;
 
   // Часть названия; пусто — первые записи по алфавиту.

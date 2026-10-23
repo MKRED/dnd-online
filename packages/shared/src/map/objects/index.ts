@@ -8,3 +8,4 @@ export * from './resizeObjects.js';
 export * from './objectRefViews.js';
 export * from './objectSummary.js';
 export * from './containerLoad.js';
+export * from './furniturePlacement.js';

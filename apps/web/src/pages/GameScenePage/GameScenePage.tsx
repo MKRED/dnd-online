@@ -36,6 +36,7 @@ import { useGameScene } from './useGameScene';
 import { CreatureCards, useCreatureCards } from './creatures';
 import { FiguresPanel, useScenePlay } from './figures';
 import { FogPanel, playersView, useSceneFog } from './fog';
+import { SceneModeSwitch, useSceneMode } from './mode';
 import { useSceneOpen } from './useSceneOpen';
 import { SCENE_TOOLS, useSceneTools } from './useSceneTools';
 
@@ -63,8 +64,15 @@ function GameScenePage() {
   const fog = eyesFog ?? playerFog;
   usePageTitle(view?.scene.name ?? 'Сцена');
   const open = useSceneOpen(id, setLoad);
+  // «Глазами игроков» — только просмотр: ни инструментов, ни ходов, ни выбора.
+  const viewOnly = sceneFog.eyes;
+  // Режим мастера (docs/plan/scene-page.md): в «Игре» нет инструментов редактора, в
+  // «Правке» — есть, а фигурки и существа переставляются без хода.
+  const { mode, setMode } = useSceneMode(master, ready !== null && !viewOnly);
+  const editing = master && mode === 'edit';
   const { editor, objects } = useSceneTools({
     master,
+    editing,
     state: ready?.state ?? null,
     refs: view?.refs ?? null,
     edits,
@@ -109,8 +117,9 @@ function GameScenePage() {
   const play = useScenePlay({
     gameId: id,
     sceneId,
-    master,
-    editorTool: editor.tool,
+    // В «Правке» фигурку выбирают только в «Просмотре»: другие инструменты правят карту.
+    active: !editing || editor.tool === 'view',
+    free: editing,
     state,
     refs: view?.refs ?? null,
   });
@@ -124,7 +133,7 @@ function GameScenePage() {
     state,
     refs: view?.refs ?? null,
     figures: figures.figures,
-    canPick: master && editor.tool === 'view',
+    canPick: master && !editing,
     figureId: play.tool.selectedId,
     clearFigure,
     reloadFigures: figures.reload,
@@ -139,15 +148,14 @@ function GameScenePage() {
   );
   // Выбор у страницы один: щелчки по клеткам ведут выбранную фигурку или (у мастера)
   // выбранного монстра (docs/plan/done/creature-movement.md).
-  // «Глазами игроков» — только просмотр: ни инструментов, ни ходов, ни выбора.
-  const viewOnly = sceneFog.eyes;
   const sceneEditor = viewOnly
     ? null
-    : ((master && ready ? editor.sceneEditor : null) ??
+    : ((editing && ready ? editor.sceneEditor : null) ??
       play.editor ??
       cards.walk.editor);
   const handleReady = useCallback(() => setReadySceneId(sceneId), [sceneId]);
   const tools = master && ready !== null && !viewOnly;
+  const editTools = tools && editing;
   const shownState = useMemo(
     () =>
       state && eyesFog && rules.refs
@@ -208,7 +216,7 @@ function GameScenePage() {
               editor={sceneEditor}
               walk={viewOnly ? null : (play.walk ?? cards.walk.scene)}
               objectTool={
-                tools && editor.tool === 'place' ? objects.scene : null
+                editTools && editor.tool === 'place' ? objects.scene : null
               }
               focusRef={focusRef}
               onReady={handleReady}
@@ -227,12 +235,14 @@ function GameScenePage() {
         )}
         {tools && (
           <SceneToolbar
-            tools={SCENE_TOOLS}
+            // В «Игре» полосы нет: остаются отмена и возврат — ход тоже отменяется.
+            tools={editing ? SCENE_TOOLS : []}
             tool={editor.tool}
             onTool={editor.setTool}
             busy={edits.busy}
             onUndo={edits.undo}
             onRedo={edits.redo}
+            leading={<SceneModeSwitch mode={mode} onChange={setMode} />}
           />
         )}
         {ready && bounds && bounds.max[1] > bounds.min[1] && (
@@ -268,6 +278,7 @@ function GameScenePage() {
           <FiguresPanel
             figures={figures.figures}
             master={master}
+            free={editing}
             tool={play.tool}
           />
         )}
@@ -279,7 +290,7 @@ function GameScenePage() {
             figure={play.tool.figure}
           />
         )}
-        {tools && (
+        {editTools && (
           <SceneToolsPanel
             editor={editor}
             objects={objects}

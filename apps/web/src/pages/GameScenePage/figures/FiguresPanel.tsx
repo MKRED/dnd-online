@@ -17,20 +17,22 @@ import type { FigureTool } from './useFigureTool';
 interface FiguresPanelProps {
   figures: GameFigures;
   master: boolean;
+  // Мастер в «Правке»: ставит без пути, видит «Не на сцене».
+  free: boolean;
   tool: FigureTool;
 }
 
 // Фигурки сцены в панели (docs/plan/done/game.md, этап 7): чья, сколько осталось движения,
 // выбор фигурки, у мастера — запас и «Не на сцене». Выбор — и щелчком по самой фигурке.
-function FiguresPanel({ figures, master, tool }: FiguresPanelProps) {
+function FiguresPanel({ figures, master, free, tool }: FiguresPanelProps) {
   const { busy } = tool;
   const toggle = (id: string) =>
     tool.select(tool.selectedId === id ? null : id);
   const hint = tool.placing
     ? `Щёлкните клетку, куда поставить: ${tool.placing.name}.`
     : tool.figure
-      ? master
-        ? 'Щёлкните клетку, где фигурка может стоять: мастер ставит без пути и запаса. Esc — снять выбор.'
+      ? free
+        ? 'Щёлкните клетку, где фигурка может стоять: в «Правке» она встаёт без пути и запаса. Esc — снять выбор.'
         : 'Щёлкните подсвеченную клетку — фигурка пойдёт туда. Esc — снять выбор.'
       : 'Выберите фигурку — щелчком по ней или по имени.';
 
@@ -105,7 +107,7 @@ function FiguresPanel({ figures, master, tool }: FiguresPanelProps) {
           </Group>
         );
       })}
-      {master && figures.unplaced.length > 0 && (
+      {free && figures.unplaced.length > 0 && (
         <Stack gap={4}>
           <Text size="xs" c="dimmed">
             Не на сцене — не хватило стартовой точки:

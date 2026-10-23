@@ -5,11 +5,14 @@
   left: var(--mantine-spacing-xs);
 }
 
-/* Отмена и возврат — в верхнем левом углу сцены. */
+/* Отмена и возврат — в верхнем левом углу сцены; перед ними может стоять переключатель
+   режима сцены игры. */
 .history {
   position: absolute;
   top: var(--mantine-spacing-xs);
   left: var(--mantine-spacing-xs);
+  display: flex;
+  gap: var(--mantine-spacing-xs);
 }
 
 /* На телефоне полоса — строкой у нижнего края, ближе к большому пальцу. */

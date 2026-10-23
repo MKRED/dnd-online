@@ -82,6 +82,8 @@ vi.mock('../../features/games/gameSocket', () => ({
 
 beforeEach(() => {
   socket.current = createFakeGameSocket();
+  // Режим мастера запоминается в браузере (docs/plan/scene-page.md): каждый тест — с «Игры».
+  localStorage.clear();
 });
 
 afterEach(() => {
@@ -174,7 +176,7 @@ function figuresOf(eventSeq: number, figures: GameFigure[]): GameFigures {
 }
 
 describe('GameScenePage', () => {
-  it('мастер видит запас фигурок, начинает новый раунд и ставит персонажа «Не на сцене»', async () => {
+  it('мастер видит запас фигурок, начинает новый раунд и в «Правке» ставит персонажа «Не на сцене»', async () => {
     const fetchMock = stub({
       [`GET ${base}`]: () => ({
         status: 200,
@@ -209,6 +211,11 @@ describe('GameScenePage', () => {
       ),
     ).toBe(true);
 
+    // «Не на сцене» — дело «Правки»: в «Игре» мастер только ходит.
+    expect(
+      screen.queryByRole('button', { name: 'Поставить на сцену: Борн' }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: 'Правка' }));
     await user.click(
       screen.getByRole('button', { name: 'Поставить на сцену: Борн' }),
     );
@@ -601,12 +608,9 @@ describe('GameScenePage', () => {
     const user = userEvent.setup();
 
     await user.click(
-      await screen.findByRole(
-        'button',
-        { name: 'Поставить' },
-        { timeout: 3000 },
-      ),
+      await screen.findByRole('radio', { name: 'Правка' }, { timeout: 3000 }),
     );
+    await user.click(screen.getByRole('button', { name: 'Поставить' }));
     expect(screen.getByText('На карте: 0')).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Ход' }),
@@ -620,6 +624,58 @@ describe('GameScenePage', () => {
         ),
       ).toBe(true),
     );
+  });
+
+  it('мастер переключает «Игру» и «Правку» клавишей Ё; в «Игре» нет инструментов, но есть отмена', async () => {
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'master' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+    });
+    renderScene('m1');
+    const user = userEvent.setup();
+
+    const play = await screen.findByRole(
+      'radio',
+      { name: 'Игра' },
+      { timeout: 3000 },
+    );
+    expect(play).toBeChecked();
+    expect(
+      screen.getByRole('button', { name: 'Отменить' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Поставить' }),
+    ).not.toBeInTheDocument();
+    // Цифры инструментов в «Игре» молчат.
+    await user.keyboard('2');
+    expect(screen.queryByText('На карте: 0')).not.toBeInTheDocument();
+
+    await user.keyboard('[Backquote]');
+    expect(screen.getByRole('radio', { name: 'Правка' })).toBeChecked();
+    expect(
+      screen.getByRole('button', { name: 'Поставить' }),
+    ).toBeInTheDocument();
+    expect(localStorage.getItem('scene.mode')).toBe('edit');
+    await user.keyboard('[Backquote]');
+    expect(screen.getByRole('radio', { name: 'Игра' })).toBeChecked();
+  });
+
+  it('у игрока нет переключателя режима', async () => {
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'member' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+    });
+    renderScene('u3');
+    expect(await screen.findByText(/Сцена:/)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('radio', { name: 'Правка' }),
+    ).not.toBeInTheDocument();
   });
 
   it('без активной сцены говорит об этом', async () => {

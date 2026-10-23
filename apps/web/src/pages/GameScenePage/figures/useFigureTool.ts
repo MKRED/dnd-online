@@ -26,7 +26,8 @@ import { sceneOccupants } from './sceneOccupants';
 import { useFigureDragging } from './useFigureDragging';
 
 interface FigureToolOptions {
-  master: boolean;
+  // Мастер в «Правке»: ставит фигурку без пути и запаса, ставит и «Не на сцене».
+  free: boolean;
   state: MapViewState | null;
   refs: MapObjectRefsView | null;
   figures: GameFigures | null;
@@ -39,9 +40,10 @@ interface FigureToolOptions {
 
 // Выбранная фигурка на сцене игры (docs/plan/done/game.md, этап 7): куда она дойдёт на
 // оставшийся запас (плитки, как у «Хода» в редакторе), путь под курсором и ход по клику.
-// Мастер ставит выбранную фигурку или персонажа «Не на сцене» на любую свободную клетку.
+// Мастер в «Правке» ставит выбранную фигурку или персонажа «Не на сцене» на любую свободную
+// клетку; в «Игре» он ходит фигуркой по пути, как игрок (docs/plan/scene-page.md).
 export function useFigureTool({
-  master,
+  free,
   state,
   refs,
   figures,
@@ -49,7 +51,7 @@ export function useFigureTool({
   onFigures,
   onDrag,
 }: FigureToolOptions) {
-  // Персонаж, которого водят: фигурка на сцене или (у мастера) «Не на сцене».
+  // Персонаж, которого водят: фигурка на сцене или (у мастера в «Правке») «Не на сцене».
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +59,7 @@ export function useFigureTool({
   const figure: GameFigure | null =
     figures?.figures.find((f) => f.character.id === selectedId) ?? null;
   const placing =
-    master && !figure
+    free && !figure
       ? (figures?.unplaced.find((c) => c.id === selectedId) ?? null)
       : null;
   const active = figure !== null || placing !== null;
@@ -97,14 +99,17 @@ export function useFigureTool({
         body: walkBody(state, figure.at, figure.size),
         ok: standHeight(state, figure.at, figure.size) !== null,
       },
-      tiles: reachTiles(
-        state,
-        reach.filter((r) => r.end),
-        figure.size,
-      ),
+      // В «Правке» фигурка встаёт куда угодно: плитки хода только сбивали бы.
+      tiles: free
+        ? []
+        : reachTiles(
+            state,
+            reach.filter((r) => r.end),
+            figure.size,
+          ),
       budget: Math.max(left.walk, left.climb ?? 0),
     };
-  }, [state, figure, reach, left]);
+  }, [state, figure, reach, left, free]);
 
   const preview = useCallback(
     (cells: PickedCells) =>
@@ -115,10 +120,10 @@ export function useFigureTool({
         cells,
         FIGURE_SIZE,
         others,
-        master,
+        free,
         figure?.at ?? null,
       ),
-    [state, reach, others, master, figure],
+    [state, reach, others, free, figure],
   );
 
   // Правки по одной: пока запрос в пути, новые не принимаются. Ответ — фигурки глазами

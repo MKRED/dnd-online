@@ -34,14 +34,14 @@ const over = (x: number, z: number): PickedCells => ({
 const start: Vec3 = [1, 1, 1];
 const goblin: Occupant = { at: [3, 1, 1], size: 'medium', ally: false };
 
-function hoverOf(cells: PickedCells, master: boolean, left = 15) {
+function hoverOf(cells: PickedCells, free: boolean, left = 15) {
   const map = floor();
   const reach = reachable(map, start, 'medium', left, [goblin]);
-  return figureHover(map, reach, cells, 'medium', [goblin], master, start);
+  return figureHover(map, reach, cells, 'medium', [goblin], free, start);
 }
 
 describe('figureHover', () => {
-  it('игрок ходит только по достижимым клеткам и не на чужое место', () => {
+  it('ход (игрок, мастер в «Игре») — только по достижимым клеткам и не на чужое место', () => {
     expect(hoverOf(over(1, 3), false)).toMatchObject({
       kind: 'move',
       anchor: [1, 1, 3],
@@ -52,7 +52,7 @@ describe('figureHover', () => {
     expect(hoverOf(over(3, 1), false).kind).toBe('blocked');
   });
 
-  it('мастер ставит куда угодно, где свободно, — без пути и цены', () => {
+  it('мастер в «Правке» ставит куда угодно, где свободно, — без пути и цены', () => {
     expect(hoverOf(over(8, 8), true)).toMatchObject({
       kind: 'place',
       anchor: [8, 1, 8],

@@ -22,6 +22,9 @@ export interface BlockInfo {
   material: MaterialName;
   // Свои текстуры группы из справочника; нет — узор материала в основном цвете.
   textures?: BlockTextures;
+  // Ключ плиток своего блока: блоки с одним ключом рисуются одними плитками атласа
+  // карты (id группы или имя формы со своим видом, docs/plan/blocks.md, этап 5б).
+  tiles?: string;
   // Свойства для правил и основной цвет.
   traits: BlockMaterial;
 }

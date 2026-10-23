@@ -2,9 +2,12 @@ import type { CatalogEntryFields, CatalogEntryInputFields } from './catalog.js';
 import {
   BLOCK_TEXTURE_FACES,
   HAZARD_NAMES,
+  SHAPE_LOOK_NAMES,
   type BlockGroupInfo,
+  type BlockShapeLooks,
   type BlockTextures,
   type HazardName,
+  type ShapeLookName,
 } from './map/customBlocks.js';
 import { MATERIALS, type MaterialName } from './map/materials.js';
 
@@ -59,6 +62,24 @@ export function isBlockTextures(value: unknown): value is BlockTextures | null {
   );
 }
 
+// Свои виды форм: только формы кроме куба, у каждой — настоящие текстуры (не null) и
+// основной цвет.
+export function isBlockShapeLooks(value: unknown): value is BlockShapeLooks {
+  if (typeof value !== 'object' || value === null || Array.isArray(value))
+    return false;
+  return Object.entries(value).every(([shape, look]) => {
+    if (!SHAPE_LOOK_NAMES.includes(shape as ShapeLookName)) return false;
+    if (typeof look !== 'object' || look === null) return false;
+    const { textures, color } = look as Record<string, unknown>;
+    return (
+      Object.keys(look).length === 2 &&
+      textures !== null &&
+      isBlockTextures(textures) &&
+      isBlockColor(color)
+    );
+  });
+}
+
 export function isHazardName(value: unknown): value is HazardName {
   return HAZARD_NAMES.includes(value as HazardName);
 }
@@ -85,6 +106,7 @@ export function readBlockGroupFields(
       extra.textures !== undefined && isBlockTextures(extra.textures)
         ? extra.textures
         : null,
+    shapes: isBlockShapeLooks(extra.shapes) ? extra.shapes : {},
   };
 }
 
@@ -103,6 +125,7 @@ export function toBlockGroupInfo(
     climbable: group.climbable,
     hazard: group.hazard,
     textures: group.textures,
+    shapes: group.shapes,
   };
 }
 

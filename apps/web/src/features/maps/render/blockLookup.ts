@@ -43,8 +43,10 @@ function placeTiles(
   atlas: BlockAtlas,
   block: BlockInfo,
 ): AtlasSet & { ownTextures: boolean } {
-  const groupId = parseCustomBlockName(block.name)?.groupId;
-  const own = groupId ? atlas.setFor(groupId, () => blockTiles(block)) : null;
+  // Формы группы делят одни плитки, а форма со своим видом получает свои (этап 5б):
+  // ключ места даёт описание блока.
+  const key = parseCustomBlockName(block.name) ? block.tiles : undefined;
+  const own = key ? atlas.setFor(key, () => blockTiles(block)) : null;
   const patternHoles = CUTOUT_MATERIALS.has(block.material);
   if (!own)
     return {

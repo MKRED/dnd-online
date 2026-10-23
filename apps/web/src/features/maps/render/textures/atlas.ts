@@ -101,7 +101,8 @@ export class BlockAtlas {
   private readonly sets = new Map<string, AtlasSet>();
   private next = MATERIAL_ORDER.length;
 
-  // Место набора плиток своей группы: key — id группы, tiles зовётся один раз.
+  // Место набора плиток своего блока: key — id группы или имя формы со своим видом
+  // (BlockInfo.tiles), tiles зовётся один раз.
   // null — атлас полон (на одной карте больше трёхсот своих групп): блок рисуется
   // плитками своей основы.
   setFor(key: string, tiles: () => MaterialTextures): AtlasSet | null {

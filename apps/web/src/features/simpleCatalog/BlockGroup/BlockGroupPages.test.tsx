@@ -30,6 +30,7 @@ const embers: BlockGroup = {
   climbable: false,
   hazard: 'fire',
   textures: null,
+  shapes: {},
 };
 
 const auth = {
@@ -140,5 +141,43 @@ describe('раздел «Блоки»', () => {
       durability: { armorClass: 17, hitPoints: 27 },
       hazard: null,
     });
+  });
+
+  it('своя текстура ступеней уходит в shapes, остальные формы — без неё', async () => {
+    const fetchMock = stubFetch((_url, init) =>
+      init?.method === 'POST' ? embers : [],
+    );
+    renderWithProviders(
+      <Routes>
+        <Route path="/blocks/new" element={<SimpleCreatePage def={BLOCKS} />} />
+        <Route path="/blocks/:id" element={<p>Карточка</p>} />
+      </Routes>,
+      { route: '/blocks/new', auth },
+    );
+
+    await userEvent.type(await screen.findByLabelText(/Название/), 'Угли');
+    await userEvent.click(screen.getByRole('radio', { name: 'Ступени' }));
+    await userEvent.click(screen.getByText('Одна на все грани'));
+    expect(
+      screen.getByRole('radio', { name: 'Ступени (свои текстуры)' }),
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Создать' }));
+
+    await screen.findByText('Карточка');
+    const post = fetchMock.mock.calls.find(
+      ([, init]) => init?.method === 'POST',
+    );
+    const body = JSON.parse(post?.[1]?.body as string) as {
+      textures: unknown;
+      shapes: Record<
+        string,
+        { textures: Record<string, string>; color: string }
+      >;
+    };
+    expect(body.textures).toBeNull();
+    expect(Object.keys(body.shapes)).toEqual(['stairs']);
+    const { textures, color } = body.shapes.stairs;
+    expect(textures.top).toBe(textures.side);
+    expect(color).toMatch(/^#[0-9a-f]{6}$/);
   });
 });

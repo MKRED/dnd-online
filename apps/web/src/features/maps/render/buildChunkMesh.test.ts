@@ -104,6 +104,7 @@ describe('buildChunkMesh', () => {
       climbable: false,
       hazard: null,
       textures: null,
+      shapes: {},
     };
     const map: MapState = {
       store: new MemoryChunkStore(),

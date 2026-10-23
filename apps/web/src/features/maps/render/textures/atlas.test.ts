@@ -102,6 +102,7 @@ describe('atlas', () => {
         climbable: false,
         hazard: null,
         textures: null,
+        shapes: {},
       },
     ]);
     expect(atlasFor(other) === atlasFor(BASE_BLOCKS)).toBe(false);

@@ -1,9 +1,10 @@
 import { Group, Stack, Text } from '@mantine/core';
-import { SHAPE_LABELS, SHAPE_NAMES, type BlockGroupFields } from 'shared';
+import { SHAPE_LABELS, SHAPE_NAMES } from 'shared';
 import { ShapeSwatch } from '../../maps';
+import { shapeAppearance, type GroupLook } from './shapeAppearance';
 
 interface BlockShapesProps {
-  group: Pick<BlockGroupFields, 'look' | 'color' | 'textures'>;
+  group: GroupLook;
 }
 
 // Картинка группы блоков — сами блоки: большой куб и под ним все формы группы
@@ -14,8 +15,7 @@ function BlockShapes({ group }: BlockShapesProps) {
     <Stack gap="sm" align="center">
       <ShapeSwatch
         material={group.look}
-        color={group.color}
-        textures={group.textures}
+        {...shapeAppearance(group, 'cube')}
         shape="cube"
         size={160}
       />
@@ -24,8 +24,7 @@ function BlockShapes({ group }: BlockShapesProps) {
           <Stack key={shape} gap={2} align="center" w={52} role="listitem">
             <ShapeSwatch
               material={group.look}
-              color={group.color}
-              textures={group.textures}
+              {...shapeAppearance(group, shape)}
               shape={shape}
               size={40}
             />

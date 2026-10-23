@@ -1,7 +1,7 @@
 import { Modal } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { useState } from 'react';
-import type { BlockTextures, MaterialName } from 'shared';
+import type { BlockTextures, MaterialName, ShapeName } from 'shared';
 import type { TextureFace, TextureMode } from '../blockTextureForm';
 import TileEditorBody from './TileEditorBody';
 
@@ -14,6 +14,8 @@ export interface TileEditorTarget {
 export interface TileEditorModalProps {
   target: TileEditorTarget | null;
   textures: BlockTextures | null;
+  // Форма, чьи текстуры правим: её и показывает предпросмотр.
+  shape: ShapeName;
   look: MaterialName;
   color: string;
   onDone: (face: TextureFace, tile: string) => void;

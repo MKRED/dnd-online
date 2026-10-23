@@ -1,5 +1,10 @@
 import { Group, Stack, Text } from '@mantine/core';
-import type { BlockTextures, MaterialName } from 'shared';
+import {
+  SHAPE_LABELS,
+  type BlockTextures,
+  type MaterialName,
+  type ShapeName,
+} from 'shared';
 import { ownTileImage, ShapeSwatch } from '../../../maps';
 import classes from './TileEditor.module.css';
 
@@ -7,12 +12,13 @@ interface TilePreviewProps {
   tile: string;
   // Текстуры блока с правленой плиткой на её грани — для куба.
   textures: BlockTextures;
+  shape: ShapeName;
   look: MaterialName;
   color: string;
 }
 
-// Предпросмотр: плитка 3×3 (видно швы на стыках) и куб, как на карте.
-function TilePreview({ tile, textures, look, color }: TilePreviewProps) {
+// Предпросмотр: плитка 3×3 (видно швы на стыках) и сама форма, как на карте.
+function TilePreview({ tile, textures, shape, look, color }: TilePreviewProps) {
   return (
     <Group gap="md" align="flex-end">
       <Stack gap={4} align="center">
@@ -31,11 +37,11 @@ function TilePreview({ tile, textures, look, color }: TilePreviewProps) {
           material={look}
           color={color}
           textures={textures}
-          shape="cube"
+          shape={shape}
           size={120}
         />
         <Text size="xs" c="dimmed">
-          Куб
+          {SHAPE_LABELS[shape]}
         </Text>
       </Stack>
     </Group>

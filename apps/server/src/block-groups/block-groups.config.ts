@@ -41,7 +41,12 @@ export const BLOCK_GROUPS_CONFIG: CatalogEntriesConfig<
       climbable: dto.climbable,
       hazard: dto.hazard,
     },
-    extra: { look: dto.look, color: dto.color, textures: dto.textures },
+    extra: {
+      look: dto.look,
+      color: dto.color,
+      textures: dto.textures,
+      shapes: dto.shapes,
+    },
   }),
 };
 

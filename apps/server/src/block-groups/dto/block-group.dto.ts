@@ -5,9 +5,11 @@ import {
   isBlockColor,
   isBlockDurability,
   isBlockLook,
+  isBlockShapeLooks,
   isBlockTextures,
   isHazardName,
   type BlockGroupFields,
+  type BlockShapeLooks,
   type BlockTextures,
   type HazardName,
   type MaterialName,
@@ -78,4 +80,16 @@ export class BlockGroupDto extends CatalogEntryDto implements BlockGroupFields {
     },
   })
   textures: BlockTextures | null;
+
+  // Свой вид отдельных форм (docs/plan/blocks.md, этап 5б); {} — все формы рисуются
+  // текстурами группы.
+  @ValidateBy({
+    name: 'blockShapeLooks',
+    validator: {
+      validate: isBlockShapeLooks,
+      defaultMessage: () =>
+        'Виды форм — объект {форма: {textures, color}}: формы кроме куба (slab, slab_top, wall, pillar, stairs), текстуры {top, side, bottom} и цвет #rrggbb; {} — без своих',
+    },
+  })
+  shapes: BlockShapeLooks;
 }

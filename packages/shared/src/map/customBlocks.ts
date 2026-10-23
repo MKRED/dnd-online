@@ -16,6 +16,22 @@ export interface BlockTextures {
 }
 
 export const BLOCK_TEXTURE_FACES = ['top', 'side', 'bottom'] as const;
+
+// Свой вид отдельной формы группы (docs/plan/blocks.md, этап 5б): ступени или плита
+// со своими плитками вместо текстур группы. Куба тут нет — его вид и есть вид группы.
+// color — основной цвет формы (средний цвет её плиток): им рисуются значок, серая зона
+// тумана и срез для нейросети.
+export type ShapeLookName = Exclude<ShapeName, 'cube'>;
+export const SHAPE_LOOK_NAMES = SHAPE_NAMES.filter(
+  (shape): shape is ShapeLookName => shape !== 'cube',
+);
+
+export interface BlockShapeLook {
+  textures: BlockTextures;
+  color: string;
+}
+
+export type BlockShapeLooks = Partial<Record<ShapeLookName, BlockShapeLook>>;
 export const HAZARD_NAMES = Object.keys(HAZARDS) as HazardName[];
 
 // Группа своих блоков из справочника (docs/plan/blocks.md, этап 3): свойства для правил
@@ -34,6 +50,8 @@ export interface BlockGroupInfo {
   hazard: HazardName | null;
   // null — узор основы, перекрашенный в основной цвет.
   textures: BlockTextures | null;
+  // Формы со своим видом; остальные формы рисуются текстурами группы.
+  shapes: BlockShapeLooks;
 }
 
 // Имя своего блока в палитре — как у базовых: id группы для куба, «id_форма» для
@@ -62,6 +80,8 @@ function describeCustom(
   shape: ShapeName,
   name: string,
 ): BlockInfo {
+  const own = shape === 'cube' ? undefined : group.shapes[shape];
+  const textures = own?.textures ?? group.textures;
   return {
     name,
     label:
@@ -70,10 +90,12 @@ function describeCustom(
         : `${group.name}: ${SHAPE_LABELS[shape].toLowerCase()}`,
     shape,
     material: group.look,
-    ...(group.textures && { textures: group.textures }),
+    ...(textures && { textures }),
+    // Формы без своего вида делят плитки группы, со своим — у каждой свои.
+    tiles: own ? name : group.id,
     traits: {
       label: group.name,
-      color: group.color,
+      color: own?.color ?? group.color,
       opaque: group.opaque,
       durability: group.durability,
       flammable: group.flammable,

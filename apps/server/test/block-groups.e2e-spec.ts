@@ -28,11 +28,14 @@ const groupBody = {
   climbable: false,
   hazard: 'fire',
   textures: null,
+  shapes: {},
 };
 
 // Плитка 16×16 RGBA в base64 (docs/plan/blocks.md, этап 4б).
 const tile = (byte: number, bytes = 1024) =>
   Buffer.alloc(bytes, byte).toString('base64');
+
+const groupTextures = () => ({ top: tile(1), side: tile(1), bottom: tile(1) });
 
 const idOf = (res: request.Response) => (res.body as { id: string }).id;
 
@@ -80,6 +83,35 @@ describeCatalog(
         ).toEqual(textures);
       });
 
+      it('свой вид формы сохраняется и уходит в каталог карты', async () => {
+        const { author, url, create } = get();
+        const stairs = {
+          textures: { top: tile(40), side: tile(50), bottom: tile(60) },
+          color: '#334455',
+        };
+        const { id } = await create({ shapes: { stairs } });
+        const card = await author.get(url(id)).expect(200);
+        expect((card.body as { shapes: unknown }).shapes).toEqual({ stairs });
+        const mapId = idOf(
+          await author
+            .post('/api/maps')
+            .send({ name: 'Со ступенями' })
+            .expect(201),
+        );
+        await author
+          .post(`/api/maps/${mapId}/ops`)
+          .send({
+            ops: [{ op: 'setBlock', at: [0, 0, 0], block: `${id}_stairs` }],
+          })
+          .expect(200);
+        const chunks = (
+          await author.get(`/api/maps/${mapId}/chunks`).expect(200)
+        ).body as MapChunksResponse;
+        expect(chunks.blocks.find((group) => group.id === id)?.shapes).toEqual({
+          stairs,
+        });
+      });
+
       it('без полей или с неверными — 400', async () => {
         const { author, url, body } = get();
         for (const over of [
@@ -94,6 +126,10 @@ describeCatalog(
           { textures: undefined },
           { textures: { top: tile(1), side: tile(1) } },
           { textures: { top: tile(1, 1023), side: tile(1), bottom: tile(1) } },
+          { shapes: undefined },
+          { shapes: { cube: { textures: groupTextures(), color: '#112233' } } },
+          { shapes: { stairs: { textures: null, color: '#112233' } } },
+          { shapes: { stairs: { textures: groupTextures(), color: 'red' } } },
         ]) {
           await author.post(url()).send(body(over)).expect(400);
         }

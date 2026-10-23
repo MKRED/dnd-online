@@ -3,6 +3,7 @@ import {
   BLOCK_HIT_POINTS_MAX,
   MATERIALS,
   type BlockGroupFields,
+  type BlockShapeLooks,
   type BlockTextures,
   type HazardName,
   type MaterialName,
@@ -23,6 +24,8 @@ export interface BlockValues {
   hitPoints: number | string;
   // Свои текстуры (этап 4б); null — узор основы в основном цвете.
   textures: BlockTextures | null;
+  // Свой вид отдельных форм (этап 5б).
+  shapes: BlockShapeLooks;
 }
 
 // Новая группа начинается как камень: самый частый блок, и у него все свойства обычные.
@@ -36,6 +39,7 @@ const NEW_GROUP: BlockGroupFields = {
   climbable: false,
   hazard: null,
   textures: null,
+  shapes: {},
 };
 
 export function toBlockValues(
@@ -54,6 +58,7 @@ export function toBlockValues(
     armorClass: durability?.armorClass ?? '',
     hitPoints: durability?.hitPoints ?? '',
     textures: group.textures,
+    shapes: group.shapes,
   };
 }
 
@@ -73,6 +78,7 @@ export function fromBlockValues(values: BlockValues): BlockGroupFields {
     climbable: values.climbable,
     hazard: values.hazard === 'none' ? null : values.hazard,
     textures: values.textures,
+    shapes: values.shapes,
   };
 }
 

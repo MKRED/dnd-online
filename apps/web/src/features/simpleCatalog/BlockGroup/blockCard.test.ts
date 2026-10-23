@@ -13,6 +13,7 @@ const plain: BlockGroupFields = {
   climbable: false,
   hazard: null,
   textures: null,
+  shapes: {},
 };
 
 describe('blockCard', () => {

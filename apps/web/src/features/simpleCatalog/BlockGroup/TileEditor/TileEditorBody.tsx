@@ -33,7 +33,7 @@ interface TileEditorBodyProps extends Omit<TileEditorModalProps, 'onClose'> {
 // Содержимое окна редактора: монтируется заново на каждое открытие, поэтому плитка,
 // история и инструмент всегда начинаются с текущей плитки формы.
 function TileEditorBody(props: TileEditorBodyProps) {
-  const { target, textures, look, color, confirmClose } = props;
+  const { target, textures, shape, look, color, confirmClose } = props;
   const [initial] = useState<Tile>(() => tileFromBase64(textures[target.face]));
   const editor = useTileEditor(
     initial,
@@ -87,6 +87,7 @@ function TileEditorBody(props: TileEditorBodyProps) {
           <TilePreview
             tile={tile}
             textures={previewTextures}
+            shape={shape}
             look={look}
             color={color}
           />

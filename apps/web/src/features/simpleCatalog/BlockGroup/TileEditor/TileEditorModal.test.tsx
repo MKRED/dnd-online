@@ -43,6 +43,7 @@ function renderEditor() {
     <TileEditorModal
       target={{ face: 'top', mode: 'faces', title: 'Текстура: верх' }}
       textures={textures}
+      shape="cube"
       look="stone"
       color="#808080"
       onDone={onDone}

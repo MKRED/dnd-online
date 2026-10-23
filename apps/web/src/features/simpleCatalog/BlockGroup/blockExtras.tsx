@@ -70,12 +70,13 @@ export const BLOCK_EXTRAS: CatalogExtras = {
         />
       )),
     // Пока цвет набирают, он бывает недописан («#8a») — тогда образец в цвете основы.
-    values: ({ block: { look, color, textures } }) => (
+    values: ({ block: { look, color, textures, shapes } }) => (
       <BlockShapes
         group={{
           look,
           color: isBlockColor(color) ? color : MATERIALS[look].color,
           textures,
+          shapes,
         }}
       />
     ),

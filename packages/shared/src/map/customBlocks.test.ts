@@ -31,6 +31,7 @@ const embers: BlockGroupInfo = {
   climbable: false,
   hazard: 'fire',
   textures: null,
+  shapes: {},
 };
 
 function mapWith(groups: BlockGroupInfo[]): MapState {
@@ -119,5 +120,35 @@ describe('каталог карты со своими группами', () => {
     expect(() =>
       applyOp(deleted, { op: 'setBlock', at: [2, 0, 0], block: GROUP_ID }),
     ).toThrow(MapOpError);
+  });
+});
+
+describe('свой вид формы', () => {
+  const tile = (byte: number) =>
+    btoa(String.fromCharCode(...new Uint8Array(1024).fill(byte)));
+  const groupTextures = { top: tile(1), side: tile(1), bottom: tile(1) };
+  const stairsTextures = { top: tile(2), side: tile(2), bottom: tile(2) };
+  const catalog = createBlockCatalog([
+    {
+      ...embers,
+      textures: groupTextures,
+      shapes: { stairs: { textures: stairsTextures, color: '#336699' } },
+    },
+  ]);
+
+  it('форма со своим видом берёт свои плитки и цвет, остальные — группы', () => {
+    const stairs = catalog.describe(`${GROUP_ID}_stairs`);
+    expect(stairs?.textures).toBe(stairsTextures);
+    expect(stairs?.traits.color).toBe('#336699');
+    expect(stairs?.tiles).toBe(`${GROUP_ID}_stairs`);
+    // Свойства для правил — по-прежнему группы.
+    expect(stairs?.traits.movementCost).toBe(2);
+
+    for (const name of [GROUP_ID, `${GROUP_ID}_slab`]) {
+      const block = catalog.describe(name);
+      expect(block?.textures).toBe(groupTextures);
+      expect(block?.traits.color).toBe(embers.color);
+      expect(block?.tiles).toBe(GROUP_ID);
+    }
   });
 });

@@ -23,6 +23,7 @@ const group: BlockGroupInfo = {
   climbable: false,
   hazard: null,
   textures: null,
+  shapes: {},
 };
 
 // Вид блока по имени: ставим его в палитру и спрашиваем лукап по id.
@@ -77,5 +78,34 @@ describe('createBlockLookup', () => {
         group.id,
       ),
     ).toMatchObject({ translucent: false, cutout: true });
+  });
+
+  it('форма со своим видом — своё место в атласе и свои дыры, прочие формы — место группы', () => {
+    const holes = tileToBase64(
+      paintTile((x) => (x % 2 ? [10, 20, 30, 255] : [0, 0, 0, 0])),
+    );
+    const catalog = createBlockCatalog([
+      {
+        ...group,
+        shapes: {
+          stairs: {
+            textures: { top: holes, side: holes, bottom: holes },
+            color: '#0a141e',
+          },
+        },
+      },
+    ]);
+    const palette = createPalette();
+    const cell = (name: string) =>
+      encodeCell(resolveBlockId(palette, name, catalog).id);
+    const cube = cell(group.id);
+    const slab = cell(`${group.id}_slab`);
+    const stairs = cell(`${group.id}_stairs`);
+    const lookup = createBlockLookup(palette, catalog);
+    expect(lookup(slab)?.tileSet).toBe(lookup(cube)?.tileSet);
+    expect(lookup(stairs)?.tileSet).not.toBe(lookup(cube)?.tileSet);
+    expect(lookup(stairs)).toMatchObject({ cutout: true, translucent: false });
+    expect(lookup(stairs)?.material.color).toBe('#0a141e');
+    expect(lookup(cube)?.cutout).toBe(false);
   });
 });

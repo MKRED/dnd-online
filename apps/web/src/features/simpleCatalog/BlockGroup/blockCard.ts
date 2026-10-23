@@ -1,4 +1,11 @@
-import { HAZARDS, hazardLabel, MATERIALS, type BlockGroupFields } from 'shared';
+import {
+  HAZARDS,
+  hazardLabel,
+  MATERIALS,
+  SHAPE_LABELS,
+  SHAPE_NAMES,
+  type BlockGroupFields,
+} from 'shared';
 
 // Виды группы для чипов и бейджей — её заметные свойства. Группа без них — «Обычный».
 // У одной группы их бывает несколько: горящий труднопроходимый блок в обоих чипах.
@@ -32,6 +39,18 @@ export function blockKinds(group: BlockGroupFields): string[] {
 }
 
 // Строки карточки, кроме основы и цвета (их рисует blockRows с образцами).
+// Формы со своим видом — «свои у форм: плита, ступени» (docs/plan/blocks.md, этап 5б).
+function ownShapes(group: BlockGroupFields): string[] {
+  const shapes = SHAPE_NAMES.filter(
+    (shape) => shape !== 'cube' && group.shapes[shape],
+  );
+  return shapes.length
+    ? [
+        `свои у форм: ${shapes.map((shape) => SHAPE_LABELS[shape].toLowerCase()).join(', ')}`,
+      ]
+    : [];
+}
+
 export function blockTraitRows(
   group: BlockGroupFields,
 ): { label: string; value: string }[] {
@@ -39,7 +58,10 @@ export function blockTraitRows(
   return [
     {
       label: 'Текстуры',
-      value: group.textures ? 'Свои' : 'Узор основы в основном цвете',
+      value: [
+        group.textures ? 'Свои' : 'Узор основы в основном цвете',
+        ...ownShapes(group),
+      ].join('; '),
     },
     { label: 'Обзор', value: group.opaque ? 'Закрывает' : 'Не закрывает' },
     {

@@ -72,6 +72,7 @@ export async function readSceneFigures(
       speed: characters.speed,
       current: characters.hitPointsCurrent,
       max: characters.hitPointsMax,
+      temp: characters.hitPointsTemp,
       deathFailures: characters.deathSaveFailures,
       controllerId: gameMembers.controllerId,
     })
@@ -92,21 +93,27 @@ export async function readSceneFigures(
       speed: row.speed,
     })),
   );
-  return rows.map(({ figure, name, ownerId, speed, controllerId, ...hp }) => ({
-    character: { id: figure.characterId, name },
-    ownerId,
-    at: [figure.x, figure.y, figure.z],
-    facing: figure.facing,
-    size: FIGURE_SIZE,
-    image: images.get(figure.characterId) ?? null,
-    model: models.get(figure.characterId) ?? null,
-    speed: speeds.get(figure.characterId)?.speed ?? speed,
-    climb: speeds.get(figure.characterId)?.climb ?? null,
-    moved: figure.moved,
-    dashes: figure.dashes,
-    canMove: canMoveFigure(viewerId, masterId, ownerId, controllerId),
-    health: creatureHealth(hp),
-  }));
+  return rows.map(
+    ({ figure, name, ownerId, speed, controllerId, temp, ...hp }) => {
+      const canMove = canMoveFigure(viewerId, masterId, ownerId, controllerId);
+      return {
+        character: { id: figure.characterId, name },
+        ownerId,
+        at: [figure.x, figure.y, figure.z],
+        facing: figure.facing,
+        size: FIGURE_SIZE,
+        image: images.get(figure.characterId) ?? null,
+        model: models.get(figure.characterId) ?? null,
+        speed: speeds.get(figure.characterId)?.speed ?? speed,
+        climb: speeds.get(figure.characterId)?.climb ?? null,
+        moved: figure.moved,
+        dashes: figure.dashes,
+        canMove,
+        health: creatureHealth(hp),
+        hitPoints: canMove ? { current: hp.current, max: hp.max, temp } : null,
+      };
+    },
+  );
 }
 
 // Персонажи на местах по порядку мест.

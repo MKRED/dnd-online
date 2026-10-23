@@ -1,4 +1,11 @@
-import { Alert, Anchor, Loader, Text, VisuallyHidden } from '@mantine/core';
+import {
+  Alert,
+  Anchor,
+  Loader,
+  Stack,
+  Text,
+  VisuallyHidden,
+} from '@mantine/core';
 import {
   lazy,
   Suspense,
@@ -30,13 +37,16 @@ import type { CameraFocusApi } from '../../features/maps/MapScene';
 import { usePageTitle } from '../../lib/usePageTitle';
 import classes from './GameScenePage.module.css';
 import SceneRoom from './SceneRoom';
-import SceneSidebar from './SceneSidebar';
 import SceneToolsPanel from './SceneToolsPanel';
 import { useGameScene } from './useGameScene';
-import { CreatureCards, useCreatureCards } from './creatures';
-import { FiguresPanel, useScenePlay } from './figures';
-import { FogPanel, playersView, useSceneFog } from './fog';
+import ScenePlaque from './ScenePlaque/ScenePlaque';
+import { plaqueState } from './ScenePlaque/plaqueState';
+import { FullSheetDrawer, useCreatureCards } from './creatures';
+import { useScenePlay } from './figures';
+import UnplacedList from './figures/UnplacedList';
+import { playersView, useSceneFog } from './fog';
 import { SceneModeSwitch, useSceneMode } from './mode';
+import { GameScenePanel } from './panel';
 import { useSceneOpen } from './useSceneOpen';
 import { SCENE_TOOLS, useSceneTools } from './useSceneTools';
 
@@ -245,6 +255,17 @@ function GameScenePage() {
             leading={<SceneModeSwitch mode={mode} onChange={setMode} />}
           />
         )}
+        {ready && !viewOnly && (
+          <ScenePlaque
+            state={plaqueState({
+              placing: play.tool.placing,
+              figure: play.tool.figure,
+              free: editing,
+              creature: play.tool.figure ? null : cards.selected,
+              creatureMoving: cards.walk.moving,
+            })}
+          />
+        )}
         {ready && bounds && bounds.max[1] > bounds.min[1] && (
           <CutRuler
             min={bounds.min[1]}
@@ -264,44 +285,44 @@ function GameScenePage() {
           </VisuallyHidden>
         )}
       </div>
-      <SceneSidebar
+      <GameScenePanel
         gameId={id}
         gameName={game?.name ?? ''}
         scene={view?.scene ?? null}
+        state={state}
         master={master}
-        busy={open.busy}
-        error={open.error}
-        onOpenChange={open.setOpen}
-      >
-        {master && view && <FogPanel fog={sceneFog} />}
-        {figures.figures && (
-          <FiguresPanel
-            figures={figures.figures}
-            master={master}
-            free={editing}
-            tool={play.tool}
-          />
-        )}
-        {ready && (
-          <CreatureCards
-            gameId={id}
-            master={master}
-            cards={cards}
-            figure={play.tool.figure}
-          />
-        )}
-        {editTools && (
-          <SceneToolsPanel
-            editor={editor}
-            objects={objects}
-            state={ready.state}
-            refs={ready.view.refs}
-            busy={edits.busy}
-            editError={edits.editError}
-            onFocus={(point) => focusRef.current?.focusOn(point)}
-          />
-        )}
-      </SceneSidebar>
+        editing={editing}
+        open={open}
+        fog={sceneFog}
+        play={play}
+        cards={cards}
+        editBody={
+          editTools && (
+            <Stack gap="md">
+              {figures.figures && (
+                <UnplacedList
+                  unplaced={figures.figures.unplaced}
+                  tool={play.tool}
+                />
+              )}
+              <SceneToolsPanel
+                editor={editor}
+                objects={objects}
+                state={ready.state}
+                refs={ready.view.refs}
+                busy={edits.busy}
+                editError={edits.editError}
+                onFocus={(point) => focusRef.current?.focusOn(point)}
+              />
+            </Stack>
+          )
+        }
+      />
+      <FullSheetDrawer
+        gameId={id}
+        target={cards.sheet}
+        onClose={() => cards.setSheet(null)}
+      />
     </div>
   );
 }

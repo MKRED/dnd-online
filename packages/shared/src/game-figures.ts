@@ -37,6 +37,9 @@ export interface GameFigure {
   canMove: boolean;
   // Что видно о здоровье всем: «Ранен», «Без сознания», «Погиб» (hitPoints.ts).
   health: CreatureHealth | null;
+  // Хиты из листа — тем, кто водит фигурку (canMove): мастеру, владельцу, управляющему;
+  // остальным null — им видна только метка здоровья (docs/plan/scene-page.md, этап 2).
+  hitPoints: { current: number; max: number; temp: number } | null;
 }
 
 export interface GameFigures {

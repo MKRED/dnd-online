@@ -1,0 +1,112 @@
+/* Строка участника: щелчок выбирает его, выбранный обведён. */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--mantine-radius-md);
+}
+
+.row:not(:disabled):hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.row[data-selected] {
+  background: var(--mantine-primary-color-light);
+  box-shadow: inset 0 0 0 1px var(--mantine-primary-color-filled);
+}
+
+.row:disabled {
+  cursor: default;
+}
+
+/* Кружок с буквой — цвет как у рамки карточки на сцене: персонаж зелёный, НПС синий,
+   монстр красный. */
+.avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+}
+
+.avatar[data-kind='pc'] {
+  background: #3d8a4f;
+}
+
+.avatar[data-kind='npc'] {
+  background: #2f63a0;
+}
+
+.avatar[data-kind='monster'] {
+  background: #9c3b30;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.hiddenIcon {
+  flex: none;
+  color: var(--mantine-color-dimmed);
+}
+
+.hp {
+  margin-left: auto;
+  flex: none;
+}
+
+.bar {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--mantine-color-default-border);
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+}
+
+.feet {
+  flex: none;
+  width: 40px;
+  text-align: right;
+}
+
+.section {
+  padding: 8px 8px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+}
+
+/* Выбранный — внизу вкладки, на всю ширину панели, отделён линией. */
+.selected {
+  margin: auto calc(var(--mantine-spacing-sm) * -1)
+    calc(var(--mantine-spacing-sm) * -1);
+  padding: var(--mantine-spacing-sm);
+  border-top: 1px solid var(--mantine-color-default-border);
+  background: var(--mantine-color-default);
+}

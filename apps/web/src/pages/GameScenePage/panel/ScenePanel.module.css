@@ -1,0 +1,100 @@
+/* Панель справа на всю высоту страницы; содержимое вкладки прокручивается само, шапка и
+   вкладки остаются на месте. */
+.panel {
+  flex: 0 0 22rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--mantine-color-default-border);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-xs)
+    var(--mantine-spacing-xs) 6px;
+}
+
+.heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--mantine-font-size-md);
+  font-family: var(--mantine-font-family-headings);
+  font-weight: 700;
+}
+
+/* Вкладки — плотная «таблетка», как SegmentedControl, но с ролью навигации. */
+.tabs {
+  display: flex;
+  gap: 2px;
+  margin: 0 var(--mantine-spacing-sm);
+  padding: 3px;
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-default-hover);
+}
+
+.tab {
+  flex: 1;
+  height: 32px;
+  border-radius: var(--mantine-radius-sm);
+  text-align: center;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  color: var(--mantine-color-dimmed);
+}
+
+.tab:hover {
+  color: var(--mantine-color-text);
+}
+
+.tab[data-active] {
+  background: var(--mantine-color-body);
+  color: var(--mantine-color-text);
+  box-shadow: var(--mantine-shadow-xs);
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: var(--mantine-spacing-sm);
+}
+
+/* Свёрнутая панель: полоса значков вкладок, подсказки и «В лобби» внизу. */
+.rail {
+  flex: 0 0 3.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: var(--mantine-spacing-sm) 0;
+  border-left: 1px solid var(--mantine-color-default-border);
+}
+
+.railLine {
+  width: 28px;
+  height: 1px;
+  margin: 4px 0;
+  background: var(--mantine-color-default-border);
+}
+
+.railSpacer {
+  flex: 1;
+}
+
+/* На телефоне панель под сценой: до 45 % высоты, свёрнутая — одна шапка. */
+@media (max-width: 48em) {
+  .panel {
+    flex: 0 0 auto;
+    max-height: 45%;
+    border-left: none;
+    border-top: 1px solid var(--mantine-color-default-border);
+  }
+}

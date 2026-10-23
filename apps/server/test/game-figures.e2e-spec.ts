@@ -105,6 +105,8 @@ describe('game figures (e2e)', () => {
         moved: 0,
         dashes: 0,
         canMove: true,
+        // Мастер водит фигурку — видит хиты из листа (docs/plan/scene-page.md, этап 2).
+        hitPoints: { current: 12, max: 12, temp: 0 },
       }),
     ]);
     const event = await lastEvent(m, g.gameId);
@@ -137,6 +139,13 @@ describe('game figures (e2e)', () => {
     // Чужой фигуркой второй игрок не ходит; ему точки не хватило — список у мастера.
     expect(forSecond.figures).toHaveLength(1);
     expect(forSecond.figures[0].canMove).toBe(false);
+    // Чужие хиты — только меткой здоровья, без чисел.
+    expect(forSecond.figures[0].hitPoints).toBeNull();
+    expect(forPlayer.figures[0].hitPoints).toEqual({
+      current: 12,
+      max: 12,
+      temp: 0,
+    });
     expect(forSecond.unplaced).toEqual([]);
     expect((await figures(m, g.gameId)).unplaced).toEqual([
       expect.objectContaining({ name: 'Второй' }),

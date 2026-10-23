@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -169,6 +169,7 @@ const LIRA: GameFigure = {
   dashes: 0,
   canMove: true,
   health: null,
+  hitPoints: { current: 10, max: 12, temp: 0 },
 };
 
 function figuresOf(eventSeq: number, figures: GameFigure[]): GameFigures {
@@ -201,9 +202,11 @@ describe('GameScenePage', () => {
     renderScene('m1');
     const user = userEvent.setup();
 
-    expect(await screen.findByText('Осталось 40 из 60 фт')).toBeInTheDocument();
+    // В списке «Участники» — остаток запаса и хиты из листа (docs/plan/scene-page.md, этап 2).
+    expect(await screen.findByText('40 фт')).toBeInTheDocument();
+    expect(screen.getByText('10/12')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Новый раунд' }));
-    expect(await screen.findByText('Осталось 30 из 30 фт')).toBeInTheDocument();
+    expect(await screen.findByText('30 фт')).toBeInTheDocument();
     expect(
       fetchMock.mock.calls.some(
         ([input, init]) =>
@@ -220,7 +223,9 @@ describe('GameScenePage', () => {
       screen.getByRole('button', { name: 'Поставить на сцену: Борн' }),
     );
     expect(
-      screen.getByText('Щёлкните клетку, куда поставить: Борн.'),
+      within(
+        screen.getByRole('status', { name: 'Выбрано на сцене' }),
+      ).getByText('щёлкните клетку, куда поставить'),
     ).toBeInTheDocument();
   });
 
@@ -308,8 +313,13 @@ describe('GameScenePage', () => {
     ).not.toBeInTheDocument();
     await user.click(own);
     expect(own).toHaveAttribute('aria-pressed', 'true');
+    // Подсказка и запас — плашкой на сцене, а не в панели.
+    const plaque = screen.getByRole('status', { name: 'Выбрано на сцене' });
     expect(
-      screen.getByText(/Щёлкните подсвеченную клетку — фигурка пойдёт туда/),
+      within(plaque).getByText('щелчок по подсвеченной клетке — ход'),
+    ).toBeInTheDocument();
+    expect(
+      within(plaque).getByText('осталось 30 из 30 фт'),
     ).toBeInTheDocument();
   });
 
@@ -374,7 +384,7 @@ describe('GameScenePage', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Пещера' })).toBeInTheDocument();
     expect(screen.getByText('Содержимое скрыто')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '← В лобби' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'В лобби' })).toHaveAttribute(
       'href',
       base,
     );
@@ -444,6 +454,9 @@ describe('GameScenePage', () => {
     renderScene('m1');
     const user = userEvent.setup();
 
+    await user.click(
+      await screen.findByRole('button', { name: 'Сцена' }, { timeout: 3000 }),
+    );
     const toggle = await screen.findByRole('switch', {
       name: 'Открыта игрокам',
     });

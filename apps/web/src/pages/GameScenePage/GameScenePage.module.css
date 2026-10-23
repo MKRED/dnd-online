@@ -1,5 +1,5 @@
-/* Как страница карты: сцена на всю высоту окна под шапкой, панель справа, на узком
-   экране — под сценой. */
+/* Как страница карты: сцена на всю высоту окна под шапкой, панель справа (ScenePanel), на
+   узком экране — под сценой. */
 .page {
   display: flex;
   height: calc(100dvh - var(--app-shell-header-offset, 0rem));
@@ -23,43 +23,8 @@
   text-align: center;
 }
 
-/* Ширина — как у редактора карты: у мастера здесь те же свойства инструментов. */
-.sidebar {
-  flex: 0 0 20rem;
-  padding: var(--mantine-spacing-md);
-  border-left: 1px solid var(--mantine-color-default-border);
-  overflow-y: auto;
-}
-
 @media (max-width: 48em) {
   .page {
     flex-direction: column;
   }
-
-  .sidebar {
-    flex: 0 0 auto;
-    max-height: 40%;
-    border-left: none;
-    border-top: 1px solid var(--mantine-color-default-border);
-  }
-}
-
-/* Строка фигурки в панели: щелчок выбирает её, выбранная подсвечена. */
-.figureRow {
-  flex: 1;
-  min-width: 0;
-  padding: 4px 8px;
-  border-radius: var(--mantine-radius-sm);
-}
-
-.figureRow:not(:disabled):hover {
-  background: var(--mantine-color-default-hover);
-}
-
-.figureRow[data-selected] {
-  background: var(--mantine-primary-color-light);
-}
-
-.figureRow:disabled {
-  cursor: default;
 }

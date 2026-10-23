@@ -106,8 +106,17 @@ export function anchorBox(editor: SceneEditor, cell: Vec3): Box3 | null {
 // Северо-западная клетка места объекта со стороной span, когда курсор над клеткой
 // cell: курсор — в середине места, как у фигурки крупного существа.
 export function spanAnchor(cell: Vec3, span: number): Vec3 {
-  const back = Math.floor((span - 1) / 2);
-  return [cell[0] - back, cell[1], cell[2] - back];
+  return extentAnchor(cell, [span, 1, span]);
+}
+
+// То же для места любой ширины и глубины (обстановка, этап 8в): курсор — в середине по
+// x и z, по высоте место растёт вверх от клетки под курсором.
+export function extentAnchor(cell: Vec3, [ex, , ez]: Vec3): Vec3 {
+  return [
+    cell[0] - Math.floor((ex - 1) / 2),
+    cell[1],
+    cell[2] - Math.floor((ez - 1) / 2),
+  ];
 }
 
 // Область между двумя углами; высота наращивает её вверх от верхнего угла,
@@ -178,9 +187,9 @@ export interface SceneEditor {
   // Подсветка проверки хода вместо клеток: тело там, где встанет фигурка, путь
   // до него и цена.
   preview?: (cells: PickedCells) => WalkHover | null;
-  // Сторона места в клетках у ставящегося или переносимого объекта: подсветка — во всё
-  // место, курсор в его середине (spanAnchor). Без него — одна клетка.
-  span?: number;
+  // Место в клетках [ширина, высота, глубина] у ставящегося или переносимого объекта:
+  // подсветка — во всё место, курсор в его середине (extentAnchor). Без него — клетка.
+  extent?: Vec3;
   // Клетки под курсором сменились (null — курсор ушёл со сцены): фигурку тянут, и при
   // отпускании ей нужна последняя клетка (docs/plan/done/game.md, этап 7).
   onHover?: (cells: PickedCells | null) => void;

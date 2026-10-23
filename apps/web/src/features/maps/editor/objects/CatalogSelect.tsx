@@ -16,6 +16,13 @@ const GROUP_LABELS: Record<CatalogKind, string> = {
   monster: 'Монстры',
   npc: 'НПС',
   item: 'Предметы',
+  furniture: 'Обстановка',
+};
+
+const MOUNT_SHORT: Record<string, string> = {
+  floor: 'на полу',
+  wall: 'на стене',
+  ceiling: 'на потолке',
 };
 
 interface Found extends MapCatalogEntry {
@@ -43,6 +50,12 @@ function optionLabel(entry: Found): string {
   const parts = [entry.name];
   if (isSize(entry.size)) parts.push(CREATURE_SIZES[entry.size].label);
   if (entry.role === 'unique') parts.push('уникальный');
+  // Обстановка: размер модели «ширина×глубина×высота» и крепление.
+  if (entry.modelSize) {
+    const [x, y, z] = entry.modelSize;
+    parts.push(`${x}×${z}×${y}`);
+  }
+  if (entry.mount) parts.push(MOUNT_SHORT[entry.mount] ?? entry.mount);
   return parts.join(' · ');
 }
 
@@ -125,6 +138,9 @@ function CatalogSelect({
       name: entry.name,
       label: optionLabel(entry),
       ...(isSize(entry.size) && { size: entry.size }),
+      ...(entry.modelSize?.length === 3 && {
+        modelSize: entry.modelSize as unknown as [number, number, number],
+      }),
     });
   };
 

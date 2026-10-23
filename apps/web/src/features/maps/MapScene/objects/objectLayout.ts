@@ -13,6 +13,7 @@ import {
   type MapObjectRefsView,
   type Point3,
   type Vec3,
+  type VoxelModelFields,
 } from 'shared';
 import type { MapViewState } from '../../mapStateFromChunks';
 import { CATALOG_OBJECT_IMAGES, type ObjectImagePaths } from './objectImages';
@@ -42,7 +43,15 @@ export type SceneObjectLook =
     }
   | { kind: 'start'; number: number; facing: Facing }
   | { kind: 'container'; look: ContainerLook; facing: Facing }
-  | { kind: 'item'; image: string | null; letter: string; missing: boolean };
+  | { kind: 'item'; image: string | null; letter: string; missing: boolean }
+  // Обстановка (docs/plan/blocks.md, этап 8в): модель вокселями; extent — место на карте
+  // с поворотом. model null — модель или сама обстановка удалены: рамка места.
+  | {
+      kind: 'furniture';
+      facing: Facing;
+      model: VoxelModelFields | null;
+      extent: Vec3;
+    };
 
 export interface SceneObject {
   id: number;
@@ -140,6 +149,17 @@ function lookOf(
         look: object.look,
         facing: object.facing ?? 0,
       };
+    case 'furniture': {
+      const ref = refs.furniture?.[object.furnitureId];
+      const model = ref?.missing === null ? ref.model : null;
+      const [x, y, z] = model?.size ?? [1, 1, 1];
+      return {
+        kind: 'furniture',
+        facing: object.facing,
+        model,
+        extent: object.facing % 180 === 0 ? [x, y, z] : [z, y, x],
+      };
+    }
     case 'item': {
       const ref = refs.items[object.itemId];
       const found = ref?.missing === null ? ref : null;
@@ -177,8 +197,28 @@ export function layoutObjects(
     const size: CreatureSize = look.kind === 'creature' ? look.size : 'medium';
     const span = look.kind === 'creature' ? footprintCells(size) : 1;
     const [x, y, z] = object.at;
-    const outside = x + span > state.size.width || z + span > state.size.depth;
+    const [ex, ey, ez] =
+      look.kind === 'furniture' ? look.extent : [span, 1, span];
+    const outside = x + ex > state.size.width || z + ez > state.size.depth;
     if (outside) continue;
+    if (look.kind === 'furniture') {
+      // Обстановка стоит дном на нижнем уровне своих клеток; ступени и плиты под ней
+      // не поднимают её — место строго по клеткам (этап 8в).
+      result.push({
+        id: object.id,
+        at: object.at,
+        level: y,
+        base: [x + ex / 2, y, z + ez / 2],
+        footprint: Math.max(ex, ez),
+        top: y + ey,
+        label: summary.label,
+        warnings: summary.warnings,
+        blocked: false,
+        hidden: object.hidden,
+        look,
+      });
+      continue;
+    }
 
     const stands = look.kind === 'creature' || look.kind === 'start';
     const standing = stands ? standHeight(state, object.at, size) : null;

@@ -287,3 +287,47 @@ describe('layoutObjects', () => {
     expect(objects.map((o) => o.id)).toEqual([2]);
   });
 });
+
+describe('обстановка на сцене', () => {
+  const TABLE = '00000000-0000-4000-8000-0000000000a1';
+  const furnitureRefs: MapObjectRefsView = {
+    ...emptyRefsView(),
+    furniture: {
+      [TABLE]: {
+        missing: null,
+        name: 'Стол',
+        mount: 'floor',
+        model: { size: [3, 1, 1], palette: [], voxels: '', cells: {} },
+      },
+      [GONE]: { missing: 'deleted' },
+    },
+  };
+  const furniture = (id: number, furnitureId: string, facing: 0 | 90) =>
+    ({
+      ...base,
+      id,
+      at: [0, 1, 0],
+      kind: 'furniture',
+      furnitureId,
+      facing,
+    }) as MapObject;
+
+  it('место по модели: на 90° ширина и глубина меняются, середина — по месту', () => {
+    const [table] = layoutObjects(
+      mapWith([furniture(1, TABLE, 90)]),
+      furnitureRefs,
+    );
+    expect(table.look).toMatchObject({ kind: 'furniture', extent: [1, 1, 3] });
+    expect(table.base).toEqual([0.5, 1, 1.5]);
+    expect(table.top).toBe(2);
+  });
+
+  it('удалённая обстановка — без модели, одна клетка', () => {
+    const [gone] = layoutObjects(
+      mapWith([furniture(1, GONE, 0)]),
+      furnitureRefs,
+    );
+    expect(gone.look).toMatchObject({ model: null, extent: [1, 1, 1] });
+    expect(gone.warnings.join()).toMatch(/удалена/);
+  });
+});

@@ -2,7 +2,11 @@ import { Checkbox, SegmentedControl, Stack, Text } from '@mantine/core';
 import { CONTAINER_LOOK_LABELS, CONTAINER_LOOKS } from 'shared';
 import CatalogSelect from './CatalogSelect';
 import FacingPicker from './FacingPicker';
-import { PLACE_KIND_LABELS, type PlaceKind } from './objectPlacement';
+import {
+  PLACE_KIND_LABELS,
+  rightFacing,
+  type PlaceKind,
+} from './objectPlacement';
 import type { ObjectTool } from './useObjectTool';
 
 const KIND_OPTIONS = (Object.keys(PLACE_KIND_LABELS) as PlaceKind[]).map(
@@ -53,6 +57,23 @@ function PlaceSection({ tool }: { tool: ObjectTool }) {
           error={required}
         />
       )}
+      {kind === 'furniture' && (
+        <>
+          <CatalogSelect
+            kinds={['furniture']}
+            value={settings.furniture}
+            onChange={tool.setFurniture}
+            label="Обстановка"
+            placeholder="Своя обстановка по названию"
+            error={required}
+          />
+          <Text size="xs" c="dimmed">
+            Ставится, только если в клетках нет блоков и объектов и есть опора
+            по креплению. Shift+клик — без проверки: закопать клад, вмуровать
+            решётку.
+          </Text>
+        </>
+      )}
       {kind === 'container' && (
         <SegmentedControl
           size="xs"
@@ -63,7 +84,15 @@ function PlaceSection({ tool }: { tool: ObjectTool }) {
         />
       )}
       {kind !== 'item' && (
-        <FacingPicker value={settings.facing} onChange={tool.setFacing} />
+        <FacingPicker
+          value={
+            kind === 'furniture'
+              ? rightFacing(settings.facing)
+              : settings.facing
+          }
+          onChange={tool.setFacing}
+          rightOnly={kind === 'furniture'}
+        />
       )}
       {/* Засаду ставят сразу скрытой: в открытой сцене объект, спрятанный после
           постановки, игроки успели бы увидеть. */}

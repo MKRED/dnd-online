@@ -16,6 +16,7 @@ import classes from '../MapScene.module.css';
 import ContainerShape from './ContainerShape';
 import CreatureBody from './CreatureBody';
 import FloorItem from './FloorItem';
+import FurnitureFigure from './FurnitureFigure';
 import GhostGroup from './GhostGroup';
 import {
   layoutObjects,
@@ -59,14 +60,18 @@ interface ObjectLayerProps {
   fog?: FogMasks | null;
 }
 
-// Обводка выделенного объекта во всё его место и рост.
+// Обводка выделенного объекта во всё его место и рост: у обстановки — прямоугольник
+// её клеток.
 function SelectionFrame({ object }: { object: SceneObject }) {
-  const half = object.footprint / 2;
+  const [hx, hz] =
+    object.look.kind === 'furniture'
+      ? [object.look.extent[0] / 2, object.look.extent[2] / 2]
+      : [object.footprint / 2, object.footprint / 2];
   const [x, y, z] = object.base;
   return (
     <FrameBox
-      min={[x - half, y, z - half]}
-      max={[x + half, object.top, z + half]}
+      min={[x - hx, y, z - hz]}
+      max={[x + hx, object.top, z + hz]}
       color={SELECTED_COLOR}
       opacity={0.1}
     />
@@ -189,6 +194,9 @@ function ObjectLayer({
                   facing={look.facing}
                   base={object.base}
                 />
+              )}
+              {look.kind === 'furniture' && (
+                <FurnitureFigure object={object} look={look} />
               )}
               {look.kind === 'item' && (
                 <FloorItem

@@ -29,7 +29,7 @@ interface MapEditorOptions {
   // и инструмента (страница сцены игры).
   walk?: Pick<WalkTest, 'pick' | 'preview'>;
   // Инструмент «Объекты»: клики по клеткам и клавиши R, Del, Esc при нём уходят ему.
-  objects: Pick<ObjectTool, 'pick' | 'span' | 'rotate' | 'remove' | 'escape'>;
+  objects: Pick<ObjectTool, 'pick' | 'extent' | 'rotate' | 'remove' | 'escape'>;
   // false — инструменты спрятаны (открыта панель размера): клавиши 1–8, R и Del молчат.
   keysActive: boolean;
   // Инструменты на полосе, по порядку; без него — все (EDITOR_TOOLS).
@@ -136,7 +136,7 @@ export function useMapEditor({
 
   const walkPick = walk?.pick;
   const walkPreview = walk?.preview;
-  const { pick: objectPick, span: objectSpan } = objects;
+  const { pick: objectPick, extent: objectExtent } = objects;
   const sceneEditor = useMemo<SceneEditor | null>(() => {
     if (tool === 'view' || !state) return null;
     if (tool === 'objects') {
@@ -145,7 +145,7 @@ export function useMapEditor({
         anchor: null,
         height,
         onPick: objectPick,
-        span: objectSpan,
+        extent: objectExtent,
       };
     }
     if (tool === 'walk') {
@@ -180,7 +180,7 @@ export function useMapEditor({
     walkPick,
     walkPreview,
     objectPick,
-    objectSpan,
+    objectExtent,
   ]);
 
   return {

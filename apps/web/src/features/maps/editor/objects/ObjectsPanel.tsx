@@ -30,8 +30,8 @@ function ObjectsPanel({ tool, state, refs, busy, onFocus }: ObjectsPanelProps) {
     const object = state.objects.byId.get(id);
     if (!object) return;
     tool.select(id);
-    const half = tool.spanOf(object) / 2;
-    onFocus([object.at[0] + half, object.at[1], object.at[2] + half]);
+    const [ex, , ez] = tool.extentOf(object);
+    onFocus([object.at[0] + ex / 2, object.at[1], object.at[2] + ez / 2]);
   };
 
   return (

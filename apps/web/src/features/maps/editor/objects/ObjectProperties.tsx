@@ -83,7 +83,12 @@ function ObjectProperties({
       </Stack>
 
       {facing !== null && (
-        <FacingPicker value={facing} onChange={tool.turn} disabled={busy} />
+        <FacingPicker
+          value={facing}
+          onChange={tool.turn}
+          disabled={busy}
+          rightOnly={object.kind === 'furniture'}
+        />
       )}
 
       {object.kind === 'npc' && (

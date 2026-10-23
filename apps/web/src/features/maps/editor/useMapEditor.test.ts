@@ -26,7 +26,7 @@ function setup(objects = objectsMock()) {
 function objectsMock() {
   return {
     pick: vi.fn(),
-    span: 1,
+    extent: [1, 1, 1] as const,
     rotate: vi.fn(),
     remove: vi.fn(),
     escape: vi.fn(),

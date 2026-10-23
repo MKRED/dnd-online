@@ -7,7 +7,7 @@ import {
   anchorBox,
   cellsFromHit,
   sceneEditorCell,
-  spanAnchor,
+  extentAnchor,
   type PickedCells,
   type SceneEditor,
 } from '../editor/editorTools';
@@ -78,10 +78,10 @@ function CellHighlight({
 }) {
   const cell = sceneEditorCell(editor, pick);
   if (!cell || !insideMap(cell, size)) return null;
-  const span = editor.span ?? 1;
-  const from = spanAnchor(cell, span);
-  const to: Vec3 = [from[0] + span - 1, from[1], from[2] + span - 1];
-  // Место крупного существа целиком: не влезает в карту — не подсвечиваем.
+  const [ex, ey, ez] = editor.extent ?? [1, 1, 1];
+  const from = extentAnchor(cell, [ex, ey, ez]);
+  const to: Vec3 = [from[0] + ex - 1, from[1] + ey - 1, from[2] + ez - 1];
+  // Место крупного существа или обстановки целиком: не влезает в карту — не подсвечиваем.
   if (!insideMap(from, size) || !insideMap(to, size)) return null;
   const box: Box3 = anchorBox(editor, cell) ?? { min: from, max: to };
   return (

@@ -3,7 +3,7 @@ import {
   moveOp,
   objectCell,
   placeBody,
-  placeSpan,
+  placeExtent,
   type PlaceSettings,
 } from './objectPlacement';
 
@@ -21,10 +21,19 @@ const HERO = {
   label: 'Аня',
 };
 
+const TABLE = {
+  kind: 'furniture' as const,
+  id: '00000000-0000-4000-8000-000000000003',
+  name: 'Стол',
+  label: 'Стол',
+  modelSize: [3, 1, 1] as [number, number, number],
+};
+
 const settings = (patch: Partial<PlaceSettings>): PlaceSettings => ({
   kind: 'start',
   creature: null,
   item: null,
+  furniture: null,
   look: 'chest',
   facing: 90,
   hidden: false,
@@ -71,33 +80,54 @@ describe('placeBody', () => {
   it('существо или предмет не выбраны — ставить нечего', () => {
     expect(placeBody(settings({ kind: 'creature' }))).toBeNull();
     expect(placeBody(settings({ kind: 'item' }))).toBeNull();
+    expect(placeBody(settings({ kind: 'furniture' }))).toBeNull();
+  });
+
+  it('обстановка поворачивается на 90°: 45° округляется назад', () => {
+    expect(
+      placeBody(settings({ kind: 'furniture', furniture: TABLE, facing: 135 })),
+    ).toEqual({ kind: 'furniture', furnitureId: TABLE.id, facing: 90 });
   });
 });
 
 describe('место на карте', () => {
   it('место Большого — 2 клетки, курсор в его середине', () => {
-    const span = placeSpan(settings({ kind: 'creature', creature: OGRE }));
-    expect(span).toBe(2);
-    expect(placeSpan(settings({ kind: 'creature', creature: HERO }))).toBe(1);
-    expect(objectCell([3, 1, 3], 2, size)).toEqual([3, 1, 3]);
+    expect(placeExtent(settings({ kind: 'creature', creature: OGRE }))).toEqual(
+      [2, 1, 2],
+    );
+    expect(placeExtent(settings({ kind: 'creature', creature: HERO }))).toEqual(
+      [1, 1, 1],
+    );
+    expect(objectCell([3, 1, 3], [2, 1, 2], size)).toEqual([3, 1, 3]);
     // Огромный (3): курсор в средней клетке.
-    expect(objectCell([3, 1, 3], 3, size)).toEqual([2, 1, 2]);
+    expect(objectCell([3, 1, 3], [3, 1, 3], size)).toEqual([2, 1, 2]);
+  });
+
+  it('стол 3×1×1: повёрнутый на 90° — вдоль глубины', () => {
+    const table = settings({ kind: 'furniture', furniture: TABLE, facing: 0 });
+    expect(placeExtent(table)).toEqual([3, 1, 1]);
+    expect(placeExtent({ ...table, facing: 270 })).toEqual([1, 1, 3]);
+    expect(objectCell([3, 1, 3], [3, 1, 1], size)).toEqual([2, 1, 3]);
   });
 
   it('место не влезает в карту — null', () => {
-    expect(objectCell([5, 1, 2], 2, size)).toBeNull();
-    expect(objectCell([0, 1, 0], 3, size)).toBeNull();
-    expect(objectCell([5, 1, 5], 1, size)).toEqual([5, 1, 5]);
+    expect(objectCell([5, 1, 2], [2, 1, 2], size)).toBeNull();
+    expect(objectCell([0, 1, 0], [3, 1, 3], size)).toBeNull();
+    expect(objectCell([5, 1, 5], [1, 1, 1], size)).toEqual([5, 1, 5]);
   });
 
   it('перенос: в ту же клетку и за границу — без операции', () => {
     const object = { id: 7, at: [1, 1, 1] as [number, number, number] };
-    expect(moveOp(object, [4, 2, 0], 1, size)).toEqual({
+    expect(moveOp(object, [4, 2, 0], [1, 1, 1], size)).toEqual({
       op: 'moveObject',
       id: 7,
       at: [4, 2, 0],
     });
-    expect(moveOp(object, [1, 1, 1], 1, size)).toBeNull();
-    expect(moveOp(object, [5, 1, 1], 2, size)).toBeNull();
+    expect(moveOp(object, [1, 1, 1], [1, 1, 1], size)).toBeNull();
+    expect(moveOp(object, [5, 1, 1], [2, 1, 2], size)).toBeNull();
+    // С Shift — без проверок места на сервере.
+    expect(moveOp(object, [4, 2, 0], [1, 1, 1], size, true)).toMatchObject({
+      force: true,
+    });
   });
 });

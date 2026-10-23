@@ -36,17 +36,26 @@ interface FacingPickerProps {
   value: Facing;
   onChange: (facing: Facing) => void;
   disabled?: boolean;
+  // Только на 90° — у обстановки (docs/plan/blocks.md, этап 8в): диагонали пустые.
+  rightOnly?: boolean;
 }
 
 // Взгляд старта, существа или контейнера — 8 направлений, правило дома (docs/dnd/facing.md).
-function FacingPicker({ value, onChange, disabled }: FacingPickerProps) {
+function FacingPicker({
+  value,
+  onChange,
+  disabled,
+  rightOnly = false,
+}: FacingPickerProps) {
   return (
     <Stack gap={4}>
-      <Text size="sm">Взгляд (R): {NAMES[value]}</Text>
+      <Text size="sm">
+        {rightOnly ? 'Поворот' : 'Взгляд'} (R): {NAMES[value]}
+      </Text>
       <SimpleGrid cols={3} spacing={2} verticalSpacing={2} w={104}>
         {COMPASS.map((facing, index) =>
-          facing === null ? (
-            <div key={index} />
+          facing === null || (rightOnly && facing % 90 !== 0) ? (
+            <div key={`empty-${index}`} />
           ) : (
             <ActionIcon
               key={facing}

@@ -2,8 +2,8 @@ import { useCallback, useMemo, useState } from 'react';
 import {
   nextFacing,
   objectRefsFromView,
+  objectBox,
   objectFacing,
-  objectSpan,
   type ContainerLook,
   type Facing,
   type MapObject,
@@ -18,10 +18,12 @@ import {
   moveOp,
   objectCell,
   placeBody,
-  placeSpan,
+  placeExtent,
+  rightFacing,
   type CatalogChoice,
   type PlaceKind,
 } from './objectPlacement';
+import { useShiftKey } from './useShiftKey';
 
 interface ObjectToolOptions {
   state: MapViewState | null;
@@ -47,6 +49,7 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
   const [kind, setKind] = useState<PlaceKind>('start');
   const [creature, setCreature] = useState<CatalogChoice | null>(null);
   const [item, setItem] = useState<CatalogChoice | null>(null);
+  const [furniture, setFurniture] = useState<CatalogChoice | null>(null);
   const [look, setLook] = useState<ContainerLook>('chest');
   const [facing, setFacing] = useState<Facing>(0);
   const [hidden, setHidden] = useState(false);
@@ -56,6 +59,9 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
   const [draggingId, setDraggingId] = useState<number | null>(null);
   // Клик по клетке, когда ставить нечего (существо или предмет не выбраны).
   const [missingChoice, setMissingChoice] = useState(false);
+  // Shift зажат — обстановка ставится, переносится и поворачивается без проверок места
+  // (этап 8в; Alt+клик уже переносит центр камеры).
+  const shift = useShiftKey();
 
   // Выделенный объект ищем в карте на каждой отрисовке: отмена постановки или чужое
   // удаление снимает выделение само.
@@ -65,21 +71,29 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
     () => (refs ? objectRefsFromView(refs) : null),
     [refs],
   );
-  const spanOf = useCallback(
-    (object: MapObject) => (objectRefs ? objectSpan(object, objectRefs) : 1),
+  // Место объекта [ширина, высота, глубина]: у обстановки — по модели с поворотом.
+  const extentOf = useCallback(
+    (object: MapObject): Vec3 => {
+      if (!objectRefs) return [1, 1, 1];
+      const { min, max } = objectBox(object, objectRefs);
+      return [max[0] - min[0] + 1, max[1] - min[1] + 1, max[2] - min[2] + 1];
+    },
     [objectRefs],
   );
 
-  const settings = { kind, creature, item, look, facing, hidden };
+  const settings = { kind, creature, item, furniture, look, facing, hidden };
   const dragged =
     (draggingId !== null && state?.objects.byId.get(draggingId)) || null;
   const carried = dragged ?? (moving ? selected : null);
-  const span = carried ? spanOf(carried) : placeSpan(settings);
+  const [ex, ey, ez] = carried ? extentOf(carried) : placeExtent(settings);
+  // Один и тот же массив, пока место не изменилось: по нему пересобирается редактор сцены.
+  const extent = useMemo<Vec3>(() => [ex, ey, ez], [ex, ey, ez]);
 
   const edit = (op: MapOp) => applyOps([op]);
   const move = (object: MapObject, cell: Vec3) => {
     if (!state) return;
-    const op = moveOp(object, cell, spanOf(object), state.size);
+    const force = shift.current && object.kind === 'furniture';
+    const op = moveOp(object, cell, extentOf(object), state.size, force);
     if (op) edit(op);
   };
 
@@ -96,8 +110,10 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
     }
     const body = placeBody(settings);
     setMissingChoice(body === null);
-    const at = objectCell(cells.place, span, state.size);
-    if (body && at) edit({ op: 'placeObject', at, object: body });
+    const at = objectCell(cells.place, extent, state.size);
+    const force = shift.current && body?.kind === 'furniture';
+    if (body && at)
+      edit({ op: 'placeObject', at, object: body, ...(force && { force }) });
   };
 
   const select = useCallback((id: number) => {
@@ -129,6 +145,10 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
       setItem(choice);
       setMissingChoice(false);
     },
+    setFurniture: (choice: CatalogChoice | null) => {
+      setFurniture(choice);
+      setMissingChoice(false);
+    },
     setLook,
     setFacing,
     setHidden,
@@ -137,26 +157,35 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
     select,
     moving,
     setMoving,
-    span,
+    extent,
     pick,
     scene,
-    spanOf,
+    extentOf,
     // R: взгляд выделенного объекта, а без выделения — следующего ставящегося.
+    // Обстановка поворачивается на 90° (этап 8в).
     rotate: () => {
-      if (!selected) setFacing(nextFacing);
-      else {
-        const facing = objectFacing(selected);
-        if (facing !== null) {
-          edit({
-            op: 'turnObject',
-            id: selected.id,
-            facing: nextFacing(facing),
-          });
-        }
+      if (!selected) {
+        setFacing((current) =>
+          kind === 'furniture'
+            ? nextRight(rightFacing(current))
+            : nextFacing(current),
+        );
+        return;
       }
+      const facing = objectFacing(selected);
+      if (facing === null) return;
+      edit(
+        turnOp(
+          selected,
+          selected.kind === 'furniture'
+            ? nextRight(facing)
+            : nextFacing(facing),
+          shift.current,
+        ),
+      );
     },
     turn: (to: Facing) => {
-      if (selected) edit({ op: 'turnObject', id: selected.id, facing: to });
+      if (selected) edit(turnOp(selected, to, shift.current));
     },
     update: (fields: ObjectFields) => {
       if (selected)
@@ -176,3 +205,12 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
 }
 
 export type ObjectTool = ReturnType<typeof useObjectTool>;
+
+// Следующее направление обстановки по часовой: через 90°.
+const nextRight = (facing: Facing): Facing => ((facing + 90) % 360) as Facing;
+
+// Поворот; обстановку с Shift — без проверок места.
+function turnOp(object: MapObject, facing: Facing, shift: boolean): MapOp {
+  const force = shift && object.kind === 'furniture';
+  return { op: 'turnObject', id: object.id, facing, ...(force && { force }) };
+}

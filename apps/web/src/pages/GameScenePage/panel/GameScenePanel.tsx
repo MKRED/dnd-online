@@ -30,6 +30,8 @@ interface GameScenePanelProps {
   fog: SceneFogControls;
   play: ReturnType<typeof useScenePlay>;
   cards: ReturnType<typeof useCreatureCards>;
+  // Переключатель режима в шапке — только на телефоне; иначе он на сцене.
+  modeSwitch: ReactNode;
   // Содержимое «Правки»: свойства инструмента и «Не на сцене».
   editBody: ReactNode;
 }
@@ -47,6 +49,7 @@ function GameScenePanel({
   fog,
   play,
   cards,
+  modeSwitch,
   editBody,
 }: GameScenePanelProps) {
   const panel = usePanelState<Tab>('participants');
@@ -132,6 +135,7 @@ function GameScenePanel({
       collapsed={panel.collapsed}
       onCollapsed={panel.setCollapsed}
       help={<HelpButton master={master} editing={editing} />}
+      headerExtra={modeSwitch}
     />
   );
 }

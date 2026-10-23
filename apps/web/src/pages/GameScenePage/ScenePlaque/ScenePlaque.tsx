@@ -32,7 +32,9 @@ function ScenePlaque({ state }: { state: PlaqueState | null }) {
       <Text size="sm" c="dimmed" className={classes.hint}>
         {state.hint}
       </Text>
-      <Kbd size="xs">Esc</Kbd>
+      <Kbd size="xs" className={classes.esc}>
+        Esc
+      </Kbd>
     </Paper>
   );
 }

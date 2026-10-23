@@ -20,7 +20,9 @@
     bottom: calc(var(--mantine-spacing-xs) * 3 + 4.5rem);
   }
 
-  .hint {
+  /* На телефоне нет ни клавиши Esc, ни места для подсказки. */
+  .hint,
+  .esc {
     display: none;
   }
 }

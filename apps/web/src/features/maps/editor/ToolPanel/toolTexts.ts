@@ -21,8 +21,23 @@ export const ERASE_MODE_SUMMARIES: Record<EraseMode, string> = {
   connected: 'Вся постройка из того же материала',
 };
 
-// Что делает щелчок, пока угол не выбран, — коротко, для плашки на сцене.
+// Что делает щелчок, пока угол не выбран, — коротко, для плашки на сцене. touch — те же
+// слова для телефона: касание вместо щелчка (docs/plan/scene-page.md, «Телефон»).
 export function firstClickHint(
+  tool: EditorTool,
+  eraseMode: EraseMode,
+  placesObject: boolean,
+  touch = false,
+): string {
+  const hint = mouseHint(tool, eraseMode, placesObject);
+  return touch
+    ? hint
+        .replace('Двойной клик', 'Двойное касание')
+        .replace('Щелчок', 'Касание')
+    : hint;
+}
+
+function mouseHint(
   tool: EditorTool,
   eraseMode: EraseMode,
   placesObject: boolean,

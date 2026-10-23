@@ -18,8 +18,13 @@
 /* На телефоне внизу — полоса инструментов: плашка над ней, клавиши прячутся. */
 @media (max-width: 48em) {
   .hint {
-    bottom: calc(var(--mantine-spacing-xs) * 3 + 4.5rem);
-    white-space: normal;
+    /* Над строкой координат, которая на телефоне бывает в две строки. */
+    left: var(--mantine-spacing-xs);
+    transform: none;
+    bottom: calc(var(--mantine-spacing-xs) * 3 + 7rem);
+    padding: 2px 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .hint :global(kbd),

@@ -1,5 +1,7 @@
 import {
+  Accordion,
   ActionIcon,
+  Drawer,
   Group,
   Kbd,
   Popover,
@@ -7,7 +9,9 @@ import {
   Text,
   Tooltip,
 } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { IconHelpCircle } from '@tabler/icons-react';
+import { useState } from 'react';
 
 interface HelpButtonProps {
   master: boolean;
@@ -64,30 +68,72 @@ function Section({ title, lines }: { title: string; lines: Line[] }) {
   );
 }
 
+// Жесты на телефоне: у MapControls один палец двигает, два — поворачивают и приближают.
+const GESTURES: Line[] = [
+  [['Один палец'], 'двигать камеру'],
+  [['Два пальца'], 'поворот и масштаб'],
+  [['Двойное касание'], 'центр вращения сюда'],
+  [['Касание'], 'выбрать; касание по подсвеченной клетке — ход'],
+];
+
 // Подсказки и горячие клавиши одной кнопкой «?» (docs/plan/scene-page.md, «Правая
-// панель»): длинные пояснения больше не стоят текстом под каждым переключателем.
+// панель»): длинные пояснения больше не стоят текстом под каждым переключателем. На
+// телефоне — лист снизу с жестами, клавиши свёрнуты (окошко уходило за край экрана).
 function HelpButton({ master, editing }: HelpButtonProps) {
+  const narrow = useMediaQuery('(max-width: 48em)');
+  const [opened, setOpened] = useState(false);
+  const keys = (
+    <Stack gap="sm">
+      <Section title="Камера" lines={CAMERA} />
+      {!editing && <Section title="Ход" lines={PLAY} />}
+      {master && <Section title="Мастер" lines={MASTER} />}
+      {editing && <Section title="Правка" lines={EDIT} />}
+    </Stack>
+  );
+  const button = (
+    <ActionIcon
+      variant="subtle"
+      color="gray"
+      aria-label="Подсказки и горячие клавиши"
+      onClick={narrow ? () => setOpened(true) : undefined}
+    >
+      <IconHelpCircle size={18} />
+    </ActionIcon>
+  );
+
+  if (narrow) {
+    return (
+      <>
+        {button}
+        <Drawer
+          opened={opened}
+          onClose={() => setOpened(false)}
+          position="bottom"
+          size={380}
+          title="Жесты"
+          radius="md"
+        >
+          <Stack gap="md" pb="md">
+            <Section title="Сцена" lines={GESTURES} />
+            <Accordion variant="contained">
+              <Accordion.Item value="keys">
+                <Accordion.Control>Клавиши (с клавиатурой)</Accordion.Control>
+                <Accordion.Panel>{keys}</Accordion.Panel>
+              </Accordion.Item>
+            </Accordion>
+          </Stack>
+        </Drawer>
+      </>
+    );
+  }
   return (
     <Popover position="left-start" withArrow shadow="md" width={340}>
       <Popover.Target>
         <Tooltip label="Подсказки и горячие клавиши" withArrow>
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            aria-label="Подсказки и горячие клавиши"
-          >
-            <IconHelpCircle size={18} />
-          </ActionIcon>
+          {button}
         </Tooltip>
       </Popover.Target>
-      <Popover.Dropdown>
-        <Stack gap="sm">
-          <Section title="Камера" lines={CAMERA} />
-          {!editing && <Section title="Ход" lines={PLAY} />}
-          {master && <Section title="Мастер" lines={MASTER} />}
-          {editing && <Section title="Правка" lines={EDIT} />}
-        </Stack>
-      </Popover.Dropdown>
+      <Popover.Dropdown>{keys}</Popover.Dropdown>
     </Popover>
   );
 }

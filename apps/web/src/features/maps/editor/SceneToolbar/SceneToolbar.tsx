@@ -49,6 +49,8 @@ function SceneToolbar({
                   label={`${TOOL_LABELS[value]} (${index + 1}${value === 'erase' ? ', ещё раз — режим' : ''})`}
                   position={tooltipSide}
                   withArrow
+                  // На касание подсказка всплывала и не уходила.
+                  disabled={narrow}
                 >
                   <ActionIcon
                     size="lg"
@@ -70,7 +72,7 @@ function SceneToolbar({
         {leading}
         <Paper withBorder shadow="xs" p={4}>
           <ActionIcon.Group>
-            <Tooltip label="Отменить (Ctrl+Z)" withArrow>
+            <Tooltip label="Отменить (Ctrl+Z)" withArrow disabled={narrow}>
               <ActionIcon
                 size="lg"
                 variant="default"
@@ -81,7 +83,7 @@ function SceneToolbar({
                 <IconArrowBackUp size={20} stroke={1.75} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Вернуть (Ctrl+Shift+Z)" withArrow>
+            <Tooltip label="Вернуть (Ctrl+Shift+Z)" withArrow disabled={narrow}>
               <ActionIcon
                 size="lg"
                 variant="default"

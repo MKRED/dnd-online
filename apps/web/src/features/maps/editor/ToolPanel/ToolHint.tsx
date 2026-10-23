@@ -1,4 +1,5 @@
 import { Group, Kbd, Paper, Text } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { Fragment } from 'react';
 import type { SizedMapState } from 'shared';
 import type { HoverStore } from '../../MapScene/hoverStore';
@@ -27,7 +28,11 @@ const SECOND_CLICK = {
 // щелчок и клавиши к нему — вместо абзаца подсказки в панели.
 function ToolHint({ editor, state, hover, placesObject }: ToolHintProps) {
   const preview = useRegionPreview(editor, state, hover);
+  const narrow = useMediaQuery('(max-width: 48em)');
   const { tool, anchor } = editor;
+  // На телефоне подсказка — в шапке инструмента в панели; на сцене плашка только с
+  // подсчётом после первого угла (docs/plan/scene-page.md, «Телефон»).
+  if (narrow && !anchor) return null;
   const keys: [string, string][] = [];
   let text: string;
   if (anchor) {
@@ -35,10 +40,13 @@ function ToolHint({ editor, state, hover, placesObject }: ToolHintProps) {
       tool in SECOND_CLICK
         ? SECOND_CLICK[tool as keyof typeof SECOND_CLICK]
         : 'второй щелчок';
+    // На телефоне — только подсчёт, в одну строку: сбросить угол можно в панели.
     text = preview
-      ? `${previewText(tool, preview)} · ${second}`
+      ? narrow
+        ? previewText(tool, preview)
+        : `${previewText(tool, preview)} · ${second}`
       : `Первый угол выбран · ${second}`;
-    keys.push(['Esc', 'сбросить угол']);
+    if (!narrow) keys.push(['Esc', 'сбросить угол']);
   } else {
     text = firstClickHint(tool, editor.eraseMode, placesObject);
     if (tool === 'view') keys.push(['Q E', 'центр ниже / выше']);

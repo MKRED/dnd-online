@@ -4,6 +4,8 @@ import type { SceneMode } from './useSceneMode';
 interface SceneModeSwitchProps {
   mode: SceneMode;
   onChange: (mode: SceneMode) => void;
+  // В шапке панели на телефоне: мельче и без подсказки — на касание она залипала.
+  compact?: boolean;
 }
 
 const MODES = [
@@ -13,7 +15,17 @@ const MODES = [
 
 // Переключатель «Игра | Правка» на сцене, рядом с отменой (docs/plan/scene-page.md):
 // на сцене, а не в панели — свёрнутая панель его бы прятала.
-function SceneModeSwitch({ mode, onChange }: SceneModeSwitchProps) {
+function SceneModeSwitch({ mode, onChange, compact }: SceneModeSwitchProps) {
+  const control = (
+    <SegmentedControl
+      aria-label="Режим мастера"
+      size={compact ? 'xs' : 'sm'}
+      data={MODES}
+      value={mode}
+      onChange={(value) => onChange(value === 'edit' ? 'edit' : 'play')}
+    />
+  );
+  if (compact) return control;
   return (
     <Tooltip
       label="Игра — ходы и справка, правка — карта и перестановка без хода. Клавиша Ё"
@@ -23,12 +35,7 @@ function SceneModeSwitch({ mode, onChange }: SceneModeSwitchProps) {
       w={260}
     >
       <Paper withBorder shadow="xs" p={4}>
-        <SegmentedControl
-          aria-label="Режим мастера"
-          data={MODES}
-          value={mode}
-          onChange={(value) => onChange(value === 'edit' ? 'edit' : 'play')}
-        />
+        {control}
       </Paper>
     </Tooltip>
   );

@@ -1,4 +1,5 @@
 import { NumberInput, SegmentedControl, Stack, Text } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import type { ReactNode } from 'react';
 import { isRotation, ROTATIONS, type SizedMapState } from 'shared';
 import type { HoverStore } from '../MapScene/hoverStore';
@@ -6,6 +7,7 @@ import PlaceChoicePanel from './PlacePicker/PlaceChoicePanel';
 import type { ObjectChoice } from './PlacePicker/placeChoice';
 import { blockTraits } from './blockTraits';
 import { buildsBlocks, isRegionTool } from './editorTools';
+import { firstClickHint } from './ToolPanel/toolTexts';
 import {
   AnchorCard,
   CursorBlockCard,
@@ -40,6 +42,8 @@ function EditorPanel({
   hover,
 }: EditorPanelProps) {
   const { tool, eraseMode } = editor;
+  // Та же граница, что у страницы: на телефоне плашки инструмента на сцене нет.
+  const narrow = useMediaQuery('(max-width: 48em)');
   // Высоту задают у области ластика; стена стирается до самого верха.
   const erasesRegion = tool === 'erase' && eraseMode === 'region';
   const builds = buildsBlocks(tool);
@@ -51,7 +55,14 @@ function EditorPanel({
 
   return (
     <Stack gap="sm">
-      <ToolHeader tool={tool} />
+      <ToolHeader
+        tool={tool}
+        hint={
+          narrow
+            ? firstClickHint(tool, eraseMode, objectChoice !== null, true)
+            : undefined
+        }
+      />
 
       {tool === 'view' && <CursorBlockCard state={state} hover={hover} />}
 

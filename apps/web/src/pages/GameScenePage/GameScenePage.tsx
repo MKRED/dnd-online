@@ -6,6 +6,7 @@ import {
   Text,
   VisuallyHidden,
 } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import {
   lazy,
   Suspense,
@@ -92,6 +93,8 @@ function GameScenePage() {
   const [readySceneId, setReadySceneId] = useState<string | null>(null);
   const [cutY, setCutY] = useState<number | null>(null);
   const focusRef = useRef<CameraFocusApi | null>(null);
+  // Та же граница, что у панели: на ней панель уходит под сцену.
+  const narrow = useMediaQuery('(max-width: 48em)');
   // Клетка под курсором — и сцене, и панели инструмента (docs/plan/scene-page.md, этап 3).
   const [hover] = useState(createHoverStore);
   const [searchParams] = useSearchParams();
@@ -266,7 +269,13 @@ function GameScenePage() {
             busy={edits.busy}
             onUndo={edits.undo}
             onRedo={edits.redo}
-            leading={<SceneModeSwitch mode={mode} onChange={setMode} />}
+            // На телефоне переключатель — в шапке панели: в строке с отменой и «Центром»
+            // ему не хватало места (docs/plan/scene-page.md, «Телефон»).
+            leading={
+              narrow ? undefined : (
+                <SceneModeSwitch mode={mode} onChange={setMode} />
+              )
+            }
           />
         )}
         {ready &&
@@ -313,6 +322,11 @@ function GameScenePage() {
         fog={sceneFog}
         play={play}
         cards={cards}
+        modeSwitch={
+          narrow && tools ? (
+            <SceneModeSwitch mode={mode} onChange={setMode} compact />
+          ) : null
+        }
         editBody={
           editTools && (
             <Stack gap="md">

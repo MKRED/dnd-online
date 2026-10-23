@@ -31,6 +31,8 @@ interface ScenePanelProps<T extends string> {
   onCollapsed: (collapsed: boolean) => void;
   // Кнопка «?» с подсказками и горячими клавишами.
   help: ReactNode;
+  // Что ещё стоит в шапке перед «?» (переключатель режима на телефоне).
+  headerExtra?: ReactNode;
 }
 
 // Правая панель страницы сцены (docs/plan/scene-page.md, «Правая панель»): шапка одной
@@ -47,11 +49,12 @@ function ScenePanel<T extends string>({
   collapsed,
   onCollapsed,
   help,
+  headerExtra,
 }: ScenePanelProps<T>) {
   // Та же граница, что у страницы: на ней панель уходит под сцену.
   const narrow = useMediaQuery('(max-width: 48em)');
   const lobbyLink = (
-    <Tooltip label="В лобби" withArrow>
+    <Tooltip label="В лобби" withArrow disabled={narrow}>
       <ActionIcon
         component={Link}
         to={lobby}
@@ -120,10 +123,12 @@ function ScenePanel<T extends string>({
             {subtitle}
           </Text>
         </div>
+        {headerExtra}
         {help}
         <Tooltip
           label={collapsed ? 'Развернуть панель' : 'Свернуть панель'}
           withArrow
+          disabled={narrow}
         >
           <ActionIcon
             variant="subtle"

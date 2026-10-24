@@ -185,7 +185,12 @@ describe('обстановка на карте (e2e)', () => {
     // Поиск для постановки — только своя обстановка, с размером модели и креплением.
     const found = (
       await m.get('/api/map-catalog?kind=furniture&q=стол').expect(200)
-    ).body as { id: string; modelSize: number[]; mount: string }[];
+    ).body as {
+      id: string;
+      modelSize: number[];
+      mount: string;
+      model: unknown;
+    }[];
     expect(found).toEqual([
       expect.objectContaining({
         id: table,
@@ -193,6 +198,8 @@ describe('обстановка на карте (e2e)', () => {
         mount: 'floor',
       }),
     ]);
+    // Модель целиком — по ней окно «Что поставить» рисует миниатюру.
+    expect(found[0].model).toMatchObject({ size: [2, 1, 1] });
 
     const foreign = await createFurniture(player.agent, true);
     expect(

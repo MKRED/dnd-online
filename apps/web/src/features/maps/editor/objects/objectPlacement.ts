@@ -1,11 +1,13 @@
 import {
   CONTAINER_LOOK_LABELS,
   footprintCells,
+  type CharacterMainImage,
   insideMap,
   type ContainerLook,
   type CreatureSize,
   type Facing,
   type FurnitureContainer,
+  type FurnitureViewModel,
   type MapObjectBody,
   type MapSize,
   type ObjectOp,
@@ -28,6 +30,11 @@ export interface CatalogChoice {
   weight?: number;
   // Контейнер-обстановка (этап 11): ставится со своим названием и содержимым по умолчанию.
   container?: FurnitureContainer | null;
+  // Картинка плитки в окне «Что поставить»: версия миниатюры монстра и предмета, главная
+  // картинка НПС, модель обстановки. Хранится и в недавних — их показывают без поиска.
+  imageVersion?: number;
+  mainImage?: CharacterMainImage;
+  model?: FurnitureViewModel;
 }
 
 // Какой объект ставит инструмент «Поставить» (docs/plan/blocks.md, этап 10); блок

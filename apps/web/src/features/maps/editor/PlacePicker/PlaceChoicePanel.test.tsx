@@ -1,6 +1,6 @@
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import {
   BASE_BLOCKS,
   createBlockCatalog,
@@ -245,6 +245,76 @@ describe('окно «Что поставить» (этап 10)', () => {
         id: TABLE,
         modelSize: [2, 1, 1],
       }) as unknown,
+    });
+  });
+
+  // Картинки плиток (вариант B макета): миниатюра предмета из каталога, первая буква
+  // без картинки, размер существа второй строкой, у НПС — «НПС».
+  it('плитки с картинками: миниатюра предмета, буква без картинки, подпись второй строкой', async () => {
+    const SWORD = '33333333-4444-4555-8666-777777777777';
+    const TOAD = '44444444-5555-4666-8777-888888888888';
+    // Только сам URL картинки: подмена всего URL сломала бы ленивую загрузку модулей.
+    const created = vi
+      .spyOn(URL, 'createObjectURL')
+      .mockReturnValue('blob:test/sword');
+    const revoked = vi
+      .spyOn(URL, 'revokeObjectURL')
+      .mockImplementation(() => undefined);
+    onTestFinished(() => {
+      created.mockRestore();
+      revoked.mockRestore();
+    });
+    const image = {
+      version: 3,
+      width: 10,
+      height: 10,
+      thumbCrop: { x: 0, y: 0, size: 10 },
+    };
+    const fetchMock = vi.fn((url: string) =>
+      Promise.resolve(
+        url.includes('/image')
+          ? new Response('png')
+          : new Response(
+              JSON.stringify(
+                url.includes('kind=item')
+                  ? [
+                      { id: SWORD, name: 'Меч', weight: 3, image },
+                      { id: TOAD, name: 'Жаба', weight: 1, image: null },
+                    ]
+                  : [],
+              ),
+            ),
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const onPickObject = vi.fn();
+    renderWithProviders(
+      <Harness blocksOnly={false} onPickObject={onPickObject} />,
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Выбрать, что ставить' }),
+    );
+    fireEvent.click(screen.getByRole('tab', { name: 'Предметы' }));
+    const sword = await screen.findByRole('button', { name: 'Меч' });
+    // Картинка без alt — оформление, роли img у неё нет.
+    await waitFor(() =>
+      expect(sword.querySelector('img')).toHaveAttribute(
+        'src',
+        'blob:test/sword',
+      ),
+    );
+    expect(
+      fetchMock.mock.calls.some(([url]) =>
+        url.includes(`/items/${SWORD}/image?variant=thumb&v=3`),
+      ),
+    ).toBe(true);
+    expect(screen.getByRole('button', { name: 'Жаба' })).toHaveTextContent(
+      /^ЖЖаба$/,
+    );
+    fireEvent.click(sword);
+    expect(onPickObject).toHaveBeenCalledWith({
+      kind: 'item',
+      entry: expect.objectContaining({ id: SWORD, imageVersion: 3 }) as unknown,
     });
   });
 

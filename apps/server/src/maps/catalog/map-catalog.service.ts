@@ -7,11 +7,15 @@ import {
   type MapCatalogKind,
 } from 'shared';
 import { entryVisibleTo } from '../../catalog/catalog-access.js';
+import { toCatalogImage } from '../../catalog/catalog-image.mapper.js';
 import { DatabaseService } from '../../database/database.service.js';
 import {
+  characterImages,
   characters,
   furniture,
+  itemImages,
   items,
+  monsterImages,
   monsters,
 } from '../../database/schema/index.js';
 import { loadFurnitureRefs } from '../objects/furniture-refs.js';
@@ -69,8 +73,9 @@ export class MapCatalogService {
     const where = (...conditions: (SQL | undefined)[]) => and(...conditions);
     if (kind === 'monster') {
       const rows = await db
-        .select()
+        .select({ entry: monsters, image: monsterImages })
         .from(monsters)
+        .leftJoin(monsterImages, eq(monsterImages.ownerId, monsters.id))
         .where(
           where(
             entryVisibleTo(MONSTER_ACCESS, userId),
@@ -79,13 +84,19 @@ export class MapCatalogService {
         )
         .orderBy(asc(monsters.name))
         .limit(LIMIT);
-      return rows.map((row) => {
+      return rows.map(({ entry, image }) => {
         const { statBlock, role } = toMonsterFields(
-          row.category,
-          row.details,
-          row.extra,
+          entry.category,
+          entry.details,
+          entry.extra,
         );
-        return { id: row.id, name: row.name, size: statBlock.size, role };
+        return {
+          id: entry.id,
+          name: entry.name,
+          size: statBlock.size,
+          role,
+          image: toCatalogImage(image),
+        };
       });
     }
     if (kind === 'item') {
@@ -95,14 +106,19 @@ export class MapCatalogService {
           name: items.name,
           category: items.category,
           weight: items.weight,
+          image: itemImages,
         })
         .from(items)
+        .leftJoin(itemImages, eq(itemImages.ownerId, items.id))
         .where(
           where(entryVisibleTo(ITEM_ACCESS, userId), contains(items.name, q)),
         )
         .orderBy(asc(items.name))
         .limit(LIMIT);
-      return rows;
+      return rows.map(({ image, ...row }) => ({
+        ...row,
+        image: toCatalogImage(image),
+      }));
     }
     if (kind === 'furniture') {
       const rows = await db
@@ -117,22 +133,40 @@ export class MapCatalogService {
         )
         .orderBy(asc(furniture.name))
         .limit(LIMIT);
-      const { refs } = await loadFurnitureRefs(
+      const { view, refs } = await loadFurnitureRefs(
         db,
         userId,
         new Set(rows.map((row) => row.id)),
       );
-      return rows.map(({ id, name, extra }) => ({
-        id,
-        name,
-        modelSize: [...(refs.get(id)?.size ?? [1, 1, 1])],
-        mount: refs.get(id)?.mount ?? 'floor',
-        container: readFurnitureContainer(extra.container),
-      }));
+      return rows.map(({ id, name, extra }) => {
+        const found = view[id];
+        return {
+          id,
+          name,
+          modelSize: [...(refs.get(id)?.size ?? [1, 1, 1])],
+          mount: refs.get(id)?.mount ?? 'floor',
+          container: readFurnitureContainer(extra.container),
+          model: found?.missing === null ? found.model : null,
+        };
+      });
     }
     return db
-      .select({ id: characters.id, name: characters.name })
+      .select({
+        id: characters.id,
+        name: characters.name,
+        mainImage: {
+          id: characterImages.id,
+          thumbVersion: characterImages.thumbVersion,
+        },
+      })
       .from(characters)
+      .leftJoin(
+        characterImages,
+        and(
+          eq(characterImages.characterId, characters.id),
+          eq(characterImages.isMain, true),
+        ),
+      )
       .where(
         where(
           eq(characters.userId, userId),

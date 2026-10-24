@@ -1,3 +1,5 @@
+import type { CatalogImage } from '../catalogImage.js';
+import type { CharacterMainImage } from '../characterImages.js';
 import type { FurnitureContainer } from '../voxelModel/furnitureContainer.js';
 import type { BlockGroupInfo } from './customBlocks.js';
 import type { SectionAxis } from './asciiSection.js';
@@ -6,7 +8,10 @@ import type { Box3 } from './coords.js';
 import type { MapSize } from './mapSize.js';
 import type { Palette } from './palette.js';
 import type { MapObject } from './objects/mapObject.js';
-import type { MapObjectRefsView } from './objects/objectRefViews.js';
+import type {
+  FurnitureViewModel,
+  MapObjectRefsView,
+} from './objects/objectRefViews.js';
 import type { MapObjectSummary } from './objects/objectSummary.js';
 
 // Ответы HTTP API карт — общие для сервера и веба.
@@ -116,4 +121,10 @@ export interface MapCatalogEntry {
   modelSize?: number[];
   mount?: string;
   container?: FurnitureContainer | null;
+  // Картинка в окне «Что поставить»: миниатюра монстра и предмета, главная картинка НПС,
+  // модель обстановки — её рисует клиент. Нейросети через MCP не нужны, сервер MCP их
+  // отрезает.
+  image?: CatalogImage | null;
+  mainImage?: CharacterMainImage | null;
+  model?: FurnitureViewModel | null;
 }

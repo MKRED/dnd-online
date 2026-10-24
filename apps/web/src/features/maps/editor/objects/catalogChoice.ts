@@ -48,4 +48,7 @@ export const toCatalogChoice = (entry: CatalogFound): CatalogChoice => ({
   ...(entry.modelSize?.length === 3 && {
     modelSize: entry.modelSize as unknown as [number, number, number],
   }),
+  ...(entry.image && { imageVersion: entry.image.version }),
+  ...(entry.mainImage && { mainImage: entry.mainImage }),
+  ...(entry.model && { model: entry.model }),
 });

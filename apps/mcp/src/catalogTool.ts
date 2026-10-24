@@ -26,8 +26,14 @@ export function registerCatalogTool(
         const params = new URLSearchParams({ kind });
         if (q) params.set('q', q);
         const found = await api<MapCatalogEntry[]>(`/map-catalog?${params}`);
+        // Картинки и модель — для окна «Что поставить» в браузере; нейросети они не
+        // нужны, а воксели модели раздули бы ответ.
+        const text = found.map(
+          ({ image: _image, mainImage: _main, model: _model, ...entry }) =>
+            entry,
+        );
         return {
-          content: [{ type: 'text', text: JSON.stringify(found, null, 2) }],
+          content: [{ type: 'text', text: JSON.stringify(text, null, 2) }],
         };
       }),
   );

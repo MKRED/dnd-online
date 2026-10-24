@@ -10,6 +10,7 @@ import BlockTile from '../BlockPicker/BlockTile';
 import { useBlockCatalog } from '../BlockPicker/catalogContext';
 import PickerSection from '../BlockPicker/PickerSection';
 import CatalogTab from './CatalogTab';
+import FramedBlockTile from './FramedBlockTile';
 import ObjectTile from './ObjectTile';
 import {
   objectChoiceLabel,
@@ -80,20 +81,33 @@ function PlacePickerModal({
     recentKey({ type: 'object', choice: current }) ===
       recentKey({ type: 'object', choice });
 
+  // Недавние — блоки и объекты вперемешку: блоки на той же подложке, у объектов — метка
+  // вида. Только окна блоков — прежние плитки блоков.
   const recentTiles = shownRecent.map((r) =>
     r.type === 'block' ? (
-      <BlockTile
-        key={recentKey(r)}
-        block={r.name}
-        label={catalog.describe(r.name)?.label ?? r.name}
-        selected={current === null && r.name === block}
-        onClick={() => onPickBlock(r.name)}
-      />
+      blocksOnly ? (
+        <BlockTile
+          key={recentKey(r)}
+          block={r.name}
+          label={catalog.describe(r.name)?.label ?? r.name}
+          selected={current === null && r.name === block}
+          onClick={() => onPickBlock(r.name)}
+        />
+      ) : (
+        <FramedBlockTile
+          key={recentKey(r)}
+          block={r.name}
+          label={catalog.describe(r.name)?.label ?? r.name}
+          selected={current === null && r.name === block}
+          onClick={() => onPickBlock(r.name)}
+        />
+      )
     ) : (
       <ObjectTile
         key={recentKey(r)}
         choice={r.choice}
         selected={isCurrent(r.choice)}
+        badge
         onClick={() => onPickObject(r.choice)}
       />
     ),

@@ -52,8 +52,10 @@ function SearchBox({ onClose }: SearchBoxProps) {
     if (result) selectFirstOption();
   }, [result, selectFirstOption]);
 
-  const leave = () => {
-    setValue('');
+  // После выбора записи поле пустеет; после «ещё N» и «Все результаты» запрос остаётся —
+  // на странице результатов его удобно уточнить.
+  const leave = (keepText = false) => {
+    if (!keepText) setValue('');
     combobox.closeDropdown();
     inputRef.current?.blur();
     onClose?.();
@@ -93,7 +95,10 @@ function SearchBox({ onClose }: SearchBoxProps) {
               leftSection={<IconSearch size={18} aria-hidden />}
               rightSection={
                 onClose ? (
-                  <CloseButton aria-label="Закрыть поиск" onClick={leave} />
+                  <CloseButton
+                    aria-label="Закрыть поиск"
+                    onClick={() => leave()}
+                  />
                 ) : (
                   hint
                 )
@@ -132,7 +137,11 @@ function SearchBox({ onClose }: SearchBoxProps) {
               ) : result && total === 0 ? (
                 <Combobox.Empty>Ничего не нашлось по «{query}»</Combobox.Empty>
               ) : result ? (
-                <SearchOptions result={result} query={query} onLeave={leave} />
+                <SearchOptions
+                  result={result}
+                  query={query}
+                  onLeave={() => leave(true)}
+                />
               ) : (
                 <Combobox.Empty>Ищем…</Combobox.Empty>
               )}
@@ -150,7 +159,7 @@ function SearchBox({ onClose }: SearchBoxProps) {
                 to={searchPagePath(query)}
                 size="sm"
                 onMouseDown={(event) => event.preventDefault()}
-                onClick={leave}
+                onClick={() => leave(true)}
               >
                 Все результаты: {total}
               </Anchor>

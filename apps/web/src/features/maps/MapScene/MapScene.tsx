@@ -164,6 +164,7 @@ function MapScene({
           size={map.size}
           onFocus={focusOn}
           readout={hover}
+          map={map}
         >
           {[...chunks].map(([key, { meshes }]) => (
             <group key={key}>

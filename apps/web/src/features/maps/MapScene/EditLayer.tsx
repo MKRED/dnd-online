@@ -13,6 +13,7 @@ import {
 } from '../editor/editorTools';
 import FrameBox from './FrameBox';
 import PlaceGhost from './objects/PlaceGhost';
+import type { MapViewState } from '../mapStateFromChunks';
 import GroundGrid from './GroundGrid';
 import type { HoverStore } from './hoverStore';
 import WalkHoverMesh from './WalkHoverMesh';
@@ -27,6 +28,8 @@ interface EditLayerProps {
   onFocus: (point: Point) => void;
   // Клетка под курсором для строки координат — при любом инструменте, и в «Просмотре».
   readout: HoverStore;
+  // Карта — по ней ставящийся объект под курсором встаёт на ступени и плиты.
+  map: MapViewState;
 }
 
 // Сдвиг мыши (px) между нажатием и отпусканием, после которого клик считается
@@ -72,10 +75,12 @@ function CellHighlight({
   editor,
   pick,
   size,
+  map,
 }: {
   editor: SceneEditor;
   pick: PickedCells;
   size: MapSize;
+  map: MapViewState;
 }) {
   const cell = sceneEditorCell(editor, pick);
   if (!cell || !insideMap(cell, size)) return null;
@@ -93,7 +98,12 @@ function CellHighlight({
         color={editor.tool === 'erase' ? '#ff6b6b' : '#ffd43b'}
       />
       {editor.ghost && (
-        <PlaceGhost look={editor.ghost} at={from} extent={[ex, ey, ez]} />
+        <PlaceGhost
+          look={editor.ghost}
+          at={from}
+          extent={[ex, ey, ez]}
+          map={map}
+        />
       )}
     </>
   );
@@ -108,6 +118,7 @@ function EditLayer({
   children,
   onFocus,
   readout,
+  map,
 }: EditLayerProps) {
   const [hover, setHover] = useState<PickedCells | null>(null);
 
@@ -166,7 +177,7 @@ function EditLayer({
         (editor.preview ? (
           <WalkHoverMesh hover={editor.preview(hover)} />
         ) : (
-          <CellHighlight editor={editor} pick={hover} size={size} />
+          <CellHighlight editor={editor} pick={hover} size={size} map={map} />
         ))}
     </>
   );

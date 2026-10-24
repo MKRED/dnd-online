@@ -12,7 +12,12 @@ import {
 import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import type { MapViewState } from '../../mapStateFromChunks';
-import { facingAngle, layoutObjects, objectImagePaths } from './objectLayout';
+import {
+  facingAngle,
+  layoutObjects,
+  objectFeet,
+  objectImagePaths,
+} from './objectLayout';
 
 const OGRE = '00000000-0000-4000-8000-000000000001';
 const GONE = '00000000-0000-4000-8000-000000000002';
@@ -436,5 +441,17 @@ describe('обстановка на сцене', () => {
     );
     expect(gone.look).toMatchObject({ model: null, extent: [1, 1, 1] });
     expect(gone.warnings.join()).toMatch(/удалена/);
+  });
+});
+
+describe('objectFeet — высота ставящегося объекта', () => {
+  it('на плите — сверху, на ровном полу — на полу', () => {
+    const map = mapWith([]);
+    const start = { kind: 'start', number: 0, facing: 0 } as const;
+    const chest = { kind: 'container', look: 'chest', facing: 0 } as const;
+    expect(objectFeet(map, start, [3, 1, 3])).toBe(1.5);
+    expect(objectFeet(map, chest, [3, 1, 3])).toBe(1.5);
+    expect(objectFeet(map, start, [1, 1, 1])).toBe(1);
+    expect(objectFeet(map, chest, [1, 1, 1])).toBe(1);
   });
 });

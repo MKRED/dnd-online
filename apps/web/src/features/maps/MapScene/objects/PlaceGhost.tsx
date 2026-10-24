@@ -7,7 +7,12 @@ import FacingNose from './FacingNose';
 import FloorItem from './FloorItem';
 import FurnitureFigure from './FurnitureFigure';
 import GhostGroup from './GhostGroup';
-import type { SceneObject, SceneObjectLook } from './objectLayout';
+import type { MapViewState } from '../../mapStateFromChunks';
+import {
+  objectFeet,
+  type SceneObject,
+  type SceneObjectLook,
+} from './objectLayout';
 import StandBase from './StandBase';
 import { useObjectTextures } from './useObjectTextures';
 
@@ -19,28 +24,32 @@ interface PlaceGhostProps {
   // Клетка места (угол с наименьшими x и z) и его размер в клетках.
   at: Vec3;
   extent: Vec3;
+  // Карта — по ней высота, на которую объект встанет (ступени, плиты); без неё — пол клетки.
+  map: MapViewState | null;
 }
 
 // Что поставит щелчок: сам объект полупрозрачно, уже повёрнутый, и носик взгляда спереди
-// (вариант В артборда «Н1», 2026-10-24, docs/plan/scene-page.md). Стоит на полу клетки
-// под курсором: ступени и плиты под ним не учитываются — это только подсказка.
-function PlaceGhost({ look, at, extent }: PlaceGhostProps) {
+// (вариант В артборда «Н1», 2026-10-24, docs/plan/scene-page.md). Стоит на той же высоте,
+// что объект после щелчка: на ступени или плите — сверху (objectFeet, как в layoutObjects).
+function PlaceGhost({ look, at, extent, map }: PlaceGhostProps) {
   const [x, y, z] = at;
+  // Обстановка стоит дном на нижнем уровне своих клеток (этап 8в плана блоков).
+  const feet = map && look.kind !== 'furniture' ? objectFeet(map, look, at) : y;
   const [ex, , ez] = extent;
   const footprint =
     look.kind === 'creature' ? CREATURE_SIZES[look.size].footprint : 1;
   const middle = look.kind === 'creature' ? Math.max(footprint, 1) / 2 : 0.5;
   const base: Point3 =
     look.kind === 'furniture'
-      ? [x + ex / 2, y, z + ez / 2]
-      : [x + middle, y, z + middle];
+      ? [x + ex / 2, feet, z + ez / 2]
+      : [x + middle, feet, z + middle];
   const object: SceneObject = {
     id: -1,
     at,
     level: y,
     base,
     footprint,
-    top: y + extent[1],
+    top: feet + extent[1],
     label: '',
     warnings: [],
     blocked: false,

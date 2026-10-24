@@ -197,6 +197,31 @@ function lookOf(
   }
 }
 
+// Высота ног объекта не из обстановки: существо и старт — на опоре под ними (standing,
+// если её уже искали), остальное — на поверхности клетки. Призрак «Поставить» берёт ту
+// же высоту, что объект получит после щелчка.
+export function objectFeet(
+  state: MapViewState,
+  look: SceneObjectLook,
+  at: Vec3,
+  standing?: number | null,
+): number {
+  const size: CreatureSize = look.kind === 'creature' ? look.size : 'medium';
+  const stands = look.kind === 'creature' || look.kind === 'start';
+  const found =
+    standing !== undefined
+      ? standing
+      : stands
+        ? standHeight(state, at, size)
+        : null;
+  if (found !== null) return found;
+  // Встроенный контейнер сам лежит в слое обстановки правил опорой «встать сверху»: по
+  // ней он стоял бы на своей же крышке (2026-10-24) — его место меряется по блокам.
+  return look.kind === 'container'
+    ? at[1] + blockSurfaceInCell(state, at)
+    : feetHeight(state, at, size);
+}
+
 // Объекты для сцены: что рисовать, где и как. Подпись и предупреждения — из той же
 // сводки, что видит нейросеть, чтобы номера стартов и заглушки совпадали. Объектов за
 // границей карты (после сужения с cut «keep») нет: они не рисуются.
@@ -248,13 +273,7 @@ export function layoutObjects(
 
     const stands = look.kind === 'creature' || look.kind === 'start';
     const standing = stands ? standHeight(state, object.at, size) : null;
-    // Встроенный контейнер сам лежит в слое обстановки правил опорой «встать сверху»: по
-    // ней он стоял бы на своей же крышке (2026-10-24) — его место меряется по блокам.
-    const feet =
-      standing ??
-      (look.kind === 'container'
-        ? y + blockSurfaceInCell(state, object.at)
-        : feetHeight(state, object.at, size));
+    const feet = objectFeet(state, look, object.at, standing);
     const footprint =
       look.kind === 'creature' ? CREATURE_SIZES[size].footprint : 1;
     // Крошечный стоит посередине своей клетки, как в creatureBody.

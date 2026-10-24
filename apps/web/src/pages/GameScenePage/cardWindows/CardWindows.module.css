@@ -56,3 +56,31 @@
   border-radius: 2px;
   background: var(--mantine-color-default-border);
 }
+
+/* Строка предмета в окне сундука: щелчок открывает карточку предмета. */
+.itemRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.itemRow:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.itemThumb {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  overflow: hidden;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-default-hover);
+}
+
+.itemThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

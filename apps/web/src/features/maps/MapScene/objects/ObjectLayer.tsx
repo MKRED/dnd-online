@@ -38,6 +38,9 @@ export interface SceneCreaturesView {
   selectedId: number | null;
   // Есть — щелчок по монстру или НПС выбирает его (мастер в «Просмотре»).
   onPick?: (id: number) => void;
+  // Есть — щелчок по сундуку, предмету на полу или обстановке открывает сведения о нём
+  // (мастер в «Игре», docs/plan/scene-page.md, этап 6).
+  onPickObject?: (id: number) => void;
 }
 
 interface ObjectLayerProps {
@@ -143,6 +146,7 @@ function ObjectLayer({
   const selected = objects.find((object) => object.id === selectedId);
   // Щелчок по существу выбирает его, пока инструмент «Объекты» клик не забирает.
   const pick = !tool && creatures?.onPick;
+  const pickObject = !tool && creatures?.onPickObject;
   const healthOf = (id: number) => creatures?.health.get(id) ?? null;
   const tipHealth = tip && healthOf(tip.id);
 
@@ -173,6 +177,14 @@ function ObjectLayer({
                   onClick: (event: ThreeEvent<MouseEvent>) => {
                     event.stopPropagation();
                     pick(object.id);
+                  },
+                })}
+              {...(pickObject &&
+                look.kind !== 'creature' &&
+                look.kind !== 'start' && {
+                  onClick: (event: ThreeEvent<MouseEvent>) => {
+                    event.stopPropagation();
+                    pickObject(object.id);
                   },
                 })}
               onPointerOver={() => setHovered(object.id)}

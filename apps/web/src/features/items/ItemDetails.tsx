@@ -17,19 +17,21 @@ interface ItemDetailsProps {
   item: Item;
   // Кнопки «Редактировать» и «Удалить» — только у автора, их передаёт страница.
   actions?: ReactNode;
+  // В окне карточки на сцене: окно узкое, заголовок меньше (имя уже в шапке окна).
+  compact?: boolean;
 }
 
 // Карточка предмета так, как её видят все: картинка целиком, поля, описание.
-function ItemDetails({ item, actions }: ItemDetailsProps) {
+function ItemDetails({ item, actions, compact }: ItemDetailsProps) {
   return (
-    <Grid gap="xl">
-      <Grid.Col span={{ base: 12, sm: 5 }}>
+    <Grid gap={compact ? 'md' : 'xl'}>
+      <Grid.Col span={compact ? 4 : { base: 12, sm: 5 }}>
         <EntryImage entry={item} imagePath={itemImagePath} />
       </Grid.Col>
-      <Grid.Col span={{ base: 12, sm: 7 }}>
+      <Grid.Col span={compact ? 8 : { base: 12, sm: 7 }}>
         <Stack gap="sm">
           <TitleWithBookmark kind="item" id={item.id}>
-            <Title order={1} style={{ overflowWrap: 'anywhere' }}>
+            <Title order={compact ? 3 : 1} style={{ overflowWrap: 'anywhere' }}>
               {item.name}
             </Title>
           </TitleWithBookmark>

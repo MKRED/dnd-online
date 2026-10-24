@@ -7,7 +7,16 @@ import type { MapViewState } from '../../../features/maps/mapStateFromChunks';
 import type { useCreatureCards } from '../creatures';
 import type { FigureTool } from '../figures';
 import { creaturePortrait, Portrait } from '../participants';
-import { CharacterCardBody, CreatureCardBody } from './CardBodies';
+import { ThemeIcon } from '@mantine/core';
+import { IconBox, IconDiamond } from '@tabler/icons-react';
+import type { MapOp } from 'shared';
+import {
+  CharacterCardBody,
+  CreatureCardBody,
+  ItemCardBody,
+} from './CardBodies';
+import ObjectCardBody from './ObjectCardBody';
+import { objectInfo } from './objectInfo';
 import CardSheet from './CardSheet';
 import CardWindowFrame from './CardWindowFrame';
 import type { CardWindow, CardWindows as Windows } from './useCardWindows';
@@ -22,6 +31,9 @@ interface CardWindowsProps {
   state: MapViewState | null;
   refs: MapObjectRefsView | null;
   images: ObjectImagePaths;
+  // Правки сцены мастера: дверь и замок из окна объекта (этап 6).
+  applyOps: (ops: MapOp[]) => void;
+  busy: boolean;
 }
 
 export interface CardView {
@@ -44,10 +56,49 @@ function CardWindows({
   state,
   refs,
   images,
+  applyOps,
+  busy,
 }: CardWindowsProps) {
   const narrow = useMediaQuery('(max-width: 48em)');
   const views: CardView[] = windows.windows.map((window) => {
     const { target } = window;
+    if (target.kind === 'object') {
+      const object = state?.objects.byId.get(target.objectId);
+      const info = object && refs ? objectInfo(object, refs, images) : null;
+      return {
+        window,
+        title: info?.title ?? 'Объект',
+        subtitle: info?.subtitle ?? '',
+        portrait: (
+          <ThemeIcon size={40} radius="xl" variant="light" color="yellow">
+            <IconBox size={20} />
+          </ThemeIcon>
+        ),
+        body: (
+          <ObjectCardBody
+            objectId={target.objectId}
+            info={info}
+            applyOps={applyOps}
+            busy={busy}
+            onOpenCard={windows.open}
+          />
+        ),
+      };
+    }
+    if (target.kind === 'item') {
+      const ref = refs?.items[target.itemId];
+      return {
+        window,
+        title: ref?.missing === null ? ref.name : 'Предмет',
+        subtitle: 'Предмет',
+        portrait: (
+          <ThemeIcon size={40} radius="xl" variant="light" color="yellow">
+            <IconDiamond size={20} />
+          </ThemeIcon>
+        ),
+        body: <ItemCardBody gameId={gameId} itemId={target.itemId} />,
+      };
+    }
     if (target.kind === 'character') {
       const figure =
         figures?.figures.find((f) => f.character.id === target.id) ?? null;

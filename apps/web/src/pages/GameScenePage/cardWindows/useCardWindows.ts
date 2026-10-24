@@ -2,8 +2,12 @@ import { useCallback, useState } from 'react';
 
 // Чья карточка открыта (docs/plan/scene-page.md, этап 4): персонаж игрока — по id листа,
 // монстр или НПС — по номеру объекта сцены (у экземпляра свои хиты и эффекты).
+// Объект сцены (сундук, предмет на полу, дверь) и предмет из библиотеки — этап 6.
 export type CardTarget =
-  { kind: 'character'; id: string } | { kind: 'creature'; objectId: number };
+  | { kind: 'character'; id: string }
+  | { kind: 'creature'; objectId: number }
+  | { kind: 'object'; objectId: number }
+  | { kind: 'item'; itemId: string };
 
 export interface CardWindow {
   key: string;
@@ -15,8 +19,18 @@ export interface CardWindow {
   minimized: boolean;
 }
 
-export const cardKey = (target: CardTarget) =>
-  target.kind === 'character' ? `c:${target.id}` : `m:${target.objectId}`;
+export function cardKey(target: CardTarget): string {
+  switch (target.kind) {
+    case 'character':
+      return `c:${target.id}`;
+    case 'creature':
+      return `m:${target.objectId}`;
+    case 'object':
+      return `o:${target.objectId}`;
+    case 'item':
+      return `i:${target.itemId}`;
+  }
+}
 
 // Больше трёх окон мешают видеть сцену: четвёртое закрывает самое старое.
 export const MAX_CARD_WINDOWS = 3;

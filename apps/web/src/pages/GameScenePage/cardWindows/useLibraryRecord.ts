@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
-import type { Character, Monster } from 'shared';
+import type { Character, Item, Monster } from 'shared';
 import { getGameLibraryEntry } from '../../../features/games';
 import { errorMessage } from '../../../lib/apiRequest';
 
 export type LibraryRecord =
-  { kind: 'monster'; record: Monster } | { kind: 'npc'; record: Character };
+  | { kind: 'monster'; record: Monster }
+  | { kind: 'npc'; record: Character }
+  | { kind: 'item'; record: Item };
 
 // Копия монстра или НПС в библиотеке игры — то, что показывают вкладки окна карточки
 // (раньше это делала шторка «Полный лист»). Копия в игре не меняется на ходу, поэтому
 // читается один раз на окно.
 export function useLibraryRecord(
   gameId: string,
-  source: { kind: 'monster' | 'npc'; id: string } | null,
+  source: { kind: 'monster' | 'npc' | 'item'; id: string } | null,
 ) {
   const [loaded, setLoaded] = useState<LibraryRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +29,9 @@ export function useLibraryRecord(
         setLoaded(
           entry.kind === 'monster'
             ? { kind: 'monster', record: entry.record }
-            : { kind: 'npc', record: entry.record as Character },
+            : entry.kind === 'item'
+              ? { kind: 'item', record: entry.record }
+              : { kind: 'npc', record: entry.record as Character },
         );
       })
       .catch((err: unknown) => {

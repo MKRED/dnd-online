@@ -256,7 +256,22 @@ function GameScenePage() {
               figureGhosts={play.ghosts.ghosts}
               figureDrag={viewOnly ? undefined : play.drag}
               creatures={
-                viewOnly ? { ...cards.view, onPick: undefined } : cards.view
+                viewOnly
+                  ? { ...cards.view, onPick: undefined }
+                  : {
+                      ...cards.view,
+                      // Мастер в «Игре» без выбранного: щелчок по сундуку, предмету или
+                      // двери — окно сведений (docs/plan/scene-page.md, этап 6). С
+                      // выбранной фигуркой щелчок идёт в ход.
+                      onPickObject:
+                        master &&
+                        !editing &&
+                        !play.tool.selectedId &&
+                        !cards.selected
+                          ? (objectId: number) =>
+                              windows.open({ kind: 'object', objectId })
+                          : undefined,
+                    }
               }
               fog={fog}
               hover={hover}
@@ -320,6 +335,8 @@ function GameScenePage() {
             state={state}
             refs={view?.refs ?? null}
             images={images}
+            applyOps={edits.applyOps}
+            busy={edits.busy}
           />
         )}
         {/* Готовность сцены не видна глазу: её ждёт агент в браузере перед снимком,

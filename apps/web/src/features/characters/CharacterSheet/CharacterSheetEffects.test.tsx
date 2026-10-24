@@ -1,6 +1,12 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { Character, CharacterEffectEntry, EffectComponent } from 'shared';
+import {
+  NO_ABILITY_COSTS,
+  type Character,
+  type CharacterAbilityEntry,
+  type CharacterEffectEntry,
+  type EffectComponent,
+} from 'shared';
 import { describe, expect, it } from 'vitest';
 import { sampleCharacter } from '../../../test/characterFixture';
 import { renderWithProviders } from '../../../test/render';
@@ -55,7 +61,7 @@ describe('лист с эффектами', () => {
     expect(screen.getByRole('radio', { name: 'С эффектами' })).toBeChecked();
     const tile = screen.getByLabelText(/^Скорость: 60 фт\./);
     expect(tile).toHaveAccessibleName(
-      'Скорость: 60 фт. Без эффектов 30 фт. Ускорение: Скорость вдвое больше. Крылья: Скорость полёта 60 фт., может парить.',
+      'Скорость: 60 фт. В форме 30 фт. Ускорение: Скорость вдвое больше. Крылья: Скорость полёта 60 фт., может парить.',
     );
     expect(within(tile).getByText('Полёт 120 фт, парит')).toBeInTheDocument();
     expect(screen.getByText('Тёмное зрение, 60 фт.')).toBeInTheDocument();
@@ -65,6 +71,55 @@ describe('лист с эффектами', () => {
     expect(speedTileText()).toBe('Скорость30 фт');
     expect(screen.queryByText('Тёмное зрение, 60 фт.')).toBeNull();
   });
+});
+
+// docs/plan/done/traits.md: черта меняет число и в виде «Без эффектов».
+it('черта: КД с ней в обоих видах, её защита — в сводке без эффектов', async () => {
+  const trait: CharacterAbilityEntry = {
+    id: 'row-trait',
+    prepared: false,
+    ability: {
+      id: 'ability-trait',
+      name: 'Защитный бой',
+      isPublic: true,
+      image: null,
+      category: 'basic',
+      level: null,
+      activation: { kind: 'trait' },
+      costs: NO_ABILITY_COSTS,
+      recharge: null,
+      passive: [
+        { kind: 'armor_class', change: 'bonus', value: 1 },
+        {
+          kind: 'defense',
+          level: 'resistance',
+          damageTypes: ['poison'],
+          conditions: [],
+        },
+      ],
+    },
+    missing: null,
+    inactive: false,
+  };
+  const faith = entry('Щит веры', [
+    { kind: 'armor_class', change: 'bonus', value: 2 },
+  ]);
+  renderWithProviders(
+    <CharacterSheet
+      character={{ ...sheet([faith]), abilities: [trait] }}
+      aside={null}
+    />,
+  );
+  expect(screen.getByLabelText(/^Класс доспеха: /)).toHaveAccessibleName(
+    'Класс доспеха: 18. В форме 15. Защитный бой: КД +1. Щит веры: КД +2.',
+  );
+  await userEvent.click(screen.getByRole('radio', { name: 'Без эффектов' }));
+  expect(screen.getByLabelText(/^Класс доспеха: /)).toHaveAccessibleName(
+    'Класс доспеха: 16. В форме 15. Защитный бой: КД +1.',
+  );
+  expect(screen.getByText('Сопротивление: Яд')).toBeInTheDocument();
+  // Черта — в «Умениях», своей группой со строкой того, что она даёт.
+  expect(screen.getByText('Черты')).toBeInTheDocument();
 });
 
 // КД 15 в форме, Ловкость 14 (+2): Доспехи мага дают 15 — не больше, но плитка
@@ -80,7 +135,7 @@ it('КД: Щит веры и Доспехи мага — итог и подск�
     <CharacterSheet character={sheet([faith, mage])} aside={null} />,
   );
   expect(screen.getByLabelText(/^Класс доспеха: /)).toHaveAccessibleName(
-    'Класс доспеха: 17. Без эффектов 15. Щит веры: КД +2. Доспехи мага: Базовый КД 13 + модификатор Ловкости.',
+    'Класс доспеха: 17. В форме 15. Щит веры: КД +2. Доспехи мага: Базовый КД 13 + модификатор Ловкости.',
   );
 
   await userEvent.click(screen.getByRole('radio', { name: 'Без эффектов' }));
@@ -99,7 +154,7 @@ it('КД: Доспехи мага слабее КД формы — число т
     <CharacterSheet character={sheet([mage])} aside={null} />,
   );
   expect(
-    screen.getByLabelText(/^Класс доспеха: 15\. Без эффектов 15\./),
+    screen.getByLabelText(/^Класс доспеха: 15\. В форме 15\./),
   ).toBeInTheDocument();
 });
 
@@ -154,7 +209,7 @@ describe('speedTile', () => {
       value: '20 фт',
       hint: 'Плавание 80 фт',
       changedBy:
-        'Без эффектов 10 фт, Плавание 40 фт.\nУскорение: Скорость вдвое больше.',
+        'В форме 10 фт, Плавание 40 фт.\nУскорение: Скорость вдвое больше.',
     });
   });
 });
@@ -168,7 +223,7 @@ it('пассивное восприятие с помехой от Отравл�
   expect(
     screen.getByLabelText(/^Пассивное восприятие: 6\./),
   ).toHaveAccessibleName(
-    'Пассивное восприятие: 6. Без эффектов 11. Отравленный: Помеха: −5.',
+    'Пассивное восприятие: 6. В форме 11. Отравленный: Помеха: −5.',
   );
   expect(
     screen.getByRole('group', {

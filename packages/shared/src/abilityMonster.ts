@@ -6,13 +6,19 @@ import type {
 
 // Категория «Монстра» (docs/plan/done/monsters-npcs.md, этап 2; правила — docs/dnd/monsters.md,
 // «Usage limits»). Способности монстров живут в общем справочнике, но только у этой
-// категории есть активации «Черта» и «Легендарное действие» и перезарядка.
+// категории есть «Легендарное действие» и перезарядка. «Черта» — с 2026-10-24 и у
+// «Базовой»: пассивная черта персонажа или НПС (docs/plan/done/traits.md).
 
 // Активации, которые бывают только у способности «Монстра».
 export const MONSTER_ACTIVATION_KINDS = [
-  'trait',
   'legendary',
 ] as const satisfies readonly AbilityActivationKind[];
+
+// Категории, у которых бывает черта. У заклинания её нет: заклинание сотворяют.
+export const TRAIT_CATEGORIES = [
+  'basic',
+  'monster',
+] as const satisfies readonly AbilityCategory[];
 
 // «Перезарядка X–6»: в начале хода монстр бросает к6 и при X и выше способность
 // возвращается. X = 6 — «Перезарядка 6».
@@ -41,14 +47,23 @@ export function isMonsterAbilityDetails(
   );
 }
 
-export const isMonsterActivation = (activation: AbilityActivation) =>
-  (MONSTER_ACTIVATION_KINDS as readonly string[]).includes(activation.kind);
+// Легендарное действие — только у «Монстра», черта — у «Базовой» и «Монстра».
+export function activationKindFitsCategory(
+  category: AbilityCategory,
+  kind: AbilityActivationKind,
+): boolean {
+  if (kind === 'trait')
+    return (TRAIT_CATEGORIES as readonly string[]).includes(category);
+  return (
+    category === 'monster' ||
+    !(MONSTER_ACTIVATION_KINDS as readonly string[]).includes(kind)
+  );
+}
 
-// Черта и легендарное действие — только у категории «Монстра».
 export const activationFitsCategory = (
   category: AbilityCategory,
   activation: AbilityActivation,
-) => category === 'monster' || !isMonsterActivation(activation);
+) => activationKindFitsCategory(category, activation.kind);
 
 export const formatRecharge = (recharge: number) =>
   recharge === RECHARGE_MAX

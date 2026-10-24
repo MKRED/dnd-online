@@ -113,6 +113,7 @@ describe('способности у персонажа (e2e)', () => {
             uses: { count: { kind: 'fixed', amount: 1 }, recovery: 'short' },
           },
           recharge: null,
+          passive: [],
         },
         missing: null,
         inactive: false,
@@ -164,6 +165,29 @@ describe('способности у персонажа (e2e)', () => {
       .expect(200);
     const [row] = await abilitiesOf(owner, id);
     expect(row.ability).toMatchObject({ id: abilityId, category: 'monster' });
+  });
+
+  // docs/plan/done/traits.md: черта «Базовой» с составляющими — на листе с ними.
+  it('черта с составляющими добавляется и приходит в листе с ними', async () => {
+    const id = await createCharacter(owner);
+    const passive = [{ kind: 'sense', sense: 'darkvision', range: 120 }];
+    const abilityId = await createAbility(
+      owner,
+      basicBody({
+        name: 'Тёмное зрение',
+        activation: { kind: 'trait' },
+        costs: noCosts,
+        passive,
+      }),
+    );
+    await add(id, abilityId);
+    const [row] = await abilitiesOf(owner, id);
+    expect(row.ability).toMatchObject({
+      id: abilityId,
+      category: 'basic',
+      activation: { kind: 'trait' },
+      passive,
+    });
   });
 
   it('подготовить заклинание 1 круга; умение и заговор — 400', async () => {

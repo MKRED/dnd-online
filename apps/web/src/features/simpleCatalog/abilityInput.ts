@@ -1,12 +1,23 @@
 import { growthBasis, type AbilityVariant, type GrowthBasis } from 'shared';
 import type { SimpleFormValues } from './SimpleEntryForm/simpleEntryValues';
+import { fromEffectValues } from './EffectFields';
 import { fromMonsterAbilityValues } from './monsterAbilityForm';
 import { fromSpellValues, spellCosts } from './SpellFields';
 import { fromUsageValues } from './UsageField';
 
+// Составляющие черты в форме живут там же, где у эффекта, — в effect.components: редактор
+// составляющих один (docs/plan/done/traits.md). У других активаций их нет.
+const passiveInput = (values: SimpleFormValues) =>
+  values.usage.kind === 'trait'
+    ? fromEffectValues(values.effect).components
+    : [];
+
 // Категория и её поля для запроса: у заклинания ячейка в затратах — его круга.
 export function abilityCategoryInput(values: SimpleFormValues) {
-  const usage = fromUsageValues(values.usage);
+  const usage = {
+    ...fromUsageValues(values.usage),
+    passive: passiveInput(values),
+  };
   if (values.category === 'monster')
     return {
       category: 'monster',

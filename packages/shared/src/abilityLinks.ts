@@ -2,6 +2,7 @@ import type { AbilityCategory } from './abilities.js';
 import type { AbilityActivation, AbilityCosts } from './abilityUsage.js';
 import type { CatalogImage } from './catalogImage.js';
 import type { CharacterEffectMissing } from './characterEffects.js';
+import type { EffectComponent } from './effectComponents.js';
 
 // Способность каталога на существе — у персонажа (docs/plan/done/character-abilities.md) и у
 // монстра (docs/plan/done/monsters-npcs.md): строка — ссылка на запись каталога, а не копия.
@@ -21,6 +22,8 @@ export interface AbilityLinkCard {
   costs: AbilityCosts;
   // «Перезарядка X–6» способности «Монстра»; у остальных категорий — null.
   recharge: number | null;
+  // Что черта даёт владельцу всегда (abilityPassive.ts): итог листа считает и их.
+  passive: EffectComponent[];
 }
 
 // Карточка глазами смотрящего: скрытое от него и удалённое — заглушка без полей карточки.

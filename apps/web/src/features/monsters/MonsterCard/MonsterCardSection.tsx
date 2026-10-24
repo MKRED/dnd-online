@@ -1,7 +1,7 @@
 import { Fieldset, Stack, Text } from '@mantine/core';
 import { useMemo } from 'react';
 import type { CharacterEffectEntry, Monster } from 'shared';
-import { EffectSummary, SheetField } from '../../characters';
+import { EffectSummary, hasSummary, SheetField } from '../../characters';
 import type { SheetSection } from '../../characters';
 import {
   MonsterSkills,
@@ -35,9 +35,10 @@ function MonsterCardSection({
     () => [...(monster.effects ?? []), ...extraEffects],
     [monster.effects, extraEffects],
   );
+  // Черты вида (docs/plan/done/traits.md) считаются вместе с эффектами.
   const totals = useMemo(
-    () => (effects.length > 0 ? monsterTotals(statBlock, effects) : null),
-    [statBlock, effects],
+    () => monsterTotals(statBlock, effects, monster.abilities ?? []),
+    [statBlock, effects, monster.abilities],
   );
   switch (section) {
     case 'stats': {
@@ -79,7 +80,7 @@ function MonsterCardSection({
         </Stack>
       );
     case 'effects':
-      return totals ? (
+      return hasSummary(totals) ? (
         <EffectSummary totals={totals} />
       ) : (
         <Text size="sm" c="dimmed">

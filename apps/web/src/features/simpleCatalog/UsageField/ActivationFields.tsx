@@ -14,24 +14,19 @@ import {
   ACTIVATION_AMOUNT_MAX,
   ACTIVATION_LABELS,
   LEGENDARY_COST_MAX,
-  MONSTER_ACTIVATION_KINDS,
+  activationKindFitsCategory,
   pluralRu,
   type AbilityActivationKind,
+  type AbilityCategory,
 } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 
-const monsterOnly: readonly AbilityActivationKind[] = MONSTER_ACTIVATION_KINDS;
-
-const kindOption = (value: AbilityActivationKind) => ({
-  value,
-  label: ACTIVATION_LABELS[value],
-});
-
-// Черта и легендарное действие — только у способности монстра (shared/abilityMonster.ts).
-const ALL_OPTIONS = ABILITY_ACTIVATION_KINDS.map(kindOption);
-const COMMON_OPTIONS = ABILITY_ACTIVATION_KINDS.filter(
-  (kind) => !monsterOnly.includes(kind),
-).map(kindOption);
+// Легендарное действие — только у способности монстра, черта — у базовой и монстра
+// (shared/abilityMonster.ts).
+const optionsFor = (category: string) =>
+  ABILITY_ACTIVATION_KINDS.filter((kind) =>
+    activationKindFitsCategory(category as AbilityCategory, kind),
+  ).map((value) => ({ value, label: ACTIVATION_LABELS[value] }));
 
 const COST_OPTIONS = Array.from({ length: LEGENDARY_COST_MAX }, (_, i) =>
   String(i + 1),
@@ -46,7 +41,7 @@ const KIND_HINTS: Record<AbilityActivationKind, string> = {
   attack: 'Заменяет одну из атак действия «Атака», как оружие дыхания',
   time: 'Дольше одного хода: 1 минута, 10 минут, 1 час',
   trait:
-    'Действует всегда или в своих условиях: «Амфибия», «Легендарное сопротивление»',
+    'Действует всегда или в своих условиях: «Тёмное зрение», «Амфибия». Что черта меняет на листе — в «Действует всегда»',
   legendary:
     'Сразу после хода другого существа, из запаса легендарных действий на раунд',
 };
@@ -66,7 +61,7 @@ function ActivationFields({ form }: ActivationFieldsProps) {
       <Select
         label="Активация"
         description={KIND_HINTS[kind]}
-        data={category === 'monster' ? ALL_OPTIONS : COMMON_OPTIONS}
+        data={optionsFor(category)}
         allowDeselect={false}
         maw={320}
         {...form.getInputProps('usage.kind')}

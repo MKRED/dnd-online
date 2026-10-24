@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { CatalogContext } from '../support/catalog-scenario/index.js';
 
-// Категория «Монстра» (docs/plan/done/monsters-npcs.md, этап 2): активации «Черта» и
-// «Легендарное действие» с ценой и перезарядка в details — только у неё.
+// Категория «Монстра» (docs/plan/done/monsters-npcs.md, этап 2): «Легендарное действие» с
+// ценой и перезарядка в details — только у неё. «Черта» бывает и у «Базовой»
+// (abilities/traits.ts).
 
 const breath = {
   category: 'monster',
@@ -67,14 +68,14 @@ export function describeAbilityMonster(get: () => CatalogContext): void {
       }
     });
 
-    it('черта и легендарное действие в другой категории — 400', async () => {
+    it('легендарное действие в другой категории — 400', async () => {
       const { author, url, create, body } = get();
       const res = await author
         .post(url())
-        .send(body({ activation: { kind: 'trait' } }))
+        .send(body({ activation: { kind: 'legendary', cost: 1 } }))
         .expect(400);
       expect(messages(res)).toContain(
-        'Черта и легендарное действие бывают только у способности монстра',
+        'Легендарное действие бывает только у способности монстра, черта — у базовой способности и способности монстра',
       );
       // Сменить категорию, оставив легендарное действие, тоже нельзя.
       const { id } = await create(legendary(1));

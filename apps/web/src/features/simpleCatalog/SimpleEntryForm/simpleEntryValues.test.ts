@@ -47,7 +47,43 @@ describe('simpleEntryValues', () => {
       activation: { kind: 'action' },
       costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
       steps: [],
+      passive: [],
     });
+  });
+
+  // docs/plan/done/traits.md: составляющие черты — в полях эффекта формы.
+  it('черта: составляющие туда и обратно, у другой активации — не уходят', () => {
+    const passive = [
+      { kind: 'sense' as const, sense: 'darkvision' as const, range: 120 },
+    ];
+    const trait: Ability = {
+      id: 'a2',
+      authorId: 'u1',
+      authorNickname: 'Арвен',
+      isPublic: false,
+      name: 'Тёмное зрение',
+      category: 'basic',
+      details: {},
+      activation: { kind: 'trait' },
+      costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
+      steps: [],
+      passive,
+      description: '',
+      sources: [],
+      image: null,
+      createdAt: '',
+      updatedAt: '',
+    };
+    const values = toSimpleFormValues(ABILITIES, trait);
+    expect(toSimpleInput(ABILITIES, values)).toMatchObject({
+      activation: { kind: 'trait' },
+      passive,
+    });
+    const action = {
+      ...values,
+      usage: { ...values.usage, kind: 'action' as const },
+    };
+    expect(toSimpleInput(ABILITIES, action)).toMatchObject({ passive: [] });
   });
 
   it('способность монстра отправляет перезарядку и цену легендарного действия', () => {
@@ -62,6 +98,7 @@ describe('simpleEntryValues', () => {
       activation: { kind: 'legendary', cost: 2 },
       costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
       steps: [],
+      passive: [],
       description: '',
       sources: [],
       image: null,

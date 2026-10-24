@@ -84,7 +84,7 @@ describe('effectForm', () => {
       { kind: 'condition', condition: 'poisoned' },
       { kind: 'sense', sense: 'darkvision', range: 60 },
     ]);
-    const back = toEffectValues({ ...fields, duration: { kind: 'permanent' } });
+    const back = toEffectValues(fields);
     expect(back.components[0]).toMatchObject({
       kind: 'condition',
       condition: 'poisoned',
@@ -142,10 +142,7 @@ describe('effectForm', () => {
         count: 0,
       }),
     ]);
-    const back = toEffectValues({
-      ...fromEffectValues(effect),
-      duration: { kind: 'permanent' },
-    });
+    const back = toEffectValues(fromEffectValues(effect));
     expect(back.components[0].perTurn).toMatchObject({
       die: '6',
       damageType: 'fire',
@@ -181,7 +178,7 @@ describe('effectForm', () => {
     const { effect } = values({ components: [newComponent('no_healing')] });
     const fields = fromEffectValues(effect);
     expect(fields.components).toEqual([{ kind: 'no_healing' }]);
-    const back = toEffectValues({ ...fields, duration: { kind: 'permanent' } });
+    const back = toEffectValues(fields);
     expect(back.components[0].kind).toBe('no_healing');
   });
 

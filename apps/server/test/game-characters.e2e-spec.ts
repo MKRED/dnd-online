@@ -238,6 +238,40 @@ describe('game characters (e2e)', () => {
       .expect(403);
   });
 
+  // docs/plan/done/traits.md: черта листа действует в игре, как эффект.
+  it('черта с запретом лечения на листе — лечение в игре отклонено с её именем', async () => {
+    const g = await setup('gch_trait');
+    const trait = idOf(
+      await g.player.agent
+        .post('/api/abilities')
+        .send({
+          name: 'Проклятая плоть',
+          category: 'basic',
+          details: {},
+          description: '',
+          isPublic: false,
+          activation: { kind: 'trait' },
+          costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
+          passive: [{ kind: 'no_healing' }],
+        })
+        .expect(201),
+    );
+    await g.player.agent
+      .post(`/api/characters/${g.player.character}/abilities`)
+      .send({ abilityId: trait })
+      .expect(201);
+    await change(g.master.agent, g.url, { kind: 'damage', amount: 3 });
+    const refused = await change(
+      g.master.agent,
+      g.url,
+      { kind: 'heal', amount: 3 },
+      400,
+    );
+    expect((refused.body as { message: string }).message).toBe(
+      'Лечение запрещено: Проклятая плоть',
+    );
+  });
+
   it('эффект мастера, скрытый от игрока, в игре действует; копия — в библиотеке', async () => {
     const g = await setup('gch_effects');
     const body = (over: Record<string, unknown>) => ({

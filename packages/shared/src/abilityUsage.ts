@@ -1,5 +1,6 @@
 import type { AbilityStep } from './abilitySteps.js';
 import { ABILITY_SCORES, type AbilityScore } from './character.js';
+import type { EffectComponent } from './effectComponents.js';
 
 // Как способность применяют и что она тратит — общие поля всех способностей
 // (docs/plan/done/abilities.md), по книге 2024 (docs/dnd/ability-usage.md). Активация — ровно
@@ -25,8 +26,9 @@ export type AbilityActivation =
   | { kind: 'attack' }
   // Долгое применение: 1 минута, 10 минут, 1 час…
   | { kind: 'time'; amount: number; unit: ActivationTimeUnit }
-  // Только у категории «Монстра» (abilityMonster.ts): черта действует всегда или в
-  // своих условиях, легендарное действие стоит cost использований из запаса на раунд.
+  // Черта действует всегда или в своих условиях — у «Базовой» и «Монстра»; легендарное
+  // действие стоит cost использований из запаса на раунд — только у «Монстра»
+  // (abilityMonster.ts).
   | { kind: 'trait' }
   | { kind: 'legendary'; cost: number };
 
@@ -93,17 +95,20 @@ export const NO_ABILITY_COSTS: AbilityCosts = {
 };
 
 // Поля всех способностей, кроме общих для каталогов. steps — «Применение»
-// (abilitySteps.ts); пустой список — всё в описании.
+// (abilitySteps.ts); пустой список — всё в описании. passive — что черта даёт владельцу
+// всегда (abilityPassive.ts); у других активаций — пустой список.
 export interface AbilityFields {
   activation: AbilityActivation;
   costs: AbilityCosts;
   steps: AbilityStep[];
+  passive: EffectComponent[];
 }
 
 export const DEFAULT_ABILITY_FIELDS: AbilityFields = {
   activation: { kind: 'action' },
   costs: NO_ABILITY_COSTS,
   steps: [],
+  passive: [],
 };
 
 const keysAre = (value: object, keys: string) =>

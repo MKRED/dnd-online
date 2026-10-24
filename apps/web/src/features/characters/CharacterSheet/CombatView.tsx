@@ -12,14 +12,15 @@ import StatTile from './StatTile';
 
 interface CombatViewProps {
   character: Character;
-  // Итог с эффектами; null — лист «Без эффектов», числа из формы.
+  // Итог с чертами и эффектами (в виде «Без эффектов» — только с чертами); null — числа
+  // из формы.
   totals: SheetTotals | null;
 }
 
 // Боевые числа плитками: их смотрят чаще всего, поэтому они крупно и сразу под шапкой.
 // Инициатива не хранится — это модификатор Ловкости (docs/dnd/combat-stats.md).
-// Эффекты пересчитывают Класс доспеха, Скорость и пассивное восприятие
-// (docs/plan/done/character-effects.md).
+// Черты и эффекты пересчитывают Класс доспеха, Скорость и пассивное восприятие
+// (docs/plan/done/character-effects.md, docs/plan/done/traits.md).
 function CombatView({ character, totals }: CombatViewProps) {
   const initiative = getAbilityModifier(character.abilityScores.dexterity);
   const armorClass = armorClassTile(character.armorClass, totals);

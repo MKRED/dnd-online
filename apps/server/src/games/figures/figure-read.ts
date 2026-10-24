@@ -4,6 +4,7 @@ import {
   creatureHealth,
   FIGURE_SIZE,
   totalSpeed,
+  traitEffects,
   type GameEventCharacter,
   type GameFigure,
 } from 'shared';
@@ -16,6 +17,7 @@ import {
   gameMembers,
 } from '../../database/schema/index.js';
 import { loadGameEffectLists } from '../characters/game-character-effects.js';
+import { loadGameTraitLists } from '../characters/game-character-traits.js';
 
 export type FigureRow = typeof gameFigures.$inferSelect;
 
@@ -32,21 +34,23 @@ export function canMoveFigure(
   );
 }
 
-// Скорость из листа с эффектами — эффекты из библиотеки игры (game-character-effects.ts);
-// скорость лазания у персонажа только от эффектов.
+// Скорость из листа с чертами и эффектами — эффекты из библиотеки игры
+// (game-character-effects.ts), черты — как в листе (game-character-traits.ts); скорость
+// лазания у персонажа только от них.
 export async function figureSpeeds(
   db: Db,
   gameId: string,
   rows: { id: string; ownerId: string; speed: number }[],
 ): Promise<Map<string, { speed: number; climb: number | null }>> {
-  const lists = await loadGameEffectLists(
-    db,
-    gameId,
-    new Map(rows.map((row) => [row.id, row.ownerId])),
-  );
+  const owners = new Map(rows.map((row) => [row.id, row.ownerId]));
+  const lists = await loadGameEffectLists(db, gameId, owners);
+  const traits = await loadGameTraitLists(db, owners);
   return new Map(
     rows.map((row) => {
-      const effects = activeEffects(lists.get(row.id) ?? []);
+      const effects = [
+        ...traitEffects(traits.get(row.id) ?? []),
+        ...activeEffects(lists.get(row.id) ?? []),
+      ];
       const total = totalSpeed({ speed: row.speed }, effects);
       return [
         row.id,

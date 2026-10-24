@@ -164,6 +164,7 @@ function abilityLink(found: LibraryRow | 'hidden' | 'deleted'): AbilityLink {
       activation: fields.activation,
       costs: fields.costs,
       recharge: fields.category === 'monster' ? fields.details.recharge : null,
+      passive: fields.passive,
     },
     missing: null,
     inactive: false,

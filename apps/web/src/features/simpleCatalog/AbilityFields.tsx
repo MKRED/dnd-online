@@ -1,7 +1,8 @@
 import { Stack } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import { useEffect, useRef } from 'react';
-import { MONSTER_ACTIVATION_KINDS, type AbilityActivationKind } from 'shared';
+import { activationKindFitsCategory, type AbilityCategory } from 'shared';
+import { ComponentsField } from './EffectFields';
 import MonsterAbilityFields from './MonsterAbilityFields';
 import type { SimpleFormValues } from './SimpleEntryForm/simpleEntryValues';
 import SpellFields, { suggestSpellSlot } from './SpellFields';
@@ -15,10 +16,11 @@ function AbilityFields({
 }: {
   form: UseFormReturnType<SimpleFormValues>;
 }) {
-  const { category } = form.getValues();
-  // Стала заклинанием — круг подставляет ячейку. Перестала быть способностью монстра —
-  // черта и легендарное действие сменяются действием: в другой категории их нет и в
-  // списке активаций. При открытии формы не трогаем: у сохранённой записи всё так, как
+  const { category, usage } = form.getValues();
+  const trait = usage.kind === 'trait';
+  // Стала заклинанием — круг подставляет ячейку. Активации, которой в новой категории нет
+  // (легендарное действие не у монстра, черта у заклинания), сменяется действием: её нет и
+  // в списке активаций. При открытии формы не трогаем: у сохранённой записи всё так, как
   // задал автор.
   const previous = useRef(category);
   useEffect(() => {
@@ -26,20 +28,34 @@ function AbilityFields({
     previous.current = category;
     if (category === 'spell')
       suggestSpellSlot(form, Number(form.getValues().spell.level), null);
-    const monsterOnly: readonly AbilityActivationKind[] =
-      MONSTER_ACTIVATION_KINDS;
     if (
-      category !== 'monster' &&
-      monsterOnly.includes(form.getValues().usage.kind)
+      !activationKindFitsCategory(
+        category as AbilityCategory,
+        form.getValues().usage.kind,
+      )
     )
       form.setFieldValue('usage.kind', 'action');
   }, [category, form]);
+  // Перестала быть чертой — составляющие убираются: у других активаций их нет, а
+  // недописанная карточка в скрытом блоке не дала бы сохранить форму.
+  const wasTrait = useRef(trait);
+  useEffect(() => {
+    if (wasTrait.current && !trait) form.setFieldValue('effect.components', []);
+    wasTrait.current = trait;
+  }, [trait, form]);
 
   return (
     <Stack gap="md">
       {category === 'spell' && <SpellFields form={form} />}
       {category === 'monster' && <MonsterAbilityFields form={form} />}
       <UsageField form={form} />
+      {trait && (
+        <ComponentsField
+          form={form}
+          label="Действует всегда"
+          description="Что черта даёт владельцу, пока она у него на листе. Лист считает это и в виде «Без эффектов». Без составляющих — всё в описании"
+        />
+      )}
       <StepsField form={form} />
     </Stack>
   );

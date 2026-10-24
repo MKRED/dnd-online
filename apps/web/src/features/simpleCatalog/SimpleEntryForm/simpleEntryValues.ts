@@ -97,7 +97,14 @@ export function toSimpleFormValues(
     duration: toDurationValues(
       entry && 'duration' in entry ? entry.duration : undefined,
     ),
-    effect: toEffectValues(entry && 'components' in entry ? entry : undefined),
+    // У черты способности составляющие — в тех же полях, что у эффекта (abilityInput.ts).
+    effect: toEffectValues(
+      entry && 'components' in entry
+        ? entry
+        : entry && 'passive' in entry
+          ? { components: entry.passive, saveEnds: null }
+          : undefined,
+    ),
     usage: toUsageValues(entry && 'activation' in entry ? entry : undefined),
     steps: entry && 'steps' in entry ? entry.steps.map(toStepValues) : [],
     spell: toSpellValues(

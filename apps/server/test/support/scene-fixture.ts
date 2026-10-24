@@ -103,5 +103,5 @@ export async function createSceneGame<
     .post(`/api/games/${gameId}/seats`)
     .send({ characterId: character })
     .expect(201);
-  return { master, player, mapId, gameId, goblin, npc, rope, gem };
+  return { master, player, character, mapId, gameId, goblin, npc, rope, gem };
 }

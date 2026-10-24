@@ -11,19 +11,25 @@
 }
 
 /* Как в форме: карточки характеристик разной высоты, поэтому колонки, а не сетка —
-   короткая карточка не тянется под высоту соседа. */
+   короткая карточка не тянется под высоту соседа. Число колонок — по ширине самого
+   блока, а не окна: лист открывается и в узком окне карточки на сцене игры
+   (docs/plan/scene-page.md, этап 4), где три колонки наезжали друг на друга. */
+.abilitiesBox {
+  container-type: inline-size;
+}
+
 .abilities {
   column-count: 3;
   column-gap: var(--mantine-spacing-sm);
 }
 
-@media (max-width: 62em) {
+@container (max-width: 700px) {
   .abilities {
     column-count: 2;
   }
 }
 
-@media (max-width: 36em) {
+@container (max-width: 440px) {
   .abilities {
     column-count: 1;
   }

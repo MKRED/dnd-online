@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, asc, eq, ilike, type SQL } from 'drizzle-orm';
+import { and, asc, eq, type SQL } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   readFurnitureContainer,
@@ -8,6 +8,7 @@ import {
 } from 'shared';
 import { entryVisibleTo } from '../../catalog/catalog-access.js';
 import { toCatalogImage } from '../../catalog/catalog-image.mapper.js';
+import { nameContains } from '../../catalog/name-match.js';
 import { DatabaseService } from '../../database/database.service.js';
 import {
   characterImages,
@@ -26,12 +27,6 @@ import {
 } from '../../monsters/monsters.config.js';
 
 const LIMIT = 20;
-
-// % и _ в запросе — обычные символы, а не шаблон LIKE.
-function contains(column: Parameters<typeof ilike>[0], q: string | undefined) {
-  if (!q) return undefined;
-  return ilike(column, `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`);
-}
 
 // Поиск того, что можно поставить на карту: монстры и предметы — свои и опубликованные,
 // НПС и обстановка — свои (чужую обстановку сначала копируют, docs/plan/blocks.md, этап 8в). Только чтение. Открыт и API-токену, чтобы нейросеть через MCP находила id
@@ -79,7 +74,7 @@ export class MapCatalogService {
         .where(
           where(
             entryVisibleTo(MONSTER_ACCESS, userId),
-            contains(monsters.name, q),
+            nameContains(monsters.name, q),
           ),
         )
         .orderBy(asc(monsters.name))
@@ -111,7 +106,10 @@ export class MapCatalogService {
         .from(items)
         .leftJoin(itemImages, eq(itemImages.ownerId, items.id))
         .where(
-          where(entryVisibleTo(ITEM_ACCESS, userId), contains(items.name, q)),
+          where(
+            entryVisibleTo(ITEM_ACCESS, userId),
+            nameContains(items.name, q),
+          ),
         )
         .orderBy(asc(items.name))
         .limit(LIMIT);
@@ -129,7 +127,10 @@ export class MapCatalogService {
         })
         .from(furniture)
         .where(
-          where(eq(furniture.authorId, userId), contains(furniture.name, q)),
+          where(
+            eq(furniture.authorId, userId),
+            nameContains(furniture.name, q),
+          ),
         )
         .orderBy(asc(furniture.name))
         .limit(LIMIT);
@@ -171,7 +172,7 @@ export class MapCatalogService {
         where(
           eq(characters.userId, userId),
           eq(characters.kind, 'npc'),
-          contains(characters.name, q),
+          nameContains(characters.name, q),
         ),
       )
       .orderBy(asc(characters.name))

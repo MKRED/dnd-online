@@ -21,6 +21,7 @@ import { MonstersModule } from './monsters/monsters.module.js';
 import { ItemImagesModule } from './item-images/item-images.module.js';
 import { ItemsModule } from './items/items.module.js';
 import { MapsModule } from './maps/maps.module.js';
+import { SearchModule } from './search/search.module.js';
 import { UsersModule } from './users/users.module.js';
 import { webAppModules } from './web-app.module.js';
 
@@ -47,6 +48,7 @@ const level = process.env.LOG_LEVEL ?? 'info';
     MonstersModule,
     ApiTokensModule,
     BookmarksModule,
+    SearchModule,
     GamesModule,
     ...webAppModules(),
     LoggerModule.forRoot({

@@ -1,4 +1,11 @@
-import { ActionIcon, Button, Group, Menu } from '@mantine/core';
+import {
+  ActionIcon,
+  Button,
+  Group,
+  Indicator,
+  Menu,
+  Tooltip,
+} from '@mantine/core';
 import {
   IconBooks,
   IconDots,
@@ -6,10 +13,13 @@ import {
   IconPlayerPlay,
   IconPlayerStop,
 } from '@tabler/icons-react';
+import { pluralRu } from 'shared';
 
 interface MasterActionsProps {
   sessionActive: boolean;
   busy: boolean;
+  // Сколько копий библиотеки изменены в справочнике и ждут обновления.
+  libraryUpdates: number;
   onStartSession: () => void;
   onEndSession: () => void;
   onOpenJournal: () => void;
@@ -22,6 +32,7 @@ interface MasterActionsProps {
 function MasterActions({
   sessionActive,
   busy,
+  libraryUpdates,
   onStartSession,
   onEndSession,
   onOpenJournal,
@@ -56,13 +67,36 @@ function MasterActions({
       >
         Журнал
       </Button>
-      <Button
-        variant="default"
-        leftSection={<IconBooks size={16} />}
-        onClick={onOpenLibrary}
+      {/* Кружок в углу, как счётчик непрочитанного: кнопка не шире, ряд не перестраивается. */}
+      <Tooltip
+        label={libraryUpdatesHint(libraryUpdates)}
+        disabled={libraryUpdates === 0}
+        multiline
+        w={260}
       >
-        Библиотека
-      </Button>
+        <Indicator
+          label={libraryUpdates}
+          disabled={libraryUpdates === 0}
+          maxValue={99}
+          size={18}
+          color="yellow.7"
+          autoContrast
+          withBorder
+        >
+          <Button
+            variant="default"
+            leftSection={<IconBooks size={16} />}
+            aria-label={
+              libraryUpdates > 0
+                ? `Библиотека, ждут обновления: ${libraryUpdates}`
+                : undefined
+            }
+            onClick={onOpenLibrary}
+          >
+            Библиотека
+          </Button>
+        </Indicator>
+      </Tooltip>
       <Menu position="bottom-end">
         <Menu.Target>
           <ActionIcon
@@ -82,6 +116,12 @@ function MasterActions({
       </Menu>
     </Group>
   );
+}
+
+function libraryUpdatesHint(count: number) {
+  const records = pluralRu(count, ['запись', 'записи', 'записей']);
+  const changed = pluralRu(count, ['изменена', 'изменены', 'изменены']);
+  return `${count} ${records} ${changed} в справочнике: откройте библиотеку, чтобы обновить`;
 }
 
 export default MasterActions;

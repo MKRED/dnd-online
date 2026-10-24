@@ -16,7 +16,7 @@ import {
   voxelModelsApi,
 } from '../../voxelModels';
 import { modelCellsText, modelSizeText } from '../VoxelModel/modelCard';
-import type { OwnModels } from './useOwnModels';
+import type { OwnModels } from '../../voxelModels';
 
 type Editing = { model: VoxelModelFields; target: VoxelModel | null };
 

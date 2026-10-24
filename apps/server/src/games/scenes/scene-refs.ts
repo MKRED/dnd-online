@@ -66,6 +66,9 @@ export async function sceneRefs(
         name: row.name,
         role,
         image: row.image,
+        // Снимок модели в копии (docs/plan/done/monster-models.md, этап 2): байты по монстру и
+        // версии копии (scene/models/monster/:id).
+        model: row.model && 'voxels' in row.model ? row.model : null,
       };
       refs.monsters.set(row.sourceId, {
         name: row.name,
@@ -92,7 +95,7 @@ export async function sceneRefs(
           ? { id: row.sourceId, thumbVersion: row.image.version }
           : null,
         // Модель — тоже копия: байты по НПС и версии (scene/models/npc/:id).
-        model: row.model ?? null,
+        model: row.model && !('voxels' in row.model) ? row.model : null,
       };
       refs.npcs.add(row.sourceId);
     }

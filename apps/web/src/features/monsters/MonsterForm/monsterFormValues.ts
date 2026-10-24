@@ -8,6 +8,7 @@ import {
   type Monster,
   type MonsterChallenge,
   type MonsterInput,
+  type MonsterModelLink,
   type MonsterRole,
   type MonsterSize,
   type MonsterType,
@@ -77,6 +78,8 @@ export interface MonsterFormValues {
     saveDc: NumValue;
     attackBonus: NumValue;
   };
+  // Ссылка на свою модель из «Моделей» с поправкой размера (docs/plan/done/monster-models.md).
+  model: MonsterModelLink | null;
   description: string;
   isPublic: boolean;
 }
@@ -137,6 +140,7 @@ export function toMonsterFormValues(
       saveDc: optional(spellcasting.saveDc),
       attackBonus: optional(spellcasting.attackBonus),
     },
+    model: monster?.model ?? null,
     description: monster?.description ?? '',
     isPublic: monster?.isPublic ?? false,
   };
@@ -157,6 +161,7 @@ export function toMonsterInput(
     isPublic: values.isPublic,
     category: values.category,
     role: values.role,
+    model: values.model,
     statBlock: {
       size: values.size,
       tags: values.tags.trim(),

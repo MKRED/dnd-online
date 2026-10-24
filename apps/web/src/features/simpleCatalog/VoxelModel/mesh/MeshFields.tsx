@@ -27,6 +27,7 @@ import {
 } from '../../../voxelModels';
 import type { SimpleFormValues } from '../../SimpleEntryForm/simpleEntryValues';
 import { meshDraftReady, resizedEmpty, type MeshDraft } from './meshDraft';
+import { compressedText } from '../../../modelCompress';
 import MeshFileButton from './MeshFileButton';
 
 const AXES = [
@@ -76,6 +77,11 @@ function MeshFields({ form, draft }: Props) {
 
   return (
     <Stack gap="sm">
+      {draft.compressed && (
+        <Text size="sm" c="dimmed">
+          {compressedText(draft.compressed)}
+        </Text>
+      )}
       <Text size="sm">
         Загружена из файла {FORMAT_LABELS[draft.format]}: на карте модель
         выглядит как в файле, а путь, укрытие и обзор считаются по вокселям из

@@ -14,6 +14,7 @@ import type {
   CatalogImageVariant,
   FigureModel,
   GameLibraryKind,
+  MonsterRefModel,
 } from 'shared';
 import { bytea } from './bytea.js';
 import { games } from './games.js';
@@ -42,9 +43,11 @@ export const gameLibrary = pgTable(
     // Метаданные копии картинки; байты — в game_library_image_files. Версия своя, растёт
     // с каждым обновлением: по ней клиент не берёт старую картинку из кеша.
     image: jsonb('image').$type<CatalogImage>(),
-    // Метаданные копии 3D-модели НПС (docs/plan/done/character-models.md, этап 4); байты — в
-    // game_library_model_files. Версия — общая с картинкой: растёт с обновлением копии.
-    model: jsonb('model').$type<FigureModel>(),
+    // Метаданные копии 3D-модели НПС (docs/plan/done/character-models.md, этап 4) или снимок
+    // модели монстра целиком (docs/plan/done/monster-models.md, этап 2); байты файла — в
+    // game_library_model_files. Версия (у монстра — mesh.version) общая с картинкой: растёт
+    // с обновлением копии.
+    model: jsonb('model').$type<FigureModel | MonsterRefModel>(),
     // updated_at записи справочника на момент копии: по нему видно, что автор её правил.
     sourceUpdatedAt: timestamp('source_updated_at', {
       withTimezone: true,
@@ -91,7 +94,8 @@ export const gameLibraryImageFiles = pgTable(
   ],
 );
 
-// Байты копии 3D-модели НПС: одна на запись, отдельно от картинок — до 10 МБ.
+// Байты копии 3D-модели НПС или файла модели монстра: одна на запись, отдельно от
+// картинок — до 10 МБ.
 export const gameLibraryModelFiles = pgTable(
   'game_library_model_files',
   {

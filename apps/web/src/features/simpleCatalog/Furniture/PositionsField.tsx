@@ -18,7 +18,7 @@ import {
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import { positionValues } from './furnitureForm';
 import ModelPicker from './ModelPicker';
-import type { OwnModels } from './useOwnModels';
+import type { OwnModels } from '../../voxelModels';
 
 interface Props {
   form: UseFormReturnType<SimpleFormValues>;

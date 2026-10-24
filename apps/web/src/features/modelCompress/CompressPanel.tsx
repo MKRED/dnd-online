@@ -1,20 +1,7 @@
 import { Alert, Button, Group, Loader, Text } from '@mantine/core';
-import type { CompressProgress, CompressStats } from './compressLimits';
+import type { CompressProgress } from './compressLimits';
+import { compressedText, megabytes } from './compressText';
 import type { CompressState } from './useModelCompression';
-
-const megabytes = (bytes: number) =>
-  `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} МБ`;
-
-// «1,2 млн», «180 тыс.», «950».
-const triangles = (count: number) =>
-  count >= 1_000_000
-    ? `${(count / 1_000_000).toFixed(1).replace('.', ',')} млн`
-    : count >= 1000
-      ? `${Math.round(count / 1000)} тыс.`
-      : String(count);
-
-const stats = (s: CompressStats) =>
-  `${megabytes(s.bytes)} · ${triangles(s.triangles)} треугольников`;
 
 const progressText = (progress: CompressProgress | null) =>
   !progress || progress.stage === 'read'
@@ -27,10 +14,18 @@ interface CompressPanelProps {
   state: CompressState;
   onCompress: () => void;
   onCancel: () => void;
+  // Кнопка согласия: у персонажа файл сразу загружается, в «Моделях» — по «Сохранить».
+  compressLabel?: string;
 }
 
-// Сжатие тяжёлой модели в блоке «3D-модель»: предложение, ход, итог или отказ.
-function CompressPanel({ state, onCompress, onCancel }: CompressPanelProps) {
+// Сжатие тяжёлой модели: предложение, ход, итог или отказ — в блоке «3D-модель» персонажа
+// и у файла модели в «Моделях».
+function CompressPanel({
+  state,
+  onCompress,
+  onCancel,
+  compressLabel = 'Сжать и загрузить',
+}: CompressPanelProps) {
   switch (state.kind) {
     case 'idle':
       return null;
@@ -44,7 +39,7 @@ function CompressPanel({ state, onCompress, onCancel }: CompressPanelProps) {
           </Text>
           <Group gap="sm">
             <Button size="xs" onClick={onCompress}>
-              Сжать и загрузить
+              {compressLabel}
             </Button>
             <Button size="xs" variant="default" onClick={onCancel}>
               Отмена
@@ -64,7 +59,7 @@ function CompressPanel({ state, onCompress, onCancel }: CompressPanelProps) {
     case 'done':
       return (
         <Text size="sm" c="dimmed">
-          Сжато: было {stats(state.before)} → стало {stats(state.after)}.
+          {compressedText(state)}
         </Text>
       );
     case 'error':

@@ -47,6 +47,7 @@ const refs: MapObjectRefsView = {
       name: 'огр',
       size: 'large',
       role: 'regular',
+      model: null,
       image: {
         version: 3,
         width: 10,
@@ -218,6 +219,8 @@ describe('layoutObjects', () => {
         `lib/npc/${id}/${image.thumbVersion}`,
       npcModel: (id: string, v: number) => `lib/npc-model/${id}/${v}`,
       furnitureMesh: (id: string, v: number) => `lib/mesh/${id}/${v}`,
+      monsterModel: (id: string, model: string, v: number) =>
+        `lib/monster-model/${id}/${model}/${v}`,
     };
     const objects = layoutObjects(
       mapWith([

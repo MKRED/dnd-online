@@ -22,6 +22,8 @@ const FIELDS = {
   description: 'всё, чему нет поля: описание, мифические действия',
   sources: 'источники — строки, например «Monster Manual 2024, с. 361»',
   isPublic: 'false (create ставит сам)',
+  model:
+    '3D-модель на карте: {id, scale} — id своей модели справочника «Модели» (kind voxelModel; чужую сначала скопировать), scale — поправка к размеру существа от 0.25 до 4, обычно 1; null — на карте карточка с картинкой; без поля — прежняя',
 } satisfies Record<keyof MonsterInput, string>;
 
 const STAT_BLOCK = {

@@ -2,6 +2,7 @@ import { Fieldset, Grid, Stack, Text } from '@mantine/core';
 import type { ReactNode } from 'react';
 import type { Monster } from 'shared';
 import { EntryImage, SourcesList } from '../../catalog';
+import { MonsterSheetModel } from '../MonsterModel';
 import { SheetField } from '../../characters';
 import {
   MonsterSkills,
@@ -55,7 +56,10 @@ function MonsterCard({
     <Stack gap="lg">
       <Grid gap="xl">
         <Grid.Col span={{ base: 12, sm: 4 }}>
-          <EntryImage entry={monster} imagePath={monstersApi.imagePath} />
+          <Stack gap="md">
+            <EntryImage entry={monster} imagePath={monstersApi.imagePath} />
+            <MonsterSheetModel monster={monster} />
+          </Stack>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 8 }}>
           <MonsterTop

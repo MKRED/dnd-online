@@ -25,3 +25,7 @@ export {
   voxelModelsApi,
   voxelModelUsage,
 } from './voxelModelApi';
+export { useOwnModels, type OwnModels } from './useOwnModels';
+// Новая модель из файла (форма монстра) — на three, поэтому функция грузится по требованию.
+export const loadMeshToModel = () =>
+  import('./mesh/meshToModel').then((m) => m.meshToModel);

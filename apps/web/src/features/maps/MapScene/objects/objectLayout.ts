@@ -1,6 +1,7 @@
 import {
   blockSurfaceInCell,
   CONTAINER_LOOK_LABELS,
+  type CharacterModelFit,
   CREATURE_SIZES,
   feetHeight,
   footprintCells,
@@ -20,14 +21,18 @@ import {
   type VoxelModelFields,
 } from 'shared';
 import type { MapViewState } from '../../mapStateFromChunks';
+import { monsterModelLook } from './monsterModelLook';
 import { CATALOG_OBJECT_IMAGES, type ObjectImagePaths } from './objectImages';
 
 // 3D-модель существа (docs/plan/done/character-models.md): путь байтов в API (с версией) и
-// как её ставить.
-export type CreatureModelInput = Pick<
-  FigureModel,
-  'format' | 'color' | 'fit'
-> & { path: string };
+// как её ставить. У монстра модель бывает и рисованной (docs/plan/done/monster-models.md) — её
+// воксели приходят в справочнике объектов, грузить нечего.
+export type CreatureModelInput =
+  | ({ kind: 'file'; path: string } & Pick<
+      FigureModel,
+      'format' | 'color' | 'fit'
+    >)
+  | { kind: 'voxels'; fields: VoxelModelFields; fit: CharacterModelFit };
 
 // Как объект выглядит в сцене (docs/plan/done/map-objects.md, «Как выглядят объекты»).
 // image — путь миниатюры в API или null; letter — что писать на карточке без картинки.
@@ -115,7 +120,11 @@ function creatureLook(
         : null,
       letter: found ? letterOf(found.name) : '?',
       missing: !found,
-      model: null,
+      model: found?.model
+        ? monsterModelLook(found.model, (modelId, version) =>
+            images.monsterModel(object.monsterId, modelId, version),
+          )
+        : null,
     };
   }
   const ref = refs.npcs[object.characterId];
@@ -132,6 +141,7 @@ function creatureLook(
     missing: !found,
     model: found?.model
       ? {
+          kind: 'file',
           path: images.npcModel(object.characterId, found.model.version),
           format: found.model.format,
           color: found.model.color,

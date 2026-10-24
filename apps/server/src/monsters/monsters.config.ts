@@ -3,7 +3,7 @@ import {
   MONSTER_ROLES,
   MONSTER_TYPES,
   isMonsterStatBlock,
-  type MonsterFields,
+  readMonsterModelLink,
   type MonsterRecordFields,
   type MonsterRole,
   type MonsterType,
@@ -34,7 +34,7 @@ export function toMonsterFields(
   category: string,
   _details: Record<string, unknown>,
   extra: Record<string, unknown>,
-): MonsterFields {
+): MonsterRecordFields {
   return {
     category: MONSTER_TYPES.includes(category as MonsterType)
       ? (category as MonsterType)
@@ -45,6 +45,7 @@ export function toMonsterFields(
     role: MONSTER_ROLES.includes(extra.role as MonsterRole)
       ? (extra.role as MonsterRole)
       : 'regular',
+    model: readMonsterModelLink(extra.model),
   };
 }
 
@@ -57,10 +58,17 @@ export const MONSTERS_CONFIG: CatalogEntriesConfig<
   images: monsterImageTables,
   access: MONSTER_ACCESS,
   toVariant: toMonsterFields,
+  // Без поля model в теле ссылка на модель остаётся прежней (docs/plan/done/monster-models.md):
+  // MCP и старые клиенты её не шлют.
+  keptExtra: ['model'],
   toStored: (dto) => ({
     category: dto.category,
     details: {},
-    extra: { statBlock: dto.statBlock, role: dto.role },
+    extra: {
+      statBlock: dto.statBlock,
+      role: dto.role,
+      ...(dto.model !== undefined && { model: dto.model }),
+    },
   }),
 };
 

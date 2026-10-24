@@ -15,6 +15,7 @@ export const sampleMonster: Monster = {
   updatedAt: '2026-10-19T10:00:00.000Z',
   category: 'aberration',
   role: 'unique',
+  model: null,
   statBlock: {
     ...DEFAULT_MONSTER_STAT_BLOCK,
     size: 'large',

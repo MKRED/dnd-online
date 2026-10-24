@@ -19,6 +19,7 @@ import {
   SourcesField,
   useImageDraft,
 } from '../../catalog';
+import { MonsterModelSection } from '../MonsterModel';
 import { monstersApi } from '../monstersApi';
 import AbilitiesSection from './AbilitiesSection';
 import CombatSection from './CombatSection';
@@ -134,6 +135,7 @@ function MonsterForm({
         <DefensesSection form={form} />
         <SensesSection form={form} />
         <LegendarySection form={form} />
+        <MonsterModelSection form={form} />
         <Textarea
           label="Описание"
           description="Черты, действия и заклинания монстра появятся на карточке позже; пока их можно описать здесь, как и логово"

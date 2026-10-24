@@ -2,15 +2,24 @@ import type { VoxelModelUsage } from 'shared';
 import { voxelModelUsage } from '../../voxelModels';
 
 // Вопрос перед удалением модели (docs/plan/blocks.md, этап 8б): обстановка с ней
-// останется без вида, поэтому называем её.
+// останется без вида, монстры (docs/plan/done/monster-models.md) — с карточкой вместо модели,
+// поэтому называем их.
 export function modelDeleteConfirmText(
   name: string,
   usage: VoxelModelUsage,
 ): string {
-  const question = `Удалить модель «${name}» безвозвратно?`;
-  if (usage.furniture.length === 0) return question;
-  const names = usage.furniture.map((entry) => `«${entry.name}»`).join(', ');
-  return `${question}\n\nОна стоит в обстановке: ${names}. Там она пропадёт — обстановка останется без вида.`;
+  const names = (entries: { name: string }[]) =>
+    entries.map((entry) => `«${entry.name}»`).join(', ');
+  const lines = [`Удалить модель «${name}» безвозвратно?`];
+  if (usage.furniture.length > 0)
+    lines.push(
+      `Она стоит в обстановке: ${names(usage.furniture)}. Там она пропадёт — обстановка останется без вида.`,
+    );
+  if (usage.monsters.length > 0)
+    lines.push(
+      `Она у монстров: ${names(usage.monsters)}. На карте вместо неё у них снова будет карточка.`,
+    );
+  return lines.join('\n\n');
 }
 
 // Где стоит модель, спрашиваем у сервера прямо перед вопросом.

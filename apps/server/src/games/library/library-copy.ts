@@ -9,6 +9,7 @@ import {
   gameLibrary,
   gameLibraryImageFiles,
   gameLibraryModelFiles,
+  voxelModelMeshes,
 } from '../../database/schema/index.js';
 import { linkedRefs, type LibraryLinks } from './library-links.js';
 import { copyNpcImageFiles, copyNpcModelFiles } from './library-npc-sources.js';
@@ -66,7 +67,7 @@ export async function copyToLibrary(
         })),
       );
       await copyImageFiles(tx, gameId, kind, sources);
-      await copyModelFiles(tx, gameId, sources);
+      await copyModelFiles(tx, gameId, kind, sources);
       copied += sources.length;
       for (const stored of links.values())
         next.push(...linkedRefs(kind, stored));
@@ -119,7 +120,7 @@ export async function refreshLibraryEntry(
       ),
     );
   await copyImageFiles(tx, gameId, ref.kind, [source]);
-  await copyModelFiles(tx, gameId, [source]);
+  await copyModelFiles(tx, gameId, ref.kind, [source]);
   const stored = links.get(ref.sourceId);
   const copied = stored
     ? await copyToLibrary(tx, gameId, viewerId, linkedRefs(ref.kind, stored))
@@ -138,7 +139,7 @@ function libraryValues(
     record: source.record,
     links: { ...links },
     image: source.image ? { ...source.image, version: imageVersion } : null,
-    model: source.model ? { ...source.model, version: imageVersion } : null,
+    model: versionedModel(source.model, imageVersion),
     sourceUpdatedAt: source.updatedAt,
   };
 }
@@ -164,17 +165,59 @@ async function notInLibrary(
   return ids.filter((id) => !present.has(id));
 }
 
-// Модель есть только у НПС.
+// Версия копии, от которой растёт обновление: у картинки и модели она общая, но копия
+// без картинки хранит её только в модели — иначе после обновления версия файла модели
+// осталась бы прежней и клиент взял бы старые байты из кеша.
+export function copyVersion(row: {
+  image: { version: number } | null;
+  model: typeof gameLibrary.$inferSelect.model;
+}): number {
+  const model = row.model;
+  const modelVersion = !model
+    ? 0
+    : 'voxels' in model
+      ? (model.mesh?.version ?? 0)
+      : model.version;
+  return Math.max(row.image?.version ?? 0, modelVersion);
+}
+
+// Версия копии модели — общая с картинкой. У снимка модели монстра она встаёт в
+// mesh.version: по ней клиент берёт байты файла из игры (docs/plan/done/monster-models.md).
+function versionedModel(model: LibrarySource['model'], version: number) {
+  if (!model) return null;
+  if (!('voxels' in model)) return { ...model, version };
+  return model.mesh ? { ...model, mesh: { ...model.mesh, version } } : model;
+}
+
+// Модель бывает у НПС (свой файл) и у монстра (файл модели справочника, если он есть).
 async function copyModelFiles(
   tx: DbTransaction,
   gameId: string,
+  kind: GameLibraryKind,
   sources: readonly LibrarySource[],
 ) {
-  await copyNpcModelFiles(
-    tx,
-    gameId,
-    sources.filter((source) => source.model).map((source) => source.sourceId),
-  );
+  if (kind === 'npc')
+    return copyNpcModelFiles(
+      tx,
+      gameId,
+      sources.filter((source) => source.model).map((source) => source.sourceId),
+    );
+  if (kind !== 'monster') return;
+  for (const source of sources) {
+    const model = source.model;
+    if (!model || !('voxels' in model) || !model.mesh) continue;
+    await tx.insert(gameLibraryModelFiles).select(
+      tx
+        .select({
+          gameId: sql<string>`${gameId}::uuid`.as('game_id'),
+          kind: sql<'monster'>`'monster'`.as('kind'),
+          sourceId: sql<string>`${source.sourceId}::uuid`.as('source_id'),
+          data: voxelModelMeshes.data,
+        })
+        .from(voxelModelMeshes)
+        .where(eq(voxelModelMeshes.modelId, model.id)),
+    );
+  }
 }
 
 // Байты картинок копируются внутри базы, не проходя через сервер: они бывают по

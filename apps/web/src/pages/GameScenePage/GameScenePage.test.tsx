@@ -692,6 +692,67 @@ describe('GameScenePage', () => {
     expect(screen.getByRole('radio', { name: 'Игра' })).toBeChecked();
   });
 
+  it('мастер видит число новых записей на вкладке «Журнал», а в ней — записи по раундам', async () => {
+    const at = '2026-10-24T16:00:00Z';
+    const entered = {
+      seq: 3,
+      kind: 'member.entered',
+      actor: { id: 'u2', nickname: 'Боб' },
+      as: null,
+      sceneId: null,
+      createdAt: at,
+      intent: null,
+      result: null,
+    };
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'master' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+      [`GET ${base}/events`]: () => ({
+        status: 200,
+        body: {
+          events: [
+            {
+              ...entered,
+              seq: 2,
+              kind: 'figures.round',
+              actor: { id: 'm1', nickname: 'Я' },
+              result: { scene: { id: 's1', name: 'Пещера' }, count: 1 },
+            },
+            { ...entered, seq: 1, actor: { id: 'u3', nickname: 'Ада' } },
+          ],
+          hasMore: false,
+        },
+      }),
+    });
+    renderScene('m1');
+    const user = userEvent.setup();
+    await screen.findByRole('button', { name: 'Журнал' }, { timeout: 3000 });
+
+    // Запись игрока пришла, пока вкладка закрыта, — на ней число; своё мастер не считает.
+    act(() => {
+      socket.current?.receive(GAME_SOCKET.event, {
+        gameId: GAME.id,
+        event: entered,
+      });
+      socket.current?.receive(GAME_SOCKET.event, {
+        gameId: GAME.id,
+        event: { ...entered, seq: 4, actor: { id: 'm1', nickname: 'Я' } },
+      });
+    });
+    await user.click(
+      await screen.findByRole('button', { name: 'Журнал, новых: 1' }),
+    );
+
+    // «Новый раунд» — разделитель; живые записи сверху первой страницы.
+    expect(await screen.findByText(/Новый раунд ·/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Боб/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Ада/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Журнал' })).toBeInTheDocument();
+  });
+
   it('у игрока нет переключателя режима', async () => {
     stub({
       [`GET ${base}`]: () => ({

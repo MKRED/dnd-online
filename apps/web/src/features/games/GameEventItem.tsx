@@ -1,6 +1,6 @@
 import { Accordion, Code, Stack, Text } from '@mantine/core';
 import type { GameEvent } from 'shared';
-import { gameEventText, gameEventTime } from '../../../features/games';
+import { gameEventText, gameEventTime } from './gameEventText';
 
 // Запись журнала: фраза, время и кто; по раскрытию — номер, вид и данные события как есть,
 // для разбора, что и почему произошло.

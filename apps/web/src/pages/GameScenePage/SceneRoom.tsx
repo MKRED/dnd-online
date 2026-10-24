@@ -3,6 +3,7 @@ import {
   CREATURE_KINDS,
   FIGURE_KINDS,
   FOG_EVENT_KINDS,
+  type GameEvent,
   type GameFigureDragMessage,
   type GameSceneEditMessage,
   type GameSceneFogMessage,
@@ -57,6 +58,10 @@ interface SceneRoomProps {
   dragSenderRef: RefObject<((message: GameFigureDragMessage) => void) | null>;
   // Игроку закрыли сцену, его убрали из игры или игру удалили — в лобби.
   onLeave: () => void;
+  // Мастеру: записи журнала для вкладки «Журнал» (docs/plan/scene-page.md, этап 7) —
+  // новая запись и пропущенные после обрыва (null — перечитать журнал целиком).
+  onEvents?: (events: GameEvent[]) => void;
+  onMissed?: (missed: GameEvent[] | null) => void;
 }
 
 // Комната игры для страницы сцены. Отдельный компонент: входить в комнату можно только
@@ -73,6 +78,8 @@ function SceneRoom({
   onFigureDrag,
   dragSenderRef,
   onLeave,
+  onEvents,
+  onMissed,
 }: SceneRoomProps) {
   const { sendFigureDrag } = useGameRoom(
     gameId,
@@ -83,12 +90,14 @@ function SceneRoom({
         else if (SCENE_CHANGES.has(message.kind)) onReload();
         else if (FIGURE_CHANGES.has(message.kind)) onFigures();
       },
+      onEvent: (event) => onEvents?.([event]),
       onSceneEdit,
       onSceneFog,
       onFigureDrag,
-      onResync: () => {
+      onResync: (missed) => {
         onReload();
         onFigures();
+        onMissed?.(missed);
       },
       onClosed: onLeave,
     },

@@ -50,6 +50,7 @@ import { useScenePlay } from './figures';
 import UnplacedList from './figures/UnplacedList';
 import { playersView, useSceneFog } from './fog';
 import { SceneModeSwitch, useSceneMode } from './mode';
+import { useJournalLive } from './journal';
 import { GameScenePanel } from './panel';
 import { useSceneOpen } from './useSceneOpen';
 import { SCENE_TOOLS, useSceneTools } from './useSceneTools';
@@ -68,6 +69,8 @@ function GameScenePage() {
     useGameScene(id);
   const game = load.kind === 'ready' || load.kind === 'none' ? load.game : null;
   const master = game?.role === 'master';
+  // Мастеру: живые записи журнала для вкладки «Журнал» (этап 7).
+  const journal = useJournalLive(user?.id ?? null);
   const ready = load.kind === 'ready' ? load : null;
   const view = ready?.view ?? null;
   // Туман войны игрока: что видно сейчас и что открыто (у мастера тумана нет).
@@ -214,6 +217,8 @@ function GameScenePage() {
           onFigureDrag={play.ghosts.receive}
           dragSenderRef={play.dragSenderRef}
           onLeave={() => void navigate(lobby)}
+          onEvents={journal.add}
+          onMissed={journal.resync}
         />
       )}
       <div className={classes.scene}>
@@ -364,6 +369,7 @@ function GameScenePage() {
         refs={view?.refs ?? null}
         images={images}
         onOpenCard={windows.open}
+        journal={journal}
         modeSwitch={
           narrow && tools ? (
             <SceneModeSwitch mode={mode} onChange={setMode} compact />

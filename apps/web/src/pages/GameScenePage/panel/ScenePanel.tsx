@@ -1,4 +1,11 @@
-import { ActionIcon, Text, Tooltip, UnstyledButton } from '@mantine/core';
+import {
+  ActionIcon,
+  Badge,
+  Indicator,
+  Text,
+  Tooltip,
+  UnstyledButton,
+} from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import {
   IconArrowLeft,
@@ -16,6 +23,12 @@ export interface PanelTab<T extends string> {
   label: string;
   icon: ReactNode;
   content: ReactNode;
+  // Сколько нового во вкладке (записи журнала); 0 или нет — без числа.
+  badge?: number;
+}
+
+function tabAriaLabel(item: { label: string; badge?: number }) {
+  return item.badge ? `${item.label}, новых: ${item.badge}` : item.label;
 }
 
 interface ScenePanelProps<T extends string> {
@@ -89,18 +102,25 @@ function ScenePanel<T extends string>({
             position="left"
             withArrow
           >
-            <ActionIcon
-              variant={item.value === tab ? 'light' : 'subtle'}
-              color={item.value === tab ? undefined : 'gray'}
-              size="lg"
-              aria-label={item.label}
-              onClick={() => {
-                onTab(item.value);
-                onCollapsed(false);
-              }}
+            <Indicator
+              label={item.badge}
+              size={16}
+              offset={4}
+              disabled={!item.badge}
             >
-              {item.icon}
-            </ActionIcon>
+              <ActionIcon
+                variant={item.value === tab ? 'light' : 'subtle'}
+                color={item.value === tab ? undefined : 'gray'}
+                size="lg"
+                aria-label={tabAriaLabel(item)}
+                onClick={() => {
+                  onTab(item.value);
+                  onCollapsed(false);
+                }}
+              >
+                {item.icon}
+              </ActionIcon>
+            </Indicator>
           </Tooltip>
         ))}
         <div className={classes.railSpacer} />
@@ -159,9 +179,15 @@ function ScenePanel<T extends string>({
                   className={classes.tab}
                   data-active={item.value === current?.value || undefined}
                   aria-pressed={item.value === current?.value}
+                  aria-label={tabAriaLabel(item)}
                   onClick={() => onTab(item.value)}
                 >
                   {item.label}
+                  {!!item.badge && (
+                    <Badge size="xs" circle={item.badge < 10} ml={4}>
+                      {item.badge}
+                    </Badge>
+                  )}
                 </UnstyledButton>
               ))}
             </nav>

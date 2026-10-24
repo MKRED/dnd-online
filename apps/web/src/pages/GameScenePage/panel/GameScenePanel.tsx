@@ -1,10 +1,11 @@
 import {
   IconAdjustmentsHorizontal,
+  IconNotes,
   IconUser,
   IconUsers,
   IconUsersGroup,
 } from '@tabler/icons-react';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import type { GameSceneStatus, MapObjectRefsView } from 'shared';
 import type { ObjectImagePaths } from '../../../features/maps/MapScene';
 import type { CardTarget } from '../cardWindows';
@@ -12,6 +13,7 @@ import type { MapViewState } from '../../../features/maps/mapStateFromChunks';
 import { CreatureCards, type useCreatureCards } from '../creatures';
 import type { useScenePlay } from '../figures';
 import type { SceneFogControls } from '../fog';
+import { JournalTab, type JournalLive } from '../journal';
 import {
   creatureParticipants,
   creaturePortrait,
@@ -26,7 +28,7 @@ import ScenePanel, { type PanelTab } from './ScenePanel';
 import SceneTab from './SceneTab';
 import { usePanelState } from './usePanelState';
 
-type Tab = 'participants' | 'scene' | 'me' | 'party';
+type Tab = 'participants' | 'scene' | 'journal' | 'me' | 'party';
 
 interface GameScenePanelProps {
   gameId: string;
@@ -44,6 +46,8 @@ interface GameScenePanelProps {
   images: ObjectImagePaths;
   // Открыть окно карточки (docs/plan/scene-page.md, этап 4).
   onOpenCard: (target: CardTarget) => void;
+  // Живые записи журнала — мастеру, вкладка «Журнал» (этап 7).
+  journal: JournalLive;
   // Переключатель режима в шапке — только на телефоне; иначе он на сцене.
   modeSwitch: ReactNode;
   // Содержимое «Правки»: свойства инструмента и «Не на сцене».
@@ -66,10 +70,18 @@ function GameScenePanel({
   refs,
   images,
   onOpenCard,
+  journal,
   modeSwitch,
   editBody,
 }: GameScenePanelProps) {
   const panel = usePanelState<Tab>(master ? 'participants' : 'me');
+  // Открытая вкладка «Журнал» показывает всё пришедшее — число новых гаснет.
+  const journalShown =
+    master && !editing && !panel.collapsed && panel.tab === 'journal';
+  const { markSeen } = journal;
+  useEffect(() => {
+    if (journalShown) markSeen();
+  }, [journalShown, markSeen]);
   const figures = play.figures.figures;
   const tool = play.tool;
   const creatures = master ? (cards.creatures.creatures?.creatures ?? []) : [];
@@ -173,6 +185,15 @@ function GameScenePanel({
           fog={fog}
         />
       ),
+    });
+  }
+  if (master) {
+    tabs.push({
+      value: 'journal',
+      label: 'Журнал',
+      icon: <IconNotes size={20} />,
+      badge: journal.unread,
+      content: <JournalTab gameId={gameId} journal={journal} />,
     });
   }
 

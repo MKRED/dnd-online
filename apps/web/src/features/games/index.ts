@@ -8,3 +8,6 @@ export * from './gameScenesApi';
 export * from './gameFiguresApi';
 export * from './gameStateApi';
 export { default as CreateGameModal } from './CreateGameModal';
+export * from './useGameJournal';
+export { default as GameEventItem } from './GameEventItem';
+export { default as GameJournalEntries } from './GameJournalEntries';

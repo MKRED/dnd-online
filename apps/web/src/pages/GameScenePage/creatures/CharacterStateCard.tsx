@@ -18,6 +18,8 @@ interface CharacterStateCardProps {
   bare?: boolean;
   // Что показать под состоянием тем же листом (вкладки окна) — без второй загрузки.
   below?: (character: Character) => ReactNode;
+  // Герой отряда (docs/plan/scene-page.md, этап 5): всё видно, ничего не правится.
+  readOnly?: boolean;
 }
 
 // Карточка персонажа игрока в панели сцены (docs/plan/done/game.md, этап 8): тем, кто его
@@ -29,6 +31,7 @@ function CharacterStateCard({
   onOpenSheet,
   bare,
   below,
+  readOnly,
 }: CharacterStateCardProps) {
   const { character, setCharacter, change, busy, error } = useGameCharacter(
     gameId,
@@ -62,14 +65,32 @@ function CharacterStateCard({
           </Button>
         </Group>
       )}
-      <HitPointsControls
-        current={character.hitPointsCurrent}
-        max={character.hitPointsMax}
-        temp={character.hitPointsTemp}
-        busy={busy}
-        onChange={(next) => void change(next)}
-      />
-      {saves && (
+      {readOnly ? (
+        <Text fw={700} size="lg">
+          ХП {character.hitPointsCurrent} / {character.hitPointsMax}
+          {character.hitPointsTemp > 0 && (
+            <Text span size="sm" c="dimmed" fw={400}>
+              {' '}
+              +{character.hitPointsTemp} временных
+            </Text>
+          )}
+        </Text>
+      ) : (
+        <HitPointsControls
+          current={character.hitPointsCurrent}
+          max={character.hitPointsMax}
+          temp={character.hitPointsTemp}
+          busy={busy}
+          onChange={(next) => void change(next)}
+        />
+      )}
+      {saves && readOnly && (
+        <Text size="sm">
+          Спасброски от смерти: успехи {character.deathSaveSuccesses}, провалы{' '}
+          {character.deathSaveFailures}
+        </Text>
+      )}
+      {saves && !readOnly && (
         <DeathSavesEditor
           successes={character.deathSaveSuccesses}
           failures={character.deathSaveFailures}
@@ -93,11 +114,14 @@ function CharacterStateCard({
                 level={level}
                 slots={slot}
                 busy={busy}
-                onSpend={(expended) =>
-                  void change({
-                    kind: 'spell_slots',
-                    expended: { [level]: expended },
-                  })
+                onSpend={
+                  readOnly
+                    ? undefined
+                    : (expended) =>
+                        void change({
+                          kind: 'spell_slots',
+                          expended: { [level]: expended },
+                        })
                 }
               />
             </Group>
@@ -108,7 +132,11 @@ function CharacterStateCard({
         effects={character.effects}
         apiBase={`${gameCharacterBase(gameId, characterId)}/effects`}
         owner="character"
-        onChange={(effects) => setCharacter({ ...character, effects })}
+        onChange={
+          readOnly
+            ? undefined
+            : (effects) => setCharacter({ ...character, effects })
+        }
       />
       {error && <Alert color="red">{error}</Alert>}
       {below?.(character)}

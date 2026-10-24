@@ -1,4 +1,9 @@
-import { IconAdjustmentsHorizontal, IconUsers } from '@tabler/icons-react';
+import {
+  IconAdjustmentsHorizontal,
+  IconUser,
+  IconUsers,
+  IconUsersGroup,
+} from '@tabler/icons-react';
 import type { ReactNode } from 'react';
 import type { GameSceneStatus, MapObjectRefsView } from 'shared';
 import type { ObjectImagePaths } from '../../../features/maps/MapScene';
@@ -12,6 +17,8 @@ import {
   creaturePortrait,
   heroParticipants,
   ParticipantsTab,
+  PartyTab,
+  PlayerCharacterTab,
 } from '../participants';
 import type { useSceneOpen } from '../useSceneOpen';
 import HelpButton from './HelpButton';
@@ -19,7 +26,7 @@ import ScenePanel, { type PanelTab } from './ScenePanel';
 import SceneTab from './SceneTab';
 import { usePanelState } from './usePanelState';
 
-type Tab = 'participants' | 'scene';
+type Tab = 'participants' | 'scene' | 'me' | 'party';
 
 interface GameScenePanelProps {
   gameId: string;
@@ -62,7 +69,7 @@ function GameScenePanel({
   modeSwitch,
   editBody,
 }: GameScenePanelProps) {
-  const panel = usePanelState<Tab>('participants');
+  const panel = usePanelState<Tab>(master ? 'participants' : 'me');
   const figures = play.figures.figures;
   const tool = play.tool;
   const creatures = master ? (cards.creatures.creatures?.creatures ?? []) : [];
@@ -110,14 +117,48 @@ function GameScenePanel({
       }
     />
   );
-  const tabs: PanelTab<Tab>[] = [
-    {
-      value: 'participants',
-      label: 'Участники',
-      icon: <IconUsers size={20} />,
-      content: participants,
-    },
-  ];
+  // Игрок (docs/plan/scene-page.md, этап 5, вариант А): «Персонаж» — свои, кого он водит,
+  // «Отряд» — другие герои, только чтение. НПС и врагов у игрока в панели нет.
+  const heroes = figures?.figures ?? [];
+  const tabs: PanelTab<Tab>[] = master
+    ? [
+        {
+          value: 'participants',
+          label: 'Участники',
+          icon: <IconUsers size={20} />,
+          content: participants,
+        },
+      ]
+    : [
+        {
+          value: 'me',
+          label: 'Персонаж',
+          icon: <IconUser size={20} />,
+          content: (
+            <PlayerCharacterTab
+              gameId={gameId}
+              own={heroes.filter((f) => f.canMove)}
+              version={cards.version}
+              tool={tool}
+              onOpenCard={onOpenCard}
+            />
+          ),
+        },
+        {
+          value: 'party',
+          label: 'Отряд',
+          icon: <IconUsersGroup size={20} />,
+          content: (
+            <PartyTab
+              party={heroParticipants(
+                heroes.filter((f) => !f.canMove),
+                gameId,
+              )}
+              onOpenCard={onOpenCard}
+            />
+          ),
+        },
+      ];
   if (master && scene) {
     tabs.push({
       value: 'scene',

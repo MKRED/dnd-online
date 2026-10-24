@@ -17,6 +17,8 @@ interface CharacterCardBodyProps {
   figure: GameFigure | null;
   onAllowance?: (change: 'refresh' | 'dash') => void;
   busy: boolean;
+  // Герой отряда у игрока: только чтение (docs/plan/scene-page.md, этап 5).
+  readOnly: boolean;
 }
 
 // Окно персонажа игрока: состояние сверху (то же, что в панели), под ним вкладки листа
@@ -28,6 +30,7 @@ export function CharacterCardBody({
   figure,
   onAllowance,
   busy,
+  readOnly,
 }: CharacterCardBodyProps) {
   return (
     <CharacterStateCard
@@ -36,6 +39,7 @@ export function CharacterCardBody({
       version={version}
       onOpenSheet={() => undefined}
       bare
+      readOnly={readOnly}
       below={(character) => (
         <Stack gap="sm">
           {figure && (

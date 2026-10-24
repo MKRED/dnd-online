@@ -55,7 +55,8 @@ function CardWindows({
       return {
         window,
         title: name,
-        subtitle: 'Герой',
+        subtitle:
+          !master && !figure?.canMove ? 'Отряд · только чтение' : 'Герой',
         portrait: (
           <Portrait
             image={figure ? figureImagePath(gameId, figure) : null}
@@ -76,6 +77,7 @@ function CardWindows({
                 : undefined
             }
             busy={figureTool.busy}
+            readOnly={!master && !figure?.canMove}
           />
         ),
       };

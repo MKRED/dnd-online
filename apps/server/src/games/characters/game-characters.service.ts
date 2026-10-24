@@ -26,7 +26,8 @@ import {
 } from './game-character-state.js';
 
 // Персонажи игроков в игре (docs/plan/done/game.md, этап 8): лист, хиты, ячейки и эффекты.
-// Читает и правит тот же круг, что водит фигурку: мастер, владелец и управляющий. Каждая
+// Правит тот же круг, что водит фигурку: мастер, владелец и управляющий; читает ещё и
+// отряд — участники со своими персонажами на местах (docs/plan/scene-page.md, этап 5). Каждая
 // правка — транзакция под блокировкой игры, запись журнала и рассылка.
 @Injectable()
 export class GameCharactersService {
@@ -45,13 +46,16 @@ export class GameCharactersService {
     const t0 = Date.now();
     const { db } = this.databaseService;
     try {
-      const { game } = await findGameAccess(db, gameId, userId);
+      const { game, member } = await findGameAccess(db, gameId, userId);
+      // Член отряда (участник со своим персонажем на месте) читает листы героев.
+      const party = member?.characterId != null;
       const seated = await findSeatedCharacter(
         db,
         gameId,
         characterId,
         userId,
         game.masterId,
+        party,
       );
       const character = await readGameCharacter(db, gameId, seated);
       this.logger.debug(

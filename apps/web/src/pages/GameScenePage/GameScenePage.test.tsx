@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -240,7 +240,10 @@ describe('GameScenePage', () => {
       [`GET ${base}/scene/figures`]: () => ({ status: 200, body: figures }),
     });
     renderScene('u3');
-    expect(await screen.findByRole('button', { name: /^Лира/ })).toBeDisabled();
+    // Чужая фигурка — в «Отряде», своей на вкладке «Персонаж» нет.
+    expect(
+      await screen.findByText(/Вашего персонажа нет на сцене/),
+    ).toBeInTheDocument();
     figures = figuresOf(4, [{ ...LIRA, ownerId: 'u2', canMove: true }]);
     act(() =>
       socket.current?.receive(GAME_SOCKET.changed, {
@@ -249,9 +252,9 @@ describe('GameScenePage', () => {
         kind: 'seat.controller',
       }),
     );
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: /^Лира/ })).toBeEnabled(),
-    );
+    expect(
+      await screen.findByRole('button', { name: 'Ходить' }),
+    ).toBeInTheDocument();
   });
 
   it('чужое перетаскивание видно тенью, пока фигурку не отпустили', async () => {
@@ -303,16 +306,25 @@ describe('GameScenePage', () => {
     renderScene('u2');
     const user = userEvent.setup();
 
-    const own = await screen.findByRole('button', { name: /^Лира/ });
-    expect(screen.getByRole('button', { name: /^Борн/ })).toBeDisabled();
+    // «Персонаж» (docs/plan/scene-page.md, этап 5): свой крупно и «Ходить».
+    expect(
+      await screen.findByRole('button', { name: 'Ходить' }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Новый раунд' }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /Рывок/ }),
     ).not.toBeInTheDocument();
-    await user.click(own);
-    expect(own).toHaveAttribute('aria-pressed', 'true');
+    // Чужой герой — в «Отряде», щелчок открывает карточку, а не выбирает.
+    await user.click(screen.getByRole('button', { name: 'Отряд' }));
+    expect(screen.getByRole('button', { name: 'Борн' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Персонаж' }));
+    await user.click(screen.getByRole('button', { name: 'Ходить' }));
+    expect(screen.getByRole('button', { name: /Идёт/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     // Подсказка и запас — плашкой на сцене, а не в панели.
     const plaque = screen.getByRole('status', { name: 'Выбрано на сцене' });
     expect(

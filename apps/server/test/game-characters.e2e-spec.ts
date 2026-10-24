@@ -80,7 +80,7 @@ describe('game characters (e2e)', () => {
 
   const sheetOf = (res: request.Response) => res.body as Character;
 
-  it('лист из игры видят мастер, владелец и управляющий', async () => {
+  it('лист из игры видят мастер, владелец, управляющий и отряд; правят — без отряда', async () => {
     const g = await setup('gch_read');
     for (const agent of [g.master.agent, g.player.agent]) {
       const res = await agent.get(g.url).expect(200);
@@ -91,8 +91,12 @@ describe('game characters (e2e)', () => {
         effects: [],
       });
     }
-    await g.second.agent.get(g.url).expect(403);
+    // Второй игрок сидит в игре своим персонажем — член отряда, лист читает.
+    await g.second.agent.get(g.url).expect(200);
     await g.stranger.agent.get(g.url).expect(403);
+    // Освободил место — уже не в отряде.
+    await g.second.agent.delete(`/api/games/${g.gameId}/seats/me`).expect(200);
+    await g.second.agent.get(g.url).expect(403);
     await t.anonymous().get(g.url).expect(401);
     // Персонажа нет на местах этой игры.
     const other = idOf(

@@ -139,8 +139,12 @@ describe('game figures (e2e)', () => {
     // Чужой фигуркой второй игрок не ходит; ему точки не хватило — список у мастера.
     expect(forSecond.figures).toHaveLength(1);
     expect(forSecond.figures[0].canMove).toBe(false);
-    // Чужие хиты — только меткой здоровья, без чисел.
-    expect(forSecond.figures[0].hitPoints).toBeNull();
+    // Хиты героев видит весь отряд (docs/plan/scene-page.md, этап 5).
+    expect(forSecond.figures[0].hitPoints).toEqual({
+      current: 12,
+      max: 12,
+      temp: 0,
+    });
     expect(forPlayer.figures[0].hitPoints).toEqual({
       current: 12,
       max: 12,

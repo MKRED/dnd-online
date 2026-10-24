@@ -110,7 +110,9 @@ export async function readSceneFigures(
         dashes: figure.dashes,
         canMove,
         health: creatureHealth(hp),
-        hitPoints: canMove ? { current: hp.current, max: hp.max, temp } : null,
+        // Хиты героев видит весь отряд и мастер — все, кому фигурки вообще показывают
+        // (docs/plan/scene-page.md, этап 5).
+        hitPoints: { current: hp.current, max: hp.max, temp },
       };
     },
   );

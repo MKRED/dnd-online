@@ -17,13 +17,16 @@ export interface SeatedCharacter {
 }
 
 // Персонаж на месте в этой игре. Кто его ведёт — тот же круг, что водит фигурку: мастер,
-// владелец и управляющий (docs/plan/done/game.md, «Состояние существ»).
+// владелец и управляющий (docs/plan/done/game.md, «Состояние существ»). party — смотрящий
+// сам сидит в игре с персонажем: член отряда читает лист любого героя, но не правит его
+// (решено с пользователем 2026-10-24, docs/plan/scene-page.md, этап 5).
 export async function findSeatedCharacter(
   db: Db,
   gameId: string,
   characterId: string,
   viewerId: string,
   masterId: string,
+  party = false,
 ): Promise<SeatedCharacter> {
   const [row] = await db
     .select({
@@ -42,7 +45,10 @@ export async function findSeatedCharacter(
     )
     .limit(1);
   if (!row) throw new NotFoundException(GAME_CHARACTER_NOT_FOUND);
-  if (!canMoveFigure(viewerId, masterId, row.ownerId, row.controllerId)) {
+  if (
+    !party &&
+    !canMoveFigure(viewerId, masterId, row.ownerId, row.controllerId)
+  ) {
     throw new ForbiddenException(GAME_CHARACTER_NOT_YOURS);
   }
   return row;

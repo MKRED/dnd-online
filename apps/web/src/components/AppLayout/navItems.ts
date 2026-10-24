@@ -2,7 +2,6 @@ import {
   IconArmchair,
   IconBackpack,
   IconBox,
-  IconCube,
   IconFlame,
   IconHome,
   IconMap,
@@ -11,6 +10,7 @@ import {
   IconStar,
   IconSwords,
   IconUsers,
+  IconWall,
   type Icon,
 } from '@tabler/icons-react';
 import { CATALOG_SECTIONS, type CatalogSection } from '../../features/catalog';
@@ -32,7 +32,7 @@ const CATALOG_ICONS: Record<CatalogSection, Icon> = {
   abilities: IconSparkles,
   effects: IconFlame,
   monsters: IconSkull,
-  blocks: IconCube,
+  blocks: IconWall,
   models: IconBox,
   furniture: IconArmchair,
 };

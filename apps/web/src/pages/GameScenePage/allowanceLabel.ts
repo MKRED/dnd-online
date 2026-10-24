@@ -12,3 +12,18 @@ export function allowanceLabel(m: Movement): string {
     ? walk
     : `${walk}, лазание ${left.climb} из ${total(m.climb)}`;
 }
+
+// Запас строкой: в бою — «осталось 20 из 30 фт», вне боя он не тратится — «до 30 фт за
+// ход» (docs/dnd/movement.md, «Free and tactical modes»).
+export function movementText(m: Movement, free: boolean): string {
+  if (!free) return `осталось ${allowanceLabel(m)}`;
+  const walk = `до ${m.speed} фт за ход`;
+  return m.climb === null ? walk : `${walk}, лазание до ${m.climb}`;
+}
+
+// То же коротко для телефона: «5 / 40 фт» или «30 фт/ход».
+export function shortMovementText(m: Movement, free: boolean): string {
+  return free
+    ? `${m.speed} фт/ход`
+    : `${movementAllowance(m).walk} / ${m.speed * (1 + m.dashes)} фт`;
+}

@@ -1,5 +1,4 @@
-import { Alert, Button, Group, Stack, Text, Tooltip } from '@mantine/core';
-import { IconRefresh } from '@tabler/icons-react';
+import { Alert, Stack, Text } from '@mantine/core';
 import { Fragment, type ReactNode } from 'react';
 import ParticipantRow, { type Participant } from './ParticipantRow';
 import classes from './participants.module.css';
@@ -14,9 +13,8 @@ interface ParticipantsTabProps {
   // Двойной щелчок по строке — окно карточки (docs/plan/done/scene-page.md, этап 4).
   onOpenHero?: (key: string) => void;
   onOpenCreature?: (key: string) => void;
-  // «Новый раунд» — только мастеру.
-  onRound?: () => void;
-  busy: boolean;
+  // Бой мастера: «Начать бой» или раунд, «Новый раунд» и «Закончить бой» (combat/).
+  combat?: ReactNode;
   errors: readonly (string | null)[];
   // Состояние выбранного: хиты, эффекты, запас — внизу вкладки.
   selected: ReactNode;
@@ -32,8 +30,7 @@ function ParticipantsTab({
   onSelectCreature,
   onOpenHero,
   onOpenCreature,
-  onRound,
-  busy,
+  combat,
   errors,
   selected,
 }: ParticipantsTabProps) {
@@ -41,21 +38,7 @@ function ParticipantsTab({
   return (
     <>
       <Stack gap={2}>
-        {onRound && !empty && (
-          <Group justify="flex-end" pb={4}>
-            <Tooltip label="Запас движения всех снова полный" withArrow>
-              <Button
-                size="xs"
-                variant="default"
-                leftSection={<IconRefresh size={15} />}
-                onClick={onRound}
-                disabled={busy}
-              >
-                Новый раунд
-              </Button>
-            </Tooltip>
-          </Group>
-        )}
+        {!empty && combat}
         {empty && (
           <Text size="sm" c="dimmed" p="xs">
             На сцене никого нет. Персонажи встают на стартовые точки, когда

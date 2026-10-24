@@ -43,10 +43,12 @@ describe('game creature moves (e2e)', () => {
 
   // Сцена из карты фикстуры: поле 8×8, старт [0,1,0] с фигуркой игрока, объект 2 — гоблин
   // на [1,1,0] (Скорость 30), 3 — НПС «Трактирщик» на [2,1,0]. Сцена активная и открыта.
-  // prepare — правки карты и каталога до того, как сцена скопирует их.
+  // prepare — правки карты и каталога до того, как сцена скопирует их. Режим хода —
+  // тактический (бой), если не просили свободный.
   async function started(
     prefix: string,
     prepare?: (g: Awaited<ReturnType<typeof createSceneGame>>) => Promise<void>,
+    mode: 'free' | 'tactical' = 'tactical',
   ) {
     const g = await createSceneGame(user, png, prefix);
     const m = g.master.agent;
@@ -60,6 +62,12 @@ describe('game creature moves (e2e)', () => {
       .put(`/api/games/${g.gameId}/scenes/open`)
       .send({ open: true })
       .expect(200);
+    if (mode === 'tactical') {
+      await m
+        .put(`/api/games/${g.gameId}/figures/mode`)
+        .send({ mode })
+        .expect(200);
+    }
     const url = `/api/games/${g.gameId}/scene/creatures`;
     const move = (
       agent: request.Agent,
@@ -261,6 +269,35 @@ describe('game creature moves (e2e)', () => {
     expect(await lastEvent(g.m, g.gameId)).toMatchObject({
       kind: 'creature.refreshed',
       result: { creature: { objectId: 2, name: 'Гоблин' } },
+    });
+  });
+
+  it('в свободном режиме запас существа не тратится, «Рывка» нет; переход в бой обновляет запас', async () => {
+    const g = await started('gcm_free', undefined, 'free');
+    const moved = await g.move(g.m, 2, [1, 1, 4]);
+    expect(movementOf(moved, 2)).toMatchObject({ moved: 0, dashes: 0 });
+    expect(await lastEvent(g.m, g.gameId)).toMatchObject({
+      kind: 'creature.moved',
+      result: { cost: 20, left: 30 },
+    });
+    // Сразу ещё 15 футов; но не дальше Скорости за один ход.
+    await g.move(g.m, 2, [1, 1, 7]);
+    await g.move(g.m, 2, [1, 1, 0], 409);
+    await g.m.post(`${g.url}/2/dash`).expect(409);
+
+    await g.m
+      .put(`/api/games/${g.gameId}/figures/mode`)
+      .send({ mode: 'tactical' })
+      .expect(200);
+    expect(movementOf(await g.move(g.m, 2, [1, 1, 4]), 2)?.moved).toBe(15);
+    await g.m
+      .put(`/api/games/${g.gameId}/figures/mode`)
+      .send({ mode: 'free' })
+      .expect(200);
+    expect(movementOf(await g.m.get(g.url).expect(200), 2)?.moved).toBe(0);
+    expect(await lastEvent(g.m, g.gameId)).toMatchObject({
+      kind: 'game.mode',
+      result: { mode: 'free', creatures: 1 },
     });
   });
 

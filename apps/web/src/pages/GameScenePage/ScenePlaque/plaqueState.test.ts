@@ -32,6 +32,17 @@ describe('plaqueState', () => {
     ).toBeNull();
   });
 
+  it('вне боя запас не тратится — Скорость на каждый ход', () => {
+    expect(
+      plaqueState({
+        ...none,
+        figure: lira,
+        creatureMoving: false,
+        freeMove: true,
+      }),
+    ).toMatchObject({ left: 'до 30 фт за ход', short: '30 фт/ход' });
+  });
+
   it('поверженное существо не ходит', () => {
     expect(
       plaqueState({

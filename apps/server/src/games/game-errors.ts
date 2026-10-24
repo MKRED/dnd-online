@@ -56,6 +56,11 @@ export const FIGURE_NOT_FOUND = 'Фигурки нет на сцене';
 export const FIGURE_NOT_YOURS = 'Эту фигурку водит другой игрок';
 export const MASTER_ONLY_FIGURES =
   'Ставить фигурки и менять их запас движения может только мастер';
+export const MASTER_ONLY_MOVE_MODE = 'Режим хода меняет только мастер';
+export const ROUND_ONLY_IN_COMBAT =
+  'Новый раунд — только в тактическом режиме: в свободном запас и так полный после каждого хода';
+export const DASH_ONLY_IN_COMBAT =
+  'Рывок — только в тактическом режиме: в свободном запас и так полный после каждого хода';
 export const FIGURE_CANT_REACH =
   'Туда не дойти: путь перекрыт или не хватает движения';
 export const CREATURE_NOT_FOUND = 'Такого существа на сцене нет';

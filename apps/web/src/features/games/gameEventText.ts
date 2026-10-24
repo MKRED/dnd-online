@@ -109,6 +109,13 @@ export function gameEventText(event: GameEvent): string {
         ? `${title}: запас движения снова полный у фигурок: ${count}, у монстров и НПС: ${creatures}`
         : `${title}: запас движения снова полный у фигурок: ${count}`;
     }
+    case 'game.mode': {
+      const { count, creatures } = event.result;
+      const fresh = creatures
+        ? `запас движения снова полный у фигурок: ${count}, у монстров и НПС: ${creatures}`
+        : `запас движения снова полный у фигурок: ${count}`;
+      return `${modeTitle(event)}: ${fresh}`;
+    }
     case 'figure.refreshed':
       return `Запас движения обновлён: ${event.result.character.name}`;
     case 'figure.dashed': {
@@ -210,6 +217,22 @@ export function gameEventTime(iso: string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+// Начало и конец боя (docs/dnd/movement.md, «Free and tactical modes»).
+export function modeTitle(
+  event: Extract<GameEvent, { kind: 'game.mode' }>,
+): string {
+  return event.result.mode === 'tactical'
+    ? `Бой начался · раунд ${event.result.round ?? 1}`
+    : 'Бой окончен';
+}
+
+// Запись-разделитель журнала на сцене: раунд, начало или конец боя; null — обычная строка.
+export function dividerTitle(event: GameEvent): string | null {
+  if (event.kind === 'figures.round') return roundTitle(event);
+  if (event.kind === 'game.mode') return modeTitle(event);
+  return null;
 }
 
 // «Раунд 3» — номер есть у записей с 2026-10-24 (docs/plan/done/scene-page.md, этап 7), у старых —

@@ -6,6 +6,7 @@ import {
   standHeight,
   type GameFigure,
   type GameFigures,
+  type GameMoveMode,
   type MapObjectRefsView,
   type Occupant,
   type Reach,
@@ -198,6 +199,13 @@ export function useFigureTool({
     selectedId,
     select: setSelectedId,
     round: () => run(api.round, 'Не удалось начать новый раунд'),
+    mode: (mode: GameMoveMode) =>
+      run(
+        () => api.mode(mode),
+        mode === 'tactical'
+          ? 'Не удалось начать бой'
+          : 'Не удалось закончить бой',
+      ),
     allowance: (characterId: string, change: 'refresh' | 'dash') =>
       run(
         () => api.allowance(characterId, change),

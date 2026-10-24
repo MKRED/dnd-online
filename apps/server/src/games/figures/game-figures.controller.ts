@@ -14,7 +14,11 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthGuard, type AuthenticatedRequest } from '../../auth/auth.guard.js';
-import { MoveFigureDto, PlaceFigureDto } from './dto/figure.dto.js';
+import {
+  MoveFigureDto,
+  MoveModeDto,
+  PlaceFigureDto,
+} from './dto/figure.dto.js';
 import { MODEL_CONTENT_TYPES } from '../../character-models/model-content-types.js';
 import { GameFiguresReadService } from './game-figures-read.service.js';
 import { GameFiguresService } from './game-figures.service.js';
@@ -44,6 +48,16 @@ export class GameFiguresController {
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.figuresService.round(req.user.sub, id);
+  }
+
+  // Режим хода игры: свободный или тактический (docs/dnd/movement.md). Только мастер.
+  @Put('figures/mode')
+  mode(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: MoveModeDto,
+  ) {
+    return this.figuresService.mode(req.user.sub, id, dto.mode);
   }
 
   @Post('figures/:characterId/move')

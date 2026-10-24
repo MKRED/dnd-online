@@ -336,6 +336,38 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'game.mode',
+        as: { kind: 'master' },
+        intent: { mode: 'tactical' },
+        result: {
+          mode: 'tactical',
+          scene: lair,
+          count: 2,
+          creatures: 3,
+          round: 1,
+        },
+      },
+      'Бой начался · раунд 1: запас движения снова полный у фигурок: 2, у монстров и НПС: 3',
+    ],
+    [
+      {
+        ...base,
+        kind: 'game.mode',
+        as: { kind: 'master' },
+        intent: { mode: 'free' },
+        result: {
+          mode: 'free',
+          scene: lair,
+          count: 2,
+          creatures: 0,
+          round: null,
+        },
+      },
+      'Бой окончен: запас движения снова полный у фигурок: 2',
+    ],
+    [
+      {
+        ...base,
         kind: 'figure.refreshed',
         as: { kind: 'master' },
         intent: { characterId: 'c1' },

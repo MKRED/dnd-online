@@ -1,24 +1,29 @@
 import { ActionIcon, Group, Text, Tooltip } from '@mantine/core';
 import { IconRefresh, IconRun } from '@tabler/icons-react';
 import type { GameFigure } from 'shared';
-import { allowanceLabel } from '../allowanceLabel';
+import { movementText } from '../allowanceLabel';
+import { useFreeMove } from '../combat/MoveModeContext';
 
 interface MovementRowProps {
   name: string;
   movement: Pick<GameFigure, 'speed' | 'climb' | 'moved' | 'dashes'>;
-  // «Обновить запас» и «Рывок» — только у мастера (docs/plan/done/creature-movement.md).
+  // «Обновить запас» и «Рывок» — только у мастера (docs/plan/done/creature-movement.md) и
+  // только в бою: вне боя запас и так полный после каждого хода.
   onAllowance?: (change: 'refresh' | 'dash') => void;
   busy: boolean;
 }
 
-// Запас движения выбранного: «Осталось 20 из 30 фт» и, у мастера, кнопки запаса.
+// Запас движения выбранного: «Осталось 20 из 30 фт» (вне боя — «До 30 фт за ход») и, у
+// мастера в бою, кнопки запаса.
 function MovementRow({ name, movement, onAllowance, busy }: MovementRowProps) {
+  const free = useFreeMove();
+  const text = movementText(movement, free);
   return (
     <Group gap={4} wrap="nowrap" justify="space-between">
       <Text size="sm" c="dimmed">
-        Осталось {allowanceLabel(movement)}
+        {text.charAt(0).toUpperCase() + text.slice(1)}
       </Text>
-      {onAllowance && (
+      {onAllowance && !free && (
         <Group gap={2} wrap="nowrap">
           <Tooltip label="Обновить запас: новый ход" withArrow>
             <ActionIcon

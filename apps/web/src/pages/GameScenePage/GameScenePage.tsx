@@ -44,7 +44,8 @@ import SceneToolsPanel from './SceneToolsPanel';
 import { useGameScene } from './useGameScene';
 import ScenePlaque from './ScenePlaque/ScenePlaque';
 import { plaqueState } from './ScenePlaque/plaqueState';
-import { FullSheetDrawer, useCreatureCards } from './creatures';
+import { CardWindows, useCardWindows } from './cardWindows';
+import { useCreatureCards } from './creatures';
 import { useScenePlay } from './figures';
 import UnplacedList from './figures/UnplacedList';
 import { playersView, useSceneFog } from './fog';
@@ -97,6 +98,8 @@ function GameScenePage() {
   const narrow = useMediaQuery('(max-width: 48em)');
   // Клетка под курсором — и сцене, и панели инструмента (docs/plan/scene-page.md, этап 3).
   const [hover] = useState(createHoverStore);
+  // Открытые окна карточек существ (docs/plan/scene-page.md, этап 4).
+  const windows = useCardWindows();
   const [searchParams] = useSearchParams();
   // Один объект путей на игру: новый перестраивал бы объекты сцены.
   const images = useMemo(() => sceneObjectImages(id), [id]);
@@ -301,6 +304,19 @@ function GameScenePage() {
             onChange={(y) => setCutY(y >= bounds.max[1] ? null : y)}
           />
         )}
+        {ready && (
+          <CardWindows
+            gameId={id}
+            master={master}
+            windows={windows}
+            figures={figures.figures}
+            figureTool={play.tool}
+            cards={cards}
+            state={state}
+            refs={view?.refs ?? null}
+            images={images}
+          />
+        )}
         {/* Готовность сцены не видна глазу: её ждёт агент в браузере перед снимком,
             а скринридер читает её как статус. */}
         {view && (
@@ -322,6 +338,9 @@ function GameScenePage() {
         fog={sceneFog}
         play={play}
         cards={cards}
+        refs={view?.refs ?? null}
+        images={images}
+        onOpenCard={windows.open}
         modeSwitch={
           narrow && tools ? (
             <SceneModeSwitch mode={mode} onChange={setMode} compact />
@@ -349,11 +368,6 @@ function GameScenePage() {
             </Stack>
           )
         }
-      />
-      <FullSheetDrawer
-        gameId={id}
-        target={cards.sheet}
-        onClose={() => cards.setSheet(null)}
       />
     </div>
   );

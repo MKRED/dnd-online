@@ -1,2 +1,7 @@
 export { default as ParticipantsTab } from './ParticipantsTab';
-export { creatureParticipants, heroParticipants } from './participantList';
+export { default as Portrait } from './Portrait';
+export {
+  creatureParticipants,
+  creaturePortrait,
+  heroParticipants,
+} from './participantList';

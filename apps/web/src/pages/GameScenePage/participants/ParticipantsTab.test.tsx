@@ -36,7 +36,7 @@ const objectOf = (id: number) => objects.get(id) as MapObject | undefined;
 
 describe('участники', () => {
   it('существа: хиты, метка, запас с «Рывком», скрытые помечены; поверженный без запаса', () => {
-    const [g, o] = creatureParticipants([goblin, orc], objectOf);
+    const [g, o] = creatureParticipants([goblin, orc], objectOf, () => null);
     expect(g).toMatchObject({
       kind: 'monster',
       hitPoints: { current: 2, max: 7 },
@@ -48,29 +48,32 @@ describe('участники', () => {
 
   it('у игрока существ нет: без состояния строки не будет', () => {
     expect(
-      creatureParticipants([{ ...goblin, state: null }], objectOf),
+      creatureParticipants([{ ...goblin, state: null }], objectOf, () => null),
     ).toEqual([]);
   });
 
   it('чужой герой — без чисел и запаса, выбрать нельзя', () => {
-    const [hero] = heroParticipants([
-      {
-        character: { id: 'c1', name: 'Лира' },
-        ownerId: 'u2',
-        at: [0, 1, 0],
-        facing: 0,
-        size: 'medium',
-        image: null,
-        model: null,
-        speed: 30,
-        climb: null,
-        moved: 0,
-        dashes: 0,
-        canMove: false,
-        health: 'bloodied',
-        hitPoints: null,
-      },
-    ]);
+    const [hero] = heroParticipants(
+      [
+        {
+          character: { id: 'c1', name: 'Лира' },
+          ownerId: 'u2',
+          at: [0, 1, 0],
+          facing: 0,
+          size: 'medium',
+          image: null,
+          model: null,
+          speed: 30,
+          climb: null,
+          moved: 0,
+          dashes: 0,
+          canMove: false,
+          health: 'bloodied',
+          hitPoints: null,
+        },
+      ],
+      'g1',
+    );
     expect(hero).toMatchObject({
       hitPoints: null,
       feetLeft: null,
@@ -84,7 +87,7 @@ describe('участники', () => {
     renderWithProviders(
       <ParticipantsTab
         heroes={[]}
-        creatures={creatureParticipants([goblin, orc], objectOf)}
+        creatures={creatureParticipants([goblin, orc], objectOf, () => null)}
         selectedKey={null}
         onSelectHero={() => {}}
         onSelectCreature={onSelectCreature}

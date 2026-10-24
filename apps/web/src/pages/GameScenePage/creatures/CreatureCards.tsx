@@ -3,6 +3,7 @@ import type { GameFigure } from 'shared';
 import CharacterStateCard from './CharacterStateCard';
 import CreatureStateCard from './CreatureStateCard';
 import MovementRow from './MovementRow';
+import type { CardTarget } from '../cardWindows/useCardWindows';
 import type { useCreatureCards } from './useCreatureCards';
 
 interface CreatureCardsProps {
@@ -14,11 +15,13 @@ interface CreatureCardsProps {
   // Запас фигурки у мастера: обновить или «Рывок».
   onFigureAllowance: (characterId: string, change: 'refresh' | 'dash') => void;
   figureBusy: boolean;
+  // «Карточка» — окно с листом (docs/plan/scene-page.md, этап 4).
+  onOpenCard: (target: CardTarget) => void;
 }
 
 // Состояние выбранного во вкладке «Участники» (docs/plan/done/game.md, этап 8; вид —
 // docs/plan/scene-page.md, этап 2): карточка выбранной фигурки или существа с запасом
-// движения. Полный лист — шторкой (FullSheetDrawer), её ставит страница.
+// движения. «Карточка» открывает окно с листом (cardWindows).
 function CreatureCards({
   gameId,
   master,
@@ -26,6 +29,7 @@ function CreatureCards({
   figure,
   onFigureAllowance,
   figureBusy,
+  onOpenCard,
 }: CreatureCardsProps) {
   const creature = !figure && cards.selected?.state ? cards.selected : null;
   if (figure?.canMove) {
@@ -37,7 +41,7 @@ function CreatureCards({
           gameId={gameId}
           characterId={id}
           version={cards.version}
-          onOpenSheet={() => cards.setSheet({ kind: 'character', id })}
+          onOpenSheet={() => onOpenCard({ kind: 'character', id })}
         />
         <MovementRow
           name={figure.character.name}
@@ -60,7 +64,7 @@ function CreatureCards({
           state={state}
           onChanged={cards.creatures.apply}
           onEffects={cards.creatures.reload}
-          onOpenSheet={() => cards.openCreatureSheet(objectId)}
+          onOpenSheet={() => onOpenCard({ kind: 'creature', objectId })}
         />
         {creature.health !== 'down' && creature.health !== 'dead' && (
           <MovementRow

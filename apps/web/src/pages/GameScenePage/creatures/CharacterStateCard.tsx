@@ -1,5 +1,6 @@
 import { Alert, Button, Group, Loader, Stack, Text } from '@mantine/core';
-import { SPELL_SLOT_CIRCLES } from 'shared';
+import type { ReactNode } from 'react';
+import { SPELL_SLOT_CIRCLES, type Character } from 'shared';
 import { EffectLinksStrip, SpellSlotPips } from '../../../features/characters';
 import { gameCharacterBase } from '../../../features/games';
 import DeathSavesEditor from './DeathSavesEditor';
@@ -13,6 +14,10 @@ interface CharacterStateCardProps {
   // Растёт с событиями состояния существ — лист перечитывается.
   version: number;
   onOpenSheet: () => void;
+  // В окне карточки (docs/plan/scene-page.md, этап 4): без своей шапки — имя в шапке окна.
+  bare?: boolean;
+  // Что показать под состоянием тем же листом (вкладки окна) — без второй загрузки.
+  below?: (character: Character) => ReactNode;
 }
 
 // Карточка персонажа игрока в панели сцены (docs/plan/done/game.md, этап 8): тем, кто его
@@ -22,6 +27,8 @@ function CharacterStateCard({
   characterId,
   version,
   onOpenSheet,
+  bare,
+  below,
 }: CharacterStateCardProps) {
   const { character, setCharacter, change, busy, error } = useGameCharacter(
     gameId,
@@ -45,14 +52,16 @@ function CharacterStateCard({
       className={classes.card}
       aria-label={`Карточка: ${character.name}`}
     >
-      <Group justify="space-between" wrap="nowrap">
-        <Text fw={600} truncate>
-          {character.name}
-        </Text>
-        <Button size="compact-xs" variant="subtle" onClick={onOpenSheet}>
-          Полный лист
-        </Button>
-      </Group>
+      {!bare && (
+        <Group justify="space-between" wrap="nowrap">
+          <Text fw={600} truncate>
+            {character.name}
+          </Text>
+          <Button size="compact-xs" variant="subtle" onClick={onOpenSheet}>
+            Карточка
+          </Button>
+        </Group>
+      )}
       <HitPointsControls
         current={character.hitPointsCurrent}
         max={character.hitPointsMax}
@@ -102,6 +111,7 @@ function CharacterStateCard({
         onChange={(effects) => setCharacter({ ...character, effects })}
       />
       {error && <Alert color="red">{error}</Alert>}
+      {below?.(character)}
     </Stack>
   );
 }

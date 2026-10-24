@@ -1,12 +1,15 @@
 import { IconAdjustmentsHorizontal, IconUsers } from '@tabler/icons-react';
 import type { ReactNode } from 'react';
-import type { GameSceneStatus } from 'shared';
+import type { GameSceneStatus, MapObjectRefsView } from 'shared';
+import type { ObjectImagePaths } from '../../../features/maps/MapScene';
+import type { CardTarget } from '../cardWindows';
 import type { MapViewState } from '../../../features/maps/mapStateFromChunks';
 import { CreatureCards, type useCreatureCards } from '../creatures';
 import type { useScenePlay } from '../figures';
 import type { SceneFogControls } from '../fog';
 import {
   creatureParticipants,
+  creaturePortrait,
   heroParticipants,
   ParticipantsTab,
 } from '../participants';
@@ -30,6 +33,10 @@ interface GameScenePanelProps {
   fog: SceneFogControls;
   play: ReturnType<typeof useScenePlay>;
   cards: ReturnType<typeof useCreatureCards>;
+  refs: MapObjectRefsView | null;
+  images: ObjectImagePaths;
+  // Открыть окно карточки (docs/plan/scene-page.md, этап 4).
+  onOpenCard: (target: CardTarget) => void;
   // Переключатель режима в шапке — только на телефоне; иначе он на сцене.
   modeSwitch: ReactNode;
   // Содержимое «Правки»: свойства инструмента и «Не на сцене».
@@ -49,6 +56,9 @@ function GameScenePanel({
   fog,
   play,
   cards,
+  refs,
+  images,
+  onOpenCard,
   modeSwitch,
   editBody,
 }: GameScenePanelProps) {
@@ -66,9 +76,11 @@ function GameScenePanel({
 
   const participants = (
     <ParticipantsTab
-      heroes={heroParticipants(figures?.figures ?? [])}
-      creatures={creatureParticipants(creatures, (id) =>
-        state?.objects.byId.get(id),
+      heroes={heroParticipants(figures?.figures ?? [], gameId)}
+      creatures={creatureParticipants(
+        creatures,
+        (id) => state?.objects.byId.get(id),
+        (object) => (refs ? creaturePortrait(object, refs, images) : null),
       )}
       selectedKey={figureKey ?? creatureKey}
       onSelectHero={(id) => tool.select(tool.selectedId === id ? null : id)}
@@ -76,6 +88,10 @@ function GameScenePanel({
         const id = Number(key);
         cards.select(cards.selected?.objectId === id ? null : id);
       }}
+      onOpenHero={(id) => onOpenCard({ kind: 'character', id })}
+      onOpenCreature={(key) =>
+        onOpenCard({ kind: 'creature', objectId: Number(key) })
+      }
       onRound={master ? tool.round : undefined}
       busy={tool.busy}
       errors={[tool.error, cards.walk.error]}
@@ -88,6 +104,7 @@ function GameScenePanel({
             figure={tool.figure}
             onFigureAllowance={tool.allowance}
             figureBusy={tool.busy}
+            onOpenCard={onOpenCard}
           />
         )
       }

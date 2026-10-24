@@ -41,3 +41,7 @@ export { armorClassTile } from './CharacterSheet/sheetArmorClass';
 export { speedTile } from './CharacterSheet/sheetSpeed';
 export { default as QuantityDialog } from './Inventory/QuantityDialog';
 export { useAddCandidates as useItemCandidates } from './Inventory/useAddCandidates';
+export {
+  default as CharacterSheetSection,
+  type SheetSection,
+} from './CharacterSheet/CharacterSheetSection';

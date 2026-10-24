@@ -13,7 +13,13 @@ function MonsterAbilityScores({ block }: { block: MonsterStatBlock }) {
   const skills = formatSkills(block);
   return (
     <Fieldset legend="Характеристики">
-      <SimpleGrid cols={{ base: 2, xs: 3, md: 6 }} spacing="xs">
+      {/* Колонки — по ширине самого блока, а не окна: в окне карточки на сцене игры
+          (docs/plan/scene-page.md, этап 4) шесть колонок не помещаются. */}
+      <SimpleGrid
+        type="container"
+        cols={{ base: 2, '360px': 3, '640px': 6 }}
+        spacing="xs"
+      >
         {ABILITY_SCORES.map((ability) => {
           const { score, save } = block.abilities[ability];
           const modifier = getAbilityModifier(score);

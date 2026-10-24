@@ -1,0 +1,58 @@
+/* Окно карточки поверх сцены: ширина как у панели, высота — до низа сцены (max-height
+   считает CardWindowFrame по положению окна). */
+.window {
+  position: absolute;
+  width: 26rem;
+  max-width: calc(100% - var(--mantine-spacing-md));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--mantine-radius-lg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 12px;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+
+.heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--mantine-spacing-sm);
+}
+
+/* Телефон: открытые карточки чипами над листом снизу, лист — текущая. */
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  max-height: 85dvh;
+  background: var(--mantine-color-body);
+  border-top: 1px solid var(--mantine-color-default-border);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.grab {
+  width: 40px;
+  height: 4px;
+  margin: 8px auto 2px;
+  border-radius: 2px;
+  background: var(--mantine-color-default-border);
+}

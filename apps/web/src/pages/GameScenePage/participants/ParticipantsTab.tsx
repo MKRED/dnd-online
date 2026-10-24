@@ -11,6 +11,9 @@ interface ParticipantsTabProps {
   selectedKey: string | null;
   onSelectHero: (key: string) => void;
   onSelectCreature: (key: string) => void;
+  // Двойной щелчок по строке — окно карточки (docs/plan/scene-page.md, этап 4).
+  onOpenHero?: (key: string) => void;
+  onOpenCreature?: (key: string) => void;
   // «Новый раунд» — только мастеру.
   onRound?: () => void;
   busy: boolean;
@@ -27,6 +30,8 @@ function ParticipantsTab({
   selectedKey,
   onSelectHero,
   onSelectCreature,
+  onOpenHero,
+  onOpenCreature,
   onRound,
   busy,
   errors,
@@ -64,6 +69,11 @@ function ParticipantsTab({
             participant={hero}
             selected={selectedKey === `pc:${hero.key}`}
             onSelect={() => onSelectHero(hero.key)}
+            onOpen={
+              hero.selectable && onOpenHero
+                ? () => onOpenHero(hero.key)
+                : undefined
+            }
           />
         ))}
         {creatures.length > 0 && (
@@ -75,6 +85,7 @@ function ParticipantsTab({
             participant={creature}
             selected={selectedKey === `creature:${creature.key}`}
             onSelect={() => onSelectCreature(creature.key)}
+            onOpen={onOpenCreature && (() => onOpenCreature(creature.key))}
           />
         ))}
         {errors.map(

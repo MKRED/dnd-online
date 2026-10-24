@@ -1,6 +1,7 @@
 import { Text, Tooltip, UnstyledButton } from '@mantine/core';
 import { IconEyeOff } from '@tabler/icons-react';
 import { creatureHealthLabel, type CreatureHealth } from 'shared';
+import Portrait from './Portrait';
 import classes from './participants.module.css';
 
 // Вид участника — цветом кружка, как рамка карточки на сцене (CreatureCard).
@@ -8,6 +9,8 @@ export type ParticipantKind = 'pc' | 'npc' | 'monster';
 
 export interface Participant {
   key: string;
+  // Миниатюра; null — буква.
+  image: string | null;
   kind: ParticipantKind;
   name: string;
   // Числа хитов — тем, кто их видит; null — только метка здоровья.
@@ -32,14 +35,16 @@ interface ParticipantRowProps {
   participant: Participant;
   selected: boolean;
   onSelect: () => void;
+  // Двойной щелчок — окно карточки; нет — карточку смотрящему не открыть.
+  onOpen?: () => void;
 }
 
-// Строка участника во вкладке «Участники» (docs/plan/scene-page.md, этап 2): кружок с
-// буквой, имя, хиты полосой с числом и запас движения.
+// Строка участника во вкладке «Участники» (docs/plan/scene-page.md, этап 2): портрет, имя, хиты полосой с числом и запас движения.
 function ParticipantRow({
   participant,
   selected,
   onSelect,
+  onOpen,
 }: ParticipantRowProps) {
   const { name, hitPoints, health, feetLeft, hidden, kind } = participant;
   const label = health ? creatureHealthLabel(health, kind === 'pc') : null;
@@ -54,10 +59,9 @@ function ParticipantRow({
       aria-pressed={participant.selectable ? selected : undefined}
       aria-label={name}
       onClick={onSelect}
+      onDoubleClick={onOpen}
     >
-      <span className={classes.avatar} data-kind={kind} aria-hidden="true">
-        {name.slice(0, 1).toUpperCase()}
-      </span>
+      <Portrait image={participant.image} name={name} kind={kind} />
       <span className={classes.main}>
         <span className={classes.line}>
           <Text size="sm" fw={600} truncate component="span">

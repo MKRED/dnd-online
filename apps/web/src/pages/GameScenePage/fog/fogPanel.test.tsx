@@ -26,6 +26,9 @@ function controls(over: Partial<SceneFogControls> = {}): SceneFogControls {
     setEyes: vi.fn(),
     save: vi.fn(),
     refresh: vi.fn(),
+    reset: vi.fn(),
+    resetState: 'idle',
+    resetError: null,
     masks: null,
     ...over,
   };

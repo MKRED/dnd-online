@@ -1,6 +1,7 @@
 import { Alert, Stack, Switch, Text } from '@mantine/core';
 import type { GameSceneStatus } from 'shared';
 import { FogPanel, type SceneFogControls } from '../fog';
+import ServiceSection from './ServiceSection';
 
 interface SceneTabProps {
   scene: GameSceneStatus;
@@ -11,7 +12,8 @@ interface SceneTabProps {
 }
 
 // Вкладка «Сцена» у мастера (docs/plan/scene-page.md, этап 2): открыта ли игрокам, туман
-// войны и «Глазами игроков» — всё, что про сцену целиком, а не про участников.
+// войны, «Глазами игроков» и свёрнутое «Служебное» — всё, что про сцену целиком, а не
+// про участников.
 function SceneTab({ scene, busy, error, onOpenChange, fog }: SceneTabProps) {
   return (
     <Stack gap="lg">
@@ -30,6 +32,7 @@ function SceneTab({ scene, busy, error, onOpenChange, fog }: SceneTabProps) {
         {error && <Alert color="red">{error}</Alert>}
       </Stack>
       <FogPanel fog={fog} />
+      <ServiceSection fog={fog} />
     </Stack>
   );
 }

@@ -11,7 +11,7 @@ import { useGameRoom } from '../../features/games';
 
 // События, после которых страница перечитывает сцену: её сменили, перезапустили,
 // открыли или закрыли (мастеру — чтобы переключатель совпадал с другой вкладкой),
-// включили или выключили туман войны, мастер поменял свои блоки на сцене — нужны новые
+// включили, выключили или сбросили туман войны, мастер поменял свои блоки на сцене — нужны новые
 // описания блоков (docs/plan/blocks.md, этап 7).
 const SCENE_CHANGES = new Set<string>([
   'scene.activated',
@@ -19,6 +19,7 @@ const SCENE_CHANGES = new Set<string>([
   'scene.opened',
   'scene.closed',
   'scene.fog',
+  'scene.fogReset',
   'blocks.changed',
 ]);
 

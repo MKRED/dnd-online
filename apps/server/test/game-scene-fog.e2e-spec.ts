@@ -134,6 +134,42 @@ describe('game scene fog (e2e)', () => {
     expect(has(moved.explored, [5, 0, 0])).toBe(false);
   });
 
+  it('сброс тумана: только мастер, туман включён; открытым остаётся видимое сейчас', async () => {
+    const g = await setup('gfog_reset');
+    const url = `${fogUrl(g.gameId, g.sceneId)}/reset`;
+    // Туман выключен — сбрасывать нечего.
+    await g.m.post(url).expect(409);
+    await g.m
+      .put(fogUrl(g.gameId, g.sceneId))
+      .send({ enabled: true, sightRange: 10 })
+      .expect(200);
+    await t.anonymous().post(url).expect(401);
+    await g.player.agent.post(url).expect(403);
+    const stranger = await user('gfog_reset_stranger');
+    await stranger.agent.post(url).expect(403);
+    await g.m
+      .post(`${fogUrl(g.gameId, '00000000-0000-4000-8000-000000000000')}/reset`)
+      .expect(404);
+
+    // Фигурка ушла со старта: старт открыт, но уже не виден.
+    await g.player.agent
+      .post(`/api/games/${g.gameId}/figures/${g.characterId}/move`)
+      .send({ to: [0, 1, 5] })
+      .expect(200);
+    expect(has((await fog(g.sceneId)).explored, [2, 0, 0])).toBe(true);
+
+    await g.m.post(url).expect(201);
+    const after = await fog(g.sceneId);
+    expect(has(after.explored, [2, 0, 0])).toBe(false);
+    expect(has(after.explored, [2, 0, 7])).toBe(true);
+    expect(has(after.visible, [2, 0, 7])).toBe(true);
+    expect(await lastEvent(g.m, g.gameId)).toMatchObject({
+      kind: 'scene.fogReset',
+      sceneId: g.sceneId,
+      intent: null,
+    });
+  });
+
   it('без сознания персонаж не смотрит; выключенный туман масок не трогает', async () => {
     const g = await setup('gfog_down');
     await g.m

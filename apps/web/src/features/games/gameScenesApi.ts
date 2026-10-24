@@ -69,6 +69,16 @@ export function setGameSceneFog(
   });
 }
 
+// Служебный сброс тумана войны: игроки забывают открытое на сцене.
+export function resetGameSceneFog(
+  gameId: string,
+  sceneId: string,
+): Promise<GameScenes> {
+  return request(`${scenesBase(gameId)}/${sceneId}/fog/reset`, {
+    method: 'POST',
+  });
+}
+
 // Маски тумана активной сцены — мастеру для «Глазами игроков»; null — туман выключен.
 export async function getGameSceneFog(
   gameId: string,

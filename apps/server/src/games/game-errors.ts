@@ -37,6 +37,8 @@ export const MASTER_ONLY_SCENES = 'Сценами управляет тольк�
 export const MASTER_ONLY_FOG =
   'Туман сцены глазами игроков видит только мастер';
 export const SCENE_NOT_FOUND = 'Сцена не найдена';
+export const SCENE_FOG_OFF =
+  'Туман войны на сцене выключен — сбрасывать нечего';
 export const SCENE_MAP_GONE =
   'Карты этой сцены больше нет — перезапустить сцену нельзя';
 export const NO_ACTIVE_SCENE = 'В игре нет активной сцены';

@@ -11,7 +11,11 @@ import {
   type GameSceneFogView,
   type GameSceneStatus,
 } from 'shared';
-import { getGameSceneFog, setGameSceneFog } from '../../../features/games';
+import {
+  getGameSceneFog,
+  resetGameSceneFog,
+  setGameSceneFog,
+} from '../../../features/games';
 import { errorMessage } from '../../../lib/apiRequest';
 import type { SceneLoad } from '../useGameScene';
 
@@ -27,6 +31,11 @@ export function useSceneFog(
   const [error, setError] = useState<string | null>(null);
   const [eyes, setEyes] = useState(false);
   const [masks, setMasks] = useState<GameSceneFogView | null>(null);
+  // Служебный сброс тумана: «done» держится, пока мастер не начнёт новый сброс.
+  const [resetState, setResetState] = useState<'idle' | 'busy' | 'done'>(
+    'idle',
+  );
+  const [resetError, setResetError] = useState<string | null>(null);
   // Номер запроса масок: ответ на устаревший запрос не ложится поверх свежего.
   const [version, setVersion] = useState(0);
   const fogOn = Boolean(scene?.fog);
@@ -80,6 +89,20 @@ export function useSceneFog(
 
   const refresh = useCallback(() => setVersion((v) => v + 1), []);
 
+  // Маски «Глазами игроков» перечитает событие сброса из комнаты (refresh).
+  const reset = () => {
+    if (!scene) return;
+    setResetState('busy');
+    setResetError(null);
+    resetGameSceneFog(gameId, scene.id)
+      .then(() => setResetState('done'))
+      .catch((err: unknown) => {
+        console.error('Failed to reset scene fog', err);
+        setResetError(errorMessage(err, 'Не удалось сбросить туман войны'));
+        setResetState('idle');
+      });
+  };
+
   return {
     busy,
     error,
@@ -89,6 +112,9 @@ export function useSceneFog(
     setEyes,
     save,
     refresh,
+    reset,
+    resetState,
+    resetError,
     // Маски для просмотра: только пока режим включён и они загрузились.
     masks: active ? masks : null,
   };

@@ -79,6 +79,8 @@ export function gameEventText(event: GameEvent): string {
         ? `Туман войны включён: ${event.result.scene.name}, обзор ${sightRange} фт`
         : `Туман войны выключен: ${event.result.scene.name}`;
     }
+    case 'scene.fogReset':
+      return `Туман войны сброшен: ${event.result.scene.name}`;
     case 'scene.edited': {
       const { libraryCopied } = event.result;
       const text = `Сцена изменена: ${sceneEdit(event.result)}`;

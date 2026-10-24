@@ -205,6 +205,16 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'scene.fogReset',
+        as: { kind: 'master' },
+        intent: null,
+        result: { scene: lair },
+      },
+      'Туман войны сброшен: Логово',
+    ],
+    [
+      {
+        ...base,
         kind: 'scene.edited',
         as: { kind: 'master' },
         intent: { ops: [] },

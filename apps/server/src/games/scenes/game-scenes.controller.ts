@@ -89,6 +89,12 @@ export class GameScenesController {
     });
   }
 
+  // Служебный сброс тумана войны (для проверок): игроки открывают сцену заново.
+  @Post('scenes/:sceneId/fog/reset')
+  resetFog(@Req() req: AuthenticatedRequest, @Param() params: SceneParamsDto) {
+    return this.scenesService.resetFog(req.user.sub, params.id, params.sceneId);
+  }
+
   @Get('scene/fog')
   fog(
     @Req() req: AuthenticatedRequest,

@@ -86,39 +86,6 @@
   }
 }
 
-.icon {
-  flex: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--mantine-color-default-hover);
-  color: var(--mantine-color-dimmed);
-}
-
-.name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-
-  & mark {
-    background: none;
-    color: var(--mantine-primary-color-filled);
-    font-weight: 700;
-  }
-}
-
-.detail {
-  margin-left: auto;
-  padding-left: 8px;
-  font-size: var(--mantine-font-size-xs);
-  color: var(--mantine-color-dimmed);
-  white-space: nowrap;
-}
-
 .footer {
   display: flex;
   flex-wrap: wrap;

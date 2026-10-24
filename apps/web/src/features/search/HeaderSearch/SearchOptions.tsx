@@ -2,8 +2,7 @@ import { Anchor, Combobox } from '@mantine/core';
 import type { MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import type { SearchGroup, SearchResult } from 'shared';
-import HighlightedName from '../HighlightedName';
-import { SEARCH_ICONS } from '../searchIcons';
+import SearchHit from '../SearchHit';
 import {
   SEARCH_GROUP_LABELS,
   searchHitDetails,
@@ -52,7 +51,6 @@ function SearchOptions({ result, query, onLeave }: SearchOptionsProps) {
   return result.groups
     .filter((group) => group.hits.length > 0)
     .map((group) => {
-      const Icon = SEARCH_ICONS[group.kind];
       const details = searchHitDetails(group);
       return (
         <Combobox.Group
@@ -65,15 +63,12 @@ function SearchOptions({ result, query, onLeave }: SearchOptionsProps) {
               value={searchHitPath(group.kind, hit.id)}
               className={classes.option}
             >
-              <span className={classes.icon} aria-hidden>
-                <Icon size={16} />
-              </span>
-              <HighlightedName
+              <SearchHit
+                kind={group.kind}
                 name={hit.name}
                 query={query}
-                className={classes.name}
+                detail={details[i]}
               />
-              <span className={classes.detail}>{details[i]}</span>
             </Combobox.Option>
           ))}
         </Combobox.Group>

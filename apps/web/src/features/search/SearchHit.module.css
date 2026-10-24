@@ -1,0 +1,49 @@
+/* Строка найденного — общая для выпадающего списка и страницы всех результатов: значок
+   раздела, название с подсветкой, подпись справа. Раскладку (flex) задаёт родитель. */
+.icon {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mantine-color-default-hover);
+  color: var(--mantine-color-dimmed);
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  & mark {
+    background: none;
+    color: var(--mantine-primary-color-filled);
+    font-weight: 700;
+  }
+}
+
+.detail {
+  margin-left: auto;
+  padding-left: 8px;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+  white-space: nowrap;
+}
+
+.owner {
+  flex: none;
+  width: 140px;
+  text-align: right;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media (max-width: $mantine-breakpoint-xs) {
+    display: none;
+  }
+}

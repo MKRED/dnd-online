@@ -78,3 +78,4 @@ export * from './game-library.js';
 export * from './game-scenes.js';
 export * from './game-socket.js';
 export * from './voxelModel/index.js';
+export * from './search.js';

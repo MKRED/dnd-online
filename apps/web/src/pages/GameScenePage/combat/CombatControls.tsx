@@ -1,4 +1,4 @@
-import { Button, Group, Text, Tooltip } from '@mantine/core';
+import { Button, Group, Stack, Text, Tooltip } from '@mantine/core';
 import { IconRefresh, IconSwords } from '@tabler/icons-react';
 import type { GameMoveMode } from 'shared';
 
@@ -41,22 +41,41 @@ function CombatControls({
       </Group>
     );
   }
+  // В бою «Новый раунд» — самое частое действие: во всю ширину под строкой боя.
   return (
-    <Group gap={6} pb={4} wrap="wrap">
-      <Text
-        size="sm"
-        fw={600}
-        c="var(--mantine-primary-color-filled)"
-        mr="auto"
-        style={{ display: 'flex', alignItems: 'center', gap: 4 }}
-      >
-        <IconSwords size={15} />
-        Бой · раунд {round ?? 1}
-      </Text>
+    <Stack gap={6} pb={4}>
+      <Group gap={6} wrap="nowrap" justify="space-between">
+        <Text
+          size="sm"
+          fw={600}
+          c="var(--mantine-primary-color-filled)"
+          style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+        >
+          <IconSwords size={15} />
+          Бой · раунд {round ?? 1}
+        </Text>
+        <Tooltip
+          label="Свободный режим: запас снова полный после каждого хода"
+          withArrow
+          multiline
+          w={240}
+        >
+          <Button
+            size="xs"
+            variant="subtle"
+            color="gray"
+            onClick={() => onMode('free')}
+            disabled={busy}
+          >
+            Закончить бой
+          </Button>
+        </Tooltip>
+      </Group>
       <Tooltip label="Запас движения всех снова полный" withArrow>
         <Button
           size="xs"
           variant="default"
+          fullWidth
           leftSection={<IconRefresh size={15} />}
           onClick={onRound}
           disabled={busy}
@@ -64,23 +83,7 @@ function CombatControls({
           Новый раунд
         </Button>
       </Tooltip>
-      <Tooltip
-        label="Свободный режим: запас снова полный после каждого хода"
-        withArrow
-        multiline
-        w={240}
-      >
-        <Button
-          size="xs"
-          variant="subtle"
-          color="gray"
-          onClick={() => onMode('free')}
-          disabled={busy}
-        >
-          Закончить бой
-        </Button>
-      </Tooltip>
-    </Group>
+    </Stack>
   );
 }
 

@@ -22,6 +22,7 @@ import {
   type ObjectChoice,
 } from './objectPlacement';
 import { useShiftKey } from './useShiftKey';
+import { choiceLook } from './choiceLook';
 
 interface ObjectToolOptions {
   state: MapViewState | null;
@@ -83,6 +84,14 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
   // Один и тот же массив, пока место не изменилось: по нему пересобирается редактор сцены.
   const extent = useMemo<Vec3>(() => [ex, ey, ez], [ex, ey, ez]);
 
+  // Полупрозрачное ставящееся под курсором; при выделенном или переносимом объекте щелчок
+  // ставить не будет — и призрака нет.
+  const ghost = useMemo(
+    () =>
+      choice && !selected && !carried ? choiceLook(choice, facing) : undefined,
+    [choice, facing, selected, carried],
+  );
+
   const edit = (op: MapOp) => applyOps([op]);
   const move = (object: MapObject, cell: Vec3) => {
     if (!state) return;
@@ -138,6 +147,7 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
     moving,
     setMoving,
     extent,
+    ghost,
     pick,
     scene,
     extentOf,

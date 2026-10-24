@@ -28,6 +28,7 @@ function objectsMock() {
   return {
     pick: vi.fn(),
     extent: [1, 1, 1] as const,
+    ghost: undefined,
     rotate: vi.fn(),
     remove: vi.fn(),
     escape: vi.fn(),

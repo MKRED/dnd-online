@@ -8,6 +8,7 @@ import {
   type Vec3,
 } from 'shared';
 import type { WalkHover } from '../walkTest';
+import type { SceneObjectLook } from '../MapScene/objects/objectLayout';
 
 // walk — проверка хода: карту не меняет, водит фигурку по правилам пути. place —
 // «Поставить»: блок или объект карты (docs/plan/blocks.md, этап 10).
@@ -191,4 +192,7 @@ export interface SceneEditor {
   onHover?: (cells: PickedCells | null) => void;
   // Инструмент ничего не делает с клетками (пустое «Поставить»): подсветки под курсором нет.
   idle?: boolean;
+  // Ставящийся объект: в рамке под курсором — он сам полупрозрачно и носик взгляда
+  // (вариант В артборда «Н1», docs/plan/scene-page.md).
+  ghost?: SceneObjectLook;
 }

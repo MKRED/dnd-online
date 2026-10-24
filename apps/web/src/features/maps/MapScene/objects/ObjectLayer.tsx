@@ -15,6 +15,7 @@ import type { HoverStore } from '../hoverStore';
 import classes from '../MapScene.module.css';
 import ContainerShape from './ContainerShape';
 import CreatureBody from './CreatureBody';
+import FacingNose from './FacingNose';
 import FloorItem from './FloorItem';
 import FurnitureFigure from './FurnitureFigure';
 import GhostGroup from './GhostGroup';
@@ -71,13 +72,25 @@ function SelectionFrame({ object }: { object: SceneObject }) {
       ? [object.look.extent[0] / 2, object.look.extent[2] / 2]
       : [object.footprint / 2, object.footprint / 2];
   const [x, y, z] = object.base;
+  const { look } = object;
   return (
-    <FrameBox
-      min={[x - hx, y, z - hz]}
-      max={[x + hx, object.top, z + hz]}
-      color={SELECTED_COLOR}
-      opacity={0.1}
-    />
+    <>
+      <FrameBox
+        min={[x - hx, y, z - hz]}
+        max={[x + hx, object.top, z + hz]}
+        color={SELECTED_COLOR}
+        opacity={0.1}
+      />
+      {/* Куда смотрит выделенное — видно, пока его поворачивают R (вариант В «Н1»). */}
+      {'facing' in look && (
+        <FacingNose
+          base={object.base}
+          half={[hx, hz]}
+          facing={look.facing}
+          color={SELECTED_COLOR}
+        />
+      )}
+    </>
   );
 }
 

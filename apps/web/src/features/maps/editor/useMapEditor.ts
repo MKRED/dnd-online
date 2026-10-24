@@ -40,6 +40,7 @@ interface MapEditorOptions {
     ObjectTool,
     | 'pick'
     | 'extent'
+    | 'ghost'
     | 'rotate'
     | 'remove'
     | 'escape'
@@ -187,6 +188,7 @@ export function useMapEditor({
   const {
     pick: objectPick,
     extent: objectExtent,
+    ghost: objectGhost,
     escape: objectEscape,
   } = objects;
   const placesObject = objects.settings.choice !== null;
@@ -211,6 +213,7 @@ export function useMapEditor({
         height,
         onPick: objectPick,
         extent: objectExtent,
+        ghost: objectGhost,
       };
     }
     if (tool === 'walk') {
@@ -251,6 +254,7 @@ export function useMapEditor({
     walkPreview,
     objectPick,
     objectExtent,
+    objectGhost,
     objectEscape,
     placesObject,
     placesNothing,

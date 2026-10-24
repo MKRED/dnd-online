@@ -12,6 +12,7 @@ import {
   type SceneEditor,
 } from '../editor/editorTools';
 import FrameBox from './FrameBox';
+import PlaceGhost from './objects/PlaceGhost';
 import GroundGrid from './GroundGrid';
 import type { HoverStore } from './hoverStore';
 import WalkHoverMesh from './WalkHoverMesh';
@@ -85,11 +86,16 @@ function CellHighlight({
   if (!insideMap(from, size) || !insideMap(to, size)) return null;
   const box: Box3 = anchorBox(editor, cell) ?? { min: from, max: to };
   return (
-    <FrameBox
-      min={box.min}
-      max={[box.max[0] + 1, box.max[1] + 1, box.max[2] + 1]}
-      color={editor.tool === 'erase' ? '#ff6b6b' : '#ffd43b'}
-    />
+    <>
+      <FrameBox
+        min={box.min}
+        max={[box.max[0] + 1, box.max[1] + 1, box.max[2] + 1]}
+        color={editor.tool === 'erase' ? '#ff6b6b' : '#ffd43b'}
+      />
+      {editor.ghost && (
+        <PlaceGhost look={editor.ghost} at={from} extent={[ex, ey, ez]} />
+      )}
+    </>
   );
 }
 

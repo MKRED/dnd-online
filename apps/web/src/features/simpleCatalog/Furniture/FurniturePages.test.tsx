@@ -351,14 +351,21 @@ describe('раздел «Обстановка»', () => {
 });
 
 describe('вопрос перед удалением модели', () => {
-  it('называет обстановку с моделью', () => {
-    expect(modelDeleteConfirmText('Стол', { furniture: [] })).toBe(
-      'Удалить модель «Стол» безвозвратно?',
-    );
+  it('называет обстановку и монстров с моделью', () => {
+    expect(
+      modelDeleteConfirmText('Стол', { furniture: [], monsters: [] }),
+    ).toBe('Удалить модель «Стол» безвозвратно?');
     expect(
       modelDeleteConfirmText('Стол', {
         furniture: [{ id: '1', name: 'Обеденный стол' }],
+        monsters: [],
       }),
     ).toMatch(/в обстановке: «Обеденный стол»/);
+    const both = modelDeleteConfirmText('Огр', {
+      furniture: [{ id: '1', name: 'Статуя' }],
+      monsters: [{ id: '2', name: 'Огр' }],
+    });
+    expect(both).toMatch(/в обстановке: «Статуя»/);
+    expect(both).toMatch(/у монстров: «Огр»\. На карте вместо неё/);
   });
 });

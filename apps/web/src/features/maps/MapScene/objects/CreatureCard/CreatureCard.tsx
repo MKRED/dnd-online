@@ -5,6 +5,8 @@ import {
   type CreatureHealth,
 } from 'shared';
 import { ModelFigure, type LoadedModel } from '../../../models';
+import type { VoxelFigureData } from '../../../../voxelModels/voxelBounds';
+import VoxelFigure from '../../../../voxelModels/VoxelFigure';
 import {
   facingAngle,
   type SceneObject,
@@ -31,12 +33,16 @@ const PLINTH = '#2b2622';
 const THICKNESS = 0.05;
 const PLINTH_HEIGHT = 0.07;
 
-// 3D-модель вместо карточки (docs/plan/done/character-models.md, этап 3).
-export interface CardModel {
-  model: LoadedModel;
-  fit: CharacterModelFit;
-  color: string | null;
-}
+// 3D-модель вместо карточки (docs/plan/done/character-models.md, этап 3): файл или
+// рисованная модель монстра (docs/plan/done/monster-models.md, этап 5).
+export type CardModel =
+  | {
+      kind: 'file';
+      model: LoadedModel;
+      fit: CharacterModelFit;
+      color: string | null;
+    }
+  | { kind: 'voxels'; data: VoxelFigureData; fit: CharacterModelFit };
 
 interface CreatureCardProps {
   object: Pick<SceneObject, 'base' | 'footprint' | 'blocked'>;
@@ -125,12 +131,19 @@ function CreatureCard({
               picture={texture ?? letter}
             />
           </>
-        ) : model ? (
+        ) : model?.kind === 'file' ? (
           <ModelFigure
             model={model.model}
             footprint={object.footprint}
             fit={model.fit}
             color={model.color}
+            lying={pose === 'lying'}
+          />
+        ) : model ? (
+          <VoxelFigure
+            data={model.data}
+            footprint={object.footprint}
+            fit={model.fit}
             lying={pose === 'lying'}
           />
         ) : (

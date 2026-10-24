@@ -4,12 +4,13 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { VoxelModelUsage } from 'shared';
 import { authoredEntry } from '../catalog/catalog-access.js';
 import { DatabaseService } from '../database/database.service.js';
-import { furniture, voxelModels } from '../database/schema/index.js';
+import { furniture, monsters, voxelModels } from '../database/schema/index.js';
 import { VOXEL_MODEL_ACCESS } from './voxel-models.config.js';
 
 // Где стоит модель (docs/plan/blocks.md, этапы 8б и 8г): обстановка автора с этой моделью
-// — своей или одного из положений — для вопроса перед удалением. Чужой обстановки с ней
-// не бывает: модель в обстановке только своя.
+// — своей или одного из положений — и его монстры (docs/plan/done/monster-models.md), для
+// вопроса перед удалением. Чужих обстановки и монстров с ней не бывает: модель у них
+// только своя.
 @Injectable()
 export class VoxelModelUsageService {
   constructor(
@@ -40,16 +41,27 @@ export class VoxelModelUsageService {
           ),
         )
         .orderBy(furniture.name);
+      const monsterRows = await db
+        .select({ id: monsters.id, name: monsters.name })
+        .from(monsters)
+        .where(
+          and(
+            eq(monsters.authorId, userId),
+            sql`${monsters.extra} -> 'model' ->> 'id' = ${id}`,
+          ),
+        )
+        .orderBy(monsters.name);
       this.logger.debug(
         {
           durationMs: Date.now() - t0,
           userId,
           entryId: id,
           furniture: rows.length,
+          monsters: monsterRows.length,
         },
         'Voxel model usage listed',
       );
-      return { furniture: rows };
+      return { furniture: rows, monsters: monsterRows };
     } catch (err: unknown) {
       if (err instanceof NotFoundException) throw err;
       this.logger.error(

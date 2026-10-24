@@ -2,9 +2,13 @@ import { Center, Loader, Stack, Text } from '@mantine/core';
 import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import type { CharacterModel } from 'shared';
-import { ModelFigure, placedHeight, useModel } from '../../maps/models';
+import {
+  ModelFigure,
+  placedHeight,
+  PreviewGuides,
+  useModel,
+} from '../../maps/models';
 import { characterModelPath } from './characterModelApi';
-import PreviewGuides from './PreviewGuides';
 
 interface ModelPreviewProps {
   characterId: string;

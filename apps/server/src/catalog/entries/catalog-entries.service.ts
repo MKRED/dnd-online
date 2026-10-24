@@ -248,8 +248,9 @@ export abstract class CatalogEntriesService<
     detail: boolean,
   ) => Promise<void>;
 
-  // extra из тела запроса плюс сохраняемые ключи прежней записи автора. Чужой или
-  // несуществующей записи нет — тогда правка ниже ничего не найдёт и объяснит почему.
+  // extra из тела запроса плюс сохраняемые ключи прежней записи автора — там, где тело их
+  // не задало (ссылка монстра на модель приходит не всегда). Чужой или несуществующей
+  // записи нет — тогда правка ниже ничего не найдёт и объяснит почему.
   private async withKeptExtra(
     tx: DbTransaction,
     userId: string,
@@ -266,7 +267,7 @@ export abstract class CatalogEntriesService<
         previous && key in previous.extra ? [[key, previous.extra[key]]] : [],
       ),
     );
-    return { ...extra, ...kept };
+    return { ...kept, ...extra };
   }
 
   // Ник автора и метаданные картинки нужны и в каталоге, и в карточке, поэтому запись

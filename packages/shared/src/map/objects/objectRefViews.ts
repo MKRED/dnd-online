@@ -1,6 +1,7 @@
 import type { CatalogImage } from '../../catalogImage.js';
 import type { CharacterMainImage } from '../../characterImages.js';
 import type { FigureModel } from '../../characterModels.js';
+import type { MonsterRefModel } from '../../monsterModel.js';
 import type { MonsterRole } from '../../monsters.js';
 import type { FurnitureMount } from '../../voxelModel/furniture.js';
 import type { LockDc } from '../../voxelModel/furnitureContainer.js';
@@ -15,13 +16,15 @@ import { emptyObjectRefs, type ObjectRefs } from './objectRefs.js';
 // (docs/plan/done/map-objects.md, «Ссылки на каталог»).
 export type RefMissing = 'hidden' | 'deleted';
 
-// Размер есть всегда: место на карте нужно и заглушке. У удалённого — Средний.
+// Размер есть всегда: место на карте нужно и заглушке. У удалённого — Средний. model —
+// 3D-модель (docs/plan/done/monster-models.md): с ней на карте стоит она, а не карточка.
 export type MonsterRefView = { size: CreatureSize } & (
   | {
       missing: null;
       name: string;
       role: MonsterRole;
       image: CatalogImage | null;
+      model: MonsterRefModel | null;
     }
   | { missing: RefMissing }
 );

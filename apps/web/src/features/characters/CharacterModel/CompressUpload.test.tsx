@@ -2,15 +2,17 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CharacterModel } from 'shared';
-import { renderWithProviders } from '../../../../test/render';
-import CharacterModelBlock from '../CharacterModelBlock';
-import { ModelCompressError } from './compressLimits';
-import { compressInWorker } from './compressInWorker';
+import { renderWithProviders } from '../../../test/render';
+import CharacterModelBlock from './CharacterModelBlock';
+import { ModelCompressError } from '../../modelCompress/compressLimits';
+import { compressInWorker } from '../../modelCompress/compressInWorker';
 
 // В jsdom нет ни WebGL, ни Web Worker: сцена и сжатие — заглушки, тут — только ход
 // выбора файла в блоке «3D-модель».
-vi.mock('../ModelPreview', () => ({ default: () => <div>Предпросмотр</div> }));
-vi.mock('./compressInWorker', () => ({ compressInWorker: vi.fn() }));
+vi.mock('./ModelPreview', () => ({ default: () => <div>Предпросмотр</div> }));
+vi.mock('../../modelCompress/compressInWorker', () => ({
+  compressInWorker: vi.fn(),
+}));
 
 const MB = 1024 * 1024;
 

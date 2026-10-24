@@ -54,6 +54,9 @@ export interface SimpleFormValues {
   model: VoxelModelFields;
   // Загруженный файл модели (этап 9); null — файла нет.
   modelMesh: MeshDraft | null;
+  // Выбранный файл модели ещё сжимается в браузере (docs/plan/done/monster-models.md, этап 3):
+  // форма ждёт, иначе сохранила бы модель без него.
+  meshCompressing: boolean;
   // Модель и крепление обстановки (этап 8б).
   furniture: FurnitureValues;
 }
@@ -118,6 +121,7 @@ export function toSimpleFormValues(
           }
         : emptyVoxelModel(),
     modelMesh: toMeshDraft(entry && 'voxels' in entry ? entry : null),
+    meshCompressing: false,
     furniture: toFurnitureValues(entry && 'mount' in entry ? entry : undefined),
   };
 }

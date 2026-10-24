@@ -1,5 +1,11 @@
 import { and, eq, inArray, or } from 'drizzle-orm';
-import type { CatalogImage, FigureModel, GameLibraryKind } from 'shared';
+import {
+  readMonsterModelLink,
+  type CatalogImage,
+  type FigureModel,
+  type GameLibraryKind,
+  type MonsterRefModel,
+} from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
 import { toCatalogImage } from '../../catalog/catalog-image.mapper.js';
 import {
@@ -15,6 +21,10 @@ import {
   type CatalogEntryTable,
   type CatalogImageTables,
 } from '../../database/schema/index.js';
+import {
+  loadMonsterModels,
+  monsterRefModel,
+} from '../../monsters/monster-model-view.js';
 import { loadNpcSources, npcStamps } from './library-npc-sources.js';
 
 // Записи справочников, из которых библиотека игры берёт копии. Видит запись тот же, кто
@@ -43,8 +53,9 @@ export interface LibrarySource {
   authorNickname: string;
   record: Record<string, unknown>;
   image: CatalogImage | null;
-  // 3D-модель НПС; версию копии, как и у картинки, задаёт библиотека.
-  model?: Omit<FigureModel, 'version'> | null;
+  // 3D-модель НПС или снимок модели монстра; версию копии, как и у картинки, задаёт
+  // библиотека.
+  model?: Omit<FigureModel, 'version'> | MonsterRefModel | null;
   updatedAt: Date;
 }
 
@@ -56,9 +67,43 @@ export async function loadSources(
 ): Promise<LibrarySource[]> {
   if (ids.length === 0) return [];
   if (kind === 'npc') return loadNpcSources(db, ids, viewerId);
-  return kind === 'item'
-    ? loadItems(db, ids, viewerId)
-    : loadEntries(db, ENTRY_TABLES[kind], SOURCE_IMAGES[kind], ids, viewerId);
+  if (kind === 'item') return loadItems(db, ids, viewerId);
+  const sources = await loadEntries(
+    db,
+    ENTRY_TABLES[kind],
+    SOURCE_IMAGES[kind],
+    ids,
+    viewerId,
+  );
+  return kind === 'monster' ? withMonsterModels(db, sources) : sources;
+}
+
+// Снимок 3D-модели монстра (docs/plan/done/monster-models.md, этап 2): вид модели любого автора
+// и поправка из ссылки — копия не зависит от того, что с моделью станет в справочнике.
+// Время записи — позднее из монстра и модели, как в monsterStamps.
+async function withMonsterModels(
+  db: Db,
+  sources: LibrarySource[],
+): Promise<LibrarySource[]> {
+  const links = sources.map((source) => monsterLink(source.record));
+  const models = await loadMonsterModels(db, links);
+  return sources.map((source, i) => {
+    const model = links[i] && models.get(links[i].id);
+    return {
+      ...source,
+      model: monsterRefModel(models, links[i]),
+      updatedAt: latest(source.updatedAt, model?.updatedAt),
+    };
+  });
+}
+
+function latest(entry: Date, model: Date | undefined): Date {
+  return model && model > entry ? model : entry;
+}
+
+function monsterLink(record: Record<string, unknown>) {
+  const extra = record.extra as Record<string, unknown> | null | undefined;
+  return readMonsterModelLink(extra?.model);
 }
 
 // Когда записи справочника правили последний раз — для сверки копий в списке. Скрытых от
@@ -71,6 +116,7 @@ export async function sourceStamps(
 ): Promise<Map<string, Date>> {
   if (ids.length === 0) return new Map();
   if (kind === 'npc') return npcStamps(db, ids, viewerId);
+  if (kind === 'monster') return monsterStamps(db, ids, viewerId);
   const table = kind === 'item' ? items : ENTRY_TABLES[kind];
   const rows = await db
     .select({ id: table.id, updatedAt: table.updatedAt })
@@ -82,6 +128,36 @@ export async function sourceStamps(
       ),
     );
   return new Map(rows.map((row) => [row.id, row.updatedAt]));
+}
+
+// У монстра с моделью — позднее из записи и модели: правка модели в справочнике тоже
+// повод «Обновить из справочника», как у модели НПС.
+async function monsterStamps(
+  db: Db,
+  ids: readonly string[],
+  viewerId: string,
+): Promise<Map<string, Date>> {
+  const rows = await db
+    .select({
+      id: monsters.id,
+      updatedAt: monsters.updatedAt,
+      extra: monsters.extra,
+    })
+    .from(monsters)
+    .where(
+      and(
+        inArray(monsters.id, [...ids]),
+        or(eq(monsters.authorId, viewerId), eq(monsters.isPublic, true)),
+      ),
+    );
+  const links = rows.map((row) => readMonsterModelLink(row.extra.model));
+  const models = await loadMonsterModels(db, links);
+  return new Map(
+    rows.map((row, i) => {
+      const model = links[i] && models.get(links[i].id);
+      return [row.id, latest(row.updatedAt, model?.updatedAt)];
+    }),
+  );
 }
 
 async function loadEntries(

@@ -67,6 +67,7 @@ export * from './monsters.js';
 export * from './monsterAbilities.js';
 export * from './monsterLinks.js';
 export * from './monsterChallenge.js';
+export * from './monsterModel.js';
 export * from './monsterStatBlockCheck.js';
 export * from './userSettings.js';
 export * from './games.js';

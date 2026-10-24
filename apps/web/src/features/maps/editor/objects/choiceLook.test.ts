@@ -8,6 +8,7 @@ const images: ObjectImagePaths = {
   npc: (id, image) => `n/${id}/${image.id}`,
   npcModel: (id, v) => `nm/${id}/${v}`,
   furnitureMesh: (id, v) => `f/${id}/${v}`,
+  monsterModel: (id, model, v) => `mm/${id}/${model}/${v}`,
 };
 
 describe('choiceLook', () => {

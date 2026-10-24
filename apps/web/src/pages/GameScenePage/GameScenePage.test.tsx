@@ -111,6 +111,7 @@ const VIEW: GameSceneView = {
         name: 'Гоблин',
         size: 'small',
         role: 'regular',
+        model: null,
         image: null,
       },
     },

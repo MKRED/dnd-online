@@ -14,7 +14,7 @@ export default defineConfig({
         find: /^ndarray(-pixels|-lanczos)?$/,
         replacement: fileURLToPath(
           new URL(
-            './src/features/characters/CharacterModel/compress/ndarrayStub.ts',
+            './src/features/modelCompress/ndarrayStub.ts',
             import.meta.url,
           ),
         ),

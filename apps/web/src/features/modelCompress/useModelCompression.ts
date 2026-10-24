@@ -8,6 +8,11 @@ import {
 } from './compressLimits';
 import { compressInWorker } from './compressInWorker';
 
+export interface CompressResult {
+  before: CompressStats;
+  after: CompressStats;
+}
+
 export type CompressState =
   | { kind: 'idle' }
   // Файл больше 10 МБ: ждём «Сжать и загрузить» или «Отмена».
@@ -20,8 +25,13 @@ const MAX_MB = MODEL_UPLOAD_MAX_BYTES / (1024 * 1024);
 
 // Выбор файла модели с учётом сжатия (docs/plan/done/character-models.md, этап 5): до 10 МБ
 // файл уходит как есть, от 10 до 100 МБ — с предложением сжать в браузере, больше —
-// отказ. upload — загрузка готового файла (useCharacterModel).
-export function useModelCompression(upload: (file: File) => void) {
+// отказ. upload — что делать с готовым файлом: у персонажа — загрузить (useCharacterModel),
+// в «Моделях» — взять в форму (docs/plan/done/monster-models.md, этап 3); у сжатого — с итогом.
+export function useModelCompression(
+  upload: (file: File, compressed?: CompressResult) => void,
+  // Сжатие сбилось — форма модели снова сохраняется (MeshFileButton).
+  onFailed?: () => void,
+) {
   const [state, setState] = useState<CompressState>({ kind: 'idle' });
 
   const choose = (file: File) => {
@@ -44,10 +54,14 @@ export function useModelCompression(upload: (file: File) => void) {
     )
       .then(({ data, before, after }) => {
         setState({ kind: 'done', before, after });
-        upload(new File([data as Uint8Array<ArrayBuffer>], file.name));
+        upload(new File([data as Uint8Array<ArrayBuffer>], file.name), {
+          before,
+          after,
+        });
       })
       .catch((err: unknown) => {
-        console.error('Failed to compress character model', err);
+        console.error('Failed to compress the model file', err);
+        onFailed?.();
         setState({
           kind: 'error',
           message:

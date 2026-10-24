@@ -1,12 +1,13 @@
 import { NotFoundException } from '@nestjs/common';
 import { eq, sql } from 'drizzle-orm';
-import type {
-  GameEventAs,
-  GameEventKind,
-  GameEventPayloads,
-  PackedChangeset,
-  SceneEditResult,
-  ScenePlayerFog,
+import {
+  walkSeen,
+  type GameEventAs,
+  type GameEventKind,
+  type GameEventPayloads,
+  type PackedChangeset,
+  type SceneEditResult,
+  type ScenePlayerFog,
 } from 'shared';
 import type { DbTransaction } from '../database/database.service.js';
 import { gameEvents, games } from '../database/schema/index.js';
@@ -61,6 +62,13 @@ function fogForPlayers(
         event.changes,
       )
     : playerFogDelta(recount, recount.scene.seq, undefined);
+  // Путь существа глазами игрока — по маскам после хода: существа сами не смотрят, и ход
+  // их не меняет (docs/plan/done/walk-animation.md).
+  if (event.kind === 'creature.moved') {
+    const { path } =
+      event.result as GameEventPayloads['creature.moved']['result'];
+    if (path) delta.walk = walkSeen(path, recount.after);
+  }
   plainLogger('FogDelta')?.debug(
     {
       kind: event.kind,

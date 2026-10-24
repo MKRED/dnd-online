@@ -18,6 +18,8 @@ interface ScenePlayOptions {
   free: boolean;
   state: MapViewState | null;
   refs: MapObjectRefsView | null;
+  // Свой ход отправлен — фигурка ждёт путь на месте (docs/plan/done/walk-animation.md).
+  onMoveStart?: (characterId: string, from: Vec3) => void;
 }
 
 // Фигурки на странице сцены (docs/plan/done/game.md, этап 7): чтение, выбор и ход, тени чужих
@@ -29,6 +31,7 @@ export function useScenePlay({
   free,
   state,
   refs,
+  onMoveStart,
 }: ScenePlayOptions) {
   const figures = useSceneFigures(gameId, sceneId);
   const api = useMemo(() => figureApi(gameId), [gameId]);
@@ -50,6 +53,7 @@ export function useScenePlay({
     api,
     onFigures: figures.apply,
     onDrag: sendDrag,
+    onMoveStart,
   });
   const { select, selectedId, grab, release } = tool;
   useEffect(() => {

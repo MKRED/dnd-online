@@ -45,6 +45,17 @@ export interface SceneFigure extends FigureInput {
   letter: string;
 }
 
+// Середина места существа на высоте ног: на опоре — над ней, без опоры — по блокам.
+// Так стоят и фигурки, и монстры с НПС (objectLayout.ts), и клетки их пути (walks/).
+export function standBase(map: MapState, at: Vec3, size: CreatureSize) {
+  const { footprint } = CREATURE_SIZES[size];
+  const standing = standHeight(map, at, size);
+  const feet = standing ?? feetHeight(map, at, size);
+  const middle = Math.max(footprint, 1) / 2;
+  const base: Point3 = [at[0] + middle, feet, at[2] + middle];
+  return { base, standing };
+}
+
 // Где и как рисовать фигурки — как существа карты (objectLayout.ts), только без сводки.
 export function layoutFigures(
   map: MapState,
@@ -52,16 +63,13 @@ export function layoutFigures(
 ): SceneFigure[] {
   return figures.map((figure) => {
     const { footprint, height } = CREATURE_SIZES[figure.size];
-    const standing = standHeight(map, figure.at, figure.size);
-    const feet = standing ?? feetHeight(map, figure.at, figure.size);
-    const middle = Math.max(footprint, 1) / 2;
-    const [x, y, z] = figure.at;
+    const { base, standing } = standBase(map, figure.at, figure.size);
     return {
       ...figure,
-      level: y,
-      base: [x + middle, feet, z + middle],
+      level: figure.at[1],
+      base,
       footprint,
-      top: feet + height,
+      top: base[1] + height,
       blocked: standing === null,
       letter: figure.name.trim().charAt(0).toUpperCase() || '?',
     };

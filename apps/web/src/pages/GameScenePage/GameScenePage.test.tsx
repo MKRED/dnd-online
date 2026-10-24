@@ -18,6 +18,7 @@ import {
 import type {
   FigureInput,
   ObjectImagePaths,
+  SceneWalks,
 } from '../../features/maps/MapScene';
 import type { MapViewState } from '../../features/maps/mapStateFromChunks';
 import { createFakeGameSocket } from '../../test/fakeGameSocket';
@@ -39,6 +40,7 @@ vi.mock('../../features/maps/MapScene', async () => {
       figures,
       figureGhosts,
       readoutAfter,
+      walks,
     }: {
       map: MapViewState;
       refs: MapObjectRefsView;
@@ -48,6 +50,7 @@ vi.mock('../../features/maps/MapScene', async () => {
       figures?: FigureInput[];
       figureGhosts?: FigureInput[];
       readoutAfter?: ReactNode;
+      walks?: SceneWalks;
     }) {
       useEffect(onReady, [onReady]);
       const names = Object.values(refs.monsters).map((m) =>
@@ -65,6 +68,14 @@ vi.mock('../../features/maps/MapScene', async () => {
             </p>
           ))}
           {readoutAfter}
+          {[...(walks ?? [])].map(([key, walk]) => (
+            <p key={key}>
+              Ход: {key}{' '}
+              {walk.kind === 'walk'
+                ? walk.path.map((c) => c?.join(',') ?? '?').join(' → ')
+                : 'ждёт'}
+            </p>
+          ))}
           {figureGhosts?.map((figure) => (
             <p key={figure.id}>
               Тень: {figure.name} {figure.at.join(',')}
@@ -288,6 +299,34 @@ describe('GameScenePage', () => {
     expect(await screen.findByText('Тень: Лира 2,1,3')).toBeInTheDocument();
     drag(null);
     expect(screen.queryByText(/Тень: Лира/)).not.toBeInTheDocument();
+  });
+
+  it('путь хода по сокету — фигурка идёт по клеткам', async () => {
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'player' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+      [`GET ${base}/scene/figures`]: () => ({
+        status: 200,
+        body: figuresOf(3, [LIRA]),
+      }),
+    });
+    renderScene('u3');
+    await screen.findByText(/Фигурка: Лира/);
+    act(() =>
+      socket.current?.receive(GAME_SOCKET.walked, {
+        gameId: GAME.id,
+        sceneId: VIEW.scene.id,
+        seq: 4,
+        walker: { kind: 'figure', characterId: 'c1' },
+        path: [[0, 1, 0], [0, 1, 1], null],
+      }),
+    );
+    expect(
+      await screen.findByText('Ход: figure:c1 0,1,0 → 0,1,1 → ?'),
+    ).toBeInTheDocument();
   });
 
   it('игрок выбирает свою фигурку по имени, чужую — нет; запас правит только мастер', async () => {

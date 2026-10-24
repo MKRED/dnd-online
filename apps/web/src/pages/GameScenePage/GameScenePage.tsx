@@ -26,6 +26,7 @@ import {
   DEFAULT_USER_SETTINGS,
   mapBounds,
   type GameSceneEditMessage,
+  type Vec3,
 } from 'shared';
 import { useAuth } from '../../features/auth';
 import { sceneObjectImages } from '../../features/games';
@@ -51,6 +52,11 @@ import UnplacedList from './figures/UnplacedList';
 import { playersView, useSceneFog } from './fog';
 import { SceneModeSwitch, useSceneMode } from './mode';
 import { useJournalLive } from './journal';
+import { useSceneWalks, withDeparted } from './walks';
+import {
+  figureWalkKey,
+  objectWalkKey,
+} from '../../features/maps/MapScene/walks/sceneWalk';
 import { GameScenePanel } from './panel';
 import { useSceneOpen } from './useSceneOpen';
 import { SCENE_TOOLS, useSceneTools } from './useSceneTools';
@@ -137,6 +143,21 @@ function GameScenePage() {
     ? Math.min(Math.max(cutY ?? bounds.max[1], bounds.min[1]), bounds.max[1])
     : 0;
   const sceneId = view?.scene.id ?? null;
+  // Ходы по пути — прыжками по клеткам (docs/plan/done/walk-animation.md).
+  const walks = useSceneWalks({
+    sceneId,
+    enabled: (user?.settings ?? DEFAULT_USER_SETTINGS).animationFps > 0,
+    objects: state?.objects ?? null,
+  });
+  const { hold } = walks;
+  const holdFigure = useCallback(
+    (characterId: string, from: Vec3) => hold(figureWalkKey(characterId), from),
+    [hold],
+  );
+  const holdCreature = useCallback(
+    (objectId: number, from: Vec3) => hold(objectWalkKey(objectId), from),
+    [hold],
+  );
   const play = useScenePlay({
     gameId: id,
     sceneId,
@@ -145,6 +166,7 @@ function GameScenePage() {
     free: editing,
     state,
     refs: view?.refs ?? null,
+    onMoveStart: holdFigure,
   });
   const { figures } = play;
   const { select: selectFigure } = play.tool;
@@ -160,6 +182,7 @@ function GameScenePage() {
     figureId: play.tool.selectedId,
     clearFigure,
     reloadFigures: figures.reload,
+    onMoveStart: holdCreature,
   });
   const { onSceneEdit: creaturesSceneEdit } = cards;
   const sceneEdit = useCallback(
@@ -179,13 +202,13 @@ function GameScenePage() {
   const handleReady = useCallback(() => setReadySceneId(sceneId), [sceneId]);
   const tools = master && ready !== null && !viewOnly;
   const editTools = tools && editing;
-  const shownState = useMemo(
-    () =>
+  const shownState = useMemo(() => {
+    const shown =
       state && eyesFog && rules.refs
         ? playersView(state, eyesFog, rules.refs)
-        : state,
-    [state, eyesFog, rules.refs],
-  );
+        : state;
+    return shown && withDeparted(shown, walks.departed);
+  }, [state, eyesFog, rules.refs, walks.departed]);
 
   // Выбранное на сцене важнее подсказки инструмента: плашка одна.
   const plaque = plaqueState({
@@ -215,6 +238,7 @@ function GameScenePage() {
           onFogChanged={sceneFog.refresh}
           onFigures={cards.onChanged}
           onFigureDrag={play.ghosts.receive}
+          onWalk={walks.receive}
           dragSenderRef={play.dragSenderRef}
           onLeave={() => void navigate(lobby)}
           onEvents={journal.add}
@@ -279,6 +303,7 @@ function GameScenePage() {
                     }
               }
               fog={fog}
+              walks={walks.walks}
               hover={hover}
               showReadout={editTools}
               readoutAfter={

@@ -150,6 +150,8 @@ export interface GameEventPayloads {
     };
   };
   // Ход фигурки по пути: cost — сколько футов он стоил, left — сколько запаса осталось.
+  // path — клетки пути от from до to (анимация хода, docs/plan/done/walk-animation.md); у
+  // записей до 2026-10-24 его нет.
   'figure.moved': {
     intent: { characterId: string; to: Vec3 };
     result: {
@@ -158,6 +160,7 @@ export interface GameEventPayloads {
       to: Vec3;
       cost: number;
       left: number;
+      path?: Vec3[];
     };
   };
   // Мастер поставил фигурку без пути и запаса; from — null, если её не было на сцене.
@@ -232,6 +235,8 @@ export interface GameEventPayloads {
       to: Vec3;
       cost: number;
       left: number;
+      // Клетки пути, как у figure.moved.
+      path?: Vec3[];
     };
   };
   // Запас одного существа обновлён или к нему добавлен «Рывок».

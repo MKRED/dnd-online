@@ -3,6 +3,7 @@ import type {
   GameFigures,
   GameSceneEditMessage,
   MapObjectRefsView,
+  Vec3,
 } from 'shared';
 import type { SceneCreaturesView } from '../../../features/maps/MapScene';
 import type { MapViewState } from '../../../features/maps/mapStateFromChunks';
@@ -26,6 +27,8 @@ interface CreatureCardsOptions {
   clearFigure: () => void;
   // Перечитать фигурки (их метки здоровья и Скорость).
   reloadFigures: () => void;
+  // Ход существа отправлен — оно ждёт путь на месте (docs/plan/done/walk-animation.md).
+  onMoveStart?: (objectId: number, from: Vec3) => void;
 }
 
 // Состояние существ на странице сцены (docs/plan/done/game.md, этап 8): монстры и НПС, выбор
@@ -41,6 +44,7 @@ export function useCreatureCards({
   figureId,
   clearFigure,
   reloadFigures,
+  onMoveStart,
 }: CreatureCardsOptions) {
   const creatures = useSceneCreatures(gameId, sceneId);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -99,6 +103,7 @@ export function useCreatureCards({
     active: master && canPick,
     onCreatures: creatures.apply,
     onMiss: clearSelection,
+    onMoveStart,
   });
   const view = useMemo<SceneCreaturesView>(
     () => ({

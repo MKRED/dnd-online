@@ -7,6 +7,7 @@ import {
   type GameFigureDragMessage,
   type GameSceneEditMessage,
   type GameSceneFogMessage,
+  type GameWalkMessage,
 } from 'shared';
 import { useGameRoom } from '../../features/games';
 
@@ -54,6 +55,8 @@ interface SceneRoomProps {
   onFigures: () => void;
   // Кто-то тянет фигурку — где она сейчас.
   onFigureDrag: (message: GameFigureDragMessage) => void;
+  // Ход по пути — показать фигурку или существо идущими.
+  onWalk: (message: GameWalkMessage) => void;
   // Сюда комната кладёт отправку своих позиций перетаскивания.
   dragSenderRef: RefObject<((message: GameFigureDragMessage) => void) | null>;
   // Игроку закрыли сцену, его убрали из игры или игру удалили — в лобби.
@@ -76,6 +79,7 @@ function SceneRoom({
   onFogChanged,
   onFigures,
   onFigureDrag,
+  onWalk,
   dragSenderRef,
   onLeave,
   onEvents,
@@ -94,6 +98,7 @@ function SceneRoom({
       onSceneEdit,
       onSceneFog,
       onFigureDrag,
+      onWalk,
       onResync: (missed) => {
         onReload();
         onFigures();

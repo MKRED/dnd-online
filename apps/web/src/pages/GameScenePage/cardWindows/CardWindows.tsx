@@ -9,7 +9,7 @@ import type { FigureTool } from '../figures';
 import { creaturePortrait, Portrait } from '../participants';
 import { ThemeIcon } from '@mantine/core';
 import { IconBox, IconDiamond } from '@tabler/icons-react';
-import type { MapOp } from 'shared';
+import type { MapObject, MapOp } from 'shared';
 import {
   CharacterCardBody,
   CreatureCardBody,
@@ -23,6 +23,8 @@ import type { CardWindow, CardWindows as Windows } from './useCardWindows';
 
 interface CardWindowsProps {
   gameId: string;
+  // Кто смотрит: ссылку на лист героя получает только его владелец (чужой лист закрыт).
+  userId: string | null;
   master: boolean;
   windows: Windows;
   figures: GameFigures | null;
@@ -36,9 +38,18 @@ interface CardWindowsProps {
   busy: boolean;
 }
 
+// Монстр — его карточка в каталоге, НПС — его лист; копия в библиотеке игры названа по ним.
+function creatureHref(object: MapObject | undefined): string | null {
+  if (object?.kind === 'monster') return `/monsters/${object.monsterId}`;
+  if (object?.kind === 'npc') return `/characters/${object.characterId}`;
+  return null;
+}
+
 export interface CardView {
   window: CardWindow;
   title: string;
+  // Полная страница в новой вкладке; null — ссылки нет.
+  href: string | null;
   subtitle: string;
   portrait: ReactNode;
   body: ReactNode;
@@ -48,6 +59,7 @@ export interface CardView {
 // сцены, на телефоне — лист снизу с чипами открытых.
 function CardWindows({
   gameId,
+  userId,
   master,
   windows,
   figures,
@@ -68,6 +80,7 @@ function CardWindows({
       return {
         window,
         title: info?.title ?? 'Объект',
+        href: null,
         subtitle: info?.subtitle ?? '',
         portrait: (
           <ThemeIcon size={40} radius="xl" variant="light" color="yellow">
@@ -90,6 +103,7 @@ function CardWindows({
       return {
         window,
         title: ref?.missing === null ? ref.name : 'Предмет',
+        href: `/items/${target.itemId}`,
         subtitle: 'Предмет',
         portrait: (
           <ThemeIcon size={40} radius="xl" variant="light" color="yellow">
@@ -106,6 +120,10 @@ function CardWindows({
       return {
         window,
         title: name,
+        href:
+          figure && figure.ownerId === userId
+            ? `/characters/${target.id}`
+            : null,
         subtitle:
           !master && !figure?.canMove ? 'Отряд · только чтение' : 'Герой',
         portrait: (
@@ -143,6 +161,7 @@ function CardWindows({
     return {
       window,
       title: name,
+      href: creatureHref(object),
       subtitle: `${kind === 'npc' ? 'НПС' : 'Монстр'}${object?.hidden ? ' · скрыт от игроков' : ''}`,
       portrait: (
         <Portrait
@@ -166,10 +185,11 @@ function CardWindows({
   if (narrow) return <CardSheet views={views} windows={windows} />;
   return (
     <>
-      {views.map(({ window, title, subtitle, portrait, body }, index) => (
+      {views.map(({ window, title, href, subtitle, portrait, body }, index) => (
         <CardWindowFrame
           key={window.key}
           title={title}
+          href={href}
           subtitle={subtitle}
           portrait={portrait}
           x={window.x}

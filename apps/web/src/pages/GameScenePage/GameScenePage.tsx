@@ -327,6 +327,7 @@ function GameScenePage() {
         {ready && (
           <CardWindows
             gameId={id}
+            userId={user?.id ?? null}
             master={master}
             windows={windows}
             figures={figures.figures}

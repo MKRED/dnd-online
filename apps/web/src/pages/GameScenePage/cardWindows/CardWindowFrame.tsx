@@ -1,10 +1,13 @@
 import { ActionIcon, Paper, Text, Tooltip } from '@mantine/core';
 import { IconMinus, IconSquare, IconX } from '@tabler/icons-react';
 import { useRef, type PointerEvent, type ReactNode } from 'react';
+import CardTitle from './CardTitle';
 import classes from './CardWindows.module.css';
 
 interface CardWindowFrameProps {
   title: string;
+  // Полная страница существа или предмета; null — ссылки нет.
+  href: string | null;
   subtitle: string;
   portrait: ReactNode;
   x: number;
@@ -22,6 +25,7 @@ interface CardWindowFrameProps {
 // ним живая. Тянется за шапку, сворачивается в шапку, щелчок поднимает его над другими.
 function CardWindowFrame({
   title,
+  href,
   subtitle,
   portrait,
   x,
@@ -38,8 +42,8 @@ function CardWindowFrame({
   const grab = useRef<{ dx: number; dy: number } | null>(null);
 
   const startDrag = (event: PointerEvent<HTMLDivElement>) => {
-    // Кнопки шапки не тянут окно.
-    if ((event.target as HTMLElement).closest('button')) return;
+    // Кнопки шапки и ссылка-имя не тянут окно.
+    if ((event.target as HTMLElement).closest('button, a')) return;
     grab.current = { dx: event.clientX - x, dy: event.clientY - y };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
@@ -80,9 +84,7 @@ function CardWindowFrame({
       >
         {portrait}
         <div className={classes.heading}>
-          <Text fw={600} truncate>
-            {title}
-          </Text>
+          <CardTitle title={title} href={href} />
           <Text size="xs" c="dimmed" truncate>
             {subtitle}
           </Text>

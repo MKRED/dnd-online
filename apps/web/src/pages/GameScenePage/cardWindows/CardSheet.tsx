@@ -1,5 +1,6 @@
 import { ActionIcon, Chip, Group, Text } from '@mantine/core';
 import { IconChevronDown, IconChevronUp, IconX } from '@tabler/icons-react';
+import CardTitle from './CardTitle';
 import type { CardView } from './CardWindows';
 import classes from './CardWindows.module.css';
 import type { CardWindows } from './useCardWindows';
@@ -16,7 +17,7 @@ function CardSheet({
 }) {
   const current = views.at(-1);
   if (!current) return null;
-  const { window, title, subtitle, portrait, body } = current;
+  const { window, title, href, subtitle, portrait, body } = current;
   return (
     <section className={classes.sheet} aria-label={`Карточка: ${title}`}>
       <div className={classes.grab} />
@@ -43,9 +44,7 @@ function CardSheet({
       <div className={classes.header} style={{ cursor: 'default' }}>
         {portrait}
         <div className={classes.heading}>
-          <Text fw={600} truncate>
-            {title}
-          </Text>
+          <CardTitle title={title} href={href} />
           <Text size="xs" c="dimmed" truncate>
             {subtitle}
           </Text>

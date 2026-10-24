@@ -5,7 +5,12 @@ import {
   MemoryChunkStore,
   type SizedMapState,
 } from 'shared';
-import { blocksText, regionPreview } from './regionPreview';
+import {
+  blocksText,
+  matchingCells,
+  MATCH_CELL_LIMIT,
+  regionPreview,
+} from './regionPreview';
 
 // Карта 10 × 10 × 10: пол из камня на y = 0 и три мшистых блока на y = 1.
 function map(): SizedMapState {
@@ -103,5 +108,21 @@ describe('regionPreview', () => {
     expect(blocksText(12)).toBe('12 блоков');
     expect(blocksText(30)).toBe('30 блоков');
     expect(blocksText(22)).toBe('22 блока');
+  });
+});
+
+describe('matchingCells — что подсветит «Замена»', () => {
+  it('только клетки с блоком из первого угла', () => {
+    expect(matchingCells(map(), box([0, 1, 0], [4, 1, 2]), 'mossy')).toEqual([
+      [0, 1, 0],
+      [1, 1, 0],
+      [2, 1, 0],
+    ]);
+  });
+
+  it('слишком много совпадений — null, хватит рамки', () => {
+    // Воздух 20 × 20 × 20 = 8000 клеток — больше предела подсветки.
+    expect(MATCH_CELL_LIMIT).toBeLessThan(8000);
+    expect(matchingCells(map(), box([0, 1, 0], [19, 20, 19]), null)).toBeNull();
   });
 });

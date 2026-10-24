@@ -81,3 +81,14 @@
 .current[data-empty] {
   border-style: dashed;
 }
+
+/* Карточка «Что ставить» (макет «П2»): картинка, имя с видом, «Выбрать» и ✕. */
+.choiceCard {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  padding: 8px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-default);
+}

@@ -1,6 +1,7 @@
 import {
   ActionIcon,
-  Group,
+  Button,
+  Kbd,
   Stack,
   Text,
   Tooltip,
@@ -12,8 +13,11 @@ import classes from '../BlockPicker/BlockPicker.module.css';
 import BlockSwatch from '../BlockPicker/BlockSwatch';
 import { BlockCatalogContext } from '../BlockPicker/catalogContext';
 import ChoicePicture from './ChoicePicture';
+import SectionLabel from '../ToolPanel/SectionLabel';
 import {
   objectChoiceLabel,
+  objectChoiceMeta,
+  objectChoiceName,
   recentKey,
   type ObjectChoice,
   type RecentPlace,
@@ -43,7 +47,22 @@ interface PlaceChoicePanelProps {
   onClear: () => void;
 }
 
-// Что ставит инструмент (docs/plan/blocks.md, этап 10): текущее с миниатюрой (клик или B —
+// Вид ставящегося словом — под именем на карточке «Что ставить».
+const KIND_WORDS: Record<ObjectChoice['kind'], string> = {
+  start: 'старт',
+  container: 'контейнер',
+  furniture: 'обстановка',
+  item: 'предмет',
+  creature: 'существо',
+};
+
+const choiceSubtitle = (choice: ObjectChoice) =>
+  [KIND_WORDS[choice.kind], objectChoiceMeta(choice)]
+    .filter(Boolean)
+    .join(' · ');
+
+// Что ставит инструмент (docs/plan/blocks.md, этап 10; вид — макет «П2»,
+// docs/plan/scene-page.md, этап 3): текущее с миниатюрой (клик или B —
 // окно «Что поставить») и строка недавних — до них один клик.
 function PlaceChoicePanel(props: PlaceChoicePanelProps) {
   const { catalog, block, rotation, choice, blocksOnly } = props;
@@ -64,9 +83,7 @@ function PlaceChoicePanel(props: PlaceChoicePanelProps) {
   return (
     <BlockCatalogContext.Provider value={catalog}>
       <Stack gap={6}>
-        <Text size="sm" fw={500}>
-          {blocksOnly ? 'Блок' : 'Ставить'}
-        </Text>
+        <SectionLabel title={blocksOnly ? 'Блок' : 'Что ставить'} />
         {empty ? (
           <UnstyledButton
             className={classes.current}
@@ -82,30 +99,35 @@ function PlaceChoicePanel(props: PlaceChoicePanelProps) {
             </Text>
           </UnstyledButton>
         ) : (
-          <Group gap={6} wrap="nowrap">
-            <UnstyledButton
-              className={classes.current}
-              style={{ flex: 1, minWidth: 0 }}
+          <div className={classes.choiceCard}>
+            {current ? (
+              <ChoicePicture choice={current} size={48} />
+            ) : (
+              <BlockSwatch block={block} rotation={rotation} size={48} />
+            )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Text size="sm" fw={600} truncate>
+                {current ? objectChoiceName(current) : label(block)}
+              </Text>
+              <Text size="xs" c="dimmed" truncate>
+                {current ? choiceSubtitle(current) : 'блок'}
+              </Text>
+            </div>
+            <Button
+              variant="default"
+              size="xs"
+              px={8}
               onClick={props.onOpen}
               aria-label={blocksOnly ? 'Выбрать блок' : 'Выбрать, что ставить'}
+              rightSection={<Kbd size="xs">B</Kbd>}
             >
-              {current ? (
-                <ChoicePicture choice={current} size={32} />
-              ) : (
-                <BlockSwatch block={block} rotation={rotation} size={32} />
-              )}
-              <Text size="sm" flex={1} truncate>
-                {current ? objectChoiceLabel(current) : label(block)}
-              </Text>
-              <Text size="xs" c="dimmed">
-                Сменить (B)
-              </Text>
-            </UnstyledButton>
+              Выбрать
+            </Button>
             {!blocksOnly && (
               <Tooltip label="Снять (Esc)" withArrow>
                 <ActionIcon
-                  variant="default"
-                  size="lg"
+                  variant="subtle"
+                  color="gray"
                   aria-label="Снять выбранное"
                   onClick={props.onClear}
                 >
@@ -113,7 +135,7 @@ function PlaceChoicePanel(props: PlaceChoicePanelProps) {
                 </ActionIcon>
               </Tooltip>
             )}
-          </Group>
+          </div>
         )}
 
         {recent.length > 1 && (
@@ -133,9 +155,9 @@ function PlaceChoicePanel(props: PlaceChoicePanelProps) {
                     onClick={() => props.onSelectRecent(r)}
                   >
                     {r.type === 'block' ? (
-                      <BlockSwatch block={r.name} size={28} />
+                      <BlockSwatch block={r.name} size={34} />
                     ) : (
-                      <ChoicePicture choice={r.choice} size={28} />
+                      <ChoicePicture choice={r.choice} size={34} />
                     )}
                   </UnstyledButton>
                 </Tooltip>

@@ -11,6 +11,7 @@ import {
   type PickedCells,
   type SceneEditor,
 } from '../editor/editorTools';
+import CellsHighlight from './CellsHighlight';
 import FrameBox from './FrameBox';
 import PlaceGhost from './objects/PlaceGhost';
 import type { MapViewState } from '../mapStateFromChunks';
@@ -90,13 +91,17 @@ function CellHighlight({
   // Место крупного существа или обстановки целиком: не влезает в карту — не подсвечиваем.
   if (!insideMap(from, size) || !insideMap(to, size)) return null;
   const box: Box3 = anchorBox(editor, cell) ?? { min: from, max: to };
+  const changed = editor.changedCells?.(box) ?? null;
   return (
     <>
       <FrameBox
         min={box.min}
         max={[box.max[0] + 1, box.max[1] + 1, box.max[2] + 1]}
         color={editor.tool === 'erase' ? '#ff6b6b' : '#ffd43b'}
+        // Подсвечены сами клетки — область только обведена.
+        opacity={changed ? 0.03 : undefined}
       />
+      {changed && <CellsHighlight cells={changed} color="#ffd43b" />}
       {editor.ghost && (
         <PlaceGhost
           look={editor.ghost}

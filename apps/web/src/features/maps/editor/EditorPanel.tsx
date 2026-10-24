@@ -1,4 +1,4 @@
-import { NumberInput, SegmentedControl, Stack, Text } from '@mantine/core';
+import { SegmentedControl, Stack, Text } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import type { ReactNode } from 'react';
 import { isRotation, ROTATIONS, type SizedMapState } from 'shared';
@@ -12,6 +12,8 @@ import {
   AnchorCard,
   CursorBlockCard,
   EraseModePicker,
+  HeightStepper,
+  SectionLabel,
   ToolHeader,
 } from './ToolPanel';
 import type { MapEditor } from './useMapEditor';
@@ -103,10 +105,11 @@ function EditorPanel({
       )}
 
       {placesBlock && catalog.describe(editor.block)?.shape !== 'cube' && (
-        <Stack gap={4}>
-          <Text size="sm">Поворот (R) — по часовой, 0° — к северу</Text>
+        <Stack gap={6}>
+          <SectionLabel title="Поворот" hotkey="R" />
           <SegmentedControl
             size="xs"
+            fullWidth
             data={ROTATIONS.map((r) => ({ value: String(r), label: `${r}°` }))}
             value={String(editor.rotation)}
             onChange={(value) => {
@@ -114,20 +117,14 @@ function EditorPanel({
               if (isRotation(rotation)) editor.setRotation(rotation);
             }}
           />
+          <Text size="xs" c="dimmed">
+            По часовой, 0° — к северу
+          </Text>
         </Stack>
       )}
 
       {(isRegionTool(tool) || erasesRegion) && (
-        <NumberInput
-          label="Высота области"
-          description="Слоёв над верхним углом, включая его"
-          min={1}
-          max={64}
-          value={editor.height}
-          onChange={(value) =>
-            editor.setHeight(Math.max(1, Number(value) || 1))
-          }
-        />
+        <HeightStepper value={editor.height} onChange={editor.setHeight} />
       )}
 
       {tool === 'walk' && walkPanel}

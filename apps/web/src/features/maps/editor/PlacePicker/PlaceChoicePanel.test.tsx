@@ -219,9 +219,11 @@ describe('выбор блока (заливка, коробка, замена)',
         recent={blocks(EMBERS_ID, OTHER_ID, 'wood')}
       />,
     );
+    // Карточка «Блок»: имя группы и «Выбрать».
+    expect(screen.getByText('Тлеющие угли')).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Выбрать блок' }),
-    ).toHaveTextContent('Тлеющие угли');
+    ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Тлеющие угли' }),
     ).toBeInTheDocument();
@@ -395,9 +397,9 @@ describe('окно «Что поставить» (этап 10)', () => {
         onSelectRecent={onSelectRecent}
       />,
     );
-    expect(
-      screen.getByRole('button', { name: 'Выбрать, что ставить' }),
-    ).toHaveTextContent('Сундук');
+    // Карточка «Что ставить»: имя и вид под ним.
+    expect(screen.getByText('Сундук')).toBeInTheDocument();
+    expect(screen.getByText('контейнер')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Точка старта' }));
     expect(onSelectRecent).toHaveBeenCalledWith({
       type: 'object',

@@ -1,5 +1,6 @@
-import { ActionIcon, SimpleGrid, Stack, Text } from '@mantine/core';
+import { ActionIcon, SimpleGrid, Stack } from '@mantine/core';
 import type { Facing } from 'shared';
+import SectionLabel from '../ToolPanel/SectionLabel';
 
 // Направления по местам на компасе 3 × 3, север сверху — как на карте и в панели
 // размера. Середина пустая.
@@ -49,9 +50,11 @@ function FacingPicker({
 }: FacingPickerProps) {
   return (
     <Stack gap={4}>
-      <Text size="sm">
-        {rightOnly ? 'Поворот' : 'Взгляд'} (R): {NAMES[value]}
-      </Text>
+      <SectionLabel
+        title={rightOnly ? 'Поворот' : 'Взгляд'}
+        hotkey="R"
+        after={NAMES[value]}
+      />
       <SimpleGrid cols={3} spacing={2} verticalSpacing={2} w={104}>
         {COMPASS.map((facing, index) =>
           facing === null || (rightOnly && facing % 90 !== 0) ? (

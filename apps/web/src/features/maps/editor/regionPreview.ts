@@ -48,6 +48,32 @@ function countCells(
   return count;
 }
 
+// Больше клеток подсветки «Замены» не рисуем: дальше хватит рамки и числа на плашке.
+export const MATCH_CELL_LIMIT = 4096;
+
+// Клетки области, которые заменит «Замена»: с тем же блоком, что в первом углу (макет
+// «П6», docs/plan/scene-page.md, этап 3). null — область или совпадений слишком много.
+export function matchingCells(
+  state: SizedMapState,
+  { min, max }: Box3,
+  match: string | null,
+): Vec3[] | null {
+  if (volume(sizeOf({ min, max })) > PREVIEW_CELL_LIMIT) return null;
+  const want = match ?? AIR_NAME;
+  const cells: Vec3[] = [];
+  for (let y = min[1]; y <= max[1]; y++)
+    for (let z = min[2]; z <= max[2]; z++)
+      for (let x = min[0]; x <= max[0]; x++) {
+        const name =
+          state.palette[cellTypeId(readCell(state.store, [x, y, z]))] ??
+          AIR_NAME;
+        if (name !== want) continue;
+        if (cells.length === MATCH_CELL_LIMIT) return null;
+        cells.push([x, y, z]);
+      }
+  return cells;
+}
+
 interface PreviewInput {
   tool: EditorTool;
   eraseMode: EraseMode;

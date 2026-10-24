@@ -177,6 +177,29 @@ describe('game scene fog: player view (e2e)', () => {
     ]);
   });
 
+  it('новый для сцены блок закрывает вид уже в той правке, что его ставит', async () => {
+    const g = await fogged('gfv_palette');
+    // Фигурка на старте в каменном углу: стены по x = 1 и z = 1.
+    await g.ops([
+      { op: 'fillBox', from: [1, 1, 0], to: [1, 3, 1], block: 'stone' },
+      { op: 'fillBox', from: [0, 1, 1], to: [1, 3, 1], block: 'stone' },
+    ]);
+    await g.m
+      .put(`/api/games/${g.gameId}/scenes/${g.sceneId}/fog`)
+      .send({ enabled: true, sightRange: 40 })
+      .expect(200);
+    // Одной правкой: проём в стене z = 1 и кирпичная стена по z = 3 — кирпича в палитре
+    // сцены ещё нет. Пересчитай туман без него, лучи прошли бы сквозь новую стену.
+    await g.ops([
+      { op: 'fillBox', from: [0, 1, 1], to: [1, 3, 1], block: 'air' },
+      { op: 'fillBox', from: [0, 1, 3], to: [7, 3, 3], block: 'brick' },
+    ]);
+    const player = await view(g.player.agent, g.gameId);
+    expect(cellIn(player, [0, 0, 2])).not.toBe(0);
+    expect(cellIn(player, [0, 0, 5])).toBe(0);
+    expect(cellIn(player, [3, 0, 6])).toBe(0);
+  });
+
   it('скрытого мастер вывел в тумане — игрок его не видит; невидимый не мешает ходу', async () => {
     const g = await fogged('gfv_hidden');
     const goblin = g.idOf('monster');

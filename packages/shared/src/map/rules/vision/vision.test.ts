@@ -99,6 +99,93 @@ describe('visibleCells', () => {
     expect(maskHas(seen, [6, 0, 0])).toBe(true);
   });
 
+  it('sees the floor under a glass column', () => {
+    const column: BlockOp = {
+      op: 'fillBox',
+      from: [3, 1, 0],
+      to: [3, 2, 0],
+      block: 'glass',
+    };
+    const map = mapWith(FLOOR, column);
+    const seen = visibleCells(map, viewer(map, [0, 1, 0]), MAP);
+    // Над этим полом не воздух, а стекло: виден он только сквозь него.
+    expect(maskHas(seen, [3, 0, 0])).toBe(true);
+    expect(maskHas(seen, [3, 2, 0])).toBe(true);
+  });
+
+  it('sees a block walled in by glass on every open side', () => {
+    const glass: BlockOp = {
+      op: 'fillBox',
+      from: [2, 1, -1],
+      to: [4, 2, 1],
+      block: 'glass',
+    };
+    const inside: BlockOp = { op: 'setBlock', at: [3, 1, 0], block: 'brick' };
+    const map = mapWith(FLOOR, glass, inside);
+    const seen = visibleCells(map, viewer(map, [0, 1, 0]), MAP);
+    expect(maskHas(seen, [3, 1, 0])).toBe(true);
+  });
+
+  it('does not see a block walled in by stone, glass or not', () => {
+    const glass: BlockOp = {
+      op: 'fillBox',
+      from: [2, 1, -1],
+      to: [4, 2, 1],
+      block: 'glass',
+    };
+    const shell: BlockOp = { ...glass, block: 'stone' };
+    const core: BlockOp = { op: 'setBlock', at: [3, 1, 0], block: 'glass' };
+    const map = mapWith(FLOOR, glass, shell, core);
+    const seen = visibleCells(map, viewer(map, [0, 1, 0]), MAP);
+    expect(maskHas(seen, [3, 1, 0])).toBe(false);
+  });
+
+  it('sees the floor under an upper slab', () => {
+    const slab: BlockOp = {
+      op: 'setBlock',
+      at: [3, 1, 0],
+      block: 'wood_slab_top',
+    };
+    const map = mapWith(FLOOR, slab);
+    const seen = visibleCells(map, viewer(map, [0, 1, 0]), MAP);
+    expect(maskHas(seen, [3, 1, 0])).toBe(true);
+    expect(maskHas(seen, [3, 0, 0])).toBe(true);
+  });
+
+  it('sees the wall beside stairs, through the open part above the lower step', () => {
+    const stairs: BlockOp = {
+      op: 'setBlock',
+      at: [3, 1, 0],
+      block: 'wood_stairs',
+    };
+    // Стена по x = 4 вплотную к ступеням: её блок [4, 1, 0] открыт только к ступеням.
+    const wall: BlockOp = { ...WALL, from: [4, 1, -10], to: [4, 4, 10] };
+    const map = mapWith(FLOOR, wall, stairs);
+    const seen = visibleCells(map, viewer(map, [0, 1, 0]), MAP);
+    expect(maskHas(seen, [3, 1, 0])).toBe(true);
+    expect(maskHas(seen, [4, 1, 0])).toBe(true);
+  });
+
+  it('does not see a block behind a thin wall that closes its face', () => {
+    const back: BlockOp = {
+      op: 'fillBox',
+      from: [-10, 1, -1],
+      to: [10, 4, -1],
+      block: 'stone',
+    };
+    // Тонкая стена у северного края клетки — вплотную к стене z = −1.
+    const thin: BlockOp = {
+      op: 'setBlock',
+      at: [3, 1, 0],
+      block: 'stone_wall',
+    };
+    const map = mapWith(FLOOR, back, thin);
+    const seen = visibleCells(map, viewer(map, [0, 1, 2]), MAP);
+    expect(maskHas(seen, [3, 1, 0])).toBe(true);
+    expect(maskHas(seen, [3, 0, 0])).toBe(true);
+    expect(maskHas(seen, [3, 1, -1])).toBe(false);
+  });
+
   it('sees the floor below from a balcony, past the edge', () => {
     const balcony: BlockOp = {
       op: 'fillBox',

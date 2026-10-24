@@ -112,12 +112,14 @@ function furnitureNear(
 // стреляют в обоих режимах: стеклянной обстановки нет). Обход клеток вдоль отрезка — 3D DDA (Amanatides–Woo),
 // внутри клетки проверяются коробки её фигуры, а не клетка целиком. Чанк берётся из
 // хранилища только при переходе в другой чанк: строковый ключ на каждую клетку
-// стоил больше самого обхода.
+// стоил больше самого обхода. intoCell — луч проверяет, доходит ли взгляд до клетки, а не
+// до точки: содержимое самой клетки цели (воксели сундука в ней) его не перекрывает.
 export function segmentBlocked(
   map: MapState,
   from: Point3,
   to: Point3,
   mode: RayMode,
+  intoCell = false,
 ): boolean {
   const boxes = boxCache(map, mode);
   const furniture = furnitureNear(map.furniture, from, to);
@@ -147,6 +149,7 @@ export function segmentBlocked(
   let chunkZ = NaN;
   let chunk: Uint16Array | undefined;
   for (let i = 0; ; i++) {
+    if (intoCell && i >= steps) return false;
     const kx = Math.floor(x / CHUNK_SIZE);
     const ky = Math.floor(y / CHUNK_SIZE);
     const kz = Math.floor(z / CHUNK_SIZE);

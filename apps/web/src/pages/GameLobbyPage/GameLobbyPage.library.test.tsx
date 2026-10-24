@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { GameLibraryEntry, GameLibraryItem, Item } from 'shared';
@@ -92,20 +92,28 @@ const LANTERN: GameLibraryEntry = {
 
 describe('GameLobbyPage: библиотека игры', () => {
   it('мастер ищет в библиотеке, открывает копию и её связь', async () => {
-    const fetchMock = stubFetch([
-      { status: 200, body: { ...GAME, role: 'master' } },
-      { status: 200, body: LIST },
-      { status: 200, body: PACK },
-      { status: 200, body: LANTERN },
-    ]);
+    const fetchMock = stubFetch(
+      [
+        { status: 200, body: { ...GAME, role: 'master' } },
+        { status: 200, body: LIST },
+        { status: 200, body: LIST },
+        { status: 200, body: PACK },
+        { status: 200, body: LANTERN },
+      ],
+      { libraryInQueue: true },
+    );
     renderLobby('m1');
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole('button', { name: 'Библиотека' }));
+    await user.click(
+      await screen.findByRole('button', {
+        name: 'Библиотека, ждут обновления: 1',
+      }),
+    );
     const drawer = await screen.findByRole('dialog', {
       name: 'Библиотека игры',
     });
-    expect(fetchMock.mock.calls[1][0]).toMatch(/\/games\/[^/]+\/library$/);
+    expect(fetchMock.mock.calls[2][0]).toMatch(/\/games\/[^/]+\/library$/);
     await within(drawer).findByText('Набор');
     // Сверка со справочником: «Обновить» — только у изменённой копии.
     expect(
@@ -129,7 +137,7 @@ describe('GameLobbyPage: библиотека игры', () => {
     expect(
       await within(drawer).findByText('Предмет · Набор снаряжения · автор Аня'),
     ).toBeInTheDocument();
-    expect(fetchMock.mock.calls[2][0]).toMatch(/\/library\/item\/p1$/);
+    expect(fetchMock.mock.calls[3][0]).toMatch(/\/library\/item\/p1$/);
     expect(within(drawer).getByText('Скрыто или удалено')).toBeInTheDocument();
 
     await user.click(within(drawer).getByRole('button', { name: 'Фонарь' }));
@@ -147,19 +155,27 @@ describe('GameLobbyPage: библиотека игры', () => {
 
   it('«Обновить» переписывает копию из справочника и перечитывает список', async () => {
     const refreshed = { ...PACK, name: 'Новый набор', source: 'same' };
-    const fetchMock = stubFetch([
-      { status: 200, body: { ...GAME, role: 'master' } },
-      { status: 200, body: LIST },
-      { status: 201, body: refreshed },
-      {
-        status: 200,
-        body: [{ ...LIST[0], name: 'Новый набор', source: 'same' }],
-      },
-    ]);
+    const fetchMock = stubFetch(
+      [
+        { status: 200, body: { ...GAME, role: 'master' } },
+        { status: 200, body: LIST },
+        { status: 200, body: LIST },
+        { status: 201, body: refreshed },
+        {
+          status: 200,
+          body: [{ ...LIST[0], name: 'Новый набор', source: 'same' }],
+        },
+      ],
+      { libraryInQueue: true },
+    );
     renderLobby('m1');
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole('button', { name: 'Библиотека' }));
+    await user.click(
+      await screen.findByRole('button', {
+        name: 'Библиотека, ждут обновления: 1',
+      }),
+    );
     const drawer = await screen.findByRole('dialog', {
       name: 'Библиотека игры',
     });
@@ -167,10 +183,59 @@ describe('GameLobbyPage: библиотека игры', () => {
       await within(drawer).findByRole('button', { name: 'Обновить' }),
     );
     expect(await within(drawer).findByText('Новый набор')).toBeInTheDocument();
-    expect(fetchMock.mock.calls[2][0]).toMatch(/\/library\/item\/p1\/refresh$/);
-    expect((fetchMock.mock.calls[2][1] as RequestInit).method).toBe('POST');
+    expect(fetchMock.mock.calls[3][0]).toMatch(/\/library\/item\/p1\/refresh$/);
+    expect((fetchMock.mock.calls[3][1] as RequestInit).method).toBe('POST');
     expect(
       within(drawer).queryByRole('button', { name: 'Обновить' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('на кнопке — сколько копий ждут обновления; пересчёт после шторки и на вкладке', async () => {
+    const same = LIST.map((entry) => ({ ...entry, source: 'same' }));
+    const twoChanged = [
+      ...LIST,
+      row('monster', 'g1', 'Гоблин', 'humanoid', 'changed'),
+    ];
+    const fetchMock = stubFetch(
+      [
+        { status: 200, body: { ...GAME, role: 'master' } },
+        { status: 200, body: LIST },
+        { status: 200, body: same },
+        { status: 200, body: same },
+        { status: 200, body: twoChanged },
+      ],
+      { libraryInQueue: true },
+    );
+    renderLobby('m1');
+    const user = userEvent.setup();
+
+    // «Нет в справочнике» не считается: обновить можно только изменённую.
+    const button = await screen.findByRole('button', {
+      name: 'Библиотека, ждут обновления: 1',
+    });
+    // Кружок Mantine стоит в обёртке кнопки перед ней.
+    expect(button.parentElement).toHaveTextContent(/^1Библиотека$/);
+
+    await user.click(button);
+    const drawer = await screen.findByRole('dialog', {
+      name: 'Библиотека игры',
+    });
+    await within(drawer).findByText('Набор');
+    await user.click(
+      within(drawer).getByRole('button', { name: 'Закрыть библиотеку' }),
+    );
+    // Закрытая шторка — повод пересчитать: обновлять больше нечего, кружка нет.
+    const plain = await screen.findByRole('button', { name: 'Библиотека' });
+    expect(plain.parentElement).toHaveTextContent(/^Библиотека$/);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+
+    // Справочник поправили в другой вкладке — вернулись, число пересчиталось.
+    fireEvent.focus(window);
+    expect(
+      await screen.findByRole('button', {
+        name: 'Библиотека, ждут обновления: 2',
+      }),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(5));
   });
 });

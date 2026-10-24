@@ -34,7 +34,11 @@ export const GAME: GameDetail = {
   members: [],
 };
 
-export function stubFetch(responses: { status: number; body?: unknown }[]) {
+export function stubFetch(
+  responses: { status: number; body?: unknown }[],
+  // Тесты библиотеки отвечают на чтение её списка сами, по очереди.
+  { libraryInQueue = false } = {},
+) {
   const fetchMock = vi.fn<typeof fetch>();
   for (const { status, body } of responses) {
     fetchMock.mockResolvedValueOnce(
@@ -42,16 +46,21 @@ export function stubFetch(responses: { status: number; body?: unknown }[]) {
     );
   }
   // Блок сцен мастера читает себя сам; тесты, которые не о сценах, его запрос не ждут —
-  // он не занимает очередь ответов и не попадает в fetchMock.mock.calls.
-  vi.stubGlobal('fetch', (input: RequestInfo | URL, init?: RequestInit) =>
-    urlOf(input).endsWith('/scenes') && !init?.method
-      ? Promise.resolve(
-          new Response(JSON.stringify({ open: false, scenes: [] }), {
-            status: 200,
-          }),
-        )
-      : fetchMock(input, init),
-  );
+  // он не занимает очередь ответов и не попадает в fetchMock.mock.calls. Так же — список
+  // библиотеки, по которому мастеру считается число на кнопке «Библиотека».
+  vi.stubGlobal('fetch', (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = urlOf(input);
+    if (init?.method) return fetchMock(input, init);
+    if (url.endsWith('/scenes'))
+      return Promise.resolve(
+        new Response(JSON.stringify({ open: false, scenes: [] }), {
+          status: 200,
+        }),
+      );
+    if (url.endsWith('/library') && !libraryInQueue)
+      return Promise.resolve(new Response('[]', { status: 200 }));
+    return fetchMock(input, init);
+  });
   return fetchMock;
 }
 

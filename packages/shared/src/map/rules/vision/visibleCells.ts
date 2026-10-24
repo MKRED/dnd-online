@@ -12,6 +12,7 @@ import { eyePoints } from '../cover.js';
 import type { BodyBox, Point3 } from '../creature.js';
 import { pointInSolid, segmentBlocked } from '../segment.js';
 import { createMask, maskAdd, type CellMask } from './cellMask.js';
+import { sightTargets } from './sightTarget.js';
 
 // Кто смотрит: тело фигурки и дальность обзора в клетках. Дальность своя у каждого:
 // сейчас это дальность сцены, потом её поменяют темнота, слепота, тёмное зрение
@@ -76,12 +77,12 @@ export function viewerEyes(map: MapState, viewer: Viewer): Point3[] {
 }
 
 // Что видит один смотрящий (docs/plan/done/fog-of-war.md, «Как считаем видимое»). Правило
-// рогаликов: лучи идут только к воздуху у поверхности — клеткам воздуха, у которых
-// сосед по грани не воздух (пол, клетка у стены). Воздух посреди зала ничего не
-// показывает. Блок виден, если виден соседний с ним воздух: луч к центру самого
-// блока упёрся бы в этот блок. bounds — клетки карты, обязательны: за её пределами
-// (под полом, y < 0) клеток нет, а лучи к ним упирались бы в пол всеми пятью глазами —
-// замеренный бюджет (docs/plan/done/fog-of-war.md) держится только с границами.
+// рогаликов: лучи идут только к клеткам у поверхности, где есть пустота, — воздуху,
+// стеклу, плитам и ступеням, у которых сосед по грани не воздух (пол, клетка у стены).
+// Воздух посреди зала ничего не показывает. Полный блок виден, если видна соседняя с ним
+// клетка: луч к центру самого блока упёрся бы в этот блок. Что считается целью и что она
+// открывает — sightTarget.ts: без стекла, плит и ступеней среди целей пол под стеклянной
+// колонной и стена за ступенями не открылись бы никогда.
 export function visibleCells(
   map: MapState,
   viewer: Viewer,
@@ -98,12 +99,13 @@ export function visibleCells(
   const sizeX = area.max[0] - ax + 1;
   const sizeY = area.max[1] - ay + 1;
   const sizeZ = area.max[2] - az + 1;
-  // Проверенный воздух — плотная сетка по области: клеток много, ключ-строка на каждую
+  // Проверенные клетки — плотная сетка по области: клеток много, ключ-строка на каждую
   // стоил бы дороже самих лучей.
   const tested = new Uint8Array(sizeX * sizeY * sizeZ);
-  const seenAir: Vec3[] = [];
+  const seenCells: { cell: Vec3; faces?: readonly boolean[] }[] = [];
+  const targetOf = sightTargets(map);
 
-  const testAir = (x: number, y: number, z: number) => {
+  const testCell = (x: number, y: number, z: number) => {
     const lx = x - ax;
     const ly = y - ay;
     const lz = z - az;
@@ -120,14 +122,24 @@ export function visibleCells(
     const index = lx + sizeX * (lz + sizeZ * ly);
     if (tested[index]) return;
     tested[index] = 1;
-    if (readCell(map.store, [x, y, z]) !== AIR) return;
-    const centre: Point3 = [x + 0.5, y + 0.5, z + 0.5];
-    if (eyes.some((eye) => !segmentBlocked(map, eye, centre, 'sight'))) {
-      seenAir.push([x, y, z]);
+    const target = targetOf(readCell(map.store, [x, y, z]));
+    if (!target) return;
+    if (target.kind === 'open') {
+      const centre: Point3 = [x + 0.5, y + 0.5, z + 0.5];
+      const seen = eyes.some(
+        (eye) => !segmentBlocked(map, eye, centre, 'sight', true),
+      );
+      if (seen) seenCells.push({ cell: [x, y, z] });
+      return;
     }
+    const seen = target.points.some((p) => {
+      const point: Point3 = [x + p[0], y + p[1], z + p[2]];
+      return eyes.some((eye) => !segmentBlocked(map, eye, point, 'sight'));
+    });
+    if (seen) seenCells.push({ cell: [x, y, z], faces: target.openFaces });
   };
 
-  // Блоки на клетку шире области: их воздух-соседи ещё в ней.
+  // Блоки на клетку шире области: их соседи ещё в ней.
   const minCell = [ax - 1, ay - 1, az - 1];
   const maxCell = [area.max[0] + 1, area.max[1] + 1, area.max[2] + 1];
   for (const key of map.store.keys()) {
@@ -148,21 +160,28 @@ export function visibleCells(
           const y = base[1] + ly;
           const z = base[2] + lz;
           for (const [dx, dy, dz] of NEIGHBOURS)
-            testAir(x + dx, y + dy, z + dz);
+            testCell(x + dx, y + dy, z + dz);
         }
       }
     }
   }
-  for (const air of seenAir) {
-    maskAdd(visible, air);
-    revealAround(map, visible, air);
+  for (const { cell, faces } of seenCells) {
+    maskAdd(visible, cell);
+    revealAround(map, visible, cell, faces);
   }
   return visible;
 }
 
-// Соседние с клеткой блоки становятся видны вместе с ней.
-function revealAround(map: MapState, mask: CellMask, cell: Vec3): void {
-  for (const [dx, dy, dz] of NEIGHBOURS) {
+// Соседние с клеткой блоки становятся видны вместе с ней — кроме тех, что за гранью,
+// закрытой фигурой самой клетки (faces — открытые грани в порядке NEIGHBOURS).
+function revealAround(
+  map: MapState,
+  mask: CellMask,
+  cell: Vec3,
+  faces?: readonly boolean[],
+): void {
+  for (const [i, [dx, dy, dz]] of NEIGHBOURS.entries()) {
+    if (faces && !faces[i]) continue;
     const next: Vec3 = [cell[0] + dx, cell[1] + dy, cell[2] + dz];
     if (readCell(map.store, next) !== AIR) maskAdd(mask, next);
   }

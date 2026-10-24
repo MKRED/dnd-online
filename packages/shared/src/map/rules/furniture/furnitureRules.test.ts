@@ -313,6 +313,20 @@ describe('встроенные контейнеры в правилах (эта�
     expect(stepCost(map, [2, 1, 3], [3, 1, 3], 'medium')).toBe(10);
   });
 
+  it('туман: видно клетку контейнера и пол под ним', () => {
+    for (const look of ['chest', 'barrel', 'crate', 'sack'] as const) {
+      const map = room(container(look));
+      const seen = partySight(
+        map,
+        [{ body: creatureBody(map, [1, 1, 1], 'medium'), rangeCells: 12 }],
+        [],
+        { min: [0, 0, 0], max: [7, 4, 7] },
+      );
+      expect(maskHas(seen, [3, 1, 3])).toBe(true);
+      expect(maskHas(seen, [3, 0, 3])).toBe(true);
+    }
+  });
+
   it('модели встроенных — в пределах клетки', () => {
     for (const look of ['chest', 'barrel', 'crate', 'sack'] as const) {
       const { size, voxels } = builtinContainerModel(look);

@@ -124,6 +124,8 @@ export interface GameEventPayloads {
     intent: { enabled: boolean; sightRange: number };
     result: { scene: GameSceneRef };
   };
+  // Мастер сбросил туман войны сцены: игроки забыли открытое и открывают его заново.
+  'scene.fogReset': { intent: null; result: { scene: GameSceneRef } };
   // Мастер правит сцену в игре — блоки и объекты, как в редакторе карты. libraryCopied —
   // сколько новых записей справочников (монстр, НПС, предмет) скопировано в библиотеку.
   'scene.edited': {

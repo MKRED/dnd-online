@@ -34,6 +34,7 @@ export const FOG_EVENT_KINDS: ReadonlySet<GameEventKind> =
     'scene.activated',
     'scene.restarted',
     'scene.fog',
+    'scene.fogReset',
     // Правки мастера: блоки (снесли стену — за ней видно), объекты, отмена и возврат.
     'scene.edited',
     'scene.undone',

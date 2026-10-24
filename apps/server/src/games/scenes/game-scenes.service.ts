@@ -16,6 +16,7 @@ import {
   setSceneFog,
   setSceneOpen,
 } from './scene-edits.js';
+import { resetSceneFog } from './scene-fog-reset.js';
 import { listScenes } from './scene-read.js';
 
 type SceneEdit = (tx: DbTransaction, masterId: string) => Promise<boolean>;
@@ -95,6 +96,20 @@ export class GameScenesService {
       'fog',
       { sceneId, ...input },
       (tx, masterId) => setSceneFog(tx, gameId, masterId, sceneId, input),
+    );
+  }
+
+  resetFog(
+    userId: string,
+    gameId: string,
+    sceneId: string,
+  ): Promise<GameScenes> {
+    return this.change(
+      userId,
+      gameId,
+      'fogReset',
+      { sceneId },
+      (tx, masterId) => resetSceneFog(tx, gameId, masterId, sceneId),
     );
   }
 

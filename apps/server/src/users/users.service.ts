@@ -94,6 +94,21 @@ export class UsersService {
     );
   }
 
+  // Ник не лежит в токенах, а его читают по join с users: новый виден везде сразу.
+  async updateNickname(id: string, nickname: string): Promise<boolean> {
+    const t0 = Date.now();
+    const updated = await this.databaseService.db
+      .update(users)
+      .set({ nickname })
+      .where(eq(users.id, id))
+      .returning({ id: users.id });
+    this.logger.info(
+      { durationMs: Date.now() - t0, id, updated: updated.length },
+      'User nickname changed',
+    );
+    return updated.length > 0;
+  }
+
   // Сливает переданные поля с уже сохранёнными прямо в UPDATE (jsonb ||): два
   // параллельных изменения разных настроек не затрут друг друга. undefined — нет такого
   // пользователя.

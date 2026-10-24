@@ -1,4 +1,5 @@
 export {
+  changeNickname,
   changePassword,
   getProfile,
   setCredentials,

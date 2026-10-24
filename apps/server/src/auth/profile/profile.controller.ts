@@ -13,11 +13,12 @@ import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { AuthGuard, type AuthenticatedRequest } from '../auth.guard.js';
 import { TokenService } from '../token.service.js';
+import { ChangeNicknameDto } from './dto/change-nickname.dto.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { SetCredentialsDto } from './dto/set-credentials.dto.js';
 import { ProfileService } from './profile.service.js';
 
-// Только сессия (cookie), без api-токенов: пароль меняет сам человек, а не MCP-клиент.
+// Только сессия (cookie), без api-токенов: пароль и ник меняет сам человек, а не MCP-клиент.
 // Лимит — от перебора текущего пароля.
 @UseGuards(AuthGuard, ThrottlerGuard)
 @Throttle({ default: { limit: 10, ttl: 60_000 } })
@@ -31,6 +32,14 @@ export class ProfileController {
   @Get()
   get(@Req() req: AuthenticatedRequest) {
     return this.profileService.getProfile(req.user.sub);
+  }
+
+  @Put('nickname')
+  changeNickname(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: ChangeNicknameDto,
+  ) {
+    return this.profileService.changeNickname(req.user.sub, dto);
   }
 
   @Put('credentials')

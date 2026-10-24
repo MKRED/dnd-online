@@ -13,11 +13,13 @@ describe('ProfileService', () => {
     login: string;
     nickname: string;
     passwordHash: string | null;
+    createdAt: Date;
   };
   let users: {
     findById: ReturnType<typeof vi.fn>;
     setCredentials: Mock<UsersService['setCredentials']>;
     updatePassword: Mock<UsersService['updatePassword']>;
+    updateNickname: Mock<UsersService['updateNickname']>;
   };
   let service: ProfileService;
 
@@ -27,11 +29,13 @@ describe('ProfileService', () => {
       login: 'lolka_ab12cd34',
       nickname: 'Арвен',
       passwordHash: null,
+      createdAt: new Date('2026-09-14T10:00:00Z'),
     };
     users = {
       findById: vi.fn(() => Promise.resolve(user)),
       setCredentials: vi.fn<UsersService['setCredentials']>(),
       updatePassword: vi.fn<UsersService['updatePassword']>(),
+      updateNickname: vi.fn<UsersService['updateNickname']>(),
     };
     service = new ProfileService(
       users as unknown as UsersService,
@@ -53,7 +57,19 @@ describe('ProfileService', () => {
       nickname: 'Арвен',
       hasPassword: false,
       providers: ['lolka'],
+      createdAt: '2026-09-14T10:00:00.000Z',
     });
+  });
+
+  it('changes the nickname and returns the fresh profile', async () => {
+    users.updateNickname.mockImplementation((_id, nickname) => {
+      user = { ...user, nickname };
+      return Promise.resolve(true);
+    });
+    await expect(
+      service.changeNickname('u1', { nickname: 'mk red' }),
+    ).resolves.toMatchObject({ nickname: 'mk red' });
+    expect(users.updateNickname).toHaveBeenCalledWith('u1', 'mk red');
   });
 
   it('sets login and password and issues fresh tokens', async () => {

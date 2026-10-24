@@ -3,7 +3,7 @@ import type { BlockCatalog, Rotation } from 'shared';
 import classes from '../BlockPicker/BlockPicker.module.css';
 import BlockSwatch from '../BlockPicker/BlockSwatch';
 import { BlockCatalogContext } from '../BlockPicker/catalogContext';
-import ChoiceIcon from './ChoiceIcon';
+import ChoicePicture from './ChoicePicture';
 import {
   objectChoiceLabel,
   recentKey,
@@ -58,7 +58,7 @@ function PlaceChoicePanel(props: PlaceChoicePanelProps) {
           aria-label={blocksOnly ? 'Выбрать блок' : 'Выбрать, что ставить'}
         >
           {current ? (
-            <ChoiceIcon choice={current} size={32} />
+            <ChoicePicture choice={current} size={32} />
           ) : (
             <BlockSwatch block={block} rotation={rotation} size={32} />
           )}
@@ -89,7 +89,7 @@ function PlaceChoicePanel(props: PlaceChoicePanelProps) {
                     {r.type === 'block' ? (
                       <BlockSwatch block={r.name} size={28} />
                     ) : (
-                      <ChoiceIcon choice={r.choice} size={22} />
+                      <ChoicePicture choice={r.choice} size={28} />
                     )}
                   </UnstyledButton>
                 </Tooltip>

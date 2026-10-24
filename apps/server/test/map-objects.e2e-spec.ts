@@ -1,7 +1,11 @@
 import request from 'supertest';
 import { DEFAULT_MONSTER_STAT_BLOCK } from 'shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { characterBody } from './support/character-fixture.js';
+import {
+  characterBody,
+  PNG_FILE,
+  pngImage,
+} from './support/character-fixture.js';
 import { createItem, itemBody } from './support/item-fixture.js';
 import { monsterBody } from './support/monster-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
@@ -425,7 +429,12 @@ describe('объекты на карте (e2e)', () => {
     expect(ids).toEqual(expect.arrayContaining([mine, shared]));
     expect(ids).toHaveLength(2);
     expect(monsters.body).toContainEqual(
-      expect.objectContaining({ id: mine, size: 'medium', role: 'regular' }),
+      expect.objectContaining({
+        id: mine,
+        size: 'medium',
+        role: 'regular',
+        image: null,
+      }),
     );
 
     const rope = await createItem(owner, {
@@ -436,13 +445,52 @@ describe('объекты на карте (e2e)', () => {
       200,
     );
     expect(found.body).toEqual([
-      expect.objectContaining({ id: rope.id, category: 'basic', weight: 10 }),
+      expect.objectContaining({
+        id: rope.id,
+        category: 'basic',
+        weight: 10,
+        image: null,
+      }),
     ]);
 
     const npcs = await api('/api/map-catalog?kind=npc').expect(200);
     const npcIds = (npcs.body as { id: string }[]).map((n) => n.id);
     expect(npcIds).toContain(npc);
     expect(npcIds).not.toContain(foreignNpc);
+
+    // Картинки для окна «Что поставить»: миниатюра записи каталога и главная картинка НПС.
+    const png = await pngImage();
+    await owner
+      .put(`/api/monsters/${mine}/image`)
+      .attach('file', png, PNG_FILE)
+      .expect(200);
+    await owner
+      .put(`/api/items/${rope.id}/image`)
+      .attach('file', png, PNG_FILE)
+      .expect(200);
+    const npcImage = (
+      await owner
+        .post(`/api/characters/${npc}/images`)
+        .attach('file', png, PNG_FILE)
+        .expect(201)
+    ).body as { id: string };
+    const pictured = async (kind: string, id: string) =>
+      (
+        (await api(`/api/map-catalog?kind=${kind}`).expect(200)).body as {
+          id: string;
+          image?: unknown;
+          mainImage?: unknown;
+        }[]
+      ).find((entry) => entry.id === id);
+    expect((await pictured('monster', mine))?.image).toMatchObject({
+      version: 1,
+    });
+    expect((await pictured('item', rope.id))?.image).toMatchObject({
+      version: 1,
+    });
+    expect((await pictured('npc', npc))?.mainImage).toMatchObject({
+      id: npcImage.id,
+    });
 
     // Шаблон LIKE не работает: «%» ищется как символ.
     const literal = await api('/api/map-catalog?kind=monster&q=%25').expect(

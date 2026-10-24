@@ -52,16 +52,18 @@ const KIND_FIELDS: Record<
 };
 
 // Составляющие эффекта списком карточек (docs/plan/done/effects.md): у каждой свои поля и
-// крестик. Новая добавляется из меню видов — оно растёт с каждым этапом плана.
-function ComponentsField({ form }: ComponentsFieldProps) {
+// крестик. Новая добавляется из меню видов — оно растёт с каждым этапом плана. Тот же
+// список — у черты в форме способности (docs/plan/done/traits.md), со своей подписью.
+function ComponentsField({
+  form,
+  label = 'Составляющие',
+  description = 'Что эффект делает. Без составляющих эффект «Базовый»: всё, что он делает, — в описании',
+}: ComponentsFieldProps & { label?: string; description?: string }) {
   const { components } = form.getValues().effect;
   const full = components.length >= EFFECT_COMPONENTS_MAX;
 
   return (
-    <Input.Wrapper
-      label="Составляющие"
-      description="Что эффект делает. Без составляющих эффект «Базовый»: всё, что он делает, — в описании"
-    >
+    <Input.Wrapper label={label} description={description}>
       <Stack gap="xs" mt={6}>
         {components.map((component, index) => {
           const Fields = KIND_FIELDS[component.kind];

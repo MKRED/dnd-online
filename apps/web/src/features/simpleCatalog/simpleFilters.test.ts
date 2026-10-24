@@ -29,6 +29,7 @@ const ability = (name: string): Ability => ({
   activation: { kind: 'action' },
   costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
   steps: [],
+  passive: [],
 });
 
 const effect = (

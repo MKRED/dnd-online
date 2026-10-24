@@ -4,6 +4,7 @@ import {
   formatAbilitySteps,
   formatActivation,
   formatCosts,
+  formatEffectComponent,
   formatRecharge,
   formatSpellDuration,
   formatSpellHeader,
@@ -75,6 +76,17 @@ export function abilityRows(
       label: 'Активация',
       value: `${formatActivation(entry.activation)}${ritual ? ' или ритуал' : ''}`,
     },
+    // Что черта даёт всегда (docs/plan/done/traits.md) — сразу под активацией «Черта».
+    ...(entry.passive.length > 0
+      ? [
+          {
+            label: 'Действует всегда',
+            value: (
+              <CardLines lines={entry.passive.map(formatEffectComponent)} />
+            ),
+          },
+        ]
+      : []),
     {
       label: 'Затраты',
       value:

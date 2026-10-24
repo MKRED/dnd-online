@@ -30,6 +30,7 @@ const row = (
     activation,
     costs: NO_ABILITY_COSTS,
     recharge: null,
+    passive: [],
   },
   missing: null,
   inactive: false,

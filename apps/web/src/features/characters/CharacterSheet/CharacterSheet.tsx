@@ -47,12 +47,14 @@ function CharacterSheet({
   onAbilitiesChange,
   images = true,
 }: CharacterSheetProps) {
-  // Вид листа: итог с эффектами или база из формы. Не запоминается — лист всегда
-  // открывается итогом, в игре нужен он (решено с пользователем 2026-10-17).
+  // Вид листа: итог с эффектами или без них. Не запоминается — лист всегда открывается
+  // итогом, в игре нужен он (решено с пользователем 2026-10-17). Черты считаются в обоих
+  // видах: они часть персонажа (docs/plan/done/traits.md).
   const [withEffects, setWithEffects] = useState(true);
   const hasEffects = character.effects.length > 0;
   const totals = useMemo(() => sheetTotals(character), [character]);
-  const shown = hasEffects && withEffects ? totals : null;
+  const base = useMemo(() => sheetTotals(character, []), [character]);
+  const shown = hasEffects && !withEffects ? base : totals;
 
   return (
     <Stack gap="lg">
@@ -82,7 +84,7 @@ function CharacterSheet({
               />
             )}
             <CombatView character={character} totals={shown} />
-            {shown && <EffectSummary totals={shown} />}
+            <EffectSummary totals={shown} />
           </Stack>
         </Grid.Col>
       </Grid>

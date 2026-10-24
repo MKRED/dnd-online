@@ -142,7 +142,8 @@ The decisions are in [plan/done/monsters-npcs.md](../plan/done/monsters-npcs.md)
 **Built (stage 2, 2026-10-19): the «Монстра» ability category.**
 
 - The category `monster` sits next to «Базовая» and «Заклинание» in the shared ability catalog.
-- Only it may use the activations **«Черта»** (`{ kind: 'trait' }`, no fields; conditions go in the description) and **«Легендарное действие»** (`{ kind: 'legendary', cost }`, cost 1–3). Any other category with them gets 400. A stored record that breaks this reads as «Действие».
+- Only it may use the activation **«Легендарное действие»** (`{ kind: 'legendary', cost }`, cost 1–3). Any other category with it gets 400. A stored record that breaks this reads as «Действие».
+- **«Черта»** (`{ kind: 'trait' }`) was monster-only too until 2026-10-24; now «Базовая» has it as well, and a trait carries the components it always applies (`passive`), counted on the monster card in both views ([plan/done/traits.md](../plan/done/traits.md), [ability-usage.md](ability-usage.md)). Its conditions go in the description.
 - **Recharge** is the category's own field in `details`: `{ recharge: X | null }`, X from 2 to 6, shown as «Перезарядка 5–6» or «Перезарядка 6» in the costs row. It isn't one of the shared costs: their key set is strict, and a new key would make every stored ability fail the check.
 - **X/Day** and **Recharge after a rest** need no new fields: they are uses that come back after a Long Rest, or one use that comes back after a Short or Long Rest.
 - **A character can't take a «Монстра» ability:** the add dialog doesn't offer one, and the server answers 400. An ability that becomes «Монстра» after it was added stays on the sheet, grouped by its activation.

@@ -48,6 +48,7 @@ describe('libraryLinkGroups', () => {
               activation: DEFAULT_ABILITY_FIELDS.activation,
               costs: DEFAULT_ABILITY_FIELDS.costs,
               recharge: null,
+              passive: [],
             },
             missing: null,
             inactive: false,

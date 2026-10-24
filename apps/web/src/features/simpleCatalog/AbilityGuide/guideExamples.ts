@@ -152,6 +152,7 @@ export const GUIDE_EXAMPLES: GuideExample[] = [
       activation: { kind: 'action' },
       costs: NO_ABILITY_COSTS,
       steps: [fireBolt],
+      passive: [],
     },
   },
   {
@@ -176,6 +177,7 @@ export const GUIDE_EXAMPLES: GuideExample[] = [
       activation: { kind: 'action' },
       costs: slot(3),
       steps: [fireball],
+      passive: [],
     },
   },
   {
@@ -196,6 +198,7 @@ export const GUIDE_EXAMPLES: GuideExample[] = [
       activation: { kind: 'action' },
       costs: slot(1),
       steps: iceKnife,
+      passive: [],
     },
   },
   {
@@ -216,6 +219,7 @@ export const GUIDE_EXAMPLES: GuideExample[] = [
       activation: { kind: 'action' },
       costs: slot(1),
       steps: [magicMissile],
+      passive: [],
     },
   },
   {
@@ -245,6 +249,7 @@ export const GUIDE_EXAMPLES: GuideExample[] = [
         uses: { count: { kind: 'proficiency' }, recovery: 'long' },
       },
       steps: [breath],
+      passive: [],
     },
   },
 ];

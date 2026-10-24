@@ -161,6 +161,35 @@ describe('game figures (e2e)', () => {
     });
   });
 
+  // docs/plan/done/traits.md: черта листа меняет Скорость фигурки, как эффект.
+  it('черта со Скоростью на листе — у фигурки Скорость с ней', async () => {
+    const g = await createSceneGame(user, png, 'gfg_trait');
+    const trait = idOf(
+      await g.player.agent
+        .post('/api/abilities')
+        .send({
+          name: 'Быстрые ноги',
+          category: 'basic',
+          details: {},
+          description: '',
+          isPublic: false,
+          activation: { kind: 'trait' },
+          costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
+          passive: [
+            { kind: 'speed', change: 'faster', feet: 10, hover: false },
+          ],
+        })
+        .expect(201),
+    );
+    await g.player.agent
+      .post(`/api/characters/${g.character}/abilities`)
+      .send({ abilityId: trait })
+      .expect(201);
+    await addScene(g.master.agent, g.gameId, g.mapId);
+    const seen = await figures(g.master.agent, g.gameId);
+    expect(seen.figures[0]).toMatchObject({ speed: 40 });
+  });
+
   it('скрытая точка пропускается; смена и перезапуск сцены ставят фигурки заново, место — убирает', async () => {
     const g = await createSceneGame(user, png, 'gfg_switch');
     const m = g.master.agent;

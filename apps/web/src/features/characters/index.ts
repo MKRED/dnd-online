@@ -37,6 +37,7 @@ export { default as StatTile } from './CharacterSheet/StatTile';
 export { EffectLinksStrip } from './Effects';
 export { default as SpellSlotPips } from './Abilities/SpellSlotPips';
 export { default as EffectSummary } from './CharacterSheet/EffectSummary';
+export { hasSummary } from './CharacterSheet/effectSummarySections';
 export { armorClassTile } from './CharacterSheet/sheetArmorClass';
 export { speedTile } from './CharacterSheet/sheetSpeed';
 export { default as QuantityDialog } from './Inventory/QuantityDialog';

@@ -5,6 +5,7 @@ import { describeAbilityGrowth } from './abilities/growth.js';
 import { describeAbilityMonster } from './abilities/monster.js';
 import { describeAbilitySpells } from './abilities/spells.js';
 import { describeAbilitySteps } from './abilities/steps.js';
+import { describeAbilityTraits } from './abilities/traits.js';
 import { describeCatalog } from './support/catalog-scenario/index.js';
 
 const costs = {
@@ -74,6 +75,7 @@ describeCatalog(
     describeAbilitySpells(get);
     describeAbilityGrowth(get);
     describeAbilityMonster(get);
+    describeAbilityTraits(get);
     describeAbilityEffects(get);
   },
 );

@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import type { AbilityActivation } from './abilityUsage.js';
+import type { CharacterAbilityEntry } from './characterAbilities.js';
 import type { CharacterEffectEntry } from './characterEffects.js';
 import type { EffectComponent } from './effectComponents.js';
 import { creatureTotals, sheetTotals } from './sheetTotals.js';
@@ -37,7 +39,37 @@ const abilityScores = {
   charisma: 10,
 };
 const totals = (...effects: CharacterEffectEntry[]) =>
-  sheetTotals({ speed: 30, armorClass: 14, abilityScores, effects });
+  sheetTotals({
+    speed: 30,
+    armorClass: 14,
+    abilityScores,
+    effects,
+    abilities: [],
+  });
+
+// Способность на листе: черта с составляющими или обычная.
+const ability = (
+  name: string,
+  passive: EffectComponent[],
+  over: Partial<{ inactive: boolean; activation: AbilityActivation }> = {},
+): CharacterAbilityEntry => ({
+  id: `row-${name}`,
+  prepared: false,
+  ability: {
+    id: `ability-${name}`,
+    name,
+    isPublic: true,
+    image: null,
+    category: 'basic',
+    level: null,
+    activation: over.activation ?? { kind: 'trait' },
+    costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
+    recharge: null,
+    passive,
+  },
+  missing: null,
+  inactive: over.inactive ?? false,
+});
 
 describe('sheetTotals', () => {
   it('без эффектов — база и пустые списки', () => {
@@ -246,5 +278,76 @@ describe('creatureTotals', () => {
       special: { swim: 80 },
       hover: false,
     });
+  });
+});
+
+describe('черты', () => {
+  const defense = ability('Защитный бой', [
+    { kind: 'armor_class', change: 'bonus', value: 1 },
+  ]);
+  const resilience = ability('Дварфийская стойкость', [
+    {
+      kind: 'defense',
+      level: 'resistance',
+      damageTypes: ['poison'],
+      conditions: [],
+    },
+  ]);
+  const sheet = (
+    abilities: CharacterAbilityEntry[],
+    effects: CharacterEffectEntry[] = [],
+  ) =>
+    sheetTotals({
+      speed: 30,
+      armorClass: 14,
+      abilityScores,
+      effects,
+      abilities,
+    });
+
+  it('считаются в итоге и названы своим именем', () => {
+    const result = sheet([defense, resilience]);
+    expect(result.armorClass).toBe(15);
+    expect(result.armorClassChanges).toEqual([
+      { text: 'КД +1', from: ['Защитный бой'] },
+    ]);
+    expect(result.defenses).toEqual([
+      { level: 'resistance', text: 'Яд', from: ['Дварфийская стойкость'] },
+    ]);
+  });
+
+  it('остаются, когда эффекты не считаются (вид «Без эффектов»)', () => {
+    const character = {
+      speed: 30,
+      armorClass: 14,
+      abilityScores,
+      effects: [haste],
+      abilities: [defense],
+    };
+    const base = sheetTotals(character, []);
+    expect(base.armorClass).toBe(15);
+    expect(base.speed.speed).toBe(30);
+    expect(sheetTotals(character).speed.speed).toBe(60);
+  });
+
+  it('складываются с эффектами', () => {
+    const faith = entry('Щит веры', [
+      { kind: 'armor_class', change: 'bonus', value: 2 },
+    ]);
+    expect(sheet([defense], [faith]).armorClass).toBe(17);
+  });
+
+  it('скрытая от владельца черта и составляющие не у черты не действуют', () => {
+    const hidden = ability(
+      'Скрытая',
+      [{ kind: 'armor_class', change: 'bonus', value: 3 }],
+      { inactive: true },
+    );
+    const action = ability(
+      'Действие',
+      [{ kind: 'armor_class', change: 'bonus', value: 3 }],
+      { activation: { kind: 'action' } },
+    );
+    expect(sheet([hidden, action]).armorClass).toBe(14);
   });
 });

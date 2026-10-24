@@ -12,6 +12,7 @@ const card = (over: Partial<AbilityLinkCard>): AbilityLinkCard => ({
   activation: { kind: 'action' },
   costs: NO_ABILITY_COSTS,
   recharge: null,
+  passive: [],
   ...over,
 });
 

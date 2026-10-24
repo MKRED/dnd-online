@@ -32,6 +32,7 @@ function row(
       activation,
       costs: NO_ABILITY_COSTS,
       recharge: null,
+      passive: [],
     },
     missing: null,
     inactive: false,
@@ -192,6 +193,7 @@ describe('CharacterAbilities', () => {
       activation: { kind: 'action' },
       costs: NO_ABILITY_COSTS,
       steps: [],
+      passive: [],
       createdAt: '2026-10-19T00:00:00.000Z',
       updatedAt: '2026-10-19T00:00:00.000Z',
     });

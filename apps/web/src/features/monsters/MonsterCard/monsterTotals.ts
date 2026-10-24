@@ -1,5 +1,6 @@
 import {
   creatureTotals,
+  type MonsterAbilityEntry,
   type MonsterEffectEntry,
   type MonsterSpeed,
   type MonsterStatBlock,
@@ -23,10 +24,12 @@ export function monsterSpecials(
 }
 
 // Итог карточки с эффектами (docs/plan/done/monsters-npcs.md, этап 6): база — числа, которые
-// ввёл мастер, эффекты пересчитывают КД и скорости, как на листе персонажа.
+// ввёл мастер, черты и эффекты пересчитывают КД и скорости, как на листе персонажа. Черты
+// (docs/plan/done/traits.md) считаются и без эффектов.
 export function monsterTotals(
   block: MonsterStatBlock,
   effects: readonly MonsterEffectEntry[],
+  abilities: readonly MonsterAbilityEntry[] = [],
 ) {
   return creatureTotals(
     {
@@ -35,5 +38,6 @@ export function monsterTotals(
       dexterity: block.abilities.dexterity.score,
     },
     effects,
+    abilities,
   );
 }

@@ -1,7 +1,7 @@
 import type { MapObjectKind, MapObjectSummary } from 'shared';
 
 export type ObjectGroupKey =
-  'creatures' | 'starts' | 'containers' | 'furniture' | 'items';
+  'npcs' | 'creatures' | 'starts' | 'containers' | 'furniture' | 'items';
 
 export interface ObjectGroup {
   key: ObjectGroupKey;
@@ -10,8 +10,10 @@ export interface ObjectGroup {
 }
 
 // Порядок групп «На карте» (вариант А артборда «Н3», 2026-10-24, docs/plan/done/scene-page.md,
-// этап 8): чаще всего ищут существ, реже всего — предметы на полу.
+// этап 8): чаще всего ищут существ, реже всего — предметы на полу. НПС — своей группой
+// перед существами, как в «Участниках» (пользователь, 2026-10-24).
 const GROUPS: { key: ObjectGroupKey; title: string }[] = [
+  { key: 'npcs', title: 'НПС' },
   { key: 'creatures', title: 'Существа' },
   { key: 'starts', title: 'Старты' },
   { key: 'containers', title: 'Контейнеры' },
@@ -21,7 +23,7 @@ const GROUPS: { key: ObjectGroupKey; title: string }[] = [
 
 const GROUP_OF: Record<MapObjectKind, ObjectGroupKey> = {
   monster: 'creatures',
-  npc: 'creatures',
+  npc: 'npcs',
   start: 'starts',
   container: 'containers',
   furniture: 'furniture',

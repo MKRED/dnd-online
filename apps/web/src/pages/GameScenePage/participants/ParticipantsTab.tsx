@@ -1,6 +1,6 @@
 import { Alert, Button, Group, Stack, Text, Tooltip } from '@mantine/core';
 import { IconRefresh } from '@tabler/icons-react';
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import ParticipantRow, { type Participant } from './ParticipantRow';
 import classes from './participants.module.css';
 
@@ -76,18 +76,33 @@ function ParticipantsTab({
             }
           />
         ))}
-        {creatures.length > 0 && (
-          <div className={classes.section}>Существа</div>
+        {/* НПС — своим разделом между героями и существами (пользователь, 2026-10-24):
+            союзники и торговцы не теряются среди монстров. */}
+        {[
+          { title: 'НПС', rows: creatures.filter((c) => c.kind === 'npc') },
+          {
+            title: 'Существа',
+            rows: creatures.filter((c) => c.kind !== 'npc'),
+          },
+        ].map(
+          ({ title, rows }) =>
+            rows.length > 0 && (
+              <Fragment key={title}>
+                <div className={classes.section}>{title}</div>
+                {rows.map((creature) => (
+                  <ParticipantRow
+                    key={creature.key}
+                    participant={creature}
+                    selected={selectedKey === `creature:${creature.key}`}
+                    onSelect={() => onSelectCreature(creature.key)}
+                    onOpen={
+                      onOpenCreature && (() => onOpenCreature(creature.key))
+                    }
+                  />
+                ))}
+              </Fragment>
+            ),
         )}
-        {creatures.map((creature) => (
-          <ParticipantRow
-            key={creature.key}
-            participant={creature}
-            selected={selectedKey === `creature:${creature.key}`}
-            onSelect={() => onSelectCreature(creature.key)}
-            onOpen={onOpenCreature && (() => onOpenCreature(creature.key))}
-          />
-        ))}
         {errors.map(
           (error) =>
             error && (

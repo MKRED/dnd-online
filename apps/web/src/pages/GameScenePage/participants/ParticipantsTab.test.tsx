@@ -97,6 +97,11 @@ describe('участники', () => {
         selected={null}
       />,
     );
+    // НПС (орк) — своим разделом перед существами.
+    const sections = screen
+      .getAllByText(/^(НПС|Существа)$/)
+      .map((el) => el.textContent);
+    expect(sections).toEqual(['НПС', 'Существа']);
     expect(screen.getByText('2/7 · Ранен')).toBeInTheDocument();
     expect(screen.getByText('0/15 · Повержен')).toBeInTheDocument();
     expect(screen.getByText('50 фт')).toBeInTheDocument();

@@ -21,7 +21,8 @@ describe('objectGroups', () => {
     expect(
       objectGroups(ALL).map((g) => [g.title, g.rows.map((r) => r.id)]),
     ).toEqual([
-      ['Существа', [2, 5]],
+      ['НПС', [5]],
+      ['Существа', [2]],
       ['Старты', [1]],
       ['Контейнеры', [3]],
       ['Обстановка', [9]],

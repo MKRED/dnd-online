@@ -1,7 +1,7 @@
 import { creatureBody } from 'shared';
 import { describe, expect, it } from 'vitest';
 import { cellsFromHit } from '../editor/editorTools';
-import { floorWith } from './testMap';
+import { floorWith, withTallTable } from './testMap';
 import { walkBody, walkTarget } from './walkTarget';
 
 const UP = [0, 1, 0] as const;
@@ -28,6 +28,30 @@ describe('walkTarget', () => {
     expect(walkTarget(map, step, 'medium')).toEqual({
       anchor: [2, 0, 0],
       ok: true,
+    });
+  });
+
+  it('курсор над высоким столом ставит фигурку на него', () => {
+    // Обстановку луч не выбирает: курсор над столом попадает в пол под ним.
+    const map = withTallTable(floorWith());
+    const cells = cellsFromHit([0.5, 0, 0.5], UP, false);
+    expect(walkTarget(map, cells, 'medium')).toEqual({
+      anchor: [0, 1, 0],
+      ok: true,
+    });
+    // Рядом со столом — по-прежнему на пол.
+    const beside = cellsFromHit([1.5, 0, 0.5], UP, false);
+    expect(walkTarget(map, beside, 'medium').anchor).toEqual([1, 0, 0]);
+  });
+
+  it('над высоким столом без просвета — красным у стола, а не над ним', () => {
+    const map = withTallTable(
+      floorWith({ op: 'setBlock', at: [0, 2, 0], block: 'stone' }),
+    );
+    const cells = cellsFromHit([0.5, 0, 0.5], UP, false);
+    expect(walkTarget(map, cells, 'medium')).toEqual({
+      anchor: [0, 0, 0],
+      ok: false,
     });
   });
 

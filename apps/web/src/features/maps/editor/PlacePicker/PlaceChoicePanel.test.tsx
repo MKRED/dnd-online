@@ -41,6 +41,8 @@ function Harness({
   choice = null,
   recent = blocks('wood', 'stone_stairs'),
   blocksOnly = true,
+  empty = false,
+  onClear = vi.fn(),
 }: {
   onPickBlock?: (block: string) => void;
   onPickObject?: (choice: ObjectChoice) => void;
@@ -50,6 +52,8 @@ function Harness({
   choice?: ObjectChoice | null;
   recent?: RecentPlace[];
   blocksOnly?: boolean;
+  empty?: boolean;
+  onClear?: () => void;
 }) {
   const [opened, setOpened] = useState(false);
   return (
@@ -66,9 +70,45 @@ function Harness({
       onPickBlock={onPickBlock}
       onPickObject={onPickObject}
       onSelectRecent={onSelectRecent}
+      empty={empty}
+      onClear={onClear}
     />
   );
 }
+
+describe('снять выбранное у «Поставить»', () => {
+  it('✕ снимает; пустое говорит, что щелчок ничего не ставит, и открывает выбор', () => {
+    const onClear = vi.fn();
+    const { unmount } = renderWithProviders(
+      <Harness blocksOnly={false} onClear={onClear} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Снять выбранное' }));
+    expect(onClear).toHaveBeenCalled();
+    unmount();
+
+    renderWithProviders(<Harness blocksOnly={false} empty />);
+    expect(screen.getByText('Ничего не выбрано')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Снять выбранное' }),
+    ).not.toBeInTheDocument();
+    // Ни одна недавняя плитка не отмечена текущей.
+    expect(screen.getByRole('button', { name: 'Дерево' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Выбрать, что ставить' }),
+    );
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('у заливки и других — без ✕', () => {
+    renderWithProviders(<Harness />);
+    expect(
+      screen.queryByRole('button', { name: 'Снять выбранное' }),
+    ).not.toBeInTheDocument();
+  });
+});
 
 describe('выбор блока (заливка, коробка, замена)', () => {
   it('недавние в панели выбирают блок одним кликом', () => {

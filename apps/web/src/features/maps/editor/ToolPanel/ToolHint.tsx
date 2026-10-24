@@ -5,7 +5,7 @@ import type { SizedMapState } from 'shared';
 import type { HoverStore } from '../../MapScene/hoverStore';
 import { buildsBlocks } from '../editorTools';
 import type { MapEditor } from '../useMapEditor';
-import { firstClickHint, previewText } from './toolTexts';
+import { EMPTY_PLACE_HINT, firstClickHint, previewText } from './toolTexts';
 import { useRegionPreview } from './useRegionPreview';
 import classes from './ToolPanel.module.css';
 
@@ -46,12 +46,22 @@ function ToolHint({ editor, state, hover, placesObject }: ToolHintProps) {
       : `Первый угол выбран · ${second}`;
     keys.push(['Esc', 'сбросить угол']);
   } else {
-    text = firstClickHint(tool, editor.eraseMode, placesObject);
+    text = editor.placeEmpty
+      ? EMPTY_PLACE_HINT
+      : firstClickHint(tool, editor.eraseMode, placesObject);
     if (tool === 'view') keys.push(['Q E', 'центр ниже / выше']);
-    if (tool === 'place' && placesObject) {
-      keys.push(['R', 'поворот'], ['Del', 'удалить'], ['B', 'выбрать']);
+    if (editor.placeEmpty) {
+      keys.push(['B', 'выбрать']);
+    } else if (tool === 'place' && placesObject) {
+      keys.push(
+        ['R', 'поворот'],
+        ['Del', 'удалить'],
+        ['B', 'выбрать'],
+        ['Esc', 'снять'],
+      );
     } else if (buildsBlocks(tool)) {
       keys.push(['R', 'поворот'], ['B', 'выбрать']);
+      if (tool === 'place') keys.push(['Esc', 'снять']);
     }
   }
   return (

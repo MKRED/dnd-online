@@ -76,3 +76,8 @@
 .recentTile[data-selected] {
   border-color: var(--mantine-primary-color-filled);
 }
+
+/* Пустое «Поставить»: пунктир — выбирать ещё нечего ставить. */
+.current[data-empty] {
+  border-style: dashed;
+}

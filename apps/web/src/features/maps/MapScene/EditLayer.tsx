@@ -156,6 +156,7 @@ function EditLayer({
       <GroundGrid size={size} showGrid={editor !== null} />
       {editor &&
         hover &&
+        !editor.idle &&
         (editor.preview ? (
           <WalkHoverMesh hover={editor.preview(hover)} />
         ) : (

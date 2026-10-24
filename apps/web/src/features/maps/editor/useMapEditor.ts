@@ -84,6 +84,14 @@ export function useMapEditor({
   // Недавнее (блоки и объекты вперемешку) и открытое окно «Что поставить» (этап 10).
   const [recentPlace, setRecentPlace] = useState(readRecentPlace);
   const [pickerOpen, setPickerOpen] = useState(false);
+  // «Поставить» без выбранного: мастер снял объект или блок (✕ или Esc), щелчок по карте
+  // ничего не ставит, рамки под курсором нет — пока не выбрано новое (2026-10-24, вариант В
+  // артборда «Н2», docs/plan/scene-page.md).
+  const [placeEmpty, setPlaceEmpty] = useState(false);
+  const clearPlace = () => {
+    objects.choose(null);
+    setPlaceEmpty(true);
+  };
   const remember = (recent: RecentPlace) => {
     const next = withRecentPlace(recentPlace, recent);
     setRecentPlace(next);
@@ -93,12 +101,19 @@ export function useMapEditor({
   // «Поставить» остаётся каким был.
   const applyBlock = (name: string) => {
     setBlock(name);
-    if (tool === 'place') objects.choose(null);
+    if (tool === 'place') {
+      objects.choose(null);
+      setPlaceEmpty(false);
+    }
+  };
+  const applyObject = (choice: ObjectChoice) => {
+    objects.choose(choice);
+    setPlaceEmpty(false);
   };
   const applyRecent = (recent: RecentPlace) =>
     recent.type === 'block'
       ? applyBlock(recent.name)
-      : objects.choose(recent.choice);
+      : applyObject(recent.choice);
   const [eraseMode, setEraseModeState] = useState<EraseMode>('block');
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   // Почему клик ничего не сделал (связное стирание слишком большой постройки).
@@ -134,7 +149,11 @@ export function useMapEditor({
         if (pickerOpen) return;
         setAnchor(null);
         setNotice(null);
-        if (tool === 'place') objects.escape();
+        // Сначала бросается перенос и выделение поставленного, следующий Esc снимает
+        // то, что ставится.
+        if (tool !== 'place') return;
+        if (objects.selected !== null) objects.escape();
+        else clearPlace();
       },
     ],
   ]);
@@ -171,9 +190,20 @@ export function useMapEditor({
     escape: objectEscape,
   } = objects;
   const placesObject = objects.settings.choice !== null;
+  const placesNothing = tool === 'place' && placeEmpty && !placesObject;
   const hasSelection = objects.selected !== null;
   const sceneEditor = useMemo<SceneEditor | null>(() => {
     if (tool === 'view' || !state) return null;
+    // Пустое «Поставить»: щелчок мимо только снимает выделение, как у объектов.
+    if (placesNothing) {
+      return {
+        tool,
+        anchor: null,
+        height,
+        onPick: () => objectEscape(),
+        idle: true,
+      };
+    }
     if (tool === 'place' && placesObject) {
       return {
         tool,
@@ -223,6 +253,7 @@ export function useMapEditor({
     objectExtent,
     objectEscape,
     placesObject,
+    placesNothing,
     hasSelection,
   ]);
 
@@ -239,9 +270,12 @@ export function useMapEditor({
       remember({ type: 'block', name });
     },
     pickObject: (choice: ObjectChoice) => {
-      objects.choose(choice);
+      applyObject(choice);
       remember({ type: 'object', choice });
     },
+    // «Поставить» без выбранного (✕ на карточке «Ставить» или Esc).
+    placeEmpty: placesNothing,
+    clearPlace,
     // Из недавних в панели — порядок не меняется.
     selectRecent: applyRecent,
     recentPlace,

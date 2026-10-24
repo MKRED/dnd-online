@@ -7,7 +7,7 @@ import PlaceChoicePanel from './PlacePicker/PlaceChoicePanel';
 import type { ObjectChoice } from './PlacePicker/placeChoice';
 import { blockTraits } from './blockTraits';
 import { buildsBlocks, isRegionTool } from './editorTools';
-import { firstClickHint } from './ToolPanel/toolTexts';
+import { EMPTY_PLACE_HINT, firstClickHint } from './ToolPanel/toolTexts';
 import {
   AnchorCard,
   CursorBlockCard,
@@ -61,7 +61,9 @@ function EditorPanel({
           narrow
             ? editor.anchor
               ? 'Касание — второй угол'
-              : firstClickHint(tool, eraseMode, objectChoice !== null, true)
+              : editor.placeEmpty
+                ? EMPTY_PLACE_HINT
+                : firstClickHint(tool, eraseMode, objectChoice !== null, true)
             : undefined
         }
       />
@@ -89,6 +91,8 @@ function EditorPanel({
           onPickBlock={editor.pickBlock}
           onPickObject={editor.pickObject}
           onSelectRecent={editor.selectRecent}
+          empty={editor.placeEmpty}
+          onClear={editor.clearPlace}
         />
       )}
 

@@ -21,6 +21,9 @@ export const ERASE_MODE_SUMMARIES: Record<EraseMode, string> = {
   connected: 'Вся постройка из того же материала',
 };
 
+// Пустое «Поставить» (мастер снял выбранное): щелчок по карте ничего не ставит.
+export const EMPTY_PLACE_HINT = 'Ничего не выбрано — щелчок ничего не ставит';
+
 // Что делает щелчок, пока угол не выбран, — коротко, для плашки на сцене. touch — те же
 // слова для телефона: касание вместо щелчка (docs/plan/scene-page.md, «Телефон»).
 export function firstClickHint(

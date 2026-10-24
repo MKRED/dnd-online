@@ -70,7 +70,7 @@ describe('useMapEditor, клавиши', () => {
     expect(result.current.tool).toBe('walk');
   });
 
-  it('у «Поставить» (2) с объектом R, Del и Esc уходят объектам, а не блоку', () => {
+  it('у «Поставить» (2) с выделенным объектом R, Del и Esc уходят объектам, а не блоку', () => {
     const objects = {
       ...objectsMock(),
       settings: {
@@ -78,6 +78,7 @@ describe('useMapEditor, клавиши', () => {
         facing: 0 as const,
         hidden: false,
       },
+      selected: { id: 1 } as unknown as null,
     };
     const { result } = setup(objects);
     press('Digit2');
@@ -91,6 +92,44 @@ describe('useMapEditor, клавиши', () => {
     expect(objects.remove).toHaveBeenCalledTimes(1);
     expect(objects.escape).toHaveBeenCalledTimes(1);
     expect(result.current.rotation).toBe(0);
+  });
+
+  it('Esc без выделенного снимает ставящееся: «Поставить» пусто, щелчок ничего не ставит', () => {
+    const objects = objectsMock();
+    const state: SizedMapState = {
+      store: new MemoryChunkStore(),
+      palette: createPalette(),
+      size: { width: 4, depth: 4 },
+    };
+    const ops = vi.fn();
+    const { result } = renderHook(() =>
+      useMapEditor({
+        state,
+        applyOps: ops,
+        undo: vi.fn(),
+        redo: vi.fn(),
+        objects,
+        keysActive: true,
+      }),
+    );
+    press('Digit2');
+    expect(result.current.placeEmpty).toBe(false);
+    act(() => {
+      fireEvent.keyDown(document.documentElement, { key: 'Escape' });
+    });
+    expect(objects.escape).not.toHaveBeenCalled();
+    expect(objects.choose).toHaveBeenCalledWith(null);
+    expect(result.current.placeEmpty).toBe(true);
+    expect(result.current.sceneEditor?.idle).toBe(true);
+    act(() =>
+      result.current.sceneEditor?.onPick({ ground: [1, 0, 1] } as never),
+    );
+    expect(ops).not.toHaveBeenCalled();
+
+    // Выбранный блок снова ставится.
+    act(() => result.current.pickBlock('wood'));
+    expect(result.current.placeEmpty).toBe(false);
+    expect(result.current.sceneEditor?.idle).toBeUndefined();
   });
 
   it('у «Поставить» с блоком R поворачивает блок', () => {

@@ -48,14 +48,15 @@ function AbilityFields({
     <Stack gap="md">
       {category === 'spell' && <SpellFields form={form} />}
       {category === 'monster' && <MonsterAbilityFields form={form} />}
-      <UsageField form={form} />
-      {trait && (
-        <ComponentsField
-          form={form}
-          label="Действует всегда"
-          description="Что черта даёт владельцу, пока она у него на листе. Лист считает это и в виде «Без эффектов». Без составляющих — всё в описании"
-        />
-      )}
+      <UsageField form={form}>
+        {trait && (
+          <ComponentsField
+            form={form}
+            label="Действует всегда"
+            description="Что черта даёт владельцу, пока она у него на листе. Лист считает это и в виде «Без эффектов». Без составляющих — всё в описании"
+          />
+        )}
+      </UsageField>
       <StepsField form={form} />
     </Stack>
   );

@@ -2,6 +2,7 @@ import { AppShell, Burger, Group } from '@mantine/core';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../features/auth';
+import { HeaderSearch } from '../../features/search';
 import ColorSchemeToggle from '../ColorSchemeToggle';
 import classes from './AppLayout.module.css';
 import AppLogo from './AppLogo';
@@ -12,7 +13,7 @@ import { useNavbarCollapsed } from './useNavbarCollapsed';
 const NAVBAR_WIDTH = 220;
 const NAVBAR_ICONS_WIDTH = 68;
 
-// Каркас страниц: шапка (логотип, тема, меню пользователя) и боковая панель разделов.
+// Каркас страниц: шапка (логотип, поиск, тема, меню пользователя) и боковая панель разделов.
 // Разделы — в панели, а не в шапке: в шапке их становилось больше, чем помещалось.
 // На широком экране панель сворачивается до иконок, на телефоне (уже sm) — шторка по
 // бургеру. Гостю панель не нужна: ему доступны только вход и регистрация.
@@ -55,7 +56,10 @@ function AppLayout() {
             <AppLogo />
           </Group>
 
+          {user && wide && <HeaderSearch compact={false} />}
+
           <Group gap="xs" wrap="nowrap">
+            {user && !wide && <HeaderSearch compact />}
             <ColorSchemeToggle />
             <UserMenu />
           </Group>

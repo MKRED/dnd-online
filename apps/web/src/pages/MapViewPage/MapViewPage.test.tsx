@@ -368,7 +368,7 @@ describe('MapViewPage', () => {
       screen.getByRole('button', { name }).getAttribute('aria-pressed');
 
     await screen.findByRole('button', { name: 'Ластик' });
-    // Название инструмента — в шапке его свойств (docs/plan/scene-page.md, этап 3).
+    // Название инструмента — в шапке его свойств (docs/plan/done/scene-page.md, этап 3).
     expect(screen.getByText('Просмотр', { selector: 'p' })).toBeInTheDocument();
     // По месту клавиши: цифры на основном ряду и на цифровом блоке.
     await user.keyboard('[Digit3]');

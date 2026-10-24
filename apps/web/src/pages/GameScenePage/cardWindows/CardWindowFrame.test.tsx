@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../../../test/render';
 import CardWindowFrame from './CardWindowFrame';
 
-// Окно карточки (docs/plan/scene-page.md, этап 4): сворачивание, закрытие, перетаскивание
+// Окно карточки (docs/plan/done/scene-page.md, этап 4): сворачивание, закрытие, перетаскивание
 // за шапку, имя-ссылка на полную страницу.
 function renderFrame(minimized = false, href: string | null = null) {
   const handlers = {

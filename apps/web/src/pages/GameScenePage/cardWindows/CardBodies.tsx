@@ -18,7 +18,7 @@ interface CharacterCardBodyProps {
   figure: GameFigure | null;
   onAllowance?: (change: 'refresh' | 'dash') => void;
   busy: boolean;
-  // Герой отряда у игрока: только чтение (docs/plan/scene-page.md, этап 5).
+  // Герой отряда у игрока: только чтение (docs/plan/done/scene-page.md, этап 5).
   readOnly: boolean;
 }
 
@@ -136,7 +136,7 @@ export function CreatureCardBody({
   );
 }
 
-// Карточка предмета из сундука (docs/plan/scene-page.md, этап 6): копия в библиотеке игры,
+// Карточка предмета из сундука (docs/plan/done/scene-page.md, этап 6): копия в библиотеке игры,
 // только чтение.
 export function ItemCardBody({
   gameId,

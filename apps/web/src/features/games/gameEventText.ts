@@ -212,7 +212,7 @@ export function gameEventTime(iso: string): string {
   });
 }
 
-// «Раунд 3» — номер есть у записей с 2026-10-24 (docs/plan/scene-page.md, этап 7), у старых —
+// «Раунд 3» — номер есть у записей с 2026-10-24 (docs/plan/done/scene-page.md, этап 7), у старых —
 // «Новый раунд».
 export function roundTitle(
   event: Extract<GameEvent, { kind: 'figures.round' }>,

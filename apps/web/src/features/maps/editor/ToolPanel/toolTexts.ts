@@ -2,7 +2,7 @@ import type { EditorTool } from '../editorTools';
 import type { EraseMode } from '../eraseModes';
 import { blocksText, sizeText, type RegionPreview } from '../regionPreview';
 
-// Строка под названием инструмента в шапке свойств (docs/plan/scene-page.md, этап 3).
+// Строка под названием инструмента в шапке свойств (docs/plan/done/scene-page.md, этап 3).
 export const TOOL_SUMMARIES: Record<EditorTool, string> = {
   view: 'Смотреть и выбирать, карту не меняет',
   place: 'Блок или объект по одному',
@@ -25,7 +25,7 @@ export const ERASE_MODE_SUMMARIES: Record<EraseMode, string> = {
 export const EMPTY_PLACE_HINT = 'Ничего не выбрано — щелчок ничего не ставит';
 
 // Что делает щелчок, пока угол не выбран, — коротко, для плашки на сцене. touch — те же
-// слова для телефона: касание вместо щелчка (docs/plan/scene-page.md, «Телефон»).
+// слова для телефона: касание вместо щелчка (docs/plan/done/scene-page.md, «Телефон»).
 export function firstClickHint(
   tool: EditorTool,
   eraseMode: EraseMode,

@@ -86,7 +86,7 @@ vi.mock('../../features/games/gameSocket', () => ({
 
 beforeEach(() => {
   socket.current = createFakeGameSocket();
-  // Режим мастера запоминается в браузере (docs/plan/scene-page.md): каждый тест — с «Игры».
+  // Режим мастера запоминается в браузере (docs/plan/done/scene-page.md): каждый тест — с «Игры».
   localStorage.clear();
 });
 
@@ -206,7 +206,7 @@ describe('GameScenePage', () => {
     renderScene('m1');
     const user = userEvent.setup();
 
-    // В списке «Участники» — остаток запаса и хиты из листа (docs/plan/scene-page.md, этап 2).
+    // В списке «Участники» — остаток запаса и хиты из листа (docs/plan/done/scene-page.md, этап 2).
     expect(await screen.findByText('40 фт')).toBeInTheDocument();
     expect(screen.getByText('10/12')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Новый раунд' }));
@@ -310,7 +310,7 @@ describe('GameScenePage', () => {
     renderScene('u2');
     const user = userEvent.setup();
 
-    // «Персонаж» (docs/plan/scene-page.md, этап 5): свой крупно и «Ходить».
+    // «Персонаж» (docs/plan/done/scene-page.md, этап 5): свой крупно и «Ходить».
     expect(
       await screen.findByRole('button', { name: 'Ходить' }),
     ).toBeInTheDocument();

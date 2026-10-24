@@ -49,7 +49,7 @@ function MapViewPage() {
   });
   // Центр камеры: страница переносит его к объекту из списка «На карте».
   const focusRef = useRef<CameraFocusApi | null>(null);
-  // Клетка под курсором — и сцене, и панели инструмента (docs/plan/scene-page.md, этап 3).
+  // Клетка под курсором — и сцене, и панели инструмента (docs/plan/done/scene-page.md, этап 3).
   const [hover] = useState(createHoverStore);
   // Открытая панель «Размер карты» с набранным изменением; null — панель закрыта.
   const [sizeDraft, setSizeDraft] = useState<ResizeDraft | null>(null);

@@ -29,7 +29,7 @@ interface PlaceGhostProps {
 }
 
 // Что поставит щелчок: сам объект полупрозрачно, уже повёрнутый, и носик взгляда спереди
-// (вариант В артборда «Н1», 2026-10-24, docs/plan/scene-page.md). Стоит на той же высоте,
+// (вариант В артборда «Н1», 2026-10-24, docs/plan/done/scene-page.md). Стоит на той же высоте,
 // что объект после щелчка: на ступени или плите — сверху (objectFeet, как в layoutObjects).
 function PlaceGhost({ look, at, extent, map }: PlaceGhostProps) {
   const [x, y, z] = at;

@@ -1,6 +1,6 @@
 import { Anchor, Text, Tooltip } from '@mantine/core';
 
-// Имя в шапке окна карточки (docs/plan/scene-page.md, вариант В артборда «К2»): ссылка на
+// Имя в шапке окна карточки (docs/plan/done/scene-page.md, вариант В артборда «К2»): ссылка на
 // полную страницу в новой вкладке, чтобы сцена осталась открытой. Без href — просто имя.
 function CardTitle({ title, href }: { title: string; href: string | null }) {
   if (!href) {

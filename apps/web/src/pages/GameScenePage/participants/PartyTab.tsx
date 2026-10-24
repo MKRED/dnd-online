@@ -8,7 +8,7 @@ interface PartyTabProps {
   onOpenCard: (target: CardTarget) => void;
 }
 
-// Вкладка «Отряд» у игрока (docs/plan/scene-page.md, этап 5): другие герои с хитами, щелчок —
+// Вкладка «Отряд» у игрока (docs/plan/done/scene-page.md, этап 5): другие герои с хитами, щелчок —
 // их карточка только для чтения. НПС и врагов здесь нет: игрок видит полностью только себя
 // и отряд (решено с пользователем 2026-10-24).
 function PartyTab({ party, onOpenCard }: PartyTabProps) {

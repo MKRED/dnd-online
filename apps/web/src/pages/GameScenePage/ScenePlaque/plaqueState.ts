@@ -20,7 +20,7 @@ interface PlaqueInput {
   creatureMoving: boolean;
 }
 
-// Что сказать на плашке сцены о выбранном (docs/plan/scene-page.md, этап 2) — бывшие
+// Что сказать на плашке сцены о выбранном (docs/plan/done/scene-page.md, этап 2) — бывшие
 // подсказки панели «Фигурки» и «Существа» одной строкой.
 export function plaqueState({
   placing,

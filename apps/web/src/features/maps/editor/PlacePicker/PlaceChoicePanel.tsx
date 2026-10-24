@@ -62,7 +62,7 @@ const choiceSubtitle = (choice: ObjectChoice) =>
     .join(' · ');
 
 // Что ставит инструмент (docs/plan/blocks.md, этап 10; вид — макет «П2»,
-// docs/plan/scene-page.md, этап 3): текущее с миниатюрой (клик или B —
+// docs/plan/done/scene-page.md, этап 3): текущее с миниатюрой (клик или B —
 // окно «Что поставить») и строка недавних — до них один клик.
 function PlaceChoicePanel(props: PlaceChoicePanelProps) {
   const { catalog, block, rotation, choice, blocksOnly } = props;

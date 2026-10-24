@@ -9,7 +9,7 @@ const SECTIONS: { value: SheetSection; label: string }[] = [
   { value: 'gear', label: 'Вещи' },
 ];
 
-// Вкладки окна карточки (вариант А, выбран 2026-10-24, docs/plan/scene-page.md, этап 4).
+// Вкладки окна карточки (вариант А, выбран 2026-10-24, docs/plan/done/scene-page.md, этап 4).
 // Открыта одна вкладка, остальные не рисуются: окно лёгкое, даже когда их три.
 function CardTabs({
   render,

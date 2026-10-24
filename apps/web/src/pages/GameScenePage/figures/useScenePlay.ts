@@ -14,7 +14,7 @@ interface ScenePlayOptions {
   // Фигурки можно выбирать: у мастера — в «Игре» и в «Просмотре» «Правки»; при других
   // инструментах щелчок правит карту.
   active: boolean;
-  // Мастер в «Правке»: ставит без пути и запаса (docs/plan/scene-page.md).
+  // Мастер в «Правке»: ставит без пути и запаса (docs/plan/done/scene-page.md).
   free: boolean;
   state: MapViewState | null;
   refs: MapObjectRefsView | null;

@@ -11,7 +11,7 @@ interface ParticipantsTabProps {
   selectedKey: string | null;
   onSelectHero: (key: string) => void;
   onSelectCreature: (key: string) => void;
-  // Двойной щелчок по строке — окно карточки (docs/plan/scene-page.md, этап 4).
+  // Двойной щелчок по строке — окно карточки (docs/plan/done/scene-page.md, этап 4).
   onOpenHero?: (key: string) => void;
   onOpenCreature?: (key: string) => void;
   // «Новый раунд» — только мастеру.
@@ -22,7 +22,7 @@ interface ParticipantsTabProps {
   selected: ReactNode;
 }
 
-// Вкладка «Участники» (docs/plan/scene-page.md, этап 2): герои и существа одним списком по
+// Вкладка «Участники» (docs/plan/done/scene-page.md, этап 2): герои и существа одним списком по
 // группам, у выбранного — его состояние внизу. Подсказки про ход — плашкой на сцене.
 function ParticipantsTab({
   heroes,

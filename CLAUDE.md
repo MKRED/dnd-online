@@ -75,7 +75,6 @@ Read the relevant file before working in that area:
   - decisions (voxel blocks, 1 block = 5 ft, operations, AI/MCP access, server-authoritative rules on the map)
   - open questions
   - stage checklist — tick items off as they land
-- [docs/plan/scene-page.md](docs/plan/scene-page.md) covers the rework of the game scene page (in Russian, a living plan): the GM's «Игра» and «Правка» modes (walking figures by path vs. placing freely and editing the map), the right panel as tabs that collapse to an icon strip, the creature card as a draggable non-modal window (a bottom sheet on a phone), the player's page in the same frame, info on chests, items and doors in play, and the stage checklist
 - [docs/mcp.md](docs/mcp.md) covers both MCP servers: `dnd` (tools, connecting it, the build → look → fix loop) and `comfy` (tools, style presets, the generate → look → upload loop, connecting ComfyUI)
 - [docs/voxel-modeling.md](docs/voxel-modeling.md) covers how an AI draws voxel models in code (in Russian): primitives (box, cylinder, ball, line, speckle), axes and "forward", style and palette, mounts and cell properties, positions for things that open, the check loop and pitfalls — read it before adding model drawing to the `dnd` MCP
 - [docs/dnd/classes.md](docs/dnd/classes.md) covers the character classes: the 13 classes and their 2024 subclasses (Russian and English names, source book), where that data lives in code, and what in it is unverified

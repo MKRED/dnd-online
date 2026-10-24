@@ -22,7 +22,7 @@ interface MonsterCardSectionProps {
   section: SheetSection;
 }
 
-// Часть карточки монстра для вкладок окна на сцене игры (docs/plan/scene-page.md, этап 4),
+// Часть карточки монстра для вкладок окна на сцене игры (docs/plan/done/scene-page.md, этап 4),
 // только для чтения: хиты и эффекты правятся в шапке окна.
 function MonsterCardSection({
   monster,

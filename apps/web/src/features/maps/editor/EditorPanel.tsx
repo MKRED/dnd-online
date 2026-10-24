@@ -27,14 +27,14 @@ interface EditorPanelProps {
   // Ставящийся объект; null — блок.
   objectChoice: ObjectChoice | null;
   // Карта и клетка под курсором: «Под курсором» в «Просмотре» и подсчёт области до
-  // второго щелчка (docs/plan/scene-page.md, этап 3).
+  // второго щелчка (docs/plan/done/scene-page.md, этап 3).
   state: SizedMapState | null;
   hover: HoverStore | null;
 }
 
 // Свойства выбранного инструмента в правой панели страницы карты и сцены игры; сами
 // инструменты, отмена и возврат — на сцене (SceneToolbar), что сделает щелчок — на плашке
-// сцены (ToolHint, docs/plan/scene-page.md, этап 3).
+// сцены (ToolHint, docs/plan/done/scene-page.md, этап 3).
 function EditorPanel({
   editor,
   walkPanel,

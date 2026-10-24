@@ -39,7 +39,7 @@ interface ParticipantRowProps {
   onOpen?: () => void;
 }
 
-// Строка участника во вкладке «Участники» (docs/plan/scene-page.md, этап 2): портрет, имя, хиты полосой с числом и запас движения.
+// Строка участника во вкладке «Участники» (docs/plan/done/scene-page.md, этап 2): портрет, имя, хиты полосой с числом и запас движения.
 function ParticipantRow({
   participant,
   selected,

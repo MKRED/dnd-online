@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useKeyCodes } from '../../../features/maps/useKeyCodes';
 
-// Режим мастера на странице сцены (docs/plan/scene-page.md, «Два режима мастера»):
+// Режим мастера на странице сцены (docs/plan/done/scene-page.md, «Два режима мастера»):
 // «Игра» — ходы по пути и справка, «Правка» — инструменты редактора и перестановка без
 // хода. Это состояние страницы, не сцены: игроки и сервер о нём не знают.
 export type SceneMode = 'play' | 'edit';

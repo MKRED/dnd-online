@@ -58,7 +58,7 @@ interface SceneRoomProps {
   dragSenderRef: RefObject<((message: GameFigureDragMessage) => void) | null>;
   // Игроку закрыли сцену, его убрали из игры или игру удалили — в лобби.
   onLeave: () => void;
-  // Мастеру: записи журнала для вкладки «Журнал» (docs/plan/scene-page.md, этап 7) —
+  // Мастеру: записи журнала для вкладки «Журнал» (docs/plan/done/scene-page.md, этап 7) —
   // новая запись и пропущенные после обрыва (null — перечитать журнал целиком).
   onEvents?: (events: GameEvent[]) => void;
   onMissed?: (missed: GameEvent[] | null) => void;

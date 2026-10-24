@@ -8,7 +8,7 @@ import {
   type Vec3,
 } from 'shared';
 
-// Блок под курсором в «Просмотре» (docs/plan/scene-page.md, этап 3): что это за блок и
+// Блок под курсором в «Просмотре» (docs/plan/done/scene-page.md, этап 3): что это за блок и
 // что он делает в правилах — то, чего не видно глазом.
 export interface CursorBlock {
   cell: Vec3;

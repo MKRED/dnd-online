@@ -11,7 +11,7 @@ interface SceneTabProps {
   fog: SceneFogControls;
 }
 
-// Вкладка «Сцена» у мастера (docs/plan/scene-page.md, этап 2): открыта ли игрокам, туман
+// Вкладка «Сцена» у мастера (docs/plan/done/scene-page.md, этап 2): открыта ли игрокам, туман
 // войны, «Глазами игроков» и свёрнутое «Служебное» — всё, что про сцену целиком, а не
 // про участников.
 function SceneTab({ scene, busy, error, onOpenChange, fog }: SceneTabProps) {

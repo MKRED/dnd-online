@@ -9,7 +9,7 @@ interface CursorBlockCardProps {
   hover: HoverStore | null;
 }
 
-// «Под курсором» в «Просмотре» (docs/plan/scene-page.md, этап 3): блок, клетка, форма и
+// «Под курсором» в «Просмотре» (docs/plan/done/scene-page.md, этап 3): блок, клетка, форма и
 // свойства для правил.
 function CursorBlockCard({ state, hover }: CursorBlockCardProps) {
   const cell = useHoverCell(hover);

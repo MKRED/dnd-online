@@ -3,7 +3,7 @@ import { emptyRefsView, type MapObjectRefsView } from 'shared';
 import type { ObjectImagePaths } from '../../../features/maps/MapScene';
 import { objectInfo } from './objectInfo';
 
-// Сведения об объекте в окне у мастера (docs/plan/scene-page.md, этап 6).
+// Сведения об объекте в окне у мастера (docs/plan/done/scene-page.md, этап 6).
 const images = {
   item: (id: string, v: number) => `/img/${id}?v=${v}`,
 } as ObjectImagePaths;

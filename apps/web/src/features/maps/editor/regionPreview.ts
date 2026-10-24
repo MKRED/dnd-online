@@ -9,7 +9,7 @@ import {
 import type { EditorTool } from './editorTools';
 import type { EraseMode } from './eraseModes';
 
-// Что сделает второй щелчок, пока курсор над клеткой (docs/plan/scene-page.md, этап 3):
+// Что сделает второй щелчок, пока курсор над клеткой (docs/plan/done/scene-page.md, этап 3):
 // размер области и сколько блоков изменится — до щелчка, а не после.
 export interface RegionPreview {
   // Ширина (x) × глубина (z) × высота (y), как размер карты.
@@ -52,7 +52,7 @@ function countCells(
 export const MATCH_CELL_LIMIT = 4096;
 
 // Клетки области, которые заменит «Замена»: с тем же блоком, что в первом углу (макет
-// «П6», docs/plan/scene-page.md, этап 3). null — область или совпадений слишком много.
+// «П6», docs/plan/done/scene-page.md, этап 3). null — область или совпадений слишком много.
 export function matchingCells(
   state: SizedMapState,
   { min, max }: Box3,

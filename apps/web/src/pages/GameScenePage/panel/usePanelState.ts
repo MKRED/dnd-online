@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-// Свёрнута ли панель сцены (docs/plan/scene-page.md, «Правая панель») — привычка, одна на
+// Свёрнута ли панель сцены (docs/plan/done/scene-page.md, «Правая панель») — привычка, одна на
 // все игры, запоминается в браузере. Хранилище может быть недоступно (приватный
 // режим) — тогда панель развёрнута.
 const COLLAPSED_STORAGE_KEY = 'scene.panelCollapsed';

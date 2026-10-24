@@ -7,7 +7,7 @@ interface UnplacedListProps {
   tool: FigureTool;
 }
 
-// «Не на сцене» в «Правке» мастера (docs/plan/scene-page.md, этап 1): персонажи на местах,
+// «Не на сцене» в «Правке» мастера (docs/plan/done/scene-page.md, этап 1): персонажи на местах,
 // которым не хватило стартовой точки. «Поставить» выбирает персонажа, щелчок по клетке
 // ставит его.
 function UnplacedList({ unplaced, tool }: UnplacedListProps) {

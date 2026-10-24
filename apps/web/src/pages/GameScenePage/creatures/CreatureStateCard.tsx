@@ -23,7 +23,7 @@ interface CreatureStateCardProps {
   // Эффекты сменились — перечитать существа.
   onEffects: () => void;
   onOpenSheet: () => void;
-  // В окне карточки (docs/plan/scene-page.md, этап 4): без своей шапки — имя в шапке окна.
+  // В окне карточки (docs/plan/done/scene-page.md, этап 4): без своей шапки — имя в шапке окна.
   bare?: boolean;
 }
 

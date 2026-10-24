@@ -5,7 +5,7 @@ import SectionLabel from './SectionLabel';
 const MIN = 1;
 const MAX = 64;
 
-// Высота области кнопками − и + (макет «П6», docs/plan/scene-page.md, этап 3): чаще всего
+// Высота области кнопками − и + (макет «П6», docs/plan/done/scene-page.md, этап 3): чаще всего
 // её меняют на слой-два, и щёлкать удобнее, чем целиться в стрелки поля.
 function HeightStepper({
   value,

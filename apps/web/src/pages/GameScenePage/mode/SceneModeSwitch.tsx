@@ -13,7 +13,7 @@ const MODES = [
   { value: 'edit', label: 'Правка' },
 ];
 
-// Переключатель «Игра | Правка» на сцене, рядом с отменой (docs/plan/scene-page.md):
+// Переключатель «Игра | Правка» на сцене, рядом с отменой (docs/plan/done/scene-page.md):
 // на сцене, а не в панели — свёрнутая панель его бы прятала.
 function SceneModeSwitch({ mode, onChange, compact }: SceneModeSwitchProps) {
   const control = (

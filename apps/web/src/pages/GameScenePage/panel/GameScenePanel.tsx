@@ -44,7 +44,7 @@ interface GameScenePanelProps {
   cards: ReturnType<typeof useCreatureCards>;
   refs: MapObjectRefsView | null;
   images: ObjectImagePaths;
-  // Открыть окно карточки (docs/plan/scene-page.md, этап 4).
+  // Открыть окно карточки (docs/plan/done/scene-page.md, этап 4).
   onOpenCard: (target: CardTarget) => void;
   // Живые записи журнала — мастеру, вкладка «Журнал» (этап 7).
   journal: JournalLive;
@@ -54,7 +54,7 @@ interface GameScenePanelProps {
   editBody: ReactNode;
 }
 
-// Правая панель страницы сцены (docs/plan/scene-page.md, этап 2): в «Игре» — вкладки
+// Правая панель страницы сцены (docs/plan/done/scene-page.md, этап 2): в «Игре» — вкладки
 // «Участники» и (мастеру) «Сцена», в «Правке» — свойства инструмента.
 function GameScenePanel({
   gameId,
@@ -129,7 +129,7 @@ function GameScenePanel({
       }
     />
   );
-  // Игрок (docs/plan/scene-page.md, этап 5, вариант А): «Персонаж» — свои, кого он водит,
+  // Игрок (docs/plan/done/scene-page.md, этап 5, вариант А): «Персонаж» — свои, кого он водит,
   // «Отряд» — другие герои, только чтение. НПС и врагов у игрока в панели нет.
   const heroes = figures?.figures ?? [];
   const tabs: PanelTab<Tab>[] = master

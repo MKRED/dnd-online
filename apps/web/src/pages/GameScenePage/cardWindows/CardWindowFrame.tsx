@@ -21,7 +21,7 @@ interface CardWindowFrameProps {
   children: ReactNode;
 }
 
-// Окно карточки на компьютере (docs/plan/scene-page.md, этап 4): не модальное, сцена под
+// Окно карточки на компьютере (docs/plan/done/scene-page.md, этап 4): не модальное, сцена под
 // ним живая. Тянется за шапку, сворачивается в шапку, щелчок поднимает его над другими.
 function CardWindowFrame({
   title,

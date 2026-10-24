@@ -1,7 +1,7 @@
 import { Group, Kbd, Text } from '@mantine/core';
 import type { ReactNode } from 'react';
 
-// Подпись раздела свойств инструмента (макет «П2», docs/plan/scene-page.md, этап 3):
+// Подпись раздела свойств инструмента (макет «П2», docs/plan/done/scene-page.md, этап 3):
 // мелкими прописными, справа — клавиша раздела. after — приглушённое уточнение после
 // подписи («север», «из первого угла»).
 function SectionLabel({

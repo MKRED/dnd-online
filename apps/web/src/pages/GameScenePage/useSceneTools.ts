@@ -16,7 +16,7 @@ const nothing = () => undefined;
 interface SceneToolsOptions {
   // Инструменты — только у мастера; у игрока клавиши молчат, а Ctrl+Z ничего не шлёт.
   master: boolean;
-  // Мастер в «Правке» (docs/plan/scene-page.md): в «Игре» клавиши инструментов молчат, а
+  // Мастер в «Правке» (docs/plan/done/scene-page.md): в «Игре» клавиши инструментов молчат, а
   // отмена и возврат остаются — ход тоже отменяется.
   editing: boolean;
   state: MapViewState | null;

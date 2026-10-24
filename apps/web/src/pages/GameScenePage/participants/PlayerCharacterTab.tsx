@@ -18,7 +18,7 @@ interface PlayerCharacterTabProps {
   onOpenCard: (target: CardTarget) => void;
 }
 
-// Вкладка «Персонаж» у игрока (docs/plan/scene-page.md, этап 5, вариант А): свой персонаж
+// Вкладка «Персонаж» у игрока (docs/plan/done/scene-page.md, этап 5, вариант А): свой персонаж
 // крупно — хиты с правкой, спасброски, ячейки, эффекты, запас и «Ходить». Если игрок ведёт
 // нескольких — переключатель имён сверху.
 function PlayerCharacterTab({

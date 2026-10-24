@@ -14,11 +14,11 @@ interface CharacterStateCardProps {
   // Растёт с событиями состояния существ — лист перечитывается.
   version: number;
   onOpenSheet: () => void;
-  // В окне карточки (docs/plan/scene-page.md, этап 4): без своей шапки — имя в шапке окна.
+  // В окне карточки (docs/plan/done/scene-page.md, этап 4): без своей шапки — имя в шапке окна.
   bare?: boolean;
   // Что показать под состоянием тем же листом (вкладки окна) — без второй загрузки.
   below?: (character: Character) => ReactNode;
-  // Герой отряда (docs/plan/scene-page.md, этап 5): всё видно, ничего не правится.
+  // Герой отряда (docs/plan/done/scene-page.md, этап 5): всё видно, ничего не правится.
   readOnly?: boolean;
 }
 

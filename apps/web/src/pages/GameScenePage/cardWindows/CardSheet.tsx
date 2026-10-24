@@ -5,7 +5,7 @@ import type { CardView } from './CardWindows';
 import classes from './CardWindows.module.css';
 import type { CardWindows } from './useCardWindows';
 
-// Карточки на телефоне (docs/plan/scene-page.md, «Карточка существа»): лист снизу почти на
+// Карточки на телефоне (docs/plan/done/scene-page.md, «Карточка существа»): лист снизу почти на
 // весь экран, сверху — чипы открытых, щелчок переключает. Свёрнутый лист — одна шапка,
 // сцена над ним живая.
 function CardSheet({

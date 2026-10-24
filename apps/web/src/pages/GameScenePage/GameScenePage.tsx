@@ -83,7 +83,7 @@ function GameScenePage() {
   const open = useSceneOpen(id, setLoad);
   // «Глазами игроков» — только просмотр: ни инструментов, ни ходов, ни выбора.
   const viewOnly = sceneFog.eyes;
-  // Режим мастера (docs/plan/scene-page.md): в «Игре» нет инструментов редактора, в
+  // Режим мастера (docs/plan/done/scene-page.md): в «Игре» нет инструментов редактора, в
   // «Правке» — есть, а фигурки и существа переставляются без хода.
   const { mode, setMode } = useSceneMode(master, ready !== null && !viewOnly);
   const editing = master && mode === 'edit';
@@ -99,9 +99,9 @@ function GameScenePage() {
   const focusRef = useRef<CameraFocusApi | null>(null);
   // Та же граница, что у панели: на ней панель уходит под сцену.
   const narrow = useMediaQuery('(max-width: 48em)');
-  // Клетка под курсором — и сцене, и панели инструмента (docs/plan/scene-page.md, этап 3).
+  // Клетка под курсором — и сцене, и панели инструмента (docs/plan/done/scene-page.md, этап 3).
   const [hover] = useState(createHoverStore);
-  // Открытые окна карточек существ (docs/plan/scene-page.md, этап 4).
+  // Открытые окна карточек существ (docs/plan/done/scene-page.md, этап 4).
   const windows = useCardWindows();
   const [searchParams] = useSearchParams();
   // Один объект путей на игру: новый перестраивал бы объекты сцены.
@@ -266,7 +266,7 @@ function GameScenePage() {
                   : {
                       ...cards.view,
                       // Мастер в «Игре» без выбранного: щелчок по сундуку, предмету или
-                      // двери — окно сведений (docs/plan/scene-page.md, этап 6). С
+                      // двери — окно сведений (docs/plan/done/scene-page.md, этап 6). С
                       // выбранной фигуркой щелчок идёт в ход.
                       onPickObject:
                         master &&
@@ -307,7 +307,7 @@ function GameScenePage() {
             onUndo={edits.undo}
             onRedo={edits.redo}
             // На телефоне переключатель — в шапке панели: в строке с отменой и «Центром»
-            // ему не хватало места (docs/plan/scene-page.md, «Телефон»).
+            // ему не хватало места (docs/plan/done/scene-page.md, «Телефон»).
             leading={
               narrow ? undefined : (
                 <SceneModeSwitch mode={mode} onChange={setMode} />

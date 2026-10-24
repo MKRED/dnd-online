@@ -24,14 +24,14 @@ const SECOND_CLICK = {
   erase: 'второй щелчок сотрёт',
 } as const;
 
-// Плашка инструмента внизу сцены (docs/plan/scene-page.md, этап 3): что сделает следующий
+// Плашка инструмента внизу сцены (docs/plan/done/scene-page.md, этап 3): что сделает следующий
 // щелчок и клавиши к нему — вместо абзаца подсказки в панели.
 function ToolHint({ editor, state, hover, placesObject }: ToolHintProps) {
   const preview = useRegionPreview(editor, state, hover);
   const narrow = useMediaQuery('(max-width: 48em)');
   const { tool, anchor } = editor;
   // На телефоне на сцене ни плашки, ни координат: подсказка — в шапке инструмента,
-  // подсчёт — в карточке первого угла в панели (выбрано 2026-10-23, docs/plan/scene-page.md,
+  // подсчёт — в карточке первого угла в панели (выбрано 2026-10-23, docs/plan/done/scene-page.md,
   // «Телефон»).
   if (narrow) return null;
   const keys: [string, string][] = [];

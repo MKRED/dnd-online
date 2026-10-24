@@ -4,7 +4,7 @@ import type { Vec3 } from 'shared';
 
 const dummy = new Object3D();
 
-// Подсветка отдельных клеток (что заменит «Замена», макет «П6», docs/plan/scene-page.md,
+// Подсветка отдельных клеток (что заменит «Замена», макет «П6», docs/plan/done/scene-page.md,
 // этап 3): одна сетка на все клетки, чуть больше блока, чтобы не мерцать на его гранях.
 // Луч сквозь неё проходит — выбор клеток идёт по блокам.
 function CellsHighlight({ cells, color }: { cells: Vec3[]; color: string }) {

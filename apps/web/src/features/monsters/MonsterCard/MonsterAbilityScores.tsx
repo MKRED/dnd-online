@@ -14,7 +14,7 @@ function MonsterAbilityScores({ block }: { block: MonsterStatBlock }) {
   return (
     <Fieldset legend="Характеристики">
       {/* Колонки — по ширине самого блока, а не окна: в окне карточки на сцене игры
-          (docs/plan/scene-page.md, этап 4) шесть колонок не помещаются. */}
+          (docs/plan/done/scene-page.md, этап 4) шесть колонок не помещаются. */}
       <SimpleGrid
         type="container"
         cols={{ base: 2, '360px': 3, '640px': 6 }}

@@ -9,7 +9,7 @@ export interface ObjectGroup {
   rows: MapObjectSummary[];
 }
 
-// Порядок групп «На карте» (вариант А артборда «Н3», 2026-10-24, docs/plan/scene-page.md,
+// Порядок групп «На карте» (вариант А артборда «Н3», 2026-10-24, docs/plan/done/scene-page.md,
 // этап 8): чаще всего ищут существ, реже всего — предметы на полу.
 const GROUPS: { key: ObjectGroupKey; title: string }[] = [
   { key: 'creatures', title: 'Существа' },

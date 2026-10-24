@@ -48,7 +48,7 @@ interface ScenePanelProps<T extends string> {
   headerExtra?: ReactNode;
 }
 
-// Правая панель страницы сцены (docs/plan/scene-page.md, «Правая панель»): шапка одной
+// Правая панель страницы сцены (docs/plan/done/scene-page.md, «Правая панель»): шапка одной
 // строкой, вкладки и их содержимое. Свёрнутая на компьютере — узкая полоса значков
 // вкладок (щелчок разворачивает на нужной), на телефоне — одна шапка под сценой.
 function ScenePanel<T extends string>({

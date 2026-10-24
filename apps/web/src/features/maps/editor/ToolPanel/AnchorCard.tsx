@@ -11,7 +11,7 @@ interface AnchorCardProps {
   hover: HoverStore | null;
 }
 
-// Начатая область (docs/plan/scene-page.md, этап 3): первый угол, у замены — что на что, и
+// Начатая область (docs/plan/done/scene-page.md, этап 3): первый угол, у замены — что на что, и
 // подсчёт до второго щелчка по клетке под курсором.
 function AnchorCard({ editor, state, hover }: AnchorCardProps) {
   const preview = useRegionPreview(editor, state, hover);

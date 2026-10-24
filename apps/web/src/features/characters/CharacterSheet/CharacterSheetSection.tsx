@@ -8,7 +8,7 @@ import CombatView from './CombatView';
 import EffectSummary from './EffectSummary';
 import ProficienciesView from './ProficienciesView';
 
-// Разделы листа для вкладок окна карточки на сцене игры (docs/plan/scene-page.md, этап 4).
+// Разделы листа для вкладок окна карточки на сцене игры (docs/plan/done/scene-page.md, этап 4).
 export type SheetSection = 'stats' | 'abilities' | 'effects' | 'gear';
 
 interface CharacterSheetSectionProps {

@@ -7,7 +7,7 @@ import MovementRow from '../creatures/MovementRow';
 import ParticipantsTab from './ParticipantsTab';
 import { creatureParticipants, heroParticipants } from './participantList';
 
-// Вкладка «Участники» (docs/plan/scene-page.md, этап 2).
+// Вкладка «Участники» (docs/plan/done/scene-page.md, этап 2).
 const goblin: GameCreature = {
   objectId: 2,
   health: 'bloodied',

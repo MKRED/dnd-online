@@ -87,7 +87,7 @@ export function useMapEditor({
   const [pickerOpen, setPickerOpen] = useState(false);
   // «Поставить» без выбранного: мастер снял объект или блок (✕ или Esc), щелчок по карте
   // ничего не ставит, рамки под курсором нет — пока не выбрано новое (2026-10-24, вариант В
-  // артборда «Н2», docs/plan/scene-page.md).
+  // артборда «Н2», docs/plan/done/scene-page.md).
   const [placeEmpty, setPlaceEmpty] = useState(false);
   const clearPlace = () => {
     objects.choose(null);

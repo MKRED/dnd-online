@@ -55,7 +55,7 @@ export interface CardView {
   body: ReactNode;
 }
 
-// Открытые окна карточек (docs/plan/scene-page.md, этап 4): на компьютере — окна поверх
+// Открытые окна карточек (docs/plan/done/scene-page.md, этап 4): на компьютере — окна поверх
 // сцены, на телефоне — лист снизу с чипами открытых.
 function CardWindows({
   gameId,

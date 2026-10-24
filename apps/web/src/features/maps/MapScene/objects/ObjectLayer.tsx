@@ -40,7 +40,7 @@ export interface SceneCreaturesView {
   // Есть — щелчок по монстру или НПС выбирает его (мастер в «Просмотре»).
   onPick?: (id: number) => void;
   // Есть — щелчок по сундуку, предмету на полу или обстановке открывает сведения о нём
-  // (мастер в «Игре», docs/plan/scene-page.md, этап 6).
+  // (мастер в «Игре», docs/plan/done/scene-page.md, этап 6).
   onPickObject?: (id: number) => void;
 }
 

@@ -14,7 +14,7 @@ export interface ObjectInfoItem {
   image: string | null;
 }
 
-// Что знает мастер об объекте сцены в «Игре» (docs/plan/scene-page.md, этап 6): название,
+// Что знает мастер об объекте сцены в «Игре» (docs/plan/done/scene-page.md, этап 6): название,
 // замок, содержимое и положения двери.
 export interface ObjectInfo {
   title: string;

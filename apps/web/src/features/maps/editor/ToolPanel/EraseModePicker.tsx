@@ -7,7 +7,7 @@ interface EraseModePickerProps {
   onChange: (mode: EraseMode) => void;
 }
 
-// Режимы ластика строками с пояснением (docs/plan/scene-page.md, этап 3): раньше были
+// Режимы ластика строками с пояснением (docs/plan/done/scene-page.md, этап 3): раньше были
 // четыре слова в SegmentedControl, и что делает «Связное», было не понять.
 function EraseModePicker({ mode, onChange }: EraseModePickerProps) {
   return (

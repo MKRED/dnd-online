@@ -15,12 +15,12 @@ interface CreatureCardsProps {
   // Запас фигурки у мастера: обновить или «Рывок».
   onFigureAllowance: (characterId: string, change: 'refresh' | 'dash') => void;
   figureBusy: boolean;
-  // «Карточка» — окно с листом (docs/plan/scene-page.md, этап 4).
+  // «Карточка» — окно с листом (docs/plan/done/scene-page.md, этап 4).
   onOpenCard: (target: CardTarget) => void;
 }
 
 // Состояние выбранного во вкладке «Участники» (docs/plan/done/game.md, этап 8; вид —
-// docs/plan/scene-page.md, этап 2): карточка выбранной фигурки или существа с запасом
+// docs/plan/done/scene-page.md, этап 2): карточка выбранной фигурки или существа с запасом
 // движения. «Карточка» открывает окно с листом (cardWindows).
 function CreatureCards({
   gameId,

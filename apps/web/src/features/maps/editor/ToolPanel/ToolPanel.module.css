@@ -2,8 +2,8 @@
 .hint {
   position: absolute;
   left: 50%;
-  /* Над строкой координат сцены (CursorReadout), чтобы не наезжать на неё. */
-  bottom: calc(var(--mantine-spacing-xs) * 2 + 1.75rem);
+  /* В одну линию со строкой координат (она слева), прижата к низу сцены. */
+  bottom: var(--mantine-spacing-xs);
   transform: translateX(-50%);
   display: flex;
   align-items: center;

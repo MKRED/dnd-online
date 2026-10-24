@@ -64,7 +64,8 @@ export function useCreatureCards({
   const clearSelection = useCallback(() => setSelectedId(null), []);
   // Esc снимает выбор, как у фигурок.
   useKeyCodes({ Escape: clearSelection });
-  // Щелчок по выбранному существу на карте снимает выбор, как в списке «Существа».
+  // Щелчок по существу на карте выбирает его или снимает выбор, как в списке; по уже
+  // выбранному щелчок проходит к клеткам (ObjectLayer), а мимо них — снимает выбор (onMiss).
   const pick = useCallback(
     (objectId: number) => select(selectedId === objectId ? null : objectId),
     [select, selectedId],

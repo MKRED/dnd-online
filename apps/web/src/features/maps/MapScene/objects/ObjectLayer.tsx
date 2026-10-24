@@ -165,7 +165,11 @@ function ObjectLayer({
             <group
               {...handlers(object.id)}
               {...(pick &&
-                look.kind === 'creature' && {
+                look.kind === 'creature' &&
+                // Выбранное существо щелчок не ловит: он проходит к клеткам под ним —
+                // иначе большое существо закрывало собой соседние клетки хода
+                // (2026-10-24). Снять выбор — Esc, щелчок мимо или строка списка.
+                object.id !== selectedId && {
                   onClick: (event: ThreeEvent<MouseEvent>) => {
                     event.stopPropagation();
                     pick(object.id);

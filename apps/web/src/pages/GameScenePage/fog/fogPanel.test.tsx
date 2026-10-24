@@ -83,7 +83,16 @@ describe('playersView', () => {
       { op: 'fillBox', from: [0, 0, 0], to: [7, 0, 7], block: 'stone' },
     ]);
     const objects: MapObject[] = [
-      { id: 1, at: [0, 1, 0], hidden: false, kind: 'start', facing: 0 },
+      {
+        id: 1,
+        at: [0, 1, 0],
+        hidden: false,
+        kind: 'item',
+        itemId: '00000000-0000-4000-8000-0000000000aa',
+        quantity: 1,
+      },
+      // Старт в открытом — разметка мастера, игрок её не видит.
+      { id: 9, at: [1, 1, 0], hidden: false, kind: 'start', facing: 0 },
       {
         id: 2,
         at: [1, 1, 0],

@@ -244,8 +244,8 @@ describe('game scenes (e2e)', () => {
     // С этого номера лобби входит в комнату сокета.
     expect(lobby.eventSeq).toBe((await lastEvent(m, gameId)).seq);
     const seen = await view(player.agent, gameId);
+    // Точек старта игрок не видит: это разметка мастера (2026-10-24).
     expect(seen.objects.map((o) => o.kind)).toEqual([
-      'start',
       'npc',
       'container',
       'item',

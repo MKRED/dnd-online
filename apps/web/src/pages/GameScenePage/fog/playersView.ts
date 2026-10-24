@@ -44,7 +44,9 @@ export function playersView(
   for (const [id, object] of state.objects.byId) {
     const box =
       object.kind === 'furniture' ? objectBox(object, refs) : undefined;
-    if (!object.hidden && objectSeen(object, fog, box)) byId.set(id, object);
+    // Как на сервере (scene-player-view.ts): ни скрытых, ни точек старта.
+    if (object.hidden || object.kind === 'start') continue;
+    if (objectSeen(object, fog, box)) byId.set(id, object);
   }
   return {
     ...state,

@@ -105,7 +105,8 @@ describe('game scene fog: player view (e2e)', () => {
     expect(cellIn(player, [6, 0, 6])).toBe(0);
     expect(player.chunks.some((c) => c.cy === 1)).toBe(false);
     expect(player.fog?.explored.length).toBeGreaterThan(0);
-    expect(kinds(player.objects)).toEqual(['monster', 'start']);
+    // Старт — разметка мастера, игроку не уходит.
+    expect(kinds(player.objects)).toEqual(['monster']);
     // Справочник — только для отправленного: НПС и верёвки в нём нет.
     expect(Object.keys(player.refs.npcs)).toEqual([]);
     expect(Object.keys(player.refs.items)).toEqual([]);
@@ -172,9 +173,7 @@ describe('game scene fog: player view (e2e)', () => {
     message = edit();
     await g.ops([{ op: 'moveObject', id: goblin, at: [5, 1, 5] }]);
     expect((await message).changes.objects).toBeUndefined();
-    expect(kinds((await view(g.player.agent, g.gameId)).objects)).toEqual([
-      'start',
-    ]);
+    expect(kinds((await view(g.player.agent, g.gameId)).objects)).toEqual([]);
   });
 
   it('новый для сцены блок закрывает вид уже в той правке, что его ставит', async () => {
@@ -210,9 +209,7 @@ describe('game scene fog: player view (e2e)', () => {
     await g.ops([
       { op: 'updateObject', id: goblin, object: { hidden: false } },
     ]);
-    expect(kinds((await view(g.player.agent, g.gameId)).objects)).toEqual([
-      'start',
-    ]);
+    expect(kinds((await view(g.player.agent, g.gameId)).objects)).toEqual([]);
     // Гоблина группа не видит: ход игрока его не учитывает и кончается в его клетке —
     // будь гоблин виден, сервер отказал бы, и отказ выдал бы засаду.
     const figures = await g.m

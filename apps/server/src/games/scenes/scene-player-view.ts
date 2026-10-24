@@ -14,14 +14,15 @@ import {
 // (docs/plan/done/fog-of-war.md) — нет и того, чего группа не видит: существ вне поля зрения
 // и всего в неоткрытых клетках. Одно правило и для чтения сцены, и для рассылки правок:
 // копия игрока — проекция настоящей сцены, и правка, спроецированная тем же правилом,
-// ложится на неё без конфликтов. fog — null, когда тумана нет. refs — справочник
+// ложится на неё без конфликтов. Точек старта у игрока тоже нет: это разметка мастера, где
+// встанут фигурки (пользователь, 2026-10-24). fog — null, когда тумана нет. refs — справочник
 // обстановки: под туманом её место берётся из модели (objectSeen).
 export function forPlayer(
   object: MapObject | null,
   fog: FogMasks | null = null,
   refs?: ObjectRefs,
 ): MapObject | null {
-  if (!object || object.hidden) return null;
+  if (!object || object.hidden || object.kind === 'start') return null;
   const box =
     refs && object.kind === 'furniture' ? objectBox(object, refs) : undefined;
   if (!objectSeen(object, fog, box)) return null;

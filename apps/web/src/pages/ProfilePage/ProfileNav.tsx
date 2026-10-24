@@ -13,8 +13,9 @@ interface ProfileNavProps {
   active: ProfileSectionKey | null;
 }
 
-// Меню разделов: на широком экране — колонка слева, на телефоне — первый экран
-// профиля, как список настроек телефона.
+// Меню разделов: на широком экране — колонка слева под карточкой игрока, коротко, без
+// подсказок; на телефоне — первый экран профиля, как список настроек телефона, с
+// подсказкой под каждым разделом.
 function ProfileNav({ active }: ProfileNavProps) {
   return (
     <nav aria-label="Разделы профиля">
@@ -24,14 +25,14 @@ function ProfileNav({ active }: ProfileNavProps) {
           component={Link}
           to={profileSectionPath(key)}
           label={label}
-          description={hint}
+          description={active === null ? hint : undefined}
           leftSection={<Icon size={22} stroke={1.6} />}
           rightSection={
             active === null && <IconChevronRight size={16} stroke={1.6} />
           }
           active={key === active}
           variant="light"
-          py="sm"
+          py={active === null ? 'sm' : 10}
           style={{ borderRadius: 'var(--mantine-radius-md)' }}
         />
       ))}

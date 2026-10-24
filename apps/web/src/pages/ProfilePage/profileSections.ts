@@ -22,7 +22,7 @@ export const PROFILE_SECTIONS: ProfileSectionInfo[] = [
   {
     key: 'account',
     label: 'Аккаунт',
-    hint: 'Ник, вход через лольку, логин и пароль',
+    hint: 'Как вас видят другие игроки и как вы входите',
     icon: IconUserCircle,
   },
   {

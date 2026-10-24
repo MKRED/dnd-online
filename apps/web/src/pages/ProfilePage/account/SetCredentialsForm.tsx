@@ -1,9 +1,9 @@
 import {
   Alert,
   Button,
+  Group,
   PasswordInput,
   Stack,
-  Text,
   TextInput,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
@@ -19,10 +19,13 @@ interface Values {
 }
 
 // Аккаунт из лольки без пароля: задать логин и пароль, чтобы входить и без неё.
+// Открывается в строке «Логин и пароль» раздела «Аккаунт».
 function SetCredentialsForm({
   onSaved,
+  onCancel,
 }: {
   onSaved: (profile: Profile) => void;
+  onCancel: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -51,10 +54,6 @@ function SetCredentialsForm({
   return (
     <form onSubmit={handleSubmit}>
       <Stack>
-        <Text size="sm" c="dimmed">
-          Сейчас вы входите только через лольку. Задайте логин и пароль, чтобы
-          входить и без неё.
-        </Text>
         {error && (
           <Alert color="red" title="Ошибка">
             {error}
@@ -64,6 +63,7 @@ function SetCredentialsForm({
           label="Логин"
           placeholder="Латинские буквы, цифры и _"
           required
+          autoFocus
           autoComplete="username"
           {...form.getInputProps('login')}
         />
@@ -79,13 +79,14 @@ function SetCredentialsForm({
           autoComplete="new-password"
           {...form.getInputProps('confirmPassword')}
         />
-        <Button
-          type="submit"
-          loading={saving}
-          style={{ alignSelf: 'flex-start' }}
-        >
-          Сохранить логин и пароль
-        </Button>
+        <Group gap="xs">
+          <Button type="submit" loading={saving}>
+            Сохранить логин и пароль
+          </Button>
+          <Button variant="default" onClick={onCancel} disabled={saving}>
+            Отмена
+          </Button>
+        </Group>
       </Stack>
     </form>
   );

@@ -5,10 +5,13 @@
   align-items: start;
 }
 
-/* Меню остаётся на виду, пока длинный раздел прокручивается. */
-.nav {
+/* Карточка и меню остаются на виду, пока длинный раздел прокручивается. */
+.aside {
   position: sticky;
   top: calc(var(--app-shell-header-height, 0px) + var(--mantine-spacing-md));
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
 }
 
 .body {

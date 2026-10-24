@@ -29,7 +29,10 @@ export class ProfileController {
     private readonly tokenService: TokenService,
   ) {}
 
+  // Чтение — с обычным лимитом: профиль грузит каждый заход на страницу профиля (его
+  // карточка над меню), и строгий лимит от перебора пароля съедали бы просто переходы.
   @Get()
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
   get(@Req() req: AuthenticatedRequest) {
     return this.profileService.getProfile(req.user.sub);
   }

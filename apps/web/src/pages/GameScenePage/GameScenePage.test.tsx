@@ -719,7 +719,11 @@ describe('GameScenePage', () => {
               seq: 2,
               kind: 'figures.round',
               actor: { id: 'm1', nickname: 'Я' },
-              result: { scene: { id: 's1', name: 'Пещера' }, count: 1 },
+              result: {
+                scene: { id: 's1', name: 'Пещера' },
+                count: 1,
+                round: 2,
+              },
             },
             { ...entered, seq: 1, actor: { id: 'u3', nickname: 'Ада' } },
           ],
@@ -746,8 +750,8 @@ describe('GameScenePage', () => {
       await screen.findByRole('button', { name: 'Журнал, новых: 1' }),
     );
 
-    // «Новый раунд» — разделитель; живые записи сверху первой страницы.
-    expect(await screen.findByText(/Новый раунд ·/)).toBeInTheDocument();
+    // Запись нового раунда — разделитель с номером; живые записи сверху первой страницы.
+    expect(await screen.findByText(/Раунд 2 ·/)).toBeInTheDocument();
     expect(screen.getAllByText(/Боб/).length).toBeGreaterThan(0);
     expect(screen.getByText(/Ада/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Журнал' })).toBeInTheDocument();

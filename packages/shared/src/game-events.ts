@@ -169,7 +169,13 @@ export interface GameEventPayloads {
   // активной сцены (creatures; в записях до хода монстров его нет).
   'figures.round': {
     intent: null;
-    result: { scene: GameSceneRef; count: number; creatures?: number };
+    // round — номер раунда на сцене с начала встречи; у записей до 2026-10-24 его нет.
+    result: {
+      scene: GameSceneRef;
+      count: number;
+      creatures?: number;
+      round?: number;
+    };
   };
   // Запас одной фигурки обновлён (её новый ход) или к нему добавлен «Рывок».
   'figure.refreshed': {

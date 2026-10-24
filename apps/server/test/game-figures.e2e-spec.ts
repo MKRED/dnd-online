@@ -348,7 +348,13 @@ describe('game figures (e2e)', () => {
     expect(figureOf(round, id)).toMatchObject({ moved: 0, dashes: 0 });
     expect(await lastEvent(g.m, g.gameId)).toMatchObject({
       kind: 'figures.round',
-      result: { count: 1 },
+      result: { count: 1, round: 1 },
+    });
+    // Следующий раунд на той же сцене — с номером 2.
+    await g.m.post(`${g.base}/round`).expect(200);
+    expect(await lastEvent(g.m, g.gameId)).toMatchObject({
+      kind: 'figures.round',
+      result: { round: 2 },
     });
     await p
       .post(`${g.url}/move`)

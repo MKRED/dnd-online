@@ -11,7 +11,7 @@ import {
 import { IconRefresh } from '@tabler/icons-react';
 import type { GameEvent } from 'shared';
 import GameEventItem from './GameEventItem';
-import { gameEventTime } from './gameEventText';
+import { gameEventTime, roundTitle } from './gameEventText';
 import { useGameJournal } from './useGameJournal';
 
 interface GameJournalEntriesProps {
@@ -75,7 +75,7 @@ function GameJournalEntries({ gameId, live, rounds }: GameJournalEntriesProps) {
                   tt="uppercase"
                   c="var(--mantine-primary-color-filled)"
                 >
-                  Новый раунд · {gameEventTime(event.createdAt)}
+                  {roundTitle(event)} · {gameEventTime(event.createdAt)}
                 </Text>
               }
             />

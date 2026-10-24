@@ -104,9 +104,10 @@ export function gameEventText(event: GameEvent): string {
         : `Фигурка поставлена на сцену: ${event.result.character.name}`;
     case 'figures.round': {
       const { count, creatures } = event.result;
+      const title = roundTitle(event);
       return creatures
-        ? `Новый раунд: запас движения снова полный у фигурок: ${count}, у монстров и НПС: ${creatures}`
-        : `Новый раунд: запас движения снова полный у фигурок: ${count}`;
+        ? `${title}: запас движения снова полный у фигурок: ${count}, у монстров и НПС: ${creatures}`
+        : `${title}: запас движения снова полный у фигурок: ${count}`;
     }
     case 'figure.refreshed':
       return `Запас движения обновлён: ${event.result.character.name}`;
@@ -209,4 +210,12 @@ export function gameEventTime(iso: string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+// «Раунд 3» — номер есть у записей с 2026-10-24 (docs/plan/scene-page.md, этап 7), у старых —
+// «Новый раунд».
+export function roundTitle(
+  event: Extract<GameEvent, { kind: 'figures.round' }>,
+): string {
+  return event.result.round ? `Раунд ${event.result.round}` : 'Новый раунд';
 }

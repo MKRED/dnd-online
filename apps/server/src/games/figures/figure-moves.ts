@@ -19,6 +19,7 @@ import {
   type Vec3,
 } from 'shared';
 import type { DbTransaction } from '../../database/database.service.js';
+import { nextRoundNumber } from './round-number.js';
 import {
   characters,
   gameFigures,
@@ -272,6 +273,7 @@ export async function newRound(actor: FigureActor): Promise<void> {
     .where(eq(gameFigures.gameId, actor.gameId))
     .returning({ id: gameFigures.characterId });
   const creatures = await refreshSceneCreatures(actor, scene.id);
+  const round = await nextRoundNumber(actor.tx, actor.gameId, scene.id);
   await appendGameEvent(actor.tx, actor.gameId, {
     kind: 'figures.round',
     actorId: actor.userId,
@@ -282,6 +284,7 @@ export async function newRound(actor: FigureActor): Promise<void> {
       scene: { id: scene.id, name: scene.name },
       count: rows.length,
       creatures,
+      round,
     },
   });
 }

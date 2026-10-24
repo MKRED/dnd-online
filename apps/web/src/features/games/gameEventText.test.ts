@@ -413,6 +413,16 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'figures.round',
+        as: { kind: 'master' },
+        intent: null,
+        result: { scene: lair, count: 2, round: 4 },
+      },
+      'Раунд 4: запас движения снова полный у фигурок: 2',
+    ],
+    [
+      {
+        ...base,
         kind: 'creature.moved',
         as: { kind: 'master' },
         intent: { objectId: 2, to: [1, 1, 4] },

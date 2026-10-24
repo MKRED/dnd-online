@@ -18,3 +18,26 @@
   vertical-align: -2px;
   color: var(--mantine-color-dimmed);
 }
+
+/* Шапка группы «На карте»: стрелка, вид прописными, число справа. */
+.groupHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 2px 6px;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  color: var(--mantine-color-dimmed);
+}
+
+.groupHeader:hover:not(:disabled) {
+  color: var(--mantine-color-text);
+}
+
+.groupTitle {
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}

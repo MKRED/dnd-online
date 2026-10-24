@@ -36,3 +36,16 @@
   border-left: 4px solid var(--mantine-primary-color-filled);
   pointer-events: auto;
 }
+
+/* На телефоне сверху справа «Центр»: плашка боя встаёт под строку управления, слева, и не
+   заходит под ползунок уровней справа — как плашка выбранного. */
+@media (max-width: 48em) {
+  .overlay {
+    top: calc(var(--mantine-spacing-xs) + 2.75rem);
+    left: var(--mantine-spacing-xs);
+    right: calc(var(--mantine-spacing-xs) * 2 + 2.5rem);
+    width: auto;
+    transform: none;
+    align-items: flex-start;
+  }
+}

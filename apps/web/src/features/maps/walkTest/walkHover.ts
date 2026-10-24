@@ -36,7 +36,7 @@ export function walkHover(
   cells: PickedCells,
   size: CreatureSize,
 ): WalkHover {
-  for (const anchor of walkAnchors(cells, size)) {
+  for (const anchor of walkAnchors(map, cells, size)) {
     const path = pathFromReach(reach, anchor);
     if (!path) continue;
     return {

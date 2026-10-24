@@ -95,7 +95,9 @@ function HelpButton({ master, editing }: HelpButtonProps) {
       variant="subtle"
       color="gray"
       aria-label="Подсказки и горячие клавиши"
-      onClick={narrow ? () => setOpened(true) : undefined}
+      // Открытие — своим состоянием: через Tooltip внутри Popover.Target щелчок до
+      // окошка не доходил, и на компьютере «?» не открывалась.
+      onClick={() => setOpened((open) => !open)}
     >
       <IconHelpCircle size={18} />
     </ActionIcon>
@@ -127,7 +129,14 @@ function HelpButton({ master, editing }: HelpButtonProps) {
     );
   }
   return (
-    <Popover position="left-start" withArrow shadow="md" width={340}>
+    <Popover
+      position="left-start"
+      withArrow
+      shadow="md"
+      width={340}
+      opened={opened}
+      onChange={setOpened}
+    >
       <Popover.Target>
         <Tooltip label="Подсказки и горячие клавиши" withArrow>
           {button}

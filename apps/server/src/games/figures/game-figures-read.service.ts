@@ -46,7 +46,12 @@ export class GameFiguresReadService {
       const result = await this.databaseService.db.transaction(
         async (tx) => {
           const [game] = await tx
-            .select({ sceneOpen: games.sceneOpen, eventSeq: games.eventSeq })
+            .select({
+              sceneOpen: games.sceneOpen,
+              eventSeq: games.eventSeq,
+              mode: games.moveMode,
+              round: games.combatRound,
+            })
             .from(games)
             .where(eq(games.id, gameId));
           const scene = await findActiveScene(tx, gameId);
@@ -64,6 +69,8 @@ export class GameFiguresReadService {
           return {
             sceneId: scene.id,
             eventSeq: game.eventSeq,
+            mode: game.mode,
+            round: game.mode === 'tactical' ? game.round : null,
             figures,
             unplaced: master ? await readUnplaced(tx, gameId, figures) : [],
           };

@@ -8,6 +8,7 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
+import type { GameMoveMode } from 'shared';
 import { characters } from './characters.js';
 import { users } from './users.js';
 
@@ -32,6 +33,14 @@ export const games = pgTable('games', {
   // «Сцена открыта игрокам» (docs/plan/done/game.md, этап 5): закрытую активную сцену игрокам
   // не отдают. У новой игры закрыта — мастер открывает сцену, когда готов.
   sceneOpen: boolean('scene_open').notNull().default(false),
+  // Режим хода (docs/dnd/movement.md): «free» — запас снова полный после каждого хода,
+  // «tactical» — тратится до «Нового раунда». Новые и старые игры — в свободном.
+  moveMode: varchar('move_mode', { length: 16 })
+    .$type<GameMoveMode>()
+    .notNull()
+    .default('free'),
+  // Номер раунда боя; только в тактическом режиме, в свободном null.
+  combatRound: integer('combat_round'),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

@@ -41,7 +41,7 @@ Departures from the book, decided 2026-10-21 while building stage 7:
 - **Ending in an occupied space is refused**, so the Prone consequence never comes up.
 - **A Medium figure for every character**: a character has no size yet (see [species.md](species.md)), and Small takes the same square.
 - **Hidden creatures** (an ambush the GM hid from the players) don't block a player's move: the player doesn't see them, and a refusal would give the ambush away. A figure can end up on a hidden monster's square; the GM sorts it out.
-- **The movement allowance** is the figure's Speed (from the sheet with effects) plus one Speed per Dash, spent by each move; the GM refreshes it with «Новый раунд» and grants Dash by hand. The turn order is the GM's, by voice, until combat (stage 9).
+- **The movement allowance** is the figure's Speed (from the sheet with effects) plus one Speed per Dash, spent by each move in tactical mode; the GM refreshes it with «Новый раунд» and grants Dash by hand. In free mode it isn't spent (see «Free and tactical modes» below). The turn order is the GM's, by voice, until combat (stage 9).
 - **A ledge one block high (5 feet)** is climbed or jumped down without stairs (decided with the user 2026-10-21):
   - up costs 10 feet: the step itself (5, the vertical counts in the same Chebyshev distance) plus 5 for climbing. On Difficult Terrain the costs add up to 15, as the glossary's «2 extra feet» gives;
   - down costs 5, like a plain step: a 5-foot drop deals no damage, so no Prone;
@@ -52,3 +52,16 @@ Departures from the book, decided 2026-10-21 while building stage 7:
   - **Dash adds to both speeds at once** — a simplification: the book has you pick one speed per Dash.
   - Code: `canMove` and `CLIMB_EXTRA_FEET` in `step.ts`, `spentAfter` in `path/search.ts`.
 - **Monsters and NPCs move too** (decided 2026-10-21, [plan/creature-movement.md](../plan/done/creature-movement.md)): the GM moves them along a path the same way, with an allowance from the stat block's walking Speed (an NPC's sheet Speed), the instance's effects, Dash and «Новый раунд». From a monster's side the other monsters and NPCs are its allies (passed through, not ended on) and the players' characters are not — a house rule, since the app stores no sides; hidden creatures count, the GM sees them. A defeated (0 hit points) monster doesn't move. Code: `apps/server/src/games/creatures/creature-moves.ts`, `apps/web/src/pages/GameScenePage/creatures/useCreatureWalk.ts`.
+
+## Free and tactical modes
+
+A house rule of the app, decided with the user 2026-10-24 (mockup «Режимы хода на сцене», variant В). It isn't taken from the books: the 2024 rules weren't searched for a rule on moving outside combat, so nothing here claims to be one.
+
+- **Free mode** («вне боя»): a move is still limited to the creature's Speed (with its effects and climbing, as above), but it spends nothing: right after the move the allowance is full again, so a figure walks on at once. One move can't cross the whole map. Dash and «Новый раунд» aren't there (the server refuses them, 409): the allowance is full anyway.
+- **Tactical mode** («бой»): the allowance is spent move by move until the GM's «Новый раунд», as before; Dash works.
+- **Who switches:** only the GM, with «Начать бой» and «Закончить бой» on the scene page. Starting combat gives everyone a fresh turn, as if the fight just began: every figure, monster and NPC of the active scene gets its full allowance and the round count starts at 1; «Новый раунд» counts on from there. Ending combat refreshes everyone too and drops the round number.
+- **Monsters and NPCs** follow the same mode as the figures.
+- **Movement only:** actions, attacks and initiative aren't built yet (stages 7–9 of [plan/map.md](../plan/map.md)); when they come, the turn order will live in tactical mode.
+- **Kept by the game**, not the scene: the mode stays across scene switches and sessions; a scene made active during combat starts at round 1 again. New and existing games start in free mode.
+- **Players** see «Бой · раунд N» over the scene during combat and a short notice when the GM starts or ends it; in free mode the allowance reads «до 30 фт за ход».
+- Code: `apps/server/src/games/figures/move-mode.ts` and `move-mode-read.ts` (the mode and the round in `games.move_mode` and `combat_round`), `isFree` in `figure-moves.ts` and `creatures/creature-moves.ts`; on the page `pages/GameScenePage/combat/`.

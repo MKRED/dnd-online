@@ -81,9 +81,8 @@ describe('участники', () => {
     });
   });
 
-  it('строки показывают хиты и метку; щелчок выбирает; «Новый раунд» у мастера', async () => {
+  it('строки показывают хиты и метку; щелчок выбирает; бой мастера сверху', async () => {
     const onSelectCreature = vi.fn();
-    const onRound = vi.fn();
     renderWithProviders(
       <ParticipantsTab
         heroes={[]}
@@ -91,8 +90,7 @@ describe('участники', () => {
         selectedKey={null}
         onSelectHero={() => {}}
         onSelectCreature={onSelectCreature}
-        onRound={onRound}
-        busy={false}
+        combat={<span>Бой мастера</span>}
         errors={[null]}
         selected={null}
       />,
@@ -108,8 +106,7 @@ describe('участники', () => {
     expect(screen.getByLabelText('Скрыт от игроков')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Гоблин' }));
     expect(onSelectCreature).toHaveBeenCalledWith('2');
-    await userEvent.click(screen.getByRole('button', { name: 'Новый раунд' }));
-    expect(onRound).toHaveBeenCalled();
+    expect(screen.getByText('Бой мастера')).toBeInTheDocument();
   });
 
   it('пустая сцена — так и сказано', () => {
@@ -120,7 +117,6 @@ describe('участники', () => {
         selectedKey={null}
         onSelectHero={() => {}}
         onSelectCreature={() => {}}
-        busy={false}
         errors={[]}
         selected={null}
       />,

@@ -9,6 +9,7 @@ import {
   emptyRefsView,
   type GameFigure,
   type GameFigures,
+  type GameMoveMode,
   type GameSceneEditMessage,
   type GameSceneFogMessage,
   type GameSceneView,
@@ -133,7 +134,10 @@ const VIEW: GameSceneView = {
 };
 
 function stub(
-  responses: Record<string, () => { status: number; body?: unknown }>,
+  responses: Record<
+    string,
+    (init?: RequestInit) => { status: number; body?: unknown }
+  >,
 ) {
   const fetchMock = vi.fn<typeof fetch>((input, init) => {
     const key = `${init?.method ?? 'GET'} ${urlOf(input).replace(/^.*\/api/, '')}`;
@@ -142,7 +146,7 @@ function stub(
       responses[key] ??
       (key.endsWith('/scene/figures') ? () => ({ status: 404 }) : undefined);
     if (!route) return Promise.reject(new Error(`Нет ответа для ${key}`));
-    const { status, body } = route();
+    const { status, body } = route(init);
     return Promise.resolve(
       new Response(JSON.stringify(body ?? {}), { status }),
     );
@@ -188,8 +192,14 @@ const LIRA: GameFigure = {
   hitPoints: { current: 10, max: 12, temp: 0 },
 };
 
-function figuresOf(eventSeq: number, figures: GameFigure[]): GameFigures {
-  return { sceneId: 's1', eventSeq, figures, unplaced: [] };
+// Режим хода — бой (раунд 1), если не сказано иначе: так запас тратится, как раньше.
+function figuresOf(
+  eventSeq: number,
+  figures: GameFigure[],
+  mode: GameMoveMode = 'tactical',
+): GameFigures {
+  const round = mode === 'tactical' ? 1 : null;
+  return { sceneId: 's1', eventSeq, mode, round, figures, unplaced: [] };
 }
 
 describe('GameScenePage', () => {
@@ -242,6 +252,52 @@ describe('GameScenePage', () => {
       within(
         screen.getByRole('status', { name: 'Выбрано на сцене' }),
       ).getByText('щёлкните клетку, куда поставить'),
+    ).toBeInTheDocument();
+  });
+
+  it('мастер начинает и заканчивает бой; вне боя запас не тратится и «Рывка» нет', async () => {
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'master' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+      [`GET ${base}/scene/figures`]: () => ({
+        status: 200,
+        body: figuresOf(3, [LIRA], 'free'),
+      }),
+      [`PUT ${base}/figures/mode`]: (init) => {
+        const { mode } = JSON.parse(init?.body as string) as {
+          mode: GameMoveMode;
+        };
+        return { status: 200, body: figuresOf(4, [LIRA], mode) };
+      },
+    });
+    renderScene('m1');
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Лира' }));
+    expect(screen.getByText('До 30 фт за ход')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Рывок: Лира' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Новый раунд' }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Начать бой' }));
+    expect(await screen.findByText('Бой · раунд 1')).toBeInTheDocument();
+    expect(screen.getByText('Осталось 30 из 30 фт')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Рывок: Лира' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Новый раунд' }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Закончить бой' }));
+    expect(
+      await screen.findByRole('button', { name: 'Начать бой' }),
     ).toBeInTheDocument();
   });
 
@@ -377,6 +433,9 @@ describe('GameScenePage', () => {
     expect(
       within(plaque).getByText('осталось 30 из 30 фт'),
     ).toBeInTheDocument();
+    // Бой — плашкой сверху сцены; уведомления нет: игрок вошёл уже в бой.
+    expect(screen.getByText('Бой · раунд 1')).toBeInTheDocument();
+    expect(screen.queryByText('Мастер начал бой')).not.toBeInTheDocument();
   });
 
   it('игрок видит фигурки и перечитывает их после событий фигурок; старый ответ не откатывает', async () => {

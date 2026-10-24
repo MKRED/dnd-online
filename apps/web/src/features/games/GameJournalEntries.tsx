@@ -11,14 +11,14 @@ import {
 import { IconRefresh } from '@tabler/icons-react';
 import type { GameEvent } from 'shared';
 import GameEventItem from './GameEventItem';
-import { gameEventTime, roundTitle } from './gameEventText';
+import { dividerTitle, gameEventTime } from './gameEventText';
 import { useGameJournal } from './useGameJournal';
 
 interface GameJournalEntriesProps {
   gameId: string;
   // Записи, пришедшие по сокету, старые первыми.
   live: GameEvent[];
-  // Запись «Новый раунд» — разделитель между раундами, а не строка (страница сцены,
+  // Записи «Новый раунд», начало и конец боя — разделители, а не строки (страница сцены,
   // docs/plan/done/scene-page.md, этап 7): в бою мастер ищет, что было в этом раунде.
   rounds?: boolean;
 }
@@ -62,8 +62,9 @@ function GameJournalEntries({ gameId, live, rounds }: GameJournalEntriesProps) {
       )}
 
       <Accordion multiple chevronPosition="right">
-        {events.map((event) =>
-          rounds && event.kind === 'figures.round' ? (
+        {events.map((event) => {
+          const divider = rounds ? dividerTitle(event) : null;
+          return divider ? (
             <Divider
               key={event.seq}
               my="xs"
@@ -75,14 +76,14 @@ function GameJournalEntries({ gameId, live, rounds }: GameJournalEntriesProps) {
                   tt="uppercase"
                   c="var(--mantine-primary-color-filled)"
                 >
-                  {roundTitle(event)} · {gameEventTime(event.createdAt)}
+                  {divider} · {gameEventTime(event.createdAt)}
                 </Text>
               }
             />
           ) : (
             <GameEventItem key={event.seq} event={event} />
-          ),
-        )}
+          );
+        })}
       </Accordion>
 
       {hasMore && (

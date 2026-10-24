@@ -69,6 +69,7 @@ export const FIGURE_KINDS: readonly GameEventKind[] = [
   'figure.moved',
   'figure.placed',
   'figures.round',
+  'game.mode',
   'figure.refreshed',
   'figure.dashed',
 ];

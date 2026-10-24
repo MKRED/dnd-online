@@ -7,7 +7,7 @@ import type {
   GameCreatureHitPoints,
   GameEventCreature,
 } from './game-creatures.js';
-import type { GameFigurePlacement } from './game-figures.js';
+import type { GameFigurePlacement, GameMoveMode } from './game-figures.js';
 import type { GameUser } from './games.js';
 import type { GameLibraryRef } from './game-library.js';
 import type { GameSceneRef } from './game-scenes.js';
@@ -172,12 +172,26 @@ export interface GameEventPayloads {
   // активной сцены (creatures; в записях до хода монстров его нет).
   'figures.round': {
     intent: null;
-    // round — номер раунда на сцене с начала встречи; у записей до 2026-10-24 его нет.
+    // round — номер раунда боя (с начала боя или сцены в тактическом режиме); у записей до
+    // 2026-10-24 его нет.
     result: {
       scene: GameSceneRef;
       count: number;
       creatures?: number;
       round?: number;
+    };
+  };
+  // Мастер сменил режим хода (docs/dnd/movement.md): запас снова полный у всех фигурок
+  // (count) и у монстров и НПС активной сцены (creatures); round — 1 в начале боя, null
+  // в свободном режиме.
+  'game.mode': {
+    intent: { mode: GameMoveMode };
+    result: {
+      mode: GameMoveMode;
+      scene: GameSceneRef;
+      count: number;
+      creatures: number;
+      round: number | null;
     };
   };
   // Запас одной фигурки обновлён (её новый ход) или к нему добавлен «Рывок».

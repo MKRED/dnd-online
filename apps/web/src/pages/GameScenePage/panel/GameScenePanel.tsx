@@ -9,6 +9,7 @@ import { useEffect, type ReactNode } from 'react';
 import type { GameSceneStatus, MapObjectRefsView } from 'shared';
 import type { ObjectImagePaths } from '../../../features/maps/MapScene';
 import type { CardTarget } from '../cardWindows';
+import { CombatControls } from '../combat';
 import type { MapViewState } from '../../../features/maps/mapStateFromChunks';
 import { CreatureCards, type useCreatureCards } from '../creatures';
 import type { useScenePlay } from '../figures';
@@ -111,8 +112,18 @@ function GameScenePanel({
       onOpenCreature={(key) =>
         onOpenCard({ kind: 'creature', objectId: Number(key) })
       }
-      onRound={master ? tool.round : undefined}
-      busy={tool.busy}
+      combat={
+        master &&
+        figures && (
+          <CombatControls
+            mode={figures.mode}
+            round={figures.round}
+            onMode={tool.mode}
+            onRound={tool.round}
+            busy={tool.busy}
+          />
+        )
+      }
       errors={[tool.error, cards.walk.error]}
       selected={
         hasSelection && (

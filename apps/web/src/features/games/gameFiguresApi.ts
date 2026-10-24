@@ -1,4 +1,4 @@
-import type { GameFigure, GameFigures, Vec3 } from 'shared';
+import type { GameFigure, GameFigures, GameMoveMode, Vec3 } from 'shared';
 import { apiRequest as request } from '../../lib/apiRequest';
 
 // Фигурки персонажей на активной сцене (docs/plan/done/game.md, этап 7).
@@ -60,6 +60,17 @@ export function startFiguresRound(gameId: string): Promise<GameFigures> {
   return request(`${figuresBase(gameId)}/round`, { method: 'POST' });
 }
 
+// Режим хода игры: «Начать бой» и «Закончить бой» мастера (docs/dnd/movement.md).
+export function setGameMoveMode(
+  gameId: string,
+  mode: GameMoveMode,
+): Promise<GameFigures> {
+  return request(`${figuresBase(gameId)}/mode`, {
+    method: 'PUT',
+    body: JSON.stringify({ mode }),
+  });
+}
+
 // Запас одной фигурки: обновить или добавить «Рывок».
 export function changeFigureAllowance(
   gameId: string,
@@ -79,6 +90,7 @@ export function figureApi(gameId: string) {
     place: (characterId: string, at: Vec3) =>
       placeGameFigure(gameId, characterId, at),
     round: () => startFiguresRound(gameId),
+    mode: (mode: GameMoveMode) => setGameMoveMode(gameId, mode),
     allowance: (characterId: string, change: 'refresh' | 'dash') =>
       changeFigureAllowance(gameId, characterId, change),
   };

@@ -1,13 +1,7 @@
 import type { GameCreature, GameEventCharacter } from 'shared';
-import { movementAllowance, type GameFigure } from 'shared';
-import { allowanceLabel } from '../allowanceLabel';
+import type { GameFigure } from 'shared';
+import { movementText, shortMovementText } from '../allowanceLabel';
 import type { PlaqueState } from './ScenePlaque';
-
-type Movement = Pick<GameFigure, 'speed' | 'climb' | 'moved' | 'dashes'>;
-
-// «5 / 40 фт» — запас на телефоне, где плашке мало места.
-const shortAllowance = (m: Movement) =>
-  `${movementAllowance(m).walk} / ${m.speed * (1 + m.dashes)} фт`;
 
 interface PlaqueInput {
   // Персонаж «Не на сцене», которого мастер ставит в «Правке».
@@ -18,6 +12,8 @@ interface PlaqueInput {
   creature: GameCreature | null;
   // Выбранное существо сейчас можно водить (у мастера в «Игре»).
   creatureMoving: boolean;
+  // Свободный режим хода: запас не тратится (docs/dnd/movement.md).
+  freeMove?: boolean;
 }
 
 // Что сказать на плашке сцены о выбранном (docs/plan/done/scene-page.md, этап 2) — бывшие
@@ -28,6 +24,7 @@ export function plaqueState({
   free,
   creature,
   creatureMoving,
+  freeMove = false,
 }: PlaqueInput): PlaqueState | null {
   if (placing) {
     return {
@@ -45,8 +42,8 @@ export function plaqueState({
         }
       : {
           name: figure.character.name,
-          left: `осталось ${allowanceLabel(figure)}`,
-          short: shortAllowance(figure),
+          left: movementText(figure, freeMove),
+          short: shortMovementText(figure, freeMove),
           hint: 'щелчок по подсвеченной клетке — ход',
         };
   }
@@ -58,8 +55,8 @@ export function plaqueState({
   return creatureMoving
     ? {
         name: state.name,
-        left: `осталось ${allowanceLabel(state.movement)}`,
-        short: shortAllowance(state.movement),
+        left: movementText(state.movement, freeMove),
+        short: shortMovementText(state.movement, freeMove),
         hint: 'щелчок по подсвеченной клетке — ход',
       }
     : {

@@ -12,6 +12,19 @@ vi.mock('./account/AccountSection', () => ({
 vi.mock('./map/MapSection', () => ({ default: () => <p>тело карты</p> }));
 vi.mock('./graphics/GraphicsSection', () => ({ default: () => null }));
 vi.mock('./ai/ApiTokensCard', () => ({ default: () => null }));
+vi.mock('./useProfile', () => ({
+  useProfile: () => ({
+    profile: {
+      login: 'hero',
+      nickname: 'mk red',
+      hasPassword: true,
+      providers: [],
+      createdAt: '2026-09-14T10:00:00.000Z',
+    },
+    error: null,
+    setProfile: vi.fn(),
+  }),
+}));
 
 // В тестах matchMedia ничему не отвечает «да» — это узкий экран (test/setup.ts).
 function renderAt(route: string) {
@@ -29,6 +42,8 @@ describe('ProfilePage на узком экране', () => {
     renderAt('/profile');
     const user = userEvent.setup();
 
+    expect(screen.getByText('mk red')).toBeInTheDocument();
+    expect(screen.getByText('hero · с сентября 2026')).toBeInTheDocument();
     const nav = screen.getByRole('navigation', { name: 'Разделы профиля' });
     expect(nav).toHaveTextContent('Аккаунт');
     expect(nav).toHaveTextContent('Нейросеть');

@@ -1,6 +1,7 @@
 .row {
   display: block;
   width: 100%;
+  min-width: 0;
   padding: 2px 6px;
   border-radius: var(--mantine-radius-sm);
 }
@@ -40,4 +41,12 @@
   flex: 1;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+/* Список «На карте»: прокрутка только по высоте, строки не шире панели. */
+.list {
+  max-height: 360px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-width: 0;
 }

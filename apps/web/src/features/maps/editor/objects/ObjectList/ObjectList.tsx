@@ -1,7 +1,6 @@
 import {
   CloseButton,
   Group,
-  ScrollArea,
   Stack,
   Text,
   TextInput,
@@ -101,7 +100,7 @@ function ObjectRow({
     >
       <Group gap={8} wrap="nowrap">
         <KindMark summary={summary} />
-        <Text size="sm" flex={1} miw={0} truncate>
+        <Text size="sm" flex={1} miw={0} truncate title={summary.label}>
           {summary.label}
         </Text>
         {summary.hidden && (
@@ -185,7 +184,9 @@ function ObjectList({ summaries, selectedId, onPick }: ObjectListProps) {
               Ничего не нашлось.
             </Text>
           )}
-          <ScrollArea.Autosize mah={360} type="auto">
+          {/* Своя прокрутка, а не ScrollArea: её содержимое растягивается по самой длинной
+              строке, и длинное имя уводило список вбок (2026-10-24). */}
+          <div className={classes.list}>
             <Stack gap={2}>
               {groups.map((group) => {
                 const open = isOpen(group.key);
@@ -218,7 +219,7 @@ function ObjectList({ summaries, selectedId, onPick }: ObjectListProps) {
                 );
               })}
             </Stack>
-          </ScrollArea.Autosize>
+          </div>
         </>
       )}
     </Stack>

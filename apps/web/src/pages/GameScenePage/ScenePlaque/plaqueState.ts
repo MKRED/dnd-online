@@ -1,6 +1,13 @@
-import type { GameCreature, GameEventCharacter, GameFigure } from 'shared';
+import type { GameCreature, GameEventCharacter } from 'shared';
+import { movementAllowance, type GameFigure } from 'shared';
 import { allowanceLabel } from '../allowanceLabel';
 import type { PlaqueState } from './ScenePlaque';
+
+type Movement = Pick<GameFigure, 'speed' | 'climb' | 'moved' | 'dashes'>;
+
+// «5 / 40 фт» — запас на телефоне, где плашке мало места.
+const shortAllowance = (m: Movement) =>
+  `${movementAllowance(m).walk} / ${m.speed * (1 + m.dashes)} фт`;
 
 interface PlaqueInput {
   // Персонаж «Не на сцене», которого мастер ставит в «Правке».
@@ -39,6 +46,7 @@ export function plaqueState({
       : {
           name: figure.character.name,
           left: `осталось ${allowanceLabel(figure)}`,
+          short: shortAllowance(figure),
           hint: 'щелчок по подсвеченной клетке — ход',
         };
   }
@@ -51,6 +59,7 @@ export function plaqueState({
     ? {
         name: state.name,
         left: `осталось ${allowanceLabel(state.movement)}`,
+        short: shortAllowance(state.movement),
         hint: 'щелчок по подсвеченной клетке — ход',
       }
     : {

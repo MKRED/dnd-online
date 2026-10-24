@@ -63,8 +63,9 @@ export function useCreatureCards({
     setShownFigure(figureId);
     if (figureId !== null) setSelectedId(null);
   }
+  const clearSelection = useCallback(() => setSelectedId(null), []);
   // Esc снимает выбор, как у фигурок.
-  useKeyCodes({ Escape: () => setSelectedId(null) });
+  useKeyCodes({ Escape: clearSelection });
   // Щелчок по выбранному существу на карте снимает выбор, как в списке «Существа».
   const pick = useCallback(
     (objectId: number) => select(selectedId === objectId ? null : objectId),
@@ -108,6 +109,7 @@ export function useCreatureCards({
     selectedId,
     active: master && canPick,
     onCreatures: creatures.apply,
+    onMiss: clearSelection,
   });
   const view = useMemo<SceneCreaturesView>(
     () => ({

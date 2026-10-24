@@ -23,6 +23,7 @@ describe('plaqueState', () => {
     ).toEqual({
       name: 'Лира',
       left: 'осталось 20 из 30 фт',
+      short: '20 / 30 фт',
       hint: 'щелчок по подсвеченной клетке — ход',
     });
     expect(

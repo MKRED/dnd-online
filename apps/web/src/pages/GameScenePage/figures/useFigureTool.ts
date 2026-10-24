@@ -147,7 +147,13 @@ export function useFigureTool({
   const pick = useCallback(
     (cells: PickedCells) => {
       const hover = preview(cells);
-      if (!selectedId || !hover || hover.kind === 'blocked') return;
+      if (!selectedId) return;
+      // Щелчок мимо подсвеченных клеток снимает выбор: на телефоне нет Esc, и ждут именно
+      // этого (2026-10-24).
+      if (!hover || hover.kind === 'blocked') {
+        setSelectedId(null);
+        return;
+      }
       if (hover.kind === 'move') {
         run(() => api.move(selectedId, hover.anchor), 'Не удалось сделать ход');
       } else {

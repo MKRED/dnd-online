@@ -14,15 +14,38 @@
   white-space: nowrap;
 }
 
-/* На телефоне внизу — полоса инструментов «Правки»: плашка над ней, подсказка прячется. */
+.left {
+  flex: none;
+  white-space: nowrap;
+}
+
+.short {
+  display: none;
+}
+
+/* На телефоне (вариант Б, 2026-10-24): плашка у левого края и не заходит под ползунок
+   уровней справа; имя обрезается, запас коротко и виден всегда. */
 @media (max-width: 48em) {
   .plaque {
-    bottom: calc(var(--mantine-spacing-xs) * 3 + 4.5rem);
+    left: var(--mantine-spacing-xs);
+    right: calc(var(--mantine-spacing-xs) * 2 + 2.5rem);
+    max-width: none;
+    transform: none;
+    bottom: var(--mantine-spacing-xs);
+    padding: 4px 10px;
   }
 
-  /* На телефоне нет ни клавиши Esc, ни места для подсказки. */
+  .plaque[data-raised] {
+    bottom: calc(var(--mantine-spacing-xs) * 2 + 2.75rem);
+  }
+
+  .long,
   .hint,
   .esc {
     display: none;
+  }
+
+  .short {
+    display: inline;
   }
 }

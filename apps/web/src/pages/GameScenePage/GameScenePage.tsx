@@ -281,7 +281,7 @@ function GameScenePage() {
         {ready &&
           !viewOnly &&
           (plaque ? (
-            <ScenePlaque state={plaque} />
+            <ScenePlaque state={plaque} raised={editTools} />
           ) : (
             editTools && (
               <ToolHint

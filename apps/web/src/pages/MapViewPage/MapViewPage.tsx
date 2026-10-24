@@ -149,6 +149,16 @@ function MapViewPage() {
               onReady={handleSceneReady}
               settings={user?.settings ?? DEFAULT_USER_SETTINGS}
               hover={hover}
+              readoutAfter={
+                !sizeDraft && (
+                  <ToolHint
+                    editor={editor}
+                    state={map.state}
+                    hover={hover}
+                    placesObject={objects.settings.choice !== null}
+                  />
+                )
+              }
             />
           </Suspense>
         )}
@@ -160,14 +170,6 @@ function MapViewPage() {
             busy={busy}
             onUndo={undo}
             onRedo={redo}
-          />
-        )}
-        {map && !sizeDraft && (
-          <ToolHint
-            editor={editor}
-            state={map.state}
-            hover={hover}
-            placesObject={objects.settings.choice !== null}
           />
         )}
         {/* Срез — когда есть что срезать: блоки больше чем на одном уровне. */}

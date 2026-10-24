@@ -1,5 +1,6 @@
 import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactNode } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -37,6 +38,7 @@ vi.mock('../../features/maps/MapScene', async () => {
       onReady,
       figures,
       figureGhosts,
+      readoutAfter,
     }: {
       map: MapViewState;
       refs: MapObjectRefsView;
@@ -45,6 +47,7 @@ vi.mock('../../features/maps/MapScene', async () => {
       onReady: () => void;
       figures?: FigureInput[];
       figureGhosts?: FigureInput[];
+      readoutAfter?: ReactNode;
     }) {
       useEffect(onReady, [onReady]);
       const names = Object.values(refs.monsters).map((m) =>
@@ -61,6 +64,7 @@ vi.mock('../../features/maps/MapScene', async () => {
               Фигурка: {figure.name} {figure.at.join(',')} {figure.image}
             </p>
           ))}
+          {readoutAfter}
           {figureGhosts?.map((figure) => (
             <p key={figure.id}>
               Тень: {figure.name} {figure.at.join(',')}

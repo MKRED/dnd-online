@@ -1,16 +1,17 @@
-/* Плашка инструмента внизу по центру сцены, как плашка выбранного на сцене игры. */
+/* Плашка инструмента — в строке координат внизу сцены, правее них (CursorReadout). */
 .hint {
-  position: absolute;
-  left: 50%;
-  /* В одну линию со строкой координат (она слева), прижата к низу сцены. */
-  bottom: var(--mantine-spacing-xs);
-  transform: translateX(-50%);
+  min-width: 0;
+  overflow: hidden;
   display: flex;
   align-items: center;
   gap: 8px;
-  max-width: calc(100% - 2 * var(--mantine-spacing-md));
   padding: 6px 12px;
   border-radius: var(--mantine-radius-md);
   white-space: nowrap;
-  pointer-events: none;
+}
+
+/* Текст — главное: держит хотя бы 10rem, дальше обрезаются клавиши справа. */
+.text {
+  flex: 0 1 auto;
+  min-width: 10rem;
 }

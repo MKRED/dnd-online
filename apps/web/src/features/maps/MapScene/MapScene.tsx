@@ -1,7 +1,13 @@
 import { useComputedColorScheme } from '@mantine/core';
 import { MapControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { useCallback, useEffect, useState, type RefObject } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type RefObject,
+  type ReactNode,
+} from 'react';
 import {
   BASE_BLOCKS,
   type FogMasks,
@@ -89,6 +95,11 @@ interface MapSceneProps {
   // Клетка под курсором для страницы: её панель показывает блок под курсором и подсчёт
   // области (docs/plan/scene-page.md, этап 3). Без него сцена держит своё хранилище.
   hover?: HoverStore;
+  // Строка координат внизу; без него — есть (редактор карты). Сцена игры в «Игре» её
+  // прячет (docs/plan/scene-page.md).
+  showReadout?: boolean;
+  // Плашка инструмента в одной строке с координатами.
+  readoutAfter?: ReactNode;
 }
 
 function MapScene({
@@ -111,6 +122,8 @@ function MapScene({
   creatures,
   fog = null,
   hover: pageHover,
+  showReadout = true,
+  readoutAfter,
 }: MapSceneProps) {
   const chunks = useChunkMeshes(map, cutY, fog?.visible ?? null);
   // Атлас каталога этой карты: сборка чанков выше уже выдала места своим группам.
@@ -212,7 +225,12 @@ function MapScene({
         {settings.frameLimit > 0 && <FrameLimiter fps={settings.frameLimit} />}
       </Canvas>
       <CenterHint level={centerLevel} onShift={shiftLevel} />
-      <CursorReadout hover={hover} editor={editor} />
+      <CursorReadout
+        hover={hover}
+        editor={editor}
+        show={showReadout}
+        after={readoutAfter}
+      />
     </div>
   );
 }

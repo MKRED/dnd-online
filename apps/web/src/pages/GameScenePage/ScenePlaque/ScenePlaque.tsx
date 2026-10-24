@@ -17,21 +17,25 @@ export interface PlaqueState {
 function ScenePlaque({
   state,
   raised,
+  inline,
 }: {
   state: PlaqueState | null;
   raised: boolean;
+  // В строке координат «Правки» — без своего места на сцене.
+  inline?: boolean;
 }) {
   if (!state) return null;
   return (
     <Paper
       className={classes.plaque}
       data-raised={raised || undefined}
+      data-inline={inline || undefined}
       withBorder
       shadow="sm"
       role="status"
       aria-label="Выбрано на сцене"
     >
-      <Text size="sm" fw={600} truncate>
+      <Text size="sm" fw={600} truncate className={classes.name}>
         {state.name}
       </Text>
       {state.left && (
@@ -45,7 +49,7 @@ function ScenePlaque({
           <span className={classes.short}>{state.short ?? state.left}</span>
         </Text>
       )}
-      <Text size="sm" c="dimmed" className={classes.hint}>
+      <Text size="sm" c="dimmed" truncate className={classes.hint}>
         {state.hint}
       </Text>
       <Kbd size="xs" className={classes.esc}>

@@ -260,6 +260,20 @@ function GameScenePage() {
               }
               fog={fog}
               hover={hover}
+              showReadout={editTools}
+              readoutAfter={
+                editTools &&
+                (plaque ? (
+                  <ScenePlaque state={plaque} raised inline />
+                ) : (
+                  <ToolHint
+                    editor={editor}
+                    state={ready.state}
+                    hover={hover}
+                    placesObject={objects.settings.choice !== null}
+                  />
+                ))
+              }
             />
           </Suspense>
         )}
@@ -281,20 +295,11 @@ function GameScenePage() {
             }
           />
         )}
-        {ready &&
-          !viewOnly &&
-          (plaque ? (
-            <ScenePlaque state={plaque} raised={editTools} />
-          ) : (
-            editTools && (
-              <ToolHint
-                editor={editor}
-                state={ready.state}
-                hover={hover}
-                placesObject={objects.settings.choice !== null}
-              />
-            )
-          ))}
+        {/* В «Игре» строки координат нет — плашка выбранного по центру внизу. В «Правке»
+            плашка стоит в строке координат, правее них (вариант А, 2026-10-24). */}
+        {ready && !viewOnly && plaque && !editTools && (
+          <ScenePlaque state={plaque} raised={false} />
+        )}
         {ready && bounds && bounds.max[1] > bounds.min[1] && (
           <CutRuler
             min={bounds.min[1]}

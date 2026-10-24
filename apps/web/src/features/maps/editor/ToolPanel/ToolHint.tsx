@@ -62,7 +62,9 @@ function ToolHint({ editor, state, hover, placesObject }: ToolHintProps) {
       role="status"
       aria-label="Подсказка инструмента"
     >
-      <Text size="sm">{text}</Text>
+      <Text size="sm" truncate className={classes.text}>
+        {text}
+      </Text>
       {keys.map(([key, what]) => (
         <Fragment key={key}>
           <Group gap={2} wrap="nowrap">

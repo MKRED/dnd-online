@@ -6,10 +6,11 @@ import type { HoverStore } from '../MapScene/hoverStore';
 import PlaceChoicePanel from './PlacePicker/PlaceChoicePanel';
 import type { ObjectChoice } from './PlacePicker/placeChoice';
 import { blockTraits } from './blockTraits';
-import { buildsBlocks, isRegionTool } from './editorTools';
+import { buildsBlocks, isBuildMode } from './editorTools';
 import { EMPTY_PLACE_HINT, firstClickHint } from './ToolPanel/toolTexts';
 import {
   AnchorCard,
+  BuildModePicker,
   CursorBlockCard,
   EraseModePicker,
   HeightStepper,
@@ -79,6 +80,10 @@ function EditorPanel({
         <EraseModePicker mode={eraseMode} onChange={editor.setEraseMode} />
       )}
 
+      {isBuildMode(tool) && (
+        <BuildModePicker mode={tool} onChange={editor.setTool} />
+      )}
+
       {builds && (
         <PlaceChoicePanel
           catalog={catalog}
@@ -123,7 +128,9 @@ function EditorPanel({
         </Stack>
       )}
 
-      {(isRegionTool(tool) || erasesRegion) && (
+      {/* У «Области» и «Коробки» высоты нет: область — от угла до угла (пользователь,
+          2026-10-24). */}
+      {(tool === 'replace' || erasesRegion) && (
         <HeightStepper value={editor.height} onChange={editor.setHeight} />
       )}
 

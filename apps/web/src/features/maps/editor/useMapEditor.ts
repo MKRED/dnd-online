@@ -9,8 +9,10 @@ import {
 } from 'shared';
 import { useKeyCodes } from '../useKeyCodes';
 import {
+  BUILD_MODES,
   buildsBlocks,
   EDITOR_TOOLS,
+  isBuildMode,
   type EditorTool,
   type SceneEditor,
 } from './editorTools';
@@ -81,7 +83,10 @@ export function useMapEditor({
   const [tool, setToolState] = useState<EditorTool>('view');
   const [block, setBlock] = useState('stone');
   const [rotation, setRotation] = useState<Rotation>(0);
-  const [height, setHeight] = useState(1);
+  const [heightState, setHeight] = useState(1);
+  // «Область» и «Коробка» строят от угла до угла, без своей высоты (2026-10-24): у них
+  // слой один, а заданная для «Замены» или ластика высота их не трогает.
+  const height = tool === 'fill' || tool === 'hollow' ? 1 : heightState;
   // Недавнее (блоки и объекты вперемешку) и открытое окно «Что поставить» (этап 10).
   const [recentPlace, setRecentPlace] = useState(readRecentPlace);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -133,10 +138,16 @@ export function useMapEditor({
     setAnchor(null);
     setNotice(null);
   };
-  const keyTool = (next: EditorTool) =>
-    next === 'erase' && tool === 'erase'
-      ? setEraseMode(nextEraseMode(eraseMode))
-      : setTool(next);
+  const keyTool = (next: EditorTool) => {
+    if (next === 'erase' && tool === 'erase')
+      setEraseMode(nextEraseMode(eraseMode));
+    // Клавиша «Строить» при нём же — следующий режим: по одному → область → коробка.
+    else if (next === 'place' && isBuildMode(tool))
+      setTool(
+        BUILD_MODES[(BUILD_MODES.indexOf(tool) + 1) % BUILD_MODES.length],
+      );
+    else setTool(next);
+  };
 
   // mod — Ctrl, на macOS Cmd. В полях ввода хоткеи не срабатывают (по умолчанию в Mantine).
   useHotkeys([

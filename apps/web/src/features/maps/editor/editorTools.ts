@@ -12,7 +12,7 @@ import type { SceneObjectLook } from '../MapScene/objects/objectLayout';
 
 // walk — проверка хода: карту не меняет, водит фигурку по правилам пути. place —
 // «Поставить»: блок или объект карты (docs/plan/blocks.md, этап 10).
-export const EDITOR_TOOLS = [
+const ALL_TOOLS = [
   'view',
   'place',
   'erase',
@@ -21,16 +21,40 @@ export const EDITOR_TOOLS = [
   'replace',
   'walk',
 ] as const;
-export type EditorTool = (typeof EDITOR_TOOLS)[number];
+export type EditorTool = (typeof ALL_TOOLS)[number];
+
+// «Строить» (вариант Б артборда «Н4», 2026-10-24, docs/plan/done/scene-page.md): одна
+// кнопка на полосе, а «По одному», «Область» и «Коробка» — её режимы, как у ластика.
+// Внутри это прежние инструменты place, fill и hollow: у каждого свой щелчок и подсветка.
+export const BUILD_MODES = ['place', 'fill', 'hollow'] as const;
+export type BuildMode = (typeof BUILD_MODES)[number];
+
+export const isBuildMode = (tool: EditorTool): tool is BuildMode =>
+  (BUILD_MODES as readonly EditorTool[]).includes(tool);
+
+// Кнопка полосы, которой принадлежит инструмент: режимы «Строить» — её кнопка place.
+export const stripTool = (tool: EditorTool): EditorTool =>
+  isBuildMode(tool) ? 'place' : tool;
+
+// Полоса инструментов по порядку; номер клавиши — место в ней.
+export const EDITOR_TOOLS: readonly EditorTool[] = ALL_TOOLS.filter(
+  (tool) => tool !== 'fill' && tool !== 'hollow',
+);
 
 export const TOOL_LABELS: Record<EditorTool, string> = {
   view: 'Просмотр',
-  place: 'Поставить',
+  place: 'Строить',
   erase: 'Ластик',
-  fill: 'Заливка',
-  hollow: 'Коробка',
+  fill: 'Строить',
+  hollow: 'Строить',
   replace: 'Замена',
   walk: 'Ход',
+};
+
+export const BUILD_MODE_LABELS: Record<BuildMode, string> = {
+  place: 'По одному',
+  fill: 'Область',
+  hollow: 'Коробка',
 };
 
 // Инструменты, которым нужны два угла области.

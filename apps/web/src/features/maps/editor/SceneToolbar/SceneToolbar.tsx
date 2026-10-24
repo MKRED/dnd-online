@@ -2,7 +2,12 @@ import { ActionIcon, Paper, Tooltip } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { IconArrowBackUp, IconArrowForwardUp } from '@tabler/icons-react';
 import type { ReactNode } from 'react';
-import { EDITOR_TOOLS, TOOL_LABELS, type EditorTool } from '../editorTools';
+import {
+  EDITOR_TOOLS,
+  stripTool,
+  TOOL_LABELS,
+  type EditorTool,
+} from '../editorTools';
 import { TOOL_ICONS } from '../toolIcons';
 import classes from './SceneToolbar.module.css';
 
@@ -42,11 +47,13 @@ function SceneToolbar({
           <ActionIcon.Group orientation={narrow ? 'horizontal' : 'vertical'}>
             {tools.map((value, index) => {
               const Icon = TOOL_ICONS[value];
+              // Режим «Строить» («Область», «Коробка») — та же кнопка.
+              const active = stripTool(tool) === value;
               return (
                 <Tooltip
                   key={value}
-                  // Клавиша ластика при ластике переключает его режим (useMapEditor).
-                  label={`${TOOL_LABELS[value]} (${index + 1}${value === 'erase' ? ', ещё раз — режим' : ''})`}
+                  // Клавиша ластика и «Строить» при нём же переключает режим (useMapEditor).
+                  label={`${TOOL_LABELS[value]} (${index + 1}${value === 'erase' || value === 'place' ? ', ещё раз — режим' : ''})`}
                   position={tooltipSide}
                   withArrow
                   // На касание подсказка всплывала и не уходила.
@@ -54,9 +61,9 @@ function SceneToolbar({
                 >
                   <ActionIcon
                     size="lg"
-                    variant={tool === value ? 'filled' : 'default'}
+                    variant={active ? 'filled' : 'default'}
                     aria-label={TOOL_LABELS[value]}
-                    aria-pressed={tool === value}
+                    aria-pressed={active}
                     onClick={() => onTool(value)}
                   >
                     <Icon size={20} stroke={1.75} />

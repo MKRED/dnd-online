@@ -5,7 +5,7 @@ import { blocksText, sizeText, type RegionPreview } from '../regionPreview';
 // Строка под названием инструмента в шапке свойств (docs/plan/done/scene-page.md, этап 3).
 export const TOOL_SUMMARIES: Record<EditorTool, string> = {
   view: 'Смотреть и выбирать, карту не меняет',
-  place: 'Блок или объект по одному',
+  place: 'Повторная клавиша — следующий режим',
   erase: 'Повторная клавиша — следующий режим',
   fill: 'Два угла — сплошной блок',
   hollow: 'Стены, пол и потолок, внутри воздух',

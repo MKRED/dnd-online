@@ -640,7 +640,7 @@ describe('GameScenePage', () => {
     await user.click(
       await screen.findByRole('radio', { name: 'Правка' }, { timeout: 3000 }),
     );
-    await user.click(screen.getByRole('button', { name: 'Поставить' }));
+    await user.click(screen.getByRole('button', { name: 'Строить' }));
     expect(screen.getByText('На карте: 0')).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Ход' }),
@@ -677,7 +677,7 @@ describe('GameScenePage', () => {
       screen.getByRole('button', { name: 'Отменить' }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Поставить' }),
+      screen.queryByRole('button', { name: 'Строить' }),
     ).not.toBeInTheDocument();
     // Цифры инструментов в «Игре» молчат.
     await user.keyboard('2');
@@ -685,9 +685,7 @@ describe('GameScenePage', () => {
 
     await user.keyboard('[Backquote]');
     expect(screen.getByRole('radio', { name: 'Правка' })).toBeChecked();
-    expect(
-      screen.getByRole('button', { name: 'Поставить' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Строить' })).toBeInTheDocument();
     expect(localStorage.getItem('scene.mode')).toBe('edit');
     await user.keyboard('[Backquote]');
     expect(screen.getByRole('radio', { name: 'Игра' })).toBeChecked();

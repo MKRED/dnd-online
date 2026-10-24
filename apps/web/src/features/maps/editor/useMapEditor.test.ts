@@ -61,14 +61,29 @@ describe('useMapEditor, клавиши', () => {
 
   it('цифры выбирают инструменты в порядке полосы', () => {
     const { result } = setup();
-    act(() => {
-      fireEvent.keyDown(window, { code: 'Digit4' });
-    });
-    expect(result.current.tool).toBe('fill');
-    act(() => {
-      fireEvent.keyDown(window, { code: 'Digit7' });
-    });
+    // Полоса: Просмотр, Строить, Ластик, Замена, Ход («Область» и «Коробка» — режимы).
+    press('Digit4');
+    expect(result.current.tool).toBe('replace');
+    press('Digit5');
     expect(result.current.tool).toBe('walk');
+  });
+
+  it('2 при «Строить» — следующий режим: по одному → область → коробка → по одному', () => {
+    const { result } = setup();
+    const modes = [0, 1, 2, 3].map(() => {
+      press('Digit2');
+      return result.current.tool;
+    });
+    expect(modes).toEqual(['place', 'fill', 'hollow', 'place']);
+  });
+
+  it('у «Области» и «Коробки» высоты нет, у «Замены» — своя', () => {
+    const { result } = setup();
+    act(() => result.current.setHeight(3));
+    act(() => result.current.setTool('fill'));
+    expect(result.current.height).toBe(1);
+    act(() => result.current.setTool('replace'));
+    expect(result.current.height).toBe(3);
   });
 
   it('у «Поставить» (2) с выделенным объектом R, Del и Esc уходят объектам, а не блоку', () => {

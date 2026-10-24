@@ -36,6 +36,8 @@ interface FigureToolOptions {
   onFigures: (figures: GameFigures) => void;
   // Куда тянут выбранную фигурку — остальным по сокету; null — отпустили.
   onDrag?: (characterId: string, at: Vec3 | null) => void;
+  // Ход отправлен: фигурка ждёт свой путь на месте (docs/plan/done/walk-animation.md).
+  onMoveStart?: (characterId: string, from: Vec3) => void;
 }
 
 // Выбранная фигурка на сцене игры (docs/plan/done/game.md, этап 7): куда она дойдёт на
@@ -50,6 +52,7 @@ export function useFigureTool({
   api,
   onFigures,
   onDrag,
+  onMoveStart,
 }: FigureToolOptions) {
   // Персонаж, которого водят: фигурка на сцене или (у мастера в «Правке») «Не на сцене».
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -155,6 +158,7 @@ export function useFigureTool({
         return;
       }
       if (hover.kind === 'move') {
+        if (figure && !busy) onMoveStart?.(figure.character.id, figure.at);
         run(() => api.move(selectedId, hover.anchor), 'Не удалось сделать ход');
       } else {
         run(
@@ -163,7 +167,7 @@ export function useFigureTool({
         );
       }
     },
-    [selectedId, preview, api, run],
+    [selectedId, preview, api, run, figure, busy, onMoveStart],
   );
 
   const dragging = useFigureDragging({

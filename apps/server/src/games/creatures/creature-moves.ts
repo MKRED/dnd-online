@@ -117,6 +117,7 @@ export async function moveCreature(
         to,
         cost: path.cost,
         left: Math.max(0, left.walk - path.cost),
+        path: path.path,
       },
     },
     actor.limits.maxChunks,

@@ -186,6 +186,7 @@ export async function moveFigure(
       to,
       cost: path.cost,
       left: Math.max(0, left.walk - path.cost),
+      path: path.path,
     },
   });
   // Замер по частям: сцена из базы, скорость и остальные существа (с туманом игрока),

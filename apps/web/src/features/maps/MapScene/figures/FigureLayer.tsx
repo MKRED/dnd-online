@@ -5,6 +5,8 @@ import type { MapState } from 'shared';
 import classes from '../MapScene.module.css';
 import { useObjectTextures } from '../objects/useObjectTextures';
 import GhostGroup from '../objects/GhostGroup';
+import { facingAngle } from '../objects/objectLayout';
+import { figureWalkKey, WalkMotion, type SceneWalks } from '../walks';
 import FigureBody from './FigureBody';
 import { layoutFigures, type FigureInput } from './figureLayout';
 import { useFigureDrag, type FigureDragHandlers } from './useFigureDrag';
@@ -15,6 +17,8 @@ interface FigureLayerProps extends FigureDragHandlers {
   cutY: number;
   // Фигурки, которые сейчас тянут другие: полупрозрачные, там, где их держат.
   ghosts?: readonly FigureInput[];
+  // Ходы по пути: фигурка прыгает по клеткам (docs/plan/done/walk-animation.md).
+  walks?: SceneWalks;
 }
 
 // Фигурки персонажей на сцене игры (docs/plan/done/game.md, этап 7): стоячие карточки, как
@@ -25,6 +29,7 @@ function FigureLayer({
   figures,
   cutY,
   ghosts,
+  walks,
   onGrab,
   onRelease,
   onSelect,
@@ -58,16 +63,24 @@ function FigureLayer({
   return (
     <>
       {visible.map((figure) => (
-        <group
+        <WalkMotion
           key={figure.id}
-          {...drag(figure.id, figure.selectable)}
-          onPointerOver={() => setHovered(figure.id)}
-          onPointerOut={() =>
-            setHovered((prev) => (prev === figure.id ? null : prev))
-          }
+          walk={walks?.get(figureWalkKey(figure.id))}
+          map={map}
+          size={figure.size}
+          base={figure.base}
+          angle={facingAngle(figure.facing)}
         >
-          {card(figure, true)}
-        </group>
+          <group
+            {...drag(figure.id, figure.selectable)}
+            onPointerOver={() => setHovered(figure.id)}
+            onPointerOut={() =>
+              setHovered((prev) => (prev === figure.id ? null : prev))
+            }
+          >
+            {card(figure, true)}
+          </group>
+        </WalkMotion>
       ))}
       {shadows.map((figure) => (
         // Обработчиков у тени нет — события проходят к клеткам под ней.

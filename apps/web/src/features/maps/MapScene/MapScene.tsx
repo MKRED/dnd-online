@@ -41,6 +41,7 @@ import ObjectLayer, {
   type SceneCreaturesView,
 } from './objects';
 import type { ObjectImagePaths } from './objects/objectImages';
+import type { SceneWalks } from './walks';
 import ResizePreview from './ResizePreview';
 import { atlasFor } from '../render/textures/atlas';
 import { releaseBlockMaterials } from './blockMaterial';
@@ -100,6 +101,8 @@ interface MapSceneProps {
   showReadout?: boolean;
   // Плашка инструмента в одной строке с координатами.
   readoutAfter?: ReactNode;
+  // Ходы фигурок, монстров и НПС по пути на сцене игры (docs/plan/done/walk-animation.md).
+  walks?: SceneWalks;
 }
 
 function MapScene({
@@ -124,6 +127,7 @@ function MapScene({
   hover: pageHover,
   showReadout = true,
   readoutAfter,
+  walks,
 }: MapSceneProps) {
   const chunks = useChunkMeshes(map, cutY, fog?.visible ?? null);
   // Атлас каталога этой карты: сборка чанков выше уже выдала места своим группам.
@@ -199,6 +203,7 @@ function MapScene({
                 hideContents={hideContainerContents}
                 creatures={creatures}
                 fog={fog}
+                walks={walks}
               />
               {figures && (
                 <FigureLayer
@@ -206,6 +211,7 @@ function MapScene({
                   figures={figures}
                   cutY={cutY}
                   ghosts={figureGhosts}
+                  walks={walks}
                   {...figureDrag}
                 />
               )}

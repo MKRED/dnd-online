@@ -20,6 +20,7 @@ import FloorItem from './FloorItem';
 import FurnitureFigure from './FurnitureFigure';
 import GhostGroup from './GhostGroup';
 import {
+  facingAngle,
   layoutObjects,
   objectImagePaths,
   type SceneObject,
@@ -29,6 +30,7 @@ import StandBase, { BLOCKED_COLOR } from './StandBase';
 import { useLabelTexture } from './useLabelTexture';
 import { useObjectDrag } from './useObjectDrag';
 import { useObjectTextures } from './useObjectTextures';
+import { objectWalkKey, WalkMotion, type SceneWalks } from '../walks';
 
 const START_COLOR = '#d9a01e';
 const SELECTED_COLOR = '#4dabf7';
@@ -62,6 +64,8 @@ interface ObjectLayerProps {
   // Туман войны игрока: предметы, контейнеры и точки старта вне поля зрения — темнее.
   // Существ вне поля зрения сервер не присылает вовсе.
   fog?: FogMasks | null;
+  // Ходы монстров и НПС по пути (docs/plan/done/walk-animation.md).
+  walks?: SceneWalks;
 }
 
 // Обводка выделенного объекта во всё его место и рост: у обстановки — прямоугольник
@@ -129,6 +133,7 @@ function ObjectLayer({
   hideContents,
   creatures,
   fog = null,
+  walks,
 }: ObjectLayerProps) {
   const all = useMemo(
     () => layoutObjects(state, refs, images, hideContents),
@@ -206,13 +211,21 @@ function ObjectLayer({
               }
             >
               {look.kind === 'creature' && (
-                <CreatureBody
-                  object={object}
-                  look={look}
-                  texture={texture(look.image)}
-                  health={healthOf(object.id)}
-                  mark
-                />
+                <WalkMotion
+                  walk={walks?.get(objectWalkKey(object.id))}
+                  map={state}
+                  size={look.size}
+                  base={object.base}
+                  angle={facingAngle(look.facing)}
+                >
+                  <CreatureBody
+                    object={object}
+                    look={look}
+                    texture={texture(look.image)}
+                    health={healthOf(object.id)}
+                    mark
+                  />
+                </WalkMotion>
               )}
               {look.kind === 'start' && (
                 <StartTile object={object} number={look.number} />

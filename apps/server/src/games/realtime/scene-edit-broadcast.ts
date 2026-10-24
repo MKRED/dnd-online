@@ -30,7 +30,7 @@ export interface SceneMessages {
 }
 
 // Разница тумана игрокам, посчитанная в транзакции записи (game_events.player_fog).
-async function loadPlayerFog(
+export async function loadPlayerFog(
   db: Db,
   gameId: string,
   seqs: number[],

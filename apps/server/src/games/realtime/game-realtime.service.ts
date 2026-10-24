@@ -15,6 +15,7 @@ import { readGameEvents } from '../game-event-read.js';
 import { findGameAccess } from '../game-read.js';
 import { GamePresence } from './game-presence.js';
 import { sceneMessages } from './scene-edit-broadcast.js';
+import { walkMessages } from './walk-broadcast.js';
 import {
   gameRoom,
   type GameRemoteSocket,
@@ -105,7 +106,18 @@ export class GameRealtimeService {
     const events = await readGameEvents(db, gameId, { after }, PUBLISH_BATCH);
     if (events.length === 0) return;
     const scene = await sceneMessages(db, gameId, events);
+    const walks = await walkMessages(db, gameId, events);
     for (const event of events) {
+      // Путь хода — раньше правки и «изменилось»: клиент запоминает существо до того,
+      // как правка уберёт его из поля зрения (docs/plan/done/walk-animation.md).
+      const walk = walks.get(event.seq);
+      if (walk) {
+        for (const socket of sockets) {
+          const message =
+            socket.data.userId === game.masterId ? walk.master : walk.player;
+          if (message) socket.emit(GAME_SOCKET.walked, message);
+        }
+      }
       const changed: GameChangedMessage = {
         gameId,
         seq: event.seq,

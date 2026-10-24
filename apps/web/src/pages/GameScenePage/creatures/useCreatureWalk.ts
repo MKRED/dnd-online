@@ -41,6 +41,8 @@ interface CreatureWalkOptions {
   onCreatures: (creatures: GameCreatures) => void;
   // Касание мимо подсвеченных клеток снимает выбор: на телефоне нет Esc (2026-10-24).
   onMiss: () => void;
+  // Ход отправлен: существо ждёт свой путь на месте (docs/plan/done/walk-animation.md).
+  onMoveStart?: (objectId: number, from: Vec3) => void;
 }
 
 // Ход выбранного мастером монстра или НПС (docs/plan/done/creature-movement.md): куда оно
@@ -56,6 +58,7 @@ export function useCreatureWalk({
   active,
   onCreatures,
   onMiss,
+  onMoveStart,
 }: CreatureWalkOptions) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -158,12 +161,13 @@ export function useCreatureWalk({
         return;
       }
       const to: Vec3 = hover.anchor;
+      if (!busy) onMoveStart?.(mover.id, mover.at);
       run(
         () => moveGameCreature(gameId, mover.id, to),
         'Не удалось сделать ход',
       );
     },
-    [preview, mover, run, gameId, onMiss],
+    [preview, mover, run, gameId, onMiss, busy, onMoveStart],
   );
 
   const editor = useMemo<SceneEditor | null>(

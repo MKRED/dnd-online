@@ -1,5 +1,6 @@
 import type { MapChunksResponse } from './map/api.js';
 import type { PackedChangeset } from './map/changesetPacking.js';
+import type { Vec3 } from './map/coords.js';
 
 // Сцены игры (docs/plan/done/game.md, «Сцены и смена карты на ходу»): копия карты мастера
 // внутри игры. Активная сцена одна; игроки видят её, только пока мастер её не закрыл.
@@ -83,6 +84,9 @@ export interface ScenePlayerFog {
   seq: number;
   changes: PackedChangeset;
   fog: GameSceneFogView;
+  // Ход существа (creature.moved): его путь глазами игрока, как в GameWalkMessage; null —
+  // группа не видела ни одной его клетки. У записей до 2026-10-24 поля нет.
+  walk?: (Vec3 | null)[] | null;
 }
 
 export interface GameSceneAddInput {

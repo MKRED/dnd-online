@@ -8,6 +8,8 @@ export interface Profile {
   hasPassword: boolean;
   // Внешние способы входа: ['lolka'].
   providers: string[];
+  // Когда аккаунт создан, ISO-строкой.
+  createdAt: string;
 }
 
 export function getProfile(): Promise<Profile> {
@@ -21,6 +23,14 @@ export function setCredentials(input: {
   return apiRequest('/profile/credentials', {
     method: 'PUT',
     body: JSON.stringify(input),
+  });
+}
+
+// Сервер приводит ник (пробелы) и возвращает профиль с сохранённым.
+export function changeNickname(nickname: string): Promise<Profile> {
+  return apiRequest('/profile/nickname', {
+    method: 'PUT',
+    body: JSON.stringify({ nickname }),
   });
 }
 

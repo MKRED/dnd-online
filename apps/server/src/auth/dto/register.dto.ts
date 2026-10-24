@@ -1,4 +1,5 @@
 import { IsString, Length, Matches } from 'class-validator';
+import { NicknameRules } from './nickname-rules.js';
 
 export class RegisterDto {
   @IsString()
@@ -8,8 +9,7 @@ export class RegisterDto {
   })
   login: string;
 
-  @IsString()
-  @Length(2, 64)
+  @NicknameRules()
   nickname: string;
 
   @IsString()

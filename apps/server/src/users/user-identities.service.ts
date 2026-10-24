@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { and, eq } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { NICKNAME_MAX, normalizeNickname } from 'shared';
 import { DatabaseService } from '../database/database.service.js';
 import { userIdentities, users } from '../database/schema/index.js';
 
@@ -15,8 +16,6 @@ export interface ExternalIdentity {
   // Ник для нового аккаунта; существующему не меняем — дальше он наш.
   nickname: string;
 }
-
-const NICKNAME_MAX = 64;
 
 // Postgres: нарушение уникальности. Drizzle кладёт ошибку драйвера в `cause`.
 export function isUniqueViolation(err: unknown): boolean {
@@ -134,6 +133,6 @@ function technicalLogin(provider: string): string {
 }
 
 function toNickname(raw: string): string {
-  const trimmed = raw.trim().slice(0, NICKNAME_MAX);
+  const trimmed = normalizeNickname(raw).slice(0, NICKNAME_MAX).trim();
   return trimmed || 'Игрок';
 }

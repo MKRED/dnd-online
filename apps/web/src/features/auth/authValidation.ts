@@ -1,3 +1,5 @@
+import { nicknameProblem } from 'shared';
+
 const LOGIN_PATTERN = /^[a-zA-Z0-9_]+$/;
 
 export function validateLogin(value: string): string | null {
@@ -7,8 +9,9 @@ export function validateLogin(value: string): string | null {
     : 'Только латинские буквы, цифры и подчёркивание';
 }
 
+// Правила те же, что у сервера (shared/nickname): при регистрации и при смене ника.
 export function validateNickname(value: string): string | null {
-  return value.trim().length >= 2 ? null : 'Минимум 2 символа';
+  return nicknameProblem(value);
 }
 
 export function validatePassword(value: string): string | null {

@@ -1,9 +1,11 @@
 import {
   applyOps,
+  buildFurnitureLayer,
   createMapObjects,
   createPalette,
   emptyRefsView,
   MemoryChunkStore,
+  objectRefsFromView,
   type MapObject,
   type MapObjectRefsView,
 } from 'shared';
@@ -260,6 +262,32 @@ describe('layoutObjects', () => {
     expect(
       layoutObjects(mapWith([chest]), refs, undefined, true)[0],
     ).toMatchObject({ label: 'Бочка эля (бочка)', warnings: [] });
+  });
+
+  // Сцена получает карту глазами правил, где контейнер сам лежит в слое обстановки
+  // опорой «встать сверху» — по ней он висел над полом на свою высоту (2026-10-24).
+  it('встроенный контейнер стоит на полу, а не на своей крышке', () => {
+    const looks = ['chest', 'crate', 'barrel', 'sack'] as const;
+    const containers: MapObject[] = looks.map((look, index) => ({
+      ...base,
+      id: index + 1,
+      at: [index, 1, 0],
+      kind: 'container',
+      name: '',
+      look,
+      items: [],
+    }));
+    const map = mapWith(containers);
+    const rules = {
+      ...map,
+      furniture: buildFurnitureLayer(
+        map.objects.byId.values(),
+        objectRefsFromView(refs),
+      ),
+    };
+    const objects = layoutObjects(rules, refs);
+    expect(objects.map((object) => object.base[1])).toEqual([1, 1, 1, 1]);
+    expect(objects.map((object) => object.warnings)).toEqual([[], [], [], []]);
   });
 
   it('не рисует объекты за границей карты', () => {

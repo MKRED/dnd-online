@@ -1,4 +1,5 @@
 import {
+  blockSurfaceInCell,
   CONTAINER_LOOK_LABELS,
   CREATURE_SIZES,
   feetHeight,
@@ -247,7 +248,13 @@ export function layoutObjects(
 
     const stands = look.kind === 'creature' || look.kind === 'start';
     const standing = stands ? standHeight(state, object.at, size) : null;
-    const feet = standing ?? feetHeight(state, object.at, size);
+    // Встроенный контейнер сам лежит в слое обстановки правил опорой «встать сверху»: по
+    // ней он стоял бы на своей же крышке (2026-10-24) — его место меряется по блокам.
+    const feet =
+      standing ??
+      (look.kind === 'container'
+        ? y + blockSurfaceInCell(state, object.at)
+        : feetHeight(state, object.at, size));
     const footprint =
       look.kind === 'creature' ? CREATURE_SIZES[size].footprint : 1;
     // Крошечный стоит посередине своей клетки, как в creatureBody.

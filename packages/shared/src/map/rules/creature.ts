@@ -37,14 +37,21 @@ export const CREATURE_SIZES: Record<
 // Обстановка «можно встать сверху» — опора до верха своих вокселей (стол, ящик).
 export function surfaceInCell(map: MapState, cell: Vec3): number {
   const furniture = furnitureCellAt(map.furniture, cell)?.surface ?? 0;
+  return Math.max(furniture, blockSurfaceInCell(map, cell));
+}
+
+// Опора только от блока клетки, без обстановки. Встроенный контейнер сам лежит в слое
+// обстановки (опора «встать сверху»), поэтому своё место он меряет по блокам — иначе
+// стоял бы на собственной крышке.
+export function blockSurfaceInCell(map: MapState, cell: Vec3): number {
   const value = readCell(map.store, cell);
   const block = blockInfo(map, value);
-  if (!block) return furniture;
+  if (!block) return 0;
   const floors = shapeBoxes(block.shape, cellRotation(value)).filter(
     ([minX, , minZ, maxX, , maxZ]) =>
       minX === 0 && minZ === 0 && maxX === 1 && maxZ === 1,
   );
-  return Math.max(furniture, ...floors.map((box) => box[4]));
+  return Math.max(0, ...floors.map((box) => box[4]));
 }
 
 // Высота ног: существо, стоящее в клетке с плитой или ступенями, стоит на их верху,

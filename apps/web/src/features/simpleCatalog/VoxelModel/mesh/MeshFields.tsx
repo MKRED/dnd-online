@@ -52,11 +52,17 @@ function MeshFields({ form, draft }: Props) {
   const [editing, setEditing] = useState<VoxelModelFields | null>(null);
   const ready = meshDraftReady(draft, model.size);
 
+  // Черновик берётся из формы, а не из пропа: поле цвета может прислать цвет ещё раз до
+  // перерисовки, уже после пересчёта вокселей, и старый проп вернул бы прежний voxelsKey.
+  // Ключ и вводы MeshVoxelizer тогда те же, что при прошлом пересчёте, — он не
+  // запустится снова, и «Считаем воксели» висит без конца.
+  const current = () => form.getValues().modelMesh ?? draft;
   const setDraft = (patch: Partial<MeshDraft>) =>
-    form.setFieldValue('modelMesh', { ...draft, ...patch });
+    form.setFieldValue('modelMesh', { ...current(), ...patch });
   const setFit = (fit: Partial<ModelMeshFit>) =>
-    setDraft({ fit: { ...draft.fit, ...fit } });
+    setDraft({ fit: { ...current().fit, ...fit } });
   const resize = (axis: number, value: number) => {
+    const { model } = form.getValues();
     const size = [...model.size] as [number, number, number];
     size[axis] = value;
     form.setFieldValue('model', resizedEmpty(model, size as Vec3));
@@ -131,7 +137,7 @@ function MeshFields({ form, draft }: Props) {
             aria-label="Повернуть модель на 90°"
             onClick={() =>
               setFit({
-                turn: ((draft.fit.turn + 1) % 4) as ModelMeshFit['turn'],
+                turn: ((current().fit.turn + 1) % 4) as ModelMeshFit['turn'],
               })
             }
           >
@@ -146,8 +152,9 @@ function MeshFields({ form, draft }: Props) {
             format="hex"
             value={draft.color ?? ''}
             onChange={(color) => {
-              if (/^#[0-9a-f]{6}$/i.test(color))
-                setDraft({ color: color.toLowerCase() });
+              const next = color.toLowerCase();
+              if (/^#[0-9a-f]{6}$/.test(next) && next !== current().color)
+                setDraft({ color: next });
             }}
           />
         )}

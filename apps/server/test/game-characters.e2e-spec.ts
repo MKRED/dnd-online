@@ -2,6 +2,7 @@ import type request from 'supertest';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import type { Character, CharacterEffectEntry, GameEventPage } from 'shared';
 import { characterBody } from './support/character-fixture.js';
+import { startSession } from './support/scene-fixture.js';
 import {
   listenForSockets,
   type SocketClients,
@@ -193,6 +194,7 @@ describe('game characters (e2e)', () => {
 
   it('ячейки тратятся из игры; неверные правки — 400', async () => {
     const g = await setup('gch_slots');
+    await startSession(g.master.agent, g.gameId);
     const spent = await change(g.player.agent, g.url, {
       kind: 'spell_slots',
       expended: { 1: 1 },
@@ -215,8 +217,44 @@ describe('game characters (e2e)', () => {
     );
   });
 
+  it('вне встречи игрок из игры лист не правит, мастер — правит; встреча кончилась — снова нет', async () => {
+    const g = await setup('gch_offsession');
+    const outside = 'Встреча не идёт: сцену можно только смотреть';
+    const refused = await change(
+      g.player.agent,
+      g.url,
+      { kind: 'damage', amount: 1 },
+      403,
+    );
+    expect((refused.body as { message: string }).message).toBe(outside);
+    await g.player.agent
+      .post(`${g.url}/effects`)
+      .send({ effectId: g.player.character })
+      .expect(403);
+    // Читать лист вне встречи можно.
+    await g.player.agent.get(g.url).expect(200);
+    // Управляющий — тоже игрок: вне встречи не правит.
+    await g.master.agent
+      .put(`/api/games/${g.gameId}/seats/${g.player.id}/controller`)
+      .send({ controllerId: g.second.id })
+      .expect(200);
+    await change(g.second.agent, g.url, { kind: 'damage', amount: 1 }, 403);
+    const hit = await change(g.master.agent, g.url, {
+      kind: 'damage',
+      amount: 2,
+    });
+    expect(sheetOf(hit).hitPointsCurrent).toBe(10);
+
+    await startSession(g.master.agent, g.gameId);
+    await change(g.player.agent, g.url, { kind: 'damage', amount: 1 });
+    await change(g.second.agent, g.url, { kind: 'damage', amount: 1 });
+    await g.master.agent.delete(`/api/games/${g.gameId}/session`).expect(200);
+    await change(g.player.agent, g.url, { kind: 'heal', amount: 1 }, 403);
+  });
+
   it('правит только тот, кто ведёт персонажа: снятый управляющий — уже нет', async () => {
     const g = await setup('gch_rights');
+    await startSession(g.master.agent, g.gameId);
     const hit = { kind: 'damage', amount: 1 };
     await change(g.second.agent, g.url, hit, 403);
     await change(g.stranger.agent, g.url, hit, 403);
@@ -274,6 +312,7 @@ describe('game characters (e2e)', () => {
 
   it('эффект мастера, скрытый от игрока, в игре действует; копия — в библиотеке', async () => {
     const g = await setup('gch_effects');
+    await startSession(g.master.agent, g.gameId);
     const body = (over: Record<string, unknown>) => ({
       name: 'Ускорение',
       components: [

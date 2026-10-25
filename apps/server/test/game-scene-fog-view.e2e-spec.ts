@@ -10,7 +10,7 @@ import {
   type MapObject,
 } from 'shared';
 import { pngImage } from './support/character-fixture.js';
-import { createSceneGame } from './support/scene-fixture.js';
+import { createSceneGame, startSession } from './support/scene-fixture.js';
 import {
   join,
   listenForSockets,
@@ -76,6 +76,7 @@ describe('game scene fog: player view (e2e)', () => {
       .put(`/api/games/${g.gameId}/scenes/open`)
       .send({ open: true })
       .expect(200);
+    await startSession(m, g.gameId);
     await m
       .put(`/api/games/${g.gameId}/scenes/${sceneId}/fog`)
       .send({ enabled: true, sightRange: 5 })

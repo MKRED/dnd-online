@@ -16,7 +16,7 @@ import { DatabaseService } from '../src/database/database.service.js';
 import { gameSceneFog } from '../src/database/schema/index.js';
 import { loadFog } from '../src/games/fog/index.js';
 import { pngImage } from './support/character-fixture.js';
-import { createSceneGame } from './support/scene-fixture.js';
+import { createSceneGame, startSession } from './support/scene-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
 // Туман войны, этап 2 (docs/plan/done/fog-of-war.md): настройки тумана у сцены и маски
@@ -66,6 +66,7 @@ describe('game scene fog (e2e)', () => {
       .put(`/api/games/${g.gameId}/scenes/open`)
       .send({ open: true })
       .expect(200);
+    await startSession(m, g.gameId);
     const figures = await m
       .get(`/api/games/${g.gameId}/scene/figures`)
       .expect(200);

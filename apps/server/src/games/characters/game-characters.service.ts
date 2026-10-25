@@ -8,6 +8,7 @@ import type {
 import { DatabaseService } from '../../database/database.service.js';
 import { GAME_CHARACTER_NOT_YOURS } from '../game-errors.js';
 import { lockGame } from '../game-journal.js';
+import { assertPlayerInSession } from '../session-gate.js';
 import { findGameAccess } from '../game-read.js';
 import { GameRealtimeService } from '../realtime/game-realtime.service.js';
 import {
@@ -155,6 +156,7 @@ export class GameCharactersService {
           userId,
           game.masterId,
         );
+        await assertPlayerInSession(tx, gameId, userId, game.masterId);
         await run({ tx, gameId, userId, masterId: game.masterId }, row);
         return row;
       });

@@ -65,3 +65,9 @@ A house rule of the app, decided with the user 2026-10-24 (mockup «Режимы
 - **Kept by the game**, not the scene: the mode stays across scene switches and sessions; a scene made active during combat starts at round 1 again. New and existing games start in free mode.
 - **Players** see «Бой · раунд N» over the scene during combat and a short notice when the GM starts or ends it; in free mode the allowance reads «до 30 фт за ход».
 - Code: `apps/server/src/games/figures/move-mode.ts` and `move-mode-read.ts` (the mode and the round in `games.move_mode` and `combat_round`), `isFree` in `figure-moves.ts` and `creatures/creature-moves.ts`; on the page `pages/GameScenePage/combat/`.
+
+## Outside a session
+
+A house rule of the app, decided with the user 2026-10-25: while the GM hasn't started a session (or has ended it), a player only watches the scene. They see the scene, move the camera, cut and read the cards, but don't move or drag a figure and don't change a character's Hit Points, death saves, slots or effects from the game. That holds for the owner and the controller alike. The server refuses with 403 «Встреча не идёт: сцену можно только смотреть». The GM isn't limited: they can arrange the scene before the session.
+
+- Code: `apps/server/src/games/session-gate.ts` (`assertPlayerInSession`), called by `GameFiguresService` and `GameCharactersService`; the drag over the socket is dropped in `realtime/figure-drag.ts`.

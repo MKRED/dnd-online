@@ -105,3 +105,9 @@ export async function createSceneGame<
     .expect(201);
   return { master, player, character, mapId, gameId, goblin, npc, rope, gem };
 }
+
+// Мастер начинает встречу: вне неё игрок на сцене только смотрит — не ходит, не тянет
+// фигурку и не правит персонажа из игры.
+export async function startSession(master: request.Agent, gameId: string) {
+  await master.post(`/api/games/${gameId}/session`).expect(201);
+}

@@ -12,7 +12,7 @@ import {
 } from 'shared';
 import type { Socket } from 'socket.io-client';
 import { pngImage } from './support/character-fixture.js';
-import { createSceneGame } from './support/scene-fixture.js';
+import { createSceneGame, startSession } from './support/scene-fixture.js';
 import {
   collect,
   join,
@@ -57,6 +57,7 @@ describe('game walks (e2e)', () => {
       .put(`/api/games/${g.gameId}/scenes/open`)
       .send({ open: true })
       .expect(200);
+    await startSession(m, g.gameId);
     const figures = await m
       .get(`/api/games/${g.gameId}/scene/figures`)
       .expect(200);

@@ -56,15 +56,26 @@
   pointer-events: auto;
 }
 
-/* На телефоне сверху справа «Центр»: плашка боя встаёт под строку управления, слева, и не
-   заходит под ползунок уровней справа — как плашка выбранного. */
+/* На телефоне у игрока сверху справа только «Центр» (макет «Плашка на телефоне», вариант А):
+   плашка встаёт слева в ту же строку и той же высоты, уведомление — под строкой, не заходя
+   под ползунок уровней справа. */
 @media (max-width: 48em) {
   .overlay {
-    top: calc(var(--mantine-spacing-xs) + 2.75rem);
     left: var(--mantine-spacing-xs);
     right: calc(var(--mantine-spacing-xs) * 2 + 2.5rem);
     width: auto;
     transform: none;
     align-items: flex-start;
+  }
+
+  .banner,
+  .watch {
+    height: 28px;
+    padding: 0 10px;
+  }
+
+  /* Без плашки уведомление всё равно ниже строки «Центра». */
+  .notice:first-child {
+    margin-top: calc(28px + 8px);
   }
 }

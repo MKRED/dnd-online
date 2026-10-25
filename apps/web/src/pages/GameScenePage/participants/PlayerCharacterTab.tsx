@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { GameFigure } from 'shared';
 import { figureImagePath } from '../../../features/games';
 import type { CardTarget } from '../cardWindows';
+import { useWatchOnly } from '../combat/MoveModeContext';
 import CharacterStateCard from '../creatures/CharacterStateCard';
 import MovementRow from '../creatures/MovementRow';
 import type { FigureTool } from '../figures';
@@ -20,7 +21,8 @@ interface PlayerCharacterTabProps {
 
 // Вкладка «Персонаж» у игрока (docs/plan/done/scene-page.md, этап 5, вариант А): свой персонаж
 // крупно — хиты с правкой, спасброски, ячейки, эффекты, запас и «Ходить». Если игрок ведёт
-// нескольких — переключатель имён сверху.
+// нескольких — переключатель имён сверху. Вне встречи (макет «Сцена вне встречи», вариант А)
+// карточка только для чтения, как у героя отряда, а вместо «Ходить» — когда можно будет.
 function PlayerCharacterTab({
   gameId,
   own,
@@ -29,6 +31,7 @@ function PlayerCharacterTab({
   onOpenCard,
 }: PlayerCharacterTabProps) {
   const [chosenId, setChosenId] = useState<string | null>(null);
+  const watchOnly = useWatchOnly();
   if (own.length === 0) {
     return (
       <Text size="sm" c="dimmed" p="xs">
@@ -84,20 +87,25 @@ function PlayerCharacterTab({
         version={version}
         onOpenSheet={() => onOpenCard({ kind: 'character', id })}
         bare
+        readOnly={watchOnly}
       />
       <MovementRow
         name={figure.character.name}
         movement={figure}
         busy={tool.busy}
       />
-      <Button
-        variant={walking ? 'filled' : 'light'}
-        leftSection={<IconWalk size={16} />}
-        aria-pressed={walking}
-        onClick={() => tool.select(walking ? null : id)}
-      >
-        {walking ? 'Идёт: щёлкните подсвеченную клетку' : 'Ходить'}
-      </Button>
+      {watchOnly ? (
+        <Text size="sm">Ходить можно, когда мастер начнёт встречу.</Text>
+      ) : (
+        <Button
+          variant={walking ? 'filled' : 'light'}
+          leftSection={<IconWalk size={16} />}
+          aria-pressed={walking}
+          onClick={() => tool.select(walking ? null : id)}
+        >
+          {walking ? 'Идёт: щёлкните подсвеченную клетку' : 'Ходить'}
+        </Button>
+      )}
     </Stack>
   );
 }

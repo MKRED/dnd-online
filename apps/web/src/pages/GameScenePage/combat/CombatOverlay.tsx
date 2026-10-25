@@ -1,5 +1,5 @@
 import { CloseButton, Paper, Text } from '@mantine/core';
-import { IconSwords } from '@tabler/icons-react';
+import { IconEye, IconSwords } from '@tabler/icons-react';
 import type { GameMoveMode } from 'shared';
 import classes from './CombatOverlay.module.css';
 import { useModeNotice } from './useModeNotice';
@@ -8,17 +8,27 @@ interface CombatOverlayProps {
   // null — фигурки ещё не прочитаны.
   mode: GameMoveMode | null;
   round: number | null;
+  // Встреча не идёт — игрок только смотрит; null — игра ещё не прочитана.
+  watchOnly?: boolean | null;
 }
 
 // Игроку сверху сцены (макет «Режимы хода на сцене», вариант В): в бою — плашка
 // «Бой · раунд N», когда мастер начал или закончил бой — уведомление под ней. Вне боя
-// плашки нет: ход беречь не нужно.
-function CombatOverlay({ mode, round }: CombatOverlayProps) {
-  const { notice, close } = useModeNotice(mode);
-  if (mode !== 'tactical' && !notice) return null;
+// плашки нет: ход беречь не нужно. Вне встречи (макет «Сцена вне встречи», вариант А) на
+// её месте — «Встреча не идёт · только просмотр»: ходить нельзя, и бой не важен.
+function CombatOverlay({ mode, round, watchOnly = null }: CombatOverlayProps) {
+  const { notice, close } = useModeNotice(mode, watchOnly);
+  const combat = mode === 'tactical' && !watchOnly;
+  if (!combat && !watchOnly && !notice) return null;
   return (
     <div className={classes.overlay}>
-      {mode === 'tactical' && (
+      {watchOnly && (
+        <div className={classes.watch} role="status">
+          <IconEye size={16} />
+          Встреча не идёт · только просмотр
+        </div>
+      )}
+      {combat && (
         <div className={classes.banner} role="status">
           <IconSwords size={16} />
           Бой · раунд {round ?? 1}

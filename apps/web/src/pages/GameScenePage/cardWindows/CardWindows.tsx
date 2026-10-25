@@ -20,6 +20,7 @@ import { objectInfo } from './objectInfo';
 import CardSheet from './CardSheet';
 import CardWindowFrame from './CardWindowFrame';
 import type { CardWindow, CardWindows as Windows } from './useCardWindows';
+import { useWatchOnly } from '../combat/MoveModeContext';
 
 interface CardWindowsProps {
   gameId: string;
@@ -72,6 +73,8 @@ function CardWindows({
   busy,
 }: CardWindowsProps) {
   const narrow = useMediaQuery('(max-width: 48em)');
+  // Вне встречи игрок только смотрит: и своя карточка — без правок.
+  const watchOnly = useWatchOnly();
   const views: CardView[] = windows.windows.map((window) => {
     const { target } = window;
     if (target.kind === 'object') {
@@ -146,7 +149,7 @@ function CardWindows({
                 : undefined
             }
             busy={figureTool.busy}
-            readOnly={!master && !figure?.canMove}
+            readOnly={!master && (!figure?.canMove || watchOnly)}
           />
         ),
       };

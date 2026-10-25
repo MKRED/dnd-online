@@ -90,6 +90,9 @@ function GameScenePage() {
   const open = useSceneOpen(id, setLoad);
   // «Глазами игроков» — только просмотр: ни инструментов, ни ходов, ни выбора.
   const viewOnly = sceneFog.eyes;
+  // Встреча не идёт — игрок только смотрит (docs/dnd/movement.md, «Outside a session»): ни
+  // выбора фигурки, ни хода, ни перетаскивания, карточки без правок. Мастер не ограничен.
+  const watchOnly = game !== null && !master && game.sessionStartedAt === null;
   // Режим мастера (docs/plan/done/scene-page.md): в «Игре» нет инструментов редактора, в
   // «Правке» — есть, а фигурки и существа переставляются без хода.
   const { mode, setMode } = useSceneMode(master, ready !== null && !viewOnly);
@@ -163,7 +166,8 @@ function GameScenePage() {
     gameId: id,
     sceneId,
     // В «Правке» фигурку выбирают только в «Просмотре»: другие инструменты правят карту.
-    active: !editing || editor.tool === 'view',
+    // Вне встречи игроку выбирать нечего: выбор снимается, щелчок по фигурке пуст.
+    active: !watchOnly && (!editing || editor.tool === 'view'),
     free: editing,
     state,
     refs: view?.refs ?? null,
@@ -232,7 +236,7 @@ function GameScenePage() {
   );
 
   return (
-    <MoveModeContext.Provider value={{ free: freeMove }}>
+    <MoveModeContext.Provider value={{ free: freeMove, watchOnly }}>
       <div className={classes.page}>
         {game && (
           <SceneRoom
@@ -352,12 +356,13 @@ function GameScenePage() {
           {ready && !viewOnly && plaque && !editTools && (
             <ScenePlaque state={plaque} raised={false} />
           )}
-          {/* Игроку — плашка боя и уведомление о его начале и конце; мастер видит бой в
-            «Участниках». */}
+          {/* Игроку — плашка боя или «только просмотр» вне встречи и уведомление о начале
+            и конце боя и встречи; мастер видит бой в «Участниках». */}
           {ready && !master && (
             <CombatOverlay
               mode={moveMode}
               round={figures.figures?.round ?? null}
+              watchOnly={watchOnly}
             />
           )}
           {ready && bounds && bounds.max[1] > bounds.min[1] && (

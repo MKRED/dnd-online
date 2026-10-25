@@ -42,6 +42,7 @@ vi.mock('../../features/maps/MapScene', async () => {
       figureGhosts,
       readoutAfter,
       walks,
+      figureDrag,
     }: {
       map: MapViewState;
       refs: MapObjectRefsView;
@@ -52,6 +53,7 @@ vi.mock('../../features/maps/MapScene', async () => {
       figureGhosts?: FigureInput[];
       readoutAfter?: ReactNode;
       walks?: SceneWalks;
+      figureDrag?: unknown;
     }) {
       useEffect(onReady, [onReady]);
       const names = Object.values(refs.monsters).map((m) =>
@@ -69,6 +71,7 @@ vi.mock('../../features/maps/MapScene', async () => {
             </p>
           ))}
           {readoutAfter}
+          {figureDrag !== undefined && <p>Фигурки можно брать</p>}
           {[...(walks ?? [])].map(([key, walk]) => (
             <p key={key}>
               Ход: {key}{' '}
@@ -202,6 +205,9 @@ function figuresOf(
   return { sceneId: 's1', eventSeq, mode, round, figures, unplaced: [] };
 }
 
+// Встреча идёт: вне неё игрок только смотрит сцену.
+const STARTED = '2026-10-25T10:00:00.000Z';
+
 describe('GameScenePage', () => {
   it('мастер видит запас фигурок, начинает новый раунд и в «Правке» ставит персонажа «Не на сцене»', async () => {
     const fetchMock = stub({
@@ -306,7 +312,7 @@ describe('GameScenePage', () => {
     stub({
       [`GET ${base}`]: () => ({
         status: 200,
-        body: { ...GAME, role: 'member' },
+        body: { ...GAME, role: 'member', sessionStartedAt: STARTED },
       }),
       [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
       [`GET ${base}/scene/figures`]: () => ({ status: 200, body: figures }),
@@ -395,7 +401,7 @@ describe('GameScenePage', () => {
     stub({
       [`GET ${base}`]: () => ({
         status: 200,
-        body: { ...GAME, role: 'player' },
+        body: { ...GAME, role: 'player', sessionStartedAt: STARTED },
       }),
       [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
       [`GET ${base}/scene/figures`]: () => ({
@@ -436,6 +442,70 @@ describe('GameScenePage', () => {
     // Бой — плашкой сверху сцены; уведомления нет: игрок вошёл уже в бой.
     expect(screen.getByText('Бой · раунд 1')).toBeInTheDocument();
     expect(screen.queryByText('Мастер начал бой')).not.toBeInTheDocument();
+  });
+
+  it('вне встречи игрок только смотрит: плашка, карточка без правок, фигурку не выбрать; встреча началась — ходит', async () => {
+    let game = { ...GAME, role: 'player' as const };
+    stub({
+      [`GET ${base}`]: () => ({ status: 200, body: game }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+      [`GET ${base}/scene/figures`]: () => ({
+        status: 200,
+        body: figuresOf(3, [LIRA]),
+      }),
+    });
+    renderScene('u2');
+    const user = userEvent.setup();
+
+    expect(
+      await screen.findByText('Ходить можно, когда мастер начнёт встречу.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Встреча не идёт · только просмотр'),
+    ).toBeInTheDocument();
+    // Плашка встречи — вместо плашки боя; уведомления нет: игрок вошёл уже вне встречи.
+    expect(screen.queryByText('Бой · раунд 1')).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Ходить' }),
+    ).not.toBeInTheDocument();
+    // Фигурки на сцене не берутся: ни выбрать, ни потянуть.
+    await screen.findByText(/Фигурка: Лира/);
+    expect(screen.queryByText('Фигурки можно брать')).not.toBeInTheDocument();
+
+    game = { ...game, sessionStartedAt: STARTED };
+    act(() =>
+      socket.current?.receive(GAME_SOCKET.changed, {
+        gameId: GAME.id,
+        seq: 4,
+        kind: 'session.started',
+      }),
+    );
+    expect(
+      await screen.findByRole('button', { name: 'Ходить' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('alert', { name: 'Встреча началась' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Бой · раунд 1')).toBeInTheDocument();
+    expect(screen.getByText('Фигурки можно брать')).toBeInTheDocument();
+
+    // Мастер завершил встречу посреди хода — выбор снят.
+    await user.click(screen.getByRole('button', { name: 'Ходить' }));
+    game = { ...game, sessionStartedAt: null };
+    act(() =>
+      socket.current?.receive(GAME_SOCKET.changed, {
+        gameId: GAME.id,
+        seq: 5,
+        kind: 'session.ended',
+      }),
+    );
+    expect(
+      await screen.findByRole('alert', { name: 'Мастер завершил встречу' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('status', { name: 'Выбрано на сцене' }),
+    ).not.toBeInTheDocument();
   });
 
   it('игрок видит фигурки и перечитывает их после событий фигурок; старый ответ не откатывает', async () => {

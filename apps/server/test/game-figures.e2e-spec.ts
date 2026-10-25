@@ -15,7 +15,7 @@ import {
   pngImage,
   PNG_FILE,
 } from './support/character-fixture.js';
-import { createSceneGame } from './support/scene-fixture.js';
+import { createSceneGame, startSession } from './support/scene-fixture.js';
 import {
   collect,
   join,
@@ -332,6 +332,7 @@ describe('game figures (e2e)', () => {
       .put(`/api/games/${g.gameId}/scenes/open`)
       .send({ open: true })
       .expect(200);
+    await startSession(m, g.gameId);
     const base = `/api/games/${g.gameId}/figures`;
     if (mode === 'tactical') {
       await m.put(`${base}/mode`).send({ mode }).expect(200);
@@ -632,6 +633,46 @@ describe('game figures (e2e)', () => {
     const closedToPlayer = collect(playerSocket, dragged);
     masterSocket.emit(GAME_SOCKET.figureDrag, drag([0, 1, 5]));
     expect(await closedToPlayer).toEqual([]);
+  });
+
+  it('вне встречи игрок только смотрит: не ходит и не тянет фигурку; мастер — да', async () => {
+    const g = await opened('gfg_offsession');
+    await g.m.delete(`/api/games/${g.gameId}/session`).expect(200);
+    const masterSocket = await clients.connect(g.master.cookie);
+    expect((await join(masterSocket, g.gameId)).ok).toBe(true);
+    const playerSocket = await clients.connect(g.player.cookie);
+    expect((await join(playerSocket, g.gameId)).ok).toBe(true);
+    const id = g.figure.character.id;
+
+    // Фигурки игрок видит, а водить не может.
+    const seen = await figures(g.player.agent, g.gameId);
+    expect(seen.figures.map((f) => f.character.id)).toContain(id);
+    const refused = await g.player.agent
+      .post(`${g.url}/move`)
+      .send({ to: [0, 1, 2] })
+      .expect(403);
+    expect((refused.body as { message: string }).message).toBe(
+      'Встреча не идёт: сцену можно только смотреть',
+    );
+    const nothing = collect(masterSocket, GAME_SOCKET.figureDragged);
+    playerSocket.emit(GAME_SOCKET.figureDrag, {
+      gameId: g.gameId,
+      characterId: id,
+      at: [0, 1, 2],
+    });
+    expect(await nothing).toEqual([]);
+
+    const moved = await g.m
+      .post(`${g.url}/move`)
+      .send({ to: [0, 1, 2] })
+      .expect(200);
+    expect(figureOf(moved, id)).toMatchObject({ at: [0, 1, 2] });
+
+    await startSession(g.m, g.gameId);
+    await g.player.agent
+      .post(`${g.url}/move`)
+      .send({ to: [0, 1, 3] })
+      .expect(200);
   });
 
   it('мастер отдаёт управление участнику: тот водит фигурку, пока владелец разрешает', async () => {

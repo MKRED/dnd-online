@@ -9,6 +9,7 @@ import {
 import { games } from '../../database/schema/index.js';
 import { SCENE_CLOSED, SCENE_MEMBERS_ONLY } from '../game-errors.js';
 import { lockGame } from '../game-journal.js';
+import { assertPlayerInSession } from '../session-gate.js';
 import { findGameAccess } from '../game-read.js';
 import { GameRealtimeService } from '../realtime/game-realtime.service.js';
 import {
@@ -95,6 +96,7 @@ export class GameFiguresService {
         if (!master && !(await sceneOpen(tx, gameId))) {
           throw new ForbiddenException(SCENE_CLOSED);
         }
+        await assertPlayerInSession(tx, gameId, userId, game.masterId);
         await run({ tx, gameId, userId, masterId: game.masterId });
       });
       this.realtime.publish(gameId);

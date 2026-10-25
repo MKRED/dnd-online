@@ -27,6 +27,25 @@
   box-shadow: var(--mantine-shadow-sm);
 }
 
+/* Вне встречи — спокойная плашка: ничего не случилось, просто ходить нельзя. */
+.watch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-body);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--mantine-shadow-sm);
+}
+
+.watch svg {
+  color: var(--mantine-color-dimmed);
+}
+
 .notice {
   display: flex;
   align-items: flex-start;

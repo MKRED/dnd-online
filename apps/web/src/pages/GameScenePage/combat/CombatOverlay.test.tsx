@@ -46,6 +46,30 @@ describe('CombatOverlay', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
+  it('вне встречи — «только просмотр» вместо плашки боя; конец и начало встречи — уведомления', () => {
+    const view = renderWithProviders(
+      <CombatOverlay mode="tactical" round={2} watchOnly={false} />,
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('Бой · раунд 2');
+
+    view.rerender(<CombatOverlay mode="tactical" round={2} watchOnly />);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Встреча не идёт · только просмотр',
+    );
+    expect(screen.queryByText('Бой · раунд 2')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('alert', { name: 'Мастер завершил встречу' }),
+    ).toBeInTheDocument();
+
+    view.rerender(
+      <CombatOverlay mode="tactical" round={2} watchOnly={false} />,
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('Бой · раунд 2');
+    expect(
+      screen.getByRole('alert', { name: 'Встреча началась' }),
+    ).toBeInTheDocument();
+  });
+
   it('пока фигурки не прочитаны — ничего', () => {
     renderWithProviders(<CombatOverlay mode={null} round={null} />);
     expect(screen.queryByRole('status')).not.toBeInTheDocument();

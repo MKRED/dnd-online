@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { sheetTotals, type Character } from 'shared';
 import CharacterAbilities from '../Abilities';
 import type { SheetSpellActions } from '../Abilities/sheetSpellActions';
+import EquipmentSection from '../Equipment';
 import InventorySection from '../Inventory';
 import { AppliedEffectList, effectRows, traitRows } from '../AppliedEffects';
 import AbilitiesView from './AbilitiesView';
@@ -54,7 +55,13 @@ function CharacterSheetSection({
         />
       );
     case 'gear':
-      return <InventorySection character={character} />;
+      // Окно карточки узкое и не одно на сцене: кукла без 3D-модели, с силуэтом.
+      return (
+        <Stack gap="md">
+          <EquipmentSection character={character} model={false} />
+          <InventorySection character={character} />
+        </Stack>
+      );
   }
 }
 

@@ -53,6 +53,8 @@ export const sampleCharacter: Character = {
       id: 'entry-1',
       location: 'carried',
       quantity: 1,
+      equipped: [],
+      attuned: false,
       item: {
         id: 'item-1',
         name: 'Верёвка',
@@ -61,6 +63,7 @@ export const sampleCharacter: Character = {
         weight: 5,
         isPublic: true,
         image: null,
+        equip: null,
       },
       missing: null,
       inactive: false,

@@ -13,6 +13,7 @@ import CombatView from './CombatView';
 import EffectSummary from './EffectSummary';
 import EffectsStrip from '../Effects';
 import CharacterAbilities from '../Abilities';
+import EquipmentSection, { anythingWorn } from '../Equipment';
 import InventorySection from '../Inventory';
 import PersonalityView from './PersonalityView';
 import ProficienciesView from './ProficienciesView';
@@ -35,7 +36,7 @@ interface CharacterSheetProps {
 }
 
 // Лист персонажа — так его видят и автор, и зритель по ссылке. Менять на листе можно
-// только инвентарь, наложенные эффекты, способности и потраченные ячейки (у автора);
+// только инвентарь с куклой, наложенные эффекты, способности и потраченные ячейки (у автора);
 // остальное — формой.
 // Разделы идут в порядке формы, пустые не показываются.
 function CharacterSheet({
@@ -55,6 +56,10 @@ function CharacterSheet({
   const totals = useMemo(() => sheetTotals(character), [character]);
   const base = useMemo(() => sheetTotals(character, []), [character]);
   const shown = hasEffects && !withEffects ? base : totals;
+  // Кукла видна автору всегда, зрителю — когда на персонаже что-то надето. Тогда 3D-модель
+  // стоит в её центре, а не под портретом.
+  const dollShown =
+    Boolean(onInventoryChange) || anythingWorn(character.inventory);
 
   return (
     <Stack gap="lg">
@@ -64,6 +69,7 @@ function CharacterSheet({
             <SheetImages
               characterId={character.id}
               characterName={character.name}
+              model={!dollShown}
             />
           </Grid.Col>
         )}
@@ -95,6 +101,7 @@ function CharacterSheet({
         onSpellSlotsChange={onSpellSlotsChange}
       />
       <ProficienciesView character={character} />
+      <EquipmentSection character={character} onChange={onInventoryChange} />
       <InventorySection character={character} onChange={onInventoryChange} />
       <PersonalityView character={character} />
     </Stack>

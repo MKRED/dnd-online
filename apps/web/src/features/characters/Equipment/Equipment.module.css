@@ -1,0 +1,123 @@
+/* Кукла (docs/plan/equipment.md, этап 2, вариант А): одежда слева, украшения справа,
+   в центре 3D-модель или силуэт, под ним оружие по наборам. Раскладка — по ширине самого
+   блока, а не окна: лист открывается и в узком окне карточки на сцене игры. */
+.doll {
+  container-type: inline-size;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 1.3fr) minmax(0, 1fr);
+  grid-template-areas:
+    'left center right'
+    'left weapons right';
+  gap: var(--mantine-spacing-sm) var(--mantine-spacing-lg);
+  align-items: start;
+}
+
+.left {
+  grid-area: left;
+}
+
+.right {
+  grid-area: right;
+}
+
+.center {
+  grid-area: center;
+  display: flex;
+  justify-content: center;
+}
+
+.weapons {
+  grid-area: weapons;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mantine-spacing-xs);
+}
+
+.wide {
+  grid-column: 1 / span 2;
+}
+
+/* Узко (телефон, окно карточки): места идут сеткой в два столбца. Силуэт не помещается и
+   не нужен, а 3D-модель остаётся сверху: под портретом её на этом листе уже нет. */
+@container (max-width: 640px) {
+  .layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      'center center'
+      'left left'
+      'right right'
+      'weapons weapons';
+  }
+
+  .silhouette {
+    display: none;
+  }
+
+  .left,
+  .right {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.slot {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  width: 100%;
+  min-height: 52px;
+  padding: 6px 10px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-body);
+  text-align: left;
+}
+
+.slot[data-empty] {
+  border-style: dashed;
+  background: transparent;
+}
+
+.slot[data-active] {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 1px;
+}
+
+.slot:not(:disabled):hover {
+  border-color: var(--mantine-primary-color-filled);
+}
+
+.thumb {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+.emptyThumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  color: var(--mantine-color-dimmed);
+}
+
+.silhouette {
+  color: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-3));
+}
+
+.option:not(:disabled):hover {
+  background: var(--mantine-color-default-hover);
+}

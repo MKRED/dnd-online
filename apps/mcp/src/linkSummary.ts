@@ -16,7 +16,13 @@ function summarizeRow(row: Row): Row {
     if (NESTED.includes(key as (typeof NESTED)[number]) && isRow(value)) {
       out[key] = { id: value.id, name: value.name };
     } else if (value === null || typeof value !== 'object') {
-      // Свои поля связи: quantity, location, perDay, prepared, missing, inactive.
+      // Свои поля связи: quantity, location, perDay, prepared, missing, inactive, attuned.
+      out[key] = value;
+    } else if (
+      Array.isArray(value) &&
+      value.every((v) => v === null || typeof v !== 'object')
+    ) {
+      // Места куклы строки инвентаря: equipped.
       out[key] = value;
     }
   }

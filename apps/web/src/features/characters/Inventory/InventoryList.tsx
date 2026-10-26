@@ -1,5 +1,6 @@
 import { Stack, Text } from '@mantine/core';
 import type { InventoryEntry } from 'shared';
+import type { EquipHandlers } from './equipHandlers';
 import InventoryRow from './InventoryRow';
 
 interface InventoryListProps {
@@ -11,6 +12,8 @@ interface InventoryListProps {
   onMove: (entry: InventoryEntry) => void;
   onEditQuantity: (entry: InventoryEntry) => void;
   onRemove: (entry: InventoryEntry) => void;
+  inventory: InventoryEntry[];
+  equipHandlers: EquipHandlers;
 }
 
 function InventoryList({
@@ -21,6 +24,8 @@ function InventoryList({
   onMove,
   onEditQuantity,
   onRemove,
+  inventory,
+  equipHandlers,
 }: InventoryListProps) {
   if (entries.length === 0) {
     return empty ? (
@@ -40,6 +45,8 @@ function InventoryList({
           onMove={() => onMove(entry)}
           onEditQuantity={() => onEditQuantity(entry)}
           onRemove={() => onRemove(entry)}
+          inventory={inventory}
+          equipHandlers={equipHandlers}
         />
       ))}
     </Stack>

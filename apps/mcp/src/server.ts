@@ -12,6 +12,7 @@ import { z } from 'zod';
 import type { ApiCall } from './apiClient.js';
 import { buildBlockGuide } from './blockGuide.js';
 import { registerCatalogTool } from './catalogTool.js';
+import { registerEquipTools } from './equipTools.js';
 import { registerImageTools } from './imageTools.js';
 import { registerLinkTools } from './linkTools.js';
 import { registerReadTools } from './readTools.js';
@@ -46,6 +47,7 @@ export function createDndMcpServer(api: ApiCall, webUrl: string): McpServer {
   registerReadTools(server, api, guarded);
   registerWriteTools(server, api, guarded);
   registerLinkTools(server, api, guarded);
+  registerEquipTools(server, api, guarded);
   registerImageTools(server, api, guarded);
 
   server.registerTool(

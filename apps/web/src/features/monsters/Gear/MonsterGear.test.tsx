@@ -18,6 +18,7 @@ const dagger: MonsterItemEntry = {
     weight: 1,
     isPublic: true,
     image: null,
+    equip: null,
   },
   missing: null,
   inactive: false,

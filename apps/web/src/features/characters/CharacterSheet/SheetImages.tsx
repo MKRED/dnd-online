@@ -10,6 +10,8 @@ import classes from './CharacterSheet.module.css';
 interface SheetImagesProps {
   characterId: string;
   characterName: string;
+  // false — модель стоит в центре куклы на том же листе: дважды её не показываем.
+  model?: boolean;
 }
 
 function StripTile({
@@ -38,7 +40,11 @@ function StripTile({
 // Портрет (основная картинка) и остальные картинки полосой миниатюр; любая открывается
 // на весь экран, под ними — 3D-модель, если она есть. Только просмотр: правки — на
 // странице редактирования.
-function SheetImages({ characterId, characterName }: SheetImagesProps) {
+function SheetImages({
+  characterId,
+  characterName,
+  model = true,
+}: SheetImagesProps) {
   const { images, loadError } = useCharacterImages(characterId);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const mainIndex = images?.findIndex((image) => image.isMain) ?? -1;
@@ -94,7 +100,7 @@ function SheetImages({ characterId, characterName }: SheetImagesProps) {
           ))}
         </div>
       )}
-      <SheetModel characterId={characterId} />
+      {model && <SheetModel characterId={characterId} />}
       {openIndex !== null && (
         <GalleryLightbox
           characterId={characterId}

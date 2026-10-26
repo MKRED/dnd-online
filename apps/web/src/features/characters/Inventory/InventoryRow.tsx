@@ -10,6 +10,9 @@ import {
 } from '@mantine/core';
 import { RecordLink } from '../../catalog';
 import type { InventoryEntry } from 'shared';
+import { SLOT_FULL_NAMES } from '../Equipment/equipmentView';
+import EquipMenuItems from './EquipMenuItems';
+import type { EquipHandlers } from './equipHandlers';
 import { formatWeight } from '../../items/itemLabels';
 import ItemThumb from '../../items/ItemThumb';
 import { entryName, entryWeight, MOVE_LABELS } from './inventoryView';
@@ -22,6 +25,9 @@ interface InventoryRowProps {
   onMove: () => void;
   onEditQuantity: () => void;
   onRemove: () => void;
+  // Весь инвентарь — чтобы меню знало, что надето на места.
+  inventory: InventoryEntry[];
+  equipHandlers: EquipHandlers;
 }
 
 // Строка инвентаря: миниатюра, название (ссылка на карточку), количество, вес строки,
@@ -34,6 +40,8 @@ function InventoryRow({
   onMove,
   onEditQuantity,
   onRemove,
+  inventory,
+  equipHandlers,
 }: InventoryRowProps) {
   const { item } = entry;
   const name = entryName(entry);
@@ -72,6 +80,21 @@ function InventoryRow({
           <Text size="sm" c="dimmed" fs="italic" lineClamp={2}>
             {name}
           </Text>
+        )}
+        {(entry.equipped.length > 0 || entry.attuned) && (
+          <Group gap={4} mt={2}>
+            {entry.equipped.length > 0 && (
+              <Badge size="xs" variant="light" color="green">
+                Надето ·{' '}
+                {entry.equipped.map((s) => SLOT_FULL_NAMES[s]).join('; ')}
+              </Badge>
+            )}
+            {entry.attuned && (
+              <Badge size="xs" variant="light" color="grape">
+                Настроен
+              </Badge>
+            )}
+          </Group>
         )}
         {inactive && (
           <Tooltip
@@ -127,6 +150,11 @@ function InventoryRow({
                 </ActionIcon>
               </Menu.Target>
               <Menu.Dropdown>
+                <EquipMenuItems
+                  entry={entry}
+                  inventory={inventory}
+                  {...equipHandlers}
+                />
                 <Menu.Item onClick={onEditQuantity}>
                   Изменить количество
                 </Menu.Item>

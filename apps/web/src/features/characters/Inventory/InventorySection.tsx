@@ -12,6 +12,7 @@ import { useState } from 'react';
 import type { Character, InventoryEntry } from 'shared';
 import AddItemDialog from './AddItemDialog';
 import EntryQuestion, { type Question } from './EntryQuestion';
+import { equipHandlers } from './equipHandlers';
 import {
   addInventoryItem,
   moveInventoryEntry,
@@ -80,6 +81,8 @@ function InventorySection({ character, onChange }: InventorySectionProps) {
         'Не удалось убрать предмет',
       );
     },
+    inventory,
+    equipHandlers: equipHandlers(id, run),
   };
 
   return (

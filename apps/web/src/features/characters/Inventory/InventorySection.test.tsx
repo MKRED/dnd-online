@@ -16,6 +16,8 @@ function entry(
     id,
     location,
     quantity,
+    equipped: [],
+    attuned: false,
     item: {
       id: `item-${id}`,
       name: `Предмет ${id}`,
@@ -24,6 +26,7 @@ function entry(
       weight,
       isPublic: true,
       image: null,
+      equip: null,
     },
     missing: null,
     inactive: false,
@@ -34,6 +37,8 @@ const hidden: InventoryEntry = {
   id: 'h',
   location: 'carried',
   quantity: 1,
+  equipped: [],
+  attuned: false,
   item: null,
   missing: 'hidden',
 };

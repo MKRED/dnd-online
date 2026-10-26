@@ -14,6 +14,7 @@
 - `packages/shared/src/itemEquipment.ts` — ключи и поля категорий: `WeaponItemDetails`, `ArmorItemDetails`, `ShieldItemDetails`, `ClothingItemDetails`, `JewelryItemDetails`, свойства (`WEAPON_FLAGS`), мастерство (`WEAPON_MASTERIES`), боеприпасы (`AMMUNITION_KINDS`), виды доспехов (`ARMOR_KINDS`, `ARMOR_DEX_CAP`), места (`CLOTHING_SLOTS`, `JEWELRY_SLOTS`).
 - `packages/shared/src/bookWeapons.ts` (`BOOK_WEAPONS`) и `bookArmor.ts` (`BOOK_ARMOR_STATS`, `BOOK_SHIELD`) — таблицы книги ниже; из них форма заполняет поля по образцу.
 - `packages/shared/src/itemEquipmentCheck.ts` — проверка полей (сервер, тесты) и правило «магия только с редкостью».
+- `packages/shared/src/equipment.ts` (`EQUIP_SLOTS`, `itemEquip`, `ATTUNEMENT_MAX`) и `equipmentRules.ts` (`planEquip`, `attuneProblem`, `slotsToPrune`) — места куклы и правила ниже; их проверяет сервер (`apps/server/src/characters/equipment/`), лист показывает (`apps/web/src/features/characters/Equipment/`).
 - `apps/web/src/features/items/equipmentLabels.ts` — русские названия; ключи оружия и их названия — `weapons.ts` и `characterWeapons.ts` ([proficiencies.md](proficiencies.md)).
 
 ## Оружие
@@ -86,14 +87,14 @@
 
 **Правила:**
 
-- Glossary, Attunement: «A creature can have Attunement with no more than three magic items at a time.» Как настраиваться (короткий отдых) и как настройка кончается, в прочитанном тексте главы Equipment **не нашли** — проверить по книге перед этапом куклы.
-- Magic Items: «Unless an armor's description notes otherwise, the armor must be worn for its magic to function»; кольцо носят на пальце. Правила «одна пара сапог» в свободных правилах **не нашли**.
+- Glossary, Attunement: «A creature can have Attunement with no more than three magic items at a time.» Как настраиваться и когда настройка кончается — в разделе [«Кукла: места и настройка»](#кукла-места-и-настройка).
+- Magic Items: «Unless an armor's description notes otherwise, the armor must be worn for its magic to function»; кольцо носят на пальце. Сколько вещей одного вида можно носить — там же, ниже.
 
 **Как в приложении (решено с пользователем 2026-10-26: заводим сразу):**
 
 - У оружия, доспеха и щита есть **бонус магии** 0–3: к атаке и урону у оружия, к КД у доспеха и щита. У всех четырёх категорий — признак **«Требует настройки»**.
 - Бонус и настройка бывают только у **магического предмета** — с редкостью. У немагического («Без редкости») поля скрыты, сервер отвечает 400 «Бонус магии и настройка бывают только у магического предмета: выберите редкость». Правило выведено из книги: у магического предмета есть редкость, у снаряжения нет ([items.md](items.md)).
-- Лимит в три настроенных предмета будет считать кукла.
+- Лимит в три настроенных предмета считает кукла (ниже).
 
 ## Одежда и украшения: места на кукле
 
@@ -102,3 +103,26 @@
 **Шлемы, перчатки и сапоги как доспех — нет** (решено с пользователем 2026-10-26: «по книге»). В BG3 они делятся на «не доспех», лёгкие, средние и тяжёлые и требуют владения доспехами этого вида, КД не дают, а дают свой бонус: лёгкие шлемы обычно к спасброскам Ловкости, средние — Телосложения ([bg3.wiki/wiki/Headwear](https://bg3.wiki/wiki/Headwear), [Footwear](https://bg3.wiki/wiki/Footwear), [Armour](https://bg3.wiki/wiki/Armour): «some helmets, gloves, and boots also require proficiency with a certain category of armour»; прочитано 2026-10-26). Тяжёлого шлема на wiki не нашли, но раздел Heavy прочитать не удалось; лёгких и тяжёлых сапог на wiki нет. В правилах 2024 доспех надевается целиком, отдельных шлемов как доспеха нет, поэтому у одежды поля владения нет; бонусы магических шлемов дадут способности и эффекты предмета (этап 5 [плана](../plan/equipment.md)).
 
 На bg3.wiki страница [Equipment](https://bg3.wiki/wiki/Equipment) делит вещи на «Clothing, Armour, and Shields», «Other gear» (Headwear, Cloaks, Handwear, Footwear, Camp Clothing) и «Jewelry» (Amulets, Rings). Названия всех слотов экрана экипировки одним списком **не нашли**, только «Helmet slot». Это игра, правилом D&D это не является.
+
+## Кукла: места и настройка
+
+Этап 2 [плана](../plan/equipment.md). Проверено 2026-10-26.
+
+**Источники:** свободные правила 2024 (SRD 5.2.1): [Rules Glossary](https://www.dndbeyond.com/sources/dnd/free-rules/rules-glossary), статья Attunement; глава Magic Items на [Roll20](https://roll20.net/compendium/dnd5e/Rules:Magic%20Items?expansion=32231) и текст SRD 5.2.1 на [mythmeister.com](https://www.mythmeister.com/compendium/5e-2024/rules/attunement-magic-items) (на D&D Beyond страница Equipment обрезана до Magic Items); для сравнения — [Basic Rules 2014](https://www.dndbeyond.com/sources/basic-rules/magic-items). DMG 2024 целиком не читали.
+
+**Правила 2024:**
+
+- Настройка: «Attuning to an item requires you to spend a Short Rest focused on only that item while being in physical contact with it»; если отдых прервали, настройка не удалась. Без настройки у предмета только немагические свойства, если в описании не сказано иное.
+- Не больше трёх: «A creature can have Attunement with no more than three magic items at a time»; «Any attempt to attune to a fourth item fails». Новое в 2024: «you can't attune to more than one copy of an item».
+- Конец настройки: «Your Attunement to an item ends if you no longer satisfy the prerequisites for Attunement», если предмет больше 24 часов дальше 100 футов, а также со смертью и когда на предмет настраивается другой (последние два — пересказ, дословно **не проверено**); «You can also voluntarily end Attunement by spending another Short Rest focused on the item unless the item is cursed». **Снять предмет — не конец настройки:** в закрытом списке этого нет (вывод, прямо не сказано).
+- Носить: «A magic item meant to be worn must be donned in the intended fashion»; «A weapon must be held». «Multiple Items of the Same Kind»: нельзя носить больше одной обуви, перчаток или рукавиц, наручей, доспеха, головного убора и плаща (список — пересказ). Парные вещи действуют, только когда надеты обе. **Ограничения на кольца в правилах нет** — два кольца взяты из BG3.
+- Оружие и щит: Двуручное «requires two hands when you attack with it»; щит — один за раз, надеть или снять — действие «Использование»; доспех — один за раз (глава Equipment, ссылки выше).
+
+**Как в приложении:**
+
+- Места — как в BG3 (решено с пользователем 2026-10-26): голова, плащ, тело, руки, ноги, амулет, два кольца, основная и вторая рука ближнего боя, основная и вторая рука дальнего боя. Одно место — одна вещь; так же держится «одна обувь, один плащ, один доспех» из книги.
+- Ближнее оружие — в ближний набор, дальнобойное — в дальний. Двуручное — только в основную руку и снимает вторую руку своего набора; пока оно там, во вторую руку ничего не надеть. Щит — вторая рука ближнего боя. Тело — доспех или одежда на тело. Метательное ближнее оружие (кинжал) — в ближнем наборе.
+- Вещь надевают только «При себе». Единственная вещь переезжает со старого места на новое; стопка (два кинжала) лежит в стольких местах, сколько её штук. Ушла в хранилище или её стало меньше — лишние места освобождаются сами.
+- **Настройка — у вещи, а не у места:** снятый предмет её не теряет, как в книге. Не больше трёх, не на две копии одного предмета, только у предмета «Требует настройки».
+- **Отступления (упрощение, решено в этой работе):** настройка — переключатель «Настроиться» на листе, без короткого отдыха: приложение время не ведёт, а вне игры лист правит только владелец. Настроиться можно только на вещь «При себе» (книга требует касания); убранная в хранилище настройку сохраняет — 24 часа и 100 футов приложение не считает, снять её владелец может сам. Смена куклы во время сессии закрыта, как весь лист, — бой и «одно оружие за атаку» будут на этапе 4.
+- Что кукла даёт числам (КД от доспеха и щита, атаки от оружия в руках, Сила и Скрытность доспеха) — этап 3; что дают надетые и настроенные магические предметы — этап 5.

@@ -14,8 +14,10 @@ import {
   IconChevronDown,
   IconChevronUp,
 } from '@tabler/icons-react';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import PanelResizeGrip from './PanelResizeGrip';
+import { PANEL_SIZES, readPanelSize, savePanelSize } from './panelHeight';
 import classes from './ScenePanel.module.css';
 
 export interface PanelTab<T extends string> {
@@ -66,6 +68,10 @@ function ScenePanel<T extends string>({
 }: ScenePanelProps<T>) {
   // Та же граница, что у страницы: на ней панель уходит под сцену.
   const narrow = useMediaQuery('(max-width: 48em)');
+  // На телефоне — положение ручки (вариант Б, 2026-10-26) и доля под пальцем, пока тянут.
+  const [size, setSize] = useState(readPanelSize);
+  const [dragShare, setDragShare] = useState<number | null>(null);
+  const share = dragShare ?? PANEL_SIZES[size];
   const lobbyLink = (
     <Tooltip label="В лобби" withArrow disabled={narrow}>
       <ActionIcon
@@ -132,7 +138,23 @@ function ScenePanel<T extends string>({
 
   const current = tabs.find((item) => item.value === tab) ?? tabs[0];
   return (
-    <aside className={classes.panel} data-collapsed={collapsed || undefined}>
+    <aside
+      className={classes.panel}
+      data-collapsed={collapsed || undefined}
+      // Высота одна во всех режимах и вкладках: содержимое прокручивается внутри, и сцена
+      // над панелью не меняет размер, когда под курсором появляется блок.
+      style={narrow && !collapsed ? { height: `${share * 100}%` } : undefined}
+    >
+      {narrow && !collapsed && (
+        <PanelResizeGrip
+          size={size}
+          onSize={(next) => {
+            setSize(next);
+            savePanelSize(next);
+          }}
+          onDrag={setDragShare}
+        />
+      )}
       <header className={classes.header}>
         {lobbyLink}
         <div className={classes.heading}>

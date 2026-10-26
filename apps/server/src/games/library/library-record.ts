@@ -17,6 +17,7 @@ import {
   type PackEntry,
   type SpellSlots,
   SPELL_SLOT_CIRCLES,
+  TURN_ACTIONS_DEFAULT,
 } from 'shared';
 import { toAbilityVariant } from '../../abilities/abilities.config.js';
 import { toCharacter } from '../../characters/characters.mapper.js';
@@ -123,6 +124,10 @@ function toNpc(row: LibraryRow, linked: LinkedRows): Character {
   const links = readLinks('npc', row.links);
   const find = finder(linked);
   const sheet = {
+    // Копии, снятые до полей «За ход», их не держат: по книге по 1 (docs/dnd/ability-usage.md).
+    actionCount: TURN_ACTIONS_DEFAULT,
+    bonusActionCount: TURN_ACTIONS_DEFAULT,
+    reactionCount: TURN_ACTIONS_DEFAULT,
     ...row.record,
     id: row.sourceId,
     userId: '',

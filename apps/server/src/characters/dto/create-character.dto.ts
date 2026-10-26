@@ -22,6 +22,8 @@ import {
   HIT_DICE,
   PROFICIENCY_BONUS_MAX,
   PROFICIENCY_BONUS_MIN,
+  TURN_ACTIONS_MAX,
+  TURN_ACTIONS_MIN,
   type CharacterKind,
   type CharacterSpecies,
   type HitDie,
@@ -169,6 +171,25 @@ export class CreateCharacterDto {
   @Min(0)
   @Max(HEROIC_INSPIRATION_MAX)
   heroicInspiration?: number;
+
+  // Действия за ход; не прислали — при создании 1, при правке остаётся прежнее.
+  @IsOptional()
+  @IsInt()
+  @Min(TURN_ACTIONS_MIN)
+  @Max(TURN_ACTIONS_MAX)
+  actionCount?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(TURN_ACTIONS_MIN)
+  @Max(TURN_ACTIONS_MAX)
+  bonusActionCount?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(TURN_ACTIONS_MIN)
+  @Max(TURN_ACTIONS_MAX)
+  reactionCount?: number;
 
   @ValidateNested()
   @Type(() => ProficienciesDto)

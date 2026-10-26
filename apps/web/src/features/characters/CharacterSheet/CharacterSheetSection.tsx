@@ -10,6 +10,7 @@ import AbilitiesView from './AbilitiesView';
 import CombatView from './CombatView';
 import ProficienciesView from './ProficienciesView';
 import SheetAttacks from './SheetAttacks';
+import TurnActions from './TurnActions';
 
 // Разделы листа для вкладок окна карточки на сцене игры (docs/plan/done/scene-page.md, этап 4).
 export type SheetSection = 'stats' | 'abilities' | 'effects' | 'gear';
@@ -35,6 +36,7 @@ function CharacterSheetSection({
       return (
         <Stack gap="md">
           <CombatView character={character} totals={totals} />
+          <TurnActions character={character} />
           <SheetAttacks character={character} />
           <AbilitiesView character={character} />
           <ProficienciesView character={character} />

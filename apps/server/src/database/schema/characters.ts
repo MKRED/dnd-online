@@ -81,6 +81,10 @@ export const characters = pgTable('characters', {
   deathSaveSuccesses: integer('death_save_successes').notNull().default(0),
   deathSaveFailures: integer('death_save_failures').notNull().default(0),
   heroicInspiration: integer('heroic_inspiration').notNull().default(0),
+  // Действия за ход (docs/dnd/ability-usage.md): база, по книге у всех 1.
+  actionCount: integer('action_count').notNull().default(1),
+  bonusActionCount: integer('bonus_action_count').notNull().default(1),
+  reactionCount: integer('reaction_count').notNull().default(1),
 
   proficiencies: jsonb('proficiencies')
     .notNull()

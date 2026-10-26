@@ -60,3 +60,26 @@ Decided with the user on 2026-10-15 ([plan/done/abilities.md](../plan/done/abili
 - Abilities saved before these fields read as «Действие» without costs.
 
 Code: `packages/shared/src/abilityUsage.ts` (types, `isAbilityActivation`, `isAbilityCosts`) and `abilityUsageLabels.ts` (Russian text); the trait's components are `abilityPassive.ts`, the categories of an activation `abilityMonster.ts`; the server stores them in `abilities.extra`; the form is `apps/web/src/features/simpleCatalog/UsageField/`, the trait's block «Действует всегда» is `AbilityFields.tsx`.
+
+## Turn actions / Действия за ход
+
+Researched on 2026-10-26, D&D Beyond Free Rules (2024), read word for word:
+
+- Rules Glossary, «Action»: «On your turn, you can take one action» (https://www.dndbeyond.com/sources/dnd/free-rules/rules-glossary).
+- Rules Glossary, «Bonus Action»: «You can't take more than one Bonus Action on a turn, and you have a Bonus Action to take only if a rule explicitly says so».
+- Rules Glossary, «Reaction»: «Once you take a Reaction, you can't take another one until the start of your next turn».
+- Slow (https://www.dndbeyond.com/spells/2619066-slow): the target «can't take Reactions. On its turns, it can take either an action or a Bonus Action, not both».
+
+So by the book every creature has one action, at most one Bonus Action and one Reaction per turn; more come only from a feature. **Unverified:** Haste (an extra action limited to some actions) and Action Surge (an extra action, «except the Magic action», quoted above from 2026-10-15) were not reread word for word this time; read them before the combat engine counts them.
+
+### In the app
+
+Decided with the user on 2026-10-26 ([plan/equipment.md](../plan/equipment.md), before stage 4):
+
+- A character (and an NPC, which is a character) has three numbers in the form, «Действия», «Бонусные действия» and «Реакции»: a whole number 1–5, 1 by default. They are the base without effects; the maximum 5 only catches typos.
+- **Departs from the book:** the bonus action is 1 for everyone, though the book gives one only when a feature allows it. The number says how many may be taken, not that the character has a use for one.
+- Extras from Haste or Action Surge are not typed into the form: they will come as effect or ability components with combat, which will also spend them. Not built yet.
+- The sheet shows them as the line «За ход» above «Атаки» with BG3 icons (green circle, orange triangle, purple diamond) and words (variant В, the user's choice). Monsters have no such fields yet; their legendary actions are a separate activation.
+- NPC copies in a game library made before these fields read as 1, 1, 1.
+
+Code: `TURN_ACTIONS_*` and `Character.actionCount`/`bonusActionCount`/`reactionCount` in `packages/shared/src/character.ts`; columns `action_count`, `bonus_action_count`, `reaction_count` of `characters` (migration `0061_character_turn_actions`); the form fields in `apps/web/src/features/characters/CharacterForm/CombatSection.tsx`; the sheet line `CharacterSheet/TurnActions.tsx`.

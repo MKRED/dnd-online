@@ -8,6 +8,8 @@ import {
   PROFICIENCY_BONUS_MIN,
   SPELL_SLOT_CIRCLES,
   SPELL_SLOT_TOTAL_MAX,
+  TURN_ACTIONS_MAX,
+  TURN_ACTIONS_MIN,
 } from 'shared';
 import type { CharacterFormValues } from '../characterFormValues';
 import AbilityScoresSection from './AbilityScoresSection';
@@ -31,6 +33,14 @@ interface CharacterFormProps {
   // Доспех на кукле: тогда число «КД без доспеха» лист не использует.
   wornArmor?: string | null;
 }
+
+// Действия за ход: целое от 1 до 5 (TURN_ACTIONS_MIN..MAX).
+const turnActionsValidate = (value: number) =>
+  Number.isInteger(value) &&
+  value >= TURN_ACTIONS_MIN &&
+  value <= TURN_ACTIONS_MAX
+    ? null
+    : `От ${TURN_ACTIONS_MIN} до ${TURN_ACTIONS_MAX}`;
 
 const required = (value: string) =>
   value.trim().length > 0 ? null : 'Обязательное поле';
@@ -85,6 +95,9 @@ function CharacterForm({
         Number.isInteger(value) && value >= 0 && value <= HEROIC_INSPIRATION_MAX
           ? null
           : `От 0 до ${HEROIC_INSPIRATION_MAX}`,
+      actionCount: turnActionsValidate,
+      bonusActionCount: turnActionsValidate,
+      reactionCount: turnActionsValidate,
       spellSlots: Object.fromEntries(
         SPELL_SLOT_CIRCLES.map((level) => [
           level,

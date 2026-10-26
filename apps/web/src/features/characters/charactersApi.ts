@@ -36,6 +36,9 @@ export interface CreateCharacterPayload {
   hitPointsCurrent: number;
   hitDie: HitDie;
   heroicInspiration?: number;
+  actionCount?: number;
+  bonusActionCount?: number;
+  reactionCount?: number;
   spellSlots?: SpellSlots;
   proficiencies: CharacterProficiencies;
   weaponMasteries?: string[];

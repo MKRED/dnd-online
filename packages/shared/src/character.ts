@@ -116,6 +116,13 @@ export type HitDie = (typeof HIT_DICE)[number];
 // оно бывает только одно (docs/dnd/combat-stats.md). Потолок ловит опечатки.
 export const HEROIC_INSPIRATION_MAX = 50;
 
+// Действия, бонусные действия и реакции за ход. По книге 2024 у каждого по одному
+// (docs/dnd/ability-usage.md, «Действия за ход»); число на листе — база для хоумбрю, а
+// прибавки (Haste, Action Surge) придут из эффектов и способностей вместе с боем.
+export const TURN_ACTIONS_DEFAULT = 1;
+export const TURN_ACTIONS_MIN = 1;
+export const TURN_ACTIONS_MAX = 5;
+
 // Бонус мастерства вводится руками. Игровому персонажу по книге хватает 2..6 (уровни 1..20),
 // но НПС переносят из бестиария, где он доходит до +9 (ПО 29–30, monsterChallenge.ts),
 // поэтому предел один на всех — до максимума монстров (docs/dnd/combat-stats.md).
@@ -248,6 +255,10 @@ export interface Character {
   deathSaveSuccesses: number;
   deathSaveFailures: number;
   heroicInspiration: number;
+  // Действия, бонусные действия и реакции за ход: база без эффектов, обычно 1.
+  actionCount: number;
+  bonusActionCount: number;
+  reactionCount: number;
   proficiencies: CharacterProficiencies;
   weaponMasteries: WeaponMasteries;
   attacks: CharacterAttack[];

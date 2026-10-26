@@ -17,6 +17,9 @@ const FIELD_ORDER = [
   'hitPointsMax',
   'hitPointsCurrent',
   'hitDie',
+  'actionCount',
+  'bonusActionCount',
+  'reactionCount',
   'heroicInspiration',
   'spellSlots',
 ];
@@ -26,12 +29,15 @@ const FIELD_LABELS: Record<string, string> = {
   species: 'Раса',
   background: 'Предыстория',
   proficiencyBonus: 'Бонус мастерства',
-  armorClass: 'Класс доспеха без эффектов',
+  armorClass: 'КД без доспеха',
   speed: 'Скорость без эффектов',
   hitPointsMax: 'ХП (максимум)',
   hitPointsCurrent: 'ХП (текущие)',
   hitDie: 'Кость хитов',
   heroicInspiration: 'Героическое вдохновение',
+  actionCount: 'Действия',
+  bonusActionCount: 'Бонусные действия',
+  reactionCount: 'Реакции',
 };
 
 function labelOf(path: string): string {

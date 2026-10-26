@@ -4,6 +4,7 @@ import {
   SKILL_ABILITIES,
   SPECIES_WITH_LINEAGE,
   SUBCLASS_MIN_LEVEL,
+  TURN_ACTIONS_DEFAULT,
   WEAPON_PROFICIENCIES,
   type AbilityScore,
   type ArmorTraining,
@@ -60,6 +61,9 @@ export interface CharacterFormValues {
   // Select работает со строками: '' — ещё не выбрана (форма такую не отправит), иначе число граней ('10').
   hitDie: string;
   heroicInspiration: number;
+  actionCount: number;
+  bonusActionCount: number;
+  reactionCount: number;
   spellSlots: SpellSlotTotals;
   // Полей для них нет: потраченные отмечаются на листе, форма их только сохраняет.
   spellSlotsExpended: SpellSlotsExpended;
@@ -107,6 +111,9 @@ export function createInitialFormValues(
     hitPointsCurrent: 10,
     hitDie: '',
     heroicInspiration: 0,
+    actionCount: TURN_ACTIONS_DEFAULT,
+    bonusActionCount: TURN_ACTIONS_DEFAULT,
+    reactionCount: TURN_ACTIONS_DEFAULT,
     spellSlots: emptySpellSlotTotals(),
     spellSlotsExpended: {},
     armorProficiencies: [],
@@ -152,6 +159,9 @@ export function fromCharacter(character: Character): CharacterFormValues {
     hitPointsCurrent: character.hitPointsCurrent,
     hitDie: character.hitDie === null ? '' : String(character.hitDie),
     heroicInspiration: character.heroicInspiration,
+    actionCount: character.actionCount,
+    bonusActionCount: character.bonusActionCount,
+    reactionCount: character.reactionCount,
     spellSlots: spellSlotTotals(character.spellSlots),
     spellSlotsExpended: spellSlotsExpended(character.spellSlots),
     armorProficiencies: [...character.proficiencies.armor],
@@ -211,6 +221,9 @@ export function toCreatePayload(
     hitPointsCurrent: values.hitPointsCurrent,
     hitDie: Number(values.hitDie) as HitDie,
     heroicInspiration: values.heroicInspiration,
+    actionCount: values.actionCount,
+    bonusActionCount: values.bonusActionCount,
+    reactionCount: values.reactionCount,
     spellSlots: toSpellSlots(values.spellSlots, values.spellSlotsExpended),
     proficiencies: {
       // Порядок как в справочнике, а не как отмечали галочки.

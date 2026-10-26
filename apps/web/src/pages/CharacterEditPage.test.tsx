@@ -86,6 +86,9 @@ describe('CharacterEditPage', { timeout: 15_000 }, () => {
     const nameInput = await screen.findByLabelText(/Имя/);
     await user.clear(nameInput);
     await user.type(nameInput, 'Странник');
+    const actions = screen.getByLabelText('Действия');
+    await user.clear(actions);
+    await user.type(actions, '2');
     await user.click(
       screen.getByRole('button', { name: 'Сохранить изменения' }),
     );
@@ -96,9 +99,37 @@ describe('CharacterEditPage', { timeout: 15_000 }, () => {
     expect(init?.method).toBe('PUT');
     const body = JSON.parse(init?.body as string) as Record<string, unknown>;
     expect(body.name).toBe('Странник');
+    expect(body).toMatchObject({
+      actionCount: 2,
+      bonusActionCount: 1,
+      reactionCount: 1,
+    });
     // Игровые поля (инвентарь, временные ХП) форма не шлёт — сервер их не трогает.
     expect(body).not.toHaveProperty('inventory');
     expect(body).not.toHaveProperty('hitPointsTemp');
+  });
+
+  it('действий за ход — от 1 до 5: лишнее поле срезает, пустое не отправляет', async () => {
+    const fetchMock = stubFetch([
+      { status: 200, body: sampleCharacter },
+      EMPTY_GALLERY,
+      NO_MODEL,
+    ]);
+    renderEditPage();
+    const user = userEvent.setup();
+
+    const actions = await screen.findByLabelText('Действия');
+    await user.clear(actions);
+    await user.type(actions, '9');
+    await user.tab();
+    expect(actions).toHaveValue('5');
+
+    await user.clear(screen.getByLabelText('Реакции'));
+    await user.click(
+      screen.getByRole('button', { name: 'Сохранить изменения' }),
+    );
+    expect(await screen.findByText('От 1 до 5')).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
   it('показывает «Персонаж не найден» на 404', async () => {

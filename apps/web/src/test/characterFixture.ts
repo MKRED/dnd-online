@@ -38,6 +38,9 @@ export const sampleCharacter: Character = {
   deathSaveSuccesses: 1,
   deathSaveFailures: 0,
   heroicInspiration: 2,
+  actionCount: 1,
+  bonusActionCount: 1,
+  reactionCount: 1,
   proficiencies: {
     armor: ['light'],
     weapons: ['simple'],

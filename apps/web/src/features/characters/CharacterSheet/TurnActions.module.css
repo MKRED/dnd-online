@@ -1,0 +1,36 @@
+.strip {
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+}
+
+/* Значки BG3: круг — действие, треугольник — бонусное, ромб — реакция. */
+.icon {
+  display: inline-block;
+  flex: none;
+}
+
+.action {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--mantine-color-green-filled);
+}
+
+.bonus {
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 14px solid var(--mantine-color-orange-filled);
+}
+
+.reaction {
+  width: 11px;
+  height: 11px;
+  margin: 0 1.5px;
+  border-radius: 2px;
+  transform: rotate(45deg);
+  background: var(--mantine-color-grape-filled);
+}

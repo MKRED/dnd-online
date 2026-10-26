@@ -13,6 +13,8 @@ import {
   HIT_DICE,
   PROFICIENCY_BONUS_MAX,
   PROFICIENCY_BONUS_MIN,
+  TURN_ACTIONS_MAX,
+  TURN_ACTIONS_MIN,
 } from 'shared';
 import type { CharacterFormValues } from '../characterFormValues';
 import {
@@ -25,6 +27,13 @@ const HIT_DIE_OPTIONS = HIT_DICE.map((die) => ({
   value: String(die),
   label: `к${die}`,
 }));
+
+// Действия за ход (docs/dnd/ability-usage.md, «Действия за ход»).
+const TURN_ACTIONS = [
+  { key: 'actionCount', label: 'Действия' },
+  { key: 'bonusActionCount', label: 'Бонусные действия' },
+  { key: 'reactionCount', label: 'Реакции' },
+] as const;
 
 interface CombatSectionProps {
   form: UseFormReturnType<CharacterFormValues>;
@@ -115,6 +124,24 @@ function CombatSection({ form, wornArmor }: CombatSectionProps) {
         <Grid.Col span={12}>
           <Text size="xs" c="dimmed">
             Инициатива считается автоматически: это модификатор Ловкости.
+          </Text>
+        </Grid.Col>
+        {TURN_ACTIONS.map(({ key, label }) => (
+          <Grid.Col key={key} span={{ base: 4, sm: 3 }}>
+            <NumberInput
+              label={label}
+              min={TURN_ACTIONS_MIN}
+              max={TURN_ACTIONS_MAX}
+              allowDecimal={false}
+              allowNegative={false}
+              {...form.getInputProps(key)}
+            />
+          </Grid.Col>
+        ))}
+        <Grid.Col span={12}>
+          <Text size="xs" c="dimmed">
+            Действия, бонусные действия и реакции за ход: обычно по 1. Ускорение
+            и Всплеск действий прибавят своё сами, когда появится бой.
           </Text>
         </Grid.Col>
         <Grid.Col span={{ base: 6, sm: 3 }}>

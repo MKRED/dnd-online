@@ -1,7 +1,9 @@
 import type request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { eq, sql } from 'drizzle-orm';
 import type {
   Ability,
+  Character,
   GameDetail,
   GameEventPage,
   GameLibraryEntry,
@@ -10,6 +12,7 @@ import type {
   Monster,
 } from 'shared';
 import { DatabaseService } from '../src/database/database.service.js';
+import { gameLibrary } from '../src/database/schema/index.js';
 import { lockGame } from '../src/games/game-journal.js';
 import { copyToLibrary } from '../src/games/library/index.js';
 import { fireBolt } from './abilities/steps.js';
@@ -395,6 +398,42 @@ describe('game library (e2e)', () => {
       },
     ]);
     expect(copy.effects).toMatchObject([{ effect: null, missing: 'deleted' }]);
+  });
+
+  it('НПС: копия держит действия за ход, у старой копии без них — по 1', async () => {
+    const { master, gameId } = await seated('gl_turn');
+    const npcId = idOf(
+      await master.agent
+        .post('/api/characters')
+        .send(characterBody({ kind: 'npc', actionCount: 2, reactionCount: 3 }))
+        .expect(201),
+    );
+    const { db } = t.app.get(DatabaseService);
+    await db.transaction(async (tx) => {
+      await lockGame(tx, gameId);
+      await copyToLibrary(tx, gameId, master.id, [
+        { kind: 'npc', sourceId: npcId },
+      ]);
+    });
+    const turn = async () => {
+      const record = (await entry(master.agent, gameId, 'npc', npcId))
+        .record as Character;
+      return [
+        record.actionCount,
+        record.bonusActionCount,
+        record.reactionCount,
+      ];
+    };
+    expect(await turn()).toEqual([2, 1, 3]);
+
+    // Копия, снятая до этих полей: в record их нет.
+    await db
+      .update(gameLibrary)
+      .set({
+        record: sql`${gameLibrary.record} - 'actionCount' - 'bonusActionCount' - 'reactionCount'`,
+      })
+      .where(eq(gameLibrary.sourceId, npcId));
+    expect(await turn()).toEqual([1, 1, 1]);
   });
 
   it('библиотеку видит и обновляет только мастер', async () => {

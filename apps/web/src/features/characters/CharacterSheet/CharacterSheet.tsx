@@ -11,6 +11,7 @@ import {
 import AbilitiesView from './AbilitiesView';
 import CombatView from './CombatView';
 import SheetAttacks from './SheetAttacks';
+import TurnActions from './TurnActions';
 import EffectSummary from './EffectSummary';
 import EffectsStrip from '../Effects';
 import CharacterAbilities from '../Abilities';
@@ -91,6 +92,7 @@ function CharacterSheet({
               />
             )}
             <CombatView character={character} totals={shown} />
+            <TurnActions character={character} />
             <SheetAttacks character={character} />
             <EffectSummary totals={shown} />
           </Stack>

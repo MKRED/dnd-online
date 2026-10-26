@@ -132,6 +132,43 @@ describe('персонажи (e2e)', () => {
     await owner.get('/api/characters/not-a-uuid').expect(400);
   });
 
+  it('действия за ход: без них по 1, своё число держится при правке без них', async () => {
+    const id = await create();
+    expect(
+      (await owner.get(`/api/characters/${id}`).expect(200)).body,
+    ).toMatchObject({ actionCount: 1, bonusActionCount: 1, reactionCount: 1 });
+
+    await owner
+      .put(`/api/characters/${id}`)
+      .send(characterBody({ actionCount: 2, bonusActionCount: 3 }))
+      .expect(200);
+    const kept = await owner
+      .put(`/api/characters/${id}`)
+      .send(characterBody({ name: 'Торин II' }))
+      .expect(200);
+    expect(kept.body).toMatchObject({
+      actionCount: 2,
+      bonusActionCount: 3,
+      reactionCount: 1,
+    });
+
+    // Целое от 1 до 5: ноль действий за ход у персонажа не бывает, потолок ловит опечатки.
+    for (const field of ['actionCount', 'bonusActionCount', 'reactionCount'])
+      for (const value of [0, 6, 1.5, '2']) {
+        await owner
+          .post('/api/characters')
+          .send(characterBody({ [field]: value }))
+          .expect(400);
+        await owner
+          .put(`/api/characters/${id}`)
+          .send(characterBody({ [field]: value }))
+          .expect(400);
+      }
+    expect(
+      (await owner.get(`/api/characters/${id}`).expect(200)).body,
+    ).toMatchObject({ actionCount: 2 });
+  });
+
   it('НПС из бестиария держит бонус мастерства +9', async () => {
     const created = await owner
       .post('/api/characters')

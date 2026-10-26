@@ -55,6 +55,7 @@ describe('plaqueState', () => {
             hitPoints: { current: 0, max: 15, temp: 0 },
             effects: [],
             movement: { speed: 30, climb: null, moved: 0, dashes: 0 },
+            spells: null,
           },
         },
         creatureMoving: true,

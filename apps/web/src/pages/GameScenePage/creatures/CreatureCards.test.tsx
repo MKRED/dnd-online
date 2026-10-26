@@ -60,7 +60,9 @@ describe('карточка персонажа в игре', () => {
     await userEvent.type(screen.getByLabelText('Сколько хитов'), '12');
     await userEvent.click(damage);
     expect(await screen.findByText('ХП 13 / 28')).toBeInTheDocument();
-    expect(sent).toEqual([{ kind: 'damage', amount: 12 }]);
+    expect(sent).toEqual([
+      { kind: 'damage', amount: 12, parts: [{ amount: 12, type: null }] },
+    ]);
     // Спасброски — только на нуле; ячейки тратятся кружком.
     expect(screen.queryByText('Спасброски от смерти')).toBeNull();
     expect(
@@ -113,6 +115,7 @@ describe('существа у мастера', () => {
           hitPoints: { current: 2, max: 7, temp: 0 },
           effects: [],
           movement: { speed: 30, climb: null, moved: 10, dashes: 1 },
+          spells: null,
         },
       },
       {
@@ -123,6 +126,7 @@ describe('существа у мастера', () => {
           hitPoints: { current: 0, max: 15, temp: 0 },
           effects: [],
           movement: { speed: 30, climb: null, moved: 0, dashes: 0 },
+          spells: null,
         },
       },
     ],

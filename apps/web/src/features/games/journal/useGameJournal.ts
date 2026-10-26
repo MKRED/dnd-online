@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GameEvent } from 'shared';
-import { listGameEvents } from './gamesApi';
-import { errorMessage } from '../../lib/apiRequest';
+import { listGameEvents } from '../gamesApi';
+import { errorMessage } from '../../../lib/apiRequest';
 
 // Записи журнала игры страницами, новые сверху. Первая страница грузится сразу: шторка
 // монтирует содержимое при каждом открытии, так что открытие и есть обновление.

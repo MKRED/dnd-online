@@ -140,6 +140,8 @@ describe('game creature moves (e2e)', () => {
       kind: 'creature.moved',
       as: { kind: 'master' },
       sceneId: g.sceneId,
+      // Сцена открыта игрокам, гоблин не скрыт — ход они видели.
+      visibility: 'players',
       intent: { objectId: 2, to: [1, 1, 4] },
       result: {
         creature: { objectId: 2, name: 'Гоблин' },

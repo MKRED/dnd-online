@@ -19,6 +19,7 @@ import {
   DASH_ONLY_IN_COMBAT,
 } from '../game-errors.js';
 import { appendGameEvent } from '../game-journal.js';
+import { creatureEventVisibility } from './creature-visibility.js';
 import type { SceneRow } from '../scenes/scene-copy.js';
 import { loadSceneEditRefs } from '../scenes/scene-edit-refs.js';
 import { commitSceneEdit } from '../scenes/scene-journal.js';
@@ -128,6 +129,13 @@ export async function moveCreature(
         left: free ? left.walk : Math.max(0, left.walk - path.cost),
         path: path.path,
       },
+      visibility: await creatureEventVisibility(
+        tx,
+        actor.gameId,
+        scene.id,
+        creature,
+        path.path,
+      ),
     },
     actor.limits.maxChunks,
   );

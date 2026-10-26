@@ -7,6 +7,7 @@ const base = {
   actor: { id: 'u1', nickname: 'Аня' },
   as: null,
   sceneId: null,
+  visibility: 'players' as const,
   createdAt: '2026-10-20T10:00:00.000Z',
 };
 const lira = { id: 'c1', name: 'Лира' };

@@ -10,6 +10,7 @@ import {
 import type {
   GameEventAs,
   GameEventKind,
+  GameEventVisibility,
   PackedChangeset,
   ScenePlayerFog,
 } from 'shared';
@@ -42,6 +43,12 @@ export const gameEvents = pgTable(
     sceneId: uuid('scene_id').references(() => gameScenes.id, {
       onDelete: 'set null',
     }),
+    // Кому видна запись (shared/game-event-visibility.ts): решают при записи, по тому, что
+    // игроки знали тогда.
+    visibility: varchar('visibility', { length: 10 })
+      .notNull()
+      .default('master')
+      .$type<GameEventVisibility>(),
     // Что просили и что получилось; форма — GameEventPayloads из shared.
     intent: jsonb('intent'),
     result: jsonb('result'),

@@ -4,14 +4,15 @@ import {
   Button,
   Center,
   Divider,
-  Group,
   Loader,
   Text,
 } from '@mantine/core';
-import { IconRefresh } from '@tabler/icons-react';
+import { useState } from 'react';
 import type { GameEvent } from 'shared';
 import GameEventItem from './GameEventItem';
 import { dividerTitle, gameEventTime } from './gameEventText';
+import JournalControls from './JournalControls';
+import { filterJournal, type JournalFilter } from './journalFilter';
 import { useGameJournal } from './useGameJournal';
 
 interface GameJournalEntriesProps {
@@ -24,26 +25,26 @@ interface GameJournalEntriesProps {
 }
 
 // Записи журнала игры, новые сверху: в шторке лобби и во вкладке «Журнал» на сцене.
-// «Обновить» — на случай обрыва связи, «Показать ещё» — старые страницы.
+// Фильтр по группам и «Глазами игроков» — по загруженным записям (journalFilter.ts);
+// «Показать ещё» — старые страницы.
 function GameJournalEntries({ gameId, live, rounds }: GameJournalEntriesProps) {
   const { events, hasMore, loading, loadingMore, error, refresh, loadMore } =
     useGameJournal(gameId, live);
+  const [filter, setFilter] = useState<JournalFilter>('all');
+  const [players, setPlayers] = useState(false);
+  const view = players ? 'players' : 'master';
+  const shown = filterJournal(events, { filter, players, rounds: !!rounds });
+  const anyEntry = shown.some((event) => !(rounds && dividerTitle(event)));
   return (
     <>
-      <Group justify="space-between" mb="xs">
-        <Text size="sm" c="dimmed">
-          Новые записи сверху
-        </Text>
-        <Button
-          variant="subtle"
-          size="xs"
-          leftSection={<IconRefresh size={14} />}
-          loading={loading}
-          onClick={refresh}
-        >
-          Обновить
-        </Button>
-      </Group>
+      <JournalControls
+        filter={filter}
+        onFilter={setFilter}
+        players={players}
+        onPlayers={setPlayers}
+        loading={loading}
+        onRefresh={refresh}
+      />
 
       {error && (
         <Alert color="red" mb="xs">
@@ -60,9 +61,14 @@ function GameJournalEntries({ gameId, live, rounds }: GameJournalEntriesProps) {
           Записей пока нет
         </Text>
       )}
+      {events.length > 0 && !anyEntry && (
+        <Text c="dimmed" size="sm">
+          Среди загруженных записей таких нет
+        </Text>
+      )}
 
       <Accordion multiple chevronPosition="right">
-        {events.map((event) => {
+        {shown.map((event) => {
           const divider = rounds ? dividerTitle(event) : null;
           return divider ? (
             <Divider
@@ -81,7 +87,7 @@ function GameJournalEntries({ gameId, live, rounds }: GameJournalEntriesProps) {
               }
             />
           ) : (
-            <GameEventItem key={event.seq} event={event} />
+            <GameEventItem key={event.seq} event={event} view={view} />
           );
         })}
       </Accordion>

@@ -7,6 +7,7 @@ import type {
   GameCreatureHitPoints,
   GameEventCreature,
 } from './game-creatures.js';
+import type { GameEventVisibility } from './game-event-visibility.js';
 import type { GameFigurePlacement, GameMoveMode } from './game-figures.js';
 import type { GameUser } from './games.js';
 import type { GameLibraryRef } from './game-library.js';
@@ -18,7 +19,8 @@ import type { SpellSlotsExpended } from './spellSlots.js';
 
 // Журнал игры (docs/plan/done/game.md, «Журнал игры»): каждое действие в игре — запись с
 // номером по порядку внутри игры. Записи только добавляются; отмена — тоже запись.
-// Сам журнал видит только мастер.
+// Сам журнал пока видит только мастер; кому из игроков видна запись — visibility
+// (game-event-visibility.ts), а группа записи для журнала — game-event-groups.ts.
 
 // Сколько записей отдаёт одна страница журнала, если не просили меньше.
 export const GAME_EVENTS_PAGE = 50;
@@ -321,6 +323,7 @@ interface GameEventBase {
   as: GameEventAs | null;
   // Сцена, в которой это случилось; у событий лобби — null.
   sceneId: string | null;
+  visibility: GameEventVisibility;
   createdAt: string;
 }
 

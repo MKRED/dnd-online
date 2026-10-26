@@ -15,7 +15,10 @@ import {
 import { AuthGuard, type AuthenticatedRequest } from '../../auth/auth.guard.js';
 import { GameCharacterEffectDto } from '../characters/dto/character-effect.dto.js';
 import { MoveFigureDto } from '../figures/dto/figure.dto.js';
-import { CreatureChangeDto } from './dto/creature-change.dto.js';
+import {
+  CreatureChangeDto,
+  toCreatureChange,
+} from './dto/creature-change.dto.js';
 import {
   CreaturePreparedDto,
   CreatureSlotsDto,
@@ -46,10 +49,12 @@ export class GameCreaturesController {
     @Param('objectId', ParseIntPipe) objectId: number,
     @Body() dto: CreatureChangeDto,
   ) {
-    return this.service.change(req.user.sub, id, objectId, {
-      kind: dto.kind,
-      amount: dto.amount,
-    });
+    return this.service.change(
+      req.user.sub,
+      id,
+      objectId,
+      toCreatureChange(dto),
+    );
   }
 
   // Ячейки и подготовка заклинаний экземпляра НПС (вариант А после первой партии).

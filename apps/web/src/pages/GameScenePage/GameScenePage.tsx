@@ -15,13 +15,9 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router-dom';
-import {
-  DEFAULT_USER_SETTINGS,
-  mapBounds,
-  type GameSceneEditMessage,
-  type Vec3,
-} from 'shared';
+import { mapBounds, type GameSceneEditMessage, type Vec3 } from 'shared';
 import { useAuth } from '../../features/auth';
+import { useDeviceSettings } from '../../features/profile';
 import { RecordLinkContext, type OpenRecord } from '../../features/catalog';
 import { sceneObjectImages } from '../../features/games';
 import {
@@ -71,6 +67,8 @@ const MapScene = lazy(() => import('../../features/maps/MapScene'));
 function GameScenePage() {
   const { id = '' } = useParams();
   const { user } = useAuth();
+  // Метки — из аккаунта, графика — этого устройства (замечания после первой партии).
+  const settings = useDeviceSettings();
   const navigate = useNavigate();
   const { load, setLoad, reload, edits, receiveEdit, receiveFog } =
     useGameScene(id);
@@ -175,7 +173,7 @@ function GameScenePage() {
   // Ходы по пути — прыжками по клеткам (docs/plan/done/walk-animation.md).
   const walks = useSceneWalks({
     sceneId,
-    enabled: (user?.settings ?? DEFAULT_USER_SETTINGS).animationFps > 0,
+    enabled: settings.animationFps > 0,
     objects: state?.objects ?? null,
   });
   const { hold } = walks;
@@ -357,7 +355,7 @@ function GameScenePage() {
                   }
                   focusRef={focusRef}
                   onReady={handleReady}
-                  settings={user?.settings ?? DEFAULT_USER_SETTINGS}
+                  settings={settings}
                   objectImages={images}
                   hideContainerContents={ready.view.contentsHidden || viewOnly}
                   figures={figures.inputs}

@@ -1,8 +1,8 @@
 import { Loader, VisuallyHidden } from '@mantine/core';
 import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { DEFAULT_USER_SETTINGS, mapBounds } from 'shared';
-import { useAuth } from '../../features/auth';
+import { mapBounds } from 'shared';
+import { useDeviceSettings } from '../../features/profile';
 import { useMapData, useRulesState } from '../../features/maps';
 import {
   EMPTY_DRAFT,
@@ -35,7 +35,8 @@ const MapScene = lazy(() => import('../../features/maps/MapScene'));
 
 function MapViewPage() {
   const { id = '' } = useParams();
-  const { user } = useAuth();
+  // Метки — из аккаунта, графика — этого устройства (замечания после первой партии).
+  const settings = useDeviceSettings();
   const { map, loadError, editError, busy, applyOps, editOps, undo, redo } =
     useMapData(id);
   usePageTitle(map?.info.name ?? 'Карта');
@@ -147,7 +148,7 @@ function MapViewPage() {
               }
               focusRef={focusRef}
               onReady={handleSceneReady}
-              settings={user?.settings ?? DEFAULT_USER_SETTINGS}
+              settings={settings}
               hover={hover}
               readoutAfter={
                 !sizeDraft && (

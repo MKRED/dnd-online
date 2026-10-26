@@ -34,7 +34,7 @@ export const PROFILE_SECTIONS: ProfileSectionInfo[] = [
   {
     key: 'graphics',
     label: 'Графика',
-    hint: 'Насколько подробно рисуются карта и сцена',
+    hint: 'Насколько подробно рисуются карта и сцена на этом устройстве',
     icon: IconPhoto,
   },
   {

@@ -1,43 +1,44 @@
-import { Alert, Card, Stack, Text, Title } from '@mantine/core';
+import { Badge, Card, Group, Stack, Text, Title } from '@mantine/core';
 import {
   GRAPHICS_PRESET_VALUES,
   type GraphicsPreset,
   type GraphicsSettings,
 } from 'shared';
-import { useSettingsChange } from '../useSettingsChange';
+import {
+  saveDeviceGraphics,
+  useDeviceGraphics,
+} from '../../../features/profile';
 import GraphicsOptions from './GraphicsOptions';
 import GraphicsPresetField from './GraphicsPresetField';
 
-// Раздел «Графика»: набор и настройки по одной (решено с пользователем 2026-10-23).
-// Значения уходят на сервер всегда целиком, вместе с набором: «Своё» начинается с того,
-// что было видно, а у набора сервер всё равно берёт его значения (readUserSettings).
+// Раздел «Графика»: набор и настройки по одной (решено с пользователем 2026-10-23). После
+// первой партии (2026-10-26, вариант А) — только для этого устройства: хранятся в браузере
+// и на сервер не уходят, так что телефон и компьютер настраиваются отдельно. Сохраняется
+// всегда целиком, вместе с набором: «Своё» начинается с того, что было видно.
 function GraphicsSection() {
-  const { settings, saving, error, change } = useSettingsChange();
-  if (!settings) return null;
-  const current: GraphicsSettings = {
-    animationFps: settings.animationFps,
-    creatureModels: settings.creatureModels,
-    renderScale: settings.renderScale,
-    antialias: settings.antialias,
-    frameLimit: settings.frameLimit,
-  };
-
-  const choosePreset = (graphicsPreset: GraphicsPreset) =>
-    change({
-      graphicsPreset,
-      ...(graphicsPreset === 'custom'
-        ? current
-        : GRAPHICS_PRESET_VALUES[graphicsPreset]),
+  const { graphicsPreset, ...current } = useDeviceGraphics();
+  const choosePreset = (preset: GraphicsPreset) =>
+    saveDeviceGraphics({
+      graphicsPreset: preset,
+      ...(preset === 'custom' ? current : GRAPHICS_PRESET_VALUES[preset]),
     });
   const changeOption = (patch: Partial<GraphicsSettings>) =>
-    change({ graphicsPreset: 'custom', ...current, ...patch });
+    saveDeviceGraphics({ graphicsPreset: 'custom', ...current, ...patch });
 
   return (
     <Stack>
       <Card withBorder padding="lg" radius="md">
+        <Group gap="xs" mb={4}>
+          <Badge variant="light" size="sm">
+            Это устройство
+          </Badge>
+        </Group>
+        <Text size="sm" c="dimmed" mb="md">
+          Настройки хранятся в этом браузере. На телефоне и компьютере они свои.
+        </Text>
         <GraphicsPresetField
-          value={settings.graphicsPreset}
-          disabled={saving}
+          value={graphicsPreset}
+          disabled={false}
           onChange={choosePreset}
         />
       </Card>
@@ -49,11 +50,10 @@ function GraphicsSection() {
         </Text>
         <GraphicsOptions
           value={current}
-          disabled={saving}
+          disabled={false}
           onChange={changeOption}
         />
       </Card>
-      {error && <Alert color="red">{error}</Alert>}
     </Stack>
   );
 }

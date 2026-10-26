@@ -8,6 +8,7 @@ import {
   ITEM_RARITIES,
   ITEM_SATIETY_MAX,
   TREASURE_KINDS,
+  WEAPON_EXTRA_DAMAGE_MAX,
   WEAPON_FLAGS,
   WEAPON_MASTERIES,
   WEAPONS_BY_GROUP,
@@ -50,7 +51,7 @@ const DETAILS = {
   treasure: `{kind} — ${list(TREASURE_KINDS)}`,
   container: '{capacity} — сколько фунтов вмещает, или null',
   pack: `{contents: [{itemId, quantity}]} — набор снаряжения из других предметов каталога, до ${ITEM_PACK_MAX_ENTRIES} строк`,
-  weapon: `{base, weaponCategory, attackType, damage, properties, thrown, ammunition, versatile, mastery, magicBonus, attunement} — оружие; все ключи обязательны. base — образец книги (${list(Object.values(WEAPONS_BY_GROUP).flat())}) или null; weaponCategory simple|martial; attackType melee|ranged; damage {count 1..10, die 4|6|8|10|12 или null — урон числом, type — тип урона}; properties — без повторов и по порядку из ${list(WEAPON_FLAGS)}; thrown {normal, long} в футах кратно 5 или null; ammunition {normal, long, kind: ${list(AMMUNITION_KINDS)}} или null; versatile {count, die} — урон двумя руками или null; mastery ${list(WEAPON_MASTERIES)} или null; magicBonus 0..3`,
+  weapon: `{base, weaponCategory, attackType, damage, extraDamage, properties, thrown, ammunition, versatile, mastery, magicBonus, attunement} — оружие; все ключи обязательны. base — образец книги (${list(Object.values(WEAPONS_BY_GROUP).flat())}) или null; weaponCategory simple|martial; attackType melee|ranged; damage {count 1..10, die 4|6|8|10|12 или null — урон числом, type — тип урона} — основной урон, к нему бонус магии и модификатор; extraDamage — до ${WEAPON_EXTRA_DAMAGE_MAX} частей того же вида без бонуса и модификатора (2к4 огонь), [] — нет; properties — без повторов и по порядку из ${list(WEAPON_FLAGS)}; thrown {normal, long} в футах кратно 5 или null; ammunition {normal, long, kind: ${list(AMMUNITION_KINDS)}} или null; versatile {count, die} — урон двумя руками или null; ammunition и loading — только у ranged, reach и versatile — только у melee; mastery ${list(WEAPON_MASTERIES)} или null; magicBonus 0..3`,
   armor: `{base, kind, armorClass, strength, stealthDisadvantage, magicBonus, attunement} — доспех: base ${list(BOOK_ARMOR)} или null; kind ${list(ARMOR_KINDS)} (Ловкость к КД из вида: лёгкий полностью, средний до 2, тяжёлый нет); armorClass — базовый КД без Ловкости; strength — нужная Сила или null; magicBonus 0..3`,
   shield:
     '{armorClass, magicBonus, attunement} — щит: armorClass — прибавка к КД (у щита книги 2); magicBonus 0..3',

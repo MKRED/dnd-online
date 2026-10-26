@@ -7,7 +7,13 @@ import { WEAPONS_BY_GROUP, type Weapon, type WeaponGroup } from './weapons.js';
 
 type BookWeaponStats = Pick<
   WeaponItemDetails,
-  'damage' | 'properties' | 'thrown' | 'ammunition' | 'versatile' | 'mastery'
+  | 'damage'
+  | 'extraDamage'
+  | 'properties'
+  | 'thrown'
+  | 'ammunition'
+  | 'versatile'
+  | 'mastery'
 > & { weight: number; cost: ItemCost };
 
 export type BookWeapon = BookWeaponStats &
@@ -33,6 +39,7 @@ function weapon(
 ): BookWeaponStats {
   return {
     damage,
+    extraDamage: [],
     properties: extra.properties ?? [],
     thrown: extra.thrown ?? null,
     ammunition: extra.ammunition ?? null,

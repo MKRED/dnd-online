@@ -1,6 +1,4 @@
 import {
-  Group,
-  NumberInput,
   SegmentedControl,
   Select,
   SimpleGrid,
@@ -10,9 +8,6 @@ import {
 import type { UseFormReturnType } from '@mantine/form';
 import {
   BOOK_WEAPONS,
-  DAMAGE_DICE,
-  DAMAGE_TYPES,
-  DAMAGE_TYPE_LABELS,
   WEAPON_MASTERIES,
   WEAPONS_BY_GROUP,
   type Weapon,
@@ -24,6 +19,7 @@ import {
 } from '../../../characters/characterWeapons';
 import { WEAPON_MASTERY_LABELS } from '../../equipmentLabels';
 import type { ItemFormValues } from '../itemFormValues';
+import DamageFields from './DamageFields';
 import { weaponBookDifferences, weaponFromBook } from './weaponFormValues';
 import WeaponPropertyFields from './WeaponPropertyFields';
 
@@ -36,14 +32,6 @@ const BASE_OPTIONS = (Object.keys(WEAPONS_BY_GROUP) as WeaponGroup[]).map(
     })),
   }),
 );
-const DIE_OPTIONS = [
-  ...DAMAGE_DICE.map((die) => ({ value: `${die}`, label: `к${die}` })),
-  { value: 'flat', label: 'число' },
-];
-const DAMAGE_TYPE_OPTIONS = DAMAGE_TYPES.map((value) => ({
-  value,
-  label: DAMAGE_TYPE_LABELS[value],
-}));
 const MASTERY_OPTIONS = WEAPON_MASTERIES.map((value) => ({
   value,
   label: WEAPON_MASTERY_LABELS[value],
@@ -117,34 +105,7 @@ function WeaponFields({ form }: WeaponFieldsProps) {
           />
         </SimpleGrid>
       </Stack>
-      <Group gap="xs" align="flex-start" wrap="nowrap">
-        <NumberInput
-          label="Урон"
-          required
-          min={1}
-          allowDecimal={false}
-          allowNegative={false}
-          w={80}
-          {...form.getInputProps('weapon.damageCount')}
-        />
-        <Select
-          label="Кубик"
-          aria-label="Кубик урона"
-          data={DIE_OPTIONS}
-          allowDeselect={false}
-          w={96}
-          {...form.getInputProps('weapon.damageDie')}
-        />
-        <Select
-          label="Тип урона"
-          required
-          placeholder="Выберите"
-          data={DAMAGE_TYPE_OPTIONS}
-          allowDeselect={false}
-          style={{ flex: 1, minWidth: 0 }}
-          {...form.getInputProps('weapon.damageType')}
-        />
-      </Group>
+      <DamageFields form={form} />
       <WeaponPropertyFields form={form} />
       <Select
         label="Мастерство"

@@ -43,7 +43,10 @@ function WeaponRows({ details }: { details: Weapon }) {
         {details.base && ` (${WEAPON_LABELS[details.base].toLowerCase()})`}
       </DetailsField>
       <DetailsField label="Урон">
-        {formatDamage(details.damage, bonus)}
+        {[
+          formatDamage(details.damage, bonus),
+          ...details.extraDamage.map((part) => formatDamage(part)),
+        ].join(' + ')}
         {details.versatile &&
           `; двумя руками ${formatVersatile(details.versatile, bonus)}`}
       </DetailsField>

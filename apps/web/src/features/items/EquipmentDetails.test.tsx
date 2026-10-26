@@ -8,7 +8,7 @@ const item = (category: string, details: object) =>
   ({ category, details }) as Item;
 
 describe('EquipmentDetails', () => {
-  it('оружие: урон с бонусом, свойства как в книге', () => {
+  it('оружие: урон с бонусом и доп. уроном, свойства как в книге', () => {
     renderWithProviders(
       <EquipmentDetails
         item={item('weapon', {
@@ -16,6 +16,10 @@ describe('EquipmentDetails', () => {
           weaponCategory: 'martial',
           attackType: 'melee',
           damage: { count: 1, die: 8, type: 'slashing' },
+          extraDamage: [
+            { count: 2, die: 4, type: 'fire' },
+            { count: 4, die: null, type: 'necrotic' },
+          ],
           properties: ['finesse'],
           thrown: { normal: 20, long: 60 },
           ammunition: null,
@@ -30,7 +34,9 @@ describe('EquipmentDetails', () => {
       screen.getByText('Воинское рукопашное (длинный меч)'),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('1к8 + 1 рубящий; двумя руками 1к10 + 1'),
+      screen.getByText(
+        '1к8 + 1 рубящий + 2к4 огонь + 4 некротический; двумя руками 1к10 + 1',
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByText(

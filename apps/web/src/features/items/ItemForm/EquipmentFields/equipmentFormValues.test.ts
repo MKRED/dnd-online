@@ -46,6 +46,43 @@ describe('образцы в форме', () => {
         properties: ['finesse', 'versatile'],
       }),
     ).toEqual(['урон', 'свойства']);
+    expect(
+      weaponBookDifferences({
+        ...sword,
+        extraDamage: [{ count: 2, die: '4', type: 'fire' }],
+      }),
+    ).toEqual(['урон']);
+  });
+});
+
+describe('оружие в запросе', () => {
+  it('дополнительный урон уходит частями, число — без кубика', () => {
+    const details = weaponToDetails({
+      ...weaponFromBook('longsword'),
+      extraDamage: [
+        { count: 2, die: '4', type: 'fire' },
+        { count: '4', die: 'flat', type: 'necrotic' },
+      ],
+    });
+    expect(details.extraDamage).toEqual([
+      { count: 2, die: 4, type: 'fire' },
+      { count: 4, die: null, type: 'necrotic' },
+    ]);
+  });
+
+  it('свойства другого вида атаки не уходят: у лука нет Досягаемости', () => {
+    const bow = weaponFromBook('longbow');
+    const details = weaponToDetails({
+      ...bow,
+      properties: [...bow.properties, 'reach', 'versatile'],
+    });
+    expect(details.properties).toEqual(['heavy', 'twoHanded']);
+    expect(details.versatile).toBeNull();
+    const asMelee = weaponToDetails({ ...bow, attackType: 'melee' });
+    expect(asMelee.ammunition).toBeNull();
+    expect(
+      weaponDetailsProblem({ ...asMelee, magicBonus: 0, attunement: false }),
+    ).toBeNull();
   });
 });
 

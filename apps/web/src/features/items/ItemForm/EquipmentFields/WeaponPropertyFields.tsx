@@ -13,8 +13,9 @@ import { AMMUNITION_LABELS, WEAPON_FLAG_LABELS } from '../../equipmentLabels';
 import type { ItemFormValues } from '../itemFormValues';
 import {
   WEAPON_PROPERTY_CHIPS,
+  chipFits,
   type WeaponPropertyChip,
-} from './weaponFormValues';
+} from './weaponPropertyChips';
 
 const VERSATILE_DIE_OPTIONS = DAMAGE_DICE.map((die) => ({
   value: `${die}`,
@@ -39,7 +40,12 @@ interface WeaponPropertyFieldsProps {
 // раскрываются их параметры.
 function WeaponPropertyFields({ form }: WeaponPropertyFieldsProps) {
   const { weapon } = form.values;
-  const has = (chip: WeaponPropertyChip) => weapon.properties.includes(chip);
+  // Чипы другого вида атаки скрыты, но выбор в них хранится: вернёшь вид — вернутся.
+  const chips = WEAPON_PROPERTY_CHIPS.filter((chip) =>
+    chipFits(chip, weapon.attackType),
+  );
+  const has = (chip: WeaponPropertyChip) =>
+    weapon.properties.includes(chip) && chipFits(chip, weapon.attackType);
   return (
     <>
       <Stack gap={4}>
@@ -48,16 +54,20 @@ function WeaponPropertyFields({ form }: WeaponPropertyFieldsProps) {
         </Text>
         <Chip.Group
           multiple
-          value={weapon.properties}
+          value={weapon.properties.filter((chip) => chips.includes(chip))}
           onChange={(value) =>
             form.setFieldValue(
               'weapon.properties',
-              WEAPON_PROPERTY_CHIPS.filter((chip) => value.includes(chip)),
+              WEAPON_PROPERTY_CHIPS.filter((chip) =>
+                chips.includes(chip)
+                  ? value.includes(chip)
+                  : weapon.properties.includes(chip),
+              ),
             )
           }
         >
           <Group gap={6}>
-            {WEAPON_PROPERTY_CHIPS.map((chip) => (
+            {chips.map((chip) => (
               <Chip key={chip} value={chip} size="xs">
                 {CHIP_LABELS[chip]}
               </Chip>

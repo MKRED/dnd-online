@@ -51,6 +51,13 @@ export type AmmunitionKind = (typeof AMMUNITION_KINDS)[number];
 export const WEAPON_ATTACK_TYPES = ['melee', 'ranged'] as const;
 export type WeaponAttackType = (typeof WEAPON_ATTACK_TYPES)[number];
 
+// Свойства, которые бывают только у одного вида атаки (решено с пользователем
+// 2026-10-26, по таблице книги): Боеприпас и Перезарядка — про стрельбу, Досягаемость и
+// Универсальное — про рукопашную. Остальные свойства — у обоих: у дротика есть Метательное
+// и Фехтовальное, у ручного арбалета — Лёгкое.
+export const RANGED_ONLY_PROPERTIES = ['ammunition', 'loading'] as const;
+export const MELEE_ONLY_PROPERTIES = ['reach', 'versatile'] as const;
+
 // Дистанция в футах: обычная и наибольшая («дист. 80/320»). Кратна 5: клетка карты — 5 фт.
 export const WEAPON_RANGE_MAX = 1000;
 export interface WeaponRange {
@@ -66,6 +73,11 @@ export interface WeaponDamage {
   type: DamageType;
 }
 
+// Дополнительный урон оружия — к основному, без модификатора характеристики и бонуса
+// магии: «1к8 колющий + 2к4 огонь + 4 некротический». Всего частей не больше трёх
+// (решено с пользователем 2026-10-26).
+export const WEAPON_EXTRA_DAMAGE_MAX = 2;
+
 // Урон Универсального оружия двумя руками — тем же типом, что основной.
 export interface WeaponDice {
   count: number;
@@ -79,6 +91,7 @@ export interface WeaponItemDetails extends EquipmentMagic {
   weaponCategory: WeaponCategory;
   attackType: WeaponAttackType;
   damage: WeaponDamage;
+  extraDamage: WeaponDamage[];
   // Без повторов, в порядке WEAPON_FLAGS.
   properties: WeaponFlag[];
   thrown: WeaponRange | null;

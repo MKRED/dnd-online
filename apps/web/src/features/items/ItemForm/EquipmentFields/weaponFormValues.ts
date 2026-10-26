@@ -7,32 +7,22 @@ import {
   type Weapon,
   type WeaponAttackType,
   type WeaponCategory,
-  type WeaponFlag,
   type WeaponItemDetails,
   type WeaponMastery,
 } from 'shared';
+import {
+  damageFromRow,
+  rowFromDamage,
+  type DamageRow,
+  type DieChoice,
+} from './damageRows';
+import {
+  WEAPON_PROPERTY_CHIPS,
+  chipFits,
+  type WeaponPropertyChip,
+} from './weaponPropertyChips';
 
-// Поля оружия в форме. Свойства — одним рядом чипов: шесть без параметров и три с
-// параметрами (дистанция, вид боеприпаса, урон двумя руками), которые раскрывают свои поля.
-export type WeaponPropertyChip =
-  WeaponFlag | 'thrown' | 'ammunition' | 'versatile';
-
-// Порядок как в таблице книги, по алфавиту английских названий.
-export const WEAPON_PROPERTY_CHIPS: WeaponPropertyChip[] = [
-  'ammunition',
-  'finesse',
-  'heavy',
-  'light',
-  'loading',
-  'reach',
-  'thrown',
-  'twoHanded',
-  'versatile',
-];
-
-// Кубик урона — строкой для Select; 'flat' — урон числом без кубика.
-export type DieChoice = `${DamageDie}` | 'flat';
-
+// Поля оружия в форме: урон частями, свойства одним рядом чипов (weaponPropertyChips.ts).
 export interface WeaponFormValues {
   base: Weapon | null;
   weaponCategory: WeaponCategory;
@@ -40,6 +30,7 @@ export interface WeaponFormValues {
   damageCount: number | string;
   damageDie: DieChoice;
   damageType: DamageType | null;
+  extraDamage: DamageRow[];
   properties: WeaponPropertyChip[];
   thrownNormal: number | string;
   thrownLong: number | string;
@@ -58,6 +49,7 @@ export const EMPTY_WEAPON: WeaponFormValues = {
   damageCount: 1,
   damageDie: '6',
   damageType: null,
+  extraDamage: [],
   properties: [],
   thrownNormal: '',
   thrownLong: '',
@@ -72,7 +64,8 @@ export const EMPTY_WEAPON: WeaponFormValues = {
 type WeaponStats = Omit<WeaponItemDetails, 'magicBonus' | 'attunement'>;
 
 export function weaponToForm(details: WeaponStats): WeaponFormValues {
-  const { damage, thrown, ammunition, versatile } = details;
+  const { thrown, ammunition, versatile } = details;
+  const damage = rowFromDamage(details.damage);
   const chips: WeaponPropertyChip[] = [...details.properties];
   if (thrown) chips.push('thrown');
   if (ammunition) chips.push('ammunition');
@@ -82,8 +75,9 @@ export function weaponToForm(details: WeaponStats): WeaponFormValues {
     weaponCategory: details.weaponCategory,
     attackType: details.attackType,
     damageCount: damage.count,
-    damageDie: damage.die === null ? 'flat' : `${damage.die}`,
+    damageDie: damage.die,
     damageType: damage.type,
+    extraDamage: details.extraDamage.map(rowFromDamage),
     properties: WEAPON_PROPERTY_CHIPS.filter((chip) => chips.includes(chip)),
     thrownNormal: thrown?.normal ?? '',
     thrownLong: thrown?.long ?? '',
@@ -103,19 +97,18 @@ export function weaponFromBook(base: Weapon): WeaponFormValues {
 
 // Форма проверена до отправки: обязательные поля заполнены.
 export function weaponToDetails(values: WeaponFormValues): WeaponStats {
-  const has = (chip: WeaponPropertyChip) => values.properties.includes(chip);
+  const has = (chip: WeaponPropertyChip) =>
+    values.properties.includes(chip) && chipFits(chip, values.attackType);
   return {
     base: values.base,
     weaponCategory: values.weaponCategory,
     attackType: values.attackType,
-    damage: {
-      count: Number(values.damageCount),
-      die:
-        values.damageDie === 'flat'
-          ? null
-          : (Number(values.damageDie) as DamageDie),
-      type: values.damageType ?? 'bludgeoning',
-    },
+    damage: damageFromRow({
+      count: values.damageCount,
+      die: values.damageDie,
+      type: values.damageType,
+    }),
+    extraDamage: values.extraDamage.map(damageFromRow),
     properties: WEAPON_FLAGS.filter(has),
     thrown: has('thrown')
       ? { normal: Number(values.thrownNormal), long: Number(values.thrownLong) }
@@ -152,7 +145,10 @@ export function weaponBookDifferences(values: WeaponFormValues): string[] {
     mine.attackType !== theirs.attackType
   )
     out.push('вид');
-  if (!SAME(mine.damage, theirs.damage)) out.push('урон');
+  if (
+    !SAME([mine.damage, mine.extraDamage], [theirs.damage, theirs.extraDamage])
+  )
+    out.push('урон');
   const props = ['properties', 'thrown', 'ammunition', 'versatile'] as const;
   if (props.some((key) => !SAME(mine[key], theirs[key]))) out.push('свойства');
   if (mine.mastery !== theirs.mastery) out.push('мастерство');

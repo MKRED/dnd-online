@@ -52,6 +52,7 @@ describeCatalog(
         weaponCategory: 'martial',
         attackType: 'melee',
         damage: { count: 1, die: 8, type: 'slashing' },
+        extraDamage: [{ count: 2, die: 4, type: 'fire' }],
         properties: [],
         thrown: null,
         ammunition: null,

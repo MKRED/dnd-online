@@ -6,9 +6,12 @@ import {
   ARMOR_STRENGTH_MAX,
   BOOK_ARMOR,
   ITEM_MAGIC_BONUS_MAX,
+  MELEE_ONLY_PROPERTIES,
+  RANGED_ONLY_PROPERTIES,
   SHIELD_BONUS_MAX,
   WEAPON_ATTACK_TYPES,
   WEAPON_DICE_MAX,
+  WEAPON_EXTRA_DAMAGE_MAX,
   WEAPON_FLAGS,
   WEAPON_MASTERIES,
   WEAPON_RANGE_MAX,
@@ -86,6 +89,7 @@ const WEAPON_KEYS = [
   'weaponCategory',
   'attackType',
   'damage',
+  'extraDamage',
   'properties',
   'thrown',
   'ammunition',
@@ -106,7 +110,20 @@ export function weaponDetailsProblem(details: unknown): Problem {
     return 'Выберите, рукопашное оружие или дальнобойное';
   if (!isDamage(d.damage))
     return `Урон — от 1 до ${WEAPON_DICE_MAX} костей к4–к12 или число, и тип урона`;
+  if (
+    !Array.isArray(d.extraDamage) ||
+    d.extraDamage.length > WEAPON_EXTRA_DAMAGE_MAX ||
+    !d.extraDamage.every(isDamage)
+  )
+    return `Дополнительный урон — до ${WEAPON_EXTRA_DAMAGE_MAX} частей: от 1 до ${WEAPON_DICE_MAX} костей к4–к12 или число, и тип урона`;
   if (!isFlags(d.properties)) return 'Неизвестное свойство оружия';
+  const has = (property: string) =>
+    (d.properties as string[]).includes(property) ||
+    (property in d && d[property] !== null);
+  if (d.attackType === 'melee' && RANGED_ONLY_PROPERTIES.some(has))
+    return 'Боеприпас и Перезарядка бывают только у дальнобойного оружия';
+  if (d.attackType === 'ranged' && MELEE_ONLY_PROPERTIES.some(has))
+    return 'Досягаемость и Универсальное бывают только у рукопашного оружия';
   if (d.thrown !== null && !isRange(d.thrown))
     return `Дистанция метания — от 5 до ${WEAPON_RANGE_MAX} фт., кратно 5, наибольшая не меньше обычной`;
   if (d.ammunition !== null) {

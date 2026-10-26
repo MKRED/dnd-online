@@ -7,7 +7,7 @@ import {
   type ItemCategory,
 } from 'shared';
 import type { EquipmentFormValues } from './equipmentFormValues';
-import type { WeaponPropertyChip } from './weaponFormValues';
+import { chipFits, type WeaponPropertyChip } from './weaponPropertyChips';
 
 // Правила полей экипировки для useForm — те же, что у сервера (itemEquipmentCheck в
 // shared), тексты короче: каждый стоит под своим полем.
@@ -29,12 +29,15 @@ const when =
   (value: V, values: Values) =>
     values.category === category ? rule(value, values) : null;
 
-const withChip = (
+const withChip = <V = NumberValue>(
   chip: WeaponPropertyChip,
-  rule: (value: NumberValue, values: Values) => string | null,
+  rule: (value: V, values: Values) => string | null,
 ) =>
-  when<NumberValue>('weapon', (value, values) =>
-    values.weapon.properties.includes(chip) ? rule(value, values) : null,
+  when<V>('weapon', (value, values) =>
+    values.weapon.properties.includes(chip) &&
+    chipFits(chip, values.weapon.attackType)
+      ? rule(value, values)
+      : null,
   );
 
 const normalRange = (value: NumberValue) =>
@@ -51,12 +54,18 @@ const longRange = (normal: NumberValue) => (value: NumberValue) => {
 const diceCount = (value: NumberValue) =>
   intIn(value, 1, WEAPON_DICE_MAX) ? null : `От 1 до ${WEAPON_DICE_MAX}`;
 
+const damageType = (value: string | null) =>
+  value === null ? 'Выберите тип урона' : null;
+
 export const equipmentRules = {
   weapon: {
     damageCount: when<NumberValue>('weapon', diceCount),
-    damageType: when<string | null>('weapon', (value) =>
-      value === null ? 'Выберите тип урона' : null,
-    ),
+    damageType: when<string | null>('weapon', damageType),
+    // Правила списка Mantine применяет к каждой строке.
+    extraDamage: {
+      count: when<NumberValue>('weapon', diceCount),
+      type: when<string | null>('weapon', damageType),
+    },
     thrownNormal: withChip('thrown', normalRange),
     thrownLong: withChip('thrown', (value, values) =>
       longRange(values.weapon.thrownNormal)(value),
@@ -65,10 +74,8 @@ export const equipmentRules = {
     ammoLong: withChip('ammunition', (value, values) =>
       longRange(values.weapon.ammoNormal)(value),
     ),
-    ammoKind: when<string | null>('weapon', (value, values) =>
-      values.weapon.properties.includes('ammunition') && value === null
-        ? 'Выберите боеприпас'
-        : null,
+    ammoKind: withChip<string | null>('ammunition', (value) =>
+      value === null ? 'Выберите боеприпас' : null,
     ),
     versatileCount: withChip('versatile', diceCount),
   },

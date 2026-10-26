@@ -104,6 +104,43 @@ describe('weaponDetailsProblem', () => {
     ).not.toBeNull();
   });
 
+  it('дополнительный урон — до двух частей', () => {
+    const fire = { count: 2, die: 4, type: 'fire' };
+    const necrotic = { count: 4, die: null, type: 'necrotic' };
+    expect(
+      weaponDetailsProblem({ ...longsword, extraDamage: [fire, necrotic] }),
+    ).toBeNull();
+    expect(
+      weaponDetailsProblem({
+        ...longsword,
+        extraDamage: [fire, necrotic, fire],
+      }),
+    ).toMatch(/^Дополнительный урон — до 2 частей/);
+    expect(
+      weaponDetailsProblem({
+        ...longsword,
+        extraDamage: [{ ...fire, type: 'holy' }],
+      }),
+    ).not.toBeNull();
+  });
+
+  it('свойства стрельбы — только у дальнобойного, досягаемость — у рукопашного', () => {
+    expect(
+      weaponDetailsProblem({
+        ...longsword,
+        ammunition: { normal: 80, long: 320, kind: 'arrow' },
+      }),
+    ).toBe('Боеприпас и Перезарядка бывают только у дальнобойного оружия');
+    expect(
+      weaponDetailsProblem({ ...longsword, properties: ['loading'] }),
+    ).toBe('Боеприпас и Перезарядка бывают только у дальнобойного оружия');
+    expect(
+      weaponDetailsProblem({ ...fromBook('longbow'), properties: ['reach'] }),
+    ).toBe('Досягаемость и Универсальное бывают только у рукопашного оружия');
+    // Метательное и Фехтовальное — у обоих видов, как у дротика.
+    expect(weaponDetailsProblem(fromBook('dart'))).toBeNull();
+  });
+
   it('бонус магии от 0 до 3', () => {
     expect(weaponDetailsProblem({ ...longsword, magicBonus: 3 })).toBeNull();
     expect(weaponDetailsProblem({ ...longsword, magicBonus: 4 })).toBe(

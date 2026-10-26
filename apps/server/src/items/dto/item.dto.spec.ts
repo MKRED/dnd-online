@@ -182,6 +182,7 @@ describe('ItemDto', () => {
       weaponCategory: 'martial',
       attackType: 'melee',
       damage: { count: 1, die: 8, type: 'slashing' },
+      extraDamage: [],
       properties: [],
       thrown: null,
       ammunition: null,
@@ -224,6 +225,22 @@ describe('ItemDto', () => {
       ).toEqual({
         details: [
           'Дистанция метания — от 5 до 1000 фт., кратно 5, наибольшая не меньше обычной',
+        ],
+      });
+    });
+
+    it('боеприпас у рукопашного оружия — 400 с текстом', async () => {
+      expect(
+        await errorsOf({
+          category: 'weapon',
+          details: {
+            ...longsword,
+            ammunition: { normal: 80, long: 320, kind: 'arrow' },
+          },
+        }),
+      ).toEqual({
+        details: [
+          'Боеприпас и Перезарядка бывают только у дальнобойного оружия',
         ],
       });
     });

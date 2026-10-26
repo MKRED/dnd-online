@@ -22,6 +22,7 @@ import ObjectCardBody from './ObjectCardBody';
 import { objectInfo } from './objectInfo';
 import CardSheet from './CardSheet';
 import CardWindowFrame from './CardWindowFrame';
+import { saveCardHeight } from './cardHeight';
 import type { CardWindow, CardWindows as Windows } from './useCardWindows';
 import { useWatchOnly } from '../combat/MoveModeContext';
 
@@ -224,7 +225,16 @@ function CardWindows({
           y={window.y}
           z={index}
           minimized={window.minimized}
+          height={window.height}
           onMove={(x, y) => windows.update(window.key, { x, y })}
+          onResize={(height, done) => {
+            windows.update(window.key, { height });
+            if (done) saveCardHeight(height);
+          }}
+          onFit={() => {
+            windows.update(window.key, { height: 'fit' });
+            saveCardHeight(null);
+          }}
           onMinimize={(minimized) => windows.update(window.key, { minimized })}
           onClose={() => windows.close(window.key)}
           onRaise={() => windows.raise(window.key)}

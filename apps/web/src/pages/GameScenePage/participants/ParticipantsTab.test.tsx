@@ -83,7 +83,7 @@ describe('участники', () => {
     });
   });
 
-  it('строки показывают хиты и метку; щелчок выбирает; бой мастера сверху', async () => {
+  it('строки показывают хиты и метку; щелчок выбирает', async () => {
     const onSelectCreature = vi.fn();
     renderWithProviders(
       <ParticipantsTab
@@ -92,7 +92,6 @@ describe('участники', () => {
         selectedKey={null}
         onSelectHero={() => {}}
         onSelectCreature={onSelectCreature}
-        combat={<span>Бой мастера</span>}
         errors={[null]}
         selected={null}
       />,
@@ -115,7 +114,6 @@ describe('участники', () => {
     expect(screen.getByLabelText('Скрыт от игроков')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Гоблин' }));
     expect(onSelectCreature).toHaveBeenCalledWith('2');
-    expect(screen.getByText('Бой мастера')).toBeInTheDocument();
   });
 
   it('уникальные — своей группой; одинаковые — одной строкой, выбранный раскрывает её', async () => {

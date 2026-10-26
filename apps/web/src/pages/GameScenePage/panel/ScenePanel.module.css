@@ -98,3 +98,27 @@
     border-top: 1px solid var(--mantine-color-default-border);
   }
 }
+
+/* Группа вкладки «Сцена» (замечания после первой партии, вариант Б): рамка с подписью,
+   в бою рамка «Боя» цвета темы. */
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  padding: 8px 10px 10px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+}
+
+.groupHot {
+  border-color: var(--mantine-primary-color-filled);
+}
+
+.groupTitle {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+}

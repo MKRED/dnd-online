@@ -25,9 +25,12 @@ export async function createScene(
   masterId: string,
   map: MapRow,
   active: boolean,
-  // Настройки тумана перезапущенной сцены переходят в новую копию; у новой сцены —
-  // по умолчанию (туман выключен).
-  fog?: Pick<SceneRow, 'fog' | 'sightRange'>,
+  // Настройки тумана перезапущенной сцены переходят в новую копию. У новой сцены туман
+  // включён (замечания после первой партии, 2026-10-26): выключенный забывали включить,
+  // и игроки видели всю карту.
+  fog: Pick<SceneRow, 'fog'> & Partial<Pick<SceneRow, 'sightRange'>> = {
+    fog: true,
+  },
 ): Promise<{ scene: SceneRow; libraryCopied: number }> {
   const [scene] = await tx
     .insert(gameScenes)

@@ -5,6 +5,7 @@ import {
   IconUsers,
   IconUsersGroup,
 } from '@tabler/icons-react';
+import { Alert } from '@mantine/core';
 import { useEffect, type ReactNode } from 'react';
 import type { GameSceneStatus, MapObjectRefsView } from 'shared';
 import type { ObjectImagePaths } from '../../../features/maps/MapScene';
@@ -114,18 +115,6 @@ function GameScenePanel({
       onOpenCreature={(key) =>
         onOpenCard({ kind: 'creature', objectId: Number(key) })
       }
-      combat={
-        master &&
-        figures && (
-          <CombatControls
-            mode={figures.mode}
-            round={figures.round}
-            onMode={tool.mode}
-            onRound={tool.round}
-            busy={tool.busy}
-          />
-        )
-      }
       errors={[tool.error, cards.walk.error]}
       selected={
         hasSelection && (
@@ -196,6 +185,21 @@ function GameScenePanel({
           error={open.error}
           onOpenChange={open.setOpen}
           fog={fog}
+          combat={
+            figures && (
+              <>
+                <CombatControls
+                  mode={figures.mode}
+                  round={figures.round}
+                  onMode={tool.mode}
+                  onRound={tool.round}
+                  busy={tool.busy}
+                />
+                {tool.error && <Alert color="red">{tool.error}</Alert>}
+              </>
+            )
+          }
+          fighting={figures?.mode === 'tactical'}
         />
       ),
     });

@@ -1,6 +1,7 @@
 import { Alert, NumberInput, Stack, Switch, Text } from '@mantine/core';
 import { useState } from 'react';
 import { SIGHT_RANGE_MAX, SIGHT_RANGE_STEP } from 'shared';
+import FogOffConfirm from './FogOffConfirm';
 import type { SceneFogControls } from './useSceneFog';
 
 // Дальность — по клетке (5 футов) и не больше предела замера (docs/plan/done/fog-of-war.md).
@@ -9,9 +10,11 @@ function roundRange(value: number): number {
   return Math.min(SIGHT_RANGE_MAX, Math.max(SIGHT_RANGE_STEP, stepped));
 }
 
-// Блок «Туман войны» в панели сцены мастера (docs/plan/done/fog-of-war.md, этап 6): включить
-// туман, дальность обзора и «Глазами игроков».
+// Группа «Туман войны» во вкладке «Сцена» (docs/plan/done/fog-of-war.md, этап 6): включить
+// туман и дальность обзора. Выключить — только после предупреждения (замечания после первой
+// партии, 2026-10-26): выключенный туман сразу открывает игрокам всю сцену.
 function FogPanel({ fog }: { fog: SceneFogControls }) {
+  const [asking, setAsking] = useState(false);
   // Набираемая дальность: сохраняется по Enter и при уходе из поля, не на каждую цифру.
   const [draft, setDraft] = useState<number | string>(fog.sightRange);
   const [shown, setShown] = useState(fog.sightRange);
@@ -35,12 +38,14 @@ function FogPanel({ fog }: { fog: SceneFogControls }) {
           label="Туман войны"
           checked={fog.fogOn}
           disabled={fog.busy}
-          onChange={(e) =>
-            fog.save({
-              enabled: e.currentTarget.checked,
-              sightRange: fog.sightRange,
-            })
-          }
+          onChange={(e) => {
+            if (e.currentTarget.checked) {
+              setAsking(false);
+              fog.save({ enabled: true, sightRange: fog.sightRange });
+            } else {
+              setAsking(true);
+            }
+          }}
         />
         <Text size="xs" c="dimmed">
           {fog.fogOn
@@ -48,6 +53,15 @@ function FogPanel({ fog }: { fog: SceneFogControls }) {
             : 'Игроки видят всю сцену.'}
         </Text>
       </Stack>
+      {asking && fog.fogOn && (
+        <FogOffConfirm
+          onConfirm={() => {
+            setAsking(false);
+            fog.save({ enabled: false, sightRange: fog.sightRange });
+          }}
+          onCancel={() => setAsking(false)}
+        />
+      )}
       {fog.fogOn && (
         <NumberInput
           label="Дальность обзора, фт"
@@ -66,19 +80,6 @@ function FogPanel({ fog }: { fog: SceneFogControls }) {
           size="xs"
         />
       )}
-      <Stack gap={4}>
-        <Switch
-          label="Глазами игроков"
-          checked={fog.eyes}
-          disabled={!fog.fogOn}
-          onChange={(e) => fog.setEyes(e.currentTarget.checked)}
-        />
-        <Text size="xs" c="dimmed">
-          {fog.fogOn
-            ? 'Сцена, как её сейчас видят игроки. Править в этом режиме нельзя.'
-            : 'Доступно, когда включён туман войны.'}
-        </Text>
-      </Stack>
       {fog.error && <Alert color="red">{fog.error}</Alert>}
     </Stack>
   );

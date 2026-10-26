@@ -111,3 +111,16 @@ export async function createSceneGame<
 export async function startSession(master: request.Agent, gameId: string) {
   await master.post(`/api/games/${gameId}/session`).expect(201);
 }
+
+// Новая сцена — с туманом войны (замечания после первой партии, 2026-10-26). Проверкам того,
+// что скрыто от игрока самим мастером, туман только мешает: его выключают.
+export async function fogOff(
+  master: request.Agent,
+  gameId: string,
+  sceneId: string,
+) {
+  await master
+    .put(`/api/games/${gameId}/scenes/${sceneId}/fog`)
+    .send({ enabled: false, sightRange: 60 })
+    .expect(200);
+}

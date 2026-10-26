@@ -1,7 +1,11 @@
 import { Anchor, Loader, Stack, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import classes from '../BlockPicker/BlockPicker.module.css';
-import { toCatalogChoice, type CatalogKind } from '../objects/catalogChoice';
+import {
+  toCatalogChoice,
+  type CatalogFound,
+  type CatalogKind,
+} from '../objects/catalogChoice';
 import { useMapCatalogSearch } from '../objects/useMapCatalogSearch';
 import ObjectTile from './ObjectTile';
 import type { ObjectChoice } from './placeChoice';
@@ -32,6 +36,9 @@ interface CatalogTabProps {
   onPick: (choice: ObjectChoice) => void;
   // Только контейнеры-обстановка — для вкладки «Контейнеры» (этап 11).
   onlyContainers?: boolean;
+  // Только эти записи (вкладки окна существ: обычные, уникальные) и что сказать, если их нет.
+  filter?: (entry: CatalogFound) => boolean;
+  emptyText?: string;
 }
 
 const CATALOG_PAGE = 20;
@@ -47,6 +54,8 @@ function CatalogTab({
   current,
   onPick,
   onlyContainers = false,
+  filter,
+  emptyText,
 }: CatalogTabProps) {
   const { found, last, error } = useMapCatalogSearch(kinds, q);
   if (error)
@@ -57,7 +66,10 @@ function CatalogTab({
     );
   if (!found && !last.length) return <Loader size="sm" />;
   const all = found ?? last;
-  const list = onlyContainers ? all.filter((entry) => entry.container) : all;
+  const list = all.filter(
+    (entry) =>
+      (!onlyContainers || entry.container) && (!filter || filter(entry)),
+  );
   if (!list.length)
     return (
       <Text size="sm" c="dimmed">
@@ -65,7 +77,7 @@ function CatalogTab({
           ? 'Ничего не нашлось.'
           : onlyContainers
             ? 'Своих контейнеров нет — в «Обстановке» выберите вид «Контейнер».'
-            : EMPTY[choiceKind(kinds[0])]}
+            : (emptyText ?? EMPTY[choiceKind(kinds[0])])}
       </Text>
     );
   return (

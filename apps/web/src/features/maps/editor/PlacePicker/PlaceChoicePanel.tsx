@@ -45,6 +45,8 @@ interface PlaceChoicePanelProps {
   empty: boolean;
   // ✕ — снять выбранное, как Esc.
   onClear: () => void;
+  // Сцена игры: окно без существ — их ставят «Существа».
+  withoutCreatures?: boolean;
 }
 
 // Вид ставящегося словом — под именем на карточке «Что ставить».
@@ -172,6 +174,7 @@ function PlaceChoicePanel(props: PlaceChoicePanelProps) {
             current={current}
             recent={recent}
             blocksOnly={blocksOnly}
+            withoutCreatures={props.withoutCreatures}
             onPickBlock={(name) => {
               props.onPickBlock(name);
               props.onClose();

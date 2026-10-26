@@ -25,6 +25,11 @@ interface EditorPanelProps {
   walkPanel?: ReactNode;
   // Объекты инструмента «Поставить»: как ставить, свойства выделенного, список.
   objectsPanel: ReactNode;
+  // Сцена игры: панель «Существ» и выбранное в «Просмотре» (под «Под курсором»).
+  creaturesPanel?: ReactNode;
+  viewPanel?: ReactNode;
+  // Сцена игры: в окне «Строить» нет существ — их ставят «Существа».
+  withoutCreatures?: boolean;
   // Ставящийся объект; null — блок.
   objectChoice: ObjectChoice | null;
   // Карта и клетка под курсором: «Под курсором» в «Просмотре» и подсчёт области до
@@ -40,6 +45,9 @@ function EditorPanel({
   editor,
   walkPanel,
   objectsPanel,
+  creaturesPanel,
+  viewPanel,
+  withoutCreatures,
   objectChoice,
   state,
   hover,
@@ -60,13 +68,21 @@ function EditorPanel({
     <Stack gap="sm">
       <ToolHeader
         tool={tool}
+        tools={editor.tools}
         hint={
           narrow
             ? editor.anchor
               ? 'Касание — второй угол'
               : editor.placeEmpty
                 ? EMPTY_PLACE_HINT
-                : firstClickHint(tool, eraseMode, objectChoice !== null, true)
+                : firstClickHint(
+                    tool,
+                    eraseMode,
+                    tool === 'creatures'
+                      ? editor.placesCreature
+                      : objectChoice !== null,
+                    true,
+                  )
             : undefined
         }
       />
@@ -75,6 +91,8 @@ function EditorPanel({
       <AnchorCard editor={editor} state={state} hover={hover} />
 
       {tool === 'view' && <CursorBlockCard state={state} hover={hover} />}
+      {tool === 'view' && viewPanel}
+      {tool === 'creatures' && creaturesPanel}
 
       {tool === 'erase' && (
         <EraseModePicker mode={eraseMode} onChange={editor.setEraseMode} />
@@ -100,6 +118,7 @@ function EditorPanel({
           onSelectRecent={editor.selectRecent}
           empty={editor.placeEmpty}
           onClear={editor.clearPlace}
+          withoutCreatures={withoutCreatures}
         />
       )}
 

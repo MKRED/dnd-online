@@ -23,6 +23,7 @@ function setup() {
         refs: null,
         figures: null,
         canPick: true,
+        canWalk: true,
         figureId,
         clearFigure,
         reloadFigures: () => {},

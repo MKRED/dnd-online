@@ -5,6 +5,7 @@ import { blocksText, sizeText, type RegionPreview } from '../regionPreview';
 // Строка под названием инструмента в шапке свойств (docs/plan/done/scene-page.md, этап 3).
 export const TOOL_SUMMARIES: Record<EditorTool, string> = {
   view: 'Смотреть и выбирать, карту не меняет',
+  creatures: 'Ставить и двигать героев, НПС и монстров',
   place: 'Повторная клавиша — следующий режим',
   erase: 'Повторная клавиша — следующий режим',
   fill: 'Два угла — сплошной блок',
@@ -48,6 +49,10 @@ function mouseHint(
   switch (tool) {
     case 'view':
       return 'Двойной клик — центр вращения сюда';
+    case 'creatures':
+      return placesObject
+        ? 'Щелчок по клетке — поставить существо'
+        : 'Щелчок по существу — выбрать, по клетке — переставить';
     case 'place':
       return placesObject
         ? 'Щелчок по клетке — поставить объект'

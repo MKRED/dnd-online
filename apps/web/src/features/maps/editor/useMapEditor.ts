@@ -27,6 +27,21 @@ import { nextEraseMode, type EraseMode } from './eraseModes';
 import { blockSceneEditor, type Anchor } from './blockSceneEditor';
 import type { WalkTest } from '../walkTest';
 import type { ObjectTool } from './objects';
+import { recentInScope } from './objects/objectScope';
+
+type ToolObjects = Pick<
+  ObjectTool,
+  | 'pick'
+  | 'extent'
+  | 'ghost'
+  | 'rotate'
+  | 'remove'
+  | 'escape'
+  | 'choose'
+  | 'settings'
+  | 'selected'
+  | 'scope'
+>;
 
 interface MapEditorOptions {
   state: SizedMapState | null;
@@ -38,18 +53,10 @@ interface MapEditorOptions {
   walk?: Pick<WalkTest, 'pick' | 'preview'>;
   // Объекты инструмента «Поставить»: клики по клеткам, когда ставится объект, и клавиши
   // R, Del, Esc при выделенном объекте уходят ему.
-  objects: Pick<
-    ObjectTool,
-    | 'pick'
-    | 'extent'
-    | 'ghost'
-    | 'rotate'
-    | 'remove'
-    | 'escape'
-    | 'choose'
-    | 'settings'
-    | 'selected'
-  >;
+  objects: ToolObjects;
+  // Монстры и НПС инструмента «Существа» (сцена игры): клики по клеткам и клавиши R, Del,
+  // Esc при нём уходят им. Нет — нет и инструмента.
+  creatures?: ToolObjects;
   // false — инструменты спрятаны (открыта панель размера): клавиши 1–8, R и Del молчат.
   keysActive: boolean;
   // Инструменты на полосе, по порядку; без него — все (EDITOR_TOOLS).
@@ -77,6 +84,7 @@ export function useMapEditor({
   redo,
   walk,
   objects,
+  creatures,
   keysActive,
   tools = EDITOR_TOOLS,
 }: MapEditorOptions) {
@@ -161,6 +169,12 @@ export function useMapEditor({
         if (pickerOpen) return;
         setAnchor(null);
         setNotice(null);
+        // У «Существ» Esc снимает выбранное существо или ставящееся.
+        if (tool === 'creatures' && creatures) {
+          if (creatures.selected !== null) creatures.escape();
+          else creatures.choose(null);
+          return;
+        }
         // Сначала бросается перенос и выделение поставленного, следующий Esc снимает
         // то, что ставится.
         if (tool !== 'place') return;
@@ -178,16 +192,19 @@ export function useMapEditor({
     {
       ...toolKeys(tools, keyTool),
       KeyR: () =>
-        objectFirst
-          ? objects.rotate()
-          : setRotation(
-              (r) => ROTATIONS[(ROTATIONS.indexOf(r) + 1) % ROTATIONS.length],
-            ),
+        tool === 'creatures'
+          ? creatures?.rotate()
+          : objectFirst
+            ? objects.rotate()
+            : setRotation(
+                (r) => ROTATIONS[(ROTATIONS.indexOf(r) + 1) % ROTATIONS.length],
+              ),
       Delete: () => {
         if (tool === 'place') objects.remove();
+        if (tool === 'creatures') creatures?.remove();
       },
       KeyB: () => {
-        if (buildsBlocks(tool)) setPickerOpen(true);
+        if (buildsBlocks(tool) || tool === 'creatures') setPickerOpen(true);
       },
     },
     // Пока открыто окно «Что поставить», цифры не должны менять инструмент за ним.
@@ -205,8 +222,27 @@ export function useMapEditor({
   const placesObject = objects.settings.choice !== null;
   const placesNothing = tool === 'place' && placeEmpty && !placesObject;
   const hasSelection = objects.selected !== null;
+  const creaturePick = creatures?.pick;
+  const creatureExtent = creatures?.extent;
+  const creatureGhost = creatures?.ghost;
+  // Щелчок по клетке «Существ» что-то делает, только когда существо ставят или выбрано.
+  const creaturesIdle =
+    !creatures ||
+    (creatures.settings.choice === null && creatures.selected === null);
   const sceneEditor = useMemo<SceneEditor | null>(() => {
     if (tool === 'view' || !state) return null;
+    if (tool === 'creatures') {
+      if (!creaturePick) return null;
+      return {
+        tool,
+        anchor: null,
+        height,
+        onPick: creaturePick,
+        extent: creatureExtent,
+        ghost: creatureGhost,
+        idle: creaturesIdle,
+      };
+    }
     // Пустое «Поставить»: щелчок мимо только снимает выделение, как у объектов.
     if (placesNothing) {
       return {
@@ -270,6 +306,10 @@ export function useMapEditor({
     placesObject,
     placesNothing,
     hasSelection,
+    creaturePick,
+    creatureExtent,
+    creatureGhost,
+    creaturesIdle,
   ]);
 
   return {
@@ -288,12 +328,26 @@ export function useMapEditor({
       applyObject(choice);
       remember({ type: 'object', choice });
     },
+    // Существо из недавних в панели «Существ».
+    selectCreatureRecent: (recent: RecentPlace) => {
+      if (recent.type === 'object') creatures?.choose(recent.choice);
+    },
+    // Существо из окна «Какое существо поставить».
+    pickCreature: (choice: ObjectChoice) => {
+      creatures?.choose(choice);
+      remember({ type: 'object', choice });
+    },
     // «Поставить» без выбранного (✕ на карточке «Ставить» или Esc).
     placeEmpty: placesNothing,
     clearPlace,
     // Из недавних в панели — порядок не меняется.
     selectRecent: applyRecent,
-    recentPlace,
+    // Недавние «Строить» — без существ, если их ставит «Существа»; недавние «Существ».
+    recentPlace: recentPlace.filter((r) => recentInScope(objects.scope, r)),
+    creatureRecent: recentPlace.filter((r) => recentInScope('creatures', r)),
+    // «Существа» ставят новое существо: подсказки говорят «поставить».
+    placesCreature: (creatures?.settings.choice ?? null) !== null,
+    tools,
     pickerOpen,
     setPickerOpen,
     rotation,

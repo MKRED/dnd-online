@@ -20,9 +20,16 @@ interface ObjectsPanelProps {
 // Панель инструмента «Объекты»: сверху — что ставить или свойства выделенного, ниже —
 // список «На карте» (docs/plan/done/map-objects.md, «Редактор: один инструмент»).
 function ObjectsPanel({ tool, state, refs, busy, onFocus }: ObjectsPanelProps) {
+  // «На карте» — только то, что инструмент берёт: на сцене игры у «Строить» без существ.
+  const { accepts } = tool;
   const summaries = useMemo(
-    () => summarizeObjects(state, state.objects.byId.values(), refs),
-    [state, refs],
+    () =>
+      summarizeObjects(
+        state,
+        [...state.objects.byId.values()].filter(accepts),
+        refs,
+      ),
+    [state, refs, accepts],
   );
   const { selected } = tool;
 

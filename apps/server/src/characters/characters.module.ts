@@ -12,6 +12,7 @@ import {
   CharacterEffectsController,
   CharacterEffectsService,
 } from './effects/index.js';
+import { EquipmentController, EquipmentService } from './equipment/index.js';
 import { InventoryController, InventoryService } from './inventory/index.js';
 
 @Module({
@@ -19,6 +20,7 @@ import { InventoryController, InventoryService } from './inventory/index.js';
   controllers: [
     CharactersController,
     InventoryController,
+    EquipmentController,
     CharacterEffectsController,
     CharacterAbilitiesController,
   ],
@@ -26,6 +28,7 @@ import { InventoryController, InventoryService } from './inventory/index.js';
     CharactersService,
     CharacterAccessService,
     InventoryService,
+    EquipmentService,
     CharacterEffectsService,
     CharacterAbilitiesService,
   ],

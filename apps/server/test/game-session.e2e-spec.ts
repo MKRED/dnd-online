@@ -189,6 +189,13 @@ describe('game session (e2e)', () => {
             .post(`${base}/items/${entry.id}/move`)
             .send({ location: 'stash', quantity: 1 }),
       ],
+      [
+        'надеть',
+        () =>
+          owner.put(`${base}/equipment/meleeMain`).send({ entryId: entry.id }),
+      ],
+      ['снять', () => owner.delete(`${base}/equipment/meleeMain`)],
+      ['настроиться', () => owner.put(`${base}/items/${entry.id}/attunement`)],
       ['убрать предмет', () => owner.delete(`${base}/items/${entry.id}`)],
       [
         'отметить способность',

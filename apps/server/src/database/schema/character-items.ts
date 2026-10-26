@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  boolean,
   check,
   index,
   integer,
@@ -32,6 +33,10 @@ export const characterItems = pgTable(
       .$type<InventoryLocation>()
       .notNull(),
     quantity: integer('quantity').notNull(),
+    // Настройка на магический предмет (docs/dnd/weapons-armor.md, «Настройка»): у строки, а
+    // не у места куклы — по правилам 2024 снятый предмет настройку не теряет, а на две копии
+    // одного предмета не настраиваются.
+    attuned: boolean('attuned').notNull().default(false),
     // Порядок строк — по времени добавления; перенос и сложение его не меняют.
     addedAt: timestamp('added_at', { withTimezone: true })
       .notNull()

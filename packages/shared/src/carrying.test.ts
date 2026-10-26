@@ -11,6 +11,7 @@ function card(weight: number): InventoryItemCard {
     weight,
     isPublic: true,
     image: null,
+    equip: null,
   };
 }
 
@@ -23,6 +24,8 @@ function entry(
     id: 'e',
     location,
     quantity,
+    equipped: [],
+    attuned: false,
     item: card(weight),
     missing: null,
     inactive: false,
@@ -57,6 +60,8 @@ describe('carriedLoad', () => {
       id: 'h',
       location: 'carried',
       quantity: 4,
+      equipped: [],
+      attuned: false,
       item: null,
       missing: 'hidden',
     };
@@ -64,6 +69,8 @@ describe('carriedLoad', () => {
       id: 'd',
       location: 'stash',
       quantity: 1,
+      equipped: [],
+      attuned: false,
       item: null,
       missing: 'deleted',
     };

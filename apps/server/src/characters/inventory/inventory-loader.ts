@@ -1,5 +1,5 @@
 import { asc, eq, inArray } from 'drizzle-orm';
-import type { InventoryEntry } from 'shared';
+import type { EquipSlot, InventoryEntry } from 'shared';
 import type {
   DatabaseService,
   DbTransaction,
@@ -11,6 +11,7 @@ import {
   items,
 } from '../../database/schema/index.js';
 import { toItemLink } from '../../items/item-link.js';
+import { liveEquipment, loadEquipped } from '../equipment/equipment-read.js';
 
 type Db = DatabaseService['db'] | DbTransaction;
 type EntryRow = typeof characterItems.$inferSelect;
@@ -25,12 +26,15 @@ export function toInventoryEntry(
   image: ItemImageRow | null,
   viewerId: string,
   ownerId: string,
+  equipped: readonly EquipSlot[] = [],
 ): InventoryEntry {
+  const link = toItemLink(item, image, viewerId, ownerId);
   return {
     id: entry.id,
     location: entry.location,
     quantity: entry.quantity,
-    ...toItemLink(item, image, viewerId, ownerId),
+    ...liveEquipment(link, equipped, entry.attuned),
+    ...link,
   };
 }
 
@@ -56,9 +60,19 @@ export async function loadInventories(
     .where(inArray(characterItems.characterId, [...characterIds]))
     // id — тай-брейкер на случай одинакового времени.
     .orderBy(asc(characterItems.addedAt), asc(characterItems.id));
+  const equipped = await loadEquipped(db, characterIds);
   for (const { entry, ownerId, item, image } of rows) {
     const list = result.get(entry.characterId) ?? [];
-    list.push(toInventoryEntry(entry, item, image, viewerId, ownerId));
+    list.push(
+      toInventoryEntry(
+        entry,
+        item,
+        image,
+        viewerId,
+        ownerId,
+        equipped.get(entry.id),
+      ),
+    );
     result.set(entry.characterId, list);
   }
   return result;

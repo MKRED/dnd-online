@@ -9,6 +9,7 @@ import {
   type EffectLink,
   type GameLibraryKind,
   type Item,
+  itemEquip,
   type ItemCategory,
   type ItemLink,
   type ItemRarity,
@@ -138,6 +139,9 @@ function toNpc(row: LibraryRow, linked: LinkedRows): Character {
       id: link.sourceId ?? `deleted-${index}`,
       location: link.location,
       quantity: link.quantity,
+      // Кукла НПС в копию библиотеки пока не переносится — это этап 4 плана экипировки.
+      equipped: [],
+      attuned: false,
       ...itemLink(find('item', link.sourceId)),
     })),
     abilities: links.abilities.map((link, index) => ({
@@ -184,6 +188,12 @@ function itemLink(found: LibraryRow | 'hidden' | 'deleted'): ItemLink {
       weight: Number(found.record.weight) || 0,
       isPublic: true,
       image: found.image,
+      equip: itemEquip(
+        toItemVariant(
+          found.record.category as ItemCategory,
+          objectOf(found.record.details),
+        ),
+      ),
     },
     missing: null,
     inactive: false,

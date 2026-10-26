@@ -1,4 +1,5 @@
 import type { CatalogImage } from './catalogImage.js';
+import type { EquipSlot, ItemEquip } from './equipment.js';
 import type { ItemCategory, ItemRarity } from './items.js';
 
 // Инвентарь персонажа (docs/plan/done/character-inventory.md): строки ссылаются на предметы
@@ -18,6 +19,8 @@ export interface InventoryItemCard {
   weight: number;
   isPublic: boolean;
   image: CatalogImage | null;
+  // Куда предмет надевается на кукле; не экипировка — null.
+  equip: ItemEquip | null;
 }
 
 // Почему у строки нет карточки: автор скрыл предмет от смотрящего или удалил его.
@@ -41,6 +44,11 @@ export type InventoryEntry = {
   id: string;
   location: InventoryLocation;
   quantity: number;
+  // Места на кукле, где лежит эта строка (стопка из двух кинжалов — в двух руках).
+  equipped: EquipSlot[];
+  // Персонаж настроен на предмет (на одну копию стопки). Снятый предмет настройку не
+  // теряет — по правилам 2024.
+  attuned: boolean;
 } & ItemLink;
 
 // Добавить предмет каталога; тот же предмет в том же месте прибавляется к количеству.
@@ -63,4 +71,9 @@ export interface InventoryEntryPatch {
 export interface InventoryMoveInput {
   location: InventoryLocation;
   quantity: number;
+}
+
+// Надеть строку инвентаря на место куклы.
+export interface EquipInput {
+  entryId: string;
 }

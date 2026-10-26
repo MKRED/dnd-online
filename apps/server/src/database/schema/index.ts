@@ -14,6 +14,7 @@ export * from './items.js';
 export * from './item-images.js';
 export * from './item-pack-entries.js';
 export * from './character-items.js';
+export * from './character-equipment.js';
 export * from './abilities.js';
 export * from './effects.js';
 export * from './block-groups.js';

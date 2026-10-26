@@ -61,7 +61,7 @@ export async function findEntryAt(
 // Применить спланированное изменение строки (planEntryChange, planMove).
 export async function applyEntryChange(
   tx: DbTransaction,
-  entry: { id: string; characterId: string; itemId: string },
+  entry: { id: string; characterId: string; itemId: string; attuned: boolean },
   change: EntryChange,
 ): Promise<void> {
   if (change.kind === 'update') {
@@ -72,9 +72,14 @@ export async function applyEntryChange(
     return;
   }
   if (change.kind === 'merge') {
+    // Настройка едет вместе с вещью: на две копии одного предмета её не бывает
+    // (attuneProblem), так что сложение её не удваивает.
     await tx
       .update(characterItems)
-      .set({ quantity: change.quantity })
+      .set({
+        quantity: change.quantity,
+        ...(entry.attuned ? { attuned: true } : {}),
+      })
       .where(eq(characterItems.id, change.targetId));
     await tx.delete(characterItems).where(eq(characterItems.id, entry.id));
     return;

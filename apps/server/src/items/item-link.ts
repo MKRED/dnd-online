@@ -1,5 +1,6 @@
-import type { ItemLink } from 'shared';
+import { itemEquip, type ItemLink } from 'shared';
 import { toCatalogImage } from '../catalog/catalog-image.mapper.js';
+import { toItemVariant } from './items.mapper.js';
 import type { itemImages, items } from '../database/schema/index.js';
 
 type ItemRow = typeof items.$inferSelect;
@@ -30,6 +31,7 @@ export function toItemLink(
       weight: item.weight,
       isPublic: item.isPublic,
       image: toCatalogImage(image),
+      equip: itemEquip(toItemVariant(item.category, item.details)),
     },
     missing: null,
     inactive: !sees(ownerId),

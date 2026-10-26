@@ -11,6 +11,7 @@ const entry: EntryRow = {
   itemId: 'i1',
   location: 'carried',
   quantity: 2,
+  attuned: false,
   addedAt: new Date('2026-10-15T00:00:00Z'),
 };
 
@@ -40,6 +41,8 @@ describe('toInventoryEntry', () => {
       id: 'e1',
       location: 'carried',
       quantity: 2,
+      equipped: [],
+      attuned: false,
       missing: null,
       inactive: false,
       item: {
@@ -50,6 +53,7 @@ describe('toInventoryEntry', () => {
         weight: 5,
         isPublic: true,
         image: null,
+        equip: null,
       },
     });
   });
@@ -79,6 +83,8 @@ describe('toInventoryEntry', () => {
       id: 'e1',
       location: 'carried',
       quantity: 2,
+      equipped: [],
+      attuned: false,
       item: null,
       missing: 'hidden',
     });
@@ -108,5 +114,45 @@ describe('toInventoryEntry', () => {
         'owner',
       ),
     ).toMatchObject({ item: null, missing: 'deleted' });
+  });
+
+  describe('надетое и настройка', () => {
+    const ring = item({
+      name: 'Кольцо защиты',
+      category: 'jewelry',
+      rarity: 'rare',
+      details: { slot: 'ring', attunement: true },
+    });
+    const attuned = { ...entry, attuned: true };
+
+    it('места, куда предмет подходит, и настройка', () => {
+      expect(
+        toInventoryEntry(attuned, ring, null, 'owner', 'owner', ['ring2']),
+      ).toMatchObject({ equipped: ['ring2'], attuned: true });
+    });
+
+    // Автор поменял предмет после того, как его надели: место пусто, настройки нет.
+    it('место, куда предмет уже не подходит, и лишняя настройка пропадают', () => {
+      const cloak = item({
+        category: 'clothing',
+        details: { slot: 'cloak', attunement: false },
+      });
+      expect(
+        toInventoryEntry(attuned, cloak, null, 'owner', 'owner', ['ring2']),
+      ).toMatchObject({ equipped: [], attuned: false });
+    });
+
+    it('скрытый от владельца предмет не надет', () => {
+      expect(
+        toInventoryEntry(
+          attuned,
+          { ...ring, isPublic: false },
+          null,
+          'author',
+          'owner',
+          ['ring1'],
+        ),
+      ).toMatchObject({ equipped: [], attuned: false, inactive: true });
+    });
   });
 });

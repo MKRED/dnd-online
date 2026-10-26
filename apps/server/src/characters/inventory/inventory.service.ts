@@ -22,6 +22,7 @@ import {
   findEditableEntry,
   findEntryAt,
 } from './inventory-entries.js';
+import { pruneEquipment } from '../equipment/equipment-prune.js';
 import { loadInventory } from './inventory-loader.js';
 import { rowsToAdd } from './inventory-unpack.js';
 import {
@@ -163,7 +164,7 @@ export class InventoryService {
     const t0 = Date.now();
     const log = { userId, characterId, entryId };
     try {
-      const kind = await this.databaseService.db.transaction(async (tx) => {
+      const result = await this.databaseService.db.transaction(async (tx) => {
         // Блокировка персонажа: перенос со сложением читает соседнюю строку и не должен
         // гоняться с другой правкой того же инвентаря.
         await assertOwnedCharacter(tx, userId, characterId, {
@@ -178,10 +179,12 @@ export class InventoryService {
         const change = plan(entry, target);
         if ('error' in change) throw new BadRequestException(change.error);
         await applyEntryChange(tx, entry, change);
-        return change.kind;
+        // Вещь ушла в хранилище или её стало меньше — кукла её отпускает.
+        const unequipped = await pruneEquipment(tx, characterId);
+        return { kind: change.kind, unequipped };
       });
       this.logger.info(
-        { ...log, durationMs: Date.now() - t0, kind },
+        { ...log, durationMs: Date.now() - t0, ...result },
         'Inventory entry changed',
       );
       return await this.inventoryOf(userId, characterId);

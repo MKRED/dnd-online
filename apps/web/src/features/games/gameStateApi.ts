@@ -1,5 +1,6 @@
 import type {
   Character,
+  EquipSlot,
   GameCharacterChange,
   GameCreatureChange,
   GameCreatures,
@@ -31,6 +32,48 @@ export function changeGameCharacter(
     method: 'POST',
     body: JSON.stringify(change),
   });
+}
+
+// Кукла персонажа в игре (docs/plan/equipment.md, этап 4) — ответ листом целиком: КД и
+// атаки меняются вместе с ней.
+export function equipGameCharacter(
+  gameId: string,
+  characterId: string,
+  slot: EquipSlot,
+  entryId: string,
+): Promise<Character> {
+  return request(
+    `${gameCharacterBase(gameId, characterId)}/equipment/${slot}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ entryId }),
+    },
+  );
+}
+
+export function unequipGameCharacter(
+  gameId: string,
+  characterId: string,
+  slot: EquipSlot,
+): Promise<Character> {
+  return request(
+    `${gameCharacterBase(gameId, characterId)}/equipment/${slot}`,
+    {
+      method: 'DELETE',
+    },
+  );
+}
+
+export function attuneGameCharacter(
+  gameId: string,
+  characterId: string,
+  entryId: string,
+  attuned: boolean,
+): Promise<Character> {
+  return request(
+    `${gameCharacterBase(gameId, characterId)}/items/${entryId}/attunement`,
+    { method: attuned ? 'PUT' : 'DELETE' },
+  );
 }
 
 const creaturesBase = (gameId: string) => `/games/${gameId}/scene/creatures`;

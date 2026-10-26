@@ -81,6 +81,7 @@ export const CREATURE_KINDS: readonly GameEventKind[] = [
   'character.changed',
   'character.effect_added',
   'character.effect_removed',
+  'character.equipment',
   'creature.changed',
   'creature.effect_added',
   'creature.effect_removed',

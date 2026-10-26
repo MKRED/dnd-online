@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -8,24 +7,14 @@ import {
   Put,
   Req,
   UseGuards,
-  type PipeTransform,
 } from '@nestjs/common';
-import { EQUIP_SLOTS, type EquipSlot } from 'shared';
+import type { EquipSlot } from 'shared';
 import { AllowApiToken } from '../../api-tokens/allow-api-token.decorator.js';
 import { SessionOrApiTokenGuard } from '../../api-tokens/session-or-api-token.guard.js';
 import type { AuthenticatedRequest } from '../../auth/auth.guard.js';
 import { EquipDto } from './equipment.dto.js';
+import { ParseEquipSlotPipe } from './equipment-slot.pipe.js';
 import { EquipmentService } from './equipment.service.js';
-
-// Место куклы из адреса: неизвестное — 400.
-class ParseEquipSlotPipe implements PipeTransform<string, EquipSlot> {
-  transform(value: string): EquipSlot {
-    if (!(EQUIP_SLOTS as readonly string[]).includes(value)) {
-      throw new BadRequestException('Нет такого места на кукле');
-    }
-    return value as EquipSlot;
-  }
-}
 
 // Надетое и настройка читаются с инвентарём (GET /characters/:id), здесь — только правки.
 @Controller('characters/:characterId')

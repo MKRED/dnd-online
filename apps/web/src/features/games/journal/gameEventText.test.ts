@@ -327,6 +327,47 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'character.equipment',
+        intent: {
+          characterId: 'c1',
+          change: { kind: 'equip', slot: 'meleeOff', entryId: 'r1' },
+        },
+        result: { character: lira, item: { id: 'i1', name: 'Щит' }, freed: [] },
+      },
+      'Надето: Лира — Щит (вторая рука, ближний бой)',
+    ],
+    [
+      {
+        ...base,
+        kind: 'character.equipment',
+        as: { kind: 'master' },
+        intent: {
+          characterId: 'c1',
+          change: { kind: 'unequip', slot: 'body' },
+        },
+        result: { character: lira, item: null, freed: [] },
+      },
+      'Снято: Лира (тело)',
+    ],
+    [
+      {
+        ...base,
+        kind: 'character.equipment',
+        intent: {
+          characterId: 'c1',
+          change: { kind: 'end_attunement', entryId: 'r2' },
+        },
+        result: {
+          character: lira,
+          item: { id: 'i2', name: 'Кольцо защиты' },
+          freed: [],
+        },
+      },
+      'Настройка снята: Лира — Кольцо защиты',
+    ],
+    [
+      {
+        ...base,
         kind: 'figures.round',
         as: { kind: 'master' },
         intent: null,

@@ -90,6 +90,7 @@ export * from './game-socket.js';
 export * from './voxelModel/index.js';
 export * from './search.js';
 export * from './equipment.js';
+export * from './equipmentInPlay.js';
 export * from './equipmentRules.js';
 export * from './gear.js';
 export * from './gearArmorClass.js';

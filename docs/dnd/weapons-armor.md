@@ -124,7 +124,7 @@
 - Ближнее оружие — в ближний набор, дальнобойное — в дальний. Двуручное — только в основную руку и снимает вторую руку своего набора; пока оно там, во вторую руку ничего не надеть. Щит — вторая рука ближнего боя. Тело — доспех или одежда на тело. Метательное ближнее оружие (кинжал) — в ближнем наборе.
 - Вещь надевают только «При себе». Единственная вещь переезжает со старого места на новое; стопка (два кинжала) лежит в стольких местах, сколько её штук. Ушла в хранилище или её стало меньше — лишние места освобождаются сами.
 - **Настройка — у вещи, а не у места:** снятый предмет её не теряет, как в книге. Не больше трёх, не на две копии одного предмета, только у предмета «Требует настройки».
-- **Отступления (упрощение, решено в этой работе):** настройка — переключатель «Настроиться» на листе, без короткого отдыха: приложение время не ведёт, а вне игры лист правит только владелец. Настроиться можно только на вещь «При себе» (книга требует касания); убранная в хранилище настройку сохраняет — 24 часа и 100 футов приложение не считает, снять её владелец может сам. Смена куклы во время сессии закрыта, как весь лист, — бой и «одно оружие за атаку» будут на этапе 4.
+- **Отступления (упрощение, решено в этой работе):** настройка — переключатель «Настроиться» на листе, без короткого отдыха: приложение время не ведёт, а вне игры лист правит только владелец. Настроиться можно только на вещь «При себе» (книга требует касания); убранная в хранилище настройку сохраняет — 24 часа и 100 футов приложение не считает, снять её владелец может сам. На листе во время встречи кукла закрыта, как весь лист; в игре её меняют из окна карточки (раздел [«Экипировка в игре»](#экипировка-в-игре)).
 - Что кукла даёт числам — раздел ниже (этап 3); что дают надетые и настроенные магические предметы — этап 5.
 
 ## Числа от экипировки
@@ -142,3 +142,27 @@
 - **Упрощения:** боеприпасы не считаются; Перезарядка и мастерство — только отметки; оружие в обоих наборах показано сразу, без «какой набор в руках».
 
 **Где в коде:** `packages/shared/src/gear.ts` (`wornGear` — что надето), `gearArmorClass.ts` (`gearArmorClass`, `armorSpeedPenalty`), `gearAttacks.ts` (`gearAttacks`), `sheetTotals.ts` (`characterGearNumbers`, итог листа), `effectArmorClassTotal.ts` (щит и «базовый КД» эффекта); сервер — `apps/server/src/games/figures/figure-armor.ts` (Скорость фигурки); веб — `CharacterSheet/sheetArmorClass.ts`, `CharacterSheet/SheetAttacks/`, `CharacterSheet/AbilitiesView.tsx`, поле «КД без доспеха» в `CharacterForm/CombatSection.tsx`.
+
+## Экипировка в игре
+
+Этап 4 [плана](../plan/equipment.md). Проверено 2026-10-26, дословно по свободным правилам 2024 на D&D Beyond.
+
+**Источники:** [Equipment](https://www.dndbeyond.com/sources/dnd/free-rules/equipment) (раздел Armor), [Rules Glossary](https://www.dndbeyond.com/sources/dnd/free-rules/rules-glossary) (Attack, Utilize), [Playing the Game](https://www.dndbeyond.com/sources/dnd/free-rules/playing-the-game) (Interacting with Things, Time-Limited Object Interactions).
+
+**Правила 2024:**
+
+- Доспех: «The category determines how long it takes to don or doff the armor». Лёгкий — «1 Minute to Don or Doff», средний — «5 Minutes to Don and 1 Minute to Doff», тяжёлый — «10 Minutes to Don and 5 Minutes to Doff». Про сон в доспехе в главе ничего нет.
+- Щит: «Shield (Utilize Action to Don or Doff)».
+- Оружие, Attack: «You can either equip or unequip one weapon when you make an attack as part of this action. You do so either before or after the attack… Equipping a weapon includes drawing it from a sheath or picking it up. Unequipping a weapon includes sheathing, stowing, or dropping it.» Метательное достают при атаке («you can draw that weapon as part of the attack»), боеприпас — тоже («Drawing the ammunition is part of the attack»).
+- Взаимодействие с предметом: «You can interact with one object or feature of the environment for free, during either your move or action»; «If you want to interact with a second object, you need to take the Utilize action». В бою — «one free interaction per turn».
+- Настройка требует короткого отдыха (раздел [«Кукла: места и настройка»](#кукла-места-и-настройка)).
+
+**Как в приложении** (решено в этой работе по рекомендации, вариант А по обоим вопросам макета https://claude.ai/artifact/4nNreNzXuaTdpo2SwYtES2):
+
+- Во время встречи куклу меняют те же, кто водит фигурку: мастер, владелец и управляющий, — в окне карточки на сцене (вкладка «Вещи»). Вне встречи игрок из игры её не меняет, как и хиты; мастер — может. Правка пишется в лист владельца и остаётся после встречи.
+- **В бою** (тактический режим, «Начать бой») доспех не надеть и не снять — ни сам по себе, ни заменив его другой вещью на месте «Тело», — и настройку не сменить: раунд — 6 секунд, а это минуты и короткий отдых. Сервер отвечает 409. Это следствие из книги, а не её правило: книга просто не даёт на это времени в бою.
+- **Цена по книге — подсказка:** у оружия «при атаке или свободным взаимодействием», у щита — действие «Использование», у доспеха — время по категории. Действие не тратится: ходов и действий в игре ещё нет. У одежды и украшений правила о времени нет — подсказки тоже нет.
+- Запись журнала «Надето», «Снято», «Настройка», «Настройка снята» видна игрокам: партия видит своих целиком.
+- **НПС:** копия НПС в библиотеке игры приносит его куклу и настройку, КД и атаки в игре считаются по ней; место, которое копия предмета больше не занимает, пустеет. В игре кукла НПС только для чтения: её меняют на листе НПС и обновляют копию. У монстров куклы нет, только список снаряжения.
+
+**Где в коде:** `packages/shared/src/equipmentInPlay.ts` (`equipCost`, `combatEquipProblem`, `combatAttuneProblem`, `GameEquipmentChange`); сервер — `apps/server/src/games/characters/game-character-equipment.ts` и `game-character-equipment.controller.ts`, общие правки куклы — `characters/equipment/equipment-writes.ts`, кукла НПС в копии — `games/library/library-source-links.ts` и `library-record.ts`; веб — `SlotPicker.tsx` и `AttuneLine.tsx` в `features/characters/Equipment/` (проп `play`), окно карточки — `pages/GameScenePage/cardWindows/CardBodies.tsx`.

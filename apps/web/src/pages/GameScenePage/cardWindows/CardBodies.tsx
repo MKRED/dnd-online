@@ -1,9 +1,13 @@
 import { Alert, Loader, Stack, Text } from '@mantine/core';
-import type { GameCreature, GameFigure, MapObject } from 'shared';
+import type { Character, GameCreature, GameFigure, MapObject } from 'shared';
 import { CharacterSheetSection } from '../../../features/characters';
+import type { EquipmentPlay } from '../../../features/characters/Equipment';
 import {
+  attuneGameCharacter,
+  equipGameCharacter,
   prepareGameCreatureSpell,
   spendGameCreatureSlots,
+  unequipGameCharacter,
 } from '../../../features/games';
 import { MonsterCardSection } from '../../../features/monsters/MonsterCard';
 import CharacterStateCard from '../creatures/CharacterStateCard';
@@ -24,6 +28,8 @@ interface CharacterCardBodyProps {
   busy: boolean;
   // Герой отряда у игрока: только чтение (docs/plan/done/scene-page.md, этап 5).
   readOnly: boolean;
+  // Тактический режим: доспех и настройку не сменить (docs/plan/equipment.md, этап 4).
+  combat: boolean;
 }
 
 // Окно персонажа игрока: состояние сверху (то же, что в панели), под ним вкладки листа
@@ -36,6 +42,7 @@ export function CharacterCardBody({
   onAllowance,
   busy,
   readOnly,
+  combat,
 }: CharacterCardBodyProps) {
   return (
     <CharacterStateCard
@@ -45,7 +52,7 @@ export function CharacterCardBody({
       onOpenSheet={() => undefined}
       bare
       readOnly={readOnly}
-      below={(character, change) => (
+      below={(character, change, apply) => (
         <Stack gap="sm">
           {figure && (
             <MovementRow
@@ -67,6 +74,9 @@ export function CharacterCardBody({
                       change({ kind: 'spell_slots', expended }),
                   }
                 }
+                equipment={
+                  apply && gameEquipment(gameId, characterId, combat, apply)
+                }
               />
             )}
           />
@@ -74,6 +84,28 @@ export function CharacterCardBody({
       )}
     />
   );
+}
+
+// Кукла героя адресами игры: ответ — лист целиком, окно показывает его сразу.
+function gameEquipment(
+  gameId: string,
+  characterId: string,
+  combat: boolean,
+  apply: (next: Character) => void,
+): EquipmentPlay {
+  const applied = (next: Character) => {
+    apply(next);
+    return next.inventory;
+  };
+  return {
+    combat,
+    equip: (slot, entryId) =>
+      equipGameCharacter(gameId, characterId, slot, entryId).then(applied),
+    unequip: (slot) =>
+      unequipGameCharacter(gameId, characterId, slot).then(applied),
+    attune: (entryId, attuned) =>
+      attuneGameCharacter(gameId, characterId, entryId, attuned).then(applied),
+  };
 }
 
 interface CreatureCardBodyProps {

@@ -8,7 +8,12 @@ import type {
 } from 'shared';
 import { SheetModel } from '../CharacterModel';
 import { useInventoryEditor } from '../Inventory/useInventoryEditor';
-import { equipEntry, setAttunement, unequipSlot } from './equipmentApi';
+import {
+  equipEntry,
+  setAttunement,
+  unequipSlot,
+  type EquipmentPlay,
+} from './equipmentApi';
 import {
   anythingWorn,
   attunementLine,
@@ -30,10 +35,12 @@ type WithItem = InventoryEntry & { item: InventoryItemCard };
 
 interface EquipmentSectionProps {
   character: Character;
-  // Есть — автор надевает и снимает; нет — кукла только показывает надетое.
+  // Есть (или play) — надевают и снимают; нет — кукла только показывает надетое.
   onChange?: (inventory: InventoryEntry[]) => void;
   // false — без 3D-модели в центре (окно карточки на сцене игры): там силуэт.
   model?: boolean;
+  // Во время встречи правки идут адресами игры, с ценой по книге и запретом боя.
+  play?: EquipmentPlay;
 }
 
 const BUSY = 'equipment';
@@ -44,9 +51,10 @@ function EquipmentSection({
   character,
   onChange,
   model = true,
+  play,
 }: EquipmentSectionProps) {
   const { id, inventory } = character;
-  const editable = Boolean(onChange);
+  const editable = Boolean(onChange ?? play);
   const [open, setOpen] = useState<EquipSlot | null>(null);
   const { busyId, error, setError, run } = useInventoryEditor((next) =>
     onChange?.(next),
@@ -61,7 +69,8 @@ function EquipmentSection({
   const equip = async (slot: EquipSlot, entry: WithItem) => {
     const done = await run(
       BUSY,
-      () => equipEntry(id, slot, entry.id),
+      () =>
+        play ? play.equip(slot, entry.id) : equipEntry(id, slot, entry.id),
       'Не удалось надеть вещь',
     );
     if (done) setOpen(null);
@@ -69,7 +78,7 @@ function EquipmentSection({
   const unequip = async (slot: EquipSlot) => {
     const done = await run(
       BUSY,
-      () => unequipSlot(id, slot),
+      () => (play ? play.unequip(slot) : unequipSlot(id, slot)),
       'Не удалось снять вещь',
     );
     if (done) setOpen(null);
@@ -77,7 +86,10 @@ function EquipmentSection({
   const attune = (entry: WithItem, attuned: boolean) =>
     void run(
       BUSY,
-      () => setAttunement(id, entry.id, attuned),
+      () =>
+        play
+          ? play.attune(entry.id, attuned)
+          : setAttunement(id, entry.id, attuned),
       attuned ? 'Не удалось настроиться' : 'Не удалось снять настройку',
     );
 
@@ -104,6 +116,7 @@ function EquipmentSection({
           onEquip={(entry) => void equip(place, entry)}
           onUnequip={() => void unequip(place)}
           onAttune={attune}
+          play={play}
         />
       </SlotControl>
     );
@@ -116,6 +129,11 @@ function EquipmentSection({
           <Badge color="grape" variant="light">
             {attunementLine(inventory)}
           </Badge>
+          {play?.combat && (
+            <Badge color="orange" variant="light">
+              Бой: доспех и настройку не сменить
+            </Badge>
+          )}
           {editable && (
             <Text size="xs" c="dimmed">
               Нажмите на место, чтобы надеть или снять

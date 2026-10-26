@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { sheetTotals, type Character } from 'shared';
 import CharacterAbilities from '../Abilities';
 import type { SheetSpellActions } from '../Abilities/sheetSpellActions';
-import EquipmentSection from '../Equipment';
+import EquipmentSection, { type EquipmentPlay } from '../Equipment';
 import InventorySection from '../Inventory';
 import { AppliedEffectList, effectRows, traitRows } from '../AppliedEffects';
 import AbilitiesView from './AbilitiesView';
@@ -20,6 +20,8 @@ interface CharacterSheetSectionProps {
   section: SheetSection;
   // Ячейки и подготовка в игре (вариант А после первой партии): нет — только чтение.
   spellActions?: SheetSpellActions;
+  // Кукла в игре (docs/plan/equipment.md, этап 4): нет — только чтение.
+  equipment?: EquipmentPlay;
 }
 
 // Часть листа персонажа или НПС, только для чтения, кроме ячеек и подготовки заклинаний
@@ -29,6 +31,7 @@ function CharacterSheetSection({
   character,
   section,
   spellActions,
+  equipment,
 }: CharacterSheetSectionProps) {
   const totals = useMemo(() => sheetTotals(character), [character]);
   switch (section) {
@@ -62,7 +65,11 @@ function CharacterSheetSection({
       // Окно карточки узкое и не одно на сцене: кукла без 3D-модели, с силуэтом.
       return (
         <Stack gap="md">
-          <EquipmentSection character={character} model={false} />
+          <EquipmentSection
+            character={character}
+            model={false}
+            play={equipment}
+          />
           <InventorySection character={character} />
         </Stack>
       );

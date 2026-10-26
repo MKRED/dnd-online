@@ -1,30 +1,14 @@
-import {
-  BadRequestException,
-  HttpException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { and, eq, inArray } from 'drizzle-orm';
+import { HttpException, Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import {
-  attuneProblem,
-  planEquip,
-  type EquipSlot,
-  type InventoryEntry,
-} from 'shared';
+import type { EquipSlot, InventoryEntry } from 'shared';
 import { assertOwnedCharacter } from '../../character-images/character-image-access.js';
 import {
   DatabaseService,
   type DbTransaction,
 } from '../../database/database.service.js';
-import {
-  characterEquipment,
-  characterItems,
-} from '../../database/schema/index.js';
 import { assertSheetUnlocked } from '../../games/sheet-lock.js';
 import { loadInventory } from '../inventory/inventory-loader.js';
-import { INVENTORY_ENTRY_NOT_FOUND } from '../inventory/inventory.rules.js';
-import { asCandidate, wornOf } from './equipment-candidates.js';
+import { applyAttune, applyEquip, applyUnequip } from './equipment-writes.js';
 
 // Кукла и настройка персонажа (docs/plan/equipment.md, этап 2). Меняет только автор
 // персонажа и не во время сессии — как инвентарь; каждая правка отдаёт инвентарь целиком,
@@ -41,53 +25,22 @@ export class EquipmentService {
     return this.change(
       'Item equipped',
       { userId, characterId, slot, entryId },
-      async (tx, inventory) => {
-        const entry = findEntry(inventory, entryId);
-        const plan = planEquip(wornOf(inventory), asCandidate(entry), slot);
-        if ('error' in plan) throw new BadRequestException(plan.error);
-        if (plan.freed.length > 0) {
-          await tx
-            .delete(characterEquipment)
-            .where(
-              and(
-                eq(characterEquipment.characterId, characterId),
-                inArray(characterEquipment.slot, plan.freed),
-              ),
-            );
-        }
-        await tx
-          .insert(characterEquipment)
-          .values({ characterId, slot, entryId })
-          .onConflictDoUpdate({
-            target: [characterEquipment.characterId, characterEquipment.slot],
-            set: { entryId },
-          });
-        return { freed: plan.freed };
-      },
+      (tx, inventory) => applyEquip(tx, characterId, inventory, slot, entryId),
     );
   }
 
-  // Снять с места; пустое место — не ошибка: вторая вкладка могла снять раньше.
   unequip(userId: string, characterId: string, slot: EquipSlot) {
     return this.change(
       'Item unequipped',
       { userId, characterId, slot },
       async (tx) => {
-        await tx
-          .delete(characterEquipment)
-          .where(
-            and(
-              eq(characterEquipment.characterId, characterId),
-              eq(characterEquipment.slot, slot),
-            ),
-          );
+        await applyUnequip(tx, characterId, slot);
         return {};
       },
     );
   }
 
-  // Настроиться на предмет строки или снять настройку. Снять можно всегда, даже со
-  // скрытого автором предмета: это не добавляет ему силы.
+  // Настроиться на предмет строки или снять настройку.
   attune(
     userId: string,
     characterId: string,
@@ -98,18 +51,7 @@ export class EquipmentService {
       attuned ? 'Item attuned' : 'Item attunement ended',
       { userId, characterId, entryId },
       async (tx, inventory) => {
-        const entry = findEntry(inventory, entryId);
-        if (attuned) {
-          const problem = attuneProblem(
-            inventory.map(asCandidate),
-            asCandidate(entry),
-          );
-          if (problem) throw new BadRequestException(problem);
-        }
-        await tx
-          .update(characterItems)
-          .set({ attuned })
-          .where(eq(characterItems.id, entryId));
+        await applyAttune(tx, inventory, entryId, attuned);
         return {};
       },
     );
@@ -157,10 +99,4 @@ export class EquipmentService {
       throw err;
     }
   }
-}
-
-function findEntry(inventory: readonly InventoryEntry[], entryId: string) {
-  const entry = inventory.find((e) => e.id === entryId);
-  if (!entry) throw new NotFoundException(INVENTORY_ENTRY_NOT_FOUND);
-  return entry;
 }

@@ -1,6 +1,8 @@
 import { Box, Button, Group, Stack, Text, UnstyledButton } from '@mantine/core';
 import {
   ATTUNEMENT_MAX,
+  combatEquipProblem,
+  equipCost,
   type EquipSlot,
   type InventoryEntry,
   type InventoryItemCard,
@@ -14,6 +16,8 @@ import {
   SLOT_FULL_NAMES,
   wornBySlot,
 } from './equipmentView';
+import AttuneLine from './AttuneLine';
+import type { EquipmentPlay } from './equipmentApi';
 import classes from './Equipment.module.css';
 
 type WithItem = InventoryEntry & { item: InventoryItemCard };
@@ -25,6 +29,8 @@ interface SlotPickerProps {
   onEquip: (entry: WithItem) => void;
   onUnequip: () => void;
   onAttune: (entry: WithItem, attuned: boolean) => void;
+  // Во время встречи: цена смены по книге и запрет боя (этап 4).
+  play?: EquipmentPlay;
 }
 
 // Что надеть на место: надетая вещь со «Снять» и настройкой, под ней — подходящие вещи
@@ -36,11 +42,17 @@ function SlotPicker({
   onEquip,
   onUnequip,
   onAttune,
+  play,
 }: SlotPickerProps) {
   const worn = wornBySlot(inventory);
   const current = worn.get(slot) ?? null;
   const candidates = candidatesFor(inventory, slot);
   const full = attunedCount(inventory) >= ATTUNEMENT_MAX;
+  const mode = play?.combat ? 'tactical' : 'free';
+  // Доспех на месте держит его в бою: ни снять, ни заменить другой вещью.
+  const stuck = combatEquipProblem(mode, current?.item.equip ?? null);
+  const blocked = (entry: WithItem) =>
+    stuck ?? combatEquipProblem(mode, entry.item.equip);
 
   return (
     <Stack gap="xs">
@@ -57,17 +69,24 @@ function SlotPicker({
               size="compact-sm"
               variant="default"
               loading={busy}
+              disabled={Boolean(stuck)}
               onClick={onUnequip}
             >
               Снять
             </Button>
           </Group>
+          {play && (stuck || equipCost(current.item.equip)) && (
+            <Text size="xs" c={stuck ? 'orange' : 'dimmed'}>
+              {stuck ?? equipCost(current.item.equip)}
+            </Text>
+          )}
           {current.item.equip?.attunement && (
             <Group>
               <AttuneLine
                 entry={current}
                 full={full}
                 busy={busy}
+                combat={Boolean(play?.combat)}
                 onAttune={onAttune}
               />
             </Group>
@@ -86,32 +105,41 @@ function SlotPicker({
             {current ? 'Надеть вместо неё' : 'При себе, подходит на это место'}
           </Text>
           <Stack gap={2} role="list">
-            {candidates.map((entry) => (
-              <UnstyledButton
-                key={entry.id}
-                role="listitem"
-                // Не disabled: иначе фокус уходит из списка и Escape его не закрывает.
-                aria-disabled={busy}
-                onClick={() => !busy && onEquip(entry)}
-                p={6}
-                style={{ borderRadius: 'var(--mantine-radius-sm)' }}
-                className={classes.option}
-              >
-                <Group gap="xs" wrap="nowrap">
-                  <Box className={classes.thumb}>
-                    <ItemThumb item={entry.item} placeholderSize="1rem" />
-                  </Box>
-                  <Box style={{ minWidth: 0 }}>
-                    <Text size="sm" fw={600} truncate>
-                      {entry.item.name}
-                    </Text>
-                    <Text size="xs" c="dimmed">
-                      {candidateNote(entry, displaces(worn, entry, slot))}
-                    </Text>
-                  </Box>
-                </Group>
-              </UnstyledButton>
-            ))}
+            {candidates.map((entry) => {
+              const problem = blocked(entry);
+              const off = busy || Boolean(problem);
+              return (
+                <UnstyledButton
+                  key={entry.id}
+                  role="listitem"
+                  // Не disabled: иначе фокус уходит из списка и Escape его не закрывает.
+                  aria-disabled={off}
+                  onClick={() => !off && onEquip(entry)}
+                  p={6}
+                  style={{ borderRadius: 'var(--mantine-radius-sm)' }}
+                  className={classes.option}
+                >
+                  <Group gap="xs" wrap="nowrap">
+                    <Box className={classes.thumb}>
+                      <ItemThumb item={entry.item} placeholderSize="1rem" />
+                    </Box>
+                    <Box style={{ minWidth: 0 }}>
+                      <Text size="sm" fw={600} truncate>
+                        {entry.item.name}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {candidateNote(entry, displaces(worn, entry, slot))}
+                      </Text>
+                      {play && (problem || equipCost(entry.item.equip)) && (
+                        <Text size="xs" c={problem ? 'orange' : 'dimmed'}>
+                          {problem ?? equipCost(entry.item.equip)}
+                        </Text>
+                      )}
+                    </Box>
+                  </Group>
+                </UnstyledButton>
+              );
+            })}
           </Stack>
         </>
       )}
@@ -131,45 +159,6 @@ function candidateNote(entry: WithItem, displaced: WithItem | null): string {
   }
   if (displaced) parts.push(`снимет «${displaced.item.name}»`);
   return parts.join(' · ');
-}
-
-interface AttuneLineProps {
-  entry: WithItem;
-  full: boolean;
-  busy: boolean;
-  onAttune: (entry: WithItem, attuned: boolean) => void;
-}
-
-function AttuneLine({ entry, full, busy, onAttune }: AttuneLineProps) {
-  if (entry.attuned) {
-    return (
-      <Button
-        size="compact-xs"
-        variant="subtle"
-        color="grape"
-        disabled={busy}
-        onClick={() => onAttune(entry, false)}
-      >
-        Снять настройку
-      </Button>
-    );
-  }
-  return full ? (
-    <Text size="xs" c="dimmed">
-      Требует настройки. Настроено уже {ATTUNEMENT_MAX} из {ATTUNEMENT_MAX}:
-      сначала снимите настройку с другого
-    </Text>
-  ) : (
-    <Button
-      size="compact-xs"
-      variant="light"
-      color="grape"
-      disabled={busy}
-      onClick={() => onAttune(entry, true)}
-    >
-      Настроиться
-    </Button>
-  );
 }
 
 export default SlotPicker;

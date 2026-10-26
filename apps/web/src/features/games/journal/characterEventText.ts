@@ -1,8 +1,10 @@
 import type { GameEventPayloads, SpellSlots } from 'shared';
+import { SLOT_FULL_NAMES } from '../../characters/Equipment/equipmentView';
 
 type CharacterChanged = GameEventPayloads['character.changed'];
 type CreatureChanged = GameEventPayloads['creature.changed'];
 type CreatureSlots = GameEventPayloads['creature.slots_changed'];
+type Equipment = GameEventPayloads['character.equipment'];
 
 // Строка журнала о правке персонажа в игре (этап 8): что просили и что стало.
 export function characterChangedText({ intent, result }: CharacterChanged) {
@@ -53,4 +55,21 @@ function slotsText(slots: SpellSlots) {
       : [],
   );
   return parts.length > 0 ? `осталось ${parts.join(', ')}` : 'ячеек нет';
+}
+
+// Кукла в игре (docs/plan/equipment.md, этап 4): что надели, сняли или настроили.
+export function equipmentEventText({ intent, result }: Equipment): string {
+  const { character, item } = result;
+  const { change } = intent;
+  const what = item ? ` — ${item.name}` : '';
+  switch (change.kind) {
+    case 'equip':
+      return `Надето: ${character.name}${what} (${SLOT_FULL_NAMES[change.slot]})`;
+    case 'unequip':
+      return `Снято: ${character.name}${what} (${SLOT_FULL_NAMES[change.slot]})`;
+    case 'attune':
+      return `Настройка: ${character.name}${what}`;
+    case 'end_attunement':
+      return `Настройка снята: ${character.name}${what}`;
+  }
 }

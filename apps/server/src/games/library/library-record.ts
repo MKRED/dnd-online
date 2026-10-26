@@ -21,6 +21,7 @@ import {
 } from 'shared';
 import { toAbilityVariant } from '../../abilities/abilities.config.js';
 import { toCharacter } from '../../characters/characters.mapper.js';
+import { liveEquipment } from '../../characters/equipment/equipment-read.js';
 import type { characters, gameLibrary } from '../../database/schema/index.js';
 import { toEffectFields } from '../../effects/effects.config.js';
 import { toItemVariant } from '../../items/items.mapper.js';
@@ -140,15 +141,19 @@ function toNpc(row: LibraryRow, linked: LinkedRows): Character {
   return toCharacter(sheet, {
     mainImage: null,
     authorNickname: row.authorNickname,
-    inventory: links.items.map((link, index) => ({
-      id: link.sourceId ?? `deleted-${index}`,
-      location: link.location,
-      quantity: link.quantity,
-      // Кукла НПС в копию библиотеки пока не переносится — это этап 4 плана экипировки.
-      equipped: [],
-      attuned: false,
-      ...itemLink(find('item', link.sourceId)),
-    })),
+    inventory: links.items.map((link, index) => {
+      const item = itemLink(find('item', link.sourceId));
+      return {
+        id: link.sourceId ?? `deleted-${index}`,
+        location: link.location,
+        quantity: link.quantity,
+        // Кукла НПС приходит с копией (этап 4 плана экипировки) и проверяется по копии
+        // предмета, как лист по справочнику: место, которое предмет больше не занимает,
+        // пустеет.
+        ...liveEquipment(item, link.equipped ?? [], link.attuned ?? false),
+        ...item,
+      };
+    }),
     abilities: links.abilities.map((link, index) => ({
       id: link.sourceId ?? `deleted-${index}`,
       prepared: link.prepared,

@@ -15,6 +15,8 @@ import type { GameSceneRef } from './game-scenes.js';
 import type { Vec3 } from './map/coords.js';
 import type { MapOp } from './map/ops.js';
 import type { SpellSlots } from './character.js';
+import type { EquipSlot } from './equipment.js';
+import type { GameEquipmentChange } from './equipmentInPlay.js';
 import type { SpellSlotsExpended } from './spellSlots.js';
 
 // Журнал игры (docs/plan/done/game.md, «Журнал игры»): каждое действие в игре — запись с
@@ -232,6 +234,17 @@ export interface GameEventPayloads {
   'character.effect_removed': {
     intent: { characterId: string; entryId: string };
     result: { character: GameEventCharacter; effect: GameEventEffect | null };
+  };
+  // Кукла персонажа в игре (docs/plan/equipment.md, этап 4): надел, снял, настроился. item —
+  // вещь, как она звалась в тот момент (null — место было пустым или вещь скрыта); freed —
+  // места, которые освободила надетая вещь (двуручное снимает вторую руку).
+  'character.equipment': {
+    intent: { characterId: string; change: GameEquipmentChange };
+    result: {
+      character: GameEventCharacter;
+      item: { id: string; name: string } | null;
+      freed: EquipSlot[];
+    };
   };
   // Хиты монстра или НПС на сцене (этап 8); правит только мастер.
   'creature.changed': {

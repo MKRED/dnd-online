@@ -11,6 +11,7 @@ import { GameSeatsService } from './game-seats.service.js';
 import { GamesController } from './games.controller.js';
 import { GamesService } from './games.service.js';
 import {
+  GameCharacterEquipmentController,
   GameCharactersController,
   GameCharactersService,
 } from './characters/index.js';
@@ -49,6 +50,7 @@ import {
     GameScenesController,
     GameSceneEditController,
     GameFiguresController,
+    GameCharacterEquipmentController,
     GameCharactersController,
     GameCreaturesController,
   ],

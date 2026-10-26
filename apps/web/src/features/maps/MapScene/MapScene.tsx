@@ -24,6 +24,7 @@ import type { WalkScene } from '../walkTest';
 import WalkLayer from './WalkLayer';
 import CameraFocus, { type CameraFocusApi } from './CameraFocus';
 import CameraRig from './CameraRig';
+import CameraWatch from './CameraWatch';
 import CenterHint from './CenterHint';
 import CursorReadout from './CursorReadout';
 import { createHoverStore, type HoverStore } from './hoverStore';
@@ -61,6 +62,8 @@ interface MapSceneProps {
   cutY: number;
   // Начальная камера (из адреса страницы); дальше ей управляет пользователь.
   camera: CameraPlacement;
+  // Где встала камера, когда её перестали двигать; держать стабильной функцией.
+  onCameraChange?: (placement: CameraPlacement) => void;
   // Набираемое изменение размера: новая граница видна до «Применить».
   resizePreview: ResizeOp['grow'] | null;
   // Инструмент редактора; null — только просмотр.
@@ -110,6 +113,7 @@ function MapScene({
   refs,
   cutY,
   camera,
+  onCameraChange,
   resizePreview,
   editor,
   walk,
@@ -228,6 +232,7 @@ function MapScene({
         <CameraRig placement={camera} />
         {/* После CameraRig: первый уровень для подсказки берётся из уже поставленной камеры. */}
         <CameraFocus apiRef={focus} onLevel={setCenterLevel} />
+        {onCameraChange && <CameraWatch onChange={onCameraChange} />}
         {imagesSettled && <FirstFrame onReady={onReady} />}
         {settings.frameLimit > 0 && <FrameLimiter fps={settings.frameLimit} />}
       </Canvas>

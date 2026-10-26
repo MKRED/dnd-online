@@ -1,6 +1,8 @@
 import {
+  buildFurnitureLayer,
   CONTAINER_LOOK_LABELS,
   footprintCells,
+  surfaceInCell,
   type CharacterMainImage,
   insideMap,
   type ContainerLook,
@@ -9,11 +11,14 @@ import {
   type FurnitureContainer,
   type FurnitureViewModel,
   type MapObjectBody,
+  type MapState,
+  type ObjectRefs,
   type MapSize,
   type ObjectOp,
   type PlacedObject,
   type Vec3,
 } from 'shared';
+import type { MapViewState } from '../../mapStateFromChunks';
 import { extentAnchor } from '../editorTools';
 
 // Запись каталога, выбранная в поиске. size — у монстра: по нему место на карте;
@@ -143,4 +148,36 @@ export function moveOp(
   const at = objectCell(cell, extent, size);
   if (!at || at.every((value, axis) => value === object.at[axis])) return null;
   return { op: 'moveObject', id: object.id, at, ...(force && { force: true }) };
+}
+
+// Сколько уровней подряд объект может подняться на обстановку: стопка ящиков, не выше.
+const LIFT_MAX = 8;
+
+// Клетка, куда встаёт не-обстановка под курсором; rules — карта с клетками обстановки
+// (rulesMap). Обстановку луч не выбирает, и курсор над столом попадает в пол под ним — в
+// клетку самого стола. Если стол — опора во всю высоту клетки (воксели до самого верха),
+// стоять на нём можно только клеткой выше, как у фигурки «Хода» (walkAnchors); без подъёма
+// существо получало «здесь нельзя стоять» (замечания после первой партии, 2026-10-26).
+// Обстановка сама так не поднимается: её место строго проверяет постановка.
+export function onTopCell(
+  rules: MapState,
+  kind: MapObjectBody['kind'],
+  cell: Vec3,
+): Vec3 {
+  if (kind === 'furniture') return cell;
+  let at = cell;
+  for (let i = 0; i < LIFT_MAX && surfaceInCell(rules, at) === 1; i++) {
+    at = [at[0], at[1] + 1, at[2]];
+  }
+  return at;
+}
+
+// Карта глазами правил — с клетками обстановки, как useRulesState у страницы.
+export function rulesMap(map: MapViewState, refs: ObjectRefs | null): MapState {
+  return refs
+    ? {
+        ...map,
+        furniture: buildFurnitureLayer(map.objects.byId.values(), refs),
+      }
+    : map;
 }

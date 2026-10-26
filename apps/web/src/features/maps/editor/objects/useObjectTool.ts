@@ -16,6 +16,8 @@ import type { MapViewState } from '../../mapStateFromChunks';
 import {
   moveOp,
   objectCell,
+  onTopCell,
+  rulesMap,
   placeBody,
   placeExtent,
   rightFacing,
@@ -96,7 +98,8 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
   const move = (object: MapObject, cell: Vec3) => {
     if (!state) return;
     const force = shift.current && object.kind === 'furniture';
-    const op = moveOp(object, cell, extentOf(object), state.size, force);
+    const at = onTopCell(rulesMap(state, objectRefs), object.kind, cell);
+    const op = moveOp(object, at, extentOf(object), state.size, force);
     if (op) edit(op);
   };
 
@@ -112,7 +115,10 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
       return;
     }
     const body = placeBody(settings);
-    const at = objectCell(cells.place, extent, state.size);
+    const place = body
+      ? onTopCell(rulesMap(state, objectRefs), body.kind, cells.place)
+      : cells.place;
+    const at = objectCell(place, extent, state.size);
     const force = shift.current && body?.kind === 'furniture';
     if (body && at)
       edit({ op: 'placeObject', at, object: body, ...(force && { force }) });

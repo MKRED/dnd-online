@@ -20,7 +20,11 @@ function CardTitle({ title, href }: { title: string; href: string | null }) {
         c="inherit"
         underline="hover"
         truncate
-        display="block"
+        // Ссылка — по длине имени, а не на всю шапку: щелчок по пустому месту правее
+        // имени не уводит на страницу (замечания после первой партии, 2026-10-26).
+        display="inline-block"
+        maw="100%"
+        style={{ verticalAlign: 'top' }}
       >
         {title}
       </Anchor>

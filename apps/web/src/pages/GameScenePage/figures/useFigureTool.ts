@@ -195,9 +195,13 @@ export function useFigureTool({
     [active, pick, preview, onHover],
   );
 
+  // Выбор — только значением: страница сцены подменяет его своим (снимает выбранное
+  // существо), и тип не должен обещать функцию-обновитель.
+  const select: (characterId: string | null) => void = setSelectedId;
+
   return {
     selectedId,
-    select: setSelectedId,
+    select,
     round: () => run(api.round, 'Не удалось начать новый раунд'),
     mode: (mode: GameMoveMode) =>
       run(

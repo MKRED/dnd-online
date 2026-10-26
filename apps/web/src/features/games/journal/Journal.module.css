@@ -1,0 +1,35 @@
+.amount {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.damageType {
+  vertical-align: 1px;
+  text-transform: none;
+}
+
+/* Хиты до и после — мелким моноширинным блоком: в длинной строке их видно сразу. */
+.hitPoints {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  padding: 0 6px;
+  border-radius: var(--mantine-radius-sm);
+  background: light-dark(
+    var(--mantine-color-gray-1),
+    var(--mantine-color-dark-5)
+  );
+}
+
+.health {
+  vertical-align: 1px;
+}
+
+.masterOnly {
+  white-space: nowrap;
+  color: light-dark(
+    var(--mantine-color-orange-8),
+    var(--mantine-color-orange-4)
+  );
+}

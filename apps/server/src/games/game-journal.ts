@@ -1,10 +1,12 @@
 import { NotFoundException } from '@nestjs/common';
 import { eq, sql } from 'drizzle-orm';
 import {
+  GAME_EVENT_DEFAULT_VISIBILITY,
   walkSeen,
   type GameEventAs,
   type GameEventKind,
   type GameEventPayloads,
+  type GameEventVisibility,
   type PackedChangeset,
   type SceneEditResult,
   type ScenePlayerFog,
@@ -42,6 +44,9 @@ export type NewGameEvent<K extends GameEventKind> = {
   sceneId?: string;
   // Правка сцены: что изменилось (в запись для мастера не входит, game-event-read.ts).
   changes?: PackedChangeset;
+  // Кому видна запись; без неё — по виду (GAME_EVENT_DEFAULT_VISIBILITY). Хиты и ход
+  // существа передают её сами: видели ли его игроки (creatures/creature-visibility.ts).
+  visibility?: GameEventVisibility;
 } & GameEventPayloads[K];
 
 // Разница тумана для игроков (fog/fog-delta.ts). Правка сцены получает её всегда, когда
@@ -108,6 +113,7 @@ export async function appendGameEvent<K extends GameEventKind>(
     asKind: event.as?.kind ?? null,
     asId: event.as && 'id' in event.as ? event.as.id : null,
     sceneId: event.sceneId ?? null,
+    visibility: event.visibility ?? GAME_EVENT_DEFAULT_VISIBILITY[event.kind],
     intent: event.intent,
     result: event.result,
     changes: event.changes ?? null,

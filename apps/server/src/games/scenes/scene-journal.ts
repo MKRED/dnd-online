@@ -3,6 +3,7 @@ import {
   packChangeset,
   type GameEventKind,
   type GameEventPayloads,
+  type GameEventVisibility,
   type MapOp,
   type PackedChangeset,
   type SceneEditResult,
@@ -39,6 +40,8 @@ export type SceneJournalEntry =
         GameEventPayloads['creature.moved']['result'],
         keyof SceneEditResult
       >;
+      // Видели ли ход игроки (creatures/creature-visibility.ts).
+      visibility: GameEventVisibility;
     }
   | { kind: 'scene.undone'; intent: { seq: number }; conflicts: number }
   | {
@@ -97,6 +100,7 @@ export async function commitSceneEdit(
       kind: entry.kind,
       intent: entry.intent,
       result: { ...base, ...entry.move },
+      visibility: entry.visibility,
     });
   } else if (entry.kind === 'scene.undone') {
     await appendGameEvent(tx, gameId, {

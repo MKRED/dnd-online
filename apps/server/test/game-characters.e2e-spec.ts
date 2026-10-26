@@ -192,6 +192,39 @@ describe('game characters (e2e)', () => {
     await change(g.master.agent, g.url, { kind: 'heal', amount: 5 }, 409);
   });
 
+  it('урон по частям с типами — в лист суммой, в журнал частями; запись видна игрокам', async () => {
+    const g = await setup('gch_parts');
+    await startSession(g.master.agent, g.gameId);
+    const hit = await change(g.master.agent, g.url, {
+      kind: 'damage',
+      parts: [
+        { amount: 3, type: 'slashing' },
+        { amount: 2, type: 'poison' },
+      ],
+    });
+    expect(sheetOf(hit).hitPointsCurrent).toBe(7);
+    expect(await lastEvent(g.master.agent, g.gameId)).toMatchObject({
+      kind: 'character.changed',
+      visibility: 'players',
+      intent: {
+        change: {
+          kind: 'damage',
+          amount: 5,
+          parts: [
+            { amount: 3, type: 'slashing' },
+            { amount: 2, type: 'poison' },
+          ],
+        },
+      },
+    });
+    await change(
+      g.player.agent,
+      g.url,
+      { kind: 'damage', parts: [{ amount: 1, type: 'love' }] },
+      400,
+    );
+  });
+
   it('ячейки тратятся из игры; неверные правки — 400', async () => {
     const g = await setup('gch_slots');
     await startSession(g.master.agent, g.gameId);

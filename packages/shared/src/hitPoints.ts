@@ -1,3 +1,5 @@
+import type { DamageDealtPart } from './damageDealt.js';
+
 // Хиты существа в игре (docs/dnd/hit-points.md, правила 2024): урон, лечение, временные
 // хиты и спасброски от смерти. Сервер считает новое состояние от того, что просили, —
 // мастер и игрок правят одно существо одновременно, и число с клиента затёрло бы чужую
@@ -7,8 +9,10 @@
 export const HIT_POINTS_CHANGE_MAX = 9999;
 export const DEATH_SAVES_MAX = 3;
 
+// Урон — amount всего и его части по типам (damageDealt.ts); сервер считает amount сам из
+// частей, у записей журнала до 2026-10-26 частей нет.
 export type HitPointsChange =
-  | { kind: 'damage'; amount: number }
+  | { kind: 'damage'; amount: number; parts?: DamageDealtPart[] }
   | { kind: 'heal'; amount: number }
   // Временные хиты не складываются: игрок сам решает, какие оставить, поэтому правка
   // ставит число, а 0 их убирает.

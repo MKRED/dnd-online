@@ -26,6 +26,7 @@ const entered = (seq: number, nickname: string): GameEvent => ({
   actor: { id: `u${seq}`, nickname },
   as: null,
   sceneId: null,
+  visibility: 'players',
   intent: null,
   result: null,
   createdAt: '2026-10-20T10:00:00.000Z',

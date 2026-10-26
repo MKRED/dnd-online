@@ -39,6 +39,7 @@ function objectsMock() {
       hidden: false,
     },
     selected: null,
+    scope: 'all' as const,
     moving: false,
   };
 }

@@ -414,6 +414,13 @@
       "when": 1792991094295,
       "tag": "0058_creature_spells",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1792998401775,
+      "tag": "0059_game_event_visibility",
+      "breakpoints": true
     }
   ]
 }

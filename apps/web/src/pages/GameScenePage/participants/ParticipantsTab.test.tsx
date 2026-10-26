@@ -16,6 +16,7 @@ const goblin: GameCreature = {
     hitPoints: { current: 2, max: 7, temp: 0 },
     effects: [],
     movement: { speed: 30, climb: null, moved: 10, dashes: 1 },
+    spells: null,
   },
 };
 const orc: GameCreature = {
@@ -26,6 +27,7 @@ const orc: GameCreature = {
     hitPoints: { current: 0, max: 15, temp: 0 },
     effects: [],
     movement: { speed: 30, climb: null, moved: 0, dashes: 0 },
+    spells: null,
   },
 };
 const objects = new Map<number, Partial<MapObject>>([
@@ -125,6 +127,7 @@ describe('участники', () => {
         hitPoints: { current, max: 4, temp: 0 },
         effects: [],
         movement: { speed: 30, climb: null, moved: 0, dashes: 0 },
+        spells: null,
       },
     });
     const boss = {

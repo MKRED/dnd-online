@@ -1,7 +1,12 @@
-import { Fieldset, Stack, Text } from '@mantine/core';
+import { Fieldset, Stack } from '@mantine/core';
 import { useMemo } from 'react';
 import type { CharacterEffectEntry, Monster } from 'shared';
-import { EffectSummary, hasSummary, SheetField } from '../../characters';
+import {
+  AppliedEffectList,
+  effectRows,
+  SheetField,
+  traitRows,
+} from '../../characters';
 import type { SheetSection } from '../../characters';
 import {
   MonsterSkills,
@@ -80,12 +85,15 @@ function MonsterCardSection({
         </Stack>
       );
     case 'effects':
-      return hasSummary(totals) ? (
-        <EffectSummary totals={totals} />
-      ) : (
-        <Text size="sm" c="dimmed">
-          Эффектов нет.
-        </Text>
+      // Каждый эффект строкой, с тем, откуда он (вариант А, замечания после первой партии).
+      return (
+        <AppliedEffectList
+          rows={[
+            ...effectRows(extraEffects, 'наложен в игре'),
+            ...effectRows(monster.effects ?? [], 'эффект вида'),
+            ...traitRows(abilities),
+          ]}
+        />
       );
     case 'gear':
       return <MonsterGear monsterId={monster.id} items={monster.items ?? []} />;

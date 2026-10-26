@@ -40,7 +40,3 @@ export function sectionsOf(totals: SheetTotals): Section[] {
     },
   ].filter((section) => section.lines.length > 0);
 }
-
-// Есть ли что показать в сводке: черты и эффекты дают хоть одну строку.
-export const hasSummary = (totals: SheetTotals) =>
-  sectionsOf(totals).length > 0;

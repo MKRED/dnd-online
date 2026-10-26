@@ -1,12 +1,11 @@
-import { Stack, Text } from '@mantine/core';
+import { Stack } from '@mantine/core';
 import { useMemo } from 'react';
 import { sheetTotals, type Character } from 'shared';
 import CharacterAbilities from '../Abilities';
 import InventorySection from '../Inventory';
+import { AppliedEffectList, effectRows, traitRows } from '../AppliedEffects';
 import AbilitiesView from './AbilitiesView';
 import CombatView from './CombatView';
-import EffectSummary from './EffectSummary';
-import { hasSummary } from './effectSummarySections';
 import ProficienciesView from './ProficienciesView';
 
 // Разделы листа для вкладок окна карточки на сцене игры (docs/plan/done/scene-page.md, этап 4).
@@ -36,12 +35,16 @@ function CharacterSheetSection({
     case 'abilities':
       return <CharacterAbilities character={character} />;
     case 'effects':
-      return hasSummary(totals) ? (
-        <EffectSummary totals={totals} />
-      ) : (
-        <Text size="sm" c="dimmed">
-          Эффектов нет.
-        </Text>
+      // Каждый эффект строкой с тем, что он даёт (вариант А, замечания после первой партии,
+      // 2026-10-26): итог по темам не показывал Скорость и КД, и эффект «Захват» выглядел
+      // как «Эффектов нет».
+      return (
+        <AppliedEffectList
+          rows={[
+            ...effectRows(character.effects, 'наложен'),
+            ...traitRows(character.abilities),
+          ]}
+        />
       );
     case 'gear':
       return <InventorySection character={character} />;

@@ -81,6 +81,8 @@ describe('снаряжение и эффекты монстра (e2e)', () => {
             weight: 1,
             isPublic: false,
             image: null,
+            // Не экипировка — мест на кукле нет.
+            equip: null,
           },
           missing: null,
           inactive: false,

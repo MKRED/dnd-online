@@ -58,6 +58,7 @@ import { playersView, useSceneFog } from './fog';
 import { SceneModeSwitch, useSceneMode } from './mode';
 import { useJournalLive } from './journal';
 import { useSceneWalks, withDeparted } from './walks';
+import { withoutStarts } from './withoutStarts';
 import {
   figureWalkKey,
   objectWalkKey,
@@ -226,8 +227,10 @@ function GameScenePage() {
       state && eyesFog && rules.refs
         ? playersView(state, eyesFog, rules.refs)
         : state;
-    return shown && withDeparted(shown, walks.departed);
-  }, [state, eyesFog, rules.refs, walks.departed]);
+    // Старты мастеру видны только в «Правке».
+    const clean = shown && !editing ? withoutStarts(shown) : shown;
+    return clean && withDeparted(clean, walks.departed);
+  }, [state, eyesFog, rules.refs, walks.departed, editing]);
 
   // Режим хода (docs/dnd/movement.md): пока фигурки не прочитаны, считаем бой — так строка
   // запаса не обещает лишнего.

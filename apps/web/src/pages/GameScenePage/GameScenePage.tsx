@@ -30,7 +30,11 @@ import {
 } from 'shared';
 import { useAuth } from '../../features/auth';
 import { sceneObjectImages } from '../../features/games';
-import { parseCameraParams, placeCamera } from '../../features/maps/cameraView';
+import {
+  parseCameraParams,
+  placeCamera,
+  type CameraPlacement,
+} from '../../features/maps/cameraView';
 import { useFogMasks } from '../../features/maps/fogMasks';
 import { useRulesState } from '../../features/maps/useRulesState';
 import CutRuler from '../../features/maps/CutRuler';
@@ -60,6 +64,7 @@ import {
 } from '../../features/maps/MapScene/walks/sceneWalk';
 import { GameScenePanel } from './panel';
 import { useSceneOpen } from './useSceneOpen';
+import { readSceneCamera, saveSceneCamera } from './sceneCamera';
 import { SCENE_TOOLS, useSceneTools } from './useSceneTools';
 
 // three.js тяжёлый — сцена грузится отдельным чанком.
@@ -126,15 +131,24 @@ function GameScenePage() {
   const viewParam = searchParams.get('view');
   const cam = searchParams.get('cam');
   const target = searchParams.get('target');
-  const camera = useMemo(
-    () =>
-      frame
-        ? placeCamera(
-            frame,
-            parseCameraParams({ view: viewParam, cam, target }),
-          )
-        : null,
-    [frame, viewParam, cam, target],
+  const cameraSceneId = ready?.view.scene.id ?? null;
+  // Ракурс из адреса важнее запомненного: ссылкой делятся видом. Без него — где камера
+  // стояла у этого человека перед обновлением страницы.
+  const camera = useMemo(() => {
+    if (!frame) return null;
+    const asked = viewParam !== null || cam !== null || target !== null;
+    const saved =
+      !asked && cameraSceneId ? readSceneCamera(cameraSceneId) : null;
+    return (
+      saved ??
+      placeCamera(frame, parseCameraParams({ view: viewParam, cam, target }))
+    );
+  }, [frame, viewParam, cam, target, cameraSceneId]);
+  const rememberCamera = useCallback(
+    (placement: CameraPlacement) => {
+      if (cameraSceneId) saveSceneCamera(cameraSceneId, placement);
+    },
+    [cameraSceneId],
   );
   // Карта для правил хода и фигурок — с клетками обстановки (этап 8в2 плана блоков).
   const rules = useRulesState(ready?.state ?? null, view?.refs ?? null);
@@ -281,6 +295,7 @@ function GameScenePage() {
                 refs={ready.view.refs}
                 cutY={cutY === null ? Number.POSITIVE_INFINITY : sliderY}
                 camera={camera}
+                onCameraChange={rememberCamera}
                 resizePreview={null}
                 editor={sceneEditor}
                 walk={viewOnly ? null : (play.walk ?? cards.walk.scene)}

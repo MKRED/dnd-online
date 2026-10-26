@@ -1,6 +1,8 @@
 import { ActionIcon, Paper, Text, Tooltip } from '@mantine/core';
 import { IconMinus, IconSquare, IconX } from '@tabler/icons-react';
 import { useRef, type PointerEvent, type ReactNode } from 'react';
+import { cardHeightStyle, type CardHeight } from './cardHeight';
+import CardResizeGrip from './CardResizeGrip';
 import CardTitle from './CardTitle';
 import classes from './CardWindows.module.css';
 
@@ -14,7 +16,11 @@ interface CardWindowFrameProps {
   y: number;
   z: number;
   minimized: boolean;
+  height: CardHeight;
   onMove: (x: number, y: number) => void;
+  // Ручка внизу: done — отпустили, высоту запомнить для следующих окон.
+  onResize: (height: number, done: boolean) => void;
+  onFit: () => void;
   onMinimize: (minimized: boolean) => void;
   onClose: () => void;
   onRaise: () => void;
@@ -32,7 +38,10 @@ function CardWindowFrame({
   y,
   z,
   minimized,
+  height,
   onMove,
+  onResize,
+  onFit,
   onMinimize,
   onClose,
   onRaise,
@@ -40,6 +49,7 @@ function CardWindowFrame({
 }: CardWindowFrameProps) {
   // Откуда тянут: смещение курсора от угла окна в начале перетаскивания.
   const grab = useRef<{ dx: number; dy: number } | null>(null);
+  const frame = useRef<HTMLDivElement>(null);
 
   const startDrag = (event: PointerEvent<HTMLDivElement>) => {
     // Кнопки шапки и ссылка-имя не тянут окно.
@@ -62,12 +72,13 @@ function CardWindowFrame({
   return (
     <Paper
       className={classes.window}
-      // Низ окна — не ниже низа сцены, сколько бы его ни опустили.
+      ref={frame}
+      // Низ окна — не ниже низа сцены, сколько бы его ни опустили и ни вытянули.
       style={{
         left: x,
         top: y,
         zIndex: 20 + z,
-        maxHeight: `calc(100% - ${y + 16}px)`,
+        ...cardHeightStyle(height, y, minimized),
       }}
       withBorder
       shadow="xl"
@@ -111,6 +122,13 @@ function CardWindowFrame({
         </Tooltip>
       </div>
       {!minimized && <div className={classes.body}>{children}</div>}
+      {!minimized && (
+        <CardResizeGrip
+          current={() => frame.current?.getBoundingClientRect().height ?? 0}
+          onResize={onResize}
+          onFit={onFit}
+        />
+      )}
     </Paper>
   );
 }

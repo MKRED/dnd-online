@@ -84,3 +84,36 @@
   height: 100%;
   object-fit: cover;
 }
+
+/* Ручка высоты внизу окна (вариант А, замечания после первой партии): полоса во всю
+   ширину, видна чёрточкой посередине. */
+.grip {
+  flex: none;
+  height: 10px;
+  display: grid;
+  place-items: center;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.grip::after {
+  content: '';
+  width: 36px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--mantine-color-dimmed);
+  opacity: 0.6;
+}
+
+.grip:hover::after,
+.grip:focus-visible::after {
+  opacity: 1;
+  background: var(--mantine-primary-color-filled);
+}
+
+.grip:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}

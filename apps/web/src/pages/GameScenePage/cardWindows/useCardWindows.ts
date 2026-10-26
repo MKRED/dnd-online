@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { readCardHeight, type CardHeight } from './cardHeight';
 
 // Чья карточка открыта (docs/plan/done/scene-page.md, этап 4): персонаж игрока — по id листа,
 // монстр или НПС — по номеру объекта сцены (у экземпляра свои хиты и эффекты).
@@ -21,6 +22,7 @@ export interface CardWindow {
   y: number;
   // Свёрнуто в шапку.
   minimized: boolean;
+  height: CardHeight;
 }
 
 export function cardKey(target: CardTarget): string {
@@ -69,6 +71,8 @@ export function useCardWindows() {
         x: FIRST.x + n * STEP,
         y: FIRST.y + n * STEP,
         minimized: false,
+        // Новое окно — той высоты, что вытянули в прошлый раз.
+        height: readCardHeight(),
       };
       return [...prev, next].slice(-MAX_CARD_WINDOWS);
     });
@@ -90,7 +94,10 @@ export function useCardWindows() {
   );
 
   const update = useCallback(
-    (key: string, patch: Partial<Pick<CardWindow, 'x' | 'y' | 'minimized'>>) =>
+    (
+      key: string,
+      patch: Partial<Pick<CardWindow, 'x' | 'y' | 'minimized' | 'height'>>,
+    ) =>
       setWindows((prev) =>
         prev.map((w) => (w.key === key ? { ...w, ...patch } : w)),
       ),

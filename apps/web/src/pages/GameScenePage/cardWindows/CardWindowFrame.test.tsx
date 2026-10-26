@@ -12,6 +12,8 @@ function renderFrame(minimized = false, href: string | null = null) {
     onMinimize: vi.fn(),
     onClose: vi.fn(),
     onRaise: vi.fn(),
+    onResize: vi.fn(),
+    onFit: vi.fn(),
   };
   renderWithProviders(
     <CardWindowFrame
@@ -23,6 +25,7 @@ function renderFrame(minimized = false, href: string | null = null) {
       y={50}
       z={0}
       minimized={minimized}
+      height={null}
       {...handlers}
     >
       <p>Содержимое</p>
@@ -85,5 +88,43 @@ describe('CardWindowFrame', () => {
   it('без страницы имя — просто текст', () => {
     renderFrame();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+
+  it('ручка внизу тянет высоту, двойной щелчок и Enter — по содержимому', () => {
+    const handlers = renderFrame();
+    const grip = screen.getByRole('separator', { name: 'Высота карточки' });
+    // jsdom не считает размеры: окно «высотой» 300, а дальше — какую задали, как в браузере.
+    let shown = 300;
+    handlers.onResize.mockImplementation((height: number) => {
+      shown = height;
+    });
+    const window = screen.getByRole('dialog');
+    window.getBoundingClientRect = () => ({ height: shown }) as DOMRect;
+    grip.setPointerCapture = vi.fn();
+    fireEvent.pointerDown(grip, { clientY: 400, pointerId: 1 });
+    fireEvent.pointerMove(grip, { clientY: 450, pointerId: 1 });
+    expect(handlers.onResize).toHaveBeenLastCalledWith(350, false);
+    // Не ниже наименьшей высоты, сколько ни тяни вверх.
+    fireEvent.pointerMove(grip, { clientY: 0, pointerId: 1 });
+    expect(handlers.onResize).toHaveBeenLastCalledWith(140, false);
+    fireEvent.pointerMove(grip, { clientY: 450, pointerId: 1 });
+    fireEvent.pointerUp(grip, { clientY: 450, pointerId: 1 });
+    expect(handlers.onResize).toHaveBeenLastCalledWith(350, true);
+    // Щелчок без сдвига высоту не запоминает.
+    handlers.onResize.mockClear();
+    fireEvent.pointerDown(grip, { clientY: 450, pointerId: 1 });
+    fireEvent.pointerUp(grip, { clientY: 450, pointerId: 1 });
+    expect(handlers.onResize).not.toHaveBeenCalled();
+
+    fireEvent.doubleClick(grip);
+    fireEvent.keyDown(grip, { key: 'Enter' });
+    expect(handlers.onFit).toHaveBeenCalledTimes(2);
+    fireEvent.keyDown(grip, { key: 'ArrowUp' });
+    expect(handlers.onResize).toHaveBeenLastCalledWith(310, true);
+  });
+
+  it('у свёрнутого ручки нет', () => {
+    renderFrame(true);
+    expect(screen.queryByRole('separator')).not.toBeInTheDocument();
   });
 });

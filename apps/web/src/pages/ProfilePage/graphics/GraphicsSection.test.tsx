@@ -85,8 +85,12 @@ describe('GraphicsSection', () => {
 
     const slider = screen.getByRole('slider', { name: 'Частота анимаций' });
     expect(slider).toHaveAttribute('aria-valuenow', '18');
+    // Значение — в заголовке поля, а не во всплывающей подсказке ползунка.
+    expect(screen.getByText('18 к/с')).toBeInTheDocument();
     slider.focus();
     await user.keyboard('{ArrowRight}');
+
+    expect(screen.getByText('19 к/с')).toBeInTheDocument();
 
     expect(stored()).toMatchObject({
       graphicsPreset: 'custom',

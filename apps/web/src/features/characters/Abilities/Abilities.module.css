@@ -48,10 +48,19 @@
   flex: 0 0 5.5em;
 }
 
-/* Место кнопки «Долгий отдых» занято и когда она скрыта: иначе, появляясь после первой
-   траты, она сдвигала бы кружки под курсором (на телефоне она стоит своей строкой). */
-.longRest[data-hidden] {
-  visibility: hidden;
+/* Заголовок блока «Заклинания» с кнопкой «Долгий отдых»: легенда во всю ширину, а
+   линия между названием и кнопкой продолжает рамку, которую легенда перекрывает. */
+.spellsLegend {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  width: 100%;
+}
+
+.legendLine {
+  flex: 1;
+  border-top: 1px solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
 }
 
 .preparedButton,

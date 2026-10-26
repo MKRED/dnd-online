@@ -67,20 +67,16 @@ function SpellsSection({
     .filter(Boolean)
     .join(' ');
 
-  // Кнопка — в строке первого круга с ячейками, а не своей строкой. Когда тратить
-  // нечего, она скрыта, но место держит (см. .longRest): появляясь после первой траты,
-  // она иначе сдвигала бы кружки под курсором. Подтверждения нет: вернуть можно кликами.
+  // Кнопка возвращает ячейки всех кругов, поэтому стоит в заголовке блока, а не у
+  // одного круга: там она не переносится и в узком окне карточки на сцене. Когда
+  // тратить нечего, она видна, но не нажимается, чтобы заголовок не менялся.
+  // Подтверждения нет: вернуть можно кликами.
   const longRest = canSpend && withSlots.length > 0 && (
     <Button
       size="compact-sm"
       variant="light"
-      ml="auto"
-      className={classes.longRest}
-      data-hidden={!anySpent || undefined}
-      aria-hidden={!anySpent || undefined}
-      tabIndex={anySpent ? undefined : -1}
-      disabled={slots.busy}
-      title="Вернуть все потраченные ячейки"
+      disabled={slots.busy || !anySpent}
+      title={anySpent ? 'Вернуть все потраченные ячейки' : 'Все ячейки целы'}
       onClick={() =>
         void slots.save(
           longRestExpended(spellSlots),
@@ -93,7 +89,20 @@ function SpellsSection({
   );
 
   return (
-    <Fieldset legend="Заклинания">
+    <Fieldset
+      classNames={longRest ? { legend: classes.spellsLegend } : undefined}
+      legend={
+        longRest ? (
+          <>
+            <span>Заклинания</span>
+            <span className={classes.legendLine} />
+            {longRest}
+          </>
+        ) : (
+          'Заклинания'
+        )
+      }
+    >
       <Stack gap="xs">
         {circles.map(({ level, entries }) => {
           const circleSlots = spellSlots[level as SpellSlotCircle];
@@ -119,7 +128,6 @@ function SpellsSection({
                     }
                   />
                 )}
-                {level === withSlots[0] && longRest}
               </div>
               {entries.length > 0 && (
                 <GroupEntries>{entries.map(renderRow)}</GroupEntries>

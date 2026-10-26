@@ -9,3 +9,4 @@ export {
   type ObjectTool,
   type ObjectToolScene,
 } from './objects';
+export { default as CreatureChoicePanel } from './PlacePicker/CreatureChoicePanel';

@@ -33,13 +33,14 @@ function FigureLayer({
   onGrab,
   onRelease,
   onSelect,
+  onOpen,
 }: FigureLayerProps) {
   const all = useMemo(() => layoutFigures(map, figures), [map, figures]);
   const shadows = useMemo(
     () => layoutFigures(map, ghosts ?? []),
     [map, ghosts],
   );
-  const drag = useFigureDrag({ onGrab, onRelease, onSelect });
+  const drag = useFigureDrag({ onGrab, onRelease, onSelect, onOpen });
   const visible = all.filter((figure) => figure.level <= cutY);
   const paths = useMemo(
     () => all.flatMap((figure) => (figure.image ? [figure.image] : [])),

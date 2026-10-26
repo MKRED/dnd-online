@@ -248,11 +248,15 @@ describe('GameScenePage', () => {
       ),
     ).toBe(true);
 
-    // «Не на сцене» — дело «Правки»: в «Игре» мастер только ходит.
+    // «Не на сцене» — дело «Существ» в «Правке»: в «Игре» мастер только ходит.
     expect(
       screen.queryByRole('button', { name: 'Поставить на сцену: Борн' }),
     ).not.toBeInTheDocument();
     await user.click(screen.getByRole('radio', { name: 'Правка' }));
+    expect(
+      screen.queryByRole('button', { name: 'Поставить на сцену: Борн' }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Существа' }));
     await user.click(
       screen.getByRole('button', { name: 'Поставить на сцену: Борн' }),
     );

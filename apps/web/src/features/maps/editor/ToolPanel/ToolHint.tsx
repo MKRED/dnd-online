@@ -59,6 +59,8 @@ function ToolHint({ editor, state, hover, placesObject }: ToolHintProps) {
         ['B', 'выбрать'],
         ['Esc', 'снять'],
       );
+    } else if (tool === 'creatures') {
+      keys.push(['R', 'поворот'], ['Del', 'убрать'], ['Esc', 'снять']);
     } else if (buildsBlocks(tool)) {
       keys.push(['R', 'поворот'], ['B', 'выбрать']);
       if (tool === 'place') keys.push(['Esc', 'снять']);

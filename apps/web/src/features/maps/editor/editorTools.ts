@@ -11,9 +11,12 @@ import type { WalkHover } from '../walkTest';
 import type { SceneObjectLook } from '../MapScene/objects/objectLayout';
 
 // walk — проверка хода: карту не меняет, водит фигурку по правилам пути. place —
-// «Поставить»: блок или объект карты (docs/plan/blocks.md, этап 10).
+// «Поставить»: блок или объект карты (docs/plan/blocks.md, этап 10). creatures — «Существа»
+// сцены игры: героев, НПС и монстров ставят и двигают только им, «Строить» двигает вещи
+// (замечания после первой партии, 2026-10-26).
 const ALL_TOOLS = [
   'view',
+  'creatures',
   'place',
   'erase',
   'fill',
@@ -36,13 +39,15 @@ export const isBuildMode = (tool: EditorTool): tool is BuildMode =>
 export const stripTool = (tool: EditorTool): EditorTool =>
   isBuildMode(tool) ? 'place' : tool;
 
-// Полоса инструментов по порядку; номер клавиши — место в ней.
+// Полоса инструментов редактора карты по порядку; номер клавиши — место в ней. «Существ» в
+// нём нет: на карте монстров и НПС ставит «Строить», героев на карте нет.
 export const EDITOR_TOOLS: readonly EditorTool[] = ALL_TOOLS.filter(
-  (tool) => tool !== 'fill' && tool !== 'hollow',
+  (tool) => tool !== 'fill' && tool !== 'hollow' && tool !== 'creatures',
 );
 
 export const TOOL_LABELS: Record<EditorTool, string> = {
   view: 'Просмотр',
+  creatures: 'Существа',
   place: 'Строить',
   erase: 'Ластик',
   fill: 'Строить',
@@ -98,10 +103,13 @@ export function cellsFromHit(
 }
 
 // С какой клеткой работает инструмент: новые блоки и области строятся в соседней
-// клетке, а ластик и замена берут уже стоящий блок. Объект ставится в клетку ног —
-// над блоком, по которому кликнули.
+// клетке, а ластик и замена берут уже стоящий блок. Объект и существо ставятся в клетку
+// ног — над блоком, по которому кликнули.
 export function toolCell(tool: EditorTool, cells: PickedCells): Vec3 | null {
-  return tool === 'place' || tool === 'fill' || tool === 'hollow'
+  return tool === 'place' ||
+    tool === 'creatures' ||
+    tool === 'fill' ||
+    tool === 'hollow'
     ? cells.place
     : cells.hit;
 }

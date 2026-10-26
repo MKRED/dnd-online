@@ -19,8 +19,11 @@ interface CreatureCardsOptions {
   refs: MapObjectRefsView | null;
   // Фигурки персонажей мешают ходу монстра.
   figures: GameFigures | null;
-  // Выбор существа щелчком на карте и его ход: у мастера — только в режиме «Игра».
+  // Выбор существа щелчком на карте: у мастера — в «Игре» и в «Просмотре» «Правки».
   canPick: boolean;
+  // Ход выбранного существа по клику: только в «Игре» — в «Просмотре» щелчок ничего не
+  // двигает (замечания после первой партии, 2026-10-26).
+  canWalk: boolean;
   // Выбранная фигурка: выбор у страницы один — фигурка снимает выбор существа.
   figureId: string | null;
   // Выбрать существо — снять выбор фигурки.
@@ -41,6 +44,7 @@ export function useCreatureCards({
   refs,
   figures,
   canPick,
+  canWalk,
   figureId,
   clearFigure,
   reloadFigures,
@@ -100,7 +104,7 @@ export function useCreatureCards({
     creatures: creatures.creatures,
     figures,
     selectedId,
-    active: master && canPick,
+    active: master && canWalk,
     onCreatures: creatures.apply,
     onMiss: clearSelection,
     onMoveStart,

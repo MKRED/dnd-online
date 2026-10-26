@@ -44,6 +44,9 @@ export interface SceneCreaturesView {
   // Есть — щелчок по сундуку, предмету на полу или обстановке открывает сведения о нём
   // (мастер в «Игре», docs/plan/done/scene-page.md, этап 6).
   onPickObject?: (id: number) => void;
+  // Есть — двойной щелчок по монстру или НПС открывает окно его карточки (мастер в
+  // «Просмотре» «Правки», замечания после первой партии, 2026-10-26).
+  onOpen?: (id: number) => void;
 }
 
 interface ObjectLayerProps {
@@ -165,6 +168,7 @@ function ObjectLayer({
   // Щелчок по существу выбирает его, пока инструмент «Объекты» клик не забирает.
   const pick = !tool && creatures?.onPick;
   const pickObject = !tool && creatures?.onPickObject;
+  const open = !tool && creatures?.onOpen;
   const healthOf = (id: number) => creatures?.health.get(id) ?? null;
   const tipHealth = tip && healthOf(tip.id);
 
@@ -185,7 +189,7 @@ function ObjectLayer({
             dim={dim}
           >
             <group
-              {...handlers(object.id)}
+              {...(!tool || tool.accepts(object.id) ? handlers(object.id) : {})}
               {...(pick &&
                 look.kind === 'creature' &&
                 // Выбранное существо щелчок не ловит: он проходит к клеткам под ним —
@@ -203,6 +207,14 @@ function ObjectLayer({
                   onClick: (event: ThreeEvent<MouseEvent>) => {
                     event.stopPropagation();
                     pickObject(object.id);
+                  },
+                })}
+              {...(open &&
+                look.kind === 'creature' && {
+                  // Двойной щелчок — окно карточки, а не центр камеры за существом.
+                  onDoubleClick: (event: ThreeEvent<MouseEvent>) => {
+                    event.stopPropagation();
+                    open(object.id);
                   },
                 })}
               onPointerOver={() => setHovered(object.id)}

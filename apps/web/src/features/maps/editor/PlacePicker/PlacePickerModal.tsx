@@ -45,6 +45,9 @@ interface PlacePickerModalProps {
   recent: readonly RecentPlace[];
   // Заливка, коробка и замена ставят только блок: окно без вкладок объектов.
   blocksOnly: boolean;
+  // Сцена игры: существ ставит инструмент «Существа» — у «Строить» их нет ни во вкладках,
+  // ни в поиске (замечания после первой партии, 2026-10-26).
+  withoutCreatures?: boolean;
   onPickBlock: (block: string) => void;
   onPickObject: (choice: ObjectChoice) => void;
   onClose: () => void;
@@ -58,10 +61,14 @@ function PlacePickerModal({
   current,
   recent,
   blocksOnly,
+  withoutCreatures = false,
   onPickBlock,
   onPickObject,
   onClose,
 }: PlacePickerModalProps) {
+  const tabs = withoutCreatures
+    ? TABS.filter(({ value }) => value !== 'creature')
+    : TABS;
   const catalog = useBlockCatalog();
   const [query, setQuery] = useState('');
   const [debounced] = useDebouncedValue(query, 250);
@@ -172,7 +179,11 @@ function PlacePickerModal({
                   </div>
                 )}
                 <CatalogTab
-                  kinds={['furniture', 'item', 'monster', 'npc']}
+                  kinds={
+                    withoutCreatures
+                      ? ['furniture', 'item']
+                      : ['furniture', 'item', 'monster', 'npc']
+                  }
                   q={debounced}
                   current={current}
                   onPick={onPickObject}
@@ -195,7 +206,7 @@ function PlacePickerModal({
             ) : (
               <Tabs value={tab} onChange={(value) => setTab(value as Tab)}>
                 <Tabs.List>
-                  {TABS.map(({ value, label }) => (
+                  {tabs.map(({ value, label }) => (
                     <Tabs.Tab key={value} value={value}>
                       {label}
                     </Tabs.Tab>
@@ -244,13 +255,15 @@ function PlacePickerModal({
                     onPick={onPickObject}
                   />
                 </Tabs.Panel>
-                <Tabs.Panel value="creature" pt="sm">
-                  <CatalogTab
-                    kinds={['monster', 'npc']}
-                    current={current}
-                    onPick={onPickObject}
-                  />
-                </Tabs.Panel>
+                {!withoutCreatures && (
+                  <Tabs.Panel value="creature" pt="sm">
+                    <CatalogTab
+                      kinds={['monster', 'npc']}
+                      current={current}
+                      onPick={onPickObject}
+                    />
+                  </Tabs.Panel>
+                )}
                 <Tabs.Panel value="start" pt="sm">
                   <div className={classes.grid}>
                     <ObjectTile

@@ -1,11 +1,4 @@
-import {
-  Alert,
-  Anchor,
-  Loader,
-  Stack,
-  Text,
-  VisuallyHidden,
-} from '@mantine/core';
+import { Alert, Anchor, Loader, Text, VisuallyHidden } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import {
   lazy,
@@ -50,9 +43,9 @@ import { useGameScene } from './useGameScene';
 import ScenePlaque from './ScenePlaque/ScenePlaque';
 import { plaqueState } from './ScenePlaque/plaqueState';
 import { CardWindows, useCardWindows } from './cardWindows';
-import { useCreatureCards } from './creatures';
+import { CreatureCards, useCreatureCards } from './creatures';
 import { useScenePlay } from './figures';
-import UnplacedList from './figures/UnplacedList';
+import { editFigureDrag } from './figures/editFigureDrag';
 import { CombatOverlay, MoveModeContext } from './combat';
 import { playersView, useSceneFog } from './fog';
 import { SceneModeSwitch, useSceneMode } from './mode';
@@ -103,12 +96,16 @@ function GameScenePage() {
   // «Правке» — есть, а фигурки и существа переставляются без хода.
   const { mode, setMode } = useSceneMode(master, ready !== null && !viewOnly);
   const editing = master && mode === 'edit';
-  const { editor, objects } = useSceneTools({
+  // Выбор героя снимается, когда в «Существах» выбрали монстра: фигурки появляются ниже.
+  const clearFigureRef = useRef<() => void>(() => undefined);
+  const focusCreature = useCallback(() => clearFigureRef.current(), []);
+  const { editor, objects, creatures } = useSceneTools({
     master,
     editing,
     state: ready?.state ?? null,
     refs: view?.refs ?? null,
     edits,
+    onCreatureFocus: focusCreature,
   });
   const [readySceneId, setReadySceneId] = useState<string | null>(null);
   const [cutY, setCutY] = useState<number | null>(null);
@@ -180,9 +177,11 @@ function GameScenePage() {
   const play = useScenePlay({
     gameId: id,
     sceneId,
-    // В «Правке» фигурку выбирают только в «Просмотре»: другие инструменты правят карту.
-    // Вне встречи игроку выбирать нечего: выбор снимается, щелчок по фигурке пуст.
-    active: !watchOnly && (!editing || editor.tool === 'view'),
+    // В «Правке» фигурку выбирают в «Просмотре» (посмотреть) и в «Существах» (переставить):
+    // другие инструменты правят карту. Вне встречи игроку выбирать нечего.
+    active:
+      !watchOnly &&
+      (!editing || editor.tool === 'view' || editor.tool === 'creatures'),
     free: editing,
     state,
     refs: view?.refs ?? null,
@@ -191,6 +190,21 @@ function GameScenePage() {
   const { figures } = play;
   const { select: selectFigure } = play.tool;
   const clearFigure = useCallback(() => selectFigure(null), [selectFigure]);
+  useEffect(() => {
+    clearFigureRef.current = clearFigure;
+  }, [clearFigure]);
+  // Выбрали героя в «Существах» — монстр или ставящееся существо снимаются.
+  const { clear: clearCreature } = creatures;
+  const figureTool = useMemo(
+    () => ({
+      ...play.tool,
+      select: (characterId: string | null) => {
+        if (characterId) clearCreature();
+        selectFigure(characterId);
+      },
+    }),
+    [play.tool, clearCreature, selectFigure],
+  );
   const cards = useCreatureCards({
     gameId: id,
     sceneId,
@@ -198,7 +212,9 @@ function GameScenePage() {
     state,
     refs: view?.refs ?? null,
     figures: figures.figures,
-    canPick: master && !editing,
+    // В «Просмотре» «Правки» щелчок по существу выбирает его, но не ведёт.
+    canPick: master && (!editing || editor.tool === 'view'),
+    canWalk: master && !editing,
     figureId: play.tool.selectedId,
     clearFigure,
     reloadFigures: figures.reload,
@@ -214,11 +230,27 @@ function GameScenePage() {
   );
   // Выбор у страницы один: щелчки по клеткам ведут выбранную фигурку или (у мастера)
   // выбранного монстра (docs/plan/done/creature-movement.md).
+  // В «Правке»: «Просмотр» клетками ничего не делает, в «Существах» выбранного героя ставит
+  // фигурка, остальное — инструмент (замечания после первой партии, 2026-10-26).
   const sceneEditor = viewOnly
     ? null
-    : ((editing && ready ? editor.sceneEditor : null) ??
-      play.editor ??
-      cards.walk.editor);
+    : editing
+      ? ready
+        ? editor.tool === 'creatures'
+          ? (play.editor ?? editor.sceneEditor)
+          : editor.sceneEditor
+        : null
+      : (play.editor ?? cards.walk.editor);
+  const figureDrag = viewOnly
+    ? undefined
+    : editFigureDrag({
+        drag: play.drag,
+        editing,
+        tool: editor.tool,
+        clearCreature,
+        onOpen: (characterId) =>
+          windows.open({ kind: 'character', id: characterId }),
+      });
   const handleReady = useCallback(() => setReadySceneId(sceneId), [sceneId]);
   const tools = master && ready !== null && !viewOnly;
   const editTools = tools && editing;
@@ -303,7 +335,11 @@ function GameScenePage() {
                 editor={sceneEditor}
                 walk={viewOnly ? null : (play.walk ?? cards.walk.scene)}
                 objectTool={
-                  editTools && editor.tool === 'place' ? objects.scene : null
+                  editTools && editor.tool === 'place'
+                    ? objects.scene
+                    : editTools && editor.tool === 'creatures'
+                      ? creatures.scene
+                      : null
                 }
                 focusRef={focusRef}
                 onReady={handleReady}
@@ -312,7 +348,7 @@ function GameScenePage() {
                 hideContainerContents={ready.view.contentsHidden || viewOnly}
                 figures={figures.inputs}
                 figureGhosts={play.ghosts.ghosts}
-                figureDrag={viewOnly ? undefined : play.drag}
+                figureDrag={figureDrag}
                 creatures={
                   viewOnly
                     ? { ...cards.view, onPick: undefined }
@@ -321,6 +357,12 @@ function GameScenePage() {
                         // Мастер в «Игре» без выбранного: щелчок по сундуку, предмету или
                         // двери — окно сведений (docs/plan/done/scene-page.md, этап 6). С
                         // выбранной фигуркой щелчок идёт в ход.
+                        // «Просмотр» «Правки»: двойной щелчок — окно карточки.
+                        onOpen:
+                          editTools && editor.tool === 'view'
+                            ? (objectId: number) =>
+                                windows.open({ kind: 'creature', objectId })
+                            : undefined,
                         onPickObject:
                           master &&
                           !editing &&
@@ -344,7 +386,11 @@ function GameScenePage() {
                       editor={editor}
                       state={ready.state}
                       hover={hover}
-                      placesObject={objects.settings.choice !== null}
+                      placesObject={
+                        editor.tool === 'creatures'
+                          ? editor.placesCreature
+                          : objects.settings.choice !== null
+                      }
                     />
                   ))
                 }
@@ -440,24 +486,33 @@ function GameScenePage() {
           }
           editBody={
             editTools && (
-              <Stack gap="md">
-                {figures.figures && (
-                  <UnplacedList
-                    unplaced={figures.figures.unplaced}
-                    tool={play.tool}
-                  />
-                )}
-                <SceneToolsPanel
-                  editor={editor}
-                  objects={objects}
-                  state={ready.state}
-                  refs={ready.view.refs}
-                  busy={edits.busy}
-                  editError={edits.editError}
-                  onFocus={(point) => focusRef.current?.focusOn(point)}
-                  hover={hover}
-                />
-              </Stack>
+              <SceneToolsPanel
+                editor={editor}
+                objects={objects}
+                creatures={creatures}
+                figures={figures.figures}
+                figureTool={figureTool}
+                state={ready.state}
+                refs={ready.view.refs}
+                busy={edits.busy}
+                editError={edits.editError}
+                onFocus={(point) => focusRef.current?.focusOn(point)}
+                hover={hover}
+                selected={
+                  ((play.tool.figure?.canMove ?? false) ||
+                    cards.selected?.state != null) && (
+                    <CreatureCards
+                      gameId={id}
+                      master={master}
+                      cards={cards}
+                      figure={play.tool.figure}
+                      onFigureAllowance={play.tool.allowance}
+                      figureBusy={play.tool.busy}
+                      onOpenCard={windows.open}
+                    />
+                  )
+                }
+              />
             )
           }
         />

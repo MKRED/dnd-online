@@ -4,6 +4,7 @@ import type { CharacterAbilityEntry } from './characterAbilities.js';
 import type { CharacterEffectEntry } from './characterEffects.js';
 import type { EffectComponent } from './effectComponents.js';
 import { creatureTotals, sheetTotals } from './sheetTotals.js';
+import { itemEquip } from './equipment.js';
 
 const entry = (
   name: string,
@@ -45,6 +46,8 @@ const totals = (...effects: CharacterEffectEntry[]) =>
     abilityScores,
     effects,
     abilities: [],
+    inventory: [],
+    proficiencies: { armor: [] },
   });
 
 // Способность на листе: черта с составляющими или обычная.
@@ -85,6 +88,17 @@ describe('sheetTotals', () => {
       noHealing: [],
       perTurn: [],
       perception: { shift: 0, lines: [] },
+      gear: {
+        armorClass: {
+          armorClass: 14,
+          wearsArmor: false,
+          shieldBonus: 0,
+          lines: [],
+          warnings: [],
+        },
+        speedPenalty: null,
+        stealthDisadvantage: null,
+      },
     });
   });
 
@@ -303,6 +317,8 @@ describe('черты', () => {
       abilityScores,
       effects,
       abilities,
+      inventory: [],
+      proficiencies: { armor: [] },
     });
 
   it('считаются в итоге и названы своим именем', () => {
@@ -323,6 +339,8 @@ describe('черты', () => {
       abilityScores,
       effects: [haste],
       abilities: [defense],
+      inventory: [],
+      proficiencies: { armor: [] },
     };
     const base = sheetTotals(character, []);
     expect(base.armorClass).toBe(15);
@@ -349,5 +367,93 @@ describe('черты', () => {
       { activation: { kind: 'action' } },
     );
     expect(sheet([hidden, action]).armorClass).toBe(14);
+  });
+});
+
+describe('надетое в итоге листа', () => {
+  // Латы книги: КД 18, Сила 15, помеха к Скрытности.
+  const plate = {
+    id: 'row-plate',
+    location: 'carried' as const,
+    quantity: 1,
+    equipped: ['body' as const],
+    attuned: false,
+    missing: null,
+    inactive: false,
+    item: {
+      id: 'plate',
+      name: 'Латы',
+      category: 'armor' as const,
+      rarity: 'none' as const,
+      weight: 65,
+      isPublic: true,
+      image: null,
+      equip: itemEquip({
+        category: 'armor',
+        details: {
+          base: 'plate',
+          kind: 'heavy',
+          armorClass: 18,
+          strength: 15,
+          stealthDisadvantage: true,
+          magicBonus: 0,
+          attunement: false,
+        },
+      }),
+    },
+  };
+  const mageArmor = entry('Доспехи мага', [
+    { kind: 'armor_class', change: 'base', value: 13 },
+  ]);
+  const character = (effects: CharacterEffectEntry[]) => ({
+    speed: 30,
+    armorClass: 14,
+    abilityScores,
+    effects,
+    abilities: [],
+    inventory: [plate],
+    proficiencies: { armor: ['heavy' as const] },
+  });
+
+  it('КД от доспеха, «базовый КД» эффекта при доспехе не действует', () => {
+    const totals = sheetTotals(character([mageArmor]));
+    // Mage Armor без доспеха дал бы 13 + 3 = 16, но латы надеты: 18.
+    expect(totals.armorClass).toBe(18);
+    expect(totals.gear.armorClass.wearsArmor).toBe(true);
+    expect(totals.gear.stealthDisadvantage).toBe('Латы');
+  });
+
+  it('щит прибавляется и к «базовому КД» эффекта', () => {
+    const shield = {
+      ...plate,
+      id: 'row-shield',
+      equipped: ['meleeOff' as const],
+      item: {
+        ...plate.item,
+        id: 'shield',
+        name: 'Щит',
+        category: 'shield' as const,
+        equip: itemEquip({
+          category: 'shield',
+          details: { armorClass: 2, magicBonus: 0, attunement: false },
+        }),
+      },
+    };
+    const totals = sheetTotals({
+      ...character([mageArmor]),
+      inventory: [shield],
+      proficiencies: { armor: ['shield'] },
+    });
+    // Без доспеха: 13 + Ловкость 3 = 16 больше числа формы 14, и щит +2 сверху.
+    expect(totals.armorClass).toBe(18);
+  });
+
+  it('Сила ниже требования снижает Скорость до эффектов', () => {
+    const totals = sheetTotals(character([haste]));
+    expect(totals.speed.speed).toBe(40);
+    expect(totals.speedChanges[0]).toEqual({
+      text: 'Скорость −10 фт: Сила ниже 15',
+      from: ['Латы'],
+    });
   });
 });

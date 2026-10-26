@@ -48,6 +48,26 @@ export const createShield = (agent: request.Agent): Promise<CreatedItem> =>
     details: { armorClass: 2, magicBonus: 0, attunement: false },
   });
 
+// Тяжёлый доспех с требованием Силы (у персонажа фикстуры Сила 15).
+export const createArmor = (
+  agent: request.Agent,
+  name: string,
+  strength: number | null,
+): Promise<CreatedItem> =>
+  createItem(agent, {
+    name,
+    category: 'armor',
+    details: {
+      base: null,
+      kind: 'heavy',
+      armorClass: 18,
+      strength,
+      stealthDisadvantage: true,
+      magicBonus: 0,
+      attunement: false,
+    },
+  });
+
 export const equipmentUrl = (characterId: string, slot: string) =>
   `/api/characters/${characterId}/equipment/${slot}`;
 

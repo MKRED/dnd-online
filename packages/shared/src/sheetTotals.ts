@@ -1,6 +1,6 @@
 import type { AbilityLink } from './abilityLinks.js';
 import { traitEffects } from './abilityPassive.js';
-import type { Character } from './character.js';
+import type { Character, CharacterProficiencies } from './character.js';
 import type { CharacterEffectEntry, EffectLink } from './characterEffects.js';
 import { expandConditions } from './conditionsExpand.js';
 import { DAMAGE_TYPE_LABELS } from './damageTypes.js';
@@ -24,6 +24,13 @@ import {
   type SpeedBase,
   type SpeedTotal,
 } from './effectSpeedTotal.js';
+import { wornGear } from './gear.js';
+import {
+  ARMOR_SPEED_PENALTY,
+  armorSpeedPenalty,
+  gearArmorClass,
+  type GearArmorClass,
+} from './gearArmorClass.js';
 import { perceptionShift } from './passivePerception.js';
 import { conditionOf, sheetConditions } from './sheetConditions.js';
 
@@ -83,25 +90,79 @@ function collect() {
 // у персонажа в форме — только обычная.
 export type CreatureBase = { speed: SpeedBase } & ArmorClassBase;
 
+// Итог листа персонажа: ещё и числа от надетого (docs/plan/equipment.md, этап 3).
+export type CharacterTotals = SheetTotals & { gear: CharacterGearNumbers };
+
+export interface CharacterGearNumbers {
+  armorClass: GearArmorClass;
+  // Доспех снижает Скорость: Силы меньше требования.
+  speedPenalty: ReturnType<typeof armorSpeedPenalty>;
+  // Доспех с помехой к Скрытности — его название.
+  stealthDisadvantage: string | null;
+}
+
+export function characterGearNumbers(
+  character: Pick<Character, 'armorClass' | 'abilityScores' | 'inventory'> & {
+    proficiencies: Pick<CharacterProficiencies, 'armor'>;
+  },
+): CharacterGearNumbers {
+  const gear = wornGear(character.inventory);
+  const { armor } = gear;
+  return {
+    armorClass: gearArmorClass(gear, {
+      unarmored: character.armorClass,
+      dexterity: character.abilityScores.dexterity,
+      training: character.proficiencies.armor,
+    }),
+    speedPenalty: armorSpeedPenalty(gear, character.abilityScores.strength),
+    stealthDisadvantage: armor?.details.stealthDisadvantage ? armor.name : null,
+  };
+}
+
 // Черты считаются всегда: вид листа «Без эффектов» передаёт пустой список эффектов, но
-// не убирает черты — они часть самого персонажа.
+// не убирает черты — они часть самого персонажа. Надетое — тоже: оно часть листа, а не
+// эффект. Скорость от доспеха снижается до эффектов: Haste удваивает уже сниженную.
 export function sheetTotals(
   character: Pick<
     Character,
-    'speed' | 'armorClass' | 'abilityScores' | 'effects' | 'abilities'
-  >,
+    | 'speed'
+    | 'armorClass'
+    | 'abilityScores'
+    | 'effects'
+    | 'abilities'
+    | 'inventory'
+  > & { proficiencies: Pick<CharacterProficiencies, 'armor'> },
   entries: readonly CharacterEffectEntry[] = character.effects,
-): SheetTotals {
-  return creatureTotals(
+): CharacterTotals {
+  const gear = characterGearNumbers(character);
+  const penalty = gear.speedPenalty;
+  const totals = creatureTotals(
     {
-      speed: { speed: character.speed },
-      armorClass: character.armorClass,
+      speed: {
+        speed: Math.max(
+          0,
+          character.speed - (penalty ? ARMOR_SPEED_PENALTY : 0),
+        ),
+      },
+      armorClass: gear.armorClass.armorClass - gear.armorClass.shieldBonus,
       dexterity: character.abilityScores.dexterity,
+      wearsArmor: gear.armorClass.wearsArmor,
+      shield: gear.armorClass.shieldBonus,
     },
     entries,
     character.abilities,
   );
+  if (penalty) {
+    totals.speedChanges.unshift({
+      text: armorSpeedPenaltyText(penalty.strength),
+      from: [penalty.name],
+    });
+  }
+  return { ...totals, gear };
 }
+
+export const armorSpeedPenaltyText = (strength: number) =>
+  `Скорость −${ARMOR_SPEED_PENALTY} фт: Сила ниже ${strength}`;
 
 export function creatureTotals(
   base: CreatureBase,

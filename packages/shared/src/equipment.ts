@@ -23,13 +23,21 @@ export type EquipSlot = (typeof EQUIP_SLOTS)[number];
 // Attunement). Настройка — у строки инвентаря, а не у места куклы: docs/dnd/weapons-armor.md.
 export const ATTUNEMENT_MAX = 3;
 
+// Поля предмета, из которых лист считает числа (этап 3): КД доспеха и щита, атаки оружия.
+// У одежды и украшений чисел нет — до способностей и эффектов предметов (этап 5).
+export type EquipStats = Extract<
+  ItemVariant,
+  { category: 'weapon' | 'armor' | 'shield' }
+>;
+
 // Что кукле нужно знать о предмете — сжато из details, чтобы карточка строки инвентаря
 // оставалась лёгкой. slots — места, куда предмет подходит; twoHanded — занимает обе руки
-// своего набора.
+// своего набора; stats — поля для чисел листа.
 export interface ItemEquip {
   slots: EquipSlot[];
   twoHanded: boolean;
   attunement: boolean;
+  stats: EquipStats | null;
 }
 
 // Места предмета по его категории; не экипировка — null.
@@ -43,13 +51,19 @@ export function itemEquip(item: ItemVariant): ItemEquip | null {
           ? (['meleeMain', 'meleeOff'] as const)
           : (['rangedMain', 'rangedOff'] as const);
       // Двуручное во второй руке не держат: оно занимает обе.
-      return { slots: twoHanded ? [main] : [main, off], twoHanded, attunement };
+      return {
+        slots: twoHanded ? [main] : [main, off],
+        twoHanded,
+        attunement,
+        stats: item,
+      };
     }
     case 'armor':
       return {
         slots: ['body'],
         twoHanded: false,
         attunement: item.details.attunement,
+        stats: item,
       };
     // Щит — вторая рука ближнего боя, как в BG3.
     case 'shield':
@@ -57,18 +71,21 @@ export function itemEquip(item: ItemVariant): ItemEquip | null {
         slots: ['meleeOff'],
         twoHanded: false,
         attunement: item.details.attunement,
+        stats: item,
       };
     case 'clothing':
       return {
         slots: [item.details.slot],
         twoHanded: false,
         attunement: item.details.attunement,
+        stats: null,
       };
     case 'jewelry':
       return {
         slots: item.details.slot === 'ring' ? ['ring1', 'ring2'] : ['amulet'],
         twoHanded: false,
         attunement: item.details.attunement,
+        stats: null,
       };
     default:
       return null;

@@ -1,5 +1,11 @@
-import { Fieldset, Group, Paper, Stack, Text } from '@mantine/core';
-import { ABILITY_SCORES, type AbilityScore, type Character } from 'shared';
+import { Badge, Fieldset, Group, Paper, Stack, Text } from '@mantine/core';
+import { useMemo } from 'react';
+import {
+  ABILITY_SCORES,
+  characterGearNumbers,
+  type AbilityScore,
+  type Character,
+} from 'shared';
 import {
   formatModifier,
   getAbilityModifier,
@@ -15,9 +21,11 @@ interface BonusRowProps {
   bonus: number;
   // Отметка владения: «●» — владение, «●●» — экспертиза.
   mark: 0 | 1 | 2;
+  // Помеха к проверке от надетого: «Помеха: Кольчуга».
+  disadvantage?: string;
 }
 
-function BonusRow({ label, bonus, mark }: BonusRowProps) {
+function BonusRow({ label, bonus, mark, disadvantage }: BonusRowProps) {
   return (
     <Group justify="space-between" wrap="nowrap" gap="xs">
       <Text size="sm" fw={mark ? 600 : 400} c={mark ? undefined : 'dimmed'}>
@@ -32,6 +40,17 @@ function BonusRow({ label, bonus, mark }: BonusRowProps) {
             {'●'.repeat(mark)}
           </Text>
         )}
+        {disadvantage && (
+          <Badge
+            component="span"
+            size="xs"
+            variant="light"
+            color="orange"
+            ml={6}
+          >
+            {disadvantage}
+          </Badge>
+        )}
       </Text>
       <Text size="sm" fw={600}>
         {formatModifier(bonus)}
@@ -43,9 +62,11 @@ function BonusRow({ label, bonus, mark }: BonusRowProps) {
 function AbilityBlock({
   character,
   ability,
+  stealthDisadvantage,
 }: {
   character: Character;
   ability: AbilityScore;
+  stealthDisadvantage: string | null;
 }) {
   const score = character.abilityScores[ability];
   const { proficiencyBonus } = character;
@@ -84,6 +105,11 @@ function AbilityBlock({
                 proficiencyBonus,
               )}
               mark={!entry ? 0 : entry.expertise ? 2 : 1}
+              disadvantage={
+                skill === 'stealth' && stealthDisadvantage
+                  ? `Помеха: ${stealthDisadvantage}`
+                  : undefined
+              }
             />
           );
         })}
@@ -93,7 +119,12 @@ function AbilityBlock({
 }
 
 // Характеристики, спасброски и навыки с уже посчитанными бонусами — те же формулы, что в форме.
+// Доспех с помехой к Скрытности отмечает этот навык (docs/plan/equipment.md, этап 3).
 function AbilitiesView({ character }: { character: Character }) {
+  const { stealthDisadvantage } = useMemo(
+    () => characterGearNumbers(character),
+    [character],
+  );
   return (
     <Fieldset legend="Характеристики и навыки">
       <div className={classes.abilitiesBox}>
@@ -103,6 +134,7 @@ function AbilitiesView({ character }: { character: Character }) {
               key={ability}
               character={character}
               ability={ability}
+              stealthDisadvantage={stealthDisadvantage}
             />
           ))}
         </div>

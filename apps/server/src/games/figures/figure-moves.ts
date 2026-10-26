@@ -73,6 +73,7 @@ async function findFigure(actor: FigureActor, characterId: string) {
       name: characters.name,
       ownerId: characters.userId,
       speed: characters.speed,
+      strength: characters.strength,
       controllerId: gameMembers.controllerId,
     })
     .from(gameFigures)
@@ -130,10 +131,8 @@ export async function moveFigure(
   characterId: string,
   to: Vec3,
 ): Promise<void> {
-  const { figure, name, ownerId, speed, controllerId } = await findFigure(
-    actor,
-    characterId,
-  );
+  const { figure, name, ownerId, speed, strength, controllerId } =
+    await findFigure(actor, characterId);
   if (!canMoveFigure(actor.userId, actor.masterId, ownerId, controllerId)) {
     throw new ForbiddenException(FIGURE_NOT_YOURS);
   }
@@ -142,7 +141,7 @@ export async function moveFigure(
   const world = await loadSceneWorld(actor.tx, scene);
   const tLoaded = Date.now();
   const speeds = await figureSpeeds(actor.tx, actor.gameId, [
-    { id: characterId, ownerId, speed },
+    { id: characterId, ownerId, speed, strength },
   ]);
   // В свободном режиме запас полный на каждый ход и не тратится (docs/dnd/movement.md).
   const free = await isFree(actor.tx, actor.gameId);

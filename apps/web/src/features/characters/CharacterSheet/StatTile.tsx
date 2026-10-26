@@ -9,9 +9,20 @@ interface StatTileProps {
   hint?: string;
   // Есть — число изменено эффектами: оно выделено, подсказка объясняет почему.
   changedBy?: string;
+  // Подсказка без выделения: из чего число сложено (КД от надетого).
+  explain?: string;
+  // Чего не хватает — короткой строкой под числом; подробно — в подсказке.
+  warning?: string;
 }
 
-function StatTile({ label, value, hint, changedBy }: StatTileProps) {
+function StatTile({
+  label,
+  value,
+  hint,
+  changedBy,
+  explain,
+  warning,
+}: StatTileProps) {
   const tile = (
     <Paper withBorder radius="md" p="xs" ta="center">
       <Text size="xs" c="dimmed">
@@ -35,13 +46,19 @@ function StatTile({ label, value, hint, changedBy }: StatTileProps) {
           {hint}
         </Text>
       )}
+      {warning && (
+        <Text size="xs" c="orange">
+          {warning}
+        </Text>
+      )}
     </Paper>
   );
-  if (!changedBy) return tile;
+  const tooltip = changedBy ?? explain;
+  if (!tooltip) return tile;
   // На телефоне наведения нет — подсказка открывается и касанием.
   return (
     <Tooltip
-      label={changedBy}
+      label={tooltip}
       multiline
       maw={280}
       withArrow
@@ -50,7 +67,7 @@ function StatTile({ label, value, hint, changedBy }: StatTileProps) {
     >
       <div
         tabIndex={0}
-        aria-label={`${label}: ${value}. ${changedBy.replaceAll('\n', ' ')}`}
+        aria-label={`${label}: ${value}. ${tooltip.replaceAll('\n', ' ')}`}
       >
         {tile}
       </div>

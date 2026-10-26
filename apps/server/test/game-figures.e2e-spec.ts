@@ -15,6 +15,7 @@ import {
   pngImage,
   PNG_FILE,
 } from './support/character-fixture.js';
+import { createArmor, equipmentUrl } from './support/equipment-fixture.js';
 import { createSceneGame, startSession } from './support/scene-fixture.js';
 import {
   collect,
@@ -189,6 +190,26 @@ describe('game figures (e2e)', () => {
     await addScene(g.master.agent, g.gameId, g.mapId);
     const seen = await figures(g.master.agent, g.gameId);
     expect(seen.figures[0]).toMatchObject({ speed: 40 });
+  });
+
+  // docs/dnd/weapons-armor.md, «Числа от экипировки»: доспех тяжелее Силы — Скорость −10.
+  it('надетый доспех с Силой выше, чем у персонажа, снижает Скорость фигурки', async () => {
+    const g = await createSceneGame(user, png, 'gfg_armor');
+    const p = g.player.agent;
+    const armor = await createArmor(p, 'Тяжёлые латы', 16);
+    const added = await p
+      .post(`/api/characters/${g.character}/items`)
+      .send({ itemId: armor.id, quantity: 1, location: 'carried' })
+      .expect(201);
+    const [row] = added.body as { id: string }[];
+    await p
+      .put(equipmentUrl(g.character, 'body'))
+      .send({ entryId: row.id })
+      .expect(200);
+    await addScene(g.master.agent, g.gameId, g.mapId);
+    expect((await figures(g.master.agent, g.gameId)).figures[0]).toMatchObject({
+      speed: 20,
+    });
   });
 
   it('скрытая точка пропускается; смена и перезапуск сцены ставят фигурки заново, место — убирает', async () => {

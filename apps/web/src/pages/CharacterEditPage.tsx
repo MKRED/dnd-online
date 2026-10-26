@@ -1,7 +1,7 @@
 import { Alert, Anchor, Container, Group, Loader, Stack } from '@mantine/core';
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import type { Character } from 'shared';
+import { wornGear, type Character } from 'shared';
 import EditPageTitle from '../components/EditPageTitle';
 import {
   CharacterForm,
@@ -125,6 +125,7 @@ function CharacterEditPage() {
               submitError={submitError}
               errorTitle="Ошибка сохранения"
               onSubmit={handleSubmit}
+              wornArmor={wornGear(character.inventory).armor?.name ?? null}
             />
           )}
         </Stack>

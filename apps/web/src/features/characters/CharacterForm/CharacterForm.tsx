@@ -28,6 +28,8 @@ interface CharacterFormProps {
   submitError: string | null;
   errorTitle: string;
   onSubmit: (values: CharacterFormValues) => void;
+  // Доспех на кукле: тогда число «КД без доспеха» лист не использует.
+  wornArmor?: string | null;
 }
 
 const required = (value: string) =>
@@ -40,6 +42,7 @@ function CharacterForm({
   submitError,
   errorTitle,
   onSubmit,
+  wornArmor = null,
 }: CharacterFormProps) {
   const form = useForm<CharacterFormValues>({
     // Форма большая (характеристики, 18 навыков, снаряжение...) — в controlled-режиме
@@ -115,7 +118,7 @@ function CharacterForm({
       <Stack>
         <IdentitySection form={form} />
         <AbilityScoresSection form={form} />
-        <CombatSection form={form} />
+        <CombatSection form={form} wornArmor={wornArmor} />
         <SpellSlotsSection form={form} />
         <ProficienciesSection form={form} />
         <CurrencyPersonalitySection form={form} />

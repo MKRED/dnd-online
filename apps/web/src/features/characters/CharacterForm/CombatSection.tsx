@@ -28,9 +28,17 @@ const HIT_DIE_OPTIONS = HIT_DICE.map((die) => ({
 
 interface CombatSectionProps {
   form: UseFormReturnType<CharacterFormValues>;
+  wornArmor: string | null;
 }
 
-function CombatSection({ form }: CombatSectionProps) {
+// КД лист считает от надетого (docs/plan/equipment.md, этап 3, вариант А): число формы —
+// КД без доспеха, щит лист прибавит сам.
+const armorClassHint = (wornArmor: string | null) =>
+  wornArmor
+    ? `Сейчас не считается: надет доспех «${wornArmor}»`
+    : '10 + Ловкость или своя защита без доспеха. Доспех и щит лист прибавит сам';
+
+function CombatSection({ form, wornArmor }: CombatSectionProps) {
   // Инициатива не хранится: по правилам 2024 это модификатор Ловкости. Секция
   // мемоизирована, поэтому за Ловкостью следим сами.
   const [dexterity, setDexterity] = useState(
@@ -59,7 +67,8 @@ function CombatSection({ form }: CombatSectionProps) {
         </Grid.Col>
         <Grid.Col span={{ base: 6, sm: 3 }}>
           <NumberInput
-            label="Класс доспеха без эффектов"
+            label="КД без доспеха"
+            description={armorClassHint(wornArmor)}
             min={0}
             {...form.getInputProps('armorClass')}
           />

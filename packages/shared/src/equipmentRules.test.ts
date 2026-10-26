@@ -75,10 +75,11 @@ describe('itemEquip', () => {
   });
 
   it('двуручное — только в основную руку', () => {
-    expect(weapon({ properties: ['twoHanded'] })).toEqual({
+    expect(weapon({ properties: ['twoHanded'] })).toMatchObject({
       slots: ['meleeMain'],
       twoHanded: true,
       attunement: false,
+      stats: { category: 'weapon' },
     });
   });
 });
@@ -153,6 +154,7 @@ describe('planEquip', () => {
             slots: ['ring1', 'ring2', 'amulet'],
             twoHanded: false,
             attunement: false,
+            stats: null,
           },
           { quantity: 2 },
         ),

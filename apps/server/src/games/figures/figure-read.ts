@@ -18,6 +18,7 @@ import {
 } from '../../database/schema/index.js';
 import { loadGameEffectLists } from '../characters/game-character-effects.js';
 import { loadGameTraitLists } from '../characters/game-character-traits.js';
+import { armorSpeedPenalties } from './figure-armor.js';
 
 export type FigureRow = typeof gameFigures.$inferSelect;
 
@@ -34,24 +35,27 @@ export function canMoveFigure(
   );
 }
 
-// Скорость из листа с чертами и эффектами — эффекты из библиотеки игры
+// Скорость из листа с доспехом, чертами и эффектами — эффекты из библиотеки игры
 // (game-character-effects.ts), черты — как в листе (game-character-traits.ts); скорость
-// лазания у персонажа только от них.
+// лазания у персонажа только от них. Доспех снижает Скорость до эффектов, как на листе
+// (sheetTotals).
 export async function figureSpeeds(
   db: Db,
   gameId: string,
-  rows: { id: string; ownerId: string; speed: number }[],
+  rows: { id: string; ownerId: string; speed: number; strength: number }[],
 ): Promise<Map<string, { speed: number; climb: number | null }>> {
   const owners = new Map(rows.map((row) => [row.id, row.ownerId]));
   const lists = await loadGameEffectLists(db, gameId, owners);
   const traits = await loadGameTraitLists(db, owners);
+  const armor = await armorSpeedPenalties(db, rows);
   return new Map(
     rows.map((row) => {
       const effects = [
         ...traitEffects(traits.get(row.id) ?? []),
         ...activeEffects(lists.get(row.id) ?? []),
       ];
-      const total = totalSpeed({ speed: row.speed }, effects);
+      const speed = Math.max(0, row.speed - (armor.get(row.id) ?? 0));
+      const total = totalSpeed({ speed }, effects);
       return [
         row.id,
         { speed: total.speed, climb: total.special.climb ?? null },
@@ -74,6 +78,7 @@ export async function readSceneFigures(
       name: characters.name,
       ownerId: characters.userId,
       speed: characters.speed,
+      strength: characters.strength,
       current: characters.hitPointsCurrent,
       max: characters.hitPointsMax,
       temp: characters.hitPointsTemp,
@@ -95,6 +100,7 @@ export async function readSceneFigures(
       id: row.figure.characterId,
       ownerId: row.ownerId,
       speed: row.speed,
+      strength: row.strength,
     })),
   );
   return rows.map(

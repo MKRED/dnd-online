@@ -1,5 +1,5 @@
 import { SimpleGrid } from '@mantine/core';
-import type { Character, SheetTotals } from 'shared';
+import type { Character, CharacterTotals } from 'shared';
 import {
   formatModifier,
   getAbilityModifier,
@@ -14,16 +14,17 @@ interface CombatViewProps {
   character: Character;
   // Итог с чертами и эффектами (в виде «Без эффектов» — только с чертами); null — числа
   // из формы.
-  totals: SheetTotals | null;
+  totals: CharacterTotals | null;
 }
 
 // Боевые числа плитками: их смотрят чаще всего, поэтому они крупно и сразу под шапкой.
 // Инициатива не хранится — это модификатор Ловкости (docs/dnd/combat-stats.md).
 // Черты и эффекты пересчитывают Класс доспеха, Скорость и пассивное восприятие
-// (docs/plan/done/character-effects.md, docs/plan/done/traits.md).
+// (docs/plan/done/character-effects.md, docs/plan/done/traits.md); КД и Скорость
+// считаются и от надетого (docs/plan/equipment.md, этап 3).
 function CombatView({ character, totals }: CombatViewProps) {
   const initiative = getAbilityModifier(character.abilityScores.dexterity);
-  const armorClass = armorClassTile(character.armorClass, totals);
+  const armorClass = armorClassTile(character.armorClass, totals, totals?.gear);
   const speed = speedTile(character.speed, totals);
   const perception = perceptionTile(character, totals);
   return (

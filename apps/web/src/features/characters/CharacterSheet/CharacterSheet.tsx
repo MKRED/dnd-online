@@ -10,6 +10,7 @@ import {
 } from 'shared';
 import AbilitiesView from './AbilitiesView';
 import CombatView from './CombatView';
+import SheetAttacks from './SheetAttacks';
 import EffectSummary from './EffectSummary';
 import EffectsStrip from '../Effects';
 import CharacterAbilities from '../Abilities';
@@ -90,6 +91,7 @@ function CharacterSheet({
               />
             )}
             <CombatView character={character} totals={shown} />
+            <SheetAttacks character={character} />
             <EffectSummary totals={shown} />
           </Stack>
         </Grid.Col>

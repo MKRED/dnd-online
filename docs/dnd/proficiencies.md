@@ -12,7 +12,7 @@ Reference for the «Владения и снаряжение» section of the ch
   - `apps/server/src/characters/dto/nested/equipment.dto.ts` — the server rejects any other value and duplicates.
   - `apps/web/src/features/characters/characterArmorTraining.ts` — the Russian names.
   - `CharacterForm/ProficienciesSection.tsx` — the checkbox group «Доспехи».
-- **Departures from the book:** the training is not derived from the class, species or feats; the player ticks it by hand (same approach as the hit die, see [combat-stats.md](combat-stats.md)). The penalties for untrained armor are not applied anywhere.
+- **Departures from the book:** the training is not derived from the class, species or feats; the player ticks it by hand (same approach as the hit die, see [combat-stats.md](combat-stats.md)). The penalties for untrained armor are not applied to rolls; since 2026-10-26 the sheet's AC tile warns about armor worn without training, and a shield without training adds no AC ([weapons-armor.md](weapons-armor.md#числа-от-экипировки)).
 - **Old data:** the field used to be free text. Migration `0011_armor_training_keys.sql` turns Russian names into keys by the start of the word and drops what it cannot recognise.
 
 | Key      | Russian (in the form) | English      |
@@ -35,7 +35,7 @@ Notes:
   - `apps/server/src/characters/dto/nested/equipment.dto.ts` — the server rejects any other value and duplicates.
   - `apps/web/src/features/characters/characterWeapons.ts` — the Russian names and the grouped options.
   - `CharacterForm/ProficienciesSection.tsx` — the select «Оружие».
-- **Departures from the book:** a proficiency that is neither a category nor a single weapon (for example "Martial weapons that have a certain property") cannot be picked; the player ticks the weapons one by one or writes it in «Прочие владения». Weapons from other books are not in the list. Nothing is derived from the class.
+- **Departures from the book:** a proficiency that is neither a category nor a single weapon (for example "Martial weapons that have a certain property") cannot be picked; the player ticks the weapons one by one or writes it in «Прочие владения». Weapons from other books are not in the list. Nothing is derived from the class. The «Атаки» block of the sheet adds the Proficiency Bonus for a weapon whose category or kind is ticked (since 2026-10-26).
 - **Old data:** the field used to be free text. Migration `0012_weapon_proficiency_keys.sql` turns the Russian names of the table into keys and drops everything else.
 
 | Group          | Russian             | English        | Mastery (RU / EN)       |

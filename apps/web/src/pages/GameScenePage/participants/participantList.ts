@@ -47,7 +47,26 @@ export function heroParticipants(
     feetLeft: figure.canMove ? movementAllowance(figure).walk : null,
     hidden: false,
     selectable: figure.canMove,
+    group: 'pc',
+    kin: null,
   }));
+}
+
+// Уникальный ли монстр в справочнике (роль «Уникальный»): такие — своей группой.
+export function isUniqueMonster(
+  object: MapObject | undefined,
+  refs: MapObjectRefsView,
+): boolean {
+  if (object?.kind !== 'monster') return false;
+  const ref = refs.monsters[object.monsterId];
+  return ref?.missing === null && ref.role === 'unique';
+}
+
+// Одинаковые существа — одна запись справочника: их строки сворачиваются в одну.
+function kinOf(object: MapObject | undefined): string | null {
+  if (object?.kind === 'monster') return `monster:${object.monsterId}`;
+  if (object?.kind === 'npc') return `npc:${object.characterId}`;
+  return null;
 }
 
 // Монстры и НПС у мастера: состояние экземпляра есть только у него. Поверженный не
@@ -56,15 +75,17 @@ export function creatureParticipants(
   creatures: readonly GameCreature[],
   objectOf: (objectId: number) => MapObject | undefined,
   portraitOf: (object: MapObject | undefined) => string | null,
+  uniqueOf: (object: MapObject | undefined) => boolean = () => false,
 ): Participant[] {
   return creatures.flatMap(({ objectId, state, health }) => {
     if (!state) return [];
     const object = objectOf(objectId);
+    const npc = object?.kind === 'npc';
     return [
       {
         key: String(objectId),
         image: portraitOf(object),
-        kind: object?.kind === 'npc' ? 'npc' : 'monster',
+        kind: npc ? 'npc' : 'monster',
         name: state.name,
         hitPoints: state.hitPoints,
         health,
@@ -74,6 +95,8 @@ export function creatureParticipants(
             : movementAllowance(state.movement).walk,
         hidden: object?.hidden ?? false,
         selectable: true,
+        group: npc ? 'npc' : uniqueOf(object) ? 'unique' : 'monster',
+        kin: kinOf(object),
       } satisfies Participant,
     ];
   });

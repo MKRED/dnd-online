@@ -235,6 +235,8 @@ describe('GameScenePage', () => {
     const user = userEvent.setup();
 
     // В списке «Участники» — остаток запаса и хиты из листа (docs/plan/done/scene-page.md, этап 2).
+    // Группы свёрнуты, пока их не раскроют.
+    await user.click(await screen.findByRole('button', { name: /^Герои/ }));
     expect(await screen.findByText('40 фт')).toBeInTheDocument();
     expect(screen.getByText('10/12')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Новый раунд' }));
@@ -282,6 +284,7 @@ describe('GameScenePage', () => {
     renderScene('m1');
     const user = userEvent.setup();
 
+    await user.click(await screen.findByRole('button', { name: /^Герои/ }));
     await user.click(await screen.findByRole('button', { name: 'Лира' }));
     expect(screen.getByText('До 30 фт за ход')).toBeInTheDocument();
     expect(

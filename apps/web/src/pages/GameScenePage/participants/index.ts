@@ -6,4 +6,5 @@ export {
   creatureParticipants,
   creaturePortrait,
   heroParticipants,
+  isUniqueMonster,
 } from './participantList';

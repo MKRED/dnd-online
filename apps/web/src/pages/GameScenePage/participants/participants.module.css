@@ -148,6 +148,26 @@
   background: var(--mantine-color-default);
 }
 
+/* На телефоне панель низкая, и две прокрутки делили бы её на две узкие полосы
+   (замечание Михаила, 2026-10-26): там выбранный и список идут друг за другом во всю
+   свою высоту, а прокручивается вся вкладка. Выбранный всё равно первым. */
+@media (max-width: 48em) {
+  .tab {
+    overflow-y: auto;
+  }
+
+  .list {
+    flex: none;
+    min-height: auto;
+    overflow-y: visible;
+  }
+
+  .selected {
+    max-height: none;
+    overflow-y: visible;
+  }
+}
+
 /* Заголовок группы и строка одинаковых существ: щелчок сворачивает и раскрывает. */
 .groupHead,
 .kinHead {

@@ -3,6 +3,7 @@ import { useMemo, type ReactNode } from 'react';
 import ParticipantGroups from './ParticipantGroups';
 import type { Participant } from './ParticipantRow';
 import { participantGroups } from './participantGroups';
+import { useDoubleOpen } from './useDoubleOpen';
 import classes from './participants.module.css';
 
 interface ParticipantsTabProps {
@@ -41,9 +42,19 @@ function ParticipantsTab({
     () => participantGroups([...heroes, ...creatures]),
     [heroes, creatures],
   );
+  const doubleOpen = useDoubleOpen(
+    selectedKey,
+    (p) => (p.kind === 'pc' ? onSelectHero(p.key) : onSelectCreature(p.key)),
+    (p) => {
+      if (p.kind === 'pc') {
+        return p.selectable && onOpenHero ? () => onOpenHero(p.key) : undefined;
+      }
+      return onOpenCreature && (() => onOpenCreature(p.key));
+    },
+  );
   const empty = groups.length === 0;
   return (
-    <div className={classes.tab}>
+    <div className={classes.tab} onClickCapture={doubleOpen.catchSecond}>
       {!empty && combat}
       {selected && <section className={classes.selected}>{selected}</section>}
       <div className={classes.list}>
@@ -56,17 +67,7 @@ function ParticipantsTab({
         <ParticipantGroups
           groups={groups}
           selectedKey={selectedKey}
-          onSelect={(p) =>
-            p.kind === 'pc' ? onSelectHero(p.key) : onSelectCreature(p.key)
-          }
-          onOpen={(p) => {
-            if (p.kind === 'pc') {
-              return p.selectable && onOpenHero
-                ? () => onOpenHero(p.key)
-                : undefined;
-            }
-            return onOpenCreature && (() => onOpenCreature(p.key));
-          }}
+          onSelect={doubleOpen.click}
         />
         {errors.map(
           (error) =>

@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { GameCreature, MapObject } from 'shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -172,6 +172,36 @@ describe('участники', () => {
     rerender(<ParticipantsTab {...props} selectedKey="creature:5" />);
     expect(screen.getByText('0/4 · Повержен')).toBeInTheDocument();
     expect(screen.getByText('4/4')).toBeInTheDocument();
+  });
+
+  it('двойной щелчок открывает окно того, по кому щёлкнули первым, даже если список сдвинулся', async () => {
+    localStorage.setItem(
+      'scene.participantsOpen',
+      JSON.stringify(['monster', 'npc']),
+    );
+    const onOpenCreature = vi.fn();
+    const onSelectCreature = vi.fn();
+    renderWithProviders(
+      <ParticipantsTab
+        heroes={[]}
+        creatures={creatureParticipants([goblin, orc], objectOf, () => null)}
+        selectedKey={null}
+        onSelectHero={() => {}}
+        onSelectCreature={onSelectCreature}
+        onOpenCreature={onOpenCreature}
+        errors={[]}
+        selected={null}
+      />,
+    );
+    await userEvent.dblClick(screen.getByRole('button', { name: 'Гоблин' }));
+    expect(onOpenCreature).toHaveBeenLastCalledWith('2');
+    // Карточка встала над списком, второй щелчок пришёлся на соседнюю строку.
+    fireEvent.click(screen.getByRole('button', { name: 'Орк' }), { detail: 1 });
+    fireEvent.click(screen.getByRole('button', { name: 'Гоблин' }), {
+      detail: 2,
+    });
+    expect(onOpenCreature).toHaveBeenLastCalledWith('3');
+    expect(onSelectCreature).toHaveBeenLastCalledWith('3');
   });
 
   it('выбранный — над списком', () => {

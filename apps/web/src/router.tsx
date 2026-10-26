@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
+import RouteError from './components/RouteError';
 import { RequireAuth, RequireGuest } from './features/auth';
 import BookmarksPage from './pages/BookmarksPage';
 import CharacterCreatePage from './pages/CharacterCreatePage';
@@ -62,12 +63,16 @@ function simpleCatalogRoutes(def: SimpleCatalogDef) {
   ];
 }
 
+// Страница ошибки стоит на двух уровнях: у групп страниц — чтобы при сбое страницы
+// остались шапка и меню, и у каркаса — на случай, если сломался он сам.
 export const router = createBrowserRouter([
   {
     element: <AppLayout />,
+    errorElement: <RouteError />,
     children: [
       {
         element: <RequireAuth />,
+        errorElement: <RouteError />,
         children: [
           { path: '/', element: <HomePage /> },
           { path: '/characters', element: <CharactersPage /> },
@@ -103,6 +108,7 @@ export const router = createBrowserRouter([
       },
       {
         element: <RequireGuest />,
+        errorElement: <RouteError />,
         children: [
           { path: '/login', element: <LoginPage /> },
           { path: '/register', element: <RegisterPage /> },

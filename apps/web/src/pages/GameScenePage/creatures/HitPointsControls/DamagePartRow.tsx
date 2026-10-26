@@ -45,7 +45,11 @@ function DamagePartRow({
         aria-label={`Сколько хитов${part}`}
         placeholder="Сколько"
         size="xs"
-        w={76}
+        // Без стрелок: хиты набирают цифрами, а стрелки съедали половину узкого
+        // поля, и «Сколько» не помещалось (вариант А, 2026-10-26). Стрелки
+        // клавиатуры число меняют по-прежнему.
+        hideControls
+        w={84}
         min={0}
         max={HIT_POINTS_CHANGE_MAX}
         allowDecimal={false}

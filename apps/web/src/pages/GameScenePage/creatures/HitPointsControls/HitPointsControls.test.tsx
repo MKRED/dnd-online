@@ -25,6 +25,16 @@ async function pickType(label: string, option: string) {
 }
 
 describe('HitPointsControls', () => {
+  it('поле числа без стрелок; стрелки клавиатуры меняют число', async () => {
+    const onChange = setup();
+    const amount = screen.getByLabelText('Сколько хитов');
+    // Стрелки Mantine скрыты от чтения с экрана, поэтому ищем их по классу.
+    expect(document.querySelector('.mantine-NumberInput-control')).toBeNull();
+    await userEvent.type(amount, '3{ArrowUp}{ArrowUp}');
+    await userEvent.click(screen.getByRole('button', { name: 'Лечение' }));
+    expect(onChange).toHaveBeenLastCalledWith({ kind: 'heal', amount: 5 });
+  });
+
   it('смешанный урон — частями с типами; типы остаются до следующего удара', async () => {
     const onChange = setup();
     await userEvent.type(screen.getByLabelText('Сколько хитов'), '6');

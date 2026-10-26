@@ -1,12 +1,17 @@
 import { Alert, Loader, Stack, Text } from '@mantine/core';
 import type { GameCreature, GameFigure, MapObject } from 'shared';
 import { CharacterSheetSection } from '../../../features/characters';
+import {
+  prepareGameCreatureSpell,
+  spendGameCreatureSlots,
+} from '../../../features/games';
 import { MonsterCardSection } from '../../../features/monsters/MonsterCard';
 import CharacterStateCard from '../creatures/CharacterStateCard';
 import CreatureStateCard from '../creatures/CreatureStateCard';
 import MovementRow from '../creatures/MovementRow';
 import type { useCreatureCards } from '../creatures';
 import CardTabs from './CardTabs';
+import { npcInstanceSheet } from './npcInstanceSheet';
 import { useLibraryRecord } from './useLibraryRecord';
 
 interface CharacterCardBodyProps {
@@ -40,7 +45,7 @@ export function CharacterCardBody({
       onOpenSheet={() => undefined}
       bare
       readOnly={readOnly}
-      below={(character) => (
+      below={(character, change) => (
         <Stack gap="sm">
           {figure && (
             <MovementRow
@@ -52,7 +57,17 @@ export function CharacterCardBody({
           )}
           <CardTabs
             render={(section) => (
-              <CharacterSheetSection character={character} section={section} />
+              <CharacterSheetSection
+                character={character}
+                section={section}
+                // Ячейки — как в шапке окна; подготовку героя в игре пока не меняют.
+                spellActions={
+                  change && {
+                    spend: (expended) =>
+                      change({ kind: 'spell_slots', expended }),
+                  }
+                }
+              />
             )}
           />
         </Stack>
@@ -69,7 +84,8 @@ interface CreatureCardBodyProps {
 }
 
 // Окно монстра или НПС у мастера: хиты и эффекты экземпляра сверху, вкладки — из копии
-// в библиотеке игры.
+// в библиотеке игры. Ячейки и «подготовлено» у НПС — свои у экземпляра (замечания после
+// первой партии, 2026-10-26, вариант А): кружки и отметки во вкладке «Способности».
 export function CreatureCardBody({
   gameId,
   creature,
@@ -124,8 +140,21 @@ export function CreatureCardBody({
               />
             ) : loaded.kind === 'npc' ? (
               <CharacterSheetSection
-                character={loaded.record}
+                character={npcInstanceSheet(loaded.record, state.spells)}
                 section={section}
+                spellActions={{
+                  spend: (expended) =>
+                    spendGameCreatureSlots(gameId, objectId, expended).then(
+                      cards.creatures.apply,
+                    ),
+                  prepare: (abilityId, prepared) =>
+                    prepareGameCreatureSpell(
+                      gameId,
+                      objectId,
+                      abilityId,
+                      prepared,
+                    ).then(cards.creatures.apply),
+                }}
               />
             ) : null
           }

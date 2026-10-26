@@ -46,3 +46,4 @@ export {
   default as CharacterSheetSection,
   type SheetSection,
 } from './CharacterSheet/CharacterSheetSection';
+export type { SheetSpellActions } from './Abilities/sheetSpellActions';

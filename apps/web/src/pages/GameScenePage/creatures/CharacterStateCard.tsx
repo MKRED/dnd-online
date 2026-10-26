@@ -1,6 +1,10 @@
 import { Alert, Button, Group, Loader, Stack, Text } from '@mantine/core';
 import type { ReactNode } from 'react';
-import { SPELL_SLOT_CIRCLES, type Character } from 'shared';
+import {
+  SPELL_SLOT_CIRCLES,
+  type Character,
+  type GameCharacterChange,
+} from 'shared';
 import { EffectLinksStrip, SpellSlotPips } from '../../../features/characters';
 import { gameCharacterBase } from '../../../features/games';
 import DeathSavesEditor from './DeathSavesEditor';
@@ -17,7 +21,11 @@ interface CharacterStateCardProps {
   // В окне карточки (docs/plan/done/scene-page.md, этап 4): без своей шапки — имя в шапке окна.
   bare?: boolean;
   // Что показать под состоянием тем же листом (вкладки окна) — без второй загрузки.
-  below?: (character: Character) => ReactNode;
+  // change — правка через игру тем, кто ведёт персонажа; у только читающего — нет.
+  below?: (
+    character: Character,
+    change?: (next: GameCharacterChange) => Promise<void>,
+  ) => ReactNode;
   // Герой отряда (docs/plan/done/scene-page.md, этап 5): всё видно, ничего не правится.
   readOnly?: boolean;
 }
@@ -139,7 +147,7 @@ function CharacterStateCard({
         }
       />
       {error && <Alert color="red">{error}</Alert>}
-      {below?.(character)}
+      {below?.(character, readOnly ? undefined : change)}
     </Stack>
   );
 }

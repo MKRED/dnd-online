@@ -66,6 +66,11 @@ export const DASH_ONLY_IN_COMBAT =
 export const FIGURE_CANT_REACH =
   'Туда не дойти: путь перекрыт или не хватает движения';
 export const CREATURE_NOT_FOUND = 'Такого существа на сцене нет';
+// Ячейки и подготовка — только у НПС: у монстра заклинания в день.
+export const CREATURE_NO_SPELLS =
+  'Ячейки и подготовка заклинаний есть только у НПС';
+export const CREATURE_SPELL_NOT_FOUND =
+  'У этого НПС нет такого заклинания, которое готовят';
 export const MASTER_ONLY_CREATURES =
   'Монстров и НПС ведёт только мастер: их хиты, эффекты и ход';
 export const CREATURE_CANT_REACH =

@@ -485,6 +485,33 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'creature.slots_changed',
+        as: { kind: 'master' },
+        intent: { objectId: 3, expended: { 1: 1 } },
+        result: {
+          creature: { objectId: 3, name: 'Трактирщик' },
+          before: { 1: { total: 2, expended: 0 } },
+          after: { 1: { total: 2, expended: 1 } },
+        },
+      },
+      'Ячейки заклинаний: Трактирщик — осталось 1 круг: 1 из 2',
+    ],
+    [
+      {
+        ...base,
+        kind: 'creature.prepared',
+        as: { kind: 'master' },
+        intent: { objectId: 3, abilityId: 'a1', prepared: true },
+        result: {
+          creature: { objectId: 3, name: 'Трактирщик' },
+          ability: { id: 'a1', name: 'Щит' },
+        },
+      },
+      'Подготовлено: Трактирщик — Щит',
+    ],
+    [
+      {
+        ...base,
         kind: 'creature.changed',
         as: { kind: 'master' },
         intent: { objectId: 2, change: { kind: 'damage', amount: 3 } },

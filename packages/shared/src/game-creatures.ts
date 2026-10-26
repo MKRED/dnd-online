@@ -1,3 +1,4 @@
+import type { SpellSlots } from './character.js';
 import type { CharacterEffectEntry } from './characterEffects.js';
 import type { CreatureHealth, HitPointsChange } from './hitPoints.js';
 
@@ -16,6 +17,18 @@ export const GAME_CREATURE_CHANGE_KINDS = [
   'temp',
 ] as const satisfies readonly GameCreatureChange['kind'][];
 
+// Ячейки и подготовка заклинаний экземпляра НПС (замечания после первой партии,
+// 2026-10-26, вариант А): свои у каждого, как хиты. slots — ячейки копии с потраченными
+// экземпляра; prepared — только отметки, отличные от копии (id способности → отметка).
+export interface GameCreatureSpells {
+  slots: SpellSlots;
+  prepared: Record<string, boolean>;
+}
+
+export interface GameCreaturePreparedInput {
+  prepared: boolean;
+}
+
 // Что видит мастер: хиты (максимум — из копии в библиотеке) и эффекты экземпляра.
 export interface GameCreatureState {
   name: string;
@@ -30,6 +43,8 @@ export interface GameCreatureState {
     moved: number;
     dashes: number;
   };
+  // У НПС — ячейки и подготовка; у монстра (заклинания в день, без ячеек) — null.
+  spells: GameCreatureSpells | null;
 }
 
 export interface GameCreature {

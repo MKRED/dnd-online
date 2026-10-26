@@ -86,6 +86,8 @@ export const CREATURE_KINDS: readonly GameEventKind[] = [
   'creature.effect_removed',
   'creature.refreshed',
   'creature.dashed',
+  'creature.slots_changed',
+  'creature.prepared',
 ];
 
 // Сколько пропущенных записей журнала мастер получает при возвращении; больше —

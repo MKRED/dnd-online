@@ -14,6 +14,8 @@ import {
   type ItemRarity,
   type Monster,
   type PackEntry,
+  type SpellSlots,
+  SPELL_SLOT_CIRCLES,
 } from 'shared';
 import { toAbilityVariant } from '../../abilities/abilities.config.js';
 import { toCharacter } from '../../characters/characters.mapper.js';
@@ -279,6 +281,24 @@ export function libraryCreatureMaxHp(row: LibraryRow): number {
     return typeof max === 'number' && max > 0 ? max : 1;
   }
   return toMonsterFields(...variantArgs(row)).statBlock.hitPoints.average;
+}
+
+// Ячейки заклинаний НПС из копии (у монстра ячеек нет — null). В копии — то, что было в
+// листе: круги с числом ячеек и потраченных, кривое отбрасывается.
+export function libraryNpcSpellSlots(row: LibraryRow): SpellSlots | null {
+  if (row.kind !== 'npc') return null;
+  const source = objectOf(row.record.spellSlots);
+  const slots: SpellSlots = {};
+  for (const level of SPELL_SLOT_CIRCLES) {
+    const slot = objectOf(source[level]);
+    const { total, expended } = slot;
+    if (typeof total !== 'number' || total <= 0) continue;
+    slots[level] = {
+      total,
+      expended: typeof expended === 'number' ? expended : 0,
+    };
+  }
+  return slots;
 }
 
 // Скорость экземпляра без эффектов (ход монстров — docs/plan/done/creature-movement.md): у

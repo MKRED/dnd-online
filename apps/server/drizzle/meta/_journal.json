@@ -407,6 +407,13 @@
       "when": 1792881793939,
       "tag": "0057_game_move_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1792991094295,
+      "tag": "0058_creature_spells",
+      "breakpoints": true
     }
   ]
 }

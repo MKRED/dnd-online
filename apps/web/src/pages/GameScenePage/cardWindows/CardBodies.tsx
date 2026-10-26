@@ -6,7 +6,6 @@ import CharacterStateCard from '../creatures/CharacterStateCard';
 import CreatureStateCard from '../creatures/CreatureStateCard';
 import MovementRow from '../creatures/MovementRow';
 import type { useCreatureCards } from '../creatures';
-import ItemDetails from '../../../features/items/ItemDetails';
 import CardTabs from './CardTabs';
 import { useLibraryRecord } from './useLibraryRecord';
 
@@ -134,22 +133,4 @@ export function CreatureCardBody({
       )}
     </Stack>
   );
-}
-
-// Карточка предмета из сундука (docs/plan/done/scene-page.md, этап 6): копия в библиотеке игры,
-// только чтение.
-export function ItemCardBody({
-  gameId,
-  itemId,
-}: {
-  gameId: string;
-  itemId: string;
-}) {
-  const { loaded, error } = useLibraryRecord(gameId, {
-    kind: 'item',
-    id: itemId,
-  });
-  if (error) return <Alert color="red">{error}</Alert>;
-  if (loaded?.kind !== 'item') return <Loader size="sm" />;
-  return <ItemDetails item={loaded.record} compact />;
 }

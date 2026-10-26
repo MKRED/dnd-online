@@ -8,13 +8,16 @@ import type { useCreatureCards } from '../creatures';
 import type { FigureTool } from '../figures';
 import { creaturePortrait, Portrait } from '../participants';
 import { ThemeIcon } from '@mantine/core';
-import { IconBox, IconDiamond } from '@tabler/icons-react';
-import type { MapObject, MapOp } from 'shared';
 import {
-  CharacterCardBody,
-  CreatureCardBody,
-  ItemCardBody,
-} from './CardBodies';
+  IconBox,
+  IconDiamond,
+  IconFlame,
+  IconSparkles,
+} from '@tabler/icons-react';
+import { RECORD_PATHS, type RecordKind } from '../../../features/catalog';
+import type { MapObject, MapOp } from 'shared';
+import { CharacterCardBody, CreatureCardBody } from './CardBodies';
+import RecordCardBody from './RecordCardBody';
 import ObjectCardBody from './ObjectCardBody';
 import { objectInfo } from './objectInfo';
 import CardSheet from './CardSheet';
@@ -38,6 +41,17 @@ interface CardWindowsProps {
   applyOps: (ops: MapOp[]) => void;
   busy: boolean;
 }
+
+const RECORD_WORDS: Record<RecordKind, string> = {
+  ability: 'Способность',
+  effect: 'Эффект',
+  item: 'Предмет',
+};
+const RECORD_ICONS = {
+  ability: IconSparkles,
+  effect: IconFlame,
+  item: IconDiamond,
+};
 
 // Монстр — его карточка в каталоге, НПС — его лист; копия в библиотеке игры названа по ним.
 function creatureHref(object: MapObject | undefined): string | null {
@@ -101,19 +115,30 @@ function CardWindows({
         ),
       };
     }
-    if (target.kind === 'item') {
-      const ref = refs?.items[target.itemId];
+    if (
+      target.kind === 'item' ||
+      target.kind === 'ability' ||
+      target.kind === 'effect'
+    ) {
+      const kind = target.kind;
+      const id = target.kind === 'item' ? target.itemId : target.id;
+      const ref = kind === 'item' ? refs?.items[id] : undefined;
+      const Icon = RECORD_ICONS[kind];
       return {
         window,
-        title: ref?.missing === null ? ref.name : 'Предмет',
-        href: `/items/${target.itemId}`,
-        subtitle: 'Предмет',
+        title:
+          target.name ??
+          (ref?.missing === null ? ref.name : RECORD_WORDS[kind]),
+        href: `${RECORD_PATHS[kind]}/${id}`,
+        subtitle: RECORD_WORDS[kind],
         portrait: (
           <ThemeIcon size={40} radius="xl" variant="light" color="yellow">
-            <IconDiamond size={20} />
+            <Icon size={20} />
           </ThemeIcon>
         ),
-        body: <ItemCardBody gameId={gameId} itemId={target.itemId} />,
+        body: (
+          <RecordCardBody gameId={gameId} master={master} kind={kind} id={id} />
+        ),
       };
     }
     if (target.kind === 'character') {

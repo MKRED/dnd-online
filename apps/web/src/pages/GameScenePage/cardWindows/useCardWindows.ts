@@ -3,11 +3,15 @@ import { useCallback, useState } from 'react';
 // Чья карточка открыта (docs/plan/done/scene-page.md, этап 4): персонаж игрока — по id листа,
 // монстр или НПС — по номеру объекта сцены (у экземпляра свои хиты и эффекты).
 // Объект сцены (сундук, предмет на полу, дверь) и предмет из библиотеки — этап 6.
+// Способность, эффект или предмет из листа и карточек — своим окном, name — подпись до
+// загрузки (замечания после первой партии, 2026-10-26).
 export type CardTarget =
   | { kind: 'character'; id: string }
   | { kind: 'creature'; objectId: number }
   | { kind: 'object'; objectId: number }
-  | { kind: 'item'; itemId: string };
+  | { kind: 'item'; itemId: string; name?: string }
+  | { kind: 'ability'; id: string; name: string }
+  | { kind: 'effect'; id: string; name: string };
 
 export interface CardWindow {
   key: string;
@@ -29,6 +33,10 @@ export function cardKey(target: CardTarget): string {
       return `o:${target.objectId}`;
     case 'item':
       return `i:${target.itemId}`;
+    case 'ability':
+      return `a:${target.id}`;
+    case 'effect':
+      return `e:${target.id}`;
   }
 }
 

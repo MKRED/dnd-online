@@ -22,6 +22,7 @@ import {
   type Vec3,
 } from 'shared';
 import { useAuth } from '../../features/auth';
+import { RecordLinkContext, type OpenRecord } from '../../features/catalog';
 import { sceneObjectImages } from '../../features/games';
 import {
   parseCameraParams,
@@ -116,6 +117,18 @@ function GameScenePage() {
   const [hover] = useState(createHoverStore);
   // Открытые окна карточек существ (docs/plan/done/scene-page.md, этап 4).
   const windows = useCardWindows();
+  const { open: openWindow } = windows;
+  // Способность, эффект или предмет из листа и карточек открывается окном, не уводя со
+  // сцены (замечания после первой партии, 2026-10-26, вариант А).
+  const openRecord = useCallback<OpenRecord>(
+    (kind, recordId, name) =>
+      openWindow(
+        kind === 'item'
+          ? { kind, itemId: recordId, name }
+          : { kind, id: recordId, name },
+      ),
+    [openWindow],
+  );
   const [searchParams] = useSearchParams();
   // Один объект путей на игру: новый перестраивал бы объекты сцены.
   const images = useMemo(() => sceneObjectImages(id), [id]);
@@ -286,237 +299,239 @@ function GameScenePage() {
 
   return (
     <MoveModeContext.Provider value={{ free: freeMove, watchOnly }}>
-      <div className={classes.page}>
-        {game && (
-          <SceneRoom
-            gameId={id}
-            since={game.eventSeq}
-            master={master}
-            onReload={reload}
-            onSceneEdit={sceneEdit}
-            onSceneFog={receiveFog}
-            onFogChanged={sceneFog.refresh}
-            onFigures={cards.onChanged}
-            onFigureDrag={play.ghosts.receive}
-            onWalk={walks.receive}
-            dragSenderRef={play.dragSenderRef}
-            onLeave={() => void navigate(lobby)}
-            onEvents={journal.add}
-            onMissed={journal.resync}
-          />
-        )}
-        <div className={classes.scene}>
-          {load.kind === 'error' && (
-            <div className={classes.placeholder}>
-              <Alert color="red">{load.message}</Alert>
-            </div>
-          )}
-          {load.kind === 'none' && (
-            <div className={classes.placeholder}>
-              <Text c="dimmed">
-                В игре нет активной сцены.{' '}
-                <Anchor component={Link} to={lobby}>
-                  Вернуться в лобби
-                </Anchor>
-              </Text>
-            </div>
-          )}
-          {(load.kind === 'loading' || load.kind === 'away') && loader}
-          {ready && camera && (
-            <Suspense fallback={loader}>
-              <MapScene
-                key={ready.view.scene.id}
-                map={shownState ?? ready.state}
-                refs={ready.view.refs}
-                cutY={cutY === null ? Number.POSITIVE_INFINITY : sliderY}
-                camera={camera}
-                onCameraChange={rememberCamera}
-                resizePreview={null}
-                editor={sceneEditor}
-                walk={viewOnly ? null : (play.walk ?? cards.walk.scene)}
-                objectTool={
-                  editTools && editor.tool === 'place'
-                    ? objects.scene
-                    : editTools && editor.tool === 'creatures'
-                      ? creatures.scene
-                      : null
-                }
-                focusRef={focusRef}
-                onReady={handleReady}
-                settings={user?.settings ?? DEFAULT_USER_SETTINGS}
-                objectImages={images}
-                hideContainerContents={ready.view.contentsHidden || viewOnly}
-                figures={figures.inputs}
-                figureGhosts={play.ghosts.ghosts}
-                figureDrag={figureDrag}
-                creatures={
-                  viewOnly
-                    ? { ...cards.view, onPick: undefined }
-                    : {
-                        ...cards.view,
-                        // Мастер в «Игре» без выбранного: щелчок по сундуку, предмету или
-                        // двери — окно сведений (docs/plan/done/scene-page.md, этап 6). С
-                        // выбранной фигуркой щелчок идёт в ход.
-                        // «Просмотр» «Правки»: двойной щелчок — окно карточки.
-                        onOpen:
-                          editTools && editor.tool === 'view'
-                            ? (objectId: number) =>
-                                windows.open({ kind: 'creature', objectId })
-                            : undefined,
-                        onPickObject:
-                          master &&
-                          !editing &&
-                          !play.tool.selectedId &&
-                          !cards.selected
-                            ? (objectId: number) =>
-                                windows.open({ kind: 'object', objectId })
-                            : undefined,
-                      }
-                }
-                fog={fog}
-                walks={walks.walks}
-                hover={hover}
-                showReadout={editTools}
-                readoutAfter={
-                  editTools &&
-                  (plaque ? (
-                    <ScenePlaque state={plaque} raised inline />
-                  ) : (
-                    <ToolHint
-                      editor={editor}
-                      state={ready.state}
-                      hover={hover}
-                      placesObject={
-                        editor.tool === 'creatures'
-                          ? editor.placesCreature
-                          : objects.settings.choice !== null
-                      }
-                    />
-                  ))
-                }
-              />
-            </Suspense>
-          )}
-          {tools && (
-            <SceneToolbar
-              // В «Игре» полосы нет: остаются отмена и возврат — ход тоже отменяется.
-              tools={editing ? SCENE_TOOLS : []}
-              tool={editor.tool}
-              onTool={editor.setTool}
-              busy={edits.busy}
-              onUndo={edits.undo}
-              onRedo={edits.redo}
-              // На телефоне переключатель — в шапке панели: в строке с отменой и «Центром»
-              // ему не хватало места (docs/plan/done/scene-page.md, «Телефон»).
-              leading={
-                narrow ? undefined : (
-                  <SceneModeSwitch mode={mode} onChange={setMode} />
-                )
-              }
-            />
-          )}
-          {/* В «Игре» строки координат нет — плашка выбранного по центру внизу. В «Правке»
-            плашка стоит в строке координат, правее них (вариант А, 2026-10-24). */}
-          {ready && !viewOnly && plaque && !editTools && (
-            <ScenePlaque state={plaque} raised={false} />
-          )}
-          {/* Игроку — плашка боя или «только просмотр» вне встречи и уведомление о начале
-            и конце боя и встречи; мастер видит бой в «Участниках». */}
-          {ready && !master && (
-            <CombatOverlay
-              mode={moveMode}
-              round={figures.figures?.round ?? null}
-              watchOnly={watchOnly}
-            />
-          )}
-          {ready && bounds && bounds.max[1] > bounds.min[1] && (
-            <CutRuler
-              min={bounds.min[1]}
-              max={bounds.max[1]}
-              value={sliderY}
-              // Шкала на самом верху — «без среза», как в редакторе.
-              onChange={(y) => setCutY(y >= bounds.max[1] ? null : y)}
-            />
-          )}
-          {ready && (
-            <CardWindows
+      <RecordLinkContext.Provider value={openRecord}>
+        <div className={classes.page}>
+          {game && (
+            <SceneRoom
               gameId={id}
-              userId={user?.id ?? null}
+              since={game.eventSeq}
               master={master}
-              windows={windows}
-              figures={figures.figures}
-              figureTool={play.tool}
-              cards={cards}
-              state={state}
-              refs={view?.refs ?? null}
-              images={images}
-              applyOps={edits.applyOps}
-              busy={edits.busy}
+              onReload={reload}
+              onSceneEdit={sceneEdit}
+              onSceneFog={receiveFog}
+              onFogChanged={sceneFog.refresh}
+              onFigures={cards.onChanged}
+              onFigureDrag={play.ghosts.receive}
+              onWalk={walks.receive}
+              dragSenderRef={play.dragSenderRef}
+              onLeave={() => void navigate(lobby)}
+              onEvents={journal.add}
+              onMissed={journal.resync}
             />
           )}
-          {/* Готовность сцены не видна глазу: её ждёт агент в браузере перед снимком,
-            а скринридер читает её как статус. */}
-          {view && (
-            <VisuallyHidden role="status">
-              {readySceneId === view.scene.id
-                ? 'Сцена готова'
-                : 'Загрузка сцены…'}
-            </VisuallyHidden>
-          )}
-        </div>
-        <GameScenePanel
-          gameId={id}
-          gameName={game?.name ?? ''}
-          scene={view?.scene ?? null}
-          state={state}
-          master={master}
-          editing={editing}
-          open={open}
-          fog={sceneFog}
-          play={play}
-          cards={cards}
-          refs={view?.refs ?? null}
-          images={images}
-          onOpenCard={windows.open}
-          journal={journal}
-          modeSwitch={
-            narrow && tools ? (
-              <SceneModeSwitch mode={mode} onChange={setMode} compact />
-            ) : null
-          }
-          editBody={
-            editTools && (
-              <SceneToolsPanel
-                editor={editor}
-                objects={objects}
-                creatures={creatures}
-                figures={figures.figures}
-                figureTool={figureTool}
-                state={ready.state}
-                refs={ready.view.refs}
+          <div className={classes.scene}>
+            {load.kind === 'error' && (
+              <div className={classes.placeholder}>
+                <Alert color="red">{load.message}</Alert>
+              </div>
+            )}
+            {load.kind === 'none' && (
+              <div className={classes.placeholder}>
+                <Text c="dimmed">
+                  В игре нет активной сцены.{' '}
+                  <Anchor component={Link} to={lobby}>
+                    Вернуться в лобби
+                  </Anchor>
+                </Text>
+              </div>
+            )}
+            {(load.kind === 'loading' || load.kind === 'away') && loader}
+            {ready && camera && (
+              <Suspense fallback={loader}>
+                <MapScene
+                  key={ready.view.scene.id}
+                  map={shownState ?? ready.state}
+                  refs={ready.view.refs}
+                  cutY={cutY === null ? Number.POSITIVE_INFINITY : sliderY}
+                  camera={camera}
+                  onCameraChange={rememberCamera}
+                  resizePreview={null}
+                  editor={sceneEditor}
+                  walk={viewOnly ? null : (play.walk ?? cards.walk.scene)}
+                  objectTool={
+                    editTools && editor.tool === 'place'
+                      ? objects.scene
+                      : editTools && editor.tool === 'creatures'
+                        ? creatures.scene
+                        : null
+                  }
+                  focusRef={focusRef}
+                  onReady={handleReady}
+                  settings={user?.settings ?? DEFAULT_USER_SETTINGS}
+                  objectImages={images}
+                  hideContainerContents={ready.view.contentsHidden || viewOnly}
+                  figures={figures.inputs}
+                  figureGhosts={play.ghosts.ghosts}
+                  figureDrag={figureDrag}
+                  creatures={
+                    viewOnly
+                      ? { ...cards.view, onPick: undefined }
+                      : {
+                          ...cards.view,
+                          // Мастер в «Игре» без выбранного: щелчок по сундуку, предмету или
+                          // двери — окно сведений (docs/plan/done/scene-page.md, этап 6). С
+                          // выбранной фигуркой щелчок идёт в ход.
+                          // «Просмотр» «Правки»: двойной щелчок — окно карточки.
+                          onOpen:
+                            editTools && editor.tool === 'view'
+                              ? (objectId: number) =>
+                                  windows.open({ kind: 'creature', objectId })
+                              : undefined,
+                          onPickObject:
+                            master &&
+                            !editing &&
+                            !play.tool.selectedId &&
+                            !cards.selected
+                              ? (objectId: number) =>
+                                  windows.open({ kind: 'object', objectId })
+                              : undefined,
+                        }
+                  }
+                  fog={fog}
+                  walks={walks.walks}
+                  hover={hover}
+                  showReadout={editTools}
+                  readoutAfter={
+                    editTools &&
+                    (plaque ? (
+                      <ScenePlaque state={plaque} raised inline />
+                    ) : (
+                      <ToolHint
+                        editor={editor}
+                        state={ready.state}
+                        hover={hover}
+                        placesObject={
+                          editor.tool === 'creatures'
+                            ? editor.placesCreature
+                            : objects.settings.choice !== null
+                        }
+                      />
+                    ))
+                  }
+                />
+              </Suspense>
+            )}
+            {tools && (
+              <SceneToolbar
+                // В «Игре» полосы нет: остаются отмена и возврат — ход тоже отменяется.
+                tools={editing ? SCENE_TOOLS : []}
+                tool={editor.tool}
+                onTool={editor.setTool}
                 busy={edits.busy}
-                editError={edits.editError}
-                onFocus={(point) => focusRef.current?.focusOn(point)}
-                hover={hover}
-                selected={
-                  ((play.tool.figure?.canMove ?? false) ||
-                    cards.selected?.state != null) && (
-                    <CreatureCards
-                      gameId={id}
-                      master={master}
-                      cards={cards}
-                      figure={play.tool.figure}
-                      onFigureAllowance={play.tool.allowance}
-                      figureBusy={play.tool.busy}
-                      onOpenCard={windows.open}
-                    />
+                onUndo={edits.undo}
+                onRedo={edits.redo}
+                // На телефоне переключатель — в шапке панели: в строке с отменой и «Центром»
+                // ему не хватало места (docs/plan/done/scene-page.md, «Телефон»).
+                leading={
+                  narrow ? undefined : (
+                    <SceneModeSwitch mode={mode} onChange={setMode} />
                   )
                 }
               />
-            )
-          }
-        />
-      </div>
+            )}
+            {/* В «Игре» строки координат нет — плашка выбранного по центру внизу. В «Правке»
+            плашка стоит в строке координат, правее них (вариант А, 2026-10-24). */}
+            {ready && !viewOnly && plaque && !editTools && (
+              <ScenePlaque state={plaque} raised={false} />
+            )}
+            {/* Игроку — плашка боя или «только просмотр» вне встречи и уведомление о начале
+            и конце боя и встречи; мастер видит бой в «Участниках». */}
+            {ready && !master && (
+              <CombatOverlay
+                mode={moveMode}
+                round={figures.figures?.round ?? null}
+                watchOnly={watchOnly}
+              />
+            )}
+            {ready && bounds && bounds.max[1] > bounds.min[1] && (
+              <CutRuler
+                min={bounds.min[1]}
+                max={bounds.max[1]}
+                value={sliderY}
+                // Шкала на самом верху — «без среза», как в редакторе.
+                onChange={(y) => setCutY(y >= bounds.max[1] ? null : y)}
+              />
+            )}
+            {ready && (
+              <CardWindows
+                gameId={id}
+                userId={user?.id ?? null}
+                master={master}
+                windows={windows}
+                figures={figures.figures}
+                figureTool={play.tool}
+                cards={cards}
+                state={state}
+                refs={view?.refs ?? null}
+                images={images}
+                applyOps={edits.applyOps}
+                busy={edits.busy}
+              />
+            )}
+            {/* Готовность сцены не видна глазу: её ждёт агент в браузере перед снимком,
+            а скринридер читает её как статус. */}
+            {view && (
+              <VisuallyHidden role="status">
+                {readySceneId === view.scene.id
+                  ? 'Сцена готова'
+                  : 'Загрузка сцены…'}
+              </VisuallyHidden>
+            )}
+          </div>
+          <GameScenePanel
+            gameId={id}
+            gameName={game?.name ?? ''}
+            scene={view?.scene ?? null}
+            state={state}
+            master={master}
+            editing={editing}
+            open={open}
+            fog={sceneFog}
+            play={play}
+            cards={cards}
+            refs={view?.refs ?? null}
+            images={images}
+            onOpenCard={windows.open}
+            journal={journal}
+            modeSwitch={
+              narrow && tools ? (
+                <SceneModeSwitch mode={mode} onChange={setMode} compact />
+              ) : null
+            }
+            editBody={
+              editTools && (
+                <SceneToolsPanel
+                  editor={editor}
+                  objects={objects}
+                  creatures={creatures}
+                  figures={figures.figures}
+                  figureTool={figureTool}
+                  state={ready.state}
+                  refs={ready.view.refs}
+                  busy={edits.busy}
+                  editError={edits.editError}
+                  onFocus={(point) => focusRef.current?.focusOn(point)}
+                  hover={hover}
+                  selected={
+                    ((play.tool.figure?.canMove ?? false) ||
+                      cards.selected?.state != null) && (
+                      <CreatureCards
+                        gameId={id}
+                        master={master}
+                        cards={cards}
+                        figure={play.tool.figure}
+                        onFigureAllowance={play.tool.allowance}
+                        figureBusy={play.tool.busy}
+                        onOpenCard={windows.open}
+                      />
+                    )
+                  }
+                />
+              )
+            }
+          />
+        </div>
+      </RecordLinkContext.Provider>
     </MoveModeContext.Provider>
   );
 }

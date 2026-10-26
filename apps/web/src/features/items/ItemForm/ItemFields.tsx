@@ -19,6 +19,7 @@ import {
   formatWeight,
 } from '../itemLabels';
 import CategoryFields from './CategoryFields';
+import { shieldBookFill } from './EquipmentFields';
 import type { ItemFormValues } from './itemFormValues';
 import { packWeight } from './PackContentsField';
 
@@ -52,6 +53,11 @@ function weightHint({ category, packContents }: ItemFormValues): string {
 
 // Поля предмета, общие для всех категорий.
 function ItemFields({ form, itemId }: ItemFieldsProps) {
+  const pickCategory = (value: string | null) => {
+    const category = value as ItemFormValues['category'];
+    form.setFieldValue('category', category);
+    if (category === 'shield') form.setValues(shieldBookFill(form.values));
+  };
   return (
     <Stack>
       <TextInput
@@ -67,6 +73,7 @@ function ItemFields({ form, itemId }: ItemFieldsProps) {
           data={CATEGORY_OPTIONS}
           allowDeselect={false}
           {...form.getInputProps('category')}
+          onChange={pickCategory}
         />
         <Select
           label="Редкость"

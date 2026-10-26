@@ -5,3 +5,4 @@ export {
   type EquipmentFormValues,
 } from './equipmentFormValues';
 export { equipmentRules } from './equipmentRules';
+export { shieldBookFill } from './shieldBookFill';

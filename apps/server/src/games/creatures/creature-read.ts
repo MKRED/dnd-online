@@ -5,6 +5,7 @@ import {
   type CharacterEffectEntry,
   type FogMasks,
   type GameCreature,
+  type SpellSlots,
   type Vec3,
 } from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
@@ -19,8 +20,10 @@ import {
   libraryCreatureClimb,
   libraryCreatureSpeed,
   libraryEffectFields,
+  libraryNpcSpellSlots,
 } from '../library/library-record.js';
 import { creatureMovement } from './creature-movement.js';
+import { creatureSpells } from './creature-spell-state.js';
 
 // Монстр или НПС сцены с тем, что о нём знает библиотека игры.
 export interface SceneCreature {
@@ -32,6 +35,8 @@ export interface SceneCreature {
   // Скорость и скорость лазания (null — нет) без эффектов экземпляра.
   speed: number;
   climb: number | null;
+  // Ячейки из копии НПС (потраченные — как в копии); у монстра и без копии — null.
+  slots: SpellSlots | null;
 }
 
 // Существа сцены (все или одно): объекты-монстры и НПС, их копии в библиотеке. Копии
@@ -85,6 +90,7 @@ export async function loadSceneCreatures(
       max: copy ? libraryCreatureMaxHp(copy) : 1,
       speed: copy ? libraryCreatureSpeed(copy) : 0,
       climb: copy ? libraryCreatureClimb(copy) : null,
+      slots: copy ? libraryNpcSpellSlots(copy) : null,
     };
   });
 }
@@ -202,6 +208,10 @@ export async function readSceneCreatures(
             creature,
             rows.find((row) => row.objectId === creature.objectId),
             effects.get(creature.objectId) ?? [],
+          ),
+          spells: creatureSpells(
+            creature,
+            rows.find((row) => row.objectId === creature.objectId),
           ),
         },
       },

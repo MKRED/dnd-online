@@ -7,6 +7,7 @@ import type {
 import {
   characterChangedText,
   creatureChangedText,
+  creatureSlotsText,
 } from './characterEventText';
 
 // Строка журнала игры по-русски. Кто сделал, показывается рядом отдельно, поэтому здесь —
@@ -146,6 +147,12 @@ export function gameEventText(event: GameEvent): string {
         ? `Рывок: ${creature.name} (за ход: ${dashes})`
         : `Рывок: ${creature.name}`;
     }
+    case 'creature.slots_changed':
+      return creatureSlotsText(event);
+    case 'creature.prepared':
+      return event.intent.prepared
+        ? `Подготовлено: ${event.result.creature.name} — ${event.result.ability.name}`
+        : `Подготовка снята: ${event.result.creature.name} — ${event.result.ability.name}`;
     case 'creature.effect_added':
       return `Эффект наложен: ${event.result.creature.name} — ${event.result.effect.name}`;
     case 'creature.effect_removed':

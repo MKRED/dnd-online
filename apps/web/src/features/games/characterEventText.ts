@@ -2,6 +2,7 @@ import type { GameEventPayloads, SpellSlots } from 'shared';
 
 type CharacterChanged = GameEventPayloads['character.changed'];
 type CreatureChanged = GameEventPayloads['creature.changed'];
+type CreatureSlots = GameEventPayloads['creature.slots_changed'];
 
 // Строка журнала о правке персонажа в игре (этап 8): что просили и что стало.
 export function characterChangedText({ intent, result }: CharacterChanged) {
@@ -37,6 +38,11 @@ export function creatureChangedText({ intent, result }: CreatureChanged) {
     case 'temp':
       return `Временные хиты: ${creature.name} — ${change.amount}`;
   }
+}
+
+// Ячейки экземпляра НПС (вариант А после первой партии) — как у персонажа.
+export function creatureSlotsText({ result }: CreatureSlots) {
+  return `Ячейки заклинаний: ${result.creature.name} — ${slotsText(result.after)}`;
 }
 
 // «1 круг: 1 из 2, 2 круг: 0 из 1» — сколько ячеек осталось по кругам.

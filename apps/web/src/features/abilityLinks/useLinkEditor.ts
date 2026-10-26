@@ -20,7 +20,10 @@ export function useLinkEditor<E>(
     setBusyId(key);
     setError(null);
     try {
-      onChange?.(await request());
+      // Не onChange?.(await request()): без onChange необязательный вызов не вычислил бы
+      // аргумент, и запрос не ушёл бы (правка через игру идёт без onChange).
+      const entries = await request();
+      onChange?.(entries);
       return true;
     } catch (err: unknown) {
       console.error('Catalog link change failed', err);

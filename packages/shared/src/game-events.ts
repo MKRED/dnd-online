@@ -13,6 +13,8 @@ import type { GameLibraryRef } from './game-library.js';
 import type { GameSceneRef } from './game-scenes.js';
 import type { Vec3 } from './map/coords.js';
 import type { MapOp } from './map/ops.js';
+import type { SpellSlots } from './character.js';
+import type { SpellSlotsExpended } from './spellSlots.js';
 
 // Журнал игры (docs/plan/done/game.md, «Журнал игры»): каждое действие в игре — запись с
 // номером по порядку внутри игры. Записи только добавляются; отмена — тоже запись.
@@ -261,6 +263,24 @@ export interface GameEventPayloads {
   'creature.dashed': {
     intent: { objectId: number };
     result: { creature: GameEventCreature; dashes: number };
+  };
+  // Ячейки заклинаний экземпляра НПС потрачены или возвращены (вариант А после первой
+  // партии, 2026-10-26).
+  'creature.slots_changed': {
+    intent: { objectId: number; expended: SpellSlotsExpended };
+    result: {
+      creature: GameEventCreature;
+      before: SpellSlots;
+      after: SpellSlots;
+    };
+  };
+  // Отметка «подготовлено» у заклинания экземпляра НПС.
+  'creature.prepared': {
+    intent: { objectId: number; abilityId: string; prepared: boolean };
+    result: {
+      creature: GameEventCreature;
+      ability: { id: string; name: string };
+    };
   };
   'creature.effect_added': {
     intent: { objectId: number; effectId: string };

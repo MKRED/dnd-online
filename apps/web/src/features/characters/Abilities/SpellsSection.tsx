@@ -11,6 +11,7 @@ import {
 import { GroupEntries } from '../../abilityLinks';
 import classes from './Abilities.module.css';
 import { spellCircles } from './abilitiesView';
+import type { SheetSpellActions } from './sheetSpellActions';
 import SpellSlotPips from './SpellSlotPips';
 import { useAbilitiesEditor } from './useAbilitiesEditor';
 import { useSpellSlotsEditor } from './useSpellSlotsEditor';
@@ -23,6 +24,8 @@ interface SpellsSectionProps {
   onSlotsChange?: (spellSlots: SpellSlots) => void;
   // Есть — автор отмечает подготовку и убирает заклинания.
   onAbilitiesChange?: (abilities: CharacterAbilityEntry[]) => void;
+  // Ячейки и подготовка через игру (окно карточки на сцене).
+  actions?: SheetSpellActions;
 }
 
 // Блок «Заклинания» (docs/plan/done/character-abilities.md): заговоры, затем круги 1–9. Ячейки
@@ -34,12 +37,15 @@ function SpellsSection({
   spellSlots,
   onSlotsChange,
   onAbilitiesChange,
+  actions,
 }: SpellsSectionProps) {
-  const slots = useSpellSlotsEditor(characterId, onSlotsChange);
+  const slots = useSpellSlotsEditor(characterId, onSlotsChange, actions?.spend);
   const { editor: rows, renderRow } = useAbilitiesEditor(
     characterId,
     onAbilitiesChange,
+    actions?.prepare,
   );
+  const canSpend = Boolean(onSlotsChange || actions?.spend);
 
   const circles = spellCircles(abilities, spellSlots);
   if (circles.length === 0) return null;
@@ -54,7 +60,7 @@ function SpellsSection({
   const legend = [
     withSlots.length > 0 && '● ○ у круга — ячейки: есть и потрачена.',
     anyPreparable && '● у заклинания — подготовлено.',
-    onSlotsChange &&
+    canSpend &&
       withSlots.length > 0 &&
       'Нажмите на кружок, чтобы потратить или вернуть ячейку.',
   ]
@@ -64,7 +70,7 @@ function SpellsSection({
   // Кнопка — в строке первого круга с ячейками, а не своей строкой. Когда тратить
   // нечего, она скрыта, но место держит (см. .longRest): появляясь после первой траты,
   // она иначе сдвигала бы кружки под курсором. Подтверждения нет: вернуть можно кликами.
-  const longRest = onSlotsChange && withSlots.length > 0 && (
+  const longRest = canSpend && withSlots.length > 0 && (
     <Button
       size="compact-sm"
       variant="light"
@@ -103,12 +109,13 @@ function SpellsSection({
                     slots={circleSlots}
                     busy={slots.busy}
                     onSpend={
-                      onSlotsChange &&
-                      ((expended) =>
-                        void slots.save(
-                          { [level]: expended },
-                          'Не удалось сохранить ячейки',
-                        ))
+                      canSpend
+                        ? (expended) =>
+                            void slots.save(
+                              { [level]: expended },
+                              'Не удалось сохранить ячейки',
+                            )
+                        : undefined
                     }
                   />
                 )}

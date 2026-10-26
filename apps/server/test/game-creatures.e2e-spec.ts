@@ -84,6 +84,7 @@ describe('game creatures (e2e)', () => {
           hitPoints: { current: 4, max: 4, temp: 0 },
           effects: [],
           movement: { speed: 30, climb: null, moved: 0, dashes: 0 },
+          spells: null,
         },
       },
       {
@@ -94,6 +95,7 @@ describe('game creatures (e2e)', () => {
           hitPoints: { current: 12, max: 12, temp: 0 },
           effects: [],
           movement: { speed: 30, climb: null, moved: 0, dashes: 0 },
+          spells: { slots: {}, prepared: {} },
         },
       },
     ]);

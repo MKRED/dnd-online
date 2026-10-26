@@ -57,6 +57,20 @@
   background: var(--mantine-color-default-border);
 }
 
+/* Чипы открытых карточек на телефоне листаются вбок. Прокрутка делает строку
+   сжимаемой (min-height: auto у неё 0), и при длинной карточке лист упирался в
+   max-height и срезал чипы; полоса прокрутки рисовалась серой чертой под ними. */
+.chips {
+  flex: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
 /* Строка предмета в окне сундука: щелчок открывает карточку предмета. */
 .itemRow {
   display: flex;

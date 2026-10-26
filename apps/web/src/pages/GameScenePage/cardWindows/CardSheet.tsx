@@ -22,13 +22,7 @@ function CardSheet({
     <section className={classes.sheet} aria-label={`Карточка: ${title}`}>
       <div className={classes.grab} />
       {views.length > 1 && (
-        <Group
-          gap={6}
-          px="xs"
-          pb={6}
-          wrap="nowrap"
-          style={{ overflowX: 'auto' }}
-        >
+        <Group gap={6} px="xs" pb={6} wrap="nowrap" className={classes.chips}>
           {views.map((view) => (
             <Chip
               key={view.window.key}

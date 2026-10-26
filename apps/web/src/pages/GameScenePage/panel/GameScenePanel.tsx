@@ -19,6 +19,7 @@ import {
   creatureParticipants,
   creaturePortrait,
   heroParticipants,
+  isUniqueMonster,
   ParticipantsTab,
   PartyTab,
   PlayerCharacterTab,
@@ -101,6 +102,7 @@ function GameScenePanel({
         creatures,
         (id) => state?.objects.byId.get(id),
         (object) => (refs ? creaturePortrait(object, refs, images) : null),
+        (object) => (refs ? isUniqueMonster(object, refs) : false),
       )}
       selectedKey={figureKey ?? creatureKey}
       onSelectHero={(id) => tool.select(tool.selectedId === id ? null : id)}

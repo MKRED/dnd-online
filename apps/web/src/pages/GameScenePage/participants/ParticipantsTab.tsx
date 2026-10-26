@@ -1,6 +1,8 @@
-import { Alert, Stack, Text } from '@mantine/core';
-import { Fragment, type ReactNode } from 'react';
-import ParticipantRow, { type Participant } from './ParticipantRow';
+import { Alert, Text } from '@mantine/core';
+import { useMemo, type ReactNode } from 'react';
+import ParticipantGroups from './ParticipantGroups';
+import type { Participant } from './ParticipantRow';
+import { participantGroups } from './participantGroups';
 import classes from './participants.module.css';
 
 interface ParticipantsTabProps {
@@ -16,12 +18,13 @@ interface ParticipantsTabProps {
   // Бой мастера: «Начать бой» или раунд, «Новый раунд» и «Закончить бой» (combat/).
   combat?: ReactNode;
   errors: readonly (string | null)[];
-  // Состояние выбранного: хиты, эффекты, запас — внизу вкладки.
+  // Состояние выбранного: хиты, эффекты, запас.
   selected: ReactNode;
 }
 
-// Вкладка «Участники» (docs/plan/done/scene-page.md, этап 2): герои и существа одним списком по
-// группам, у выбранного — его состояние внизу. Подсказки про ход — плашкой на сцене.
+// Вкладка «Участники» (docs/plan/done/scene-page.md, этап 2; замечания после первой партии,
+// 2026-10-26, вариант А): состояние выбранного — наверху и на месте, под ним список по
+// сворачиваемым группам прокручивается сам. Подсказки про ход — плашкой на сцене.
 function ParticipantsTab({
   heroes,
   creatures,
@@ -34,58 +37,37 @@ function ParticipantsTab({
   errors,
   selected,
 }: ParticipantsTabProps) {
-  const empty = heroes.length === 0 && creatures.length === 0;
+  const groups = useMemo(
+    () => participantGroups([...heroes, ...creatures]),
+    [heroes, creatures],
+  );
+  const empty = groups.length === 0;
   return (
-    <>
-      <Stack gap={2}>
-        {!empty && combat}
+    <div className={classes.tab}>
+      {!empty && combat}
+      {selected && <section className={classes.selected}>{selected}</section>}
+      <div className={classes.list}>
         {empty && (
           <Text size="sm" c="dimmed" p="xs">
             На сцене никого нет. Персонажи встают на стартовые точки, когда
             садятся на места.
           </Text>
         )}
-        {heroes.length > 0 && <div className={classes.section}>Герои</div>}
-        {heroes.map((hero) => (
-          <ParticipantRow
-            key={hero.key}
-            participant={hero}
-            selected={selectedKey === `pc:${hero.key}`}
-            onSelect={() => onSelectHero(hero.key)}
-            onOpen={
-              hero.selectable && onOpenHero
-                ? () => onOpenHero(hero.key)
-                : undefined
+        <ParticipantGroups
+          groups={groups}
+          selectedKey={selectedKey}
+          onSelect={(p) =>
+            p.kind === 'pc' ? onSelectHero(p.key) : onSelectCreature(p.key)
+          }
+          onOpen={(p) => {
+            if (p.kind === 'pc') {
+              return p.selectable && onOpenHero
+                ? () => onOpenHero(p.key)
+                : undefined;
             }
-          />
-        ))}
-        {/* НПС — своим разделом между героями и существами (пользователь, 2026-10-24):
-            союзники и торговцы не теряются среди монстров. */}
-        {[
-          { title: 'НПС', rows: creatures.filter((c) => c.kind === 'npc') },
-          {
-            title: 'Существа',
-            rows: creatures.filter((c) => c.kind !== 'npc'),
-          },
-        ].map(
-          ({ title, rows }) =>
-            rows.length > 0 && (
-              <Fragment key={title}>
-                <div className={classes.section}>{title}</div>
-                {rows.map((creature) => (
-                  <ParticipantRow
-                    key={creature.key}
-                    participant={creature}
-                    selected={selectedKey === `creature:${creature.key}`}
-                    onSelect={() => onSelectCreature(creature.key)}
-                    onOpen={
-                      onOpenCreature && (() => onOpenCreature(creature.key))
-                    }
-                  />
-                ))}
-              </Fragment>
-            ),
-        )}
+            return onOpenCreature && (() => onOpenCreature(p.key));
+          }}
+        />
         {errors.map(
           (error) =>
             error && (
@@ -94,9 +76,8 @@ function ParticipantsTab({
               </Alert>
             ),
         )}
-      </Stack>
-      {selected && <section className={classes.selected}>{selected}</section>}
-    </>
+      </div>
+    </div>
   );
 }
 

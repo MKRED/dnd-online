@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { GameCreature, MapObject } from 'shared';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../../../test/render';
 import MovementRow from '../creatures/MovementRow';
 import ParticipantsTab from './ParticipantsTab';
@@ -35,6 +35,8 @@ const objects = new Map<number, Partial<MapObject>>([
 const objectOf = (id: number) => objects.get(id) as MapObject | undefined;
 
 describe('участники', () => {
+  afterEach(() => localStorage.clear());
+
   it('существа: хиты, метка, запас с «Рывком», скрытые помечены; поверженный без запаса', () => {
     const [g, o] = creatureParticipants([goblin, orc], objectOf, () => null);
     expect(g).toMatchObject({
@@ -100,6 +102,13 @@ describe('участники', () => {
       .getAllByText(/^(НПС|Существа)$/)
       .map((el) => el.textContent);
     expect(sections).toEqual(['НПС', 'Существа']);
+    // Группы по умолчанию свёрнуты: в заголовке — сколько и кто в беде.
+    expect(screen.queryByText('2/7 · Ранен')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^Существа\s*1 · ранено 1/ }),
+    ).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(screen.getByRole('button', { name: /^НПС/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^Существа/ }));
     expect(screen.getByText('2/7 · Ранен')).toBeInTheDocument();
     expect(screen.getByText('0/15 · Повержен')).toBeInTheDocument();
     expect(screen.getByText('50 фт')).toBeInTheDocument();
@@ -107,6 +116,81 @@ describe('участники', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Гоблин' }));
     expect(onSelectCreature).toHaveBeenCalledWith('2');
     expect(screen.getByText('Бой мастера')).toBeInTheDocument();
+  });
+
+  it('уникальные — своей группой; одинаковые — одной строкой, выбранный раскрывает её', async () => {
+    const rat = (objectId: number, current: number): GameCreature => ({
+      objectId,
+      health: current === 0 ? 'down' : null,
+      state: {
+        name: 'Крыса',
+        hitPoints: { current, max: 4, temp: 0 },
+        effects: [],
+        movement: { speed: 30, climb: null, moved: 0, dashes: 0 },
+      },
+    });
+    const boss = {
+      ...goblin,
+      objectId: 9,
+      state: { ...goblin.state!, name: 'Король' },
+    };
+    const kinds = new Map<number, Partial<MapObject>>([
+      [4, { kind: 'monster', monsterId: 'rat' }],
+      [5, { kind: 'monster', monsterId: 'rat' }],
+      [9, { kind: 'monster', monsterId: 'king' }],
+    ]);
+    const creatures = creatureParticipants(
+      [rat(4, 4), rat(5, 0), boss],
+      (id) => kinds.get(id) as MapObject | undefined,
+      () => null,
+      (object) => object?.kind === 'monster' && object.monsterId === 'king',
+    );
+    const props = {
+      heroes: [],
+      creatures,
+      onSelectHero: () => {},
+      onSelectCreature: () => {},
+      errors: [],
+      selected: null,
+    };
+    const { rerender } = renderWithProviders(
+      <ParticipantsTab {...props} selectedKey={null} />,
+    );
+    expect(
+      screen
+        .getAllByText(/^(Уникальные существа|Существа)$/)
+        .map((el) => el.textContent),
+    ).toEqual(['Уникальные существа', 'Существа']);
+    await userEvent.click(screen.getByRole('button', { name: /^Существа/ }));
+    const kin = screen.getByRole('button', {
+      name: /Крыса\s*×2 · повержено 1/,
+    });
+    expect(kin).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByText('4/4')).not.toBeInTheDocument();
+    // Выбор на сцене раскрывает группу и строку одинаковых.
+    await userEvent.click(screen.getByRole('button', { name: /^Существа/ }));
+    rerender(<ParticipantsTab {...props} selectedKey="creature:5" />);
+    expect(screen.getByText('0/4 · Повержен')).toBeInTheDocument();
+    expect(screen.getByText('4/4')).toBeInTheDocument();
+  });
+
+  it('выбранный — над списком', () => {
+    renderWithProviders(
+      <ParticipantsTab
+        heroes={[]}
+        creatures={creatureParticipants([goblin], objectOf, () => null)}
+        selectedKey="creature:2"
+        onSelectHero={() => {}}
+        onSelectCreature={() => {}}
+        errors={[]}
+        selected={<span>Карточка гоблина</span>}
+      />,
+    );
+    const card = screen.getByText('Карточка гоблина');
+    const row = screen.getByRole('button', { name: 'Гоблин' });
+    expect(
+      card.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('пустая сцена — так и сказано', () => {

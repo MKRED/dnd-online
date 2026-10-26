@@ -20,7 +20,14 @@ export interface Participant {
   feetLeft: number | null;
   hidden: boolean;
   selectable: boolean;
+  // Группа во вкладке «Участники»: уникальные монстры — своей группой (замечания после
+  // первой партии, 2026-10-26).
+  group: ParticipantGroupKey;
+  // Одинаковые существа — один монстр или НПС справочника: «monster:<id>»; null — герой.
+  kin: string | null;
 }
+
+export type ParticipantGroupKey = 'pc' | 'npc' | 'unique' | 'monster';
 
 // Цвет полосы: больше половины — зелёный, до половины («Ранен», docs/dnd/hit-points.md) —
 // жёлтый, на нуле — красный.

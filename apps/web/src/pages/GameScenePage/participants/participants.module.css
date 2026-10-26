@@ -109,7 +109,6 @@
 }
 
 .section {
-  padding: 8px 8px 2px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -117,11 +116,85 @@
   color: var(--mantine-color-dimmed);
 }
 
-/* Выбранный — внизу вкладки, на всю ширину панели, отделён линией. */
+/* Вкладка на всю высоту панели: выбранный наверху стоит на месте, список под ним
+   прокручивается сам (замечания после первой партии, 2026-10-26). */
+.tab {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Выбранный — наверху вкладки, на всю ширину панели, отделён линией. Длинная карточка
+   (ячейки, эффекты) прокручивается сама и не съедает список целиком. */
 .selected {
-  margin: auto calc(var(--mantine-spacing-sm) * -1)
-    calc(var(--mantine-spacing-sm) * -1);
+  flex: none;
+  max-height: 60%;
+  overflow-y: auto;
+  margin: 0 calc(var(--mantine-spacing-sm) * -1) 4px;
   padding: var(--mantine-spacing-sm);
   border-top: 1px solid var(--mantine-color-default-border);
+  border-bottom: 1px solid var(--mantine-color-default-border);
   background: var(--mantine-color-default);
+}
+
+/* Заголовок группы и строка одинаковых существ: щелчок сворачивает и раскрывает. */
+.groupHead,
+.kinHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  border-radius: var(--mantine-radius-md);
+}
+
+.groupHead {
+  padding: 8px 8px 4px 4px;
+}
+
+.kinHead {
+  gap: 10px;
+  padding: 6px 8px 6px 4px;
+}
+
+.groupHead:hover,
+.kinHead:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.chevron {
+  flex: none;
+  color: var(--mantine-color-dimmed);
+  transition: transform 120ms ease;
+}
+
+.chevron[data-open] {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
+
+.tally {
+  margin-left: auto;
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Одинаковые существа под своей строкой — с отступом, чтобы было видно, чьи они. */
+.nested {
+  padding-left: 18px;
 }

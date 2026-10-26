@@ -10,9 +10,9 @@ interface CombatControlsProps {
   busy: boolean;
 }
 
-// Бой мастера наверху «Участников» (docs/dnd/movement.md, «Free and tactical modes»;
-// макет «Режимы хода на сцене», вариант В): вне боя — одна кнопка «Начать бой», в бою —
-// номер раунда, «Новый раунд» и «Закончить бой».
+// Бой мастера — группа «Бой» во вкладке «Сцена» (docs/dnd/movement.md, «Free and tactical
+// modes»; замечания после первой партии, 2026-10-26, вариант Б): вне боя — «Начать бой»,
+// в бою — номер раунда, «Закончить бой» и «Новый раунд».
 function CombatControls({
   mode,
   round,
@@ -22,7 +22,10 @@ function CombatControls({
 }: CombatControlsProps) {
   if (mode === 'free') {
     return (
-      <Group justify="flex-end" pb={4}>
+      <Stack gap={6}>
+        <Text size="xs" c="dimmed">
+          Вне боя запас движения снова полный после каждого хода.
+        </Text>
         <Tooltip
           label="Тактический режим: у всех новый ход, дальше запас тратится до нового раунда"
           withArrow
@@ -31,6 +34,7 @@ function CombatControls({
         >
           <Button
             size="xs"
+            fullWidth
             leftSection={<IconSwords size={15} />}
             onClick={() => onMode('tactical')}
             disabled={busy}
@@ -38,12 +42,12 @@ function CombatControls({
             Начать бой
           </Button>
         </Tooltip>
-      </Group>
+      </Stack>
     );
   }
-  // В бою «Новый раунд» — самое частое действие: во всю ширину под строкой боя.
+  // В бою «Новый раунд» — самое частое действие: во всю ширину под строкой раунда.
   return (
-    <Stack gap={6} pb={4}>
+    <Stack gap={6}>
       <Group gap={6} wrap="nowrap" justify="space-between">
         <Text
           size="sm"
@@ -52,7 +56,7 @@ function CombatControls({
           style={{ display: 'flex', alignItems: 'center', gap: 4 }}
         >
           <IconSwords size={15} />
-          Бой · раунд {round ?? 1}
+          Раунд {round ?? 1}
         </Text>
         <Tooltip
           label="Свободный режим: запас снова полный после каждого хода"

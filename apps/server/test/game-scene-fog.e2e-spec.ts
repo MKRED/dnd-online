@@ -16,7 +16,11 @@ import { DatabaseService } from '../src/database/database.service.js';
 import { gameSceneFog } from '../src/database/schema/index.js';
 import { loadFog } from '../src/games/fog/index.js';
 import { pngImage } from './support/character-fixture.js';
-import { createSceneGame, startSession } from './support/scene-fixture.js';
+import {
+  createSceneGame,
+  fogOff,
+  startSession,
+} from './support/scene-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
 // Туман войны, этап 2 (docs/plan/done/fog-of-war.md): настройки тумана у сцены и маски
@@ -53,6 +57,8 @@ describe('game scene fog (e2e)', () => {
   }
 
   // Игра со сценой 8×8 (scene-fixture.ts): фигурка игрока встаёт на старт [0, 1, 0].
+  // Сцена — как созданная до тумана по умолчанию (замечания после первой партии,
+  // 2026-10-26): туман выключен и ничего не открыто, его включают сами проверки.
   async function setup(prefix: string) {
     const g = await createSceneGame(user, png, prefix);
     const m = g.master.agent;
@@ -61,6 +67,8 @@ describe('game scene fog (e2e)', () => {
       .send({ mapId: g.mapId })
       .expect(201);
     const sceneId = (added.body as GameScenes).scenes[0].id;
+    await fogOff(m, g.gameId, sceneId);
+    await db().delete(gameSceneFog).where(eq(gameSceneFog.sceneId, sceneId));
     // Ход игрока — только по открытой сцене.
     await m
       .put(`/api/games/${g.gameId}/scenes/open`)
@@ -107,6 +115,19 @@ describe('game scene fog (e2e)', () => {
     const seq = (await lastEvent(g.m, g.gameId)).seq;
     await g.m.put(url).send(body).expect(200);
     expect((await lastEvent(g.m, g.gameId)).seq).toBe(seq);
+  });
+
+  it('у новой сцены туман включён: фигурка на старте сразу видит вокруг себя', async () => {
+    const g = await createSceneGame(user, png, 'gfog_default');
+    const added = await g.master.agent
+      .post(`/api/games/${g.gameId}/scenes`)
+      .send({ mapId: g.mapId })
+      .expect(201);
+    const scene = (added.body as GameScenes).scenes[0];
+    expect(scene).toMatchObject({ fog: true, sightRange: 60 });
+    const masks = await fog(scene.id);
+    expect(has(masks.visible, [1, 0, 1])).toBe(true);
+    expect(has(masks.explored, [1, 0, 1])).toBe(true);
   });
 
   it('включённый туман открывает то, что видит фигурка, а ход — новое', async () => {

@@ -81,6 +81,11 @@ describe('game scene fog: player view (e2e)', () => {
       .put(`/api/games/${g.gameId}/scenes/${sceneId}/fog`)
       .send({ enabled: true, sightRange: 5 })
       .expect(200);
+    // Туман у новой сцены включён сразу (замечания после первой партии, 2026-10-26), и
+    // фигурка уже открыла всё на 60 футов вокруг; сброс оставляет видимое на 5.
+    await m
+      .post(`/api/games/${g.gameId}/scenes/${sceneId}/fog/reset`)
+      .expect(201);
     const all = (await view(m, g.gameId)).objects;
     const idOf = (kind: MapObject['kind']) =>
       all.find((o) => o.kind === kind)!.id;

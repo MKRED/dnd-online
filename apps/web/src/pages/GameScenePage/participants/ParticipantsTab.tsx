@@ -16,8 +16,6 @@ interface ParticipantsTabProps {
   // Двойной щелчок по строке — окно карточки (docs/plan/done/scene-page.md, этап 4).
   onOpenHero?: (key: string) => void;
   onOpenCreature?: (key: string) => void;
-  // Бой мастера: «Начать бой» или раунд, «Новый раунд» и «Закончить бой» (combat/).
-  combat?: ReactNode;
   errors: readonly (string | null)[];
   // Состояние выбранного: хиты, эффекты, запас.
   selected: ReactNode;
@@ -34,7 +32,6 @@ function ParticipantsTab({
   onSelectCreature,
   onOpenHero,
   onOpenCreature,
-  combat,
   errors,
   selected,
 }: ParticipantsTabProps) {
@@ -55,7 +52,6 @@ function ParticipantsTab({
   const empty = groups.length === 0;
   return (
     <div className={classes.tab} onClickCapture={doubleOpen.catchSecond}>
-      {!empty && combat}
       {selected && <section className={classes.selected}>{selected}</section>}
       <div className={classes.list}>
         {empty && (

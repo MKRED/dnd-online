@@ -239,7 +239,10 @@ describe('GameScenePage', () => {
     await user.click(await screen.findByRole('button', { name: /^Герои/ }));
     expect(await screen.findByText('40 фт')).toBeInTheDocument();
     expect(screen.getByText('10/12')).toBeInTheDocument();
+    // Бой и раунд — во вкладке «Сцена» (замечания после первой партии, вариант Б).
+    await user.click(screen.getByRole('button', { name: 'Сцена' }));
     await user.click(screen.getByRole('button', { name: 'Новый раунд' }));
+    await user.click(screen.getByRole('button', { name: 'Участники' }));
     expect(await screen.findByText('30 фт')).toBeInTheDocument();
     expect(
       fetchMock.mock.calls.some(
@@ -298,16 +301,22 @@ describe('GameScenePage', () => {
       screen.queryByRole('button', { name: 'Новый раунд' }),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Начать бой' }));
-    expect(await screen.findByText('Бой · раунд 1')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Сцена' }));
+    const combat = screen.getByRole('region', { name: 'Бой' });
+    await user.click(
+      within(combat).getByRole('button', { name: 'Начать бой' }),
+    );
+    expect(await within(combat).findByText('Раунд 1')).toBeInTheDocument();
+    expect(
+      within(combat).getByRole('button', { name: 'Новый раунд' }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Участники' }));
     expect(screen.getByText('Осталось 30 из 30 фт')).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Рывок: Лира' }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Новый раунд' }),
-    ).toBeInTheDocument();
 
+    await user.click(screen.getByRole('button', { name: 'Сцена' }));
     await user.click(screen.getByRole('button', { name: 'Закончить бой' }));
     expect(
       await screen.findByRole('button', { name: 'Начать бой' }),

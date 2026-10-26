@@ -1,6 +1,6 @@
-import { Anchor, Text } from '@mantine/core';
+import { Text } from '@mantine/core';
 import { Fragment } from 'react';
-import { Link } from 'react-router-dom';
+import { RecordLink } from '../catalog';
 import type { StepEffectOutcome } from 'shared';
 
 // Строка эффектов исхода в карточке способности: «Попадание: «Отравлен»». Название —
@@ -13,9 +13,14 @@ function StepEffectsLine({ outcome }: { outcome: StepEffectOutcome }) {
         <Fragment key={effectId}>
           {index > 0 && ', '}
           {effect ? (
-            <Anchor component={Link} to={`/effects/${effectId}`} size="sm">
+            <RecordLink
+              kind="effect"
+              id={effectId}
+              name={effect.name}
+              size="sm"
+            >
               {effect.name}
-            </Anchor>
+            </RecordLink>
           ) : (
             <Text span size="sm" c="dimmed">
               скрыт автором

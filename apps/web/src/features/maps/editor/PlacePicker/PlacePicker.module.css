@@ -1,0 +1,42 @@
+/* Подложка картинки на плитке объекта (вариант B макета «Картинки в «Что поставить»»):
+   у миниатюр каталога прозрачные поля, у моделей — фон, поэтому под ними спокойный фон,
+   видимый в обеих схемах. */
+.picture {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-default-hover);
+}
+
+.image {
+  display: block;
+  object-fit: contain;
+}
+
+.letter {
+  font-weight: 600;
+  line-height: 1;
+  color: var(--mantine-color-dimmed);
+  user-select: none;
+}
+
+/* Метка вида в недавних, где блоки и объекты вперемешку. */
+.badge {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  padding: 2px 5px;
+  border: 1px solid var(--mantine-color-body);
+  border-radius: 10px;
+  background: var(--mantine-color-default);
+  font-size: 10px;
+  line-height: 1.1;
+  color: var(--mantine-color-text);
+}
+
+.meta {
+  overflow-wrap: anywhere;
+}

@@ -37,10 +37,21 @@ export interface GameFigure {
   canMove: boolean;
   // Что видно о здоровье всем: «Ранен», «Без сознания», «Погиб» (hitPoints.ts).
   health: CreatureHealth | null;
+  // Хиты из листа — тем, кто водит фигурку (canMove): мастеру, владельцу, управляющему;
+  // остальным null — им видна только метка здоровья (docs/plan/done/scene-page.md, этап 2).
+  hitPoints: { current: number; max: number; temp: number } | null;
 }
+
+// Режим хода игры (docs/dnd/movement.md): в свободном запас снова полный после каждого
+// хода, в тактическом тратится до «Нового раунда». Переключает мастер.
+export const GAME_MOVE_MODES = ['free', 'tactical'] as const;
+export type GameMoveMode = (typeof GAME_MOVE_MODES)[number];
 
 export interface GameFigures {
   sceneId: string;
+  // Режим хода игры и номер раунда боя (только в тактическом; в свободном null).
+  mode: GameMoveMode;
+  round: number | null;
   // Номер журнала на момент чтения: ответ старше уже применённого не откатывает фигурки.
   eventSeq: number;
   figures: GameFigure[];

@@ -1,5 +1,6 @@
-import { act, screen, waitFor } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactNode } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -8,6 +9,7 @@ import {
   emptyRefsView,
   type GameFigure,
   type GameFigures,
+  type GameMoveMode,
   type GameSceneEditMessage,
   type GameSceneFogMessage,
   type GameSceneView,
@@ -17,6 +19,7 @@ import {
 import type {
   FigureInput,
   ObjectImagePaths,
+  SceneWalks,
 } from '../../features/maps/MapScene';
 import type { MapViewState } from '../../features/maps/mapStateFromChunks';
 import { createFakeGameSocket } from '../../test/fakeGameSocket';
@@ -37,6 +40,9 @@ vi.mock('../../features/maps/MapScene', async () => {
       onReady,
       figures,
       figureGhosts,
+      readoutAfter,
+      walks,
+      figureDrag,
     }: {
       map: MapViewState;
       refs: MapObjectRefsView;
@@ -45,6 +51,9 @@ vi.mock('../../features/maps/MapScene', async () => {
       onReady: () => void;
       figures?: FigureInput[];
       figureGhosts?: FigureInput[];
+      readoutAfter?: ReactNode;
+      walks?: SceneWalks;
+      figureDrag?: unknown;
     }) {
       useEffect(onReady, [onReady]);
       const names = Object.values(refs.monsters).map((m) =>
@@ -59,6 +68,16 @@ vi.mock('../../features/maps/MapScene', async () => {
           {figures?.map((figure) => (
             <p key={figure.id}>
               Фигурка: {figure.name} {figure.at.join(',')} {figure.image}
+            </p>
+          ))}
+          {readoutAfter}
+          {figureDrag !== undefined && <p>Фигурки можно брать</p>}
+          {[...(walks ?? [])].map(([key, walk]) => (
+            <p key={key}>
+              Ход: {key}{' '}
+              {walk.kind === 'walk'
+                ? walk.path.map((c) => c?.join(',') ?? '?').join(' → ')
+                : 'ждёт'}
             </p>
           ))}
           {figureGhosts?.map((figure) => (
@@ -82,6 +101,8 @@ vi.mock('../../features/games/gameSocket', () => ({
 
 beforeEach(() => {
   socket.current = createFakeGameSocket();
+  // Режим мастера запоминается в браузере (docs/plan/done/scene-page.md): каждый тест — с «Игры».
+  localStorage.clear();
 });
 
 afterEach(() => {
@@ -105,6 +126,7 @@ const VIEW: GameSceneView = {
         name: 'Гоблин',
         size: 'small',
         role: 'regular',
+        model: null,
         image: null,
       },
     },
@@ -115,7 +137,10 @@ const VIEW: GameSceneView = {
 };
 
 function stub(
-  responses: Record<string, () => { status: number; body?: unknown }>,
+  responses: Record<
+    string,
+    (init?: RequestInit) => { status: number; body?: unknown }
+  >,
 ) {
   const fetchMock = vi.fn<typeof fetch>((input, init) => {
     const key = `${init?.method ?? 'GET'} ${urlOf(input).replace(/^.*\/api/, '')}`;
@@ -124,7 +149,7 @@ function stub(
       responses[key] ??
       (key.endsWith('/scene/figures') ? () => ({ status: 404 }) : undefined);
     if (!route) return Promise.reject(new Error(`Нет ответа для ${key}`));
-    const { status, body } = route();
+    const { status, body } = route(init);
     return Promise.resolve(
       new Response(JSON.stringify(body ?? {}), { status }),
     );
@@ -167,14 +192,24 @@ const LIRA: GameFigure = {
   dashes: 0,
   canMove: true,
   health: null,
+  hitPoints: { current: 10, max: 12, temp: 0 },
 };
 
-function figuresOf(eventSeq: number, figures: GameFigure[]): GameFigures {
-  return { sceneId: 's1', eventSeq, figures, unplaced: [] };
+// Режим хода — бой (раунд 1), если не сказано иначе: так запас тратится, как раньше.
+function figuresOf(
+  eventSeq: number,
+  figures: GameFigure[],
+  mode: GameMoveMode = 'tactical',
+): GameFigures {
+  const round = mode === 'tactical' ? 1 : null;
+  return { sceneId: 's1', eventSeq, mode, round, figures, unplaced: [] };
 }
 
+// Встреча идёт: вне неё игрок только смотрит сцену.
+const STARTED = '2026-10-25T10:00:00.000Z';
+
 describe('GameScenePage', () => {
-  it('мастер видит запас фигурок, начинает новый раунд и ставит персонажа «Не на сцене»', async () => {
+  it('мастер видит запас фигурок, начинает новый раунд и в «Правке» ставит персонажа «Не на сцене»', async () => {
     const fetchMock = stub({
       [`GET ${base}`]: () => ({
         status: 200,
@@ -199,9 +234,16 @@ describe('GameScenePage', () => {
     renderScene('m1');
     const user = userEvent.setup();
 
-    expect(await screen.findByText('Осталось 40 из 60 фт')).toBeInTheDocument();
+    // В списке «Участники» — остаток запаса и хиты из листа (docs/plan/done/scene-page.md, этап 2).
+    // Группы свёрнуты, пока их не раскроют.
+    await user.click(await screen.findByRole('button', { name: /^Герои/ }));
+    expect(await screen.findByText('40 фт')).toBeInTheDocument();
+    expect(screen.getByText('10/12')).toBeInTheDocument();
+    // Бой и раунд — во вкладке «Сцена» (замечания после первой партии, вариант Б).
+    await user.click(screen.getByRole('button', { name: 'Сцена' }));
     await user.click(screen.getByRole('button', { name: 'Новый раунд' }));
-    expect(await screen.findByText('Осталось 30 из 30 фт')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Участники' }));
+    expect(await screen.findByText('30 фт')).toBeInTheDocument();
     expect(
       fetchMock.mock.calls.some(
         ([input, init]) =>
@@ -209,11 +251,75 @@ describe('GameScenePage', () => {
       ),
     ).toBe(true);
 
+    // «Не на сцене» — дело «Существ» в «Правке»: в «Игре» мастер только ходит.
+    expect(
+      screen.queryByRole('button', { name: 'Поставить на сцену: Борн' }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: 'Правка' }));
+    expect(
+      screen.queryByRole('button', { name: 'Поставить на сцену: Борн' }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Существа' }));
     await user.click(
       screen.getByRole('button', { name: 'Поставить на сцену: Борн' }),
     );
     expect(
-      screen.getByText('Щёлкните клетку, куда поставить: Борн.'),
+      within(
+        screen.getByRole('status', { name: 'Выбрано на сцене' }),
+      ).getByText('щёлкните клетку, куда поставить'),
+    ).toBeInTheDocument();
+  });
+
+  it('мастер начинает и заканчивает бой; вне боя запас не тратится и «Рывка» нет', async () => {
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'master' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+      [`GET ${base}/scene/figures`]: () => ({
+        status: 200,
+        body: figuresOf(3, [LIRA], 'free'),
+      }),
+      [`PUT ${base}/figures/mode`]: (init) => {
+        const { mode } = JSON.parse(init?.body as string) as {
+          mode: GameMoveMode;
+        };
+        return { status: 200, body: figuresOf(4, [LIRA], mode) };
+      },
+    });
+    renderScene('m1');
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: /^Герои/ }));
+    await user.click(await screen.findByRole('button', { name: 'Лира' }));
+    expect(screen.getByText('До 30 фт за ход')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Рывок: Лира' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Новый раунд' }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Сцена' }));
+    const combat = screen.getByRole('region', { name: 'Бой' });
+    await user.click(
+      within(combat).getByRole('button', { name: 'Начать бой' }),
+    );
+    expect(await within(combat).findByText('Раунд 1')).toBeInTheDocument();
+    expect(
+      within(combat).getByRole('button', { name: 'Новый раунд' }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Участники' }));
+    expect(screen.getByText('Осталось 30 из 30 фт')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Рывок: Лира' }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Сцена' }));
+    await user.click(screen.getByRole('button', { name: 'Закончить бой' }));
+    expect(
+      await screen.findByRole('button', { name: 'Начать бой' }),
     ).toBeInTheDocument();
   });
 
@@ -222,13 +328,16 @@ describe('GameScenePage', () => {
     stub({
       [`GET ${base}`]: () => ({
         status: 200,
-        body: { ...GAME, role: 'member' },
+        body: { ...GAME, role: 'member', sessionStartedAt: STARTED },
       }),
       [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
       [`GET ${base}/scene/figures`]: () => ({ status: 200, body: figures }),
     });
     renderScene('u3');
-    expect(await screen.findByRole('button', { name: /^Лира/ })).toBeDisabled();
+    // Чужая фигурка — в «Отряде», своей на вкладке «Персонаж» нет.
+    expect(
+      await screen.findByText(/Вашего персонажа нет на сцене/),
+    ).toBeInTheDocument();
     figures = figuresOf(4, [{ ...LIRA, ownerId: 'u2', canMove: true }]);
     act(() =>
       socket.current?.receive(GAME_SOCKET.changed, {
@@ -237,9 +346,9 @@ describe('GameScenePage', () => {
         kind: 'seat.controller',
       }),
     );
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: /^Лира/ })).toBeEnabled(),
-    );
+    expect(
+      await screen.findByRole('button', { name: 'Ходить' }),
+    ).toBeInTheDocument();
   });
 
   it('чужое перетаскивание видно тенью, пока фигурку не отпустили', async () => {
@@ -270,6 +379,34 @@ describe('GameScenePage', () => {
     expect(screen.queryByText(/Тень: Лира/)).not.toBeInTheDocument();
   });
 
+  it('путь хода по сокету — фигурка идёт по клеткам', async () => {
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'player' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+      [`GET ${base}/scene/figures`]: () => ({
+        status: 200,
+        body: figuresOf(3, [LIRA]),
+      }),
+    });
+    renderScene('u3');
+    await screen.findByText(/Фигурка: Лира/);
+    act(() =>
+      socket.current?.receive(GAME_SOCKET.walked, {
+        gameId: GAME.id,
+        sceneId: VIEW.scene.id,
+        seq: 4,
+        walker: { kind: 'figure', characterId: 'c1' },
+        path: [[0, 1, 0], [0, 1, 1], null],
+      }),
+    );
+    expect(
+      await screen.findByText('Ход: figure:c1 0,1,0 → 0,1,1 → ?'),
+    ).toBeInTheDocument();
+  });
+
   it('игрок выбирает свою фигурку по имени, чужую — нет; запас правит только мастер', async () => {
     const born = {
       ...LIRA,
@@ -280,7 +417,7 @@ describe('GameScenePage', () => {
     stub({
       [`GET ${base}`]: () => ({
         status: 200,
-        body: { ...GAME, role: 'player' },
+        body: { ...GAME, role: 'player', sessionStartedAt: STARTED },
       }),
       [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
       [`GET ${base}/scene/figures`]: () => ({
@@ -291,19 +428,100 @@ describe('GameScenePage', () => {
     renderScene('u2');
     const user = userEvent.setup();
 
-    const own = await screen.findByRole('button', { name: /^Лира/ });
-    expect(screen.getByRole('button', { name: /^Борн/ })).toBeDisabled();
+    // «Персонаж» (docs/plan/done/scene-page.md, этап 5): свой крупно и «Ходить».
+    expect(
+      await screen.findByRole('button', { name: 'Ходить' }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Новый раунд' }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /Рывок/ }),
     ).not.toBeInTheDocument();
-    await user.click(own);
-    expect(own).toHaveAttribute('aria-pressed', 'true');
+    // Чужой герой — в «Отряде», щелчок открывает карточку, а не выбирает.
+    await user.click(screen.getByRole('button', { name: 'Отряд' }));
+    expect(screen.getByRole('button', { name: 'Борн' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Персонаж' }));
+    await user.click(screen.getByRole('button', { name: 'Ходить' }));
+    expect(screen.getByRole('button', { name: /Идёт/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    // Подсказка и запас — плашкой на сцене, а не в панели.
+    const plaque = screen.getByRole('status', { name: 'Выбрано на сцене' });
     expect(
-      screen.getByText(/Щёлкните подсвеченную клетку — фигурка пойдёт туда/),
+      within(plaque).getByText('щелчок по подсвеченной клетке — ход'),
     ).toBeInTheDocument();
+    expect(
+      within(plaque).getByText('осталось 30 из 30 фт'),
+    ).toBeInTheDocument();
+    // Бой — плашкой сверху сцены; уведомления нет: игрок вошёл уже в бой.
+    expect(screen.getByText('Бой · раунд 1')).toBeInTheDocument();
+    expect(screen.queryByText('Мастер начал бой')).not.toBeInTheDocument();
+  });
+
+  it('вне встречи игрок только смотрит: плашка, карточка без правок, фигурку не выбрать; встреча началась — ходит', async () => {
+    let game = { ...GAME, role: 'player' as const };
+    stub({
+      [`GET ${base}`]: () => ({ status: 200, body: game }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+      [`GET ${base}/scene/figures`]: () => ({
+        status: 200,
+        body: figuresOf(3, [LIRA]),
+      }),
+    });
+    renderScene('u2');
+    const user = userEvent.setup();
+
+    expect(
+      await screen.findByText('Ходить можно, когда мастер начнёт встречу.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Встреча не идёт · только просмотр'),
+    ).toBeInTheDocument();
+    // Плашка встречи — вместо плашки боя; уведомления нет: игрок вошёл уже вне встречи.
+    expect(screen.queryByText('Бой · раунд 1')).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Ходить' }),
+    ).not.toBeInTheDocument();
+    // Фигурки на сцене не берутся: ни выбрать, ни потянуть.
+    await screen.findByText(/Фигурка: Лира/);
+    expect(screen.queryByText('Фигурки можно брать')).not.toBeInTheDocument();
+
+    game = { ...game, sessionStartedAt: STARTED };
+    act(() =>
+      socket.current?.receive(GAME_SOCKET.changed, {
+        gameId: GAME.id,
+        seq: 4,
+        kind: 'session.started',
+      }),
+    );
+    expect(
+      await screen.findByRole('button', { name: 'Ходить' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('alert', { name: 'Встреча началась' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Бой · раунд 1')).toBeInTheDocument();
+    expect(screen.getByText('Фигурки можно брать')).toBeInTheDocument();
+
+    // Мастер завершил встречу посреди хода — выбор снят.
+    await user.click(screen.getByRole('button', { name: 'Ходить' }));
+    game = { ...game, sessionStartedAt: null };
+    act(() =>
+      socket.current?.receive(GAME_SOCKET.changed, {
+        gameId: GAME.id,
+        seq: 5,
+        kind: 'session.ended',
+      }),
+    );
+    expect(
+      await screen.findByRole('alert', { name: 'Мастер завершил встречу' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('status', { name: 'Выбрано на сцене' }),
+    ).not.toBeInTheDocument();
   });
 
   it('игрок видит фигурки и перечитывает их после событий фигурок; старый ответ не откатывает', async () => {
@@ -367,7 +585,7 @@ describe('GameScenePage', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Пещера' })).toBeInTheDocument();
     expect(screen.getByText('Содержимое скрыто')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '← В лобби' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'В лобби' })).toHaveAttribute(
       'href',
       base,
     );
@@ -437,6 +655,9 @@ describe('GameScenePage', () => {
     renderScene('m1');
     const user = userEvent.setup();
 
+    await user.click(
+      await screen.findByRole('button', { name: 'Сцена' }, { timeout: 3000 }),
+    );
     const toggle = await screen.findByRole('switch', {
       name: 'Открыта игрокам',
     });
@@ -601,12 +822,9 @@ describe('GameScenePage', () => {
     const user = userEvent.setup();
 
     await user.click(
-      await screen.findByRole(
-        'button',
-        { name: 'Поставить' },
-        { timeout: 3000 },
-      ),
+      await screen.findByRole('radio', { name: 'Правка' }, { timeout: 3000 }),
     );
+    await user.click(screen.getByRole('button', { name: 'Строить' }));
     expect(screen.getByText('На карте: 0')).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Ход' }),
@@ -620,6 +838,121 @@ describe('GameScenePage', () => {
         ),
       ).toBe(true),
     );
+  });
+
+  it('мастер переключает «Игру» и «Правку» клавишей Ё; в «Игре» нет инструментов, но есть отмена', async () => {
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'master' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+    });
+    renderScene('m1');
+    const user = userEvent.setup();
+
+    const play = await screen.findByRole(
+      'radio',
+      { name: 'Игра' },
+      { timeout: 3000 },
+    );
+    expect(play).toBeChecked();
+    expect(
+      screen.getByRole('button', { name: 'Отменить' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Строить' }),
+    ).not.toBeInTheDocument();
+    // Цифры инструментов в «Игре» молчат.
+    await user.keyboard('2');
+    expect(screen.queryByText('На карте: 0')).not.toBeInTheDocument();
+
+    await user.keyboard('[Backquote]');
+    expect(screen.getByRole('radio', { name: 'Правка' })).toBeChecked();
+    expect(screen.getByRole('button', { name: 'Строить' })).toBeInTheDocument();
+    expect(localStorage.getItem('scene.mode')).toBe('edit');
+    await user.keyboard('[Backquote]');
+    expect(screen.getByRole('radio', { name: 'Игра' })).toBeChecked();
+  });
+
+  it('мастер видит число новых записей на вкладке «Журнал», а в ней — записи по раундам', async () => {
+    const at = '2026-10-24T16:00:00Z';
+    const entered = {
+      seq: 3,
+      kind: 'member.entered',
+      actor: { id: 'u2', nickname: 'Боб' },
+      as: null,
+      sceneId: null,
+      createdAt: at,
+      intent: null,
+      result: null,
+    };
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'master' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+      [`GET ${base}/events`]: () => ({
+        status: 200,
+        body: {
+          events: [
+            {
+              ...entered,
+              seq: 2,
+              kind: 'figures.round',
+              actor: { id: 'm1', nickname: 'Я' },
+              result: {
+                scene: { id: 's1', name: 'Пещера' },
+                count: 1,
+                round: 2,
+              },
+            },
+            { ...entered, seq: 1, actor: { id: 'u3', nickname: 'Ада' } },
+          ],
+          hasMore: false,
+        },
+      }),
+    });
+    renderScene('m1');
+    const user = userEvent.setup();
+    await screen.findByRole('button', { name: 'Журнал' }, { timeout: 3000 });
+
+    // Запись игрока пришла, пока вкладка закрыта, — на ней число; своё мастер не считает.
+    act(() => {
+      socket.current?.receive(GAME_SOCKET.event, {
+        gameId: GAME.id,
+        event: entered,
+      });
+      socket.current?.receive(GAME_SOCKET.event, {
+        gameId: GAME.id,
+        event: { ...entered, seq: 4, actor: { id: 'm1', nickname: 'Я' } },
+      });
+    });
+    await user.click(
+      await screen.findByRole('button', { name: 'Журнал, новых: 1' }),
+    );
+
+    // Запись нового раунда — разделитель с номером; живые записи сверху первой страницы.
+    expect(await screen.findByText(/Раунд 2 ·/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Боб/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Ада/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Журнал' })).toBeInTheDocument();
+  });
+
+  it('у игрока нет переключателя режима', async () => {
+    stub({
+      [`GET ${base}`]: () => ({
+        status: 200,
+        body: { ...GAME, role: 'member' },
+      }),
+      [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
+    });
+    renderScene('u3');
+    expect(await screen.findByText(/Сцена:/)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('radio', { name: 'Правка' }),
+    ).not.toBeInTheDocument();
   });
 
   it('без активной сцены говорит об этом', async () => {

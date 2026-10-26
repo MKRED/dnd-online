@@ -10,7 +10,7 @@ import type {
   GameSceneView,
 } from 'shared';
 import { pngImage } from './support/character-fixture.js';
-import { createSceneGame } from './support/scene-fixture.js';
+import { createSceneGame, fogOff } from './support/scene-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
 // Сцены игры (docs/plan/done/game.md, этап 5): копия карты мастера, активная сцена,
@@ -100,11 +100,12 @@ describe('game scenes (e2e)', () => {
       })
       .expect(200);
     const scene = await view(m, gameId);
+    // Туман у новой сцены включён (замечания после первой партии, 2026-10-26).
     expect(scene.scene).toEqual({
       id: sceneId,
       name: 'Логово',
       open: false,
-      fog: false,
+      fog: true,
       sightRange: 60,
     });
     expect(scene.objects.map((o) => o.kind)).toEqual([
@@ -163,7 +164,7 @@ describe('game scenes (e2e)', () => {
       id: sceneId,
       name: 'Логово',
       open: false,
-      fog: false,
+      fog: true,
       sightRange: 60,
     });
     await player.agent.get(sceneUrl(gameId)).expect(403);
@@ -214,6 +215,7 @@ describe('game scenes (e2e)', () => {
       .expect(200);
     const scenes = await addScene(m, gameId, mapId);
     const sceneId = scenes.scenes[0].id;
+    await fogOff(m, gameId, sceneId);
 
     const opened = await m
       .put(`${scenesUrl(gameId)}/open`)
@@ -244,8 +246,8 @@ describe('game scenes (e2e)', () => {
     // С этого номера лобби входит в комнату сокета.
     expect(lobby.eventSeq).toBe((await lastEvent(m, gameId)).seq);
     const seen = await view(player.agent, gameId);
+    // Точек старта игрок не видит: это разметка мастера (2026-10-24).
     expect(seen.objects.map((o) => o.kind)).toEqual([
-      'start',
       'npc',
       'container',
       'item',

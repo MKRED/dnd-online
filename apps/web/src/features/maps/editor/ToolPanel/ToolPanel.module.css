@@ -1,0 +1,17 @@
+/* Плашка инструмента — в строке координат внизу сцены, правее них (CursorReadout). */
+.hint {
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--mantine-radius-md);
+  white-space: nowrap;
+}
+
+/* Текст — главное: держит хотя бы 10rem, дальше обрезаются клавиши справа. */
+.text {
+  flex: 0 1 auto;
+  min-width: 10rem;
+}

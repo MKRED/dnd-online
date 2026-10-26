@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { floorWith, withTallTable } from '../../walkTest/testMap';
 import {
   moveOp,
   objectCell,
+  onTopCell,
   placeBody,
   placeExtent,
   type PlaceSettings,
@@ -84,6 +86,30 @@ describe('placeBody', () => {
     expect(placeExtent(settings({ choice: null }))).toEqual([1, 1, 1]);
   });
 
+  it('контейнер-обстановка ставится с названием и содержимым по умолчанию', () => {
+    const gold = '00000000-0000-4000-8000-000000000009';
+    const chest = {
+      ...TABLE,
+      name: 'Сундук',
+      container: {
+        capacity: 360,
+        lockDc: null,
+        contents: [{ itemId: gold, quantity: 50 }],
+      },
+    };
+    expect(
+      placeBody(
+        settings({ choice: { kind: 'furniture', entry: chest }, facing: 0 }),
+      ),
+    ).toEqual({
+      kind: 'furniture',
+      furnitureId: TABLE.id,
+      facing: 0,
+      name: 'Сундук',
+      items: [{ itemId: gold, quantity: 50 }],
+    });
+  });
+
   it('обстановка поворачивается на 90°: 45° округляется назад', () => {
     expect(
       placeBody(
@@ -135,5 +161,14 @@ describe('место на карте', () => {
     expect(moveOp(object, [4, 2, 0], [1, 1, 1], size, true)).toMatchObject({
       force: true,
     });
+  });
+
+  it('на стол с опорой во всю высоту клетки существо встаёт клеткой выше', () => {
+    const map = withTallTable(floorWith());
+    expect(onTopCell(map, 'monster', [0, 0, 0])).toEqual([0, 1, 0]);
+    expect(onTopCell(map, 'start', [0, 0, 0])).toEqual([0, 1, 0]);
+    // Рядом со столом и сама обстановка — без подъёма.
+    expect(onTopCell(map, 'npc', [1, 0, 0])).toEqual([1, 0, 0]);
+    expect(onTopCell(map, 'furniture', [0, 0, 0])).toEqual([0, 0, 0]);
   });
 });

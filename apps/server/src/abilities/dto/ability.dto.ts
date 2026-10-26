@@ -6,12 +6,15 @@ import {
   isAbilityActivation,
   isAbilityCosts,
   isAbilitySteps,
+  isEffectComponents,
   isMonsterAbilityDetails,
   isSpellDetails,
+  passiveFitsActivation,
   type AbilityActivation,
   type AbilityCategory,
   type AbilityCosts,
   type AbilityStep,
+  type EffectComponent,
 } from 'shared';
 import {
   CategoryDetails,
@@ -48,8 +51,9 @@ export class AbilityDto extends CatalogEntryDto {
       defaultMessage: () => 'Активация способности задана неверно',
     },
   })
-  // Черта и легендарное действие — только у способности монстра (shared/abilityMonster.ts).
-  // Неверную активацию или категорию отклоняют их собственные проверки.
+  // Легендарное действие — только у способности монстра, черта — у базовой и монстра
+  // (shared/abilityMonster.ts). Неверную активацию или категорию отклоняют их собственные
+  // проверки.
   @ValidateBy({
     name: 'activationFitsCategory',
     validator: {
@@ -61,7 +65,7 @@ export class AbilityDto extends CatalogEntryDto {
         return activationFitsCategory(category as AbilityCategory, value);
       },
       defaultMessage: () =>
-        'Черта и легендарное действие бывают только у способности монстра',
+        'Легендарное действие бывает только у способности монстра, черта — у базовой способности и способности монстра',
     },
   })
   activation: AbilityActivation;
@@ -89,6 +93,30 @@ export class AbilityDto extends CatalogEntryDto {
     },
   })
   steps?: AbilityStep[];
+
+  // Что черта даёт владельцу всегда (shared/abilityPassive.ts). Необязательно: без поля —
+  // пустой список, как у запросов, написанных до черт персонажа.
+  @IsOptional()
+  @ValidateBy({
+    name: 'abilityPassive',
+    validator: {
+      validate: isEffectComponents,
+      defaultMessage: () => 'Составляющие черты заданы неверно',
+    },
+  })
+  @ValidateBy({
+    name: 'passiveFitsActivation',
+    validator: {
+      validate: (value: unknown, args) => {
+        const { activation } = args?.object as { activation?: unknown };
+        if (!isEffectComponents(value) || !isAbilityActivation(activation))
+          return true;
+        return passiveFitsActivation(activation, value);
+      },
+      defaultMessage: () => 'Составляющие бывают только у черты',
+    },
+  })
+  passive?: EffectComponent[];
 
   // Флаг одного запроса, в способности не хранится (docs/plan/done/abilities.md, этап 8).
   // Опубликовать вместе со способностью свои скрытые эффекты из её шагов — иначе 409.

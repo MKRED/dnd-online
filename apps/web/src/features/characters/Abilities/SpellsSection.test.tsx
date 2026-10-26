@@ -89,24 +89,33 @@ describe('SpellsSection', () => {
     expect(sent()).toEqual({ spellSlotsExpended: { 1: 0 } });
   });
 
-  it('«Долгий отдых» возвращает все круги; когда тратить нечего, кнопки нет', async () => {
+  it('«Долгий отдых» в заголовке возвращает все круги; когда тратить нечего, он не нажимается', async () => {
     const onChange = vi.fn();
     const sent = stubPatch({ ...slots, 1: { total: 4, expended: 0 } });
     renderWithProviders(
       <SpellsSection {...props(character(slots))} onSlotsChange={onChange} />,
     );
-    await userEvent.click(screen.getByRole('button', { name: 'Долгий отдых' }));
+    const legend = screen.getByRole('group', { name: /Заклинания/ });
+    await userEvent.click(
+      within(legend).getByRole('button', { name: 'Долгий отдых' }),
+    );
     expect(sent()).toEqual({ spellSlotsExpended: { 1: 0, 2: 0 } });
+  });
 
+  it('«Долгий отдых» не нажимается, когда все ячейки целы', () => {
     renderWithProviders(
       <SpellsSection
         {...props(character({ 2: { total: 2, expended: 0 } }))}
         onSlotsChange={vi.fn()}
       />,
     );
-    expect(
-      screen.getAllByRole('button', { name: 'Долгий отдых' }),
-    ).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Долгий отдых' })).toBeDisabled();
+  });
+
+  it('без права тратить кнопки «Долгий отдых» нет', () => {
+    renderWithProviders(<SpellsSection {...props(character(slots))} />);
+    expect(screen.queryByRole('button', { name: 'Долгий отдых' })).toBeNull();
+    expect(screen.getByText('Заклинания')).toBeInTheDocument();
   });
 
   it('ошибка сервера показывается, лист не меняется', async () => {

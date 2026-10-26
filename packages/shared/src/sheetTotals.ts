@@ -1,3 +1,5 @@
+import type { AbilityLink } from './abilityLinks.js';
+import { traitEffects } from './abilityPassive.js';
 import type { Character } from './character.js';
 import type { CharacterEffectEntry, EffectLink } from './characterEffects.js';
 import { expandConditions } from './conditionsExpand.js';
@@ -25,14 +27,15 @@ import {
 import { perceptionShift } from './passivePerception.js';
 import { conditionOf, sheetConditions } from './sheetConditions.js';
 
-// Итог листа персонажа или карточки монстра: база из формы плюс наложенные эффекты
-// (docs/plan/done/character-effects.md, docs/plan/done/monsters-npcs.md). Числа пересчитываются там, где движок это умеет
+// Итог листа персонажа или карточки монстра: база из формы плюс черты и наложенные эффекты
+// (docs/plan/done/character-effects.md, docs/plan/done/monsters-npcs.md, docs/plan/done/traits.md). Числа пересчитываются там, где движок это умеет
 // (Скорость и Класс доспеха), остальное собирается в списки. У каждой строки — откуда она: названия
 // эффектов или состояний, для подсказки на листе.
 
 export type TotalLine = { text: string; from: string[] };
 
 type EffectLinkEntry = { id: string } & EffectLink;
+type AbilityLinkEntry = { id: string } & AbilityLink;
 
 export type SheetTotals = {
   speed: SpeedTotal;
@@ -80,10 +83,12 @@ function collect() {
 // у персонажа в форме — только обычная.
 export type CreatureBase = { speed: SpeedBase } & ArmorClassBase;
 
+// Черты считаются всегда: вид листа «Без эффектов» передаёт пустой список эффектов, но
+// не убирает черты — они часть самого персонажа.
 export function sheetTotals(
   character: Pick<
     Character,
-    'speed' | 'armorClass' | 'abilityScores' | 'effects'
+    'speed' | 'armorClass' | 'abilityScores' | 'effects' | 'abilities'
   >,
   entries: readonly CharacterEffectEntry[] = character.effects,
 ): SheetTotals {
@@ -94,17 +99,23 @@ export function sheetTotals(
       dexterity: character.abilityScores.dexterity,
     },
     entries,
+    character.abilities,
   );
 }
 
 export function creatureTotals(
   base: CreatureBase,
   entries: readonly EffectLinkEntry[],
+  abilities: readonly AbilityLinkEntry[] = [],
 ): SheetTotals {
-  const applied = activeEffects(entries);
-  const names = new Map(
-    entries.flatMap((e) => (e.effect ? [[e.effect.id, e.effect.name]] : [])),
-  );
+  const traits = traitEffects(abilities);
+  const applied = [...traits, ...activeEffects(entries)];
+  const names = new Map([
+    ...traits.map(({ source, name }) => [source, name] as const),
+    ...entries.flatMap((e) =>
+      e.effect ? [[e.effect.id, e.effect.name] as const] : [],
+    ),
+  ]);
   const nameOf = (source: string) => {
     const kind = conditionOf(source);
     return kind ? CONDITION_LABELS[kind] : (names.get(source) ?? source);

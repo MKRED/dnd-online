@@ -1,5 +1,10 @@
 import { Alert, Button, Group, Loader, Stack, Text } from '@mantine/core';
-import { SPELL_SLOT_CIRCLES } from 'shared';
+import type { ReactNode } from 'react';
+import {
+  SPELL_SLOT_CIRCLES,
+  type Character,
+  type GameCharacterChange,
+} from 'shared';
 import { EffectLinksStrip, SpellSlotPips } from '../../../features/characters';
 import { gameCharacterBase } from '../../../features/games';
 import DeathSavesEditor from './DeathSavesEditor';
@@ -13,6 +18,16 @@ interface CharacterStateCardProps {
   // Растёт с событиями состояния существ — лист перечитывается.
   version: number;
   onOpenSheet: () => void;
+  // В окне карточки (docs/plan/done/scene-page.md, этап 4): без своей шапки — имя в шапке окна.
+  bare?: boolean;
+  // Что показать под состоянием тем же листом (вкладки окна) — без второй загрузки.
+  // change — правка через игру тем, кто ведёт персонажа; у только читающего — нет.
+  below?: (
+    character: Character,
+    change?: (next: GameCharacterChange) => Promise<void>,
+  ) => ReactNode;
+  // Герой отряда (docs/plan/done/scene-page.md, этап 5): всё видно, ничего не правится.
+  readOnly?: boolean;
 }
 
 // Карточка персонажа игрока в панели сцены (docs/plan/done/game.md, этап 8): тем, кто его
@@ -22,6 +37,9 @@ function CharacterStateCard({
   characterId,
   version,
   onOpenSheet,
+  bare,
+  below,
+  readOnly,
 }: CharacterStateCardProps) {
   const { character, setCharacter, change, busy, error } = useGameCharacter(
     gameId,
@@ -45,22 +63,42 @@ function CharacterStateCard({
       className={classes.card}
       aria-label={`Карточка: ${character.name}`}
     >
-      <Group justify="space-between" wrap="nowrap">
-        <Text fw={600} truncate>
-          {character.name}
+      {!bare && (
+        <Group justify="space-between" wrap="nowrap">
+          <Text fw={600} truncate>
+            {character.name}
+          </Text>
+          <Button size="compact-xs" variant="subtle" onClick={onOpenSheet}>
+            Карточка
+          </Button>
+        </Group>
+      )}
+      {readOnly ? (
+        <Text fw={700} size="lg">
+          ХП {character.hitPointsCurrent} / {character.hitPointsMax}
+          {character.hitPointsTemp > 0 && (
+            <Text span size="sm" c="dimmed" fw={400}>
+              {' '}
+              +{character.hitPointsTemp} временных
+            </Text>
+          )}
         </Text>
-        <Button size="compact-xs" variant="subtle" onClick={onOpenSheet}>
-          Полный лист
-        </Button>
-      </Group>
-      <HitPointsControls
-        current={character.hitPointsCurrent}
-        max={character.hitPointsMax}
-        temp={character.hitPointsTemp}
-        busy={busy}
-        onChange={(next) => void change(next)}
-      />
-      {saves && (
+      ) : (
+        <HitPointsControls
+          current={character.hitPointsCurrent}
+          max={character.hitPointsMax}
+          temp={character.hitPointsTemp}
+          busy={busy}
+          onChange={(next) => void change(next)}
+        />
+      )}
+      {saves && readOnly && (
+        <Text size="sm">
+          Спасброски от смерти: успехи {character.deathSaveSuccesses}, провалы{' '}
+          {character.deathSaveFailures}
+        </Text>
+      )}
+      {saves && !readOnly && (
         <DeathSavesEditor
           successes={character.deathSaveSuccesses}
           failures={character.deathSaveFailures}
@@ -84,11 +122,14 @@ function CharacterStateCard({
                 level={level}
                 slots={slot}
                 busy={busy}
-                onSpend={(expended) =>
-                  void change({
-                    kind: 'spell_slots',
-                    expended: { [level]: expended },
-                  })
+                onSpend={
+                  readOnly
+                    ? undefined
+                    : (expended) =>
+                        void change({
+                          kind: 'spell_slots',
+                          expended: { [level]: expended },
+                        })
                 }
               />
             </Group>
@@ -99,9 +140,14 @@ function CharacterStateCard({
         effects={character.effects}
         apiBase={`${gameCharacterBase(gameId, characterId)}/effects`}
         owner="character"
-        onChange={(effects) => setCharacter({ ...character, effects })}
+        onChange={
+          readOnly
+            ? undefined
+            : (effects) => setCharacter({ ...character, effects })
+        }
       />
       {error && <Alert color="red">{error}</Alert>}
+      {below?.(character, readOnly ? undefined : change)}
     </Stack>
   );
 }

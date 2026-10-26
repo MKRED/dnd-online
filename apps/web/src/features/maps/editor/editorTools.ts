@@ -8,11 +8,15 @@ import {
   type Vec3,
 } from 'shared';
 import type { WalkHover } from '../walkTest';
+import type { SceneObjectLook } from '../MapScene/objects/objectLayout';
 
 // walk — проверка хода: карту не меняет, водит фигурку по правилам пути. place —
-// «Поставить»: блок или объект карты (docs/plan/blocks.md, этап 10).
-export const EDITOR_TOOLS = [
+// «Поставить»: блок или объект карты (docs/plan/blocks.md, этап 10). creatures — «Существа»
+// сцены игры: героев, НПС и монстров ставят и двигают только им, «Строить» двигает вещи
+// (замечания после первой партии, 2026-10-26).
+const ALL_TOOLS = [
   'view',
+  'creatures',
   'place',
   'erase',
   'fill',
@@ -20,16 +24,42 @@ export const EDITOR_TOOLS = [
   'replace',
   'walk',
 ] as const;
-export type EditorTool = (typeof EDITOR_TOOLS)[number];
+export type EditorTool = (typeof ALL_TOOLS)[number];
+
+// «Строить» (вариант Б артборда «Н4», 2026-10-24, docs/plan/done/scene-page.md): одна
+// кнопка на полосе, а «По одному», «Область» и «Коробка» — её режимы, как у ластика.
+// Внутри это прежние инструменты place, fill и hollow: у каждого свой щелчок и подсветка.
+export const BUILD_MODES = ['place', 'fill', 'hollow'] as const;
+export type BuildMode = (typeof BUILD_MODES)[number];
+
+export const isBuildMode = (tool: EditorTool): tool is BuildMode =>
+  (BUILD_MODES as readonly EditorTool[]).includes(tool);
+
+// Кнопка полосы, которой принадлежит инструмент: режимы «Строить» — её кнопка place.
+export const stripTool = (tool: EditorTool): EditorTool =>
+  isBuildMode(tool) ? 'place' : tool;
+
+// Полоса инструментов редактора карты по порядку; номер клавиши — место в ней. «Существ» в
+// нём нет: на карте монстров и НПС ставит «Строить», героев на карте нет.
+export const EDITOR_TOOLS: readonly EditorTool[] = ALL_TOOLS.filter(
+  (tool) => tool !== 'fill' && tool !== 'hollow' && tool !== 'creatures',
+);
 
 export const TOOL_LABELS: Record<EditorTool, string> = {
   view: 'Просмотр',
-  place: 'Поставить',
+  creatures: 'Существа',
+  place: 'Строить',
   erase: 'Ластик',
-  fill: 'Заливка',
-  hollow: 'Коробка',
+  fill: 'Строить',
+  hollow: 'Строить',
   replace: 'Замена',
   walk: 'Ход',
+};
+
+export const BUILD_MODE_LABELS: Record<BuildMode, string> = {
+  place: 'По одному',
+  fill: 'Область',
+  hollow: 'Коробка',
 };
 
 // Инструменты, которым нужны два угла области.
@@ -73,10 +103,13 @@ export function cellsFromHit(
 }
 
 // С какой клеткой работает инструмент: новые блоки и области строятся в соседней
-// клетке, а ластик и замена берут уже стоящий блок. Объект ставится в клетку ног —
-// над блоком, по которому кликнули.
+// клетке, а ластик и замена берут уже стоящий блок. Объект и существо ставятся в клетку
+// ног — над блоком, по которому кликнули.
 export function toolCell(tool: EditorTool, cells: PickedCells): Vec3 | null {
-  return tool === 'place' || tool === 'fill' || tool === 'hollow'
+  return tool === 'place' ||
+    tool === 'creatures' ||
+    tool === 'fill' ||
+    tool === 'hollow'
     ? cells.place
     : cells.hit;
 }
@@ -189,4 +222,12 @@ export interface SceneEditor {
   // Клетки под курсором сменились (null — курсор ушёл со сцены): фигурку тянут, и при
   // отпускании ей нужна последняя клетка (docs/plan/done/game.md, этап 7).
   onHover?: (cells: PickedCells | null) => void;
+  // Клетки области, которые изменит второй щелчок, — подсвечиваются вместо всей области
+  // (у «Замены»: только блоки как в первом углу). null — слишком много, хватит рамки.
+  changedCells?: (box: Box3) => Vec3[] | null;
+  // Инструмент ничего не делает с клетками (пустое «Поставить»): подсветки под курсором нет.
+  idle?: boolean;
+  // Ставящийся объект: в рамке под курсором — он сам полупрозрачно и носик взгляда
+  // (вариант В артборда «Н1», docs/plan/done/scene-page.md).
+  ghost?: SceneObjectLook;
 }

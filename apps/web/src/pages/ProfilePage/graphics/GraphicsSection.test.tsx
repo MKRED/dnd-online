@@ -1,6 +1,6 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_USER_SETTINGS, GRAPHICS_PRESET_VALUES } from 'shared';
 import type { AuthUser } from '../../../features/auth/authApi';
 import { renderWithProviders } from '../../../test/render';
@@ -13,74 +13,57 @@ const me: AuthUser = {
   settings: DEFAULT_USER_SETTINGS,
 };
 
-function stubFetch(status: number, body: unknown) {
-  const fetchMock = vi.fn(() =>
-    Promise.resolve(new Response(JSON.stringify(body), { status })),
-  );
-  vi.stubGlobal('fetch', fetchMock);
-  return fetchMock;
-}
+// Графика этого устройства — в браузере (замечания после первой партии, вариант А).
+const stored = () =>
+  JSON.parse(localStorage.getItem('graphics.device') ?? 'null') as unknown;
 
-const sentBody = (fetchMock: ReturnType<typeof stubFetch>) => {
-  const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
-  return JSON.parse(init.body as string) as unknown;
-};
+let fetchMock: ReturnType<typeof vi.fn>;
+beforeEach(() => {
+  localStorage.clear();
+  fetchMock = vi.fn();
+  vi.stubGlobal('fetch', fetchMock);
+});
 
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+  localStorage.clear();
 });
 
 describe('GraphicsSection', () => {
-  it('набор: «Высокое» выбрать нельзя, «Низкое» уходит со своими значениями', async () => {
-    const low = {
-      ...DEFAULT_USER_SETTINGS,
-      graphicsPreset: 'low',
-      ...GRAPHICS_PRESET_VALUES.low,
-    };
-    const fetchMock = stubFetch(200, low);
-    const { authValue } = renderWithProviders(<GraphicsSection />, {
-      auth: { user: me },
-    });
+  it('набор: «Высокое» выбрать нельзя, «Низкое» сохраняется на устройстве со своими значениями', async () => {
+    renderWithProviders(<GraphicsSection />, { auth: { user: me } });
     const user = userEvent.setup();
 
+    expect(screen.getByText('Это устройство')).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /Среднее/ })).toBeChecked();
     expect(screen.getByRole('radio', { name: /Высокое/ })).toBeDisabled();
     await user.click(screen.getByRole('radio', { name: /Низкое/ }));
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    expect(sentBody(fetchMock)).toEqual({
+    expect(stored()).toEqual({
       graphicsPreset: 'low',
       ...GRAPHICS_PRESET_VALUES.low,
     });
-    // Сразу, до ответа сервера: карточки моделей и без анимаций.
-    expect(authValue.setUser).toHaveBeenNthCalledWith(1, {
-      ...me,
-      settings: low,
-    });
+    expect(screen.getByRole('radio', { name: /Низкое/ })).toBeChecked();
+    // На сервер графика больше не уходит.
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('настройка по одной переключает набор на «Своё» и шлёт все значения', async () => {
-    const fetchMock = stubFetch(200, {
-      ...DEFAULT_USER_SETTINGS,
-      graphicsPreset: 'custom',
-      creatureModels: 'party',
-    });
+  it('настройка по одной переключает набор на «Своё» и хранит все значения', async () => {
     renderWithProviders(<GraphicsSection />, { auth: { user: me } });
     const user = userEvent.setup();
 
     await user.click(screen.getByText('Только отряд'));
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    expect(sentBody(fetchMock)).toEqual({
+    expect(stored()).toEqual({
       graphicsPreset: 'custom',
       ...GRAPHICS_PRESET_VALUES.medium,
       creatureModels: 'party',
     });
+    expect(screen.getByRole('radio', { name: /Своё/ })).toBeChecked();
   });
 
   it('сглаживание — переключатель; «Своё» начинается с того, что видно', async () => {
-    const fetchMock = stubFetch(200, DEFAULT_USER_SETTINGS);
     renderWithProviders(<GraphicsSection />, { auth: { user: me } });
     const user = userEvent.setup();
 
@@ -89,8 +72,7 @@ describe('GraphicsSection', () => {
     ).toBeChecked();
     await user.click(screen.getByRole('switch', { name: /Сглаживание краёв/ }));
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    expect(sentBody(fetchMock)).toEqual({
+    expect(stored()).toEqual({
       graphicsPreset: 'custom',
       ...GRAPHICS_PRESET_VALUES.medium,
       antialias: false,
@@ -98,23 +80,34 @@ describe('GraphicsSection', () => {
   });
 
   it('ползунок анимаций сохраняет, когда его отпустили', async () => {
-    const fetchMock = stubFetch(200, {
-      ...DEFAULT_USER_SETTINGS,
-      graphicsPreset: 'custom',
-      animationFps: 19,
-    });
     renderWithProviders(<GraphicsSection />, { auth: { user: me } });
     const user = userEvent.setup();
 
     const slider = screen.getByRole('slider', { name: 'Частота анимаций' });
     expect(slider).toHaveAttribute('aria-valuenow', '18');
+    // Значение — в заголовке поля, а не во всплывающей подсказке ползунка.
+    expect(screen.getByText('18 к/с')).toBeInTheDocument();
     slider.focus();
     await user.keyboard('{ArrowRight}');
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    expect(sentBody(fetchMock)).toMatchObject({
+    expect(screen.getByText('19 к/с')).toBeInTheDocument();
+
+    expect(stored()).toMatchObject({
       graphicsPreset: 'custom',
       animationFps: 19,
     });
+  });
+
+  it('без своей графики устройство начинает с сохранённой в аккаунте', () => {
+    const account = {
+      ...DEFAULT_USER_SETTINGS,
+      graphicsPreset: 'custom' as const,
+      creatureModels: 'none' as const,
+    };
+    renderWithProviders(<GraphicsSection />, {
+      auth: { user: { ...me, settings: account } },
+    });
+    expect(screen.getByRole('radio', { name: /Своё/ })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Карточки' })).toBeChecked();
   });
 });

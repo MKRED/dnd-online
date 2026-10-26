@@ -2,6 +2,7 @@ import {
   cellTypeId,
   insideMap,
   readCell,
+  type Box3,
   type MapOp,
   type SizedMapState,
   type Vec3,
@@ -17,6 +18,7 @@ import {
   type SceneEditor,
   type ToolSettings,
 } from './editorTools';
+import { matchingCells } from './regionPreview';
 import {
   connectedEraseOps,
   eraseBoxOp,
@@ -108,6 +110,7 @@ export function blockSceneEditor({
     setAnchor(null);
   };
 
+  const match = anchor?.match ?? null;
   return {
     tool,
     anchor: anchor?.cell ?? null,
@@ -115,5 +118,9 @@ export function blockSceneEditor({
     onPick,
     pickCell,
     region,
+    ...(tool === 'replace' &&
+      anchor && {
+        changedCells: (box: Box3) => matchingCells(state, box, match),
+      }),
   };
 }

@@ -33,7 +33,7 @@ const toBuffer = (bits: Uint8Array | undefined) => Buffer.from(bits ?? EMPTY);
 
 // Пишет только изменившиеся чанки. «Открыто» только растёт, поэтому строки не
 // удаляются: чанк, однажды открытый, остаётся в таблице до перезапуска сцены (новая
-// копия — новые строки).
+// копия — новые строки) или до сброса тумана мастером (clearFog).
 export async function saveFog(
   tx: DbTransaction,
   sceneId: string,
@@ -79,4 +79,16 @@ export async function saveFog(
       },
     });
   return rows.length;
+}
+
+// Сброс тумана мастером: открытое забыто целиком, следующий пересчёт начинает с нуля.
+export async function clearFog(
+  tx: DbTransaction,
+  sceneId: string,
+): Promise<number> {
+  const removed = await tx
+    .delete(gameSceneFog)
+    .where(eq(gameSceneFog.sceneId, sceneId))
+    .returning({ cx: gameSceneFog.cx });
+  return removed.length;
 }

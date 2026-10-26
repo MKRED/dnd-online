@@ -3,11 +3,11 @@ import type {
   GameFigures,
   GameSceneEditMessage,
   MapObjectRefsView,
+  Vec3,
 } from 'shared';
 import type { SceneCreaturesView } from '../../../features/maps/MapScene';
 import type { MapViewState } from '../../../features/maps/mapStateFromChunks';
 import { useKeyCodes } from '../../../features/maps/useKeyCodes';
-import type { SheetTarget } from './FullSheetDrawer';
 import { useCreatureWalk } from './useCreatureWalk';
 import { useSceneCreatures } from './useSceneCreatures';
 
@@ -19,18 +19,23 @@ interface CreatureCardsOptions {
   refs: MapObjectRefsView | null;
   // Фигурки персонажей мешают ходу монстра.
   figures: GameFigures | null;
-  // Выбор существа щелчком на карте и его ход: у мастера — только в «Просмотре».
+  // Выбор существа щелчком на карте: у мастера — в «Игре» и в «Просмотре» «Правки».
   canPick: boolean;
+  // Ход выбранного существа по клику: только в «Игре» — в «Просмотре» щелчок ничего не
+  // двигает (замечания после первой партии, 2026-10-26).
+  canWalk: boolean;
   // Выбранная фигурка: выбор у страницы один — фигурка снимает выбор существа.
   figureId: string | null;
   // Выбрать существо — снять выбор фигурки.
   clearFigure: () => void;
   // Перечитать фигурки (их метки здоровья и Скорость).
   reloadFigures: () => void;
+  // Ход существа отправлен — оно ждёт путь на месте (docs/plan/done/walk-animation.md).
+  onMoveStart?: (objectId: number, from: Vec3) => void;
 }
 
 // Состояние существ на странице сцены (docs/plan/done/game.md, этап 8): монстры и НПС, выбор
-// существа мастером, номер для перечитывания карточки персонажа и открытый полный лист.
+// существа мастером и номер для перечитывания карточки персонажа.
 export function useCreatureCards({
   gameId,
   sceneId,
@@ -39,14 +44,15 @@ export function useCreatureCards({
   refs,
   figures,
   canPick,
+  canWalk,
   figureId,
   clearFigure,
   reloadFigures,
+  onMoveStart,
 }: CreatureCardsOptions) {
   const creatures = useSceneCreatures(gameId, sceneId);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [version, setVersion] = useState(0);
-  const [sheet, setSheet] = useState<SheetTarget | null>(null);
   const { reload } = creatures;
 
   const select = useCallback(
@@ -63,9 +69,11 @@ export function useCreatureCards({
     setShownFigure(figureId);
     if (figureId !== null) setSelectedId(null);
   }
+  const clearSelection = useCallback(() => setSelectedId(null), []);
   // Esc снимает выбор, как у фигурок.
-  useKeyCodes({ Escape: () => setSelectedId(null) });
-  // Щелчок по выбранному существу на карте снимает выбор, как в списке «Существа».
+  useKeyCodes({ Escape: clearSelection });
+  // Щелчок по существу на карте выбирает его или снимает выбор, как в списке; по уже
+  // выбранному щелчок проходит к клеткам (ObjectLayer), а мимо них — снимает выбор (onMiss).
   const pick = useCallback(
     (objectId: number) => select(selectedId === objectId ? null : objectId),
     [select, selectedId],
@@ -86,16 +94,6 @@ export function useCreatureCards({
     [reload],
   );
 
-  // Полный лист монстра или НПС — по ссылке объекта на копию в библиотеке.
-  const openCreatureSheet = (objectId: number) => {
-    const object = state?.objects.byId.get(objectId);
-    if (object?.kind === 'monster') {
-      setSheet({ kind: 'monster', sourceId: object.monsterId });
-    } else if (object?.kind === 'npc') {
-      setSheet({ kind: 'npc', sourceId: object.characterId });
-    }
-  };
-
   const selected =
     creatures.creatures?.creatures.find((c) => c.objectId === selectedId) ??
     null;
@@ -106,8 +104,10 @@ export function useCreatureCards({
     creatures: creatures.creatures,
     figures,
     selectedId,
-    active: master && canPick,
+    active: master && canWalk,
     onCreatures: creatures.apply,
+    onMiss: clearSelection,
+    onMoveStart,
   });
   const view = useMemo<SceneCreaturesView>(
     () => ({
@@ -123,9 +123,6 @@ export function useCreatureCards({
     selected,
     select,
     version,
-    sheet,
-    setSheet,
-    openCreatureSheet,
     onChanged,
     onSceneEdit,
     view,

@@ -16,7 +16,8 @@ interface MonsterTopProps {
 
 // Шапка карточки, плашки постоянных эффектов и боевые числа — как верх листа персонажа.
 // С эффектами числа — итог (КД и скорости), переключатель показывает стат-блок как его
-// ввёл мастер. Не запоминается: карточка открывается итогом, как лист.
+// ввёл мастер, с чертами: они часть монстра (docs/plan/done/traits.md). Не запоминается:
+// карточка открывается итогом, как лист.
 function MonsterTop({
   monster,
   showHidden,
@@ -24,12 +25,18 @@ function MonsterTop({
   onEffectsChange,
 }: MonsterTopProps) {
   const [withEffects, setWithEffects] = useState(true);
+  const { statBlock } = monster;
   const totals = useMemo(
-    () => monsterTotals(monster.statBlock, monster.effects ?? []),
-    [monster.statBlock, monster.effects],
+    () =>
+      monsterTotals(statBlock, monster.effects ?? [], monster.abilities ?? []),
+    [statBlock, monster.effects, monster.abilities],
+  );
+  const base = useMemo(
+    () => monsterTotals(statBlock, [], monster.abilities ?? []),
+    [statBlock, monster.abilities],
   );
   const effects = monster.effects ?? [];
-  const shown = effects.length > 0 && withEffects ? totals : null;
+  const shown = effects.length > 0 && !withEffects ? base : totals;
 
   return (
     <Stack gap="md">
@@ -53,7 +60,7 @@ function MonsterTop({
         />
       )}
       <MonsterStats block={monster.statBlock} totals={shown} />
-      {shown && <EffectSummary totals={shown} />}
+      <EffectSummary totals={shown} />
     </Stack>
   );
 }

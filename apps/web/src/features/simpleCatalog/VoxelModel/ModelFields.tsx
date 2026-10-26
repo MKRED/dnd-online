@@ -41,6 +41,12 @@ function ModelFields({ form }: { form: UseFormReturnType<SimpleFormValues> }) {
             <MeshFileButton form={form} label="Загрузить .glb или STL" />
           </Group>
         )}
+        {/* Почему форма ещё не сохраняется: файл сжимается или воксели из него считаются. */}
+        {(form.errors.meshCompressing ?? form.errors.modelMesh) && (
+          <Text size="sm" c="red">
+            {form.errors.meshCompressing ?? form.errors.modelMesh}
+          </Text>
+        )}
       </Stack>
       <Suspense fallback={null}>
         {editing && (

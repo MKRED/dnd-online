@@ -15,10 +15,12 @@ import type { HoverStore } from '../hoverStore';
 import classes from '../MapScene.module.css';
 import ContainerShape from './ContainerShape';
 import CreatureBody from './CreatureBody';
+import FacingNose from './FacingNose';
 import FloorItem from './FloorItem';
 import FurnitureFigure from './FurnitureFigure';
 import GhostGroup from './GhostGroup';
 import {
+  facingAngle,
   layoutObjects,
   objectImagePaths,
   type SceneObject,
@@ -28,6 +30,7 @@ import StandBase, { BLOCKED_COLOR } from './StandBase';
 import { useLabelTexture } from './useLabelTexture';
 import { useObjectDrag } from './useObjectDrag';
 import { useObjectTextures } from './useObjectTextures';
+import { objectWalkKey, WalkMotion, type SceneWalks } from '../walks';
 
 const START_COLOR = '#d9a01e';
 const SELECTED_COLOR = '#4dabf7';
@@ -38,6 +41,12 @@ export interface SceneCreaturesView {
   selectedId: number | null;
   // Есть — щелчок по монстру или НПС выбирает его (мастер в «Просмотре»).
   onPick?: (id: number) => void;
+  // Есть — щелчок по сундуку, предмету на полу или обстановке открывает сведения о нём
+  // (мастер в «Игре», docs/plan/done/scene-page.md, этап 6).
+  onPickObject?: (id: number) => void;
+  // Есть — двойной щелчок по монстру или НПС открывает окно его карточки (мастер в
+  // «Просмотре» «Правки», замечания после первой партии, 2026-10-26).
+  onOpen?: (id: number) => void;
 }
 
 interface ObjectLayerProps {
@@ -58,6 +67,8 @@ interface ObjectLayerProps {
   // Туман войны игрока: предметы, контейнеры и точки старта вне поля зрения — темнее.
   // Существ вне поля зрения сервер не присылает вовсе.
   fog?: FogMasks | null;
+  // Ходы монстров и НПС по пути (docs/plan/done/walk-animation.md).
+  walks?: SceneWalks;
 }
 
 // Обводка выделенного объекта во всё его место и рост: у обстановки — прямоугольник
@@ -68,13 +79,25 @@ function SelectionFrame({ object }: { object: SceneObject }) {
       ? [object.look.extent[0] / 2, object.look.extent[2] / 2]
       : [object.footprint / 2, object.footprint / 2];
   const [x, y, z] = object.base;
+  const { look } = object;
   return (
-    <FrameBox
-      min={[x - hx, y, z - hz]}
-      max={[x + hx, object.top, z + hz]}
-      color={SELECTED_COLOR}
-      opacity={0.1}
-    />
+    <>
+      <FrameBox
+        min={[x - hx, y, z - hz]}
+        max={[x + hx, object.top, z + hz]}
+        color={SELECTED_COLOR}
+        opacity={0.1}
+      />
+      {/* Куда смотрит выделенное — видно, пока его поворачивают R (вариант В «Н1»). */}
+      {'facing' in look && (
+        <FacingNose
+          base={object.base}
+          half={[hx, hz]}
+          facing={look.facing}
+          color={SELECTED_COLOR}
+        />
+      )}
+    </>
   );
 }
 
@@ -113,6 +136,7 @@ function ObjectLayer({
   hideContents,
   creatures,
   fog = null,
+  walks,
 }: ObjectLayerProps) {
   const all = useMemo(
     () => layoutObjects(state, refs, images, hideContents),
@@ -143,6 +167,8 @@ function ObjectLayer({
   const selected = objects.find((object) => object.id === selectedId);
   // Щелчок по существу выбирает его, пока инструмент «Объекты» клик не забирает.
   const pick = !tool && creatures?.onPick;
+  const pickObject = !tool && creatures?.onPickObject;
+  const open = !tool && creatures?.onOpen;
   const healthOf = (id: number) => creatures?.health.get(id) ?? null;
   const tipHealth = tip && healthOf(tip.id);
 
@@ -163,12 +189,32 @@ function ObjectLayer({
             dim={dim}
           >
             <group
-              {...handlers(object.id)}
+              {...(!tool || tool.accepts(object.id) ? handlers(object.id) : {})}
               {...(pick &&
-                look.kind === 'creature' && {
+                look.kind === 'creature' &&
+                // Выбранное существо щелчок не ловит: он проходит к клеткам под ним —
+                // иначе большое существо закрывало собой соседние клетки хода
+                // (2026-10-24). Снять выбор — Esc, щелчок мимо или строка списка.
+                object.id !== selectedId && {
                   onClick: (event: ThreeEvent<MouseEvent>) => {
                     event.stopPropagation();
                     pick(object.id);
+                  },
+                })}
+              {...(pickObject &&
+                look.kind !== 'creature' &&
+                look.kind !== 'start' && {
+                  onClick: (event: ThreeEvent<MouseEvent>) => {
+                    event.stopPropagation();
+                    pickObject(object.id);
+                  },
+                })}
+              {...(open &&
+                look.kind === 'creature' && {
+                  // Двойной щелчок — окно карточки, а не центр камеры за существом.
+                  onDoubleClick: (event: ThreeEvent<MouseEvent>) => {
+                    event.stopPropagation();
+                    open(object.id);
                   },
                 })}
               onPointerOver={() => setHovered(object.id)}
@@ -177,13 +223,21 @@ function ObjectLayer({
               }
             >
               {look.kind === 'creature' && (
-                <CreatureBody
-                  object={object}
-                  look={look}
-                  texture={texture(look.image)}
-                  health={healthOf(object.id)}
-                  mark
-                />
+                <WalkMotion
+                  walk={walks?.get(objectWalkKey(object.id))}
+                  map={state}
+                  size={look.size}
+                  base={object.base}
+                  angle={facingAngle(look.facing)}
+                >
+                  <CreatureBody
+                    object={object}
+                    look={look}
+                    texture={texture(look.image)}
+                    health={healthOf(object.id)}
+                    mark
+                  />
+                </WalkMotion>
               )}
               {look.kind === 'start' && (
                 <StartTile object={object} number={look.number} />

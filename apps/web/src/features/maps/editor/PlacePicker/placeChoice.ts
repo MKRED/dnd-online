@@ -34,6 +34,32 @@ export function objectChoiceLabel(choice: ObjectChoice): string {
   }
 }
 
+// Плитка окна пишет имя и под ним, приглушённо, остальное из подписи: размер и крепление
+// обстановки, размер монстра. У НПС подписи нет — пишем, что это НПС.
+export function objectChoiceName(choice: ObjectChoice): string {
+  return 'entry' in choice ? choice.entry.name : objectChoiceLabel(choice);
+}
+
+export function objectChoiceMeta(choice: ObjectChoice): string {
+  if (!('entry' in choice)) return '';
+  const { name, label, kind } = choice.entry;
+  if (kind === 'npc') return 'НПС';
+  const prefix = `${name} · `;
+  return label.startsWith(prefix) ? label.slice(prefix.length) : '';
+}
+
+// Метка вида в углу картинки — в недавних, где блоки и объекты вперемешку.
+const KIND_BADGES: Record<ObjectChoice['kind'], string> = {
+  start: 'старт',
+  container: 'конт.',
+  furniture: 'обст.',
+  item: 'предм.',
+  creature: 'сущ.',
+};
+
+export const objectChoiceBadge = (choice: ObjectChoice) =>
+  KIND_BADGES[choice.kind];
+
 // Недавние — привычка одного человека, общая для редактора карт и сцены игры: в браузере.
 // До этапа 10 помнили только блоки — с них и начинаем.
 const STORAGE_KEY = 'maps.recentPlace';

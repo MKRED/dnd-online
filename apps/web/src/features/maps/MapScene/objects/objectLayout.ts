@@ -1,5 +1,7 @@
 import {
+  blockSurfaceInCell,
   CONTAINER_LOOK_LABELS,
+  type CharacterModelFit,
   CREATURE_SIZES,
   feetHeight,
   footprintCells,
@@ -19,14 +21,18 @@ import {
   type VoxelModelFields,
 } from 'shared';
 import type { MapViewState } from '../../mapStateFromChunks';
+import { monsterModelLook } from './monsterModelLook';
 import { CATALOG_OBJECT_IMAGES, type ObjectImagePaths } from './objectImages';
 
 // 3D-модель существа (docs/plan/done/character-models.md): путь байтов в API (с версией) и
-// как её ставить.
-export type CreatureModelInput = Pick<
-  FigureModel,
-  'format' | 'color' | 'fit'
-> & { path: string };
+// как её ставить. У монстра модель бывает и рисованной (docs/plan/done/monster-models.md) — её
+// воксели приходят в справочнике объектов, грузить нечего.
+export type CreatureModelInput =
+  | ({ kind: 'file'; path: string } & Pick<
+      FigureModel,
+      'format' | 'color' | 'fit'
+    >)
+  | { kind: 'voxels'; fields: VoxelModelFields; fit: CharacterModelFit };
 
 // Как объект выглядит в сцене (docs/plan/done/map-objects.md, «Как выглядят объекты»).
 // image — путь миниатюры в API или null; letter — что писать на карточке без картинки.
@@ -114,7 +120,11 @@ function creatureLook(
         : null,
       letter: found ? letterOf(found.name) : '?',
       missing: !found,
-      model: null,
+      model: found?.model
+        ? monsterModelLook(found.model, (modelId, version) =>
+            images.monsterModel(object.monsterId, modelId, version),
+          )
+        : null,
     };
   }
   const ref = refs.npcs[object.characterId];
@@ -131,6 +141,7 @@ function creatureLook(
     missing: !found,
     model: found?.model
       ? {
+          kind: 'file',
           path: images.npcModel(object.characterId, found.model.version),
           format: found.model.format,
           color: found.model.color,
@@ -196,6 +207,31 @@ function lookOf(
   }
 }
 
+// Высота ног объекта не из обстановки: существо и старт — на опоре под ними (standing,
+// если её уже искали), остальное — на поверхности клетки. Призрак «Поставить» берёт ту
+// же высоту, что объект получит после щелчка.
+export function objectFeet(
+  state: MapViewState,
+  look: SceneObjectLook,
+  at: Vec3,
+  standing?: number | null,
+): number {
+  const size: CreatureSize = look.kind === 'creature' ? look.size : 'medium';
+  const stands = look.kind === 'creature' || look.kind === 'start';
+  const found =
+    standing !== undefined
+      ? standing
+      : stands
+        ? standHeight(state, at, size)
+        : null;
+  if (found !== null) return found;
+  // Встроенный контейнер сам лежит в слое обстановки правил опорой «встать сверху»: по
+  // ней он стоял бы на своей же крышке (2026-10-24) — его место меряется по блокам.
+  return look.kind === 'container'
+    ? at[1] + blockSurfaceInCell(state, at)
+    : feetHeight(state, at, size);
+}
+
 // Объекты для сцены: что рисовать, где и как. Подпись и предупреждения — из той же
 // сводки, что видит нейросеть, чтобы номера стартов и заглушки совпадали. Объектов за
 // границей карты (после сужения с cut «keep») нет: они не рисуются.
@@ -232,8 +268,12 @@ export function layoutObjects(
         base: [x + ex / 2, y, z + ez / 2],
         footprint: Math.max(ex, ez),
         top: y + ey,
-        label: summary.label,
-        warnings: summary.warnings,
+        // Игроку — только название контейнера-обстановки, без содержимого (этап 11).
+        label:
+          hideContents && object.kind === 'furniture' && object.name
+            ? object.name
+            : summary.label,
+        warnings: hideContents ? [] : summary.warnings,
         blocked: false,
         hidden: object.hidden,
         look,
@@ -243,7 +283,7 @@ export function layoutObjects(
 
     const stands = look.kind === 'creature' || look.kind === 'start';
     const standing = stands ? standHeight(state, object.at, size) : null;
-    const feet = standing ?? feetHeight(state, object.at, size);
+    const feet = objectFeet(state, look, object.at, standing);
     const footprint =
       look.kind === 'creature' ? CREATURE_SIZES[size].footprint : 1;
     // Крошечный стоит посередине своей клетки, как в creatureBody.

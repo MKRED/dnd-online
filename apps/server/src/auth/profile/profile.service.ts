@@ -17,6 +17,7 @@ import {
   PASSWORD_SALT_ROUNDS,
   type AuthTokens,
 } from '../auth.service.js';
+import { ChangeNicknameDto } from './dto/change-nickname.dto.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { SetCredentialsDto } from './dto/set-credentials.dto.js';
 import { UpdateSettingsDto } from './dto/update-settings.dto.js';
@@ -28,6 +29,8 @@ export interface Profile {
   hasPassword: boolean;
   // Внешние способы входа: ['lolka'].
   providers: string[];
+  // Когда аккаунт создан, ISO-строкой: «с нами с сентября 2026» в профиле.
+  createdAt: string;
 }
 
 @Injectable()
@@ -47,7 +50,19 @@ export class ProfileService {
       nickname: user.nickname,
       hasPassword,
       providers: await this.identities.providersOf(userId),
+      createdAt: user.createdAt.toISOString(),
     };
+  }
+
+  // Ник — только для показа: в токенах его нет, так что новые токены не нужны.
+  async changeNickname(
+    userId: string,
+    dto: ChangeNicknameDto,
+  ): Promise<Profile> {
+    if (!(await this.usersService.updateNickname(userId, dto.nickname))) {
+      throw new UnauthorizedException();
+    }
+    return this.getProfile(userId);
   }
 
   // Аккаунт из лольки получает свои логин и пароль. Логин сменился, а он лежит в JWT —

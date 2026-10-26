@@ -28,18 +28,28 @@
   background: rgb(0 0 0 / 65%);
 }
 
-/* Клетка под курсором и размер области — внизу сцены, правее полосы инструментов. */
+/* Клетка под курсором и размер области — внизу сцены, правее полосы инструментов; правее
+   них — плашка инструмента, одной строкой. */
 .readout {
   position: absolute;
   bottom: var(--mantine-spacing-xs);
   left: calc(var(--mantine-spacing-xs) * 2 + 2.75rem);
+  right: calc(var(--mantine-spacing-xs) * 2 + 3rem);
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  pointer-events: none;
 }
 
-/* На телефоне полоса — строкой внизу, подпись поднимается над ней. */
+.cell {
+  flex: none;
+}
+
+/* На телефоне строки координат нет: над полосой инструментов она занимала место сцены, а
+   размер области и так в панели (docs/plan/done/scene-page.md, «Телефон»). */
 @media (max-width: 48em) {
-  .readout {
-    left: var(--mantine-spacing-xs);
-    bottom: calc(var(--mantine-spacing-xs) * 2 + 2.75rem);
+  .cell {
+    display: none;
   }
 }
 

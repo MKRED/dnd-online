@@ -3,6 +3,7 @@ import {
   activationFitsCategory,
   isAbilityActivation,
   isAbilityCosts,
+  isEffectComponents,
   isMonsterAbilityDetails,
   isSpellDetails,
   readAbilitySteps,
@@ -33,8 +34,9 @@ export type AbilityRecordFields = AbilityVariant & AbilityFields;
 // категории читается как «Базовая», чтобы карточка открылась.
 // Активация, затраты и шаги «Применения» лежат в extra; у записей без них (или с
 // испорченными) — значения по умолчанию: действие, без затрат, без шагов. Испорченный шаг
-// пропускается, остальные остаются. Черта или легендарное действие не у «Монстра» тоже
-// читаются как действие.
+// пропускается, остальные остаются. Легендарное действие не у «Монстра» и черта у
+// заклинания тоже читаются как действие. Составляющие черты (passive) — только у черты:
+// у записей до них и у других активаций — пустой список.
 export function toAbilityVariant(
   category: string,
   details: Record<string, unknown>,
@@ -46,17 +48,22 @@ export function toAbilityVariant(
       : category === 'monster' && isMonsterAbilityDetails(details)
         ? { category, details }
         : { category: 'basic', details: {} };
+  const activation =
+    isAbilityActivation(extra.activation) &&
+    activationFitsCategory(variant.category, extra.activation)
+      ? extra.activation
+      : DEFAULT_ABILITY_FIELDS.activation;
   return {
     ...variant,
-    activation:
-      isAbilityActivation(extra.activation) &&
-      activationFitsCategory(variant.category, extra.activation)
-        ? extra.activation
-        : DEFAULT_ABILITY_FIELDS.activation,
+    activation,
     costs: isAbilityCosts(extra.costs)
       ? extra.costs
       : DEFAULT_ABILITY_FIELDS.costs,
     steps: readAbilitySteps(extra.steps),
+    passive:
+      activation.kind === 'trait' && isEffectComponents(extra.passive)
+        ? extra.passive
+        : DEFAULT_ABILITY_FIELDS.passive,
   };
 }
 
@@ -79,6 +86,7 @@ export const ABILITIES_CONFIG: CatalogEntriesConfig<
       costs: dto.costs,
       // Эффекты шагов — в таблице ability_step_effects (StepEffectsService), не здесь.
       steps: (dto.steps ?? []).map(withoutStepEffects),
+      passive: dto.passive ?? [],
     },
   }),
 };

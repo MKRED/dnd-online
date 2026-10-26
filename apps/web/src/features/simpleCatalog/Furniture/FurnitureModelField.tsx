@@ -6,7 +6,7 @@ import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 import { startPositions } from './furnitureForm';
 import ModelPicker from './ModelPicker';
 import PositionsField from './PositionsField';
-import { useOwnModels } from './useOwnModels';
+import { useOwnModels } from '../../voxelModels';
 
 // Модель обстановки или модели её положений (docs/plan/blocks.md, этапы 8б и 8г): у
 // двери, сундука, рычага — несколько положений со своими моделями, на карте их

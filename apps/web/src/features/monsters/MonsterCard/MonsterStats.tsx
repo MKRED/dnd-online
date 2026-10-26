@@ -14,7 +14,8 @@ interface MonsterStatsProps {
 // изменённое выделено, подсказка объясняет почему.
 function MonsterStats({ block, totals }: MonsterStatsProps) {
   return (
-    <SimpleGrid cols={{ base: 2, xs: 4 }} spacing="xs">
+    // Колонки по ширине блока: в окне карточки на сцене игры узко.
+    <SimpleGrid type="container" cols={{ base: 2, '420px': 4 }} spacing="xs">
       <StatTile
         label="Класс доспеха"
         {...armorClassTile(block.armorClass, totals)}

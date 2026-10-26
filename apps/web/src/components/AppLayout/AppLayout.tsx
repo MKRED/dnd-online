@@ -1,8 +1,11 @@
-import { AppShell, Anchor, Burger, Group } from '@mantine/core';
+import { AppShell, Burger, Group } from '@mantine/core';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../features/auth';
+import { HeaderSearch } from '../../features/search';
 import ColorSchemeToggle from '../ColorSchemeToggle';
+import classes from './AppLayout.module.css';
+import AppLogo from './AppLogo';
 import AppNavbar from './AppNavbar';
 import UserMenu from './UserMenu';
 import { useNavbarCollapsed } from './useNavbarCollapsed';
@@ -10,7 +13,7 @@ import { useNavbarCollapsed } from './useNavbarCollapsed';
 const NAVBAR_WIDTH = 220;
 const NAVBAR_ICONS_WIDTH = 68;
 
-// Каркас страниц: шапка (логотип, тема, меню пользователя) и боковая панель разделов.
+// Каркас страниц: шапка (логотип, поиск, тема, меню пользователя) и боковая панель разделов.
 // Разделы — в панели, а не в шапке: в шапке их становилось больше, чем помещалось.
 // На широком экране панель сворачивается до иконок, на телефоне (уже sm) — шторка по
 // бургеру. Гостю панель не нужна: ему доступны только вход и регистрация.
@@ -36,7 +39,8 @@ function AppLayout() {
           : undefined
       }
     >
-      <AppShell.Header>
+      {/* Без рамки: её место заняла латунная линия из AppLayout.module.css. */}
+      <AppShell.Header withBorder={false} className={classes.header}>
         {/* nowrap: при переносе правая часть уезжала под шапку и накрывала страницу. */}
         <Group h="100%" px="md" justify="space-between" wrap="nowrap">
           <Group gap="sm" wrap="nowrap">
@@ -49,19 +53,13 @@ function AppLayout() {
                 aria-label={mobileOpened ? 'Закрыть меню' : 'Меню'}
               />
             )}
-            <Anchor
-              component={Link}
-              to="/"
-              underline="never"
-              fz="xl"
-              fw={700}
-              style={{ whiteSpace: 'nowrap' }}
-            >
-              DnD Online
-            </Anchor>
+            <AppLogo />
           </Group>
 
+          {user && wide && <HeaderSearch compact={false} />}
+
           <Group gap="xs" wrap="nowrap">
+            {user && !wide && <HeaderSearch compact />}
             <ColorSchemeToggle />
             <UserMenu />
           </Group>

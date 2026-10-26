@@ -22,7 +22,7 @@ import {
 import { appendGameEvent, lockGame } from '../game-journal.js';
 import { findGameAccess } from '../game-read.js';
 import { GameRealtimeService } from '../realtime/game-realtime.service.js';
-import { refreshLibraryEntry } from './library-copy.js';
+import { copyVersion, refreshLibraryEntry } from './library-copy.js';
 import {
   findLibraryRow,
   listLibrary,
@@ -149,7 +149,7 @@ export class GameLibraryService {
           gameId,
           viewerId,
           ref,
-          row.image?.version ?? 0,
+          copyVersion(row),
         );
         if (!refreshed) throw new ConflictException(LIBRARY_SOURCE_MISSING);
         await appendGameEvent(tx, gameId, {

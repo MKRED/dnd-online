@@ -109,6 +109,8 @@ export type Furniture = CatalogEntryFields &
 // Где стоит модель: перед удалением автора предупреждают, какая обстановка её потеряет.
 export interface VoxelModelUsage {
   furniture: { id: string; name: string }[];
+  // Свои монстры с этой моделью (docs/plan/done/monster-models.md).
+  monsters: { id: string; name: string }[];
 }
 
 const isPosition = (value: unknown): value is FurniturePosition =>

@@ -69,6 +69,16 @@ export function setGameSceneFog(
   });
 }
 
+// Служебный сброс тумана войны: игроки забывают открытое на сцене.
+export function resetGameSceneFog(
+  gameId: string,
+  sceneId: string,
+): Promise<GameScenes> {
+  return request(`${scenesBase(gameId)}/${sceneId}/fog/reset`, {
+    method: 'POST',
+  });
+}
+
 // Маски тумана активной сцены — мастеру для «Глазами игроков»; null — туман выключен.
 export async function getGameSceneFog(
   gameId: string,
@@ -116,5 +126,8 @@ export function sceneObjectImages(gameId: string): ObjectImagePaths {
       `/games/${gameId}/scene/models/npc/${id}?v=${version}`,
     furnitureMesh: (id, version) =>
       `/games/${gameId}/scene/models/mesh/${id}?v=${version}`,
+    // Копия файла модели монстра — по монстру: модель с ним скопирована целиком.
+    monsterModel: (id, _modelId, version) =>
+      `/games/${gameId}/scene/models/monster/${id}?v=${version}`,
   };
 }

@@ -47,6 +47,7 @@ export function useSceneFigures(gameId: string, sceneId: string | null) {
         size: figure.size,
         image: figureImagePath(gameId, figure),
         model: figure.model && {
+          kind: 'file' as const,
           path: figureModelPath(gameId, figure, figure.model.version),
           format: figure.model.format,
           color: figure.model.color,

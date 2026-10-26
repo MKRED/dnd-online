@@ -41,7 +41,8 @@ export const gameScenes = pgTable(
     // таблицы не ссылаются друг на друга по кругу.
     active: boolean('active').notNull().default(false),
     // Туман войны (docs/plan/done/fog-of-war.md): включён ли и дальность обзора в футах.
-    // Выключен — игроки видят сцену целиком, как до тумана.
+    // Выключен — игроки видят сцену целиком, как до тумана. Новой сцене createScene
+    // (scene-copy.ts) включает его сам; умолчание столбца — для старых строк.
     fog: boolean('fog').notNull().default(false),
     sightRange: integer('sight_range').notNull().default(SIGHT_RANGE_DEFAULT),
     createdAt: timestamp('created_at', { withTimezone: true })

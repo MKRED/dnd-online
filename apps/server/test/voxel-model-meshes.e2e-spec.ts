@@ -1,48 +1,12 @@
 import type request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import {
-  bytesToBase64,
-  encodeVoxels,
-  modelVoxelCount,
-  type Furniture,
-  type ModelMesh,
-  type VoxelModel,
-} from 'shared';
+import type { Furniture, ModelMesh, VoxelModel } from 'shared';
 import { createTestApp, type TestApp } from './support/test-app.js';
+import { glb, modelBody, stl } from './support/voxel-model-fixture.js';
 
 // Загруженный файл модели (docs/plan/blocks.md, этап 9): `.glb` или STL у модели
 // справочника, что нарисовать — в extra.mesh записи, байты — отдельно; правка записи файл
 // не теряет; копия модели и копия обстановки забирают и файл.
-
-// Наименьший двоичный STL: заголовок, число треугольников и по 50 байт на каждый.
-function stl(triangles: number): Buffer {
-  const bytes = Buffer.alloc(84 + triangles * 50);
-  bytes.writeUInt32LE(triangles, 80);
-  return bytes;
-}
-
-// Заголовок `.glb`: «glTF», версия 2 и длина файла.
-function glb(): Buffer {
-  const bytes = Buffer.alloc(20);
-  bytes.write('glTF', 0, 'ascii');
-  bytes.writeUInt32LE(2, 4);
-  bytes.writeUInt32LE(20, 8);
-  return bytes;
-}
-
-const modelBody = (isPublic = false) => {
-  const voxels = new Uint8Array(modelVoxelCount([1, 1, 1]));
-  voxels[0] = 1;
-  return {
-    name: 'Статуя',
-    description: '',
-    isPublic,
-    size: [1, 1, 1],
-    palette: ['#9a948a'],
-    voxels: bytesToBase64(encodeVoxels(voxels)),
-    cells: {},
-  };
-};
 
 const idOf = (res: request.Response) => (res.body as { id: string }).id;
 

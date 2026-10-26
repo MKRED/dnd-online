@@ -12,22 +12,32 @@ import { hasCard, type AbilityGroup, type CardEntry } from '../../abilityLinks';
 const GROUP_TITLES: Record<AbilityActivationKind, string> = {
   ...ACTIVATION_LABELS,
   time: 'Долгое применение',
+  trait: 'Черты',
 };
 
-// «Умения» — по активации в порядке ABILITY_ACTIVATION_KINDS, пустые группы не
-// показываются. Скрытые и удалённые — отдельной группой в конце: их категория не видна.
+// Черты — первой группой, как на карточке монстра (docs/plan/done/traits.md): то, что
+// есть всегда, читают раньше того, что применяют. Остальные — в порядке
+// ABILITY_ACTIVATION_KINDS.
+const GROUP_ORDER: AbilityActivationKind[] = [
+  'trait',
+  ...ABILITY_ACTIVATION_KINDS.filter((kind) => kind !== 'trait'),
+];
+
+// «Умения» — по активации, пустые группы не показываются. Скрытые и удалённые —
+// отдельной группой в конце: их категория не видна.
 // Способность «Монстра» персонажу не добавить, но она бывает, если автор сменил
 // категорию уже добавленной, — тогда она тоже в «Умениях», по своей активации.
 export function skillGroups(entries: readonly CharacterAbilityEntry[]) {
   const skills = entries
     .filter(hasCard)
     .filter((e) => e.ability.category !== 'spell');
-  const groups: AbilityGroup<CharacterAbilityEntry>[] =
-    ABILITY_ACTIVATION_KINDS.map((kind) => ({
+  const groups: AbilityGroup<CharacterAbilityEntry>[] = GROUP_ORDER.map(
+    (kind) => ({
       key: kind,
       title: GROUP_TITLES[kind],
       entries: skills.filter((e) => e.ability.activation.kind === kind),
-    }));
+    }),
+  );
   groups.push({
     key: 'missing',
     title: 'Недоступны',

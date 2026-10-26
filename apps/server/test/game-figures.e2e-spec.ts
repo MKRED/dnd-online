@@ -6,6 +6,7 @@ import {
   type GameEventPage,
   type GameFigureDragMessage,
   type GameFigures,
+  type GameMoveMode,
   type GameScenes,
   type GameSceneView,
 } from 'shared';
@@ -14,7 +15,7 @@ import {
   pngImage,
   PNG_FILE,
 } from './support/character-fixture.js';
-import { createSceneGame } from './support/scene-fixture.js';
+import { createSceneGame, startSession } from './support/scene-fixture.js';
 import {
   collect,
   join,
@@ -105,6 +106,8 @@ describe('game figures (e2e)', () => {
         moved: 0,
         dashes: 0,
         canMove: true,
+        // Мастер водит фигурку — видит хиты из листа (docs/plan/done/scene-page.md, этап 2).
+        hitPoints: { current: 12, max: 12, temp: 0 },
       }),
     ]);
     const event = await lastEvent(m, g.gameId);
@@ -137,6 +140,17 @@ describe('game figures (e2e)', () => {
     // Чужой фигуркой второй игрок не ходит; ему точки не хватило — список у мастера.
     expect(forSecond.figures).toHaveLength(1);
     expect(forSecond.figures[0].canMove).toBe(false);
+    // Хиты героев видит весь отряд (docs/plan/done/scene-page.md, этап 5).
+    expect(forSecond.figures[0].hitPoints).toEqual({
+      current: 12,
+      max: 12,
+      temp: 0,
+    });
+    expect(forPlayer.figures[0].hitPoints).toEqual({
+      current: 12,
+      max: 12,
+      temp: 0,
+    });
     expect(forSecond.unplaced).toEqual([]);
     expect((await figures(m, g.gameId)).unplaced).toEqual([
       expect.objectContaining({ name: 'Второй' }),
@@ -146,6 +160,35 @@ describe('game figures (e2e)', () => {
       intent: { reason: 'seat' },
       result: { placed: [], unplaced: [{ name: 'Второй' }] },
     });
+  });
+
+  // docs/plan/done/traits.md: черта листа меняет Скорость фигурки, как эффект.
+  it('черта со Скоростью на листе — у фигурки Скорость с ней', async () => {
+    const g = await createSceneGame(user, png, 'gfg_trait');
+    const trait = idOf(
+      await g.player.agent
+        .post('/api/abilities')
+        .send({
+          name: 'Быстрые ноги',
+          category: 'basic',
+          details: {},
+          description: '',
+          isPublic: false,
+          activation: { kind: 'trait' },
+          costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
+          passive: [
+            { kind: 'speed', change: 'faster', feet: 10, hover: false },
+          ],
+        })
+        .expect(201),
+    );
+    await g.player.agent
+      .post(`/api/characters/${g.character}/abilities`)
+      .send({ abilityId: trait })
+      .expect(201);
+    await addScene(g.master.agent, g.gameId, g.mapId);
+    const seen = await figures(g.master.agent, g.gameId);
+    expect(seen.figures[0]).toMatchObject({ speed: 40 });
   });
 
   it('скрытая точка пропускается; смена и перезапуск сцены ставят фигурки заново, место — убирает', async () => {
@@ -279,8 +322,9 @@ describe('game figures (e2e)', () => {
   });
 
   // Игра с открытой активной сценой: фигурка игрока на стартовой точке [0, 1, 0],
-  // гоблин — на [1, 1, 0], пол — камень на y = 0 (стоят на y = 1).
-  async function opened(prefix: string) {
+  // гоблин — на [1, 1, 0], пол — камень на y = 0 (стоят на y = 1). Режим хода —
+  // тактический (бой, раунд 1), если не просили свободный.
+  async function opened(prefix: string, mode: GameMoveMode = 'tactical') {
     const g = await createSceneGame(user, png, prefix);
     const m = g.master.agent;
     const { scenes } = await addScene(m, g.gameId, g.mapId);
@@ -288,8 +332,12 @@ describe('game figures (e2e)', () => {
       .put(`/api/games/${g.gameId}/scenes/open`)
       .send({ open: true })
       .expect(200);
-    const [figure] = (await figures(m, g.gameId)).figures;
+    await startSession(m, g.gameId);
     const base = `/api/games/${g.gameId}/figures`;
+    if (mode === 'tactical') {
+      await m.put(`${base}/mode`).send({ mode }).expect(200);
+    }
+    const [figure] = (await figures(m, g.gameId)).figures;
     const url = `${base}/${figure.character.id}`;
     return { ...g, m, sceneId: scenes[0].id, figure, base, url };
   }
@@ -331,11 +379,18 @@ describe('game figures (e2e)', () => {
       .expect(200);
     expect(figureOf(far, id)).toMatchObject({ at: [0, 1, 7], moved: 35 });
 
+    // Бой начался с раунда 1 — «Новый раунд» даёт второй.
     const round = await g.m.post(`${g.base}/round`).expect(200);
     expect(figureOf(round, id)).toMatchObject({ moved: 0, dashes: 0 });
+    expect(round.body).toMatchObject({ mode: 'tactical', round: 2 });
     expect(await lastEvent(g.m, g.gameId)).toMatchObject({
       kind: 'figures.round',
-      result: { count: 1 },
+      result: { count: 1, round: 2 },
+    });
+    await g.m.post(`${g.base}/round`).expect(200);
+    expect(await lastEvent(g.m, g.gameId)).toMatchObject({
+      kind: 'figures.round',
+      result: { round: 3 },
     });
     await p
       .post(`${g.url}/move`)
@@ -343,6 +398,87 @@ describe('game figures (e2e)', () => {
       .expect(200);
     const refreshed = await g.m.post(`${g.url}/refresh`).expect(200);
     expect(figureOf(refreshed, id)).toMatchObject({ moved: 0 });
+  });
+
+  it('свободный режим: запас полный после каждого хода; бой начинается с раунда 1 и полного запаса', async () => {
+    const g = await opened('gfg_mode', 'free');
+    const id = g.figure.character.id;
+    const p = g.player.agent;
+    const move = (to: number[], status = 200) =>
+      p.post(`${g.url}/move`).send({ to }).expect(status);
+    // Новая игра — в свободном режиме, раунда нет.
+    expect(await figures(p, g.gameId)).toMatchObject({
+      mode: 'free',
+      round: null,
+    });
+    const first = await move([0, 1, 3]);
+    expect(figureOf(first, id)).toMatchObject({ at: [0, 1, 3], moved: 0 });
+    expect(await lastEvent(g.m, g.gameId)).toMatchObject({
+      kind: 'figure.moved',
+      result: { cost: 15, left: 30 },
+    });
+    // Ещё 25 футов сразу же — запас снова полный; но один ход не дальше Скорости.
+    await move([5, 1, 7]);
+    await move([0, 1, 0], 409);
+    // «Рывок» и «Новый раунд» — только в бою.
+    await g.m.post(`${g.url}/dash`).expect(409);
+    await g.m.post(`${g.base}/round`).expect(409);
+
+    // В бой: у всех полный запас, раунд 1.
+    const tactical = await g.m
+      .put(`${g.base}/mode`)
+      .send({ mode: 'tactical' })
+      .expect(200);
+    expect(tactical.body).toMatchObject({ mode: 'tactical', round: 1 });
+    expect(await lastEvent(g.m, g.gameId)).toMatchObject({
+      kind: 'game.mode',
+      as: { kind: 'master' },
+      sceneId: g.sceneId,
+      intent: { mode: 'tactical' },
+      result: { mode: 'tactical', count: 1, creatures: 0, round: 1 },
+    });
+    await move([5, 1, 4]);
+    expect(figureOf(await move([5, 1, 3]), id)).toMatchObject({ moved: 20 });
+    await move([5, 1, 0], 409);
+    // Тот же режим ещё раз — ничего не меняется, записи нет.
+    await g.m.put(`${g.base}/mode`).send({ mode: 'tactical' }).expect(200);
+    expect((await lastEvent(g.m, g.gameId)).kind).toBe('figure.moved');
+    expect(figureOf(await g.m.post(`${g.base}/round`), id)).toBeDefined();
+    expect(await figures(p, g.gameId)).toMatchObject({ round: 2 });
+
+    // Перезапуск сцены в бою — бой на новой копии снова с раунда 1.
+    await g.m
+      .post(`/api/games/${g.gameId}/scenes/${g.sceneId}/restart`)
+      .expect(201);
+    expect(await figures(g.m, g.gameId)).toMatchObject({
+      mode: 'tactical',
+      round: 1,
+    });
+    await move([0, 1, 4]);
+
+    // Обратно в свободный: запас полный, раунда нет.
+    const free = await g.m
+      .put(`${g.base}/mode`)
+      .send({ mode: 'free' })
+      .expect(200);
+    expect(free.body).toMatchObject({ mode: 'free', round: null });
+    expect(figureOf(free, id)).toMatchObject({ moved: 0, dashes: 0 });
+    expect(await lastEvent(g.m, g.gameId)).toMatchObject({
+      kind: 'game.mode',
+      result: { mode: 'free', count: 1, round: null },
+    });
+  });
+
+  it('режим хода меняет только мастер; режим — «free» или «tactical»', async () => {
+    const g = await opened('gfg_mode_rights', 'free');
+    const url = `${g.base}/mode`;
+    const stranger = await user('gfg_mode_rights_stranger');
+    await t.anonymous().put(url).send({ mode: 'tactical' }).expect(401);
+    await stranger.agent.put(url).send({ mode: 'tactical' }).expect(403);
+    await g.player.agent.put(url).send({ mode: 'tactical' }).expect(403);
+    await g.m.put(url).send({ mode: 'combat' }).expect(400);
+    await g.m.put(url).send({}).expect(400);
+    expect(await figures(g.m, g.gameId)).toMatchObject({ mode: 'free' });
   });
 
   it('в чужом месте ход не кончается; скрытый монстр игроку не мешает, мастеру — да', async () => {
@@ -497,6 +633,46 @@ describe('game figures (e2e)', () => {
     const closedToPlayer = collect(playerSocket, dragged);
     masterSocket.emit(GAME_SOCKET.figureDrag, drag([0, 1, 5]));
     expect(await closedToPlayer).toEqual([]);
+  });
+
+  it('вне встречи игрок только смотрит: не ходит и не тянет фигурку; мастер — да', async () => {
+    const g = await opened('gfg_offsession');
+    await g.m.delete(`/api/games/${g.gameId}/session`).expect(200);
+    const masterSocket = await clients.connect(g.master.cookie);
+    expect((await join(masterSocket, g.gameId)).ok).toBe(true);
+    const playerSocket = await clients.connect(g.player.cookie);
+    expect((await join(playerSocket, g.gameId)).ok).toBe(true);
+    const id = g.figure.character.id;
+
+    // Фигурки игрок видит, а водить не может.
+    const seen = await figures(g.player.agent, g.gameId);
+    expect(seen.figures.map((f) => f.character.id)).toContain(id);
+    const refused = await g.player.agent
+      .post(`${g.url}/move`)
+      .send({ to: [0, 1, 2] })
+      .expect(403);
+    expect((refused.body as { message: string }).message).toBe(
+      'Встреча не идёт: сцену можно только смотреть',
+    );
+    const nothing = collect(masterSocket, GAME_SOCKET.figureDragged);
+    playerSocket.emit(GAME_SOCKET.figureDrag, {
+      gameId: g.gameId,
+      characterId: id,
+      at: [0, 1, 2],
+    });
+    expect(await nothing).toEqual([]);
+
+    const moved = await g.m
+      .post(`${g.url}/move`)
+      .send({ to: [0, 1, 2] })
+      .expect(200);
+    expect(figureOf(moved, id)).toMatchObject({ at: [0, 1, 2] });
+
+    await startSession(g.m, g.gameId);
+    await g.player.agent
+      .post(`${g.url}/move`)
+      .send({ to: [0, 1, 3] })
+      .expect(200);
   });
 
   it('мастер отдаёт управление участнику: тот водит фигурку, пока владелец разрешает', async () => {

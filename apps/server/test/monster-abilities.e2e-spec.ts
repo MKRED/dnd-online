@@ -109,6 +109,7 @@ describe('способности у монстра (e2e)', () => {
           activation: { kind: 'action' },
           costs: noCosts,
           recharge: 5,
+          passive: [],
         },
         missing: null,
         inactive: false,

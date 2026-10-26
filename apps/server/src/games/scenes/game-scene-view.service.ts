@@ -162,11 +162,12 @@ export class GameSceneViewService {
     }
   }
 
-  // 3D-модель НПС на сцене (docs/plan/done/character-models.md, этап 4) — тем же, кому его
-  // картинка.
+  // 3D-модель НПС (docs/plan/done/character-models.md, этап 4) или файл модели монстра
+  // (docs/plan/done/monster-models.md, этап 2) на сцене — тем же, кому его картинка.
   async modelFile(
     userId: string,
     gameId: string,
+    kind: 'npc' | 'monster',
     sourceId: string,
   ): Promise<{ data: Buffer; format: CharacterModelFormat }> {
     const t0 = Date.now();
@@ -174,12 +175,12 @@ export class GameSceneViewService {
       await this.assertEntryShown(
         userId,
         gameId,
-        'npc',
+        kind,
         sourceId,
         SCENE_NO_MODEL,
       );
       const model = await readLibraryModel(this.databaseService.db, gameId, {
-        kind: 'npc',
+        kind,
         sourceId,
       });
       this.logger.debug(
@@ -187,6 +188,7 @@ export class GameSceneViewService {
           durationMs: Date.now() - t0,
           userId,
           gameId,
+          kind,
           sourceId,
           found: !!model,
           bytes: model?.data.length,
@@ -198,7 +200,7 @@ export class GameSceneViewService {
     } catch (err: unknown) {
       if (err instanceof HttpException) throw err;
       this.logger.error(
-        { err, userId, gameId, sourceId },
+        { err, userId, gameId, kind, sourceId },
         'Game scene model lookup failed',
       );
       throw err;

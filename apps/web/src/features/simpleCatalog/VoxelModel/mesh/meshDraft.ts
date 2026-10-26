@@ -10,6 +10,7 @@ import {
   type VoxelModel,
   type VoxelModelFields,
 } from 'shared';
+import type { CompressResult } from '../../../modelCompress';
 import { meshVoxelsKey, type MeshSource } from '../../../voxelModels';
 
 // Загруженный файл модели в форме (docs/plan/blocks.md, этап 9): выбранный файл или
@@ -21,6 +22,8 @@ export interface MeshDraft {
   color: string | null;
   fit: ModelMeshFit;
   voxelsKey: string | null;
+  // Файл сжат в браузере (docs/plan/done/monster-models.md, этап 3): что было и что стало.
+  compressed?: CompressResult;
 }
 
 // Сохранённые воксели посчитаны по сохранённому файлу: пересчитывать при открытии формы
@@ -44,13 +47,18 @@ export function toMeshDraft(entry: VoxelModel | null): MeshDraft | null {
 }
 
 // Новый файл: формат известен по первым байтам, вписывание и цвет — по умолчанию.
-export function newMeshDraft(file: File, format: ModelMeshFormat): MeshDraft {
+export function newMeshDraft(
+  file: File,
+  format: ModelMeshFormat,
+  compressed?: CompressResult,
+): MeshDraft {
   return {
     source: { kind: 'file', file },
     format,
     color: format === 'stl' ? STL_DEFAULT_COLOR : null,
     fit: defaultMeshFit(format),
     voxelsKey: null,
+    ...(compressed && { compressed }),
   };
 }
 

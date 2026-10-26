@@ -10,7 +10,7 @@ import {
 } from 'shared';
 import { characterBody, pngImage } from './support/character-fixture.js';
 import { monsterBody } from './support/monster-fixture.js';
-import { createSceneGame } from './support/scene-fixture.js';
+import { createSceneGame, fogOff } from './support/scene-fixture.js';
 import {
   collect,
   join,
@@ -51,6 +51,7 @@ describe('game scene edits (e2e)', () => {
       .send({ mapId: game.mapId })
       .expect(201);
     const sceneId = (scenes.body as GameScenes).scenes[0].id;
+    await fogOff(game.master.agent, game.gameId, sceneId);
     const url = `/api/games/${game.gameId}/scenes/${sceneId}`;
     const m = game.master.agent;
     const ops = (list: unknown[], status = 200) =>

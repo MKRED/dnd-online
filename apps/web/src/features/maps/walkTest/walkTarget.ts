@@ -40,11 +40,20 @@ function axisAnchor(
 
 // Позиции-кандидаты под курсором: сначала по клетке, в которую попал луч, —
 // так фигурка встаёт на плиту и ступень (стоят в своей же клетке на +½), — потом
-// по соседней со стороны грани: над верхом блока или рядом со стеной.
-export function walkAnchors(cells: PickedCells, size: CreatureSize): Vec3[] {
+// по соседней со стороны грани: над верхом блока или рядом со стеной. Обстановку
+// луч не выбирает, и курсор над столом попадает в пол под ним; если соседняя клетка
+// — опора во всю высоту (стол с бутылками до верхнего вокселя), последний кандидат —
+// клетка над ней: на таком столе стоят клеткой выше.
+export function walkAnchors(
+  map: MapState,
+  cells: PickedCells,
+  size: CreatureSize,
+): Vec3[] {
   const n = bodyCells(size);
-  const { point, normal } = cells;
-  const candidates = cells.hit ? [cells.hit, cells.place] : [cells.place];
+  const { point, normal, place } = cells;
+  const candidates = cells.hit ? [cells.hit, place] : [place];
+  if (surfaceInCell(map, place) === 1)
+    candidates.push([place[0], place[1] + 1, place[2]]);
   return candidates.map((c) => [
     axisAnchor(c[0], point[0], normal[0], n),
     c[1],
@@ -60,17 +69,17 @@ export function bodyCentre(anchor: Vec3, size: CreatureSize): [number, number] {
 }
 
 // Куда встанет фигурка по клику: первый кандидат, где можно стоять. Если нигде
-// нельзя — последний (соседняя клетка) с ok = false, чтобы показать красным.
+// нельзя — соседняя клетка с ok = false, чтобы показать красным.
 export function walkTarget(
   map: MapState,
   cells: PickedCells,
   size: CreatureSize,
 ): WalkTarget {
-  const anchors = walkAnchors(cells, size);
+  const anchors = walkAnchors(map, cells, size);
   for (const anchor of anchors) {
     if (standHeight(map, anchor, size) !== null) return { anchor, ok: true };
   }
-  return { anchor: anchors[anchors.length - 1], ok: false };
+  return { anchor: anchors[cells.hit ? 1 : 0], ok: false };
 }
 
 // Тело фигурки для подсветки и показа. creatureBody ставит ноги на самый высокий

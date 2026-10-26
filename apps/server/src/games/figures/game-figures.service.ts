@@ -1,7 +1,7 @@
 import { ForbiddenException, HttpException, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import type { GameFigures, Vec3 } from 'shared';
+import type { GameFigures, GameMoveMode, Vec3 } from 'shared';
 import {
   DatabaseService,
   type DbTransaction,
@@ -9,6 +9,7 @@ import {
 import { games } from '../../database/schema/index.js';
 import { SCENE_CLOSED, SCENE_MEMBERS_ONLY } from '../game-errors.js';
 import { lockGame } from '../game-journal.js';
+import { assertPlayerInSession } from '../session-gate.js';
 import { findGameAccess } from '../game-read.js';
 import { GameRealtimeService } from '../realtime/game-realtime.service.js';
 import {
@@ -19,8 +20,9 @@ import {
   type FigureActor,
 } from './figure-moves.js';
 import { GameFiguresReadService } from './game-figures-read.service.js';
+import { setMoveMode } from './move-mode.js';
 
-type FigureChange = 'move' | 'place' | 'round' | 'refresh' | 'dash';
+type FigureChange = 'move' | 'place' | 'round' | 'refresh' | 'dash' | 'mode';
 
 async function sceneOpen(tx: DbTransaction, gameId: string): Promise<boolean> {
   const [game] = await tx
@@ -31,7 +33,7 @@ async function sceneOpen(tx: DbTransaction, gameId: string): Promise<boolean> {
 }
 
 // Правки фигурок (docs/plan/done/game.md, этап 7): ход игрока, постановка, «Новый раунд»,
-// запас одной фигурки. Каждая — одна транзакция под блокировкой игры, событие журнала и
+// запас одной фигурки, режим хода игры (docs/dnd/movement.md). Каждая — одна транзакция под блокировкой игры, событие журнала и
 // рассылка; ответ — фигурки глазами того, кто правил.
 @Injectable()
 export class GameFiguresService {
@@ -57,6 +59,12 @@ export class GameFiguresService {
 
   round(userId: string, gameId: string) {
     return this.change(userId, gameId, 'round', newRound);
+  }
+
+  mode(userId: string, gameId: string, mode: GameMoveMode) {
+    return this.change(userId, gameId, 'mode', (actor) =>
+      setMoveMode(actor, mode),
+    );
   }
 
   allowance(
@@ -88,6 +96,7 @@ export class GameFiguresService {
         if (!master && !(await sceneOpen(tx, gameId))) {
           throw new ForbiddenException(SCENE_CLOSED);
         }
+        await assertPlayerInSession(tx, gameId, userId, game.masterId);
         await run({ tx, gameId, userId, masterId: game.masterId });
       });
       this.realtime.publish(gameId);

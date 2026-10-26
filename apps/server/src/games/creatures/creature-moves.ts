@@ -11,9 +11,15 @@ import {
 } from 'shared';
 import { gameCreatures, gameFigures } from '../../database/schema/index.js';
 import { runOps, type EditLimits } from '../../maps/edit-run.js';
+import { isFree } from '../figures/move-mode-read.js';
 import { loadSceneWorld } from '../figures/scene-world.js';
-import { CREATURE_CANT_REACH, CREATURE_DOWN } from '../game-errors.js';
+import {
+  CREATURE_CANT_REACH,
+  CREATURE_DOWN,
+  DASH_ONLY_IN_COMBAT,
+} from '../game-errors.js';
 import { appendGameEvent } from '../game-journal.js';
+import { creatureEventVisibility } from './creature-visibility.js';
 import type { SceneRow } from '../scenes/scene-copy.js';
 import { loadSceneEditRefs } from '../scenes/scene-edit-refs.js';
 import { commitSceneEdit } from '../scenes/scene-journal.js';
@@ -83,7 +89,11 @@ export async function moveCreature(
       ally: false,
     })),
   ];
-  const left = movementAllowance(movement);
+  // В свободном режиме запас полный на каждый ход и не тратится (docs/dnd/movement.md).
+  const free = await isFree(tx, actor.gameId);
+  const left = movementAllowance(
+    free ? { ...movement, moved: 0, dashes: 0 } : movement,
+  );
   const from = self.at;
   const path = findPath(world.map, from, to, self.size, left, others);
   if (!path || path.path.length < 2) {
@@ -116,14 +126,24 @@ export async function moveCreature(
         from,
         to,
         cost: path.cost,
-        left: Math.max(0, left.walk - path.cost),
+        left: free ? left.walk : Math.max(0, left.walk - path.cost),
+        path: path.path,
       },
+      visibility: await creatureEventVisibility(
+        tx,
+        actor.gameId,
+        scene.id,
+        creature,
+        path.path,
+      ),
     },
     actor.limits.maxChunks,
   );
-  await saveAllowance(actor, objectId, hitPoints, {
-    moved: movement.moved + path.cost,
-  });
+  if (!free) {
+    await saveAllowance(actor, objectId, hitPoints, {
+      moved: movement.moved + path.cost,
+    });
+  }
 }
 
 // Запас одного существа: обновить (его новый ход) или добавить «Рывок».
@@ -148,6 +168,9 @@ export async function changeCreatureAllowance(
       result: { creature: event },
     });
     return;
+  }
+  if (await isFree(actor.tx, actor.gameId)) {
+    throw new ConflictException(DASH_ONLY_IN_COMBAT);
   }
   const dashes = movement.dashes + 1;
   await saveAllowance(actor, objectId, hitPoints, { dashes });

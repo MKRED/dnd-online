@@ -22,7 +22,7 @@ describe('validateLogin', () => {
 
 describe('validateNickname', () => {
   it('не считает пробелы по краям символами', () => {
-    expect(validateNickname('  a  ')).toBe('Минимум 2 символа');
+    expect(validateNickname('  a  ')).toBe('Ник — от 2 до 32 знаков');
     expect(validateNickname('Гэндальф')).toBeNull();
   });
 });

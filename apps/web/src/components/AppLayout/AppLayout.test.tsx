@@ -102,6 +102,9 @@ describe('AppLayout', () => {
 
     expect(screen.getByRole('link', { name: 'Войти' })).toBeInTheDocument();
     expect(
+      screen.getByRole('link', { name: 'DnD Online, на главную' }),
+    ).toHaveAttribute('href', '/');
+    expect(
       screen.queryByRole('navigation', { name: 'Разделы' }),
     ).not.toBeInTheDocument();
   });

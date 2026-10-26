@@ -121,10 +121,10 @@ describe('раздел «Блоки»', () => {
       { route: '/blocks/new', auth },
     );
 
-    await userEvent.type(
-      await screen.findByLabelText(/Название/),
-      'Тлеющие угли',
-    );
+    // Вставка, а не набор: каждая буква перерисовывает большую форму, и на CI тест
+    // упирался в 5 с.
+    await userEvent.click(await screen.findByLabelText(/Название/));
+    await userEvent.paste('Тлеющие угли');
     await userEvent.click(
       screen.getByRole('switch', { name: /Труднопроходимая местность/ }),
     );

@@ -37,7 +37,13 @@ export { default as StatTile } from './CharacterSheet/StatTile';
 export { EffectLinksStrip } from './Effects';
 export { default as SpellSlotPips } from './Abilities/SpellSlotPips';
 export { default as EffectSummary } from './CharacterSheet/EffectSummary';
+export { AppliedEffectList, effectRows, traitRows } from './AppliedEffects';
 export { armorClassTile } from './CharacterSheet/sheetArmorClass';
 export { speedTile } from './CharacterSheet/sheetSpeed';
 export { default as QuantityDialog } from './Inventory/QuantityDialog';
 export { useAddCandidates as useItemCandidates } from './Inventory/useAddCandidates';
+export {
+  default as CharacterSheetSection,
+  type SheetSection,
+} from './CharacterSheet/CharacterSheetSection';
+export type { SheetSpellActions } from './Abilities/sheetSpellActions';

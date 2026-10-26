@@ -122,7 +122,11 @@ export async function readLibraryModel(
       ),
     )
     .limit(1);
-  return row?.model ? { data: row.data, format: row.model.format } : undefined;
+  // У НПС формат — в метаданных копии, у снимка модели монстра — у её файла.
+  const model = row?.model;
+  const format =
+    model && ('format' in model ? model.format : model.mesh?.format);
+  return format ? { data: row.data, format } : undefined;
 }
 
 function refWhere(gameId: string, ref: GameLibraryRef): SQL | undefined {

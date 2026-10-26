@@ -1,41 +1,23 @@
-import {
-  Button,
-  Group,
-  NumberInput,
-  SegmentedControl,
-  Stack,
-  Text,
-} from '@mantine/core';
+import { SegmentedControl, Stack, Text } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import type { ReactNode } from 'react';
-import { isRotation, ROTATIONS } from 'shared';
+import { isRotation, ROTATIONS, type SizedMapState } from 'shared';
+import type { HoverStore } from '../MapScene/hoverStore';
 import PlaceChoicePanel from './PlacePicker/PlaceChoicePanel';
 import type { ObjectChoice } from './PlacePicker/placeChoice';
 import { blockTraits } from './blockTraits';
-import { buildsBlocks, isRegionTool, type EditorTool } from './editorTools';
-import { ERASE_MODE_LABELS, ERASE_MODES, type EraseMode } from './eraseModes';
+import { buildsBlocks, isBuildMode } from './editorTools';
+import { EMPTY_PLACE_HINT, firstClickHint } from './ToolPanel/toolTexts';
+import {
+  AnchorCard,
+  BuildModePicker,
+  CursorBlockCard,
+  EraseModePicker,
+  HeightStepper,
+  SectionLabel,
+  ToolHeader,
+} from './ToolPanel';
 import type { MapEditor } from './useMapEditor';
-
-// Подсказки ластика — по режиму, ниже (ERASE_HINTS).
-const HINTS: Record<Exclude<EditorTool, 'erase'>, string> = {
-  view: 'Левая кнопка мыши — перемещение, правая — поворот, колесо — масштаб к курсору. Двойной клик (в других инструментах — Alt+клик) переносит центр вращения, Q и E опускают и поднимают его.',
-  place:
-    'Блок: клик по грани ставит его рядом с ней, клик по земле — на уровень 0. Объект: клик по клетке ставит его. Клик по объекту выделяет его, перетаскивание переносит. R — поворот, Del — удалить, Esc — снять выделение.',
-  fill: 'Два клика задают углы области, она заливается блоком.',
-  hollow:
-    'Два клика задают углы: стены, пол и потолок из блока, внутри — воздух.',
-  replace:
-    'Два клика по блокам задают углы; блоки как в первом углу заменяются выбранным.',
-  walk: 'Клик ставит фигурку. Зелёное — дойдёт: клик делает ход и списывает футы. Оранжевое — не дойдёт: клик переставляет фигурку. Карту инструмент не меняет, фигурка нигде не сохраняется.',
-};
-
-const ERASE_HINTS: Record<EraseMode, string> = {
-  block: 'Клик по блоку удаляет его.',
-  plane:
-    'Два клика по противоположным углам стены или пола стирают прямоугольник между ними толщиной в клетку. Клики на одном уровне — пол, на одной линии — стена.',
-  region: 'Два клика задают углы области: всё внутри стирается.',
-  connected:
-    'Клик по блоку стирает всю постройку из того же материала, соединённую с ним гранями.',
-};
 
 interface EditorPanelProps {
   editor: MapEditor;
@@ -43,19 +25,36 @@ interface EditorPanelProps {
   walkPanel?: ReactNode;
   // Объекты инструмента «Поставить»: как ставить, свойства выделенного, список.
   objectsPanel: ReactNode;
+  // Сцена игры: панель «Существ» и выбранное в «Просмотре» (под «Под курсором»).
+  creaturesPanel?: ReactNode;
+  viewPanel?: ReactNode;
+  // Сцена игры: в окне «Строить» нет существ — их ставят «Существа».
+  withoutCreatures?: boolean;
   // Ставящийся объект; null — блок.
   objectChoice: ObjectChoice | null;
+  // Карта и клетка под курсором: «Под курсором» в «Просмотре» и подсчёт области до
+  // второго щелчка (docs/plan/done/scene-page.md, этап 3).
+  state: SizedMapState | null;
+  hover: HoverStore | null;
 }
 
-// Свойства выбранного инструмента в правой панели страницы карты; сами инструменты,
-// отмена и возврат — на сцене (SceneToolbar).
+// Свойства выбранного инструмента в правой панели страницы карты и сцены игры; сами
+// инструменты, отмена и возврат — на сцене (SceneToolbar), что сделает щелчок — на плашке
+// сцены (ToolHint, docs/plan/done/scene-page.md, этап 3).
 function EditorPanel({
   editor,
   walkPanel,
   objectsPanel,
+  creaturesPanel,
+  viewPanel,
+  withoutCreatures,
   objectChoice,
+  state,
+  hover,
 }: EditorPanelProps) {
-  const { tool, anchor, eraseMode } = editor;
+  const { tool, eraseMode } = editor;
+  // Та же граница, что у страницы: на телефоне плашки инструмента на сцене нет.
+  const narrow = useMediaQuery('(max-width: 48em)');
   // Высоту задают у области ластика; стена стирается до самого верха.
   const erasesRegion = tool === 'erase' && eraseMode === 'region';
   const builds = buildsBlocks(tool);
@@ -67,19 +66,40 @@ function EditorPanel({
 
   return (
     <Stack gap="sm">
+      <ToolHeader
+        tool={tool}
+        tools={editor.tools}
+        hint={
+          narrow
+            ? editor.anchor
+              ? 'Касание — второй угол'
+              : editor.placeEmpty
+                ? EMPTY_PLACE_HINT
+                : firstClickHint(
+                    tool,
+                    eraseMode,
+                    tool === 'creatures'
+                      ? editor.placesCreature
+                      : objectChoice !== null,
+                    true,
+                  )
+            : undefined
+        }
+      />
+
+      {/* Начатая область — сразу под шапкой: на телефоне иначе её не видно за режимами. */}
+      <AnchorCard editor={editor} state={state} hover={hover} />
+
+      {tool === 'view' && <CursorBlockCard state={state} hover={hover} />}
+      {tool === 'view' && viewPanel}
+      {tool === 'creatures' && creaturesPanel}
+
       {tool === 'erase' && (
-        <Stack gap={4}>
-          <Text size="sm">Режим (клавиша ластика — следующий)</Text>
-          <SegmentedControl
-            size="xs"
-            data={ERASE_MODES.map((mode) => ({
-              value: mode,
-              label: ERASE_MODE_LABELS[mode],
-            }))}
-            value={eraseMode}
-            onChange={(value) => editor.setEraseMode(value)}
-          />
-        </Stack>
+        <EraseModePicker mode={eraseMode} onChange={editor.setEraseMode} />
+      )}
+
+      {isBuildMode(tool) && (
+        <BuildModePicker mode={tool} onChange={editor.setTool} />
       )}
 
       {builds && (
@@ -96,6 +116,9 @@ function EditorPanel({
           onPickBlock={editor.pickBlock}
           onPickObject={editor.pickObject}
           onSelectRecent={editor.selectRecent}
+          empty={editor.placeEmpty}
+          onClear={editor.clearPlace}
+          withoutCreatures={withoutCreatures}
         />
       )}
 
@@ -106,10 +129,11 @@ function EditorPanel({
       )}
 
       {placesBlock && catalog.describe(editor.block)?.shape !== 'cube' && (
-        <Stack gap={4}>
-          <Text size="sm">Поворот (R) — по часовой, 0° — к северу</Text>
+        <Stack gap={6}>
+          <SectionLabel title="Поворот" hotkey="R" />
           <SegmentedControl
             size="xs"
+            fullWidth
             data={ROTATIONS.map((r) => ({ value: String(r), label: `${r}°` }))}
             value={String(editor.rotation)}
             onChange={(value) => {
@@ -117,56 +141,25 @@ function EditorPanel({
               if (isRotation(rotation)) editor.setRotation(rotation);
             }}
           />
+          <Text size="xs" c="dimmed">
+            По часовой, 0° — к северу
+          </Text>
         </Stack>
       )}
 
-      {(isRegionTool(tool) || erasesRegion) && (
-        <NumberInput
-          label="Высота области"
-          description="Слоёв над верхним углом, включая его"
-          min={1}
-          max={64}
-          value={editor.height}
-          onChange={(value) =>
-            editor.setHeight(Math.max(1, Number(value) || 1))
-          }
-        />
+      {/* У «Области» и «Коробки» высоты нет: область — от угла до угла (пользователь,
+          2026-10-24). */}
+      {(tool === 'replace' || erasesRegion) && (
+        <HeightStepper value={editor.height} onChange={editor.setHeight} />
       )}
 
       {tool === 'walk' && walkPanel}
       {tool === 'place' && objectsPanel}
 
-      <Text size="xs" c="dimmed">
-        {tool === 'erase' ? ERASE_HINTS[eraseMode] : HINTS[tool]}
-      </Text>
-
       {editor.notice && (
         <Text size="sm" c="orange">
           {editor.notice}
         </Text>
-      )}
-
-      {anchor && (
-        <Group
-          gap="xs"
-          justify="space-between"
-          align="flex-start"
-          wrap="nowrap"
-        >
-          <Text size="sm" flex={1}>
-            Первый угол: {anchor.cell.join(', ')}
-            {anchor.match &&
-              ` — заменяем «${catalog.describe(anchor.match)?.label ?? anchor.match}»`}
-          </Text>
-          <Button
-            size="xs"
-            variant="subtle"
-            flex="none"
-            onClick={editor.cancelRegion}
-          >
-            Сбросить (Esc)
-          </Button>
-        </Group>
       )}
     </Stack>
   );

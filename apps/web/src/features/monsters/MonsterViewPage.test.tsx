@@ -127,7 +127,7 @@ describe('MonsterViewPage', () => {
       screen.getByRole('link', { name: 'Каменная кожа' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText(/^Класс доспеха: 19\. Без эффектов 17\./),
+      screen.getByLabelText(/^Класс доспеха: 19\. В форме 17\./),
     ).toBeInTheDocument();
     await userEvent.click(screen.getByText('Без эффектов'));
     expect(screen.getByText('Класс доспеха').nextSibling).toHaveTextContent(

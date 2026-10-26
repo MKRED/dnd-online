@@ -37,7 +37,7 @@ import {
 import { errorMessage } from '../../lib/apiRequest';
 import FreeSeatCard from './FreeSeatCard';
 import GameJournal from './GameJournal';
-import GameLibrary from './GameLibrary';
+import GameLibrary, { useLibraryUpdateCount } from './GameLibrary';
 import GameScenes, { SceneInvite } from './GameScenes';
 import LobbyClosed from './LobbyClosed';
 import MasterActions from './MasterActions';
@@ -91,6 +91,12 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
   const addLive = (events: GameEvent[]) =>
     setLiveEvents((prev) => [...prev, ...events].slice(-LIVE_EVENTS_MAX));
   const isMaster = game.role === 'master';
+  const libraryUpdates = useLibraryUpdateCount(
+    game.id,
+    isMaster,
+    libraryVersion,
+    libraryOpened,
+  );
   const { online } = useGameRoom(
     game.id,
     {
@@ -241,6 +247,7 @@ function LobbyView({ game, onChange }: LobbyViewProps) {
           <MasterActions
             sessionActive={game.sessionStartedAt !== null}
             busy={busy}
+            libraryUpdates={libraryUpdates}
             onStartSession={() =>
               run(
                 async () => onChange(await startSession(game.id)),

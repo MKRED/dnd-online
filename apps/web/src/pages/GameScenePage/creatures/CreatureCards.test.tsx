@@ -6,7 +6,6 @@ import { sampleCharacter } from '../../../test/characterFixture';
 import { renderWithProviders } from '../../../test/render';
 import CharacterStateCard from './CharacterStateCard';
 import CreatureStateCard from './CreatureStateCard';
-import CreaturesPanel from './CreaturesPanel';
 
 const GAME = '22222222-2222-4222-8222-222222222222';
 const hero: Character = {
@@ -61,7 +60,9 @@ describe('карточка персонажа в игре', () => {
     await userEvent.type(screen.getByLabelText('Сколько хитов'), '12');
     await userEvent.click(damage);
     expect(await screen.findByText('ХП 13 / 28')).toBeInTheDocument();
-    expect(sent).toEqual([{ kind: 'damage', amount: 12 }]);
+    expect(sent).toEqual([
+      { kind: 'damage', amount: 12, parts: [{ amount: 12, type: null }] },
+    ]);
     // Спасброски — только на нуле; ячейки тратятся кружком.
     expect(screen.queryByText('Спасброски от смерти')).toBeNull();
     expect(
@@ -114,6 +115,7 @@ describe('существа у мастера', () => {
           hitPoints: { current: 2, max: 7, temp: 0 },
           effects: [],
           movement: { speed: 30, climb: null, moved: 10, dashes: 1 },
+          spells: null,
         },
       },
       {
@@ -124,60 +126,11 @@ describe('существа у мастера', () => {
           hitPoints: { current: 0, max: 15, temp: 0 },
           effects: [],
           movement: { speed: 30, climb: null, moved: 0, dashes: 0 },
+          spells: null,
         },
       },
     ],
   };
-
-  const panel = (selectedId: number | null, moving = false) => {
-    const onSelect = vi.fn();
-    const onAllowance = vi.fn();
-    renderWithProviders(
-      <CreaturesPanel
-        creatures={creatures.creatures}
-        selectedId={selectedId}
-        onSelect={onSelect}
-        onAllowance={onAllowance}
-        busy={false}
-        moving={moving}
-        error={null}
-      />,
-    );
-    return { onSelect, onAllowance };
-  };
-
-  it('список — с хитами, меткой и запасом движения; щелчок выбирает', async () => {
-    const { onSelect } = panel(null);
-    // Запас с «Рывком» — две Скорости; у поверженного запаса нет.
-    expect(
-      screen.getByText('ХП 2 / 7 · Ранен · Осталось 50 из 60 фт'),
-    ).toBeInTheDocument();
-    expect(screen.getByText('ХП 0 / 15 · Повержен')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /^Гоблин/ }));
-    expect(onSelect).toHaveBeenCalledWith(2);
-  });
-
-  it('запас у существа: «Обновить» и «Рывок»; подсказка про ход', async () => {
-    const { onAllowance } = panel(2, true);
-    expect(
-      screen.getByText(/Щёлкните подсвеченную клетку — существо пойдёт туда/),
-    ).toBeInTheDocument();
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Рывок: Гоблин' }),
-    );
-    expect(onAllowance).toHaveBeenCalledWith(2, 'dash');
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Обновить запас: Гоблин' }),
-    );
-    expect(onAllowance).toHaveBeenCalledWith(2, 'refresh');
-  });
-
-  it('поверженный не ходит — так и сказано', () => {
-    panel(3);
-    expect(
-      screen.getByText(/Поверженное существо не ходит/),
-    ).toBeInTheDocument();
-  });
 
   it('лечение монстра — правка экземпляра, ответ уходит странице', async () => {
     const sent: unknown[] = [];

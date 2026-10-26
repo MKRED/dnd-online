@@ -7,6 +7,7 @@ import {
   type ObjectRefs,
 } from '../../objects/objectRefs.js';
 import type { ShapeBox } from '../../shapes.js';
+import { builtinContainerRef } from '../../../voxelModel/builtinContainers.js';
 import { isGroundMount } from '../../../voxelModel/furniture.js';
 import { modelCellKey } from '../../../voxelModel/voxelModel.js';
 import { modelCellShapes, type ModelCellShape } from './modelCellShapes.js';
@@ -107,6 +108,27 @@ function addCell(
   });
 }
 
+// Что из объекта карты попадает в слой: обстановка — по записи справочника и положению,
+// встроенный контейнер (этап 11) — как обстановка на полу; взгляд контейнера бывает и на
+// 45°, а воксели ложатся на сетку только четвертями оборота.
+function layerPiece(
+  object: MapObject,
+  refs: ObjectRefs,
+): { ref: FurnitureRef; look: FurnitureLook; facing: Facing } | null {
+  if (object.kind === 'furniture') {
+    const ref = refs.furniture.get(object.furnitureId);
+    return ref
+      ? { ref, look: furnitureLook(ref, object), facing: object.facing }
+      : null;
+  }
+  if (object.kind === 'container') {
+    const ref = builtinContainerRef(object.look);
+    const facing = object.facing ?? 0;
+    return { ref, look: ref, facing: (facing - (facing % 90)) as Facing };
+  }
+  return null;
+}
+
 export function buildFurnitureLayer(
   objects: Iterable<MapObject>,
   refs: ObjectRefs,
@@ -115,11 +137,10 @@ export function buildFurnitureLayer(
   const min = [Infinity, Infinity, Infinity];
   const max = [-Infinity, -Infinity, -Infinity];
   for (const object of objects) {
-    if (object.kind !== 'furniture') continue;
-    const ref = refs.furniture.get(object.furnitureId);
-    if (!ref) continue;
-    const look = furnitureLook(ref, object);
-    for (const shape of shapesOf(look, object.facing)) {
+    const placed = layerPiece(object, refs);
+    if (!placed) continue;
+    const { ref, look, facing } = placed;
+    for (const shape of shapesOf(look, facing)) {
       const [ox, oy, oz] = shape.offset;
       const at: Vec3 = [
         object.at[0] + ox,

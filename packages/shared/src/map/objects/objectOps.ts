@@ -107,6 +107,9 @@ function kindBody(kind: MapObjectKind, fields: ObjectFields): MapObjectBody {
         furnitureId: required(fields.furnitureId, 'furnitureId'),
         facing,
         ...(fields.locked && { locked: true }),
+        // Контейнер-обстановка ставится со своим названием и содержимым (этап 11).
+        ...(fields.name !== undefined && { name: fields.name }),
+        ...(fields.items !== undefined && { items: fields.items }),
       };
   }
 }

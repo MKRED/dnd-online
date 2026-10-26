@@ -1,85 +1,54 @@
-import {
-  Alert,
-  Avatar,
-  Badge,
-  Card,
-  Group,
-  Loader,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core';
-import { useEffect, useState } from 'react';
+import { Badge, Loader, Stack, Text } from '@mantine/core';
 import { useAuth } from '../../../features/auth';
-import { getProfile, type Profile } from '../../../features/profile';
-import { errorMessage } from '../../../lib/apiRequest';
-import ChangePasswordForm from './ChangePasswordForm';
-import SetCredentialsForm from './SetCredentialsForm';
+import type { Profile } from '../../../features/profile';
+import NicknameRow from './NicknameRow';
+import PasswordRow from './PasswordRow';
+import { SettingRow, SettingsGroup } from './SettingRow';
 
-// Раздел «Аккаунт»: кто вы и как входите. Без пароля (вход только через лольку)
-// вместо смены пароля — форма, которая задаёт логин и пароль.
-function AccountSection() {
+interface AccountSectionProps {
+  // Грузит страница профиля (useProfile): его же показывает карточка игрока.
+  profile: Profile | null;
+  onChange: (profile: Profile) => void;
+}
+
+// Раздел «Аккаунт» строками (вариант «Настройки списком», выбран пользователем
+// 2026-10-24): что видят другие игроки — ник; как вы входите — логин, пароль, лолька.
+function AccountSection({ profile, onChange }: AccountSectionProps) {
   const { user, setUser } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    getProfile()
-      .then(setProfile)
-      .catch((err: unknown) => {
-        console.error('Failed to load profile', err);
-        setError(errorMessage(err, 'Не удалось загрузить профиль'));
-      });
-  }, []);
+  if (!profile) return <Loader />;
 
   // Логин сменился — обновляем и пользователя в контексте, чтобы он не разошёлся с сервером.
   const handleCredentialsSaved = (saved: Profile) => {
-    setProfile(saved);
+    onChange(saved);
     if (user && saved.login) setUser({ ...user, login: saved.login });
   };
+  const lolka = profile.providers.includes('lolka');
 
-  if (error)
-    return (
-      <Alert color="red" title="Ошибка">
-        {error}
-      </Alert>
-    );
-  if (!profile) return <Loader />;
   return (
     <Stack>
-      <Card withBorder padding="lg" radius="md">
-        <Group wrap="nowrap">
-          <Avatar name={profile.nickname} color="initials" size="lg" />
-          <Stack gap={4} style={{ minWidth: 0 }}>
-            <Text fw={600} size="lg" truncate>
-              {profile.nickname}
-            </Text>
-            <Group gap="xs">
-              {profile.login && (
-                <Text size="sm" c="dimmed">
-                  Логин: {profile.login}
-                </Text>
-              )}
-              {profile.providers.includes('lolka') && (
-                <Badge color="green" variant="light">
-                  Лолька подключена
-                </Badge>
-              )}
-            </Group>
-          </Stack>
-        </Group>
-      </Card>
-
-      <Card withBorder padding="lg" radius="md">
-        <Title order={4} mb="md">
-          {profile.hasPassword ? 'Пароль' : 'Логин и пароль'}
-        </Title>
-        {profile.hasPassword ? (
-          <ChangePasswordForm />
-        ) : (
-          <SetCredentialsForm onSaved={handleCredentialsSaved} />
+      <SettingsGroup caption="Для других игроков">
+        <NicknameRow profile={profile} onSaved={onChange} />
+      </SettingsGroup>
+      <SettingsGroup caption="Вход">
+        {profile.login && (
+          <SettingRow label="Логин" hint="Только для входа, другим не виден">
+            <Text size="lg">{profile.login}</Text>
+          </SettingRow>
         )}
-      </Card>
+        <PasswordRow
+          profile={profile}
+          onCredentialsSaved={handleCredentialsSaved}
+        />
+        <SettingRow label="Лолька">
+          {lolka ? (
+            <Badge color="green" variant="light">
+              Подключена
+            </Badge>
+          ) : (
+            <Text c="dimmed">Не подключена</Text>
+          )}
+        </SettingRow>
+      </SettingsGroup>
     </Stack>
   );
 }

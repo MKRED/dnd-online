@@ -1,7 +1,7 @@
 import { reachable } from 'shared';
 import { describe, expect, it } from 'vitest';
 import { cellsFromHit } from '../editor/editorTools';
-import { floorWith } from './testMap';
+import { floorWith, withTallTable } from './testMap';
 import { walkHover } from './walkHover';
 
 const UP = [0, 1, 0] as const;
@@ -46,5 +46,14 @@ describe('walkHover', () => {
 
   it('без фигурки (пустой reach) — только постановка', () => {
     expect(walkHover(map, [], floorAt(1, 2), 'medium').kind).toBe('place');
+  });
+
+  it('на высокий стол — путь на клетку над ним', () => {
+    // Курсор над столом попадает в пол под ним, а дойти можно до верха стола.
+    const table = withTallTable(floorWith());
+    const fromBeside = reachable(table, [1, 0, 0], 'medium', 30);
+    const hover = walkHover(table, fromBeside, floorAt(0, 0), 'medium');
+    expect(hover.kind).toBe('move');
+    expect(hover.anchor).toEqual([0, 1, 0]);
   });
 });

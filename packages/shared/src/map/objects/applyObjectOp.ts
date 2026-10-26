@@ -12,6 +12,7 @@ import {
   objectFacing,
   type MapObject,
   type MapObjects,
+  type ObjectItem,
 } from './mapObject.js';
 import type { ObjectChange } from './objectChanges.js';
 import { fieldsOfKind } from './objectFields.js';
@@ -214,6 +215,17 @@ function checkRefs(
       `Обстановка ${object.furnitureId} не найдена среди вашей: чужую сначала скопируйте себе`,
     );
   }
+  // Название и содержимое — только у контейнера-обстановки (этап 11).
+  if (
+    object.kind === 'furniture' &&
+    (object.items !== undefined || object.name !== undefined) &&
+    refs.furniture.has(object.furnitureId) &&
+    !refs.furniture.get(object.furnitureId)?.container
+  ) {
+    throw new MapOpError(
+      `«${refs.furniture.get(object.furnitureId)?.name}» — не контейнер: у неё нет названия и содержимого`,
+    );
+  }
   const before = new Set(itemIds(previous));
   for (const itemId of itemIds(object)) {
     if (!before.has(itemId) && !refs.items.has(itemId)) {
@@ -222,7 +234,17 @@ function checkRefs(
   }
 }
 
-// Груз контейнера не больше вместимости вида. Правку, которая не делает хуже, не
+// Вместимость контейнера: у вида на карте — по виду, у контейнера-обстановки (этап 11) —
+// из записи. null — у объекта содержимого нет.
+function capacityOf(ctx: ObjectEditContext, object: MapObject): number | null {
+  if (object.kind === 'container') return CONTAINER_CAPACITY[object.look];
+  if (object.kind !== 'furniture') return null;
+  return (
+    ctx.refs.furniture.get(object.furnitureId)?.container?.capacity ?? null
+  );
+}
+
+// Груз контейнера не больше вместимости. Правку, которая не делает хуже, не
 // останавливаем: контейнер мог стать тяжелее вместимости без неё — вес предмета
 // поменяли в каталоге, — и переименовать или разгрузить его всё равно нужно.
 function checkLoad(
@@ -230,22 +252,34 @@ function checkLoad(
   object: MapObject,
   previous: MapObject | null,
 ) {
-  if (object.kind !== 'container') return;
+  const items = itemsOf(object);
+  if (!items) return;
+  // Обычной обстановке содержимое не дают проверки ссылок (checkRefs).
+  const capacity = capacityOf(ctx, object);
+  if (capacity === null) return;
   const weightOf = (itemId: string) => ctx.refs.items.get(itemId) ?? 0;
-  const load = containerLoad(object.items, weightOf);
-  const capacity = CONTAINER_CAPACITY[object.look];
+  const load = containerLoad(items, weightOf);
   if (load <= capacity) return;
-  if (previous?.kind === 'container') {
-    const before = containerLoad(previous.items, weightOf);
-    if (load <= before && capacity >= CONTAINER_CAPACITY[previous.look]) return;
+  const before = previous && itemsOf(previous);
+  if (before) {
+    const was = capacityOf(ctx, previous) ?? 0;
+    if (load <= containerLoad(before, weightOf) && capacity >= was) return;
   }
-  throw new MapOpError(
-    `Не влезет в «${object.name}»: ${loadLabel(load, capacity)}`,
-  );
+  const name =
+    object.kind === 'container' || object.kind === 'furniture'
+      ? (object.name ?? 'Контейнер')
+      : 'Контейнер';
+  throw new MapOpError(`Не влезет в «${name}»: ${loadLabel(load, capacity)}`);
+}
+
+// Содержимое объекта: у контейнера и контейнера-обстановки; null — содержимого нет.
+function itemsOf(object: MapObject): readonly ObjectItem[] | null {
+  if (object.kind === 'container') return object.items;
+  if (object.kind === 'furniture') return object.items ?? null;
+  return null;
 }
 
 function itemIds(object: MapObject | null): string[] {
   if (object?.kind === 'item') return [object.itemId];
-  if (object?.kind === 'container') return object.items.map((i) => i.itemId);
-  return [];
+  return (object && itemsOf(object))?.map((i) => i.itemId) ?? [];
 }

@@ -1,5 +1,6 @@
 import type { MonsterRole } from '../../monsters.js';
 import type { FurnitureMount } from '../../voxelModel/furniture.js';
+import type { LockDc } from '../../voxelModel/furnitureContainer.js';
 import type { ModelCellKind } from '../../voxelModel/voxelModel.js';
 import type { Box3, Vec3 } from '../coords.js';
 import type { CreatureSize } from '../rules/creature.js';
@@ -33,6 +34,8 @@ export interface FurnitureLook {
 export interface FurnitureRef extends FurnitureLook {
   name: string;
   mount: FurnitureMount;
+  // Вместимость и Сл взлома контейнера (этап 11); null — обычная обстановка.
+  container: { capacity: number; lockDc: LockDc | null } | null;
   positions: (FurnitureLook & { name: string })[];
   usable: boolean;
 }

@@ -65,6 +65,7 @@ const refs: MapObjectRefsView = {
       size: 'small',
       role: 'regular',
       image: null,
+      model: null,
     },
     [GONE]: { missing: 'deleted', size: 'medium' },
   },

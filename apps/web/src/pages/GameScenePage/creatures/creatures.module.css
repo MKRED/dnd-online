@@ -42,25 +42,7 @@
   background: var(--save-pip-color);
 }
 
-/* Карточка выбранного существа под списками панели. */
+/* Карточка выбранного — внизу вкладки «Участники», рамку даёт сама вкладка. */
 .card {
-  padding: var(--mantine-spacing-xs);
-  border: 1px solid var(--mantine-color-default-border);
-  border-radius: var(--mantine-radius-md);
-}
-
-/* Строка существа в списке мастера: щелчок выбирает его, выбранное подсвечено. */
-.row {
-  flex: 1;
   min-width: 0;
-  padding: 4px 8px;
-  border-radius: var(--mantine-radius-sm);
-}
-
-.row:hover {
-  background: var(--mantine-color-default-hover);
-}
-
-.row[data-selected] {
-  background: var(--mantine-primary-color-light);
 }

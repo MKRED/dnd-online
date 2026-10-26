@@ -17,6 +17,10 @@ import {
   monsterImages,
   monsters,
 } from '../../database/schema/index.js';
+import {
+  loadMonsterModels,
+  monsterRefModel,
+} from '../../monsters/monster-model-view.js';
 import { toMonsterFields } from '../../monsters/monsters.config.js';
 import { loadFurnitureRefs } from './furniture-refs.js';
 
@@ -47,8 +51,13 @@ export async function loadRefs(
       .from(monsters)
       .leftJoin(monsterImages, eq(monsterImages.ownerId, monsters.id))
       .where(inArray(monsters.id, [...ids.monsters]));
+    // 3D-модели монстров (docs/plan/done/monster-models.md) — любого автора, как в карточке.
+    const models = await loadMonsterModels(
+      db,
+      rows.map(({ entry }) => toMonsterFields('', {}, entry.extra).model),
+    );
     for (const { entry, image } of rows) {
-      const { statBlock, role } = toMonsterFields(
+      const { statBlock, role, model } = toMonsterFields(
         entry.category,
         entry.details,
         entry.extra,
@@ -62,6 +71,7 @@ export async function loadRefs(
             name: entry.name,
             role,
             image: toCatalogImage(image),
+            model: monsterRefModel(models, model),
           }
         : { missing: 'hidden', size };
       refs.monsters.set(entry.id, {

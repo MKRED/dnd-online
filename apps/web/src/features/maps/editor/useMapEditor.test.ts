@@ -28,6 +28,7 @@ function objectsMock() {
   return {
     pick: vi.fn(),
     extent: [1, 1, 1] as const,
+    ghost: undefined,
     rotate: vi.fn(),
     remove: vi.fn(),
     escape: vi.fn(),
@@ -38,6 +39,8 @@ function objectsMock() {
       hidden: false,
     },
     selected: null,
+    scope: 'all' as const,
+    moving: false,
   };
 }
 
@@ -60,17 +63,32 @@ describe('useMapEditor, клавиши', () => {
 
   it('цифры выбирают инструменты в порядке полосы', () => {
     const { result } = setup();
-    act(() => {
-      fireEvent.keyDown(window, { code: 'Digit4' });
-    });
-    expect(result.current.tool).toBe('fill');
-    act(() => {
-      fireEvent.keyDown(window, { code: 'Digit7' });
-    });
+    // Полоса: Просмотр, Строить, Ластик, Замена, Ход («Область» и «Коробка» — режимы).
+    press('Digit4');
+    expect(result.current.tool).toBe('replace');
+    press('Digit5');
     expect(result.current.tool).toBe('walk');
   });
 
-  it('у «Поставить» (2) с объектом R, Del и Esc уходят объектам, а не блоку', () => {
+  it('2 при «Строить» — следующий режим: по одному → область → коробка → по одному', () => {
+    const { result } = setup();
+    const modes = [0, 1, 2, 3].map(() => {
+      press('Digit2');
+      return result.current.tool;
+    });
+    expect(modes).toEqual(['place', 'fill', 'hollow', 'place']);
+  });
+
+  it('у «Области» и «Коробки» высоты нет, у «Замены» — своя', () => {
+    const { result } = setup();
+    act(() => result.current.setHeight(3));
+    act(() => result.current.setTool('fill'));
+    expect(result.current.height).toBe(1);
+    act(() => result.current.setTool('replace'));
+    expect(result.current.height).toBe(3);
+  });
+
+  it('у «Поставить» (2) с выделенным объектом R, Del и Esc уходят объектам, а не блоку', () => {
     const objects = {
       ...objectsMock(),
       settings: {
@@ -78,6 +96,7 @@ describe('useMapEditor, клавиши', () => {
         facing: 0 as const,
         hidden: false,
       },
+      selected: { id: 1 } as unknown as null,
     };
     const { result } = setup(objects);
     press('Digit2');
@@ -91,6 +110,86 @@ describe('useMapEditor, клавиши', () => {
     expect(objects.remove).toHaveBeenCalledTimes(1);
     expect(objects.escape).toHaveBeenCalledTimes(1);
     expect(result.current.rotation).toBe(0);
+  });
+
+  it('Esc без выделенного снимает ставящееся: «Поставить» пусто, щелчок ничего не ставит', () => {
+    const objects = objectsMock();
+    const state: SizedMapState = {
+      store: new MemoryChunkStore(),
+      palette: createPalette(),
+      size: { width: 4, depth: 4 },
+    };
+    const ops = vi.fn();
+    const { result } = renderHook(() =>
+      useMapEditor({
+        state,
+        applyOps: ops,
+        undo: vi.fn(),
+        redo: vi.fn(),
+        objects,
+        keysActive: true,
+      }),
+    );
+    press('Digit2');
+    expect(result.current.placeEmpty).toBe(false);
+    act(() => {
+      fireEvent.keyDown(document.documentElement, { key: 'Escape' });
+    });
+    expect(objects.escape).not.toHaveBeenCalled();
+    expect(objects.choose).toHaveBeenCalledWith(null);
+    expect(result.current.placeEmpty).toBe(true);
+    expect(result.current.sceneEditor?.idle).toBe(true);
+    act(() =>
+      result.current.sceneEditor?.onPick({ ground: [1, 0, 1] } as never),
+    );
+    expect(ops).not.toHaveBeenCalled();
+
+    // Выбранный блок снова ставится.
+    act(() => result.current.pickBlock('wood'));
+    expect(result.current.placeEmpty).toBe(false);
+    expect(result.current.sceneEditor?.idle).toBeUndefined();
+  });
+
+  it('«Перенести»: щелчок по клетке уходит объекту — и с блоком, и с пустым «Поставить»', () => {
+    const idle = objectsMock();
+    const moving = {
+      ...idle,
+      selected: { id: 1 } as unknown as null,
+      moving: true,
+    };
+    const state: SizedMapState = {
+      store: new MemoryChunkStore(),
+      palette: createPalette(),
+      size: { width: 4, depth: 4 },
+    };
+    const ops = vi.fn();
+    const { result, rerender } = renderHook(
+      ({ objects }) =>
+        useMapEditor({
+          state,
+          applyOps: ops,
+          undo: vi.fn(),
+          redo: vi.fn(),
+          objects,
+          keysActive: true,
+        }),
+      { initialProps: { objects: idle } },
+    );
+    press('Digit2');
+    const cells = { ground: [1, 0, 1] } as never;
+    rerender({ objects: moving });
+    act(() => result.current.sceneEditor?.onPick(cells));
+    // Ничего не ставить: без выделения Esc снимает выбранный блок.
+    rerender({ objects: idle });
+    act(() => {
+      fireEvent.keyDown(document.documentElement, { key: 'Escape' });
+    });
+    expect(result.current.placeEmpty).toBe(true);
+    rerender({ objects: moving });
+    act(() => result.current.sceneEditor?.onPick(cells));
+    expect(idle.pick).toHaveBeenCalledTimes(2);
+    expect(idle.escape).not.toHaveBeenCalled();
+    expect(ops).not.toHaveBeenCalled();
   });
 
   it('у «Поставить» с блоком R поворачивает блок', () => {

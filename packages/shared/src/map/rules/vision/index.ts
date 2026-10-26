@@ -24,3 +24,4 @@ export {
   objectSeen,
   type FogMasks,
 } from './fogView.js';
+export { walkSeen } from './walkView.js';

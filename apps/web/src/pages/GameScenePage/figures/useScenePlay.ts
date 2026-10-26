@@ -11,22 +11,27 @@ import { useSceneFigures } from './useSceneFigures';
 interface ScenePlayOptions {
   gameId: string;
   sceneId: string | null;
-  master: boolean;
-  // Инструмент мастера: фигурки он водит только в «Просмотре».
-  editorTool: string;
+  // Фигурки можно выбирать: у мастера — в «Игре» и в «Просмотре» «Правки»; при других
+  // инструментах щелчок правит карту.
+  active: boolean;
+  // Мастер в «Правке»: ставит без пути и запаса (docs/plan/done/scene-page.md).
+  free: boolean;
   state: MapViewState | null;
   refs: MapObjectRefsView | null;
+  // Свой ход отправлен — фигурка ждёт путь на месте (docs/plan/done/walk-animation.md).
+  onMoveStart?: (characterId: string, from: Vec3) => void;
 }
 
 // Фигурки на странице сцены (docs/plan/done/game.md, этап 7): чтение, выбор и ход, тени чужих
-// перетаскиваний. В других инструментах мастера щелчок правит карту — выбор снимается.
+// перетаскиваний. Пока выбирать нельзя (инструмент «Правки» правит карту) — выбор снимается.
 export function useScenePlay({
   gameId,
   sceneId,
-  master,
-  editorTool,
+  active,
+  free,
   state,
   refs,
+  onMoveStart,
 }: ScenePlayOptions) {
   const figures = useSceneFigures(gameId, sceneId);
   const api = useMemo(() => figureApi(gameId), [gameId]);
@@ -41,15 +46,15 @@ export function useScenePlay({
     [gameId],
   );
   const tool = useFigureTool({
-    master,
+    free,
     state,
     refs,
     figures: figures.figures,
     api,
     onFigures: figures.apply,
     onDrag: sendDrag,
+    onMoveStart,
   });
-  const active = !master || editorTool === 'view';
   const { select, selectedId, grab, release } = tool;
   useEffect(() => {
     if (!active) select(null);

@@ -13,6 +13,7 @@ import { appendGameEvent } from '../game-journal.js';
 import type { SceneRow } from '../scenes/scene-copy.js';
 import { findActiveScene } from '../scenes/scene-read.js';
 import { seatedCharacters } from './figure-read.js';
+import { restartCombatRound } from './move-mode-read.js';
 import { loadSceneWorld, type SceneWorld } from './scene-world.js';
 
 // Фигурки встают на свободные стартовые точки (docs/plan/done/game.md, этап 7): когда сцена
@@ -70,6 +71,7 @@ export async function placeFiguresOnScene(
   masterId: string,
 ): Promise<void> {
   await tx.delete(gameFigures).where(eq(gameFigures.gameId, scene.gameId));
+  await restartCombatRound(tx, scene.gameId);
   const seated = await seatedCharacters(tx, scene.gameId);
   if (seated.length === 0) return;
   const world = await loadSceneWorld(tx, scene);

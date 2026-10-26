@@ -1,12 +1,14 @@
 import {
   index,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   timestamp,
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
+import type { SpellSlotsExpended } from 'shared';
 import { gameScenes } from './game-scenes.js';
 
 // Монстр или НПС на сцене — экземпляр со своим состоянием (docs/plan/done/game.md, этап 8).
@@ -26,6 +28,16 @@ export const gameCreatures = pgTable(
     // (docs/plan/done/creature-movement.md). «Новый раунд» обнуляет.
     moved: integer('moved').notNull().default(0),
     dashes: integer('dashes').notNull().default(0),
+    // Ячейки и подготовка заклинаний НПС — свои у экземпляра, как хиты (замечания после
+    // первой партии, 2026-10-26, вариант А). Потрачено по кругам; null — как в копии.
+    spellSlotsExpended: jsonb(
+      'spell_slots_expended',
+    ).$type<SpellSlotsExpended>(),
+    // Отметки «подготовлено», отличные от копии: id способности (исходный) → отметка.
+    prepared: jsonb('prepared')
+      .notNull()
+      .default({})
+      .$type<Record<string, boolean>>(),
   },
   (table) => [primaryKey({ columns: [table.sceneId, table.objectId] })],
 );

@@ -138,7 +138,7 @@ describe('MapViewPage', () => {
     ).toHaveAttribute('aria-valuenow', '4');
     expect(screen.getByText('Подземелье')).toBeInTheDocument();
     // Готовность — невидимый статус для агента в браузере, не текст на панели.
-    expect(await screen.findByRole('status')).toHaveTextContent('Сцена готова');
+    expect(await screen.findByText('Сцена готова')).toBeInTheDocument();
   });
 
   it('название и размер карты — только в «Просмотре»', async () => {
@@ -150,7 +150,7 @@ describe('MapViewPage', () => {
     const user = userEvent.setup();
 
     expect(await screen.findByText('Подземелье')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Поставить' }));
+    await user.click(screen.getByRole('button', { name: 'Строить' }));
     expect(screen.queryByText('Подземелье')).toBeNull();
     expect(screen.queryByText('32 × 32 клеток (160 × 160 фт)')).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Просмотр' }));
@@ -216,7 +216,7 @@ describe('MapViewPage', () => {
     renderPage();
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole('button', { name: 'Поставить' }));
+    await user.click(await screen.findByRole('button', { name: 'Строить' }));
     await user.click(screen.getByRole('button', { name: 'Клик по земле' }));
 
     await waitFor(() =>
@@ -229,7 +229,7 @@ describe('MapViewPage', () => {
       ops: [{ op: 'setBlock', at: [1, 0, 1], block: 'stone', rotation: 0 }],
     });
     // Сцена не перемонтировалась — «Сцена готова» остаётся.
-    expect(screen.getByRole('status')).toHaveTextContent('Сцена готова');
+    expect(screen.getByText('Сцена готова')).toBeInTheDocument();
   });
 
   it('перечитывает карту, если между правками были чужие', async () => {
@@ -253,7 +253,7 @@ describe('MapViewPage', () => {
     renderPage();
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole('button', { name: 'Поставить' }));
+    await user.click(await screen.findByRole('button', { name: 'Строить' }));
     await user.click(screen.getByRole('button', { name: 'Клик по земле' }));
 
     expect(
@@ -314,7 +314,7 @@ describe('MapViewPage', () => {
     expect(apply).toBeDisabled();
     // Пока панель открыта, инструменты спрятаны и сцена ничего не правит.
     expect(
-      screen.queryByRole('button', { name: 'Поставить' }),
+      screen.queryByRole('button', { name: 'Строить' }),
     ).not.toBeInTheDocument();
     await user.clear(screen.getByRole('textbox', { name: 'Восток' }));
     await user.type(screen.getByRole('textbox', { name: 'Восток' }), '2');
@@ -352,12 +352,10 @@ describe('MapViewPage', () => {
 
     expect(screen.getByText(/Удалится блоков: 5/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Отмена' }));
-    expect(
-      screen.getByRole('button', { name: 'Поставить' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Строить' })).toBeInTheDocument();
   });
 
-  it('клавиши 1–7 выбирают инструмент, пока не открыта панель размера', async () => {
+  it('клавиши 1–5 выбирают инструмент, пока не открыта панель размера', async () => {
     stubFetch([
       { status: 200, body: info },
       { status: 200, body: towerChunks() },
@@ -368,13 +366,14 @@ describe('MapViewPage', () => {
       screen.getByRole('button', { name }).getAttribute('aria-pressed');
 
     await screen.findByRole('button', { name: 'Ластик' });
-    expect(screen.getByRole('separator')).toHaveTextContent('Просмотр');
+    // Название инструмента — в шапке его свойств (docs/plan/done/scene-page.md, этап 3).
+    expect(screen.getByText('Просмотр', { selector: 'p' })).toBeInTheDocument();
     // По месту клавиши: цифры на основном ряду и на цифровом блоке.
     await user.keyboard('[Digit3]');
     expect(pressed('Ластик')).toBe('true');
-    expect(screen.getByRole('separator')).toHaveTextContent('Ластик');
+    expect(screen.getByText('Ластик', { selector: 'p' })).toBeInTheDocument();
     await user.keyboard('[Numpad2]');
-    expect(pressed('Поставить')).toBe('true');
+    expect(pressed('Строить')).toBe('true');
     // Размер карты меняется из «Просмотра»: только там видна ⚙.
     await user.keyboard('[Digit1]');
 

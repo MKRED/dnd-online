@@ -1,9 +1,10 @@
 export * from './gamesApi';
 export * from './gameLabels';
-export * from './gameEventText';
 export * from './useGameRoom';
 export * from './gameLibraryApi';
 export * from './libraryLabels';
 export * from './gameScenesApi';
 export * from './gameFiguresApi';
 export * from './gameStateApi';
+export { default as CreateGameModal } from './CreateGameModal';
+export * from './journal';

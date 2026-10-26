@@ -7,11 +7,17 @@ import {
   type SpellSlotsExpended,
 } from 'shared';
 import { IsSpellSlotsExpended } from '../../../characters/dto/nested/spells.dto.js';
+import {
+  AMOUNT,
+  DamageParts,
+  needsAmount,
+  toDamageChange,
+  type DamagePartDto,
+} from '../../dto/damage-parts.dto.js';
 
 const KINDS = [...HIT_POINTS_CHANGE_KINDS, 'spell_slots'] as const;
 type Kind = (typeof KINDS)[number];
 
-const AMOUNT = 'Число от 0 до 9999';
 const SAVES = 'Число спасбросков — от 0 до 3';
 
 // Правка персонажа в игре: одно тело на все виды, поля — по виду (shared/hitPoints.ts).
@@ -19,13 +25,15 @@ export class CharacterChangeDto {
   @IsIn(KINDS, { message: 'Неизвестная правка' })
   kind: Kind;
 
-  @ValidateIf((dto: CharacterChangeDto) =>
-    ['damage', 'heal', 'temp'].includes(dto.kind),
-  )
+  @ValidateIf(needsAmount)
   @IsInt({ message: AMOUNT })
   @Min(0, { message: AMOUNT })
   @Max(HIT_POINTS_CHANGE_MAX, { message: AMOUNT })
   amount?: number;
+
+  // Урон по частям с типами — вместо amount.
+  @DamageParts()
+  parts?: DamagePartDto[];
 
   @ValidateIf((dto: CharacterChangeDto) => dto.kind === 'death_saves')
   @IsInt({ message: SAVES })
@@ -50,6 +58,7 @@ export function toCharacterChange(
 ): GameCharacterChange {
   switch (dto.kind) {
     case 'damage':
+      return toDamageChange(dto);
     case 'heal':
     case 'temp':
       return { kind: dto.kind, amount: dto.amount ?? 0 };

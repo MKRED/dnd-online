@@ -2,6 +2,7 @@ import type request from 'supertest';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import type { Character, CharacterEffectEntry, GameEventPage } from 'shared';
 import { characterBody } from './support/character-fixture.js';
+import { startSession } from './support/scene-fixture.js';
 import {
   listenForSockets,
   type SocketClients,
@@ -80,7 +81,7 @@ describe('game characters (e2e)', () => {
 
   const sheetOf = (res: request.Response) => res.body as Character;
 
-  it('лист из игры видят мастер, владелец и управляющий', async () => {
+  it('лист из игры видят мастер, владелец, управляющий и отряд; правят — без отряда', async () => {
     const g = await setup('gch_read');
     for (const agent of [g.master.agent, g.player.agent]) {
       const res = await agent.get(g.url).expect(200);
@@ -91,8 +92,12 @@ describe('game characters (e2e)', () => {
         effects: [],
       });
     }
-    await g.second.agent.get(g.url).expect(403);
+    // Второй игрок сидит в игре своим персонажем — член отряда, лист читает.
+    await g.second.agent.get(g.url).expect(200);
     await g.stranger.agent.get(g.url).expect(403);
+    // Освободил место — уже не в отряде.
+    await g.second.agent.delete(`/api/games/${g.gameId}/seats/me`).expect(200);
+    await g.second.agent.get(g.url).expect(403);
     await t.anonymous().get(g.url).expect(401);
     // Персонажа нет на местах этой игры.
     const other = idOf(
@@ -187,8 +192,42 @@ describe('game characters (e2e)', () => {
     await change(g.master.agent, g.url, { kind: 'heal', amount: 5 }, 409);
   });
 
+  it('урон по частям с типами — в лист суммой, в журнал частями; запись видна игрокам', async () => {
+    const g = await setup('gch_parts');
+    await startSession(g.master.agent, g.gameId);
+    const hit = await change(g.master.agent, g.url, {
+      kind: 'damage',
+      parts: [
+        { amount: 3, type: 'slashing' },
+        { amount: 2, type: 'poison' },
+      ],
+    });
+    expect(sheetOf(hit).hitPointsCurrent).toBe(7);
+    expect(await lastEvent(g.master.agent, g.gameId)).toMatchObject({
+      kind: 'character.changed',
+      visibility: 'players',
+      intent: {
+        change: {
+          kind: 'damage',
+          amount: 5,
+          parts: [
+            { amount: 3, type: 'slashing' },
+            { amount: 2, type: 'poison' },
+          ],
+        },
+      },
+    });
+    await change(
+      g.player.agent,
+      g.url,
+      { kind: 'damage', parts: [{ amount: 1, type: 'love' }] },
+      400,
+    );
+  });
+
   it('ячейки тратятся из игры; неверные правки — 400', async () => {
     const g = await setup('gch_slots');
+    await startSession(g.master.agent, g.gameId);
     const spent = await change(g.player.agent, g.url, {
       kind: 'spell_slots',
       expended: { 1: 1 },
@@ -211,8 +250,44 @@ describe('game characters (e2e)', () => {
     );
   });
 
+  it('вне встречи игрок из игры лист не правит, мастер — правит; встреча кончилась — снова нет', async () => {
+    const g = await setup('gch_offsession');
+    const outside = 'Встреча не идёт: сцену можно только смотреть';
+    const refused = await change(
+      g.player.agent,
+      g.url,
+      { kind: 'damage', amount: 1 },
+      403,
+    );
+    expect((refused.body as { message: string }).message).toBe(outside);
+    await g.player.agent
+      .post(`${g.url}/effects`)
+      .send({ effectId: g.player.character })
+      .expect(403);
+    // Читать лист вне встречи можно.
+    await g.player.agent.get(g.url).expect(200);
+    // Управляющий — тоже игрок: вне встречи не правит.
+    await g.master.agent
+      .put(`/api/games/${g.gameId}/seats/${g.player.id}/controller`)
+      .send({ controllerId: g.second.id })
+      .expect(200);
+    await change(g.second.agent, g.url, { kind: 'damage', amount: 1 }, 403);
+    const hit = await change(g.master.agent, g.url, {
+      kind: 'damage',
+      amount: 2,
+    });
+    expect(sheetOf(hit).hitPointsCurrent).toBe(10);
+
+    await startSession(g.master.agent, g.gameId);
+    await change(g.player.agent, g.url, { kind: 'damage', amount: 1 });
+    await change(g.second.agent, g.url, { kind: 'damage', amount: 1 });
+    await g.master.agent.delete(`/api/games/${g.gameId}/session`).expect(200);
+    await change(g.player.agent, g.url, { kind: 'heal', amount: 1 }, 403);
+  });
+
   it('правит только тот, кто ведёт персонажа: снятый управляющий — уже нет', async () => {
     const g = await setup('gch_rights');
+    await startSession(g.master.agent, g.gameId);
     const hit = { kind: 'damage', amount: 1 };
     await change(g.second.agent, g.url, hit, 403);
     await change(g.stranger.agent, g.url, hit, 403);
@@ -234,8 +309,43 @@ describe('game characters (e2e)', () => {
       .expect(403);
   });
 
+  // docs/plan/done/traits.md: черта листа действует в игре, как эффект.
+  it('черта с запретом лечения на листе — лечение в игре отклонено с её именем', async () => {
+    const g = await setup('gch_trait');
+    const trait = idOf(
+      await g.player.agent
+        .post('/api/abilities')
+        .send({
+          name: 'Проклятая плоть',
+          category: 'basic',
+          details: {},
+          description: '',
+          isPublic: false,
+          activation: { kind: 'trait' },
+          costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
+          passive: [{ kind: 'no_healing' }],
+        })
+        .expect(201),
+    );
+    await g.player.agent
+      .post(`/api/characters/${g.player.character}/abilities`)
+      .send({ abilityId: trait })
+      .expect(201);
+    await change(g.master.agent, g.url, { kind: 'damage', amount: 3 });
+    const refused = await change(
+      g.master.agent,
+      g.url,
+      { kind: 'heal', amount: 3 },
+      400,
+    );
+    expect((refused.body as { message: string }).message).toBe(
+      'Лечение запрещено: Проклятая плоть',
+    );
+  });
+
   it('эффект мастера, скрытый от игрока, в игре действует; копия — в библиотеке', async () => {
     const g = await setup('gch_effects');
+    await startSession(g.master.agent, g.gameId);
     const body = (over: Record<string, unknown>) => ({
       name: 'Ускорение',
       components: [

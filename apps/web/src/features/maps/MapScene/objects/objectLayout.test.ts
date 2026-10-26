@@ -1,16 +1,23 @@
 import {
   applyOps,
+  buildFurnitureLayer,
   createMapObjects,
   createPalette,
   emptyRefsView,
   MemoryChunkStore,
+  objectRefsFromView,
   type MapObject,
   type MapObjectRefsView,
 } from 'shared';
 import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import type { MapViewState } from '../../mapStateFromChunks';
-import { facingAngle, layoutObjects, objectImagePaths } from './objectLayout';
+import {
+  facingAngle,
+  layoutObjects,
+  objectFeet,
+  objectImagePaths,
+} from './objectLayout';
 
 const OGRE = '00000000-0000-4000-8000-000000000001';
 const GONE = '00000000-0000-4000-8000-000000000002';
@@ -40,6 +47,7 @@ const refs: MapObjectRefsView = {
       name: 'огр',
       size: 'large',
       role: 'regular',
+      model: null,
       image: {
         version: 3,
         width: 10,
@@ -211,6 +219,8 @@ describe('layoutObjects', () => {
         `lib/npc/${id}/${image.thumbVersion}`,
       npcModel: (id: string, v: number) => `lib/npc-model/${id}/${v}`,
       furnitureMesh: (id: string, v: number) => `lib/mesh/${id}/${v}`,
+      monsterModel: (id: string, model: string, v: number) =>
+        `lib/monster-model/${id}/${model}/${v}`,
     };
     const objects = layoutObjects(
       mapWith([
@@ -262,6 +272,32 @@ describe('layoutObjects', () => {
     ).toMatchObject({ label: 'Бочка эля (бочка)', warnings: [] });
   });
 
+  // Сцена получает карту глазами правил, где контейнер сам лежит в слое обстановки
+  // опорой «встать сверху» — по ней он висел над полом на свою высоту (2026-10-24).
+  it('встроенный контейнер стоит на полу, а не на своей крышке', () => {
+    const looks = ['chest', 'crate', 'barrel', 'sack'] as const;
+    const containers: MapObject[] = looks.map((look, index) => ({
+      ...base,
+      id: index + 1,
+      at: [index, 1, 0],
+      kind: 'container',
+      name: '',
+      look,
+      items: [],
+    }));
+    const map = mapWith(containers);
+    const rules = {
+      ...map,
+      furniture: buildFurnitureLayer(
+        map.objects.byId.values(),
+        objectRefsFromView(refs),
+      ),
+    };
+    const objects = layoutObjects(rules, refs);
+    expect(objects.map((object) => object.base[1])).toEqual([1, 1, 1, 1]);
+    expect(objects.map((object) => object.warnings)).toEqual([[], [], [], []]);
+  });
+
   it('не рисует объекты за границей карты', () => {
     const objects = layoutObjects(
       mapWith([
@@ -301,6 +337,7 @@ describe('обстановка на сцене', () => {
         mount: 'floor',
         model: { id: 'm', size: [3, 1, 1], palette: [], voxels: '', cells: {} },
         positions: [],
+        container: null,
       },
       // Ворота: закрытые 1×2×1, открытые — 2×2×1 (этап 8г).
       [GATE]: {
@@ -330,6 +367,7 @@ describe('обстановка на сцене', () => {
             },
           },
         ],
+        container: null,
       },
       [GONE]: { missing: 'deleted' },
     },
@@ -377,6 +415,7 @@ describe('обстановка на сцене', () => {
             },
           },
           positions: [],
+          container: null,
         },
       },
     };
@@ -405,5 +444,17 @@ describe('обстановка на сцене', () => {
     );
     expect(gone.look).toMatchObject({ model: null, extent: [1, 1, 1] });
     expect(gone.warnings.join()).toMatch(/удалена/);
+  });
+});
+
+describe('objectFeet — высота ставящегося объекта', () => {
+  it('на плите — сверху, на ровном полу — на полу', () => {
+    const map = mapWith([]);
+    const start = { kind: 'start', number: 0, facing: 0 } as const;
+    const chest = { kind: 'container', look: 'chest', facing: 0 } as const;
+    expect(objectFeet(map, start, [3, 1, 3])).toBe(1.5);
+    expect(objectFeet(map, chest, [3, 1, 3])).toBe(1.5);
+    expect(objectFeet(map, start, [1, 1, 1])).toBe(1);
+    expect(objectFeet(map, chest, [1, 1, 1])).toBe(1);
   });
 });

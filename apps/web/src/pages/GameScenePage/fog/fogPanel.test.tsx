@@ -13,6 +13,7 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../../../test/render';
 import FogPanel from './FogPanel';
+import PlayersEyesSwitch from './PlayersEyesSwitch';
 import { playersView } from './playersView';
 import type { SceneFogControls } from './useSceneFog';
 
@@ -26,6 +27,9 @@ function controls(over: Partial<SceneFogControls> = {}): SceneFogControls {
     setEyes: vi.fn(),
     save: vi.fn(),
     refresh: vi.fn(),
+    reset: vi.fn(),
+    resetState: 'idle',
+    resetError: null,
     masks: null,
     ...over,
   };
@@ -36,8 +40,6 @@ describe('FogPanel', () => {
     const fog = controls({ fogOn: false });
     renderWithProviders(<FogPanel fog={fog} />);
     expect(screen.getByText('Игроки видят всю сцену.')).toBeInTheDocument();
-    // Без тумана смотреть глазами игроков нечего.
-    expect(screen.getByLabelText('Глазами игроков')).toBeDisabled();
     fireEvent.click(screen.getByLabelText('Туман войны'));
     expect(fog.save).toHaveBeenCalledWith({ enabled: true, sightRange: 60 });
   });
@@ -60,11 +62,36 @@ describe('FogPanel', () => {
     });
   });
 
-  it('switches to the players’ eyes', () => {
+  it('turns the fog off only after the warning', () => {
     const fog = controls();
     renderWithProviders(<FogPanel fog={fog} />);
+    fireEvent.click(screen.getByLabelText('Туман войны'));
+    expect(fog.save).not.toHaveBeenCalled();
+    expect(screen.getByText('Выключить туман войны?')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Оставить' }));
+    expect(
+      screen.queryByText('Выключить туман войны?'),
+    ).not.toBeInTheDocument();
+    expect(fog.save).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByLabelText('Туман войны'));
+    fireEvent.click(screen.getByRole('button', { name: 'Выключить' }));
+    expect(fog.save).toHaveBeenCalledWith({ enabled: false, sightRange: 60 });
+  });
+});
+
+describe('PlayersEyesSwitch', () => {
+  it('switches to the players’ eyes', () => {
+    const fog = controls();
+    renderWithProviders(<PlayersEyesSwitch fog={fog} />);
     fireEvent.click(screen.getByLabelText('Глазами игроков'));
     expect(fog.setEyes).toHaveBeenCalledWith(true);
+  });
+
+  it('is off without the fog', () => {
+    renderWithProviders(<PlayersEyesSwitch fog={controls({ fogOn: false })} />);
+    // Без тумана смотреть глазами игроков нечего.
+    expect(screen.getByLabelText('Глазами игроков')).toBeDisabled();
   });
 });
 
@@ -80,7 +107,16 @@ describe('playersView', () => {
       { op: 'fillBox', from: [0, 0, 0], to: [7, 0, 7], block: 'stone' },
     ]);
     const objects: MapObject[] = [
-      { id: 1, at: [0, 1, 0], hidden: false, kind: 'start', facing: 0 },
+      {
+        id: 1,
+        at: [0, 1, 0],
+        hidden: false,
+        kind: 'item',
+        itemId: '00000000-0000-4000-8000-0000000000aa',
+        quantity: 1,
+      },
+      // Старт в открытом — разметка мастера, игрок её не видит.
+      { id: 9, at: [1, 1, 0], hidden: false, kind: 'start', facing: 0 },
       {
         id: 2,
         at: [1, 1, 0],

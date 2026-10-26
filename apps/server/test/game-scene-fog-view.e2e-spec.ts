@@ -10,7 +10,7 @@ import {
   type MapObject,
 } from 'shared';
 import { pngImage } from './support/character-fixture.js';
-import { createSceneGame } from './support/scene-fixture.js';
+import { createSceneGame, startSession } from './support/scene-fixture.js';
 import {
   join,
   listenForSockets,
@@ -76,10 +76,16 @@ describe('game scene fog: player view (e2e)', () => {
       .put(`/api/games/${g.gameId}/scenes/open`)
       .send({ open: true })
       .expect(200);
+    await startSession(m, g.gameId);
     await m
       .put(`/api/games/${g.gameId}/scenes/${sceneId}/fog`)
       .send({ enabled: true, sightRange: 5 })
       .expect(200);
+    // Туман у новой сцены включён сразу (замечания после первой партии, 2026-10-26), и
+    // фигурка уже открыла всё на 60 футов вокруг; сброс оставляет видимое на 5.
+    await m
+      .post(`/api/games/${g.gameId}/scenes/${sceneId}/fog/reset`)
+      .expect(201);
     const all = (await view(m, g.gameId)).objects;
     const idOf = (kind: MapObject['kind']) =>
       all.find((o) => o.kind === kind)!.id;
@@ -105,7 +111,8 @@ describe('game scene fog: player view (e2e)', () => {
     expect(cellIn(player, [6, 0, 6])).toBe(0);
     expect(player.chunks.some((c) => c.cy === 1)).toBe(false);
     expect(player.fog?.explored.length).toBeGreaterThan(0);
-    expect(kinds(player.objects)).toEqual(['monster', 'start']);
+    // Старт — разметка мастера, игроку не уходит.
+    expect(kinds(player.objects)).toEqual(['monster']);
     // Справочник — только для отправленного: НПС и верёвки в нём нет.
     expect(Object.keys(player.refs.npcs)).toEqual([]);
     expect(Object.keys(player.refs.items)).toEqual([]);
@@ -172,9 +179,30 @@ describe('game scene fog: player view (e2e)', () => {
     message = edit();
     await g.ops([{ op: 'moveObject', id: goblin, at: [5, 1, 5] }]);
     expect((await message).changes.objects).toBeUndefined();
-    expect(kinds((await view(g.player.agent, g.gameId)).objects)).toEqual([
-      'start',
+    expect(kinds((await view(g.player.agent, g.gameId)).objects)).toEqual([]);
+  });
+
+  it('новый для сцены блок закрывает вид уже в той правке, что его ставит', async () => {
+    const g = await fogged('gfv_palette');
+    // Фигурка на старте в каменном углу: стены по x = 1 и z = 1.
+    await g.ops([
+      { op: 'fillBox', from: [1, 1, 0], to: [1, 3, 1], block: 'stone' },
+      { op: 'fillBox', from: [0, 1, 1], to: [1, 3, 1], block: 'stone' },
     ]);
+    await g.m
+      .put(`/api/games/${g.gameId}/scenes/${g.sceneId}/fog`)
+      .send({ enabled: true, sightRange: 40 })
+      .expect(200);
+    // Одной правкой: проём в стене z = 1 и кирпичная стена по z = 3 — кирпича в палитре
+    // сцены ещё нет. Пересчитай туман без него, лучи прошли бы сквозь новую стену.
+    await g.ops([
+      { op: 'fillBox', from: [0, 1, 1], to: [1, 3, 1], block: 'air' },
+      { op: 'fillBox', from: [0, 1, 3], to: [7, 3, 3], block: 'brick' },
+    ]);
+    const player = await view(g.player.agent, g.gameId);
+    expect(cellIn(player, [0, 0, 2])).not.toBe(0);
+    expect(cellIn(player, [0, 0, 5])).toBe(0);
+    expect(cellIn(player, [3, 0, 6])).toBe(0);
   });
 
   it('скрытого мастер вывел в тумане — игрок его не видит; невидимый не мешает ходу', async () => {
@@ -187,9 +215,7 @@ describe('game scene fog: player view (e2e)', () => {
     await g.ops([
       { op: 'updateObject', id: goblin, object: { hidden: false } },
     ]);
-    expect(kinds((await view(g.player.agent, g.gameId)).objects)).toEqual([
-      'start',
-    ]);
+    expect(kinds((await view(g.player.agent, g.gameId)).objects)).toEqual([]);
     // Гоблина группа не видит: ход игрока его не учитывает и кончается в его клетке —
     // будь гоблин виден, сервер отказал бы, и отказ выдал бы засаду.
     const figures = await g.m

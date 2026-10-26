@@ -256,9 +256,15 @@ describe('dnd MCP server', () => {
   });
 
   it('find_catalog ищет по виду и строке', async () => {
-    const api = vi
-      .fn()
-      .mockResolvedValue([{ id: MAP_ID, name: 'Гоблин', size: 'small' }]);
+    const api = vi.fn().mockResolvedValue([
+      {
+        id: MAP_ID,
+        name: 'Гоблин',
+        size: 'small',
+        // Картинка — для окна в браузере, нейросети её не отдаём.
+        image: { version: 1, width: 10, height: 10, thumbCrop: {} },
+      },
+    ]);
     const client = await connect(api as unknown as ApiCall);
 
     const result = await call(client, 'find_catalog', {

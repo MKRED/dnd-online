@@ -1,0 +1,103 @@
+/* Поиск в шапке по макету «Поиск 1. В шапке»: поле посередине, список под ним, страница
+   под шапкой притушена. */
+.wide {
+  flex: 1;
+  min-width: 0;
+  max-width: 560px;
+}
+
+/* Телефон: поле поверх всей шапки, вместо логотипа и кнопок. */
+.phone {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--mantine-spacing-md);
+  background: inherit;
+
+  & > * {
+    flex: 1;
+  }
+}
+
+.input {
+  height: 40px;
+  border-radius: 10px;
+  background: var(--mantine-color-body);
+}
+
+/* Под шапкой и над страницей с боковой панелью; список — выше (у Combobox z-index 300). */
+.overlay {
+  top: var(--app-shell-header-height, 60px);
+  z-index: 190;
+  background: rgba(0, 0, 0, 0.2);
+
+  @mixin dark {
+    background: rgba(0, 0, 0, 0.35);
+  }
+}
+
+.dropdown {
+  padding: 0;
+  border-radius: 12px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.groupLabelBox {
+  padding: 10px 14px 4px;
+
+  /* Линию после подписи рисует Mantine; в макете её нет, справа — «ещё N». */
+  &::after {
+    display: none;
+  }
+}
+
+.groupLabel {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+
+  & a {
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+  }
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  border-radius: 0;
+  font-size: var(--mantine-font-size-sm);
+
+  &[data-combobox-selected] {
+    background: var(--mantine-primary-color-light);
+    color: inherit;
+  }
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 0 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--mantine-color-default-border);
+
+  /* На телефоне подсказок по клавишам нет — ссылка остаётся справа. */
+  & > a {
+    margin-left: auto;
+  }
+}

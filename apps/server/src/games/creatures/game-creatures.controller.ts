@@ -8,13 +8,21 @@ import {
   ParseIntPipe,
   ParseUUIDPipe,
   Post,
+  Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard, type AuthenticatedRequest } from '../../auth/auth.guard.js';
 import { GameCharacterEffectDto } from '../characters/dto/character-effect.dto.js';
 import { MoveFigureDto } from '../figures/dto/figure.dto.js';
-import { CreatureChangeDto } from './dto/creature-change.dto.js';
+import {
+  CreatureChangeDto,
+  toCreatureChange,
+} from './dto/creature-change.dto.js';
+import {
+  CreaturePreparedDto,
+  CreatureSlotsDto,
+} from './dto/creature-spells.dto.js';
 import { GameCreaturesService } from './game-creatures.service.js';
 
 // Монстры и НПС активной сцены (docs/plan/done/game.md, этап 8): чтение, хиты и эффекты;
@@ -41,10 +49,41 @@ export class GameCreaturesController {
     @Param('objectId', ParseIntPipe) objectId: number,
     @Body() dto: CreatureChangeDto,
   ) {
-    return this.service.change(req.user.sub, id, objectId, {
-      kind: dto.kind,
-      amount: dto.amount,
-    });
+    return this.service.change(
+      req.user.sub,
+      id,
+      objectId,
+      toCreatureChange(dto),
+    );
+  }
+
+  // Ячейки и подготовка заклинаний экземпляра НПС (вариант А после первой партии).
+  @Post(':objectId/spell-slots')
+  @HttpCode(200)
+  spellSlots(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('objectId', ParseIntPipe) objectId: number,
+    @Body() dto: CreatureSlotsDto,
+  ) {
+    return this.service.spellSlots(req.user.sub, id, objectId, dto.expended);
+  }
+
+  @Put(':objectId/abilities/:abilityId')
+  prepared(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('objectId', ParseIntPipe) objectId: number,
+    @Param('abilityId', ParseUUIDPipe) abilityId: string,
+    @Body() dto: CreaturePreparedDto,
+  ) {
+    return this.service.prepared(
+      req.user.sub,
+      id,
+      objectId,
+      abilityId,
+      dto.prepared,
+    );
   }
 
   // Ход по пути и запас движения (docs/plan/done/creature-movement.md) — тоже ответ

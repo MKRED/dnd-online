@@ -3,6 +3,7 @@ import {
   packChangeset,
   type GameEventKind,
   type GameEventPayloads,
+  type GameEventVisibility,
   type MapOp,
   type PackedChangeset,
   type SceneEditResult,
@@ -39,6 +40,8 @@ export type SceneJournalEntry =
         GameEventPayloads['creature.moved']['result'],
         keyof SceneEditResult
       >;
+      // Видели ли ход игроки (creatures/creature-visibility.ts).
+      visibility: GameEventVisibility;
     }
   | { kind: 'scene.undone'; intent: { seq: number }; conflicts: number }
   | {
@@ -69,6 +72,15 @@ export async function commitSceneEdit(
     cells: applied.cells.length,
     objects: applied.objects?.length ?? 0,
   };
+  // Палитра — до записи журнала: запись пересчитывает туман войны, и блок нового для
+  // сцены типа без палитры был бы неизвестным и прозрачным — лучи прошли бы сквозь
+  // только что поставленную стену.
+  if (applied.paletteAdded.length > 0) {
+    await tx
+      .update(gameScenes)
+      .set({ palette: state.palette })
+      .where(eq(gameScenes.id, scene.id));
+  }
   const common = {
     actorId: masterId,
     as: asMaster,
@@ -88,6 +100,7 @@ export async function commitSceneEdit(
       kind: entry.kind,
       intent: entry.intent,
       result: { ...base, ...entry.move },
+      visibility: entry.visibility,
     });
   } else if (entry.kind === 'scene.undone') {
     await appendGameEvent(tx, gameId, {
@@ -108,7 +121,6 @@ export async function commitSceneEdit(
     .update(gameScenes)
     .set({
       seq: sceneSeq,
-      palette: state.palette,
       ...(state.objects && { nextObjectId: state.objects.nextId }),
     })
     .where(eq(gameScenes.id, scene.id));

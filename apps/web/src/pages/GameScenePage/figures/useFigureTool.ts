@@ -6,6 +6,7 @@ import {
   standHeight,
   type GameFigure,
   type GameFigures,
+  type GameMoveMode,
   type MapObjectRefsView,
   type Occupant,
   type Reach,
@@ -26,7 +27,8 @@ import { sceneOccupants } from './sceneOccupants';
 import { useFigureDragging } from './useFigureDragging';
 
 interface FigureToolOptions {
-  master: boolean;
+  // Мастер в «Правке»: ставит фигурку без пути и запаса, ставит и «Не на сцене».
+  free: boolean;
   state: MapViewState | null;
   refs: MapObjectRefsView | null;
   figures: GameFigures | null;
@@ -35,21 +37,25 @@ interface FigureToolOptions {
   onFigures: (figures: GameFigures) => void;
   // Куда тянут выбранную фигурку — остальным по сокету; null — отпустили.
   onDrag?: (characterId: string, at: Vec3 | null) => void;
+  // Ход отправлен: фигурка ждёт свой путь на месте (docs/plan/done/walk-animation.md).
+  onMoveStart?: (characterId: string, from: Vec3) => void;
 }
 
 // Выбранная фигурка на сцене игры (docs/plan/done/game.md, этап 7): куда она дойдёт на
 // оставшийся запас (плитки, как у «Хода» в редакторе), путь под курсором и ход по клику.
-// Мастер ставит выбранную фигурку или персонажа «Не на сцене» на любую свободную клетку.
+// Мастер в «Правке» ставит выбранную фигурку или персонажа «Не на сцене» на любую свободную
+// клетку; в «Игре» он ходит фигуркой по пути, как игрок (docs/plan/done/scene-page.md).
 export function useFigureTool({
-  master,
+  free,
   state,
   refs,
   figures,
   api,
   onFigures,
   onDrag,
+  onMoveStart,
 }: FigureToolOptions) {
-  // Персонаж, которого водят: фигурка на сцене или (у мастера) «Не на сцене».
+  // Персонаж, которого водят: фигурка на сцене или (у мастера в «Правке») «Не на сцене».
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +63,7 @@ export function useFigureTool({
   const figure: GameFigure | null =
     figures?.figures.find((f) => f.character.id === selectedId) ?? null;
   const placing =
-    master && !figure
+    free && !figure
       ? (figures?.unplaced.find((c) => c.id === selectedId) ?? null)
       : null;
   const active = figure !== null || placing !== null;
@@ -97,14 +103,17 @@ export function useFigureTool({
         body: walkBody(state, figure.at, figure.size),
         ok: standHeight(state, figure.at, figure.size) !== null,
       },
-      tiles: reachTiles(
-        state,
-        reach.filter((r) => r.end),
-        figure.size,
-      ),
+      // В «Правке» фигурка встаёт куда угодно: плитки хода только сбивали бы.
+      tiles: free
+        ? []
+        : reachTiles(
+            state,
+            reach.filter((r) => r.end),
+            figure.size,
+          ),
       budget: Math.max(left.walk, left.climb ?? 0),
     };
-  }, [state, figure, reach, left]);
+  }, [state, figure, reach, left, free]);
 
   const preview = useCallback(
     (cells: PickedCells) =>
@@ -115,10 +124,10 @@ export function useFigureTool({
         cells,
         FIGURE_SIZE,
         others,
-        master,
+        free,
         figure?.at ?? null,
       ),
-    [state, reach, others, master, figure],
+    [state, reach, others, free, figure],
   );
 
   // Правки по одной: пока запрос в пути, новые не принимаются. Ответ — фигурки глазами
@@ -142,8 +151,15 @@ export function useFigureTool({
   const pick = useCallback(
     (cells: PickedCells) => {
       const hover = preview(cells);
-      if (!selectedId || !hover || hover.kind === 'blocked') return;
+      if (!selectedId) return;
+      // Щелчок мимо подсвеченных клеток снимает выбор: на телефоне нет Esc, и ждут именно
+      // этого (2026-10-24).
+      if (!hover || hover.kind === 'blocked') {
+        setSelectedId(null);
+        return;
+      }
       if (hover.kind === 'move') {
+        if (figure && !busy) onMoveStart?.(figure.character.id, figure.at);
         run(() => api.move(selectedId, hover.anchor), 'Не удалось сделать ход');
       } else {
         run(
@@ -152,7 +168,7 @@ export function useFigureTool({
         );
       }
     },
-    [selectedId, preview, api, run],
+    [selectedId, preview, api, run, figure, busy, onMoveStart],
   );
 
   const dragging = useFigureDragging({
@@ -179,10 +195,21 @@ export function useFigureTool({
     [active, pick, preview, onHover],
   );
 
+  // Выбор — только значением: страница сцены подменяет его своим (снимает выбранное
+  // существо), и тип не должен обещать функцию-обновитель.
+  const select: (characterId: string | null) => void = setSelectedId;
+
   return {
     selectedId,
-    select: setSelectedId,
+    select,
     round: () => run(api.round, 'Не удалось начать новый раунд'),
+    mode: (mode: GameMoveMode) =>
+      run(
+        () => api.mode(mode),
+        mode === 'tactical'
+          ? 'Не удалось начать бой'
+          : 'Не удалось закончить бой',
+      ),
     allowance: (characterId: string, change: 'refresh' | 'dash') =>
       run(
         () => api.allowance(characterId, change),

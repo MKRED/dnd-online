@@ -23,6 +23,7 @@ export const GAME_SOCKET = {
   sceneEdit: 'game:scene-edit',
   sceneFog: 'game:scene-fog',
   figureDragged: 'game:figure-dragged',
+  walked: 'game:walked',
 } as const;
 
 // События, после которых туман войны активной сцены пересчитывается (docs/plan/done/fog-of-war.md,
@@ -34,6 +35,7 @@ export const FOG_EVENT_KINDS: ReadonlySet<GameEventKind> =
     'scene.activated',
     'scene.restarted',
     'scene.fog',
+    'scene.fogReset',
     // Правки мастера: блоки (снесли стену — за ней видно), объекты, отмена и возврат.
     'scene.edited',
     'scene.undone',
@@ -67,6 +69,7 @@ export const FIGURE_KINDS: readonly GameEventKind[] = [
   'figure.moved',
   'figure.placed',
   'figures.round',
+  'game.mode',
   'figure.refreshed',
   'figure.dashed',
 ];
@@ -83,6 +86,8 @@ export const CREATURE_KINDS: readonly GameEventKind[] = [
   'creature.effect_removed',
   'creature.refreshed',
   'creature.dashed',
+  'creature.slots_changed',
+  'creature.prepared',
 ];
 
 // Сколько пропущенных записей журнала мастер получает при возвращении; больше —
@@ -171,6 +176,24 @@ export interface GameFigureDragMessage {
 // пропадает (тянувший мог отключиться посреди перетаскивания).
 export const FIGURE_DRAG_INTERVAL_MS = 100;
 export const FIGURE_DRAG_STALE_MS = 2000;
+
+// Кто прошёл путь: фигурка персонажа или монстр и НПС сцены (объект карты).
+export type GameWalker =
+  | { kind: 'figure'; characterId: string }
+  | { kind: 'creature'; objectId: number };
+
+// Ход по пути (docs/plan/done/walk-animation.md): клетки, по которым фигурку или существо
+// показать идущим. Приходит до правки сцены и «game:changed» того же хода: клиент успевает
+// запомнить существо до того, как правка уберёт его из поля зрения. seq — номер записи
+// журнала. Игроку путь существа — только по клеткам, где его видит группа; null — кусок
+// пути вне поля зрения (подряд идущие скрытые клетки — один null).
+export interface GameWalkMessage {
+  gameId: string;
+  sceneId: string;
+  seq: number;
+  walker: GameWalker;
+  path: (Vec3 | null)[];
+}
 
 // Комната закрыта для этого клиента: игру удалили или его убрали из закрытой игры.
 export interface GameClosedMessage {

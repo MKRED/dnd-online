@@ -1,0 +1,183 @@
+/* Панель справа на всю высоту страницы; содержимое вкладки прокручивается само, шапка и
+   вкладки остаются на месте. */
+.panel {
+  flex: 0 0 22rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--mantine-color-default-border);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-xs)
+    var(--mantine-spacing-xs) 6px;
+}
+
+.heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--mantine-font-size-md);
+  font-family: var(--mantine-font-family-headings);
+  font-weight: 700;
+}
+
+/* Вкладки — плотная «таблетка», как SegmentedControl, но с ролью навигации. */
+.tabs {
+  display: flex;
+  gap: 2px;
+  margin: 0 var(--mantine-spacing-sm);
+  padding: 3px;
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-default-hover);
+}
+
+.tab {
+  flex: 1;
+  height: 32px;
+  border-radius: var(--mantine-radius-sm);
+  text-align: center;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  color: var(--mantine-color-dimmed);
+}
+
+.tab:hover {
+  color: var(--mantine-color-text);
+}
+
+.tab[data-active] {
+  background: var(--mantine-color-body);
+  color: var(--mantine-color-text);
+  box-shadow: var(--mantine-shadow-xs);
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: var(--mantine-spacing-sm);
+}
+
+/* Свёрнутая панель: полоса значков вкладок, подсказки и «В лобби» внизу. */
+.rail {
+  flex: 0 0 3.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: var(--mantine-spacing-sm) 0;
+  border-left: 1px solid var(--mantine-color-default-border);
+}
+
+.railLine {
+  width: 28px;
+  height: 1px;
+  margin: 4px 0;
+  background: var(--mantine-color-default-border);
+}
+
+.railSpacer {
+  flex: 1;
+}
+
+/* На телефоне панель под сценой: высоту задаёт ручка (style в ScenePanel, доля страницы
+   из PANEL_SIZES), свёрнутая — одна шапка. Пока тянут, доля любая: пределы держат её в
+   пяти положениях. */
+@media (max-width: 48em) {
+  .panel {
+    flex: 0 0 auto;
+    min-height: 140px;
+    max-height: 60%;
+    border-left: none;
+    border-top: 1px solid var(--mantine-color-default-border);
+  }
+
+  .panel[data-collapsed] {
+    min-height: 0;
+  }
+}
+
+/* Ручка над шапкой панели на телефоне: полоска посередине, точки положений справа. */
+.grip {
+  flex: none;
+  position: relative;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+.gripBar {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--mantine-color-dimmed);
+  opacity: 0.6;
+}
+
+.grip:hover .gripBar,
+.grip:focus-visible .gripBar {
+  opacity: 1;
+  background: var(--mantine-primary-color-filled);
+}
+
+.grip:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+.gripSizes {
+  position: absolute;
+  right: var(--mantine-spacing-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 4px;
+}
+
+.gripSizes > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid var(--mantine-color-dimmed);
+}
+
+.gripSizes > span[data-on] {
+  border-color: var(--mantine-primary-color-filled);
+  background: var(--mantine-primary-color-filled);
+}
+
+/* Группа вкладки «Сцена» (замечания после первой партии, вариант Б): рамка с подписью,
+   в бою рамка «Боя» цвета темы. */
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  padding: 8px 10px 10px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+}
+
+.groupHot {
+  border-color: var(--mantine-primary-color-filled);
+}
+
+.groupTitle {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+}

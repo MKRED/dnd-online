@@ -14,6 +14,8 @@ export interface FigureDragHandlers {
   onRelease?: (dragged: boolean) => void;
   // Касание (на телефоне перетаскивания нет) — выбрать или снять выбор.
   onSelect?: (id: string) => void;
+  // Двойной щелчок — окно карточки персонажа (мастер в «Просмотре» «Правки»).
+  onOpen?: (id: string) => void;
 }
 
 // Перетаскивание фигурки (docs/plan/done/game.md, этап 7) — как объекта в редакторе
@@ -64,6 +66,13 @@ export function useFigureDrag(handlers: FigureDragHandlers) {
         release.current = null;
       };
     },
+    // Двойной щелчок — окно, а не центр камеры за фигуркой.
+    ...(handlers.onOpen && {
+      onDoubleClick: (event: ThreeEvent<MouseEvent>) => {
+        event.stopPropagation();
+        latest.current.onOpen?.(id);
+      },
+    }),
     // Щелчок по фигурке — не щелчок по клетке за ней.
     onClick: (event: ThreeEvent<MouseEvent>) => {
       if (!selectable) return;

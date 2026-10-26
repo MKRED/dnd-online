@@ -1,0 +1,81 @@
+/* Сверху по центру сцены: слева полоса отмены, справа «Центр» и ползунок уровней. */
+.overlay {
+  position: absolute;
+  top: var(--mantine-spacing-xs);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(22rem, calc(100% - 2 * var(--mantine-spacing-md)));
+  z-index: 3;
+  pointer-events: none;
+}
+
+.banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-primary-color-filled);
+  color: var(--mantine-primary-color-contrast);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: var(--mantine-shadow-sm);
+}
+
+/* Вне встречи — спокойная плашка: ничего не случилось, просто ходить нельзя. */
+.watch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-body);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--mantine-shadow-sm);
+}
+
+.watch svg {
+  color: var(--mantine-color-dimmed);
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px 8px 12px;
+  border-left: 4px solid var(--mantine-primary-color-filled);
+  pointer-events: auto;
+}
+
+/* На телефоне у игрока сверху справа только «Центр» (макет «Плашка на телефоне», вариант А):
+   плашка встаёт слева в ту же строку и той же высоты, уведомление — под строкой, не заходя
+   под ползунок уровней справа. */
+@media (max-width: 48em) {
+  .overlay {
+    left: var(--mantine-spacing-xs);
+    right: calc(var(--mantine-spacing-xs) * 2 + 2.5rem);
+    width: auto;
+    transform: none;
+    align-items: flex-start;
+  }
+
+  .banner,
+  .watch {
+    height: 28px;
+    padding: 0 10px;
+  }
+
+  /* Без плашки уведомление всё равно ниже строки «Центра». */
+  .notice:first-child {
+    margin-top: calc(28px + 8px);
+  }
+}

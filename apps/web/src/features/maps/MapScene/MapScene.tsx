@@ -1,7 +1,13 @@
 import { useComputedColorScheme } from '@mantine/core';
 import { MapControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { useCallback, useEffect, useState, type RefObject } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type RefObject,
+  type ReactNode,
+} from 'react';
 import {
   BASE_BLOCKS,
   type FogMasks,
@@ -18,9 +24,10 @@ import type { WalkScene } from '../walkTest';
 import WalkLayer from './WalkLayer';
 import CameraFocus, { type CameraFocusApi } from './CameraFocus';
 import CameraRig from './CameraRig';
+import CameraWatch from './CameraWatch';
 import CenterHint from './CenterHint';
 import CursorReadout from './CursorReadout';
-import { createHoverStore } from './hoverStore';
+import { createHoverStore, type HoverStore } from './hoverStore';
 import EditLayer from './EditLayer';
 import FigureLayer, {
   type FigureDragHandlers,
@@ -35,6 +42,7 @@ import ObjectLayer, {
   type SceneCreaturesView,
 } from './objects';
 import type { ObjectImagePaths } from './objects/objectImages';
+import type { SceneWalks } from './walks';
 import ResizePreview from './ResizePreview';
 import { atlasFor } from '../render/textures/atlas';
 import { releaseBlockMaterials } from './blockMaterial';
@@ -54,6 +62,8 @@ interface MapSceneProps {
   cutY: number;
   // Начальная камера (из адреса страницы); дальше ей управляет пользователь.
   camera: CameraPlacement;
+  // Где встала камера, когда её перестали двигать; держать стабильной функцией.
+  onCameraChange?: (placement: CameraPlacement) => void;
   // Набираемое изменение размера: новая граница видна до «Применить».
   resizePreview: ResizeOp['grow'] | null;
   // Инструмент редактора; null — только просмотр.
@@ -86,6 +96,16 @@ interface MapSceneProps {
   // Туман войны игрока (docs/plan/done/fog-of-war.md, этап 5): блоки и предметы вне поля
   // зрения — серые. Неоткрытого в карте нет вовсе: его не присылает сервер.
   fog?: FogMasks | null;
+  // Клетка под курсором для страницы: её панель показывает блок под курсором и подсчёт
+  // области (docs/plan/done/scene-page.md, этап 3). Без него сцена держит своё хранилище.
+  hover?: HoverStore;
+  // Строка координат внизу; без него — есть (редактор карты). Сцена игры в «Игре» её
+  // прячет (docs/plan/done/scene-page.md).
+  showReadout?: boolean;
+  // Плашка инструмента в одной строке с координатами.
+  readoutAfter?: ReactNode;
+  // Ходы фигурок, монстров и НПС по пути на сцене игры (docs/plan/done/walk-animation.md).
+  walks?: SceneWalks;
 }
 
 function MapScene({
@@ -93,6 +113,7 @@ function MapScene({
   refs,
   cutY,
   camera,
+  onCameraChange,
   resizePreview,
   editor,
   walk,
@@ -107,6 +128,10 @@ function MapScene({
   figureDrag,
   creatures,
   fog = null,
+  hover: pageHover,
+  showReadout = true,
+  readoutAfter,
+  walks,
 }: MapSceneProps) {
   const chunks = useChunkMeshes(map, cutY, fog?.visible ?? null);
   // Атлас каталога этой карты: сборка чанков выше уже выдала места своим группам.
@@ -117,7 +142,8 @@ function MapScene({
   // Центр камеры живёт внутри Canvas (CameraFocus), а подсказка с кнопками и клавиши
   // Q/E — снаружи, в обычном DOM; связывает их ref focus.
   const [centerLevel, setCenterLevel] = useState<number | null>(null);
-  const [hover] = useState(createHoverStore);
+  const [ownHover] = useState(createHoverStore);
+  const hover = pageHover ?? ownHover;
   // Миниатюры объектов догрузились (или не загрузились) — только после этого первый
   // кадр считается готовым, иначе на снимке пустые карточки.
   const [imagesSettled, setImagesSettled] = useState(false);
@@ -146,6 +172,7 @@ function MapScene({
           size={map.size}
           onFocus={focusOn}
           readout={hover}
+          map={map}
         >
           {[...chunks].map(([key, { meshes }]) => (
             <group key={key}>
@@ -180,6 +207,7 @@ function MapScene({
                 hideContents={hideContainerContents}
                 creatures={creatures}
                 fog={fog}
+                walks={walks}
               />
               {figures && (
                 <FigureLayer
@@ -187,6 +215,7 @@ function MapScene({
                   figures={figures}
                   cutY={cutY}
                   ghosts={figureGhosts}
+                  walks={walks}
                   {...figureDrag}
                 />
               )}
@@ -203,11 +232,17 @@ function MapScene({
         <CameraRig placement={camera} />
         {/* После CameraRig: первый уровень для подсказки берётся из уже поставленной камеры. */}
         <CameraFocus apiRef={focus} onLevel={setCenterLevel} />
+        {onCameraChange && <CameraWatch onChange={onCameraChange} />}
         {imagesSettled && <FirstFrame onReady={onReady} />}
         {settings.frameLimit > 0 && <FrameLimiter fps={settings.frameLimit} />}
       </Canvas>
       <CenterHint level={centerLevel} onShift={shiftLevel} />
-      <CursorReadout hover={hover} editor={editor} />
+      <CursorReadout
+        hover={hover}
+        editor={editor}
+        show={showReadout}
+        after={readoutAfter}
+      />
     </div>
   );
 }

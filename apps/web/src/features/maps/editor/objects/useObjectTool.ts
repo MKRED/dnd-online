@@ -16,21 +16,29 @@ import type { MapViewState } from '../../mapStateFromChunks';
 import {
   moveOp,
   objectCell,
+  onTopCell,
+  rulesMap,
   placeBody,
   placeExtent,
   rightFacing,
   type ObjectChoice,
 } from './objectPlacement';
 import { useShiftKey } from './useShiftKey';
+import { choiceLook } from './choiceLook';
+import { objectInScope, type ObjectScope } from './objectScope';
 
 interface ObjectToolOptions {
   state: MapViewState | null;
   refs: MapObjectRefsView | null;
   applyOps: (ops: MapOp[]) => void;
+  // Какие объекты инструмент берёт; без него — все (редактор карты).
+  scope?: ObjectScope;
 }
 
 // Что сцене нужно от инструмента: выделение и перетаскивание объектов.
 export interface ObjectToolScene {
+  // Объект, который инструмент выделяет и тянет; остальные щелчок пропускает к клеткам.
+  accepts: (id: number) => boolean;
   selectedId: number | null;
   select: (id: number) => void;
   // Нажали мышью на объект: перетаскивание до отпускания.
@@ -44,7 +52,17 @@ export interface ObjectToolScene {
 // Клик по пустой клетке ставит выбранное, а при выделенном объекте — только снимает
 // выделение: иначе после правки свойств следующий клик мимо поставил бы лишний
 // объект. Поставленный объект не выделяется — так ставят несколько подряд.
-export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
+//
+// «Существа» (scope creatures, сцена игры): щелчок по клетке при выбранном существе
+// переставляет его туда и оставляет выбранным — так на телефоне двигают касанием, без
+// перетаскивания; поставленное существо снимает выбор «что ставить» (замечания после
+// первой партии, 2026-10-26).
+export function useObjectTool({
+  state,
+  refs,
+  applyOps,
+  scope = 'all',
+}: ObjectToolOptions) {
   // null — инструмент «Поставить» ставит блок (этап 10).
   const [choice, setChoice] = useState<ObjectChoice | null>(null);
   const [facing, setFacing] = useState<Facing>(0);
@@ -58,9 +76,10 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
   const shift = useShiftKey();
 
   // Выделенный объект ищем в карте на каждой отрисовке: отмена постановки или чужое
-  // удаление снимает выделение само.
-  const selected =
+  // удаление снимает выделение само. Чужой инструменту объект не выделяется.
+  const found =
     (selectedId !== null && state?.objects.byId.get(selectedId)) || null;
+  const selected = found && objectInScope(scope, found) ? found : null;
   const objectRefs = useMemo(
     () => (refs ? objectRefsFromView(refs) : null),
     [refs],
@@ -78,16 +97,27 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
   const settings = { choice, facing, hidden };
   const dragged =
     (draggingId !== null && state?.objects.byId.get(draggingId)) || null;
-  const carried = dragged ?? (moving ? selected : null);
+  // У «Существ» выбранное и так ставится щелчком по клетке — рамка под курсором в его место.
+  const carried =
+    dragged ?? (moving || scope === 'creatures' ? selected : null);
   const [ex, ey, ez] = carried ? extentOf(carried) : placeExtent(settings);
   // Один и тот же массив, пока место не изменилось: по нему пересобирается редактор сцены.
   const extent = useMemo<Vec3>(() => [ex, ey, ez], [ex, ey, ez]);
+
+  // Полупрозрачное ставящееся под курсором; при выделенном или переносимом объекте щелчок
+  // ставить не будет — и призрака нет.
+  const ghost = useMemo(
+    () =>
+      choice && !selected && !carried ? choiceLook(choice, facing) : undefined,
+    [choice, facing, selected, carried],
+  );
 
   const edit = (op: MapOp) => applyOps([op]);
   const move = (object: MapObject, cell: Vec3) => {
     if (!state) return;
     const force = shift.current && object.kind === 'furniture';
-    const op = moveOp(object, cell, extentOf(object), state.size, force);
+    const at = onTopCell(rulesMap(state, objectRefs), object.kind, cell);
+    const op = moveOp(object, at, extentOf(object), state.size, force);
     if (op) edit(op);
   };
 
@@ -98,23 +128,54 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
       setMoving(false);
       return;
     }
+    if (selected && scope === 'creatures') {
+      move(selected, cells.place);
+      return;
+    }
     if (selected) {
       setSelectedId(null);
       return;
     }
     const body = placeBody(settings);
-    const at = objectCell(cells.place, extent, state.size);
+    const place = body
+      ? onTopCell(rulesMap(state, objectRefs), body.kind, cells.place)
+      : cells.place;
+    const at = objectCell(place, extent, state.size);
     const force = shift.current && body?.kind === 'furniture';
-    if (body && at)
-      edit({ op: 'placeObject', at, object: body, ...(force && { force }) });
+    if (!body || !at) return;
+    edit({ op: 'placeObject', at, object: body, ...(force && { force }) });
+    // Существ ставят по одному: следующий щелчок не поставит второго такого же
+    // (пользователь, 2026-10-26).
+    if (scope === 'creatures') setChoice(null);
   };
 
-  const select = useCallback((id: number) => {
-    setSelectedId(id);
-    setMoving(false);
-  }, []);
+  // У «Существ» одно из двух: выбранное существо двигают, ставящееся ставят — выбор
+  // одного снимает другое, чтобы щелчок по клетке не гадал.
+  const select = useCallback(
+    (id: number) => {
+      setSelectedId(id);
+      setMoving(false);
+      if (scope === 'creatures') setChoice(null);
+    },
+    [scope],
+  );
+  const choose = useCallback(
+    (next: ObjectChoice | null) => {
+      setChoice(next);
+      if (next && scope === 'creatures') setSelectedId(null);
+    },
+    [scope],
+  );
 
+  const accepts = useCallback(
+    (object: MapObject) => objectInScope(scope, object),
+    [scope],
+  );
   const scene: ObjectToolScene = {
+    accepts: (id) => {
+      const object = state?.objects.byId.get(id);
+      return object !== undefined && accepts(object);
+    },
     selectedId: selected?.id ?? null,
     select,
     grab: (id) => {
@@ -128,9 +189,11 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
   };
 
   return {
+    scope,
+    accepts,
     settings,
     // Что ставить: объект или null — блок (выбор в окне «Что поставить»).
-    choose: setChoice,
+    choose,
     setFacing,
     setHidden,
     selected,
@@ -138,6 +201,7 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
     moving,
     setMoving,
     extent,
+    ghost,
     pick,
     scene,
     extentOf,
@@ -186,6 +250,12 @@ export function useObjectTool({ state, refs, applyOps }: ObjectToolOptions) {
       if (!selected) return;
       edit({ op: 'removeObject', id: selected.id });
       setSelectedId(null);
+    },
+    // Снять и выделенное, и ставящееся (у «Существ» — выбрали героя).
+    clear: () => {
+      setSelectedId(null);
+      setMoving(false);
+      setChoice(null);
     },
     // Esc: сначала бросает «Перенести», потом снимает выделение.
     escape: () => {

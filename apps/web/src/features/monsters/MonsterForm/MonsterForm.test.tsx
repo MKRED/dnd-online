@@ -7,11 +7,14 @@ import { renderWithProviders } from '../../../test/render';
 import MonsterForm from './MonsterForm';
 
 function renderForm(onSaved = vi.fn()) {
-  const fetchMock = vi
-    .fn<typeof fetch>()
-    .mockResolvedValue(
-      new Response(JSON.stringify(sampleMonster), { status: 201 }),
-    );
+  // Список своих моделей для раздела «3D-модель на карте» — пустой.
+  const fetchMock = vi.fn<typeof fetch>((url) =>
+    Promise.resolve(
+      (url as string).includes('/voxel-models')
+        ? new Response('[]')
+        : new Response(JSON.stringify(sampleMonster), { status: 201 }),
+    ),
+  );
   vi.stubGlobal('fetch', fetchMock);
   renderWithProviders(
     <MonsterForm
@@ -37,7 +40,9 @@ describe('MonsterForm', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Создать' }));
 
     expect(onSaved).toHaveBeenCalledWith(sampleMonster);
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchMock.mock.calls.find(([target]) =>
+      /\/monsters$/.test(target as string),
+    )!;
     expect(url).toMatch(/\/monsters$/);
     expect(JSON.parse(init?.body as string)).toEqual({
       name: 'Крыса',
@@ -46,6 +51,7 @@ describe('MonsterForm', () => {
       isPublic: false,
       category: 'humanoid',
       role: 'regular',
+      model: null,
       statBlock: DEFAULT_MONSTER_STAT_BLOCK,
     });
   });
@@ -76,6 +82,8 @@ describe('MonsterForm', () => {
     expect(summary).toHaveTextContent('Монстр не сохранён — исправьте поля');
     expect(summary).toHaveTextContent('Название — название — от 1 до 100');
     expect(summary).toHaveTextContent('Класс доспеха — обязательное поле');
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(
+      fetchMock.mock.calls.filter(([url]) => /\/monsters/.test(url as string)),
+    ).toHaveLength(0);
   });
 });

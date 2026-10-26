@@ -16,6 +16,8 @@ const PAINTING = '00000000-0000-4000-8000-0000000000a2';
 const LAMP = '00000000-0000-4000-8000-0000000000a3';
 const FOREIGN = '00000000-0000-4000-8000-0000000000a4';
 const GATE = '00000000-0000-4000-8000-0000000000a5';
+const CHEST = '00000000-0000-4000-8000-0000000000a6';
+const GOLD = '00000000-0000-4000-8000-0000000000b1';
 
 function refs(): ObjectRefs {
   const r = emptyObjectRefs();
@@ -27,6 +29,7 @@ function refs(): ObjectRefs {
     cells: { '0,0,0': 'stand', '1,0,0': 'stand' },
     voxels: null,
     positions: [],
+    container: null,
     usable: true,
   });
   r.furniture.set(PAINTING, {
@@ -36,6 +39,7 @@ function refs(): ObjectRefs {
     cells: {},
     voxels: null,
     positions: [],
+    container: null,
     usable: true,
   });
   r.furniture.set(LAMP, {
@@ -45,6 +49,7 @@ function refs(): ObjectRefs {
     cells: {},
     voxels: null,
     positions: [],
+    container: null,
     usable: true,
   });
   r.furniture.set(FOREIGN, {
@@ -54,6 +59,7 @@ function refs(): ObjectRefs {
     cells: {},
     voxels: null,
     positions: [],
+    container: null,
     usable: false,
   });
   // Ворота в проёме (этап 8г): закрытые — 1×1×1, открытые — створка уходит в соседнюю
@@ -68,8 +74,21 @@ function refs(): ObjectRefs {
       { name: 'Закрыты', ...closed, size: [1, 1, 1] },
       { name: 'Открыты', size: [2, 1, 1], cells: {}, voxels: null },
     ],
+    container: null,
     usable: true,
   });
+  // Сундук-обстановка на 2 фнт. (этап 11) и монета в 0,5 фнт.
+  r.furniture.set(CHEST, {
+    name: 'Сундук',
+    mount: 'floor',
+    size: [1, 1, 1],
+    cells: {},
+    voxels: null,
+    positions: [],
+    container: { capacity: 2, lockDc: 15 },
+    usable: true,
+  });
+  r.items.set(GOLD, 0.5);
   return r;
 }
 
@@ -251,5 +270,30 @@ describe('положения двери (этап 8г)', () => {
     expect(map.objects.byId.get(1)).toMatchObject({ locked: true });
     edit(map, [{ op: 'updateObject', id: 1, object: { locked: false } }]);
     expect(map.objects.byId.get(1)).toMatchObject({ locked: false });
+  });
+});
+
+describe('контейнер-обстановка на карте (этап 11)', () => {
+  const coins = (quantity: number) => [{ itemId: GOLD, quantity }];
+
+  it('ставится с названием и содержимым, груз — по вместимости записи', () => {
+    const map = floorMap();
+    edit(map, [
+      place([1, 1, 1], CHEST, { name: 'Сундук казначея', items: coins(4) }),
+    ]);
+    expect(map.objects.byId.get(1)).toMatchObject({
+      name: 'Сундук казначея',
+      items: coins(4),
+    });
+    expect(() =>
+      edit(map, [{ op: 'updateObject', id: 1, object: { items: coins(5) } }]),
+    ).toThrow(/Не влезет в «Сундук казначея»: 2,5 из 2/);
+  });
+
+  it('у обычной обстановки содержимого нет', () => {
+    const map = floorMap();
+    expect(() =>
+      edit(map, [place([1, 1, 1], TABLE, { items: coins(1) })]),
+    ).toThrow(/не контейнер/);
   });
 });

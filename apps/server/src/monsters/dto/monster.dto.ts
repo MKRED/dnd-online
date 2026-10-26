@@ -1,9 +1,11 @@
-import { IsIn, ValidateBy } from 'class-validator';
+import { IsIn, IsOptional, ValidateBy } from 'class-validator';
 import {
   MONSTER_ROLES,
   MONSTER_TYPES,
+  isMonsterModelLink,
   isMonsterStatBlock,
   monsterStatBlockProblem,
+  type MonsterModelLink,
   type MonsterRole,
   type MonsterStatBlock,
   type MonsterType,
@@ -30,4 +32,17 @@ export class MonsterDto extends CatalogEntryDto {
 
   @IsIn(MONSTER_ROLES, { message: 'Роль монстра — обычный или уникальный' })
   role: MonsterRole;
+
+  // 3D-модель (docs/plan/done/monster-models.md): нет поля — ссылка прежняя, null — без модели.
+  // Своя ли модель, проверяет сервис в транзакции записи.
+  @IsOptional()
+  @ValidateBy({
+    name: 'monsterModel',
+    validator: {
+      validate: isMonsterModelLink,
+      defaultMessage: () =>
+        'Модель монстра задана неверно: нужен id своей модели и размер от ×0,25 до ×4',
+    },
+  })
+  model?: MonsterModelLink | null;
 }

@@ -68,6 +68,7 @@ const refs: MapObjectRefsView = {
         { name: 'Закрыта', model: { ...doorModel, size: [1, 2, 1] } },
         { name: 'Открыта', model: { ...doorModel, size: [1, 2, 1] } },
       ],
+      container: null,
     },
   },
 };

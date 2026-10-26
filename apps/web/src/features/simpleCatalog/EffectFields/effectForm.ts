@@ -22,7 +22,9 @@ export interface EffectValues {
   saveEnds: SaveEndsValues;
 }
 
-export function toEffectValues(entry?: EffectFields): EffectValues {
+export function toEffectValues(
+  entry?: Pick<EffectFields, 'components' | 'saveEnds'>,
+): EffectValues {
   const components = (entry?.components ?? []).map(toComponentValues);
   const saveEnds = entry?.saveEnds;
   return {

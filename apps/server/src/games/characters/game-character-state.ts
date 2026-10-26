@@ -13,6 +13,7 @@ import { CHARACTER_DEAD, characterNoHealing } from '../game-errors.js';
 import { appendGameEvent } from '../game-journal.js';
 import { actingAs, type SeatedCharacter } from './game-character-access.js';
 import { loadGameEffectLists } from './game-character-effects.js';
+import { loadGameTraitLists } from './game-character-traits.js';
 
 type CharacterRow = typeof characters.$inferSelect;
 
@@ -74,13 +75,12 @@ export async function changeCharacter(
   });
 }
 
-// Эффект «Запрет лечения» (Chill Touch) на персонаже — лечение отклоняется с его именем.
+// Эффект «Запрет лечения» (Chill Touch) или черта с ним на персонаже — лечение
+// отклоняется с его именем.
 async function assertCanHeal(actor: CharacterActor, row: CharacterRow) {
-  const lists = await loadGameEffectLists(
-    actor.tx,
-    actor.gameId,
-    new Map([[row.id, row.userId]]),
-  );
+  const owners = new Map([[row.id, row.userId]]);
+  const lists = await loadGameEffectLists(actor.tx, actor.gameId, owners);
+  const traits = await loadGameTraitLists(actor.tx, owners);
   const { noHealing } = creatureTotals(
     {
       speed: { speed: row.speed },
@@ -88,6 +88,7 @@ async function assertCanHeal(actor: CharacterActor, row: CharacterRow) {
       dexterity: row.dexterity,
     },
     lists.get(row.id) ?? [],
+    traits.get(row.id) ?? [],
   );
   if (noHealing.length > 0) {
     throw new BadRequestException(characterNoHealing(noHealing));

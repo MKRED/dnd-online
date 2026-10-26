@@ -89,6 +89,12 @@ export class GameScenesController {
     });
   }
 
+  // Служебный сброс тумана войны (для проверок): игроки открывают сцену заново.
+  @Post('scenes/:sceneId/fog/reset')
+  resetFog(@Req() req: AuthenticatedRequest, @Param() params: SceneParamsDto) {
+    return this.scenesService.resetFog(req.user.sub, params.id, params.sceneId);
+  }
+
   @Get('scene/fog')
   fog(
     @Req() req: AuthenticatedRequest,
@@ -142,6 +148,29 @@ export class GameScenesController {
     const { data, format } = await this.viewService.modelFile(
       req.user.sub,
       id,
+      'npc',
+      sourceId,
+    );
+    res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+    return new StreamableFile(data, {
+      type: MODEL_CONTENT_TYPES[format],
+      length: data.length,
+    });
+  }
+
+  // Файл 3D-модели монстра на сцене (docs/plan/done/monster-models.md, этап 2) — снимок в
+  // библиотеке игры, тем же, кому картинка монстра.
+  @Get('scene/models/monster/:sourceId')
+  async monsterModel(
+    @Req() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('sourceId', ParseUUIDPipe) sourceId: string,
+  ) {
+    const { data, format } = await this.viewService.modelFile(
+      req.user.sub,
+      id,
+      'monster',
       sourceId,
     );
     res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');

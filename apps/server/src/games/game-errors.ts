@@ -37,10 +37,14 @@ export const MASTER_ONLY_SCENES = 'Сценами управляет тольк�
 export const MASTER_ONLY_FOG =
   'Туман сцены глазами игроков видит только мастер';
 export const SCENE_NOT_FOUND = 'Сцена не найдена';
+export const SCENE_FOG_OFF =
+  'Туман войны на сцене выключен — сбрасывать нечего';
 export const SCENE_MAP_GONE =
   'Карты этой сцены больше нет — перезапустить сцену нельзя';
 export const NO_ACTIVE_SCENE = 'В игре нет активной сцены';
 export const SCENE_CLOSED = 'Мастер закрыл сцену';
+export const PLAYER_OUTSIDE_SESSION =
+  'Встреча не идёт: сцену можно только смотреть';
 export const SCENE_MEMBERS_ONLY = 'Сцену видят только участники игры';
 export const SCENE_NO_IMAGE = 'Такой картинки на сцене нет';
 export const SCENE_NO_RESIZE =
@@ -54,9 +58,19 @@ export const FIGURE_NOT_FOUND = 'Фигурки нет на сцене';
 export const FIGURE_NOT_YOURS = 'Эту фигурку водит другой игрок';
 export const MASTER_ONLY_FIGURES =
   'Ставить фигурки и менять их запас движения может только мастер';
+export const MASTER_ONLY_MOVE_MODE = 'Режим хода меняет только мастер';
+export const ROUND_ONLY_IN_COMBAT =
+  'Новый раунд — только в тактическом режиме: в свободном запас и так полный после каждого хода';
+export const DASH_ONLY_IN_COMBAT =
+  'Рывок — только в тактическом режиме: в свободном запас и так полный после каждого хода';
 export const FIGURE_CANT_REACH =
   'Туда не дойти: путь перекрыт или не хватает движения';
 export const CREATURE_NOT_FOUND = 'Такого существа на сцене нет';
+// Ячейки и подготовка — только у НПС: у монстра заклинания в день.
+export const CREATURE_NO_SPELLS =
+  'Ячейки и подготовка заклинаний есть только у НПС';
+export const CREATURE_SPELL_NOT_FOUND =
+  'У этого НПС нет такого заклинания, которое готовят';
 export const MASTER_ONLY_CREATURES =
   'Монстров и НПС ведёт только мастер: их хиты, эффекты и ход';
 export const CREATURE_CANT_REACH =

@@ -16,7 +16,11 @@ import { DatabaseService } from '../src/database/database.service.js';
 import { gameSceneFog } from '../src/database/schema/index.js';
 import { loadFog } from '../src/games/fog/index.js';
 import { pngImage } from './support/character-fixture.js';
-import { createSceneGame } from './support/scene-fixture.js';
+import {
+  createSceneGame,
+  fogOff,
+  startSession,
+} from './support/scene-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
 // Туман войны, этап 2 (docs/plan/done/fog-of-war.md): настройки тумана у сцены и маски
@@ -53,6 +57,8 @@ describe('game scene fog (e2e)', () => {
   }
 
   // Игра со сценой 8×8 (scene-fixture.ts): фигурка игрока встаёт на старт [0, 1, 0].
+  // Сцена — как созданная до тумана по умолчанию (замечания после первой партии,
+  // 2026-10-26): туман выключен и ничего не открыто, его включают сами проверки.
   async function setup(prefix: string) {
     const g = await createSceneGame(user, png, prefix);
     const m = g.master.agent;
@@ -61,11 +67,14 @@ describe('game scene fog (e2e)', () => {
       .send({ mapId: g.mapId })
       .expect(201);
     const sceneId = (added.body as GameScenes).scenes[0].id;
+    await fogOff(m, g.gameId, sceneId);
+    await db().delete(gameSceneFog).where(eq(gameSceneFog.sceneId, sceneId));
     // Ход игрока — только по открытой сцене.
     await m
       .put(`/api/games/${g.gameId}/scenes/open`)
       .send({ open: true })
       .expect(200);
+    await startSession(m, g.gameId);
     const figures = await m
       .get(`/api/games/${g.gameId}/scene/figures`)
       .expect(200);
@@ -108,6 +117,19 @@ describe('game scene fog (e2e)', () => {
     expect((await lastEvent(g.m, g.gameId)).seq).toBe(seq);
   });
 
+  it('у новой сцены туман включён: фигурка на старте сразу видит вокруг себя', async () => {
+    const g = await createSceneGame(user, png, 'gfog_default');
+    const added = await g.master.agent
+      .post(`/api/games/${g.gameId}/scenes`)
+      .send({ mapId: g.mapId })
+      .expect(201);
+    const scene = (added.body as GameScenes).scenes[0];
+    expect(scene).toMatchObject({ fog: true, sightRange: 60 });
+    const masks = await fog(scene.id);
+    expect(has(masks.visible, [1, 0, 1])).toBe(true);
+    expect(has(masks.explored, [1, 0, 1])).toBe(true);
+  });
+
   it('включённый туман открывает то, что видит фигурка, а ход — новое', async () => {
     const g = await setup('gfog_move');
     // Выключен — масок нет, ход их не создаёт.
@@ -132,6 +154,42 @@ describe('game scene fog (e2e)', () => {
     expect(has(moved.visible, [2, 0, 0])).toBe(false);
     expect(has(moved.explored, [2, 0, 0])).toBe(true);
     expect(has(moved.explored, [5, 0, 0])).toBe(false);
+  });
+
+  it('сброс тумана: только мастер, туман включён; открытым остаётся видимое сейчас', async () => {
+    const g = await setup('gfog_reset');
+    const url = `${fogUrl(g.gameId, g.sceneId)}/reset`;
+    // Туман выключен — сбрасывать нечего.
+    await g.m.post(url).expect(409);
+    await g.m
+      .put(fogUrl(g.gameId, g.sceneId))
+      .send({ enabled: true, sightRange: 10 })
+      .expect(200);
+    await t.anonymous().post(url).expect(401);
+    await g.player.agent.post(url).expect(403);
+    const stranger = await user('gfog_reset_stranger');
+    await stranger.agent.post(url).expect(403);
+    await g.m
+      .post(`${fogUrl(g.gameId, '00000000-0000-4000-8000-000000000000')}/reset`)
+      .expect(404);
+
+    // Фигурка ушла со старта: старт открыт, но уже не виден.
+    await g.player.agent
+      .post(`/api/games/${g.gameId}/figures/${g.characterId}/move`)
+      .send({ to: [0, 1, 5] })
+      .expect(200);
+    expect(has((await fog(g.sceneId)).explored, [2, 0, 0])).toBe(true);
+
+    await g.m.post(url).expect(201);
+    const after = await fog(g.sceneId);
+    expect(has(after.explored, [2, 0, 0])).toBe(false);
+    expect(has(after.explored, [2, 0, 7])).toBe(true);
+    expect(has(after.visible, [2, 0, 7])).toBe(true);
+    expect(await lastEvent(g.m, g.gameId)).toMatchObject({
+      kind: 'scene.fogReset',
+      sceneId: g.sceneId,
+      intent: null,
+    });
   });
 
   it('без сознания персонаж не смотрит; выключенный туман масок не трогает', async () => {

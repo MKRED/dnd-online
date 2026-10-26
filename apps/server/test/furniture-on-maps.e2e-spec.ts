@@ -12,6 +12,7 @@ import {
   type MapChunksResponse,
 } from 'shared';
 import { pngImage } from './support/character-fixture.js';
+import { createItem } from './support/item-fixture.js';
 import { createSceneGame } from './support/scene-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
@@ -184,7 +185,12 @@ describe('обстановка на карте (e2e)', () => {
     // Поиск для постановки — только своя обстановка, с размером модели и креплением.
     const found = (
       await m.get('/api/map-catalog?kind=furniture&q=стол').expect(200)
-    ).body as { id: string; modelSize: number[]; mount: string }[];
+    ).body as {
+      id: string;
+      modelSize: number[];
+      mount: string;
+      model: unknown;
+    }[];
     expect(found).toEqual([
       expect.objectContaining({
         id: table,
@@ -192,6 +198,8 @@ describe('обстановка на карте (e2e)', () => {
         mount: 'floor',
       }),
     ]);
+    // Модель целиком — по ней окно «Что поставить» рисует миниатюру.
+    expect(found[0].model).toMatchObject({ size: [2, 1, 1] });
 
     const foreign = await createFurniture(player.agent, true);
     expect(
@@ -430,5 +438,67 @@ describe('обстановка на карте (e2e)', () => {
       .send({ ops: [{ op: 'setPosition', id: doorId, position: 1 }] })
       .expect(200);
     await move([1, 1, 1]).expect(200);
+  });
+
+  it('контейнер-обстановка: содержимое по вместимости записи, игроку — без содержимого', async () => {
+    const { master, player, mapId, gameId } = await createSceneGame(
+      user,
+      png,
+      'fuc',
+    );
+    const m = master.agent;
+    const gold = await createItem(m, { name: 'Золото', weight: 0.5 });
+    const modelId = idOf(
+      await m.post('/api/voxel-models').send(crateModel()).expect(201),
+    );
+    const chest = idOf(
+      await m
+        .post('/api/furniture')
+        .send({
+          name: 'Сундук',
+          description: '',
+          isPublic: false,
+          modelId,
+          mount: 'floor',
+          container: { capacity: 2, lockDc: 15, contents: [] },
+        })
+        .expect(201),
+    );
+    const found = (
+      await m.get('/api/map-catalog?kind=furniture&q=Сундук').expect(200)
+    ).body as { container: unknown }[];
+    expect(found[0].container).toEqual({
+      capacity: 2,
+      lockDc: 15,
+      contents: [],
+    });
+
+    const ops = (list: unknown[]) =>
+      m.post(`/api/maps/${mapId}/ops`).send({ ops: list });
+    const coins = (quantity: number) => [{ itemId: gold.id, quantity }];
+    const placed = await ops([
+      placeFurniture([3, 1, 3], chest, { name: 'Казна', items: coins(4) }),
+    ]).expect(200);
+    const [id] = (placed.body as { createdObjectIds: number[] })
+      .createdObjectIds;
+    const refused = await ops([
+      { op: 'updateObject', id, object: { items: coins(5) } },
+    ]).expect(400);
+    expect(JSON.stringify(refused.body)).toMatch(/Не влезет в «Казна»/);
+    const summary = await m.get(`/api/maps/${mapId}/summary`).expect(200);
+    expect(JSON.stringify(summary.body)).toMatch(
+      /Казна \(контейнер «Сундук» 1×1×1, предметов: 1, замок Сл 15\)/,
+    );
+
+    await m.post(`/api/games/${gameId}/scenes`).send({ mapId }).expect(201);
+    await m
+      .put(`/api/games/${gameId}/scenes/open`)
+      .send({ open: true })
+      .expect(200);
+    const view = (
+      await player.agent.get(`/api/games/${gameId}/scene`).expect(200)
+    ).body as GameSceneView;
+    const seen = view.objects.find((o) => o.kind === 'furniture');
+    expect(seen).toMatchObject({ name: 'Казна', items: [] });
   });
 });

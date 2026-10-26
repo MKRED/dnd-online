@@ -10,6 +10,7 @@ import BlockTile from '../BlockPicker/BlockTile';
 import { useBlockCatalog } from '../BlockPicker/catalogContext';
 import PickerSection from '../BlockPicker/PickerSection';
 import CatalogTab from './CatalogTab';
+import FramedBlockTile from './FramedBlockTile';
 import ObjectTile from './ObjectTile';
 import {
   objectChoiceLabel,
@@ -44,6 +45,9 @@ interface PlacePickerModalProps {
   recent: readonly RecentPlace[];
   // Заливка, коробка и замена ставят только блок: окно без вкладок объектов.
   blocksOnly: boolean;
+  // Сцена игры: существ ставит инструмент «Существа» — у «Строить» их нет ни во вкладках,
+  // ни в поиске (замечания после первой партии, 2026-10-26).
+  withoutCreatures?: boolean;
   onPickBlock: (block: string) => void;
   onPickObject: (choice: ObjectChoice) => void;
   onClose: () => void;
@@ -57,10 +61,14 @@ function PlacePickerModal({
   current,
   recent,
   blocksOnly,
+  withoutCreatures = false,
   onPickBlock,
   onPickObject,
   onClose,
 }: PlacePickerModalProps) {
+  const tabs = withoutCreatures
+    ? TABS.filter(({ value }) => value !== 'creature')
+    : TABS;
   const catalog = useBlockCatalog();
   const [query, setQuery] = useState('');
   const [debounced] = useDebouncedValue(query, 250);
@@ -80,20 +88,33 @@ function PlacePickerModal({
     recentKey({ type: 'object', choice: current }) ===
       recentKey({ type: 'object', choice });
 
+  // Недавние — блоки и объекты вперемешку: блоки на той же подложке, у объектов — метка
+  // вида. Только окна блоков — прежние плитки блоков.
   const recentTiles = shownRecent.map((r) =>
     r.type === 'block' ? (
-      <BlockTile
-        key={recentKey(r)}
-        block={r.name}
-        label={catalog.describe(r.name)?.label ?? r.name}
-        selected={current === null && r.name === block}
-        onClick={() => onPickBlock(r.name)}
-      />
+      blocksOnly ? (
+        <BlockTile
+          key={recentKey(r)}
+          block={r.name}
+          label={catalog.describe(r.name)?.label ?? r.name}
+          selected={current === null && r.name === block}
+          onClick={() => onPickBlock(r.name)}
+        />
+      ) : (
+        <FramedBlockTile
+          key={recentKey(r)}
+          block={r.name}
+          label={catalog.describe(r.name)?.label ?? r.name}
+          selected={current === null && r.name === block}
+          onClick={() => onPickBlock(r.name)}
+        />
+      )
     ) : (
       <ObjectTile
         key={recentKey(r)}
         choice={r.choice}
         selected={isCurrent(r.choice)}
+        badge
         onClick={() => onPickObject(r.choice)}
       />
     ),
@@ -158,7 +179,11 @@ function PlacePickerModal({
                   </div>
                 )}
                 <CatalogTab
-                  kinds={['furniture', 'item', 'monster', 'npc']}
+                  kinds={
+                    withoutCreatures
+                      ? ['furniture', 'item']
+                      : ['furniture', 'item', 'monster', 'npc']
+                  }
                   q={debounced}
                   current={current}
                   onPick={onPickObject}
@@ -181,7 +206,7 @@ function PlacePickerModal({
             ) : (
               <Tabs value={tab} onChange={(value) => setTab(value as Tab)}>
                 <Tabs.List>
-                  {TABS.map(({ value, label }) => (
+                  {tabs.map(({ value, label }) => (
                     <Tabs.Tab key={value} value={value}>
                       {label}
                     </Tabs.Tab>
@@ -198,16 +223,30 @@ function PlacePickerModal({
                   />
                 </Tabs.Panel>
                 <Tabs.Panel value="container" pt="sm">
-                  <div className={classes.grid}>
-                    {CONTAINERS.map((choice) => (
-                      <ObjectTile
-                        key={recentKey({ type: 'object', choice })}
-                        choice={choice}
-                        selected={isCurrent(choice)}
-                        onClick={() => onPickObject(choice)}
+                  <Stack gap="md">
+                    <PickerSection title="Встроенные">
+                      {CONTAINERS.map((choice) => (
+                        <ObjectTile
+                          key={recentKey({ type: 'object', choice })}
+                          choice={choice}
+                          selected={isCurrent(choice)}
+                          onClick={() => onPickObject(choice)}
+                        />
+                      ))}
+                    </PickerSection>
+                    {/* Свои — обстановка вида «Контейнер» (этап 11). */}
+                    <Stack gap={4}>
+                      <Text size="sm" fw={500}>
+                        Свои
+                      </Text>
+                      <CatalogTab
+                        kinds={['furniture']}
+                        onlyContainers
+                        current={current}
+                        onPick={onPickObject}
                       />
-                    ))}
-                  </div>
+                    </Stack>
+                  </Stack>
                 </Tabs.Panel>
                 <Tabs.Panel value="item" pt="sm">
                   <CatalogTab
@@ -216,13 +255,15 @@ function PlacePickerModal({
                     onPick={onPickObject}
                   />
                 </Tabs.Panel>
-                <Tabs.Panel value="creature" pt="sm">
-                  <CatalogTab
-                    kinds={['monster', 'npc']}
-                    current={current}
-                    onPick={onPickObject}
-                  />
-                </Tabs.Panel>
+                {!withoutCreatures && (
+                  <Tabs.Panel value="creature" pt="sm">
+                    <CatalogTab
+                      kinds={['monster', 'npc']}
+                      current={current}
+                      onPick={onPickObject}
+                    />
+                  </Tabs.Panel>
+                )}
                 <Tabs.Panel value="start" pt="sm">
                   <div className={classes.grid}>
                     <ObjectTile

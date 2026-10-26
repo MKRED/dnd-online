@@ -26,6 +26,7 @@ import {
 import NotFoundPage from './pages/NotFoundPage';
 import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
+import SearchPage from './pages/SearchPage';
 import {
   ABILITIES,
   BLOCKS,
@@ -87,6 +88,7 @@ export const router = createBrowserRouter([
           ...simpleCatalogRoutes(MODELS),
           ...simpleCatalogRoutes(FURNITURE),
           { path: '/bookmarks', element: <BookmarksPage /> },
+          { path: '/search', element: <SearchPage /> },
           { path: '/games', element: <GamesPage /> },
           { path: '/games/:id', element: <GameLobbyPage /> },
           { path: '/games/:id/scene', element: <GameScenePage /> },

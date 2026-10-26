@@ -14,7 +14,7 @@ import {
   CompressPanel,
   MODEL_UPLOAD_MAX_BYTES,
   useModelCompression,
-} from './compress';
+} from '../../modelCompress';
 import ModelFitControls from './ModelFitControls';
 import { useCharacterModel } from './useCharacterModel';
 

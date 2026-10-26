@@ -102,6 +102,8 @@
 
 Код: `packages/shared/src/map/objects/containerLoad.ts` (`CONTAINER_CAPACITY`, `containerLoad`), проверка — `checkLoad` в `applyObjectOp.ts`.
 
+**Контейнер в правилах карты** (решено 2026-10-24 по ходу этапа 11 [plan/blocks.md](../plan/blocks.md), пересматриваемо). Встроенный контейнер занимает свою клетку по вокселям модели, как обстановка: на сундук, бочку и ящик можно встать сверху (подъём выше полублока — лазание на уступ, [movement.md](movement.md)), мешок — труднопроходимая клетка: его переступают. В книге 2024 правил для этого нет — это правило дома, как мебель в [terrain.md](terrain.md). Код: `packages/shared/src/voxelModel/builtinContainers.ts`.
+
 ## Наборы снаряжения
 
 Проверено 2026-10-14. Источники:

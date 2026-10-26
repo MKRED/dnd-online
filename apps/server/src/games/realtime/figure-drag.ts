@@ -39,7 +39,7 @@ export function parseFigureDrag(body: unknown): GameFigureDragMessage | null {
 
 // Куда тянут фигурку (docs/plan/done/game.md, этап 7) — остальным в комнате, без базы и
 // журнала. Тянуть может тот, кто водит фигурку: мастер — всегда, владелец — пока сцена
-// открыта; клетка — внутри сцены. Игрокам позиция уходит только при открытой сцене.
+// открыта и идёт встреча (вне встречи игрок только смотрит); клетка — внутри сцены. Игрокам позиция уходит только при открытой сцене.
 // false — сообщение отброшено.
 export async function relayFigureDrag(
   databaseService: DatabaseService,
@@ -53,6 +53,7 @@ export async function relayFigureDrag(
     .select({
       masterId: games.masterId,
       open: games.sceneOpen,
+      sessionStartedAt: games.sessionStartedAt,
       ownerId: characters.userId,
       controllerId: gameMembers.controllerId,
       width: gameScenes.width,
@@ -75,7 +76,7 @@ export async function relayFigureDrag(
   if (!canMoveFigure(userId, row.masterId, row.ownerId, row.controllerId)) {
     return false;
   }
-  if (!master && !row.open) return false;
+  if (!master && (!row.open || !row.sessionStartedAt)) return false;
   if (at && !insideMap(at, { width: row.width, depth: row.depth })) {
     return false;
   }

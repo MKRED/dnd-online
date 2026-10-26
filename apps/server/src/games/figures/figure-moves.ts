@@ -19,12 +19,14 @@ import {
   type Vec3,
 } from 'shared';
 import type { DbTransaction } from '../../database/database.service.js';
+import { isFree, nextCombatRound } from './move-mode-read.js';
 import {
   characters,
   gameFigures,
   gameMembers,
 } from '../../database/schema/index.js';
 import {
+  DASH_ONLY_IN_COMBAT,
   FIGURE_CANT_REACH,
   FIGURE_CANT_STAND,
   FIGURE_NOT_FOUND,
@@ -142,11 +144,13 @@ export async function moveFigure(
   const speeds = await figureSpeeds(actor.tx, actor.gameId, [
     { id: characterId, ownerId, speed },
   ]);
+  // В свободном режиме запас полный на каждый ход и не тратится (docs/dnd/movement.md).
+  const free = await isFree(actor.tx, actor.gameId);
   const left = movementAllowance({
     speed: speeds.get(characterId)?.speed ?? speed,
     climb: speeds.get(characterId)?.climb ?? null,
-    moved: figure.moved,
-    dashes: figure.dashes,
+    moved: free ? 0 : figure.moved,
+    dashes: free ? 0 : figure.dashes,
   });
   const from: Vec3 = [figure.x, figure.y, figure.z];
   const others = await othersOf(
@@ -169,7 +173,7 @@ export async function moveFigure(
       x: to[0],
       y: to[1],
       z: to[2],
-      moved: figure.moved + path.cost,
+      moved: free ? 0 : figure.moved + path.cost,
       facing: stepFacing(before, to),
     })
     .where(eq(gameFigures.characterId, characterId));
@@ -184,7 +188,8 @@ export async function moveFigure(
       from,
       to,
       cost: path.cost,
-      left: Math.max(0, left.walk - path.cost),
+      left: free ? left.walk : Math.max(0, left.walk - path.cost),
+      path: path.path,
     },
   });
   // Замер по частям: сцена из базы, скорость и остальные существа (с туманом игрока),
@@ -262,10 +267,11 @@ export async function placeFigure(
 }
 
 // «Новый раунд»: запас движения снова полный у всех фигурок и у монстров и НПС активной
-// сцены (docs/plan/done/creature-movement.md).
+// сцены (docs/plan/done/creature-movement.md). Только в бою — в тактическом режиме.
 export async function newRound(actor: FigureActor): Promise<void> {
   assertMaster(actor);
   const scene = await activeScene(actor);
+  const round = await nextCombatRound(actor.tx, actor.gameId);
   const rows = await actor.tx
     .update(gameFigures)
     .set({ moved: 0, dashes: 0 })
@@ -282,6 +288,7 @@ export async function newRound(actor: FigureActor): Promise<void> {
       scene: { id: scene.id, name: scene.name },
       count: rows.length,
       creatures,
+      round,
     },
   });
 }
@@ -309,6 +316,9 @@ export async function changeAllowance(
       result: { character },
     });
     return;
+  }
+  if (await isFree(actor.tx, actor.gameId)) {
+    throw new ConflictException(DASH_ONLY_IN_COMBAT);
   }
   const dashes = figure.dashes + 1;
   await actor.tx

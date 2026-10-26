@@ -5,6 +5,7 @@ import type { ConditionKind } from './effectConditions.js';
 import type { SenseDetails } from './effectSenses.js';
 import type { MonsterAbilityEntry } from './monsterAbilities.js';
 import type { MonsterChallenge } from './monsterChallenge.js';
+import type { MonsterModelLink, MonsterModelView } from './monsterModel.js';
 import type { MonsterEffectEntry, MonsterItemEntry } from './monsterLinks.js';
 
 // Каталог монстров (docs/plan/done/monsters-npcs.md). Категория записи — тип существа, остальной
@@ -142,10 +143,16 @@ export interface MonsterFields {
   category: MonsterType;
   statBlock: MonsterStatBlock;
   role: MonsterRole;
+  // 3D-модель (docs/plan/done/monster-models.md). В теле правки необязательна: нет поля —
+  // ссылка остаётся прежней, null — убрать модель.
+  model?: MonsterModelLink | null;
 }
 
 // Способности, снаряжение и эффекты приходят только в карточке монстра, не в списке.
+// Вид модели (modelView) — тоже только в карточке.
 export type MonsterRecordFields = MonsterFields & {
+  model: MonsterModelLink | null;
+  modelView?: MonsterModelView | null;
   abilities?: MonsterAbilityEntry[];
   items?: MonsterItemEntry[];
   effects?: MonsterEffectEntry[];

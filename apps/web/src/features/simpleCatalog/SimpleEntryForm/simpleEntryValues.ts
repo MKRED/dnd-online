@@ -54,6 +54,9 @@ export interface SimpleFormValues {
   model: VoxelModelFields;
   // Загруженный файл модели (этап 9); null — файла нет.
   modelMesh: MeshDraft | null;
+  // Выбранный файл модели ещё сжимается в браузере (docs/plan/done/monster-models.md, этап 3):
+  // форма ждёт, иначе сохранила бы модель без него.
+  meshCompressing: boolean;
   // Модель и крепление обстановки (этап 8б).
   furniture: FurnitureValues;
 }
@@ -94,7 +97,14 @@ export function toSimpleFormValues(
     duration: toDurationValues(
       entry && 'duration' in entry ? entry.duration : undefined,
     ),
-    effect: toEffectValues(entry && 'components' in entry ? entry : undefined),
+    // У черты способности составляющие — в тех же полях, что у эффекта (abilityInput.ts).
+    effect: toEffectValues(
+      entry && 'components' in entry
+        ? entry
+        : entry && 'passive' in entry
+          ? { components: entry.passive, saveEnds: null }
+          : undefined,
+    ),
     usage: toUsageValues(entry && 'activation' in entry ? entry : undefined),
     steps: entry && 'steps' in entry ? entry.steps.map(toStepValues) : [],
     spell: toSpellValues(
@@ -118,6 +128,7 @@ export function toSimpleFormValues(
           }
         : emptyVoxelModel(),
     modelMesh: toMeshDraft(entry && 'voxels' in entry ? entry : null),
+    meshCompressing: false,
     furniture: toFurnitureValues(entry && 'mount' in entry ? entry : undefined),
   };
 }

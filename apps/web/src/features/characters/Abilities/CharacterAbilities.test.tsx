@@ -32,6 +32,7 @@ function row(
       activation,
       costs: NO_ABILITY_COSTS,
       recharge: null,
+      passive: [],
     },
     missing: null,
     inactive: false,
@@ -122,6 +123,32 @@ describe('CharacterAbilities', () => {
     expect(screen.getByRole('button', { name: '+ Способность' }));
   });
 
+  it('в игре ячейки и подготовка идут через игру, а убрать способность нельзя', async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    vi.stubGlobal('fetch', fetchMock);
+    const spend = vi.fn(() => Promise.resolve());
+    const prepare = vi.fn(() => Promise.resolve());
+    renderWithProviders(
+      <CharacterAbilities
+        character={character([firebolt, shield], {
+          1: { total: 2, expended: 0 },
+        })}
+        spellActions={{ spend, prepare }}
+      />,
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: '«Щит» подготовлено' }),
+    );
+    expect(prepare).toHaveBeenCalledWith('row-Щит', false);
+    await userEvent.click(
+      screen.getAllByRole('button', { name: 'Потратить ячейку 1 круга' })[0],
+    );
+    expect(spend).toHaveBeenCalledWith({ 1: 1 });
+    expect(screen.queryByRole('button', { name: /Убрать/ })).toBeNull();
+    // Справочник не трогают: лист в игре правит игра.
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('отметка «подготовлено» — только у заклинания 1 круга, клик шлёт PATCH', async () => {
     const fetchMock = vi.fn<typeof fetch>(() =>
       json([{ ...shield, prepared: false }]),
@@ -192,6 +219,7 @@ describe('CharacterAbilities', () => {
       activation: { kind: 'action' },
       costs: NO_ABILITY_COSTS,
       steps: [],
+      passive: [],
       createdAt: '2026-10-19T00:00:00.000Z',
       updatedAt: '2026-10-19T00:00:00.000Z',
     });

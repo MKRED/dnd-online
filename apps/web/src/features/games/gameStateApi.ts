@@ -3,6 +3,7 @@ import type {
   GameCharacterChange,
   GameCreatureChange,
   GameCreatures,
+  SpellSlotsExpended,
   Vec3,
 } from 'shared';
 import { apiRequest as request } from '../../lib/apiRequest';
@@ -74,4 +75,29 @@ export function changeGameCreatureAllowance(
   return request(`${creaturesBase(gameId)}/${objectId}/${change}`, {
     method: 'POST',
   });
+}
+
+// Ячейки и подготовка заклинаний экземпляра НПС (вариант А после первой партии) — ответ
+// существами сцены.
+export function spendGameCreatureSlots(
+  gameId: string,
+  objectId: number,
+  expended: SpellSlotsExpended,
+): Promise<GameCreatures> {
+  return request(`${creaturesBase(gameId)}/${objectId}/spell-slots`, {
+    method: 'POST',
+    body: JSON.stringify({ expended }),
+  });
+}
+
+export function prepareGameCreatureSpell(
+  gameId: string,
+  objectId: number,
+  abilityId: string,
+  prepared: boolean,
+): Promise<GameCreatures> {
+  return request(
+    `${creaturesBase(gameId)}/${objectId}/abilities/${abilityId}`,
+    { method: 'PUT', body: JSON.stringify({ prepared }) },
+  );
 }

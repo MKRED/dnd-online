@@ -54,6 +54,8 @@ export const MODEL_EXTRAS: CatalogExtras = {
       draft && !meshDraftReady(draft, values.model.size)
         ? 'Воксели из файла ещё считаются — подождите'
         : null,
+    meshCompressing: (busy) =>
+      busy ? 'Файл модели ещё сжимается — подождите' : null,
   },
   afterSave: (saved, values) =>
     isModel(saved)

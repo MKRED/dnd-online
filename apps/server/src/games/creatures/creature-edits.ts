@@ -26,6 +26,7 @@ import { EFFECT_ACCESS } from '../../effects/effects.config.js';
 import { CREATURE_NOT_FOUND, characterNoHealing } from '../game-errors.js';
 import { appendGameEvent } from '../game-journal.js';
 import { copyToLibrary } from '../library/index.js';
+import { creatureEventVisibility } from './creature-visibility.js';
 import {
   loadCreatureEffects,
   loadCreatureHitPoints,
@@ -106,6 +107,13 @@ export async function changeCreature(
         temp: outcome.state.temp,
       },
     },
+    visibility: await creatureEventVisibility(
+      tx,
+      actor.gameId,
+      actor.sceneId,
+      creature,
+      [creature.at],
+    ),
   });
 }
 

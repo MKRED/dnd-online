@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import type { Texture } from 'three';
 import type { CreatureHealth } from 'shared';
 import { modelTop, useModel } from '../../models';
-import CreatureCard, { creaturePose } from './CreatureCard';
+import { voxelFigureData } from '../../../voxelModels/voxelBounds';
+import CreatureCard, { creaturePose, type CardModel } from './CreatureCard';
 import { useGraphics } from './graphicsContext';
 import HealthMark from './HealthMark';
 import type { SceneObject, SceneObjectLook } from './objectLayout';
@@ -32,16 +34,30 @@ function CreatureBody({
   const mode = useGraphics().creatureModels;
   const wanted =
     mode === 'all' || (mode === 'party' && pc) ? (look.model ?? null) : null;
-  const state = useModel(wanted?.path ?? null, wanted?.format ?? null);
-  const model =
-    wanted && state?.status === 'ready'
-      ? { model: state.model, fit: wanted.fit, color: wanted.color }
-      : null;
+  const file = wanted?.kind === 'file' ? wanted : null;
+  const state = useModel(file?.path ?? null, file?.format ?? null);
+  // Рисованную модель монстра (docs/plan/done/monster-models.md) грузить не нужно: воксели уже
+  // в справочнике объектов. Пустая — карточка.
+  const voxels = useMemo(
+    () => (wanted?.kind === 'voxels' ? voxelFigureData(wanted.fields) : null),
+    [wanted],
+  );
+  const model: CardModel | null =
+    file && state?.status === 'ready'
+      ? { kind: 'file', model: state.model, fit: file.fit, color: file.color }
+      : wanted?.kind === 'voxels' && voxels
+        ? { kind: 'voxels', data: voxels, fit: wanted.fit }
+        : null;
   const pose = creaturePose(health, pc);
   // У погибшего и поверженного гроб, а не модель — над ним метка как у карточки.
   const poseHeight =
     model && pose !== 'coffin'
-      ? modelTop(model.model.box, object.footprint, model.fit, pose === 'lying')
+      ? modelTop(
+          model.kind === 'file' ? model.model.box : model.data.box,
+          object.footprint,
+          model.fit,
+          pose === 'lying',
+        )
       : undefined;
   return (
     <>

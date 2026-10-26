@@ -6,12 +6,15 @@ import {
 } from '../../abilityLinks';
 import { characterAbilitiesApi } from './abilitiesApi';
 import PreparedMark from './PreparedMark';
+import type { SheetSpellActions } from './sheetSpellActions';
 
 // Правки способностей персонажа и его строка: у заклинания 1 круга и выше слева отметка
-// «подготовлено». Без onChange — только чтение.
+// «подготовлено». Без onChange — только чтение; prepareInGame — отметка через игру, без
+// остальных правок.
 export function useAbilitiesEditor(
   characterId: string,
   onChange: ((abilities: CharacterAbilityEntry[]) => void) | undefined,
+  prepareInGame?: SheetSpellActions['prepare'],
 ) {
   const editor = useLinkEditor(onChange);
   const api = characterAbilitiesApi(characterId);
@@ -24,7 +27,9 @@ export function useAbilitiesEditor(
     const prepare = () =>
       void run(
         entry.id,
-        () => api.update(entry.id, { prepared: !entry.prepared }),
+        prepareInGame
+          ? () => prepareInGame(entry.id, !entry.prepared).then(() => [])
+          : () => api.update(entry.id, { prepared: !entry.prepared }),
         'Не удалось отметить подготовку',
       );
     return (
@@ -39,7 +44,7 @@ export function useAbilitiesEditor(
               prepared={entry.prepared}
               name={name}
               busy={busy}
-              onToggle={onChange && prepare}
+              onToggle={onChange || prepareInGame ? prepare : undefined}
             />
           )
         }

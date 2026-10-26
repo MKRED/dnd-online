@@ -24,8 +24,17 @@ const goblin: MapObject = {
 };
 
 describe('сцена глазами игрока', () => {
-  it('скрытого нет, у контейнера нет содержимого', () => {
+  it('скрытого и стартов нет, у контейнера нет содержимого', () => {
     expect(forPlayer(goblin)).toBeNull();
+    expect(
+      forPlayer({
+        id: 3,
+        at: [0, 1, 0],
+        hidden: false,
+        kind: 'start',
+        facing: 0,
+      }),
+    ).toBeNull();
     expect(forPlayer(chest)).toEqual({ ...chest, items: [] });
     expect(forPlayer(null)).toBeNull();
   });

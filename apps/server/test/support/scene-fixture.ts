@@ -103,5 +103,24 @@ export async function createSceneGame<
     .post(`/api/games/${gameId}/seats`)
     .send({ characterId: character })
     .expect(201);
-  return { master, player, mapId, gameId, goblin, npc, rope, gem };
+  return { master, player, character, mapId, gameId, goblin, npc, rope, gem };
+}
+
+// Мастер начинает встречу: вне неё игрок на сцене только смотрит — не ходит, не тянет
+// фигурку и не правит персонажа из игры.
+export async function startSession(master: request.Agent, gameId: string) {
+  await master.post(`/api/games/${gameId}/session`).expect(201);
+}
+
+// Новая сцена — с туманом войны (замечания после первой партии, 2026-10-26). Проверкам того,
+// что скрыто от игрока самим мастером, туман только мешает: его выключают.
+export async function fogOff(
+  master: request.Agent,
+  gameId: string,
+  sceneId: string,
+) {
+  await master
+    .put(`/api/games/${gameId}/scenes/${sceneId}/fog`)
+    .send({ enabled: false, sightRange: 60 })
+    .expect(200);
 }

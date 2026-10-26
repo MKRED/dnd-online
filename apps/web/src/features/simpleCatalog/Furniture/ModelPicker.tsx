@@ -1,7 +1,10 @@
-import { Alert, Button, Group, Select, Stack, Text } from '@mantine/core';
-import { IconCube, IconPencil } from '@tabler/icons-react';
+import { Alert, Button, Group, Menu, Select, Stack, Text } from '@mantine/core';
+import { IconBox, IconCube, IconPencil } from '@tabler/icons-react';
 import { Suspense, useState } from 'react';
 import {
+  builtinContainerModel,
+  CONTAINER_LOOK_LABELS,
+  CONTAINER_LOOKS,
   emptyVoxelModel,
   type VoxelModel,
   type VoxelModelFields,
@@ -13,7 +16,7 @@ import {
   voxelModelsApi,
 } from '../../voxelModels';
 import { modelCellsText, modelSizeText } from '../VoxelModel/modelCard';
-import type { OwnModels } from './useOwnModels';
+import type { OwnModels } from '../../voxelModels';
 
 type Editing = { model: VoxelModelFields; target: VoxelModel | null };
 
@@ -129,6 +132,34 @@ function ModelPicker({
         >
           Нарисовать новую
         </Button>
+        <Menu position="bottom-start">
+          <Menu.Target>
+            <Button
+              size="xs"
+              variant="default"
+              leftSection={<IconBox size={16} />}
+            >
+              Начать со встроенного
+            </Button>
+          </Menu.Target>
+          <Menu.Dropdown>
+            {/* Свой вариант встроенного контейнера (этап 11): его модель — в редактор,
+                «Готово» сохраняет её новой своей моделью. */}
+            {CONTAINER_LOOKS.map((look) => (
+              <Menu.Item
+                key={look}
+                onClick={() =>
+                  setEditing({
+                    model: builtinContainerModel(look),
+                    target: null,
+                  })
+                }
+              >
+                {CONTAINER_LOOK_LABELS[look]}
+              </Menu.Item>
+            ))}
+          </Menu.Dropdown>
+        </Menu>
         <Button
           size="xs"
           variant="default"

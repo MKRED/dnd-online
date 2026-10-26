@@ -1,8 +1,10 @@
 import type { CatalogImage } from '../../catalogImage.js';
 import type { CharacterMainImage } from '../../characterImages.js';
 import type { FigureModel } from '../../characterModels.js';
+import type { MonsterRefModel } from '../../monsterModel.js';
 import type { MonsterRole } from '../../monsters.js';
 import type { FurnitureMount } from '../../voxelModel/furniture.js';
+import type { LockDc } from '../../voxelModel/furnitureContainer.js';
 import type { VoxelModelFields } from '../../voxelModel/voxelModel.js';
 import type { Vec3 } from '../coords.js';
 import type { CreatureSize } from '../rules/creature.js';
@@ -14,13 +16,15 @@ import { emptyObjectRefs, type ObjectRefs } from './objectRefs.js';
 // (docs/plan/done/map-objects.md, «Ссылки на каталог»).
 export type RefMissing = 'hidden' | 'deleted';
 
-// Размер есть всегда: место на карте нужно и заглушке. У удалённого — Средний.
+// Размер есть всегда: место на карте нужно и заглушке. У удалённого — Средний. model —
+// 3D-модель (docs/plan/done/monster-models.md): с ней на карте стоит она, а не карточка.
 export type MonsterRefView = { size: CreatureSize } & (
   | {
       missing: null;
       name: string;
       role: MonsterRole;
       image: CatalogImage | null;
+      model: MonsterRefModel | null;
     }
   | { missing: RefMissing }
 );
@@ -55,6 +59,8 @@ export type FurnitureRefView =
       mount: FurnitureMount;
       model: FurnitureViewModel | null;
       positions: { name: string; model: FurnitureViewModel | null }[];
+      // Вместимость и Сл взлома контейнера (этап 11); null — обычная обстановка.
+      container: { capacity: number; lockDc: LockDc | null } | null;
     }
   | { missing: 'deleted' };
 
@@ -100,8 +106,8 @@ export function objectRefIds(objects: Iterable<MapObject>) {
     if (object.kind === 'monster') ids.monsters.add(object.monsterId);
     if (object.kind === 'npc') ids.npcs.add(object.characterId);
     if (object.kind === 'item') ids.items.add(object.itemId);
-    if (object.kind === 'container') {
-      for (const { itemId } of object.items) ids.items.add(itemId);
+    if (object.kind === 'container' || object.kind === 'furniture') {
+      for (const { itemId } of object.items ?? []) ids.items.add(itemId);
     }
   }
   return ids;
@@ -141,6 +147,7 @@ export function objectRefsFromView(view: MapObjectRefsView): ObjectRefs {
         name: position.name,
         ...lookOf(position.model),
       })),
+      container: furniture.container,
       usable: true,
     });
   }

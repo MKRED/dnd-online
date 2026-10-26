@@ -14,6 +14,7 @@ const EVENT_COLUMNS = {
   asKind: gameEvents.asKind,
   asId: gameEvents.asId,
   sceneId: gameEvents.sceneId,
+  visibility: gameEvents.visibility,
   intent: gameEvents.intent,
   result: gameEvents.result,
   createdAt: gameEvents.createdAt,
@@ -62,6 +63,7 @@ function toGameEvent(row: EventRow, nickname: string | null): GameEvent {
         : { kind: row.asKind, id: row.asId ?? '' }
       : null,
     sceneId: row.sceneId,
+    visibility: row.visibility,
     intent: row.intent,
     result: row.result,
     createdAt: row.createdAt.toISOString(),

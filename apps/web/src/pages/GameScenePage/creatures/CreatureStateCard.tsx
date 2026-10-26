@@ -23,6 +23,8 @@ interface CreatureStateCardProps {
   // Эффекты сменились — перечитать существа.
   onEffects: () => void;
   onOpenSheet: () => void;
+  // В окне карточки (docs/plan/done/scene-page.md, этап 4): без своей шапки — имя в шапке окна.
+  bare?: boolean;
 }
 
 // Карточка монстра или НПС у мастера (docs/plan/done/game.md, этап 8): хиты экземпляра и
@@ -34,6 +36,7 @@ function CreatureStateCard({
   onChanged,
   onEffects,
   onOpenSheet,
+  bare,
 }: CreatureStateCardProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,14 +60,16 @@ function CreatureStateCard({
       className={classes.card}
       aria-label={`Карточка: ${state.name}`}
     >
-      <Group justify="space-between" wrap="nowrap">
-        <Text fw={600} truncate>
-          {state.name}
-        </Text>
-        <Button size="compact-xs" variant="subtle" onClick={onOpenSheet}>
-          Полный лист
-        </Button>
-      </Group>
+      {!bare && (
+        <Group justify="space-between" wrap="nowrap">
+          <Text fw={600} truncate>
+            {state.name}
+          </Text>
+          <Button size="compact-xs" variant="subtle" onClick={onOpenSheet}>
+            Карточка
+          </Button>
+        </Group>
+      )}
       <HitPointsControls
         current={hitPoints.current}
         max={hitPoints.max}

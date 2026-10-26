@@ -35,22 +35,59 @@ describe('abilities.config', () => {
     ).toMatchObject({ category: 'basic', details: {} });
   });
 
-  it('читает поля «Монстра», черта не у монстра — действие', () => {
-    const trait = { kind: 'trait' };
+  it('читает поля «Монстра», легендарное действие не у монстра — действие', () => {
+    const legendary = { kind: 'legendary', cost: 1 };
     expect(
-      toAbilityVariant('monster', { recharge: 5 }, { activation: trait }),
+      toAbilityVariant('monster', { recharge: 5 }, { activation: legendary }),
     ).toMatchObject({
       category: 'monster',
       details: { recharge: 5 },
-      activation: trait,
+      activation: legendary,
     });
     expect(
-      toAbilityVariant('monster', { recharge: 1 }, { activation: trait }),
+      toAbilityVariant('monster', { recharge: 1 }, { activation: legendary }),
     ).toMatchObject({
       category: 'basic',
       details: {},
       activation: { kind: 'action' },
     });
+  });
+
+  // docs/plan/done/traits.md: составляющие читаются только у черты.
+  it('читает составляющие черты; у других активаций и испорченные — пусто', () => {
+    const passive = [{ kind: 'sense', sense: 'darkvision', range: 60 }];
+    const trait = { kind: 'trait' };
+    expect(
+      toAbilityVariant('basic', {}, { activation: trait, passive }),
+    ).toMatchObject({ activation: trait, passive });
+    expect(toAbilityVariant('basic', {}, { activation: trait })).toMatchObject({
+      activation: trait,
+      passive: [],
+    });
+    expect(
+      toAbilityVariant(
+        'basic',
+        {},
+        { activation: { kind: 'action' }, passive },
+      ),
+    ).toMatchObject({ passive: [] });
+    expect(
+      toAbilityVariant('basic', {}, { activation: trait, passive: [{}] }),
+    ).toMatchObject({ passive: [] });
+    // У заклинания черты нет — действие без составляющих.
+    expect(
+      toAbilityVariant(
+        'spell',
+        {
+          level: 0,
+          school: 'evocation',
+          components: '',
+          ritual: false,
+          duration: { kind: 'instant' },
+        },
+        { activation: trait, passive },
+      ),
+    ).toMatchObject({ activation: { kind: 'action' }, passive: [] });
   });
 
   // Записи без этих полей и испорченный jsonb не ломают каталог.
@@ -75,7 +112,7 @@ describe('abilities.config', () => {
     expect(ABILITIES_CONFIG.toStored(dto)).toEqual({
       category: 'basic',
       details: {},
-      extra: { activation: { kind: 'action' }, costs, steps: [] },
+      extra: { activation: { kind: 'action' }, costs, steps: [], passive: [] },
     });
   });
 

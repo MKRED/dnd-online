@@ -1,6 +1,7 @@
 export {
   buildFurnitureLayer,
   furnitureCellAt,
+  furnitureCellKey,
   type FurnitureCell,
   type FurnitureLayer,
 } from './furnitureLayer.js';

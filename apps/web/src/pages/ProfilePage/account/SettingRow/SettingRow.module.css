@@ -1,0 +1,78 @@
+.group {
+  overflow: hidden;
+}
+
+.caption {
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-lg);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+}
+
+/* Строка настройки: название, значение с подсказкой и кнопка справа. */
+.row {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr) auto;
+  grid-template-areas: 'key value action';
+  align-items: center;
+  column-gap: var(--mantine-spacing-lg);
+  min-height: 72px;
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-lg);
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+/* Открытая форма: название встаёт вровень с первым полем, а не с серединой формы. */
+.open {
+  align-items: start;
+}
+
+.open .key {
+  padding-top: 8px;
+}
+
+.key {
+  grid-area: key;
+  font-weight: 600;
+}
+
+.value {
+  grid-area: value;
+  min-width: 0;
+}
+
+.action {
+  grid-area: action;
+}
+
+/* На телефоне название — мелкой строкой над значением, кнопка остаётся справа. */
+@media (max-width: 36em) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'key action'
+      'value action';
+    column-gap: var(--mantine-spacing-sm);
+    min-height: 64px;
+    padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  }
+
+  .open {
+    grid-template-areas:
+      'key key'
+      'value value';
+  }
+
+  .key,
+  .open .key {
+    padding-top: 0;
+    font-weight: 400;
+    font-size: var(--mantine-font-size-sm);
+    color: var(--mantine-color-dimmed);
+  }
+
+  .caption {
+    padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  }
+}

@@ -1,0 +1,70 @@
+/* Внизу по центру сцены, поверх неё; не шире сцены. */
+.plaque {
+  position: absolute;
+  left: 50%;
+  /* В одну линию со строкой координат (она слева), прижата к низу сцены. */
+  bottom: var(--mantine-spacing-xs);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 2 * var(--mantine-spacing-md));
+  padding: 6px 12px;
+  border-radius: var(--mantine-radius-md);
+  white-space: nowrap;
+}
+
+.plaque[data-inline] {
+  position: static;
+  transform: none;
+  min-width: 0;
+  max-width: none;
+  overflow: hidden;
+}
+
+/* В узкой плашке первым обрезается пояснение, имя остаётся видно. */
+.name {
+  flex: 0 1 auto;
+  min-width: 4rem;
+}
+
+.hint {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.left {
+  flex: none;
+  white-space: nowrap;
+}
+
+.short {
+  display: none;
+}
+
+/* На телефоне (вариант Б, 2026-10-24): плашка у левого края и не заходит под ползунок
+   уровней справа; имя обрезается, запас коротко и виден всегда. */
+@media (max-width: 48em) {
+  .plaque {
+    left: var(--mantine-spacing-xs);
+    right: calc(var(--mantine-spacing-xs) * 2 + 2.5rem);
+    max-width: none;
+    transform: none;
+    bottom: var(--mantine-spacing-xs);
+    padding: 4px 10px;
+  }
+
+  .plaque[data-raised] {
+    bottom: calc(var(--mantine-spacing-xs) * 2 + 2.75rem);
+  }
+
+  .long,
+  .hint,
+  .esc {
+    display: none;
+  }
+
+  .short {
+    display: inline;
+  }
+}

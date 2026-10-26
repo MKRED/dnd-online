@@ -7,16 +7,20 @@ import type {
   GameCreatureHitPoints,
   GameEventCreature,
 } from './game-creatures.js';
-import type { GameFigurePlacement } from './game-figures.js';
+import type { GameEventVisibility } from './game-event-visibility.js';
+import type { GameFigurePlacement, GameMoveMode } from './game-figures.js';
 import type { GameUser } from './games.js';
 import type { GameLibraryRef } from './game-library.js';
 import type { GameSceneRef } from './game-scenes.js';
 import type { Vec3 } from './map/coords.js';
 import type { MapOp } from './map/ops.js';
+import type { SpellSlots } from './character.js';
+import type { SpellSlotsExpended } from './spellSlots.js';
 
 // Журнал игры (docs/plan/done/game.md, «Журнал игры»): каждое действие в игре — запись с
 // номером по порядку внутри игры. Записи только добавляются; отмена — тоже запись.
-// Сам журнал видит только мастер.
+// Сам журнал пока видит только мастер; кому из игроков видна запись — visibility
+// (game-event-visibility.ts), а группа записи для журнала — game-event-groups.ts.
 
 // Сколько записей отдаёт одна страница журнала, если не просили меньше.
 export const GAME_EVENTS_PAGE = 50;
@@ -124,6 +128,8 @@ export interface GameEventPayloads {
     intent: { enabled: boolean; sightRange: number };
     result: { scene: GameSceneRef };
   };
+  // Мастер сбросил туман войны сцены: игроки забыли открытое и открывают его заново.
+  'scene.fogReset': { intent: null; result: { scene: GameSceneRef } };
   // Мастер правит сцену в игре — блоки и объекты, как в редакторе карты. libraryCopied —
   // сколько новых записей справочников (монстр, НПС, предмет) скопировано в библиотеку.
   'scene.edited': {
@@ -148,6 +154,8 @@ export interface GameEventPayloads {
     };
   };
   // Ход фигурки по пути: cost — сколько футов он стоил, left — сколько запаса осталось.
+  // path — клетки пути от from до to (анимация хода, docs/plan/done/walk-animation.md); у
+  // записей до 2026-10-24 его нет.
   'figure.moved': {
     intent: { characterId: string; to: Vec3 };
     result: {
@@ -156,6 +164,7 @@ export interface GameEventPayloads {
       to: Vec3;
       cost: number;
       left: number;
+      path?: Vec3[];
     };
   };
   // Мастер поставил фигурку без пути и запаса; from — null, если её не было на сцене.
@@ -167,7 +176,27 @@ export interface GameEventPayloads {
   // активной сцены (creatures; в записях до хода монстров его нет).
   'figures.round': {
     intent: null;
-    result: { scene: GameSceneRef; count: number; creatures?: number };
+    // round — номер раунда боя (с начала боя или сцены в тактическом режиме); у записей до
+    // 2026-10-24 его нет.
+    result: {
+      scene: GameSceneRef;
+      count: number;
+      creatures?: number;
+      round?: number;
+    };
+  };
+  // Мастер сменил режим хода (docs/dnd/movement.md): запас снова полный у всех фигурок
+  // (count) и у монстров и НПС активной сцены (creatures); round — 1 в начале боя, null
+  // в свободном режиме.
+  'game.mode': {
+    intent: { mode: GameMoveMode };
+    result: {
+      mode: GameMoveMode;
+      scene: GameSceneRef;
+      count: number;
+      creatures: number;
+      round: number | null;
+    };
   };
   // Запас одной фигурки обновлён (её новый ход) или к нему добавлен «Рывок».
   'figure.refreshed': {
@@ -224,6 +253,8 @@ export interface GameEventPayloads {
       to: Vec3;
       cost: number;
       left: number;
+      // Клетки пути, как у figure.moved.
+      path?: Vec3[];
     };
   };
   // Запас одного существа обновлён или к нему добавлен «Рывок».
@@ -234,6 +265,24 @@ export interface GameEventPayloads {
   'creature.dashed': {
     intent: { objectId: number };
     result: { creature: GameEventCreature; dashes: number };
+  };
+  // Ячейки заклинаний экземпляра НПС потрачены или возвращены (вариант А после первой
+  // партии, 2026-10-26).
+  'creature.slots_changed': {
+    intent: { objectId: number; expended: SpellSlotsExpended };
+    result: {
+      creature: GameEventCreature;
+      before: SpellSlots;
+      after: SpellSlots;
+    };
+  };
+  // Отметка «подготовлено» у заклинания экземпляра НПС.
+  'creature.prepared': {
+    intent: { objectId: number; abilityId: string; prepared: boolean };
+    result: {
+      creature: GameEventCreature;
+      ability: { id: string; name: string };
+    };
   };
   'creature.effect_added': {
     intent: { objectId: number; effectId: string };
@@ -274,6 +323,7 @@ interface GameEventBase {
   as: GameEventAs | null;
   // Сцена, в которой это случилось; у событий лобби — null.
   sceneId: string | null;
+  visibility: GameEventVisibility;
   createdAt: string;
 }
 

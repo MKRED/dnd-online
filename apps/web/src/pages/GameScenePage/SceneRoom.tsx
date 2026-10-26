@@ -3,23 +3,29 @@ import {
   CREATURE_KINDS,
   FIGURE_KINDS,
   FOG_EVENT_KINDS,
+  type GameEvent,
   type GameFigureDragMessage,
   type GameSceneEditMessage,
   type GameSceneFogMessage,
+  type GameWalkMessage,
 } from 'shared';
 import { useGameRoom } from '../../features/games';
 
 // События, после которых страница перечитывает сцену: её сменили, перезапустили,
 // открыли или закрыли (мастеру — чтобы переключатель совпадал с другой вкладкой),
-// включили или выключили туман войны, мастер поменял свои блоки на сцене — нужны новые
-// описания блоков (docs/plan/blocks.md, этап 7).
+// включили, выключили или сбросили туман войны, мастер поменял свои блоки на сцене — нужны новые
+// описания блоков (docs/plan/blocks.md, этап 7), мастер начал или закончил встречу — вне неё
+// игрок только смотрит сцену.
 const SCENE_CHANGES = new Set<string>([
   'scene.activated',
   'scene.restarted',
   'scene.opened',
   'scene.closed',
   'scene.fog',
+  'scene.fogReset',
   'blocks.changed',
+  'session.started',
+  'session.ended',
 ]);
 
 // После них перечитываются фигурки (этап 7): ход, расстановка, ушедший с места персонаж
@@ -52,10 +58,16 @@ interface SceneRoomProps {
   onFigures: () => void;
   // Кто-то тянет фигурку — где она сейчас.
   onFigureDrag: (message: GameFigureDragMessage) => void;
+  // Ход по пути — показать фигурку или существо идущими.
+  onWalk: (message: GameWalkMessage) => void;
   // Сюда комната кладёт отправку своих позиций перетаскивания.
   dragSenderRef: RefObject<((message: GameFigureDragMessage) => void) | null>;
   // Игроку закрыли сцену, его убрали из игры или игру удалили — в лобби.
   onLeave: () => void;
+  // Мастеру: записи журнала для вкладки «Журнал» (docs/plan/done/scene-page.md, этап 7) —
+  // новая запись и пропущенные после обрыва (null — перечитать журнал целиком).
+  onEvents?: (events: GameEvent[]) => void;
+  onMissed?: (missed: GameEvent[] | null) => void;
 }
 
 // Комната игры для страницы сцены. Отдельный компонент: входить в комнату можно только
@@ -70,8 +82,11 @@ function SceneRoom({
   onFogChanged,
   onFigures,
   onFigureDrag,
+  onWalk,
   dragSenderRef,
   onLeave,
+  onEvents,
+  onMissed,
 }: SceneRoomProps) {
   const { sendFigureDrag } = useGameRoom(
     gameId,
@@ -82,12 +97,15 @@ function SceneRoom({
         else if (SCENE_CHANGES.has(message.kind)) onReload();
         else if (FIGURE_CHANGES.has(message.kind)) onFigures();
       },
+      onEvent: (event) => onEvents?.([event]),
       onSceneEdit,
       onSceneFog,
       onFigureDrag,
-      onResync: () => {
+      onWalk,
+      onResync: (missed) => {
         onReload();
         onFigures();
+        onMissed?.(missed);
       },
       onClosed: onLeave,
     },

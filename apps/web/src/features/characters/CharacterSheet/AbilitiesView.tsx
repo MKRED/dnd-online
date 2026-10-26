@@ -96,10 +96,16 @@ function AbilityBlock({
 function AbilitiesView({ character }: { character: Character }) {
   return (
     <Fieldset legend="Характеристики и навыки">
-      <div className={classes.abilities}>
-        {ABILITY_SCORES.map((ability) => (
-          <AbilityBlock key={ability} character={character} ability={ability} />
-        ))}
+      <div className={classes.abilitiesBox}>
+        <div className={classes.abilities}>
+          {ABILITY_SCORES.map((ability) => (
+            <AbilityBlock
+              key={ability}
+              character={character}
+              ability={ability}
+            />
+          ))}
+        </div>
       </div>
       <Text size="xs" c="dimmed">
         ● — владение, ●● — экспертиза.

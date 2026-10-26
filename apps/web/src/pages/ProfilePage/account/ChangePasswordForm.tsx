@@ -1,4 +1,4 @@
-import { Alert, Button, PasswordInput, Stack } from '@mantine/core';
+import { Alert, Button, Group, PasswordInput, Stack } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
 import { validatePassword } from '../../../features/auth';
@@ -11,9 +11,14 @@ interface Values {
   confirmPassword: string;
 }
 
-function ChangePasswordForm() {
+interface ChangePasswordFormProps {
+  onDone: () => void;
+  onCancel: () => void;
+}
+
+// Смена пароля в раскрытой строке «Пароль»: после успеха строка сворачивается сама.
+function ChangePasswordForm({ onDone, onCancel }: ChangePasswordFormProps) {
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
   const [saving, setSaving] = useState(false);
   const form = useForm<Values>({
     initialValues: {
@@ -31,13 +36,9 @@ function ChangePasswordForm() {
 
   const handleSubmit = form.onSubmit(({ currentPassword, newPassword }) => {
     setError(null);
-    setDone(false);
     setSaving(true);
     changePassword({ currentPassword, newPassword })
-      .then(() => {
-        setDone(true);
-        form.reset();
-      })
+      .then(onDone)
       .catch((err: unknown) => {
         console.error('Failed to change password', err);
         setError(errorMessage(err, 'Не удалось сменить пароль'));
@@ -53,10 +54,10 @@ function ChangePasswordForm() {
             {error}
           </Alert>
         )}
-        {done && <Alert color="green">Пароль изменён.</Alert>}
         <PasswordInput
           label="Текущий пароль"
           required
+          autoFocus
           autoComplete="current-password"
           {...form.getInputProps('currentPassword')}
         />
@@ -72,13 +73,14 @@ function ChangePasswordForm() {
           autoComplete="new-password"
           {...form.getInputProps('confirmPassword')}
         />
-        <Button
-          type="submit"
-          loading={saving}
-          style={{ alignSelf: 'flex-start' }}
-        >
-          Сменить пароль
-        </Button>
+        <Group gap="xs">
+          <Button type="submit" loading={saving}>
+            Сменить пароль
+          </Button>
+          <Button variant="default" onClick={onCancel} disabled={saving}>
+            Отмена
+          </Button>
+        </Group>
       </Stack>
     </form>
   );

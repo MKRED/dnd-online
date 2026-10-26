@@ -11,6 +11,7 @@ import type {
   CharacterEffectEntry,
   GameCreatureChange,
   GameCreatures,
+  SpellSlotsExpended,
   Vec3,
 } from 'shared';
 import { DatabaseService } from '../../database/database.service.js';
@@ -37,6 +38,7 @@ import {
   type CreatureMoveActor,
 } from './creature-moves.js';
 import { playerFog } from '../fog/fog-view.js';
+import { prepareCreatureSpell, spendCreatureSlots } from './creature-spells.js';
 import { loadCreatureEffects, readSceneCreatures } from './creature-read.js';
 
 // Монстры и НПС активной сцены (docs/plan/done/game.md, этап 8). Видят их те же, кто видит
@@ -114,6 +116,32 @@ export class GameCreaturesService {
   ): Promise<GameCreatures> {
     await this.edit(userId, gameId, objectId, change.kind, (actor) =>
       changeCreature(actor, objectId, change),
+    );
+    return this.list(userId, gameId);
+  }
+
+  // Ячейки и подготовка экземпляра НПС; отвечают существами, как правка хитов.
+  async spellSlots(
+    userId: string,
+    gameId: string,
+    objectId: number,
+    expended: SpellSlotsExpended,
+  ): Promise<GameCreatures> {
+    await this.edit(userId, gameId, objectId, 'slots_changed', (actor) =>
+      spendCreatureSlots(actor, objectId, expended),
+    );
+    return this.list(userId, gameId);
+  }
+
+  async prepared(
+    userId: string,
+    gameId: string,
+    objectId: number,
+    abilityId: string,
+    prepared: boolean,
+  ): Promise<GameCreatures> {
+    await this.edit(userId, gameId, objectId, 'prepared', (actor) =>
+      prepareCreatureSpell(actor, objectId, abilityId, prepared),
     );
     return this.list(userId, gameId);
   }

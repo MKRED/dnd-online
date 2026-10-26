@@ -1,5 +1,5 @@
-import { Anchor, Stack, Text } from '@mantine/core';
-import { Link } from 'react-router-dom';
+import { Stack, Text } from '@mantine/core';
+import { RecordLink } from '../../catalog';
 import type { PackEntry } from 'shared';
 import PackEntryLine from './PackEntryLine';
 
@@ -19,9 +19,9 @@ function PackContentsView({ contents }: { contents: PackEntry[] }) {
             key={entry.itemId}
             entry={entry}
             renderName={(name) => (
-              <Anchor component={Link} to={`/items/${entry.itemId}`} inherit>
+              <RecordLink kind="item" id={entry.itemId} name={name} inherit>
                 {name}
-              </Anchor>
+              </RecordLink>
             )}
           >
             <Text size="sm" c="dimmed" style={{ flexShrink: 0 }}>

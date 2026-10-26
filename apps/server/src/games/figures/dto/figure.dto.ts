@@ -1,5 +1,11 @@
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsInt } from 'class-validator';
-import type { Vec3 } from 'shared';
+import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
+  IsIn,
+  IsInt,
+} from 'class-validator';
+import { GAME_MOVE_MODES, type GameMoveMode, type Vec3 } from 'shared';
 
 const CELL_MESSAGE = 'Клетка — три целых числа [x, y, z]';
 
@@ -19,4 +25,12 @@ export class PlaceFigureDto {
   @ArrayMaxSize(3, { message: CELL_MESSAGE })
   @IsInt({ each: true, message: CELL_MESSAGE })
   at: Vec3;
+}
+
+// Мастер меняет режим хода игры (docs/dnd/movement.md).
+export class MoveModeDto {
+  @IsIn(GAME_MOVE_MODES, {
+    message: 'Режим хода — «free» (свободный) или «tactical» (тактический)',
+  })
+  mode: GameMoveMode;
 }

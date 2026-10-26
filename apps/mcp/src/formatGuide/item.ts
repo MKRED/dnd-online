@@ -12,7 +12,8 @@ import {
   WEAPON_FLAGS,
   WEAPON_MASTERIES,
   WEAPONS_BY_GROUP,
-  WEAR_SLOTS,
+  CLOTHING_SLOTS,
+  JEWELRY_SLOTS,
   type Item,
   type ItemCategory,
 } from 'shared';
@@ -55,7 +56,8 @@ const DETAILS = {
   armor: `{base, kind, armorClass, strength, stealthDisadvantage, magicBonus, attunement} — доспех: base ${list(BOOK_ARMOR)} или null; kind ${list(ARMOR_KINDS)} (Ловкость к КД из вида: лёгкий полностью, средний до 2, тяжёлый нет); armorClass — базовый КД без Ловкости; strength — нужная Сила или null; magicBonus 0..3`,
   shield:
     '{armorClass, magicBonus, attunement} — щит: armorClass — прибавка к КД (у щита книги 2); magicBonus 0..3',
-  wearable: `{slot, attunement} — одежда и украшения на кукле: slot ${list(WEAR_SLOTS)}; body — одежда вместо доспеха`,
+  clothing: `{slot, attunement} — одежда на кукле: slot ${list(CLOTHING_SLOTS)}; body — одежда вместо доспеха`,
+  jewelry: `{slot, attunement} — украшение на кукле: slot ${list(JEWELRY_SLOTS)}; колец на кукле два`,
 } satisfies Record<ItemCategory, string>;
 
 export const itemGuide = () => [

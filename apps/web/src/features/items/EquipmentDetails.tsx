@@ -121,7 +121,8 @@ function EquipmentDetails({ item }: { item: Item }) {
           <MagicBonus bonus={item.details.magicBonus} />
         </>
       );
-    case 'wearable':
+    case 'clothing':
+    case 'jewelry':
       return (
         <DetailsField label="Место">
           {WEAR_SLOT_LABELS[item.details.slot]}

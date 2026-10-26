@@ -54,6 +54,9 @@ const longRange = (normal: NumberValue) => (value: NumberValue) => {
 const diceCount = (value: NumberValue) =>
   intIn(value, 1, WEAPON_DICE_MAX) ? null : `От 1 до ${WEAPON_DICE_MAX}`;
 
+const slotRule = (value: string | null) =>
+  value === null ? 'Выберите место' : null;
+
 const damageType = (value: string | null) =>
   value === null ? 'Выберите тип урона' : null;
 
@@ -96,7 +99,6 @@ export const equipmentRules = {
       ? null
       : `Целое от 0 до ${SHIELD_BONUS_MAX}`,
   ),
-  wearableSlot: when<string | null>('wearable', (value) =>
-    value === null ? 'Выберите место' : null,
-  ),
+  clothingSlot: when<string | null>('clothing', slotRule),
+  jewelrySlot: when<string | null>('jewelry', slotRule),
 };

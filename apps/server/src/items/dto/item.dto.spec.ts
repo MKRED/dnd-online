@@ -212,8 +212,23 @@ describe('ItemDto', () => {
       );
       const ring = { slot: 'ring', attunement: true };
       expect(
-        await errorsOf({ category: 'wearable', rarity: 'rare', details: ring }),
+        await errorsOf({ category: 'jewelry', rarity: 'rare', details: ring }),
       ).toEqual({});
+      const cloak = { slot: 'cloak', attunement: false };
+      expect(await errorsOf({ category: 'clothing', details: cloak })).toEqual(
+        {},
+      );
+    });
+
+    it('кольцо — украшение, а не одежда', async () => {
+      expect(
+        await errorsOf({
+          category: 'clothing',
+          details: { slot: 'ring', attunement: false },
+        }),
+      ).toEqual({
+        details: ['Выберите место одежды: голова, плащ, тело, руки или ноги'],
+      });
     });
 
     it('называет первое неверное поле оружия', async () => {

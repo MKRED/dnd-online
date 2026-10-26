@@ -6,7 +6,8 @@ import {
   armorDetailsProblem,
   equipmentRarityProblem,
   shieldDetailsProblem,
-  wearableDetailsProblem,
+  clothingDetailsProblem,
+  jewelryDetailsProblem,
   weaponDetailsProblem,
 } from './itemEquipmentCheck.js';
 import type { Weapon } from './weapons.js';
@@ -149,7 +150,7 @@ describe('weaponDetailsProblem', () => {
   });
 });
 
-describe('armorDetailsProblem и wearableDetailsProblem', () => {
+describe('доспех, одежда и украшения', () => {
   const plate = {
     base: 'plate',
     kind: 'heavy',
@@ -171,16 +172,31 @@ describe('armorDetailsProblem и wearableDetailsProblem', () => {
     );
   });
 
-  it('у одежды нет бонуса магии', () => {
+  it('у одежды и украшений нет бонуса магии', () => {
     expect(
-      wearableDetailsProblem({ slot: 'ring', attunement: true }),
+      jewelryDetailsProblem({ slot: 'ring', attunement: true }),
     ).toBeNull();
     expect(
-      wearableDetailsProblem({ slot: 'ring', attunement: true, magicBonus: 1 }),
+      jewelryDetailsProblem({ slot: 'ring', attunement: true, magicBonus: 1 }),
     ).not.toBeNull();
-    expect(wearableDetailsProblem({ slot: 'belt', attunement: false })).toBe(
-      'Выберите место на теле',
+    expect(
+      clothingDetailsProblem({ slot: 'head', attunement: true, magicBonus: 1 }),
+    ).not.toBeNull();
+  });
+
+  it('у одежды и украшений свои места', () => {
+    expect(
+      clothingDetailsProblem({ slot: 'cloak', attunement: false }),
+    ).toBeNull();
+    expect(clothingDetailsProblem({ slot: 'ring', attunement: false })).toBe(
+      'Выберите место одежды: голова, плащ, тело, руки или ноги',
     );
+    expect(jewelryDetailsProblem({ slot: 'feet', attunement: false })).toBe(
+      'Выберите место украшения: амулет или кольцо',
+    );
+    expect(
+      jewelryDetailsProblem({ slot: 'belt', attunement: false }),
+    ).not.toBeNull();
   });
 });
 

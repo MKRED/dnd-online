@@ -117,7 +117,7 @@ describeCatalog(
           .post(url())
           .send(
             body({
-              category: 'wearable',
+              category: 'jewelry',
               details: { slot: 'ring', attunement: true },
             }),
           )

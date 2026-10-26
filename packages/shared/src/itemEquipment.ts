@@ -152,18 +152,28 @@ export interface ShieldItemDetails extends EquipmentMagic {
 }
 
 // Места одежды и украшений на кукле — как слоты Baldur's Gate 3 (решено с пользователем
-// 2026-10-26). «Тело» — одежда вместо доспеха, в тот же слот.
-export const WEAR_SLOTS = [
+// 2026-10-26). Одежда и украшения — разные категории (там же): у одежды «тело» — одежда
+// вместо доспеха, в тот же слот; украшения — амулет и кольцо.
+export const CLOTHING_SLOTS = [
   'head',
   'cloak',
   'body',
   'hands',
   'feet',
-  'amulet',
-  'ring',
 ] as const;
+export type ClothingSlot = (typeof CLOTHING_SLOTS)[number];
+
+export const JEWELRY_SLOTS = ['amulet', 'ring'] as const;
+export type JewelrySlot = (typeof JEWELRY_SLOTS)[number];
+
+// Все места на кукле.
+export const WEAR_SLOTS = [...CLOTHING_SLOTS, ...JEWELRY_SLOTS] as const;
 export type WearSlot = (typeof WEAR_SLOTS)[number];
 
-export interface WearableItemDetails extends EquipmentMagic {
-  slot: WearSlot;
+export interface ClothingItemDetails extends EquipmentMagic {
+  slot: ClothingSlot;
+}
+
+export interface JewelryItemDetails extends EquipmentMagic {
+  slot: JewelrySlot;
 }

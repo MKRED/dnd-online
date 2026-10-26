@@ -19,7 +19,8 @@ export const CATEGORY_LABELS: Record<ItemCategory, string> = {
   weapon: 'Оружие',
   armor: 'Доспех',
   shield: 'Щит',
-  wearable: 'Одежда и украшения',
+  clothing: 'Одежда',
+  jewelry: 'Украшения',
 };
 
 // Подсказка под полем «Категория» в форме: что в эту категорию класть.
@@ -34,7 +35,8 @@ export const CATEGORY_HINTS: Record<ItemCategory, string> = {
   weapon: 'Мечи, луки, арбалеты. Образец из книги заполнит поля',
   armor: 'Лёгкие, средние и тяжёлые доспехи',
   shield: 'Щит: прибавка к КД',
-  wearable: 'Шлемы, плащи, перчатки, сапоги, амулеты, кольца',
+  clothing: 'Шлемы, плащи, перчатки, сапоги и одежда вместо доспеха',
+  jewelry: 'Амулеты и кольца',
 };
 
 // Названия как на dnd.su (docs/dnd/items.md); торговые слитки — тоже «Товар».

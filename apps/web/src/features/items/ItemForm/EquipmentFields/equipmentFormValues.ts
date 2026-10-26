@@ -7,7 +7,8 @@ import {
   type EquipmentCategory,
   type Item,
   type ItemInputVariant,
-  type WearSlot,
+  type ClothingSlot,
+  type JewelrySlot,
 } from 'shared';
 import {
   EMPTY_WEAPON,
@@ -31,7 +32,8 @@ export interface EquipmentFormValues {
   weapon: WeaponFormValues;
   armor: ArmorFormValues;
   shieldArmorClass: number | string;
-  wearableSlot: WearSlot | null;
+  clothingSlot: ClothingSlot | null;
+  jewelrySlot: JewelrySlot | null;
   // Строкой для Select: '0'…'3'.
   magicBonus: string;
   attunement: boolean;
@@ -89,7 +91,8 @@ export function equipmentToForm(item: Item | null): EquipmentFormValues {
       item?.category === 'shield'
         ? item.details.armorClass
         : BOOK_SHIELD.armorClass,
-    wearableSlot: item?.category === 'wearable' ? item.details.slot : null,
+    clothingSlot: item?.category === 'clothing' ? item.details.slot : null,
+    jewelrySlot: item?.category === 'jewelry' ? item.details.slot : null,
     magicBonus: String(details?.magicBonus ?? 0),
     attunement: details?.attunement ?? false,
   };
@@ -133,10 +136,15 @@ export function equipmentVariant(
           attunement,
         },
       };
-    case 'wearable':
+    case 'clothing':
       return {
         category,
-        details: { slot: values.wearableSlot ?? 'ring', attunement },
+        details: { slot: values.clothingSlot ?? 'body', attunement },
+      };
+    case 'jewelry':
+      return {
+        category,
+        details: { slot: values.jewelrySlot ?? 'ring', attunement },
       };
   }
 }

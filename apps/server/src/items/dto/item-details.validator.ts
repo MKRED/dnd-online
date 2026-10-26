@@ -7,7 +7,8 @@ import {
   TREASURE_KINDS,
   armorDetailsProblem,
   shieldDetailsProblem,
-  wearableDetailsProblem,
+  clothingDetailsProblem,
+  jewelryDetailsProblem,
   weaponDetailsProblem,
   type ItemCategory,
   type TreasureKind,
@@ -105,7 +106,8 @@ const DETAILS_CHECKS: Record<ItemCategory, (details: object) => boolean> = {
   weapon: (details) => weaponDetailsProblem(details) === null,
   armor: (details) => armorDetailsProblem(details) === null,
   shield: (details) => shieldDetailsProblem(details) === null,
-  wearable: (details) => wearableDetailsProblem(details) === null,
+  clothing: (details) => clothingDetailsProblem(details) === null,
+  jewelry: (details) => jewelryDetailsProblem(details) === null,
 };
 
 // Текст ошибки — для поля, которое правит человек; лишние поля шлёт только чужой клиент.
@@ -117,7 +119,8 @@ const MESSAGES: Partial<Record<ItemCategory, DetailsMessage>> = {
   weapon: weaponDetailsProblem,
   armor: armorDetailsProblem,
   shield: shieldDetailsProblem,
-  wearable: wearableDetailsProblem,
+  clothing: clothingDetailsProblem,
+  jewelry: jewelryDetailsProblem,
 };
 const DEFAULT_MESSAGE = 'Поля предмета не подходят к его категории';
 

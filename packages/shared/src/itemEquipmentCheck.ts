@@ -15,7 +15,8 @@ import {
   WEAPON_FLAGS,
   WEAPON_MASTERIES,
   WEAPON_RANGE_MAX,
-  WEAR_SLOTS,
+  CLOTHING_SLOTS,
+  JEWELRY_SLOTS,
 } from './itemEquipment.js';
 import type { ItemRarity } from './items.js';
 import { WEAPON_CATEGORIES, WEAPONS_BY_GROUP } from './weapons.js';
@@ -173,10 +174,19 @@ export function shieldDetailsProblem(details: unknown): Problem {
   return magicProblem(details, true);
 }
 
-export function wearableDetailsProblem(details: unknown): Problem {
+export function clothingDetailsProblem(details: unknown): Problem {
   if (!hasKeys(details, ['slot', 'attunement']))
-    return 'Поля одежды и украшений заполнены не все';
-  if (!isIn(WEAR_SLOTS, details.slot)) return 'Выберите место на теле';
+    return 'Поля одежды заполнены не все';
+  if (!isIn(CLOTHING_SLOTS, details.slot))
+    return 'Выберите место одежды: голова, плащ, тело, руки или ноги';
+  return magicProblem(details, false);
+}
+
+export function jewelryDetailsProblem(details: unknown): Problem {
+  if (!hasKeys(details, ['slot', 'attunement']))
+    return 'Поля украшения заполнены не все';
+  if (!isIn(JEWELRY_SLOTS, details.slot))
+    return 'Выберите место украшения: амулет или кольцо';
   return magicProblem(details, false);
 }
 

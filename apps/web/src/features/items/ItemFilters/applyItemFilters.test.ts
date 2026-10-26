@@ -105,7 +105,8 @@ describe('countByCategory', () => {
       weapon: 0,
       armor: 0,
       shield: 0,
-      wearable: 0,
+      clothing: 0,
+      jewelry: 0,
     });
   });
 });

@@ -10,18 +10,22 @@ import type { UseFormReturnType } from '@mantine/form';
 import {
   BOOK_SHIELD,
   ITEM_MAGIC_BONUS_MAX,
-  WEAR_SLOTS,
+  CLOTHING_SLOTS,
+  JEWELRY_SLOTS,
   isEquipmentCategory,
+  type WearSlot,
 } from 'shared';
 import { WEAR_SLOT_HINTS, WEAR_SLOT_LABELS } from '../../equipmentLabels';
 import type { ItemFormValues } from '../itemFormValues';
 import ArmorFields from './ArmorFields';
 import WeaponFields from './WeaponFields';
 
-const SLOT_OPTIONS = WEAR_SLOTS.map((value) => ({
-  value,
-  label: WEAR_SLOT_LABELS[value],
-}));
+const slotOptions = (slots: readonly WearSlot[]) =>
+  slots.map((value) => ({ value, label: WEAR_SLOT_LABELS[value] }));
+const SLOT_FIELDS = {
+  clothing: { path: 'clothingSlot', options: slotOptions(CLOTHING_SLOTS) },
+  jewelry: { path: 'jewelrySlot', options: slotOptions(JEWELRY_SLOTS) },
+} as const;
 const BONUS_OPTIONS = Array.from(
   { length: ITEM_MAGIC_BONUS_MAX + 1 },
   (_, bonus) => ({ value: String(bonus), label: bonus ? `+${bonus}` : 'Нет' }),
@@ -71,9 +75,31 @@ function MagicFields({ form }: EquipmentFieldsProps) {
   );
 }
 
+// Место на кукле: у одежды и украшений свои списки.
+function SlotField({
+  form,
+  category,
+}: EquipmentFieldsProps & { category: keyof typeof SLOT_FIELDS }) {
+  const { path, options } = SLOT_FIELDS[category];
+  const slot = form.values[path];
+  return (
+    <SimpleGrid cols={{ base: 1, xs: 2 }}>
+      <Select
+        label="Место"
+        description={slot ? WEAR_SLOT_HINTS[slot] : 'Куда надевается на кукле'}
+        placeholder="Выберите место"
+        required
+        data={options}
+        allowDeselect={false}
+        {...form.getInputProps(path)}
+      />
+    </SimpleGrid>
+  );
+}
+
 // Свои поля категорий экипировки: оружие, доспех, щит, одежда и украшения.
 function EquipmentFields({ form }: EquipmentFieldsProps) {
-  const { category, wearableSlot } = form.values;
+  const { category } = form.values;
   if (!isEquipmentCategory(category)) return null;
   return (
     <Stack gap="sm">
@@ -93,22 +119,8 @@ function EquipmentFields({ form }: EquipmentFieldsProps) {
           />
         </SimpleGrid>
       )}
-      {category === 'wearable' && (
-        <SimpleGrid cols={{ base: 1, xs: 2 }}>
-          <Select
-            label="Место"
-            description={
-              wearableSlot
-                ? WEAR_SLOT_HINTS[wearableSlot]
-                : 'Куда надевается на кукле'
-            }
-            placeholder="Выберите место"
-            required
-            data={SLOT_OPTIONS}
-            allowDeselect={false}
-            {...form.getInputProps('wearableSlot')}
-          />
-        </SimpleGrid>
+      {(category === 'clothing' || category === 'jewelry') && (
+        <SlotField form={form} category={category} />
       )}
       <MagicFields form={form} />
     </Stack>

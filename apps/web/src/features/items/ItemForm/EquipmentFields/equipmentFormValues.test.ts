@@ -108,14 +108,15 @@ describe('экипировка в запросе', () => {
 
   it('предмет из базы читается в форму и уходит тем же', () => {
     const ring = {
-      category: 'wearable',
+      category: 'jewelry',
       rarity: 'rare',
       details: { slot: 'ring', attunement: true },
     } as Item;
     const values = { ...toFormValues(ring), name: 'Кольцо' };
-    expect(values.wearableSlot).toBe('ring');
+    expect(values.jewelrySlot).toBe('ring');
+    expect(values.clothingSlot).toBeNull();
     expect(toItemInput(values)).toMatchObject({
-      category: 'wearable',
+      category: 'jewelry',
       details: { slot: 'ring', attunement: true },
     });
     const bow = {

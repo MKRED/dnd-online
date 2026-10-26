@@ -2,7 +2,8 @@ import type { CatalogImage } from './catalogImage.js';
 import type {
   ArmorItemDetails,
   ShieldItemDetails,
-  WearableItemDetails,
+  ClothingItemDetails,
+  JewelryItemDetails,
   WeaponItemDetails,
 } from './itemEquipment.js';
 
@@ -24,7 +25,8 @@ export const ITEM_CATEGORIES = [
   'weapon',
   'armor',
   'shield',
-  'wearable',
+  'clothing',
+  'jewelry',
 ] as const;
 export type ItemCategory = (typeof ITEM_CATEGORIES)[number];
 
@@ -33,7 +35,8 @@ export const EQUIPMENT_CATEGORIES = [
   'weapon',
   'armor',
   'shield',
-  'wearable',
+  'clothing',
+  'jewelry',
 ] as const satisfies readonly ItemCategory[];
 export type EquipmentCategory = (typeof EQUIPMENT_CATEGORIES)[number];
 export const isEquipmentCategory = (
@@ -136,7 +139,8 @@ export type ItemVariant =
   | { category: 'weapon'; details: WeaponItemDetails }
   | { category: 'armor'; details: ArmorItemDetails }
   | { category: 'shield'; details: ShieldItemDetails }
-  | { category: 'wearable'; details: WearableItemDetails };
+  | { category: 'clothing'; details: ClothingItemDetails }
+  | { category: 'jewelry'; details: JewelryItemDetails };
 export type ItemDetails = ItemVariant['details'];
 
 // То же для записи: у набора в составе только ссылки и количество, карточки строит сервер.

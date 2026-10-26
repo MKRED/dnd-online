@@ -1,13 +1,5 @@
-import {
-  ActionIcon,
-  Anchor,
-  Box,
-  Button,
-  Group,
-  Menu,
-  Text,
-} from '@mantine/core';
-import { Link } from 'react-router-dom';
+import { ActionIcon, Box, Button, Group, Menu, Text } from '@mantine/core';
+import { RecordLink } from '../../catalog';
 import type { MonsterItemEntry } from 'shared';
 import ItemThumb from '../../items/ItemThumb';
 import { gearEntryName } from './gearView';
@@ -40,9 +32,10 @@ function GearRow({ entry, busy, onEditQuantity, onRemove }: GearRowProps) {
       </Box>
       <Box style={{ flex: 1, minWidth: 0 }}>
         {item ? (
-          <Anchor
-            component={Link}
-            to={`/items/${item.id}`}
+          <RecordLink
+            kind="item"
+            id={item.id}
+            name={name}
             size="sm"
             lineClamp={2}
             td={entry.inactive ? 'line-through' : undefined}
@@ -54,7 +47,7 @@ function GearRow({ entry, busy, onEditQuantity, onRemove }: GearRowProps) {
             }
           >
             {name}
-          </Anchor>
+          </RecordLink>
         ) : (
           <Text size="sm" c="dimmed" fs="italic" lineClamp={2}>
             {name}

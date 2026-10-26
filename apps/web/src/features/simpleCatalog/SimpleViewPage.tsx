@@ -7,23 +7,17 @@ import {
   Group,
   Loader,
   Stack,
-  Text,
   Title,
 } from '@mantine/core';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth';
 import { TitleWithBookmark } from '../bookmarks';
-import {
-  DetailsField,
-  EntryImage,
-  SourcesList,
-  useCatalogEntry,
-} from '../catalog';
+import { EntryImage, useCatalogEntry } from '../catalog';
 import { errorMessage } from '../../lib/apiRequest';
 import { usePageTitle } from '../../lib/usePageTitle';
 import type { SimpleCatalogDef } from './simpleCatalogs';
-import SimpleBadges from './SimpleBadges';
+import SimpleEntryDetails from './SimpleEntryDetails';
 
 interface SimpleViewPageProps {
   def: SimpleCatalogDef;
@@ -107,21 +101,7 @@ function SimpleViewPage({ def }: SimpleViewPageProps) {
                   {entry.name}
                 </Title>
               )}
-              <SimpleBadges def={def} entry={entry} showHidden />
-              <DetailsField label="Автор">{entry.authorNickname}</DetailsField>
-              {def.extras.rows(entry).map(({ label, value }) => (
-                <DetailsField key={label} label={label}>
-                  {value}
-                </DetailsField>
-              ))}
-              {entry.description && (
-                <Text
-                  style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
-                >
-                  {entry.description}
-                </Text>
-              )}
-              <SourcesList sources={entry.sources} />
+              <SimpleEntryDetails def={def} entry={entry} />
               {def.CardActions && (
                 <def.CardActions
                   entry={entry}

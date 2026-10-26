@@ -1,6 +1,5 @@
-import { Anchor, Badge, Box, CloseButton, Text, Tooltip } from '@mantine/core';
-import { Link } from 'react-router-dom';
-import { CatalogThumb } from '../../catalog';
+import { Badge, Box, CloseButton, Text, Tooltip } from '@mantine/core';
+import { CatalogThumb, RecordLink } from '../../catalog';
 import { effectsCatalog, type EffectLinkEntry } from './effectsApi';
 import {
   effectEntryHint,
@@ -62,15 +61,16 @@ function EffectBadge({ entry, owner, onRemove, busy }: EffectBadgeProps) {
         withArrow
       >
         {effect ? (
-          <Anchor
-            component={Link}
-            to={`/effects/${effect.id}`}
+          <RecordLink
+            kind="effect"
+            id={effect.id}
+            name={name}
             inherit
             c="inherit"
             td={entry.inactive ? 'line-through' : undefined}
           >
             {name}
-          </Anchor>
+          </RecordLink>
         ) : (
           <Text span inherit fs="italic">
             {name}

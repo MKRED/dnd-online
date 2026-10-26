@@ -1,6 +1,6 @@
-import { Anchor, CloseButton, Text } from '@mantine/core';
+import { CloseButton, Text } from '@mantine/core';
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { RecordLink } from '../catalog';
 import classes from './AbilityLinks.module.css';
 import {
   abilityEntryName,
@@ -42,9 +42,10 @@ function AbilityRow({
       {leading}
       <div className={classes.abilityText}>
         {ability ? (
-          <Anchor
-            component={Link}
-            to={`/abilities/${ability.id}`}
+          <RecordLink
+            kind="ability"
+            id={ability.id}
+            name={name}
             size="sm"
             fw={500}
             td={entry.inactive ? 'line-through' : undefined}
@@ -52,7 +53,7 @@ function AbilityRow({
             title={entry.inactive ? inactiveHint : undefined}
           >
             {name}
-          </Anchor>
+          </RecordLink>
         ) : (
           <Text size="sm" c="dimmed" fs="italic">
             {name}

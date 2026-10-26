@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { MAX_CARD_WINDOWS, useCardWindows } from './useCardWindows';
+import { cardKey, MAX_CARD_WINDOWS, useCardWindows } from './useCardWindows';
 
 describe('useCardWindows', () => {
   it('открывает окна лесенкой, повторное открытие поднимает и разворачивает', () => {
@@ -29,5 +29,12 @@ describe('useCardWindows', () => {
     expect(result.current.windows.at(-1)?.key).toBe('m:2');
     act(() => result.current.close('m:2'));
     expect(result.current.windows).toHaveLength(2);
+  });
+
+  it('у способности и эффекта с одним id — разные окна', () => {
+    const ability = cardKey({ kind: 'ability', id: 'x', name: 'Удар' });
+    const effect = cardKey({ kind: 'effect', id: 'x', name: 'Удар' });
+    expect(ability).not.toBe(effect);
+    expect(cardKey({ kind: 'item', itemId: 'x' })).not.toBe(ability);
   });
 });

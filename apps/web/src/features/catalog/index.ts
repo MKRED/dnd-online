@@ -22,3 +22,10 @@ export { useCatalogEntry } from './useCatalogEntry';
 export { useCatalogList } from './useCatalogList';
 export { useCatalogScope } from './useCatalogScope';
 export { useCollectionView } from './useCollectionView';
+export {
+  RECORD_PATHS,
+  RecordLink,
+  RecordLinkContext,
+  type OpenRecord,
+  type RecordKind,
+} from './RecordLink';

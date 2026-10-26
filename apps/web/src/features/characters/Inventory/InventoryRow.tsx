@@ -1,6 +1,5 @@
 import {
   ActionIcon,
-  Anchor,
   Badge,
   Box,
   Button,
@@ -9,7 +8,7 @@ import {
   Text,
   Tooltip,
 } from '@mantine/core';
-import { Link } from 'react-router-dom';
+import { RecordLink } from '../../catalog';
 import type { InventoryEntry } from 'shared';
 import { formatWeight } from '../../items/itemLabels';
 import ItemThumb from '../../items/ItemThumb';
@@ -59,15 +58,16 @@ function InventoryRow({
       </Box>
       <Box style={{ flex: 1, minWidth: 0 }}>
         {item ? (
-          <Anchor
-            component={Link}
-            to={`/items/${item.id}`}
+          <RecordLink
+            kind="item"
+            id={item.id}
+            name={name}
             size="sm"
             display="block"
             lineClamp={2}
           >
             {name}
-          </Anchor>
+          </RecordLink>
         ) : (
           <Text size="sm" c="dimmed" fs="italic" lineClamp={2}>
             {name}

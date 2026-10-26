@@ -2,6 +2,7 @@ import { NumberInput, Select, SimpleGrid } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
 import { ITEM_MAX_WEIGHT, ITEM_SATIETY_MAX, TREASURE_KINDS } from 'shared';
 import { TREASURE_KIND_LABELS } from '../itemLabels';
+import EquipmentFields from './EquipmentFields';
 import type { ItemFormValues } from './itemFormValues';
 import PackContentsField from './PackContentsField';
 
@@ -70,6 +71,7 @@ function CategoryFields({ form, itemId }: CategoryFieldsProps) {
       {form.values.category === 'pack' && (
         <PackContentsField form={form} selfId={itemId} />
       )}
+      <EquipmentFields form={form} />
     </>
   );
 }

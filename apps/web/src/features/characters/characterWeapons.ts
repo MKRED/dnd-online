@@ -15,14 +15,14 @@ const CATEGORY_LABELS: Record<WeaponCategory, string> = {
   martial: 'Воинское оружие',
 };
 
-const GROUP_LABELS: Record<WeaponGroup, string> = {
+export const WEAPON_GROUP_LABELS: Record<WeaponGroup, string> = {
   simpleMelee: 'Простое рукопашное',
   simpleRanged: 'Простое дальнобойное',
   martialMelee: 'Воинское рукопашное',
   martialRanged: 'Воинское дальнобойное',
 };
 
-const WEAPON_LABELS: Record<Weapon, string> = {
+export const WEAPON_LABELS: Record<Weapon, string> = {
   quarterstaff: 'Боевой посох',
   mace: 'Булава',
   club: 'Дубинка',
@@ -82,7 +82,7 @@ export const WEAPON_PROFICIENCY_OPTIONS = [
     })),
   },
   ...WEAPON_GROUPS.map((group) => ({
-    group: GROUP_LABELS[group],
+    group: WEAPON_GROUP_LABELS[group],
     items: WEAPONS_BY_GROUP[group].map((value) => ({
       value,
       label: WEAPON_LABELS[value],
@@ -92,6 +92,6 @@ export const WEAPON_PROFICIENCY_OPTIONS = [
 
 // Подсказки для поля «Мастерство оружия»: своё оружие там можно вписать.
 export const WEAPON_SUGGESTIONS = WEAPON_GROUPS.map((group) => ({
-  group: GROUP_LABELS[group],
+  group: WEAPON_GROUP_LABELS[group],
   items: WEAPONS_BY_GROUP[group].map((value) => WEAPON_LABELS[value]),
 }));

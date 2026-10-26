@@ -1,4 +1,10 @@
+import { isEquipmentCategory } from 'shared';
 import { toSourcesInput } from '../../catalog';
+import {
+  equipmentToForm,
+  equipmentVariant,
+  type EquipmentFormValues,
+} from './EquipmentFields';
 import type { FormPackEntry } from './PackContentsField/packContents';
 import type {
   Coin,
@@ -11,7 +17,8 @@ import type {
 } from 'shared';
 
 // Значения формы. Числа — number | string: NumberInput отдаёт '' для пустого поля.
-export interface ItemFormValues {
+// Поля экипировки — в EquipmentFormValues.
+export interface ItemFormValues extends EquipmentFormValues {
   name: string;
   category: ItemCategory;
   rarity: ItemRarity;
@@ -51,11 +58,14 @@ export function toFormValues(item: Item | null): ItemFormValues {
     capacity:
       item?.category === 'container' ? (item.details.capacity ?? '') : '',
     packContents: item?.category === 'pack' ? item.details.contents : [],
+    ...equipmentToForm(item),
   };
 }
 
 // Форма проверена до отправки, поэтому у сокровища вид уже выбран.
 function toVariant(values: ItemFormValues): ItemInputVariant {
+  if (isEquipmentCategory(values.category))
+    return equipmentVariant(values.category, values);
   switch (values.category) {
     case 'food':
       return { category: 'food', details: { satiety: Number(values.satiety) } };

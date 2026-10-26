@@ -102,6 +102,10 @@ describe('countByCategory', () => {
       treasure: 0,
       container: 0,
       pack: 0,
+      weapon: 0,
+      armor: 0,
+      shield: 0,
+      wearable: 0,
     });
   });
 });

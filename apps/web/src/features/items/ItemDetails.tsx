@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { Item } from 'shared';
 import { TitleWithBookmark } from '../bookmarks';
 import { DetailsField, EntryImage, SourcesList } from '../catalog';
+import EquipmentDetails from './EquipmentDetails';
 import { ItemBadges } from './ItemCollection';
 import { PackContentsView } from './PackContents';
 import {
@@ -50,6 +51,7 @@ function ItemDetails({ item, actions }: ItemDetailsProps) {
                 {TREASURE_KIND_LABELS[item.details.kind]}
               </DetailsField>
             )}
+            <EquipmentDetails item={item} />
             <DetailsField label="Вес">{formatWeight(item.weight)}</DetailsField>
             <DetailsField label="Стоимость">
               {formatCost(item.cost)}

@@ -5,18 +5,22 @@ import {
   ITEM_PACK_MAX_QUANTITY,
   ITEM_SATIETY_MAX,
   TREASURE_KINDS,
+  armorDetailsProblem,
+  shieldDetailsProblem,
+  wearableDetailsProblem,
+  weaponDetailsProblem,
   type ItemCategory,
   type TreasureKind,
 } from 'shared';
 import {
   CategoryDetails,
+  type DetailsMessage,
   isEmptyDetails,
 } from '../../catalog/category-details.validator.js';
 
 // Проверка details для каждой категории. У категорий без своих полей — только пустой
-// объект. Поля у категорий пока простые, поэтому хватает функции; категория с
-// вложенными полями заведёт свой DTO-класс (validateSync с whitelist и
-// forbidNonWhitelisted).
+// объект. Экипировку проверяют функции из shared (itemEquipmentCheck.ts): они же
+// называют первое неверное поле.
 
 function isFood(details: object): boolean {
   const keys = Object.keys(details);
@@ -98,14 +102,22 @@ const DETAILS_CHECKS: Record<ItemCategory, (details: object) => boolean> = {
   treasure: isTreasure,
   container: isContainer,
   pack: isPack,
+  weapon: (details) => weaponDetailsProblem(details) === null,
+  armor: (details) => armorDetailsProblem(details) === null,
+  shield: (details) => shieldDetailsProblem(details) === null,
+  wearable: (details) => wearableDetailsProblem(details) === null,
 };
 
 // Текст ошибки — для поля, которое правит человек; лишние поля шлёт только чужой клиент.
-const MESSAGES: Partial<Record<ItemCategory, string>> = {
+const MESSAGES: Partial<Record<ItemCategory, DetailsMessage>> = {
   food: `Насыщение — целое число от 0 до ${ITEM_SATIETY_MAX}`,
   treasure: 'Выберите вид сокровища',
   container: `Груз — больше 0 и до ${ITEM_MAX_WEIGHT} фнт., не больше двух знаков после запятой`,
   pack: `В наборе — от 1 до ${ITEM_PACK_MAX_ENTRIES} разных предметов, количество каждого — целое от 1 до ${ITEM_PACK_MAX_QUANTITY}`,
+  weapon: weaponDetailsProblem,
+  armor: armorDetailsProblem,
+  shield: shieldDetailsProblem,
+  wearable: wearableDetailsProblem,
 };
 const DEFAULT_MESSAGE = 'Поля предмета не подходят к его категории';
 

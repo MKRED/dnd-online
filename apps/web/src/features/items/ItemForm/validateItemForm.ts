@@ -7,6 +7,7 @@ import {
   ITEM_SATIETY_MAX,
   type ItemCategory,
 } from 'shared';
+import { equipmentRules } from './EquipmentFields';
 import type { FormPackEntry } from './PackContentsField/packContents';
 
 // Те же правила, что у сервера (ItemDto): форма ловит ошибку до отправки, тексты те же.
@@ -83,4 +84,5 @@ export const validateItemForm = {
     value.trim().length > ITEM_DESCRIPTION_MAX_LENGTH
       ? `Описание — не длиннее ${ITEM_DESCRIPTION_MAX_LENGTH} символов`
       : null,
+  ...equipmentRules,
 };

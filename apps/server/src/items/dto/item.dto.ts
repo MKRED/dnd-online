@@ -27,6 +27,7 @@ import {
 } from 'shared';
 import { CatalogSources } from '../../catalog/catalog-sources.validator.js';
 import { DetailsForCategory } from './item-details.validator.js';
+import { MagicNeedsRarity } from './item-magic.validator.js';
 
 const trim = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
@@ -56,6 +57,7 @@ export class ItemDto {
   category: ItemCategory;
 
   @IsIn(ITEM_RARITIES, { message: 'Неизвестная редкость предмета' })
+  @MagicNeedsRarity()
   rarity: ItemRarity;
 
   @DetailsForCategory()

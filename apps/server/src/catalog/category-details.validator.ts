@@ -3,10 +3,13 @@ import { ValidationArguments, registerDecorator } from 'class-validator';
 // Проверка details по категории — общая для каталогов: набор полей details зависит от
 // category, поэтому проверка кросс-полевая. Каждый каталог передаёт свои проверки и
 // тексты ошибок. Неизвестную категорию отклоняет её собственный декоратор, поэтому
-// здесь ошибка не дублируется.
+// здесь ошибка не дублируется. Текст может зависеть от полей: у категории со многими
+// полями он называет первое неверное.
+export type DetailsMessage = string | ((details: unknown) => string | null);
+
 export function CategoryDetails<C extends string>(
   checks: Record<C, (details: object) => boolean>,
-  messages: Partial<Record<C, string>>,
+  messages: Partial<Record<C, DetailsMessage>>,
   defaultMessage: string,
 ) {
   const categories = Object.keys(checks);
@@ -25,7 +28,10 @@ export function CategoryDetails<C extends string>(
         },
         defaultMessage(args: ValidationArguments) {
           const { category } = args.object as { category?: unknown };
-          return messages[category as C] ?? defaultMessage;
+          const message = messages[category as C];
+          if (typeof message === 'function')
+            return message(args.value) ?? defaultMessage;
+          return message ?? defaultMessage;
         },
       },
     });

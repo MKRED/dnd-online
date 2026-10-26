@@ -15,7 +15,7 @@ describe('itemFilters', () => {
 
   it('читает фильтры из адреса и отбрасывает неизвестные значения', () => {
     const params = new URLSearchParams(
-      'cat=food,weapon,food,quest&rarity=epic&q=верёв&sort=price',
+      'cat=food,potion,food,quest&rarity=epic&q=верёв&sort=price',
     );
     expect(readItemFilters(params)).toEqual({
       categories: ['food', 'quest'],

@@ -62,7 +62,7 @@ describe('ItemDto', () => {
   });
 
   it('отклоняет неизвестную категорию и монету', async () => {
-    expect(await errorsOf({ category: 'weapon' })).toEqual({
+    expect(await errorsOf({ category: 'potion' })).toEqual({
       category: ['Неизвестная категория предмета'],
     });
     expect(await errorsOf({ cost: { amount: 1, coin: 'zm' } })).toEqual({
@@ -175,5 +175,73 @@ describe('ItemDto', () => {
     });
     expect(await errorsOf({ details: [] })).toHaveProperty('details');
     expect(await errorsOf({ details: undefined })).toHaveProperty('details');
+  });
+  describe('экипировка', () => {
+    const longsword = {
+      base: 'longsword',
+      weaponCategory: 'martial',
+      attackType: 'melee',
+      damage: { count: 1, die: 8, type: 'slashing' },
+      properties: [],
+      thrown: null,
+      ammunition: null,
+      versatile: { count: 1, die: 10 },
+      mastery: 'sap',
+      magicBonus: 0,
+      attunement: false,
+    };
+
+    it('принимает оружие, доспех, щит и кольцо', async () => {
+      expect(
+        await errorsOf({ category: 'weapon', details: longsword }),
+      ).toEqual({});
+      const armor = {
+        base: 'chainMail',
+        kind: 'heavy',
+        armorClass: 16,
+        strength: 13,
+        stealthDisadvantage: true,
+        magicBonus: 0,
+        attunement: false,
+      };
+      expect(await errorsOf({ category: 'armor', details: armor })).toEqual({});
+      const shield = { armorClass: 2, magicBonus: 0, attunement: false };
+      expect(await errorsOf({ category: 'shield', details: shield })).toEqual(
+        {},
+      );
+      const ring = { slot: 'ring', attunement: true };
+      expect(
+        await errorsOf({ category: 'wearable', rarity: 'rare', details: ring }),
+      ).toEqual({});
+    });
+
+    it('называет первое неверное поле оружия', async () => {
+      expect(
+        await errorsOf({
+          category: 'weapon',
+          details: { ...longsword, thrown: { normal: 60, long: 20 } },
+        }),
+      ).toEqual({
+        details: [
+          'Дистанция метания — от 5 до 1000 фт., кратно 5, наибольшая не меньше обычной',
+        ],
+      });
+    });
+
+    it('бонус магии и настройка — только с редкостью', async () => {
+      const magic = { ...longsword, magicBonus: 1 };
+      expect(await errorsOf({ category: 'weapon', details: magic })).toEqual({
+        rarity: [
+          'Бонус магии и настройка бывают только у магического предмета: выберите редкость',
+        ],
+      });
+      expect(
+        await errorsOf({
+          category: 'weapon',
+          rarity: 'uncommon',
+          details: magic,
+        }),
+      ).toEqual({});
+    });
   });
 });

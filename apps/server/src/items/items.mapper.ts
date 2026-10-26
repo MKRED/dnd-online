@@ -1,5 +1,6 @@
 import {
   isCatalogSources,
+  isEquipmentCategory,
   TREASURE_KINDS,
   type Item,
   type ItemCategory,
@@ -55,6 +56,10 @@ export function toItemVariant(
   }
   if (category === 'pack') {
     return { category, details: { contents: packContents } };
+  }
+  // Экипировку пишет только проверенный DTO, старых записей без полей у неё нет.
+  if (isEquipmentCategory(category)) {
+    return { category, details } as unknown as ItemVariant;
   }
   return { category, details: {} };
 }

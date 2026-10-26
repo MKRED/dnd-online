@@ -1,4 +1,10 @@
 import type { CatalogImage } from './catalogImage.js';
+import type {
+  ArmorItemDetails,
+  ShieldItemDetails,
+  WearableItemDetails,
+  WeaponItemDetails,
+} from './itemEquipment.js';
 
 // Предметы (docs/plan/done/items.md): общий каталог. Общие поля у всех предметов одинаковые,
 // поля категории лежат в details — у каждой категории свои. Справка по весу, стоимости
@@ -14,8 +20,26 @@ export const ITEM_CATEGORIES = [
   'treasure',
   'container',
   'pack',
+  // Экипировка (docs/plan/equipment.md): поля — itemEquipment.ts.
+  'weapon',
+  'armor',
+  'shield',
+  'wearable',
 ] as const;
 export type ItemCategory = (typeof ITEM_CATEGORIES)[number];
+
+// Категории экипировки: их предметы надевают на куклу персонажа.
+export const EQUIPMENT_CATEGORIES = [
+  'weapon',
+  'armor',
+  'shield',
+  'wearable',
+] as const satisfies readonly ItemCategory[];
+export type EquipmentCategory = (typeof EQUIPMENT_CATEGORIES)[number];
+export const isEquipmentCategory = (
+  category: ItemCategory,
+): category is EquipmentCategory =>
+  (EQUIPMENT_CATEGORIES as readonly ItemCategory[]).includes(category);
 
 // Категории без своих полей: details у них пустой объект (docs/plan/done/items-filters.md).
 export const PLAIN_ITEM_CATEGORIES = [
@@ -108,7 +132,11 @@ export type ItemVariant =
   | { category: 'food'; details: FoodItemDetails }
   | { category: 'treasure'; details: TreasureItemDetails }
   | { category: 'container'; details: ContainerItemDetails }
-  | { category: 'pack'; details: PackItemDetails };
+  | { category: 'pack'; details: PackItemDetails }
+  | { category: 'weapon'; details: WeaponItemDetails }
+  | { category: 'armor'; details: ArmorItemDetails }
+  | { category: 'shield'; details: ShieldItemDetails }
+  | { category: 'wearable'; details: WearableItemDetails };
 export type ItemDetails = ItemVariant['details'];
 
 // То же для записи: у набора в составе только ссылки и количество, карточки строит сервер.

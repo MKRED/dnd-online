@@ -39,6 +39,7 @@ function objectsMock() {
       hidden: false,
     },
     selected: null,
+    moving: false,
   };
 }
 
@@ -146,6 +147,48 @@ describe('useMapEditor, клавиши', () => {
     act(() => result.current.pickBlock('wood'));
     expect(result.current.placeEmpty).toBe(false);
     expect(result.current.sceneEditor?.idle).toBeUndefined();
+  });
+
+  it('«Перенести»: щелчок по клетке уходит объекту — и с блоком, и с пустым «Поставить»', () => {
+    const idle = objectsMock();
+    const moving = {
+      ...idle,
+      selected: { id: 1 } as unknown as null,
+      moving: true,
+    };
+    const state: SizedMapState = {
+      store: new MemoryChunkStore(),
+      palette: createPalette(),
+      size: { width: 4, depth: 4 },
+    };
+    const ops = vi.fn();
+    const { result, rerender } = renderHook(
+      ({ objects }) =>
+        useMapEditor({
+          state,
+          applyOps: ops,
+          undo: vi.fn(),
+          redo: vi.fn(),
+          objects,
+          keysActive: true,
+        }),
+      { initialProps: { objects: idle } },
+    );
+    press('Digit2');
+    const cells = { ground: [1, 0, 1] } as never;
+    rerender({ objects: moving });
+    act(() => result.current.sceneEditor?.onPick(cells));
+    // Ничего не ставить: без выделения Esc снимает выбранный блок.
+    rerender({ objects: idle });
+    act(() => {
+      fireEvent.keyDown(document.documentElement, { key: 'Escape' });
+    });
+    expect(result.current.placeEmpty).toBe(true);
+    rerender({ objects: moving });
+    act(() => result.current.sceneEditor?.onPick(cells));
+    expect(idle.pick).toHaveBeenCalledTimes(2);
+    expect(idle.escape).not.toHaveBeenCalled();
+    expect(ops).not.toHaveBeenCalled();
   });
 
   it('у «Поставить» с блоком R поворачивает блок', () => {

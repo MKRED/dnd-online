@@ -41,6 +41,7 @@ type ToolObjects = Pick<
   | 'settings'
   | 'selected'
   | 'scope'
+  | 'moving'
 >;
 
 interface MapEditorOptions {
@@ -218,10 +219,12 @@ export function useMapEditor({
     extent: objectExtent,
     ghost: objectGhost,
     escape: objectEscape,
+    moving: objectMoving,
   } = objects;
   const placesObject = objects.settings.choice !== null;
   const placesNothing = tool === 'place' && placeEmpty && !placesObject;
   const hasSelection = objects.selected !== null;
+  const movingObject = objectMoving && hasSelection;
   const creaturePick = creatures?.pick;
   const creatureExtent = creatures?.extent;
   const creatureGhost = creatures?.ghost;
@@ -241,6 +244,18 @@ export function useMapEditor({
         extent: creatureExtent,
         ghost: creatureGhost,
         idle: creaturesIdle,
+      };
+    }
+    // «Перенести»: щелчок по клетке переносит выделенный объект, что бы ни было выбрано
+    // ставить. Раньше без выбранного объекта щелчок уходил блокам и только снимал
+    // «Перенести» (замечания после первой партии, 2026-10-26).
+    if (tool === 'place' && movingObject) {
+      return {
+        tool,
+        anchor: null,
+        height,
+        onPick: objectPick,
+        extent: objectExtent,
       };
     }
     // Пустое «Поставить»: щелчок мимо только снимает выделение, как у объектов.
@@ -306,6 +321,7 @@ export function useMapEditor({
     placesObject,
     placesNothing,
     hasSelection,
+    movingObject,
     creaturePick,
     creatureExtent,
     creatureGhost,

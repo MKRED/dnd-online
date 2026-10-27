@@ -148,6 +148,38 @@ describe('weaponDetailsProblem', () => {
       'Бонус магии — от 0 до +3',
     );
   });
+
+  // Отметки необязательны: старые записи и клиенты без них остаются верными.
+  it('«Действует без настройки» — у бонуса и у части доп. урона, да или нет', () => {
+    const fire = { count: 2, die: 6, type: 'fire' };
+    const marked = {
+      ...longsword,
+      attunement: true,
+      bonusWithoutAttunement: true,
+      extraDamage: [{ ...fire, withoutAttunement: false }, fire],
+    };
+    expect(weaponDetailsProblem(marked)).toBeNull();
+    expect(
+      weaponDetailsProblem({ ...marked, bonusWithoutAttunement: 'да' }),
+    ).toBe('Отметка «Действует без настройки» у бонуса магии — да или нет');
+    expect(
+      weaponDetailsProblem({
+        ...marked,
+        extraDamage: [{ ...fire, withoutAttunement: 1 }],
+      }),
+    ).toMatch(/^Дополнительный урон/);
+    expect(
+      weaponDetailsProblem({ ...marked, extraDamage: [{ ...fire, x: true }] }),
+    ).toMatch(/^Дополнительный урон/);
+    expect(
+      shieldDetailsProblem({
+        armorClass: 2,
+        magicBonus: 1,
+        attunement: true,
+        bonusWithoutAttunement: true,
+      }),
+    ).toBeNull();
+  });
 });
 
 describe('доспех, одежда и украшения', () => {
@@ -160,6 +192,15 @@ describe('доспех, одежда и украшения', () => {
     magicBonus: 0,
     attunement: false,
   };
+
+  it('у доспеха — отметка бонуса, лишних ключей нет', () => {
+    expect(
+      armorDetailsProblem({ ...plate, bonusWithoutAttunement: false }),
+    ).toBeNull();
+    expect(armorDetailsProblem({ ...plate, withoutAttunement: true })).toBe(
+      'Поля доспеха заполнены не все',
+    );
+  });
 
   it('требование Силы — число или пусто', () => {
     expect(armorDetailsProblem({ ...plate, strength: null })).toBeNull();

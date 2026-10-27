@@ -100,6 +100,59 @@ describeCatalog(
         });
       });
 
+      // Магия без настройки (docs/dnd/weapons-armor.md): отметки необязательны и хранятся
+      // как присланы; без них запись прежняя.
+      it('отметки «Действует без настройки» сохраняются, неверная — 400', async () => {
+        const { author, url, create, body } = get();
+        const marked = {
+          ...longsword,
+          attunement: true,
+          bonusWithoutAttunement: true,
+          extraDamage: [
+            { count: 2, die: 4, type: 'fire', withoutAttunement: true },
+            { count: 1, die: 6, type: 'cold' },
+          ],
+        };
+        const { id } = await create({
+          category: 'weapon',
+          rarity: 'rare',
+          details: marked,
+        });
+        const card = await author.get(url(id)).expect(200);
+        expect(card.body).toMatchObject({ details: marked });
+        expect(
+          (card.body as { details: { extraDamage: object[] } }).details
+            .extraDamage[1],
+        ).not.toHaveProperty('withoutAttunement');
+
+        const bad = await author
+          .put(url(id))
+          .send(
+            body({
+              category: 'weapon',
+              rarity: 'rare',
+              details: { ...marked, bonusWithoutAttunement: 'да' },
+            }),
+          )
+          .expect(400);
+        expect(JSON.stringify(bad.body)).toContain('Действует без настройки');
+        await author
+          .put(url(id))
+          .send(
+            body({
+              category: 'shield',
+              rarity: 'rare',
+              details: {
+                armorClass: 2,
+                magicBonus: 1,
+                attunement: true,
+                withoutAttunement: true,
+              },
+            }),
+          )
+          .expect(400);
+      });
+
       it('неверные поля и магия без редкости — 400 с текстом', async () => {
         const { author, url, body } = get();
         const badRange = await author

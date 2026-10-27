@@ -45,13 +45,18 @@ const chainMail: ItemVariant = {
   },
 };
 
-function worn(name: string, variant: ItemVariant, equipped: EquipSlot[]) {
+function worn(
+  name: string,
+  variant: ItemVariant,
+  equipped: EquipSlot[],
+  attuned = false,
+) {
   return {
     id: `row-${name}`,
     location: 'carried',
     quantity: 1,
     equipped,
-    attuned: false,
+    attuned,
     item: {
       id: `item-${name}`,
       name,
@@ -115,5 +120,62 @@ describe('лист с надетым', () => {
     expect(
       box.getByText('Без владения: без бонуса мастерства'),
     ).toBeInTheDocument();
+  });
+
+  // Магия без настройки (вариант 2А макета 2026-10-27): числа без неё и строка, чего нет.
+  it('без настройки: атака и КД без магии, строка «Нет настройки»', () => {
+    const flame: ItemVariant = {
+      category: 'weapon',
+      details: {
+        ...(longsword.details as object),
+        magicBonus: 1,
+        attunement: true,
+        extraDamage: [{ count: 2, die: 6, type: 'fire' }],
+      } as ItemVariant['details'],
+    } as ItemVariant;
+    const mail: ItemVariant = {
+      category: 'armor',
+      details: {
+        ...(chainMail.details as object),
+        kind: 'light',
+        magicBonus: 1,
+        attunement: true,
+      } as ItemVariant['details'],
+    } as ItemVariant;
+    const inventory = [
+      worn('Пламенный меч', flame, ['meleeMain']),
+      worn('Кольчуга', mail, ['body']),
+    ];
+    const { unmount } = renderWithProviders(
+      <CharacterSheet character={sheet(inventory)} aside={null} />,
+    );
+    const box = within(screen.getByText('Атаки').closest('fieldset')!);
+    expect(box.getByLabelText('Атака +2: Сила +2')).toBeInTheDocument();
+    expect(box.getByText('1к8 + 2 рубящий')).toBeInTheDocument();
+    expect(
+      box.getByText('Нет настройки: не действуют бонус +1 и урон 2к6 огонь'),
+    ).toBeInTheDocument();
+    const tile = screen.getByLabelText(/^Класс доспеха: /);
+    expect(tile).toHaveAccessibleName(
+      /^Класс доспеха: 18\. Кольчуга: 16 Ловкость: \+2 Нет настройки: не действует бонус \+1 доспеха «Кольчуга»/,
+    );
+    expect(within(tile).getByText('Нет настройки')).toBeInTheDocument();
+    unmount();
+
+    renderWithProviders(
+      <CharacterSheet
+        character={sheet([
+          worn('Пламенный меч', flame, ['meleeMain'], true),
+          worn('Кольчуга', mail, ['body'], true),
+        ])}
+        aside={null}
+      />,
+    );
+    const attuned = within(screen.getByText('Атаки').closest('fieldset')!);
+    expect(
+      attuned.getByText('1к8 + 3 рубящий + 2к6 огонь'),
+    ).toBeInTheDocument();
+    expect(attuned.queryByText(/^Нет настройки/)).toBeNull();
+    expect(screen.getByLabelText(/^Класс доспеха: 19\./)).toBeInTheDocument();
   });
 });

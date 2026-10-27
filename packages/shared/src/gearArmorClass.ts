@@ -27,6 +27,8 @@ export interface GearArmorClass {
   lines: GearLine[];
   // Чего не хватает: тренированности с доспехом или со щитом.
   warnings: string[];
+  // Чья магия не действует без настройки (gearMagic.ts).
+  unattuned: string[];
 }
 
 export interface GearArmorClassInput {
@@ -42,12 +44,16 @@ export const armorUntrainedWarning = (name: string) =>
 export const shieldUntrainedWarning = (name: string) =>
   `Нет тренированности со щитами: «${name}» КД не даёт`;
 
+export const unattunedBonusNote = (bonus: number, of: string) =>
+  `Нет настройки: не действует бонус +${bonus} ${of}`;
+
 export function gearArmorClass(
   gear: WornGear,
   { unarmored, dexterity, training }: GearArmorClassInput,
 ): GearArmorClass {
   const lines: GearLine[] = [];
   const warnings: string[] = [];
+  const unattuned: string[] = [];
   let armorClass = unarmored;
   let shieldBonus = 0;
   const { armor, shield } = gear;
@@ -69,6 +75,10 @@ export function gearArmorClass(
     }
     if (!training.includes(kind))
       warnings.push(armorUntrainedWarning(armor.name));
+    if (armor.inactive)
+      unattuned.push(
+        unattunedBonusNote(armor.inactive.bonus, `доспеха «${armor.name}»`),
+      );
   } else if (shield) {
     lines.push({ text: 'Без доспеха', value: String(unarmored) });
   }
@@ -79,6 +89,10 @@ export function gearArmorClass(
       armorClass += bonus;
       shieldBonus = bonus;
       lines.push({ text: shield.name, value: signed(bonus) });
+      if (shield.inactive)
+        unattuned.push(
+          unattunedBonusNote(shield.inactive.bonus, `щита «${shield.name}»`),
+        );
     } else {
       warnings.push(shieldUntrainedWarning(shield.name));
     }
@@ -90,6 +104,7 @@ export function gearArmorClass(
     shieldBonus,
     lines,
     warnings,
+    unattuned,
   };
 }
 

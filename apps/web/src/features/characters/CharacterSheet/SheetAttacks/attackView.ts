@@ -2,6 +2,7 @@ import {
   DAMAGE_TYPE_LABELS,
   HEAVY_MIN_SCORE,
   type GearAttack,
+  type InactiveMagic,
   type WeaponDamage,
   type WeaponDice,
 } from 'shared';
@@ -75,6 +76,17 @@ export function masteryUnlocked(
 
 const ABILITY_SHORT = { strength: 'Сила', dexterity: 'Ловкость' } as const;
 
+// Что не действует без настройки (вариант А макета 2026-10-27): числа строки уже без
+// этого, а здесь — что вернёт настройка.
+export function unattunedNote(inactive: InactiveMagic): string {
+  const parts = [
+    ...(inactive.bonus > 0 ? [`бонус +${inactive.bonus}`] : []),
+    ...inactive.extraDamage.map((part) => `урон ${formatAttackDamage(part)}`),
+  ];
+  const verb = parts.length > 1 ? 'не действуют' : 'не действует';
+  return `Нет настройки: ${verb} ${parts.join(' и ')}`;
+}
+
 export function attackView(
   attack: GearAttack,
   masteries: readonly string[],
@@ -83,6 +95,7 @@ export function attackView(
   const { details } = weapon;
   const isOff = weapon.slot === 'meleeOff' || weapon.slot === 'rangedOff';
   const notes: string[] = [];
+  if (weapon.inactive) notes.push(unattunedNote(weapon.inactive));
   if (!attack.proficient) notes.push('Без владения: без бонуса мастерства');
   if (attack.heavyDisadvantage) {
     notes.push(

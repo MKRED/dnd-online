@@ -14,6 +14,16 @@ export interface EquipmentMagic {
   attunement: boolean;
 }
 
+// Предмет, который требует настройки, без неё даёт только обычные свойства, «unless its
+// description states otherwise» (SRD 5.2.1; docs/dnd/weapons-armor.md, «Магия без
+// настройки»). Это «иначе» — отметка у части магии: бонуса или доп. урона (решено с
+// пользователем 2026-10-27, вариант А). Поле необязательное: нет — как в книге, без
+// настройки не действует; так старые записи и клиенты без отметок остаются верными.
+export interface MagicBonus {
+  magicBonus: number;
+  bonusWithoutAttunement?: boolean;
+}
+
 // Свойства оружия без параметров. Метательное, Боеприпас и Универсальное несут параметры
 // и лежат своими полями.
 export const WEAPON_FLAGS = [
@@ -77,6 +87,9 @@ export interface WeaponDamage {
 // магии: «1к8 колющий + 2к4 огонь + 4 некротический». Всего частей не больше трёх
 // (решено с пользователем 2026-10-26).
 export const WEAPON_EXTRA_DAMAGE_MAX = 2;
+export interface WeaponExtraDamage extends WeaponDamage {
+  withoutAttunement?: boolean;
+}
 
 // Урон Универсального оружия двумя руками — тем же типом, что основной.
 export interface WeaponDice {
@@ -84,21 +97,20 @@ export interface WeaponDice {
   die: DamageDie;
 }
 
-export interface WeaponItemDetails extends EquipmentMagic {
+export interface WeaponItemDetails extends EquipmentMagic, MagicBonus {
   // Образец из книги: из него форма заполнила поля, по нему же считается владение.
   // null — своё оружие без образца.
   base: Weapon | null;
   weaponCategory: WeaponCategory;
   attackType: WeaponAttackType;
   damage: WeaponDamage;
-  extraDamage: WeaponDamage[];
+  extraDamage: WeaponExtraDamage[];
   // Без повторов, в порядке WEAPON_FLAGS.
   properties: WeaponFlag[];
   thrown: WeaponRange | null;
   ammunition: (WeaponRange & { kind: AmmunitionKind }) | null;
   versatile: WeaponDice | null;
   mastery: WeaponMastery | null;
-  magicBonus: number;
 }
 
 export const ARMOR_KINDS = ['light', 'medium', 'heavy'] as const;
@@ -132,7 +144,7 @@ export const ARMOR_DEX_CAP: Record<ArmorKind, number | null> = {
 export const ARMOR_CLASS_MAX = 30;
 export const ARMOR_STRENGTH_MAX = 30;
 
-export interface ArmorItemDetails extends EquipmentMagic {
+export interface ArmorItemDetails extends EquipmentMagic, MagicBonus {
   base: BookArmor | null;
   kind: ArmorKind;
   // Базовый КД доспеха без Ловкости: 11 у кожаного, 16 у кольчужного.
@@ -140,15 +152,13 @@ export interface ArmorItemDetails extends EquipmentMagic {
   // Нужная Сила, иначе скорость −10 фт. null — требования нет.
   strength: number | null;
   stealthDisadvantage: boolean;
-  magicBonus: number;
 }
 
 export const SHIELD_BONUS_MAX = 10;
 
-export interface ShieldItemDetails extends EquipmentMagic {
+export interface ShieldItemDetails extends EquipmentMagic, MagicBonus {
   // Прибавка к КД: у щита книги +2.
   armorClass: number;
-  magicBonus: number;
 }
 
 // Места одежды и украшений на кукле — как слоты Baldur's Gate 3 (решено с пользователем

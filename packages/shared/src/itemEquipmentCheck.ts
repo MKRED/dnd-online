@@ -35,19 +35,32 @@ const isInt = (value: unknown, min: number, max: number) =>
   (value as number) >= min &&
   (value as number) <= max;
 
-function hasKeys(value: unknown, keys: string[]): value is Fields {
+// Все keys на месте, из optional — какие угодно, других нет.
+function hasKeys(
+  value: unknown,
+  keys: string[],
+  optional: string[] = [],
+): value is Fields {
   if (typeof value !== 'object' || value === null || Array.isArray(value))
     return false;
-  const own = Object.keys(value).sort();
-  const want = [...keys].sort();
-  return own.length === want.length && own.every((key, i) => key === want[i]);
+  const own = Object.keys(value);
+  return (
+    keys.every((key) => own.includes(key)) &&
+    own.every((key) => keys.includes(key) || optional.includes(key))
+  );
 }
+
+// Отметка «Действует без настройки» необязательна (itemEquipment.ts, MagicBonus).
+const isOptionalFlag = (fields: Fields, key: string) =>
+  !(key in fields) || typeof fields[key] === 'boolean';
 
 function magicProblem(fields: Fields, withBonus: boolean): Problem {
   if (typeof fields.attunement !== 'boolean')
     return 'Признак «Требует настройки» — да или нет';
   if (withBonus && !isInt(fields.magicBonus, 0, ITEM_MAGIC_BONUS_MAX))
     return `Бонус магии — от 0 до +${ITEM_MAGIC_BONUS_MAX}`;
+  if (withBonus && !isOptionalFlag(fields, 'bonusWithoutAttunement'))
+    return 'Отметка «Действует без настройки» у бонуса магии — да или нет';
   return null;
 }
 
@@ -63,9 +76,10 @@ function isRange(value: unknown, extra: string[] = []): boolean {
   );
 }
 
-function isDamage(value: unknown): boolean {
-  if (!hasKeys(value, ['count', 'die', 'type'])) return false;
+function isDamage(value: unknown, optional: string[] = []): boolean {
+  if (!hasKeys(value, ['count', 'die', 'type'], optional)) return false;
   return (
+    optional.every((key) => isOptionalFlag(value, key)) &&
     isInt(value.count, 1, WEAPON_DICE_MAX) &&
     (value.die === null || isIn(DAMAGE_DICE, value.die)) &&
     isIn(DAMAGE_TYPES, value.type)
@@ -99,9 +113,11 @@ const WEAPON_KEYS = [
   'magicBonus',
   'attunement',
 ];
+const BONUS_OPTIONAL = ['bonusWithoutAttunement'];
 
 export function weaponDetailsProblem(details: unknown): Problem {
-  if (!hasKeys(details, WEAPON_KEYS)) return 'Поля оружия заполнены не все';
+  if (!hasKeys(details, WEAPON_KEYS, BONUS_OPTIONAL))
+    return 'Поля оружия заполнены не все';
   const d = details;
   if (d.base !== null && !isIn(ALL_WEAPONS, d.base))
     return 'Неизвестный образец оружия';
@@ -114,7 +130,7 @@ export function weaponDetailsProblem(details: unknown): Problem {
   if (
     !Array.isArray(d.extraDamage) ||
     d.extraDamage.length > WEAPON_EXTRA_DAMAGE_MAX ||
-    !d.extraDamage.every(isDamage)
+    !d.extraDamage.every((part) => isDamage(part, ['withoutAttunement']))
   )
     return `Дополнительный урон — до ${WEAPON_EXTRA_DAMAGE_MAX} частей: от 1 до ${WEAPON_DICE_MAX} костей к4–к12 или число, и тип урона`;
   if (!isFlags(d.properties)) return 'Неизвестное свойство оружия';
@@ -151,7 +167,8 @@ const ARMOR_KEYS = [
 ];
 
 export function armorDetailsProblem(details: unknown): Problem {
-  if (!hasKeys(details, ARMOR_KEYS)) return 'Поля доспеха заполнены не все';
+  if (!hasKeys(details, ARMOR_KEYS, BONUS_OPTIONAL))
+    return 'Поля доспеха заполнены не все';
   const d = details;
   if (d.base !== null && !isIn(BOOK_ARMOR, d.base))
     return 'Неизвестный образец доспеха';
@@ -167,7 +184,13 @@ export function armorDetailsProblem(details: unknown): Problem {
 }
 
 export function shieldDetailsProblem(details: unknown): Problem {
-  if (!hasKeys(details, ['armorClass', 'magicBonus', 'attunement']))
+  if (
+    !hasKeys(
+      details,
+      ['armorClass', 'magicBonus', 'attunement'],
+      BONUS_OPTIONAL,
+    )
+  )
     return 'Поля щита заполнены не все';
   if (!isInt(details.armorClass, 0, SHIELD_BONUS_MAX))
     return `Бонус щита к КД — целое от 0 до ${SHIELD_BONUS_MAX}`;

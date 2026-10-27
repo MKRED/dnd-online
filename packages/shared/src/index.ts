@@ -95,3 +95,4 @@ export * from './equipmentRules.js';
 export * from './gear.js';
 export * from './gearArmorClass.js';
 export * from './gearAttacks.js';
+export * from './gearMagic.js';

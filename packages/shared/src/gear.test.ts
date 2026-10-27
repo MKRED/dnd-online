@@ -16,9 +16,15 @@ import type { ItemVariant } from './items.js';
 import type { Weapon, WeaponProficiency } from './weapons.js';
 
 // Строка инвентаря с предметом на местах куклы.
-function row(name: string, variant: ItemVariant, equipped: EquipSlot[]) {
+function row(
+  name: string,
+  variant: ItemVariant,
+  equipped: EquipSlot[],
+  attuned = false,
+) {
   return {
     equipped,
+    attuned,
     item: {
       id: name,
       name,
@@ -101,7 +107,7 @@ describe('wornGear', () => {
   });
 
   it('скрытый или удалённый предмет ничего не даёт', () => {
-    expect(wornGear([{ equipped: [], item: null }])).toEqual({
+    expect(wornGear([{ equipped: [], item: null, attuned: false }])).toEqual({
       armor: null,
       shield: null,
       weapons: [],
@@ -119,6 +125,7 @@ describe('gearArmorClass', () => {
       shieldBonus: 0,
       lines: [],
       warnings: [],
+      unattuned: [],
     });
   });
 

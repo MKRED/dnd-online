@@ -12,6 +12,7 @@ import {
 } from 'shared';
 import {
   damageFromRow,
+  extraFromRow,
   rowFromDamage,
   type DamageRow,
   type DieChoice,
@@ -61,7 +62,10 @@ export const EMPTY_WEAPON: WeaponFormValues = {
   mastery: null,
 };
 
-type WeaponStats = Omit<WeaponItemDetails, 'magicBonus' | 'attunement'>;
+type WeaponStats = Omit<
+  WeaponItemDetails,
+  'magicBonus' | 'attunement' | 'bonusWithoutAttunement'
+>;
 
 export function weaponToForm(details: WeaponStats): WeaponFormValues {
   const { thrown, ammunition, versatile } = details;
@@ -108,7 +112,7 @@ export function weaponToDetails(values: WeaponFormValues): WeaponStats {
       die: values.damageDie,
       type: values.damageType,
     }),
-    extraDamage: values.extraDamage.map(damageFromRow),
+    extraDamage: values.extraDamage.map(extraFromRow),
     properties: WEAPON_FLAGS.filter(has),
     thrown: has('thrown')
       ? { normal: Number(values.thrownNormal), long: Number(values.thrownLong) }

@@ -7,9 +7,21 @@ import { toFormValues, type ItemFormValues } from '../itemFormValues';
 import { weaponFromBook } from './weaponFormValues';
 import WeaponFields from './WeaponFields';
 
-function Harness({ weapon }: { weapon: ItemFormValues['weapon'] }) {
+function Harness({
+  weapon,
+  attunement = false,
+}: {
+  weapon: ItemFormValues['weapon'];
+  attunement?: boolean;
+}) {
   const form = useForm<ItemFormValues>({
-    initialValues: { ...toFormValues(null), category: 'weapon', weapon },
+    initialValues: {
+      ...toFormValues(null),
+      category: 'weapon',
+      rarity: 'rare',
+      weapon,
+      attunement,
+    },
   });
   return <WeaponFields form={form} />;
 }
@@ -57,5 +69,29 @@ describe('WeaponFields', () => {
       screen.queryByRole('checkbox', { name: 'Универсальное' }),
     ).toBeNull();
     expect(screen.queryByText('Двумя руками')).toBeNull();
+  });
+
+  // Вариант 1А макета 2026-10-27: отметка у каждой строки доп. урона, только с настройкой.
+  it('«Действует без настройки» у строк доп. урона — только у предмета с настройкой', async () => {
+    const u = userEvent.setup();
+    const fire = {
+      count: 2,
+      die: '6',
+      type: 'fire',
+      withoutAttunement: false,
+    } as const;
+    const weapon = { ...weaponFromBook('longsword'), extraDamage: [fire] };
+    const { unmount } = renderWithProviders(<Harness weapon={weapon} />);
+    expect(
+      screen.queryByRole('checkbox', { name: /действует без настройки/ }),
+    ).toBeNull();
+    unmount();
+    renderWithProviders(<Harness weapon={weapon} attunement />);
+    const mark = screen.getByRole('checkbox', {
+      name: 'Дополнительный урон 1: действует без настройки',
+    });
+    expect(mark).not.toBeChecked();
+    await u.click(mark);
+    expect(mark).toBeChecked();
   });
 });

@@ -19,13 +19,18 @@ const ARMOR_DON_DOFF: Record<ArmorKind, string> = {
   heavy: 'Надеть — 10 минут, снять — 5 минут',
 };
 
-// Чего стоит взять или надеть вещь по книге; у одежды и украшений правила нет.
+// Чего стоит взять или надеть вещь; у одежды и украшений правила нет. Оружие — по домашнему
+// правилу, а не по книге: книжная смена при атаке слишком расплывчата (docs/dnd/weapons-armor.md,
+// «Смена оружия — домашнее правило»).
+export const WEAPON_SWAP_COST =
+  'Снять или заменить — раз за ход бесплатно, дальше действие';
+
 export function equipCost(equip: ItemEquip | null): string | null {
   const stats = equip?.stats;
   if (!stats) return null;
   switch (stats.category) {
     case 'weapon':
-      return 'Взять или убрать — при атаке или свободным взаимодействием';
+      return WEAPON_SWAP_COST;
     case 'shield':
       return 'Надеть или снять — действие «Использование»';
     case 'armor':

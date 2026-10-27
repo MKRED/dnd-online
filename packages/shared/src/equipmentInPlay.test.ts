@@ -7,6 +7,7 @@ import {
   EQUIP_COMBAT_ARMOR,
   EQUIP_COMBAT_ATTUNE,
   equipCost,
+  WEAPON_SWAP_COST,
 } from './equipmentInPlay.js';
 import type { ItemVariant } from './items.js';
 
@@ -30,13 +31,31 @@ const shield = itemEquip({
   category: 'shield',
   details: { armorClass: 2, magicBonus: 0, attunement: false },
 });
+const sword = itemEquip({
+  category: 'weapon',
+  details: {
+    base: null,
+    weaponCategory: 'martial',
+    attackType: 'melee',
+    damage: { count: 1, die: 8, type: 'slashing' },
+    extraDamage: [],
+    properties: [],
+    thrown: null,
+    ammunition: null,
+    versatile: null,
+    mastery: null,
+    magicBonus: 0,
+    attunement: false,
+  },
+});
 const ring = itemEquip({
   category: 'jewelry',
   details: { slot: 'ring', attunement: true },
 });
 
 describe('экипировка во время встречи', () => {
-  it('цена по книге: доспех по категории, щит — «Использование», украшения — нет', () => {
+  it('цена: оружие — домашнее правило, доспех по категории, щит — «Использование», украшения — нет', () => {
+    expect(equipCost(sword)).toBe(WEAPON_SWAP_COST);
     expect(equipCost(itemEquip(armor('leather')))).toBe(
       'Надеть и снять — 1 минута',
     );
@@ -58,6 +77,7 @@ describe('экипировка во время встречи', () => {
     expect(combatEquipProblem('tactical', plate)).toBe(EQUIP_COMBAT_ARMOR);
     expect(combatEquipProblem('free', plate)).toBeNull();
     expect(combatEquipProblem('tactical', shield)).toBeNull();
+    expect(combatEquipProblem('tactical', sword)).toBeNull();
     expect(combatEquipProblem('tactical', ring)).toBeNull();
     expect(combatAttuneProblem('tactical')).toBe(EQUIP_COMBAT_ATTUNE);
     expect(combatAttuneProblem('free')).toBeNull();

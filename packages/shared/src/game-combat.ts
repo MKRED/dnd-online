@@ -28,6 +28,10 @@ export interface GameCombatant {
   pending: Omit<D20RollInput, 'master'> | null;
   // Ресурсы хода — тем же, кому виден бросок; иначе null (этап 4).
   resources: CombatantResources | null;
+  // «Уклонение» — до начала своего следующего хода; «Отход» — до конца этого хода. Видны
+  // всем, кто видит участника: значок на портрете (решение Михаила 2026-10-27, вариант А).
+  dodging: boolean;
+  disengaged: boolean;
 }
 
 // Сколько чего за ход и сколько уже потрачено (docs/plan/combat.md, этап 4): у героя и НПС
@@ -48,9 +52,6 @@ export interface CombatantResources {
   actions: TurnResource;
   bonusActions: TurnResource;
   reactions: TurnResource;
-  // «Уклонение» — до начала своего следующего хода; «Отход» — до конца этого хода.
-  dodging: boolean;
-  disengaged: boolean;
 }
 
 // Обычные действия без цели: тратят одно действие (docs/dnd/combat.md).

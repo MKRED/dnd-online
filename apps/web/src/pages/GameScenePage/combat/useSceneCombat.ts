@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
+  CombatAbilityInput,
   CombatAction,
   CombatantInput,
   CombatResourcesInput,
@@ -102,6 +103,11 @@ export function useSceneCombat(gameId: string, sceneId: string | null) {
       run(
         () => api.setResources(id, input),
         'Не удалось поправить потраченное',
+      ),
+    applyAbility: (id: string, input: CombatAbilityInput) =>
+      run(
+        () => api.applyAbility(id, input),
+        'Не удалось применить способность',
       ),
   };
 }

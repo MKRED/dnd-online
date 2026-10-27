@@ -19,6 +19,8 @@ interface ParticipantsTabProps {
   errors: readonly (string | null)[];
   // Состояние выбранного: хиты, эффекты, запас.
   selected: ReactNode;
+  // Блок хода монстра или НПС в бою (docs/plan/combat.md, этап 4, вариант А) — над всем.
+  turn?: ReactNode;
 }
 
 // Вкладка «Участники» (docs/plan/done/scene-page.md, этап 2; замечания после первой партии,
@@ -34,6 +36,7 @@ function ParticipantsTab({
   onOpenCreature,
   errors,
   selected,
+  turn,
 }: ParticipantsTabProps) {
   const groups = useMemo(
     () => participantGroups([...heroes, ...creatures]),
@@ -52,6 +55,7 @@ function ParticipantsTab({
   const empty = groups.length === 0;
   return (
     <div className={classes.tab} onClickCapture={doubleOpen.catchSecond}>
+      {turn && <div className={classes.turn}>{turn}</div>}
       {selected && <section className={classes.selected}>{selected}</section>}
       <div className={classes.list}>
         {empty && (

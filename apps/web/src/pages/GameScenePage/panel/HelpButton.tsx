@@ -1,6 +1,7 @@
 import {
   Accordion,
   ActionIcon,
+  Anchor,
   Drawer,
   Group,
   Kbd,
@@ -12,6 +13,7 @@ import {
 import { useMediaQuery } from '@mantine/hooks';
 import { IconHelpCircle } from '@tabler/icons-react';
 import { useState } from 'react';
+import { GAME_ICON_AUTHORS } from '../combat/TurnPanel';
 
 interface HelpButtonProps {
   master: boolean;
@@ -30,8 +32,30 @@ const CAMERA: Line[] = [
 
 const PLAY: Line[] = [
   [['Клик'], 'выбрать фигурку, щелчок по подсвеченной клетке — ход'],
-  [['Esc'], 'снять выбор'],
+  [['Esc'], 'снять выбор или выбранный значок хода'],
 ];
+
+// Значки обычных действий в блоке «Ваш ход» — game-icons.net, CC BY 3.0: авторов надо
+// назвать там, где значки видны.
+function IconCredit() {
+  return (
+    <Text size="xs" c="dimmed">
+      Значки действий —{' '}
+      <Anchor href="https://game-icons.net" target="_blank" size="xs">
+        game-icons.net
+      </Anchor>{' '}
+      ({GAME_ICON_AUTHORS}), лицензия{' '}
+      <Anchor
+        href="https://creativecommons.org/licenses/by/3.0/"
+        target="_blank"
+        size="xs"
+      >
+        CC BY 3.0
+      </Anchor>
+      .
+    </Text>
+  );
+}
 
 const MASTER: Line[] = [[['Ё'], 'режим «Игра» или «Правка»']];
 
@@ -87,6 +111,7 @@ function HelpButton({ master, editing }: HelpButtonProps) {
       {!editing && <Section title="Ход" lines={PLAY} />}
       {master && <Section title="Мастер" lines={MASTER} />}
       {editing && <Section title="Правка" lines={EDIT} />}
+      {!editing && <IconCredit />}
     </Stack>
   );
   const button = (

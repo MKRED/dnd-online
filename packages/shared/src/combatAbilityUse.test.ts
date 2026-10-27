@@ -6,8 +6,6 @@ const resources = (used: [number, number, number]): CombatantResources => ({
   actions: { max: 1, used: used[0] },
   bonusActions: { max: 1, used: used[1] },
   reactions: { max: 1, used: used[2] },
-  dodging: false,
-  disengaged: false,
 });
 
 describe('turnSpendOf', () => {

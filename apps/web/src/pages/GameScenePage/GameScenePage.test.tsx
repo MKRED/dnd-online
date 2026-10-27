@@ -222,6 +222,8 @@ const LIRA_COMBATANT: GameCombatant = {
     reasons: { advantage: [], disadvantage: ['Врасплох'] },
   },
   resources: null,
+  dodging: false,
+  disengaged: false,
 };
 
 // Бой с очерёдностью: без участников мастер видит Лиру среди кандидатов.

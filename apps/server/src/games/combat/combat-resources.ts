@@ -46,6 +46,4 @@ export const resourcesOf = (
   actions: { max: limits.actions, used: row.actionsUsed },
   bonusActions: { max: limits.bonusActions, used: row.bonusActionsUsed },
   reactions: { max: limits.reactions, used: row.reactionsUsed },
-  dodging: row.dodging,
-  disengaged: row.disengaged,
 });

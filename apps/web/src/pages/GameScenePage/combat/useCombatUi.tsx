@@ -12,6 +12,7 @@ import {
   type EntrySources,
   type StripActions,
 } from './TurnStrip';
+import { turnBlocks, type TurnBlocks } from './turnBlocks';
 import type { SceneCombat } from './useSceneCombat';
 
 interface CombatUiOptions {
@@ -24,11 +25,13 @@ interface CombatUiOptions {
   dialog: boolean;
   onDialog: (open: boolean) => void;
   focus: (at: Vec3) => void;
+  // Номер правок листов и существ: блок хода героя перечитывает его лист.
+  version: number;
 }
 
-// Бой с очерёдностью на странице сцены (docs/plan/combat.md, этап 3): полоса над сценой с
-// кнопками и окна — броска, «Начать бой», правок мастера. Полосу страница ставит в плашку
-// над сценой, окна — куда угодно.
+// Бой с очерёдностью на странице сцены (docs/plan/combat.md, этапы 3–4): полоса над сценой с
+// кнопками, окна — броска, «Начать бой», правок мастера — и блоки «Ваш ход». Полосу страница
+// ставит в плашку над сценой, окна — куда угодно, блоки — в панель.
 export function useCombatUi({
   combat,
   master,
@@ -37,7 +40,12 @@ export function useCombatUi({
   dialog,
   onDialog,
   focus,
-}: CombatUiOptions): { strip: ReactNode; windows: ReactNode } {
+  version,
+}: CombatUiOptions): {
+  strip: ReactNode;
+  windows: ReactNode;
+  turn: TurnBlocks;
+} {
   const state = combat.combat;
   const entries = useMemo(
     () => (state ? combatEntries(state, sources) : []),
@@ -153,5 +161,6 @@ export function useCombatUi({
       />
     </>
   );
-  return { strip, windows };
+  const turn = turnBlocks({ combat, entries, sources, master, version });
+  return { strip, windows, turn };
 }

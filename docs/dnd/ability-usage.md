@@ -79,6 +79,7 @@ Decided with the user on 2026-10-26 ([plan/equipment.md](../plan/equipment.md), 
 - A character (and an NPC, which is a character) has three numbers in the form, «Действия», «Бонусные действия» and «Реакции»: a whole number 1–5, 1 by default. They are the base without effects; the maximum 5 only catches typos.
 - **Departs from the book:** the bonus action is 1 for everyone, though the book gives one only when a feature allows it. The number says how many may be taken, not that the character has a use for one.
 - Extras from Haste or Action Surge are not typed into the form: they will come as effect or ability components with combat, which will also spend them. Not built yet.
+- **In a fight with a turn order** (stage 4 of [plan/combat.md](../plan/combat.md), 2026-10-27) these numbers are the participant's maximums per turn; the «Ваш ход» block spends them and they come back at the start of its own turn ([combat.md](combat.md), «In the app»). A monster gets one of each.
 - The sheet shows them as the line «За ход» above «Атаки» with BG3 icons (green circle, orange triangle, purple diamond) and words (variant В, the user's choice). Monsters have no such fields yet; their legendary actions are a separate activation.
 - NPC copies in a game library made before these fields read as 1, 1, 1.
 

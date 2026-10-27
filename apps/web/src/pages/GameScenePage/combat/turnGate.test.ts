@@ -16,6 +16,8 @@ const combat = (turn: string | null): GameCombat => ({
       roll: null,
       pending: null,
       resources: null,
+      dodging: false,
+      disengaged: false,
     },
     {
       id: 'k2',
@@ -27,6 +29,8 @@ const combat = (turn: string | null): GameCombat => ({
       roll: null,
       pending: null,
       resources: null,
+      dodging: false,
+      disengaged: false,
     },
   ],
   turn,

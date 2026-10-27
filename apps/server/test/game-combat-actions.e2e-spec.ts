@@ -149,8 +149,10 @@ describe('game combat actions (e2e)', () => {
     };
   }
 
+  const entry = (combat: GameCombat, id: string) =>
+    combat.combatants.find((c) => c.id === id)!;
   const resources = (combat: GameCombat, id: string) =>
-    combat.combatants.find((c) => c.id === id)!.resources;
+    entry(combat, id).resources;
 
   const message = (res: request.Response) =>
     (res.body as { message: string }).message;
@@ -159,8 +161,6 @@ describe('game combat actions (e2e)', () => {
     actions: { max: counts[0], used: 0 },
     bonusActions: { max: counts[1], used: 0 },
     reactions: { max: counts[2], used: 0 },
-    dodging: false,
-    disengaged: false,
   });
 
   it('«Рывок» тратит действие и добавляет запас; ход у следующего — всё снова целое', async () => {
@@ -198,8 +198,11 @@ describe('game combat actions (e2e)', () => {
     // Ход гоблина: мастер уклоняется за него. У героя ресурсы до его хода не обновляются.
     await g.endTurn(g.p, g.hero);
     combat = (await g.act(g.m, g.goblin, 'dodge')).body as GameCombat;
-    expect(resources(combat, g.goblin)).toMatchObject({
-      actions: { used: 1 },
+    expect(resources(combat, g.goblin)!.actions.used).toBe(1);
+    expect(entry(combat, g.goblin).dodging).toBe(true);
+    // «Уклонение» гоблина видит и игрок, хотя ресурсов гоблина ему не видно.
+    expect(entry(await g.read(g.p), g.goblin)).toMatchObject({
+      resources: null,
       dodging: true,
     });
     expect(resources(combat, g.hero)!.actions.used).toBe(1);
@@ -208,18 +211,16 @@ describe('game combat actions (e2e)', () => {
     await g.endTurn(g.m, g.goblin);
     await g.act(g.m, g.npc, 'disengage');
     combat = (await g.act(g.m, g.npc, 'dash')).body as GameCombat;
-    expect(resources(combat, g.npc)).toMatchObject({
-      actions: { max: 2, used: 2 },
-      disengaged: true,
-    });
+    expect(resources(combat, g.npc)!.actions).toEqual({ max: 2, used: 2 });
+    expect(entry(combat, g.npc).disengaged).toBe(true);
 
     // Новый раунд, ход героя: его ресурсы целые, «Уклонение» гоблина ещё держится,
     // «Отход» трактирщика кончился. Запас героя снова без «Рывков».
     combat = (await g.endTurn(g.m, g.npc)).body as GameCombat;
     expect(combat.round).toBe(2);
     expect(resources(combat, g.hero)).toEqual(fresh([1, 2, 1]));
-    expect(resources(combat, g.goblin)!.dodging).toBe(true);
-    expect(resources(combat, g.npc)!.disengaged).toBe(false);
+    expect(entry(combat, g.goblin).dodging).toBe(true);
+    expect(entry(combat, g.npc).disengaged).toBe(false);
     const after = (
       await g.p.get(`/api/games/${g.gameId}/scene/figures`).expect(200)
     ).body as GameFigures;
@@ -227,7 +228,9 @@ describe('game combat actions (e2e)', () => {
 
     // Ход гоблина снова — его «Уклонение» кончилось.
     await g.endTurn(g.p, g.hero);
-    expect(resources(await g.read(g.m), g.goblin)).toEqual(fresh([1, 1, 1]));
+    combat = await g.read(g.m);
+    expect(resources(combat, g.goblin)).toEqual(fresh([1, 1, 1]));
+    expect(entry(combat, g.goblin).dodging).toBe(false);
   });
 
   it('мастер правит потраченное; уклоняться дважды нельзя', async () => {

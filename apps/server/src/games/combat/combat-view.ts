@@ -52,6 +52,8 @@ async function toCombatant(
       own && limits.has(c.row.id)
         ? resourcesOf(c.row, limits.get(c.row.id)!)
         : null,
+    dodging: c.row.dodging,
+    disengaged: c.row.disengaged,
   };
 }
 

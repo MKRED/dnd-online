@@ -1,4 +1,5 @@
 import type {
+  CombatAbilityInput,
   CombatAction,
   CombatantInput,
   CombatResourcesInput,
@@ -52,6 +53,9 @@ export function combatApi(gameId: string) {
       post(`${base}/combatants/${combatantId}/actions`, { action }),
     setResources: (combatantId: string, input: CombatResourcesInput) =>
       put(`${base}/combatants/${combatantId}/resources`, input),
+    // «Применить» способность: тратит действие её вида и ячейку круга slotLevel.
+    applyAbility: (combatantId: string, input: CombatAbilityInput) =>
+      post(`${base}/combatants/${combatantId}/abilities`, input),
   };
 }
 

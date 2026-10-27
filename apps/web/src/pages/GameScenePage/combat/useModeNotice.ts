@@ -12,7 +12,7 @@ export interface ModeNotice {
 const MODE_NOTICES: Record<GameMoveMode, ModeNotice> = {
   tactical: {
     title: 'Мастер начал бой',
-    text: 'У всех новый ход. Ход кончится — ждите нового раунда.',
+    text: 'Ходят по очереди инициативы — она над сценой.',
   },
   free: {
     title: 'Бой окончен',

@@ -8,6 +8,7 @@ import {
   type D20RollInput,
   type RollMode,
 } from 'shared';
+import type { Db } from '../../catalog/catalog-access.js';
 import type { DbTransaction } from '../../database/database.service.js';
 import { characters } from '../../database/schema/index.js';
 import { loadGameEffectLists } from '../characters/game-character-effects.js';
@@ -23,7 +24,7 @@ export const fairRandom = () => randomInt(0, 2 ** 32) / 2 ** 32;
 
 // Что входит в бросок участника и его модификатор инициативы (для ничьих).
 export async function initiativeInputOf(
-  tx: DbTransaction,
+  tx: Db,
   gameId: string,
   sceneId: string,
   c: LiveCombatant,

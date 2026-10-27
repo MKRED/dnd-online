@@ -1,5 +1,6 @@
 import { useEffect, type RefObject } from 'react';
 import {
+  COMBAT_KINDS,
   CREATURE_KINDS,
   FIGURE_KINDS,
   FOG_EVENT_KINDS,
@@ -41,6 +42,20 @@ const FIGURE_CHANGES = new Set<string>([
   'member.removed',
 ]);
 
+// После них перечитывается бой с очерёдностью (docs/plan/combat.md, этап 3): его записи,
+// смена режима (свободный режим кончает бой), расстановка фигурок (кандидаты в бой) и
+// ушедшие из игры персонажи.
+const COMBAT_EVENTS = new Set<string>(COMBAT_KINDS);
+const COMBAT_CHANGES = new Set<string>([
+  ...COMBAT_EVENTS,
+  'game.mode',
+  'figures.placed',
+  'figure.placed',
+  'seat.freed',
+  'member.left',
+  'member.removed',
+]);
+
 interface SceneRoomProps {
   gameId: string;
   // Номер журнала, на котором страница впервые прочитала игру: с него комната догоняет.
@@ -56,6 +71,8 @@ interface SceneRoomProps {
   onFogChanged?: () => void;
   // Фигурки изменились — перечитать их.
   onFigures: () => void;
+  // Бой с очерёдностью изменился — перечитать очередь.
+  onCombat: () => void;
   // Кто-то тянет фигурку — где она сейчас.
   onFigureDrag: (message: GameFigureDragMessage) => void;
   // Ход по пути — показать фигурку или существо идущими.
@@ -81,6 +98,7 @@ function SceneRoom({
   onSceneFog,
   onFogChanged,
   onFigures,
+  onCombat,
   onFigureDrag,
   onWalk,
   dragSenderRef,
@@ -94,8 +112,15 @@ function SceneRoom({
       onChanged: (message) => {
         if (FOG_EVENT_KINDS.has(message.kind)) onFogChanged?.();
         if (!master && message.kind === 'scene.closed') onLeave();
-        else if (SCENE_CHANGES.has(message.kind)) onReload();
-        else if (FIGURE_CHANGES.has(message.kind)) onFigures();
+        else if (SCENE_CHANGES.has(message.kind)) {
+          onReload();
+          onCombat();
+        } else if (FIGURE_CHANGES.has(message.kind)) onFigures();
+        // Ход в бою обновляет запас движения — фигурки тоже перечитываются.
+        if (COMBAT_CHANGES.has(message.kind)) {
+          onCombat();
+          if (COMBAT_EVENTS.has(message.kind)) onFigures();
+        }
       },
       onEvent: (event) => onEvents?.([event]),
       onSceneEdit,
@@ -105,6 +130,7 @@ function SceneRoom({
       onResync: (missed) => {
         onReload();
         onFigures();
+        onCombat();
         onMissed?.(missed);
       },
       onClosed: onLeave,

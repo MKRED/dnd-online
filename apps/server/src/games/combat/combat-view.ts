@@ -12,6 +12,7 @@ import { loadSceneCreatures } from '../creatures/creature-read.js';
 import { playerFog } from '../fog/fog-view.js';
 import type { SceneRow } from '../scenes/scene-copy.js';
 import { drives } from './combat-actor.js';
+import { initiativeInputOf } from './combat-initiative.js';
 import { loadCombat, type LiveCombatant } from './combatant-read.js';
 
 // Очередь боя глазами смотрящего (docs/plan/combat.md, этап 2). Игроку — участники, которых
@@ -21,12 +22,19 @@ import { loadCombat, type LiveCombatant } from './combatant-read.js';
 const seenByParty = (c: LiveCombatant, fog: FogMasks | null) =>
   !c.creature || (!c.creature.hidden && creatureSeen(c.creature.at, fog));
 
-function toCombatant(
+async function toCombatant(
+  db: Db,
+  gameId: string,
+  sceneId: string,
   c: LiveCombatant,
   viewer: { userId: string; masterId: string },
-): GameCombatant {
+): Promise<GameCombatant> {
   const own = drives(viewer, c);
   const master = viewer.userId === viewer.masterId;
+  const pending =
+    own && c.row.initiative === null
+      ? (await initiativeInputOf(db, gameId, sceneId, c)).input
+      : null;
   return {
     id: c.row.id,
     ref: c.ref,
@@ -35,6 +43,7 @@ function toCombatant(
     surprised: master || c.figure ? c.row.surprised : false,
     canRoll: own,
     roll: own ? c.row.roll : null,
+    pending,
   };
 }
 
@@ -98,7 +107,9 @@ export async function readCombatView(
   return {
     sceneId: scene.id,
     round: game.mode === 'tactical' ? state.round : null,
-    combatants: visible.map((c) => toCombatant(c, viewer)),
+    combatants: await Promise.all(
+      visible.map((c) => toCombatant(db, gameId, scene.id, c, viewer)),
+    ),
     turn,
     candidates: master
       ? await readCandidates(db, gameId, scene, state.combatants, fog)

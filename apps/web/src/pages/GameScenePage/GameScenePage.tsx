@@ -43,7 +43,14 @@ import { CardWindows, useCardWindows } from './cardWindows';
 import { CreatureCards, useCreatureCards } from './creatures';
 import { useScenePlay } from './figures';
 import { editFigureDrag } from './figures/editFigureDrag';
-import { CombatOverlay, MoveModeContext } from './combat';
+import {
+  CombatOverlay,
+  MoveModeContext,
+  figureTurnNow,
+  turnFigureDrag,
+  useCombatUi,
+  useSceneCombat,
+} from './combat';
 import { playersView, useSceneFog } from './fog';
 import { SceneModeSwitch, useSceneMode } from './mode';
 import { useJournalLive } from './journal';
@@ -54,6 +61,7 @@ import {
   objectWalkKey,
 } from '../../features/maps/MapScene/walks/sceneWalk';
 import { GameScenePanel } from './panel';
+import { creaturePortrait } from './participants';
 import { useSceneOpen } from './useSceneOpen';
 import { readSceneCamera, saveSceneCamera } from './sceneCamera';
 import { SCENE_TOOLS, useSceneTools } from './useSceneTools';
@@ -231,14 +239,42 @@ function GameScenePage() {
     reloadFigures: figures.reload,
     onMoveStart: holdCreature,
   });
+  // Бой с очерёдностью (docs/plan/combat.md, этап 3): полоса над сценой и окна.
+  const combat = useSceneCombat(id, sceneId);
+  const [combatDialog, setCombatDialog] = useState(false);
+  const { reload: reloadCombat } = combat;
+  const fighting = (combat.combat?.combatants.length ?? 0) > 0;
   const { onSceneEdit: creaturesSceneEdit } = cards;
   const sceneEdit = useCallback(
     (message: GameSceneEditMessage) => {
       receiveEdit(message);
       creaturesSceneEdit(message);
+      // Мастер поставил, убрал или скрыл существо — меняются кандидаты в бой и участники.
+      if (master || fighting) reloadCombat();
     },
-    [receiveEdit, creaturesSceneEdit],
+    [receiveEdit, creaturesSceneEdit, master, fighting, reloadCombat],
   );
+  const refs = view?.refs ?? null;
+  const combatSources = useMemo(
+    () => ({
+      gameId: id,
+      figures: figures.figures?.figures ?? [],
+      creatures: cards.creatures.creatures?.creatures ?? [],
+      objectOf: (objectId: number) => state?.objects.byId.get(objectId),
+      portraitOf: (object: Parameters<typeof creaturePortrait>[0]) =>
+        refs ? creaturePortrait(object, refs, images) : null,
+    }),
+    [id, figures.figures, cards.creatures.creatures, state, refs, images],
+  );
+  const combatUi = useCombatUi({
+    combat,
+    master,
+    sources: combatSources,
+    hidden: editing || viewOnly,
+    dialog: combatDialog,
+    onDialog: setCombatDialog,
+    focus: (at) => focusRef.current?.focusOn([...at]),
+  });
   // Выбор у страницы один: щелчки по клеткам ведут выбранную фигурку или (у мастера)
   // выбранного монстра (docs/plan/done/creature-movement.md).
   // В «Правке»: «Просмотр» клетками ничего не делает, в «Существах» выбранного героя ставит
@@ -252,10 +288,17 @@ function GameScenePage() {
           : editor.sceneEditor
         : null
       : (play.editor ?? cards.walk.editor);
+  // Игрок тянет фигурку только в свой ход боя с очерёдностью; мастер — когда угодно.
+  const combatState = combat.combat;
+  const playDrag = master
+    ? play.drag
+    : turnFigureDrag(play.drag, (characterId) =>
+        figureTurnNow(combatState, characterId),
+      );
   const figureDrag = viewOnly
     ? undefined
     : editFigureDrag({
-        drag: play.drag,
+        drag: playDrag,
         editing,
         tool: editor.tool,
         clearCreature,
@@ -309,6 +352,7 @@ function GameScenePage() {
               onSceneFog={receiveFog}
               onFogChanged={sceneFog.refresh}
               onFigures={cards.onChanged}
+              onCombat={reloadCombat}
               onFigureDrag={play.ghosts.receive}
               onWalk={walks.receive}
               dragSenderRef={play.dragSenderRef}
@@ -435,14 +479,17 @@ function GameScenePage() {
               <ScenePlaque state={plaque} raised={false} />
             )}
             {/* Игроку — плашка боя или «только просмотр» вне встречи и уведомление о начале
-            и конце боя и встречи; мастер видит бой в «Участниках». */}
-            {ready && !master && (
+            и конце боя и встречи. В бою с очерёдностью — полоса портретов, мастеру тоже. */}
+            {ready && (
               <CombatOverlay
-                mode={moveMode}
+                mode={master ? null : moveMode}
                 round={figures.figures?.round ?? null}
-                watchOnly={watchOnly}
+                watchOnly={master ? false : watchOnly}
+                strip={combatUi.strip}
+                tools={tools}
               />
             )}
+            {ready && combatUi.windows}
             {ready && bounds && bounds.max[1] > bounds.min[1] && (
               <CutRuler
                 min={bounds.min[1]}
@@ -493,6 +540,8 @@ function GameScenePage() {
             images={images}
             onOpenCard={windows.open}
             journal={journal}
+            combatOrdered={fighting}
+            onStartCombat={() => setCombatDialog(true)}
             modeSwitch={
               narrow && tools ? (
                 <SceneModeSwitch mode={mode} onChange={setMode} compact />

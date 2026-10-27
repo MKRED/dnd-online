@@ -1,0 +1,95 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { CombatantInput, D20Roll, GameCombat, RollMode } from 'shared';
+import { combatApi, getGameCombat } from '../../../features/games';
+import { ApiError, errorMessage } from '../../../lib/apiRequest';
+
+// Бой с очерёдностью на активной сцене (docs/plan/combat.md, этап 3): очередь, как её видит
+// смотрящий, и правки. Перечитывается целиком после записей боя, как фигурки; ответ старше
+// уже показанного (по номеру журнала) не откатывает очередь назад.
+export function useSceneCombat(gameId: string, sceneId: string | null) {
+  const [loaded, setLoaded] = useState<GameCombat | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const seqRef = useRef(-1);
+  const api = useMemo(() => combatApi(gameId), [gameId]);
+
+  const apply = useCallback((result: GameCombat) => {
+    if (result.eventSeq < seqRef.current) return;
+    seqRef.current = result.eventSeq;
+    setLoaded(result);
+  }, []);
+
+  const reload = useCallback(() => {
+    if (!sceneId) return;
+    getGameCombat(gameId)
+      .then(apply)
+      .catch((err: unknown) => {
+        // Сцену закрыли или сменили — это перечитает сама страница сцены.
+        if (err instanceof ApiError && [403, 404].includes(err.status)) return;
+        console.error('Failed to load scene combat', err);
+      });
+  }, [gameId, sceneId, apply]);
+
+  useEffect(reload, [reload]);
+
+  // Правки по одной: пока запрос в пути, новые не принимаются.
+  const run = useCallback(
+    (request: () => Promise<GameCombat>, failure: string) => {
+      if (busy) return Promise.resolve(false);
+      setBusy(true);
+      setError(null);
+      return request()
+        .then((result) => {
+          apply(result);
+          return true;
+        })
+        .catch((err: unknown) => {
+          console.error(failure, err);
+          setError(errorMessage(err, failure));
+          return false;
+        })
+        .finally(() => setBusy(false));
+    },
+    [busy, apply],
+  );
+
+  // Бросок для окна броска: ошибку показывает само окно, поэтому она пробрасывается.
+  const roll = useCallback(
+    async (combatantId: string, mode: RollMode | null): Promise<D20Roll> => {
+      const result = await api.roll(combatantId, mode);
+      apply(result.combat);
+      return result.roll;
+    },
+    [api, apply],
+  );
+
+  const current = loaded?.sceneId === sceneId ? loaded : null;
+  return {
+    combat: current,
+    reload,
+    busy,
+    error,
+    clearError: () => setError(null),
+    roll,
+    start: (participants: CombatantInput[]) =>
+      run(() => api.start(participants), 'Не удалось начать бой'),
+    join: (participants: CombatantInput[]) =>
+      run(() => api.join(participants), 'Не удалось позвать в бой'),
+    leave: (id: string) => run(() => api.leave(id), 'Не удалось убрать из боя'),
+    rollCreatures: () =>
+      run(() => api.rollCreatures(), 'Не удалось бросить за монстров'),
+    setInitiative: (id: string, value: number) =>
+      run(
+        () => api.setInitiative(id, value),
+        'Не удалось поправить инициативу',
+      ),
+    reorder: (ids: string[]) =>
+      run(() => api.reorder(ids), 'Не удалось переставить очередь'),
+    endTurn: (id: string) =>
+      run(() => api.endTurn(id), 'Не удалось закончить ход'),
+    passTurn: (id: string) =>
+      run(() => api.passTurn(id), 'Не удалось передать ход'),
+  };
+}
+
+export type SceneCombat = ReturnType<typeof useSceneCombat>;

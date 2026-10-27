@@ -1,4 +1,4 @@
-import type { D20Roll, RollMode } from './d20Roll.js';
+import type { D20Roll, D20RollInput, RollMode } from './d20Roll.js';
 
 // Очерёдность боя на активной сцене (docs/plan/combat.md, этап 2; правила —
 // docs/dnd/combat.md). Участник — фигурка персонажа или монстр/НПС сцены. Сначала все
@@ -23,6 +23,9 @@ export interface GameCombatant {
   canRoll: boolean;
   // Бросок инициативы со слагаемыми — мастеру и тем, кто водит фигурку; иначе null.
   roll: D20Roll | null;
+  // Что войдёт в бросок, пока он не брошен: окно броска показывает слагаемые и
+  // преимущество заранее. Тем же, кому виден бросок; после броска — null.
+  pending: Omit<D20RollInput, 'master'> | null;
 }
 
 // Кого ещё можно позвать в бой (окно «Начать бой» и «В бой» у мастера). seen — видит ли

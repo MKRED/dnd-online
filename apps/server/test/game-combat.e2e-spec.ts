@@ -155,6 +155,12 @@ describe('game combat (e2e)', () => {
     ]);
     // «Врасплох» существа игроку не видно.
     expect(seen.combatants[2].surprised).toBe(false);
+    // Окну броска — слагаемые заранее, только своему; чужому — ничего.
+    expect(seen.combatants[0].pending).toEqual({
+      terms: [{ kind: 'number', label: 'Ловкость', amount: 1 }],
+      reasons: { advantage: [], disadvantage: [] },
+    });
+    expect(seen.combatants[1].pending).toBeNull();
     const own = g.idOf(seen, g.figure);
     const goblinId = g.idOf(seen, g.goblin);
     const npcId = g.idOf(seen, g.npc);
@@ -193,6 +199,7 @@ describe('game combat (e2e)', () => {
       id: own,
       initiative: roll.total,
       roll,
+      pending: null,
     });
     expect((await events(g.m, g.gameId, 1))[0]).toMatchObject({
       kind: 'combat.initiative',
@@ -410,6 +417,12 @@ describe('game combat (e2e)', () => {
     const combat = (await g.start([g.figure, g.goblin])).body as GameCombat;
     const own = g.idOf(combat, g.figure);
     const goblinId = g.idOf(combat, g.goblin);
+    // Мастеру до броска видно, откуда преимущество.
+    expect(
+      combat.combatants.find((c) => c.id === goblinId)?.pending,
+    ).toMatchObject({
+      reasons: { advantage: ['Невидимый'], disadvantage: [] },
+    });
 
     const player = (
       await g.p.post(`${g.url}/combatants/${own}/initiative`).expect(200)

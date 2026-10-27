@@ -1,23 +1,31 @@
 import { Button, Group, Stack, Text, Tooltip } from '@mantine/core';
-import { IconRefresh, IconSwords } from '@tabler/icons-react';
+import { IconRefresh, IconSwords, IconUserPlus } from '@tabler/icons-react';
 import type { GameMoveMode } from 'shared';
 
 interface CombatControlsProps {
   mode: GameMoveMode;
   round: number | null;
+  // Идёт бой с очерёдностью (docs/plan/combat.md): раунд меняется сам, «Нового раунда» нет.
+  ordered: boolean;
   onMode: (mode: GameMoveMode) => void;
   onRound: () => void;
+  // Окно «Начать бой» с участниками.
+  onStart: () => void;
   busy: boolean;
 }
 
 // Бой мастера — группа «Бой» во вкладке «Сцена» (docs/dnd/movement.md, «Free and tactical
 // modes»; замечания после первой партии, 2026-10-26, вариант Б): вне боя — «Начать бой»,
-// в бою — номер раунда, «Закончить бой» и «Новый раунд».
+// в бою — номер раунда и «Закончить бой». «Начать бой» открывает окно участников; бой без
+// очерёдности (начатый до неё или когда все ушли из очереди) живёт по-старому, с «Новым
+// раундом», и его можно превратить в бой с очерёдностью.
 function CombatControls({
   mode,
   round,
+  ordered,
   onMode,
   onRound,
+  onStart,
   busy,
 }: CombatControlsProps) {
   if (mode === 'free') {
@@ -27,7 +35,7 @@ function CombatControls({
           Вне боя запас движения снова полный после каждого хода.
         </Text>
         <Tooltip
-          label="Тактический режим: у всех новый ход, дальше запас тратится до нового раунда"
+          label="Выбрать участников: каждый бросит инициативу, дальше ходят по очереди"
           withArrow
           multiline
           w={260}
@@ -36,7 +44,7 @@ function CombatControls({
             size="xs"
             fullWidth
             leftSection={<IconSwords size={15} />}
-            onClick={() => onMode('tactical')}
+            onClick={onStart}
             disabled={busy}
           >
             Начать бой
@@ -45,7 +53,8 @@ function CombatControls({
       </Stack>
     );
   }
-  // В бою «Новый раунд» — самое частое действие: во всю ширину под строкой раунда.
+  // В бою без очерёдности «Новый раунд» — самое частое действие: во всю ширину под строкой
+  // раунда. С очерёдностью ход передают на полосе над сценой.
   return (
     <Stack gap={6}>
       <Group gap={6} wrap="nowrap" justify="space-between">
@@ -75,18 +84,42 @@ function CombatControls({
           </Button>
         </Tooltip>
       </Group>
-      <Tooltip label="Запас движения всех снова полный" withArrow>
-        <Button
-          size="xs"
-          variant="default"
-          fullWidth
-          leftSection={<IconRefresh size={15} />}
-          onClick={onRound}
-          disabled={busy}
-        >
-          Новый раунд
-        </Button>
-      </Tooltip>
+      {ordered ? (
+        <Text size="xs" c="dimmed">
+          Ходят по очереди инициативы — полоса над сценой.
+        </Text>
+      ) : (
+        <>
+          <Tooltip
+            label="Выбрать участников: каждый бросит инициативу, дальше ходят по очереди"
+            withArrow
+            multiline
+            w={260}
+          >
+            <Button
+              size="xs"
+              fullWidth
+              leftSection={<IconUserPlus size={15} />}
+              onClick={onStart}
+              disabled={busy}
+            >
+              Позвать участников
+            </Button>
+          </Tooltip>
+          <Tooltip label="Запас движения всех снова полный" withArrow>
+            <Button
+              size="xs"
+              variant="default"
+              fullWidth
+              leftSection={<IconRefresh size={15} />}
+              onClick={onRound}
+              disabled={busy}
+            >
+              Новый раунд
+            </Button>
+          </Tooltip>
+        </>
+      )}
     </Stack>
   );
 }

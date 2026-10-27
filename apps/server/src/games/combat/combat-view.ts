@@ -5,6 +5,7 @@ import {
   type FogMasks,
   type GameCombat,
   type GameCombatant,
+  type TurnLimits,
 } from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
 import { characters, gameFigures, games } from '../../database/schema/index.js';
@@ -13,11 +14,13 @@ import { playerFog } from '../fog/fog-view.js';
 import type { SceneRow } from '../scenes/scene-copy.js';
 import { drives } from './combat-actor.js';
 import { initiativeInputOf } from './combat-initiative.js';
+import { resourcesOf, turnLimitsOf } from './combat-resources.js';
 import { loadCombat, type LiveCombatant } from './combatant-read.js';
 
 // Очередь боя глазами смотрящего (docs/plan/combat.md, этап 2). Игроку — участники, которых
 // видит партия: фигурки всегда, существо — не скрытое мастером и в поле зрения под
-// туманом, как метки здоровья на сцене. Бросок со слагаемыми — тем, кто водит участника.
+// туманом, как метки здоровья на сцене. Бросок со слагаемыми и ресурсы хода — тем, кто водит
+// участника.
 
 const seenByParty = (c: LiveCombatant, fog: FogMasks | null) =>
   !c.creature || (!c.creature.hidden && creatureSeen(c.creature.at, fog));
@@ -28,6 +31,7 @@ async function toCombatant(
   sceneId: string,
   c: LiveCombatant,
   viewer: { userId: string; masterId: string },
+  limits: Map<string, TurnLimits>,
 ): Promise<GameCombatant> {
   const own = drives(viewer, c);
   const master = viewer.userId === viewer.masterId;
@@ -44,6 +48,12 @@ async function toCombatant(
     canRoll: own,
     roll: own ? c.row.roll : null,
     pending,
+    resources:
+      own && limits.has(c.row.id)
+        ? resourcesOf(c.row, limits.get(c.row.id)!)
+        : null,
+    dodging: c.row.dodging,
+    disengaged: c.row.disengaged,
   };
 }
 
@@ -103,6 +113,7 @@ export async function readCombatView(
   const visible = master
     ? state.combatants
     : state.combatants.filter((c) => seenByParty(c, fog));
+  const limits = await turnLimitsOf(db, visible);
   const turn = visible.some((c) => c.row.id === state.turn) ? state.turn : null;
   // Ходит скрытое от игрока существо — «Ход противника» на его месте среди видимых.
   const hiddenAt =
@@ -116,7 +127,7 @@ export async function readCombatView(
     sceneId: scene.id,
     round: game.mode === 'tactical' ? state.round : null,
     combatants: await Promise.all(
-      visible.map((c) => toCombatant(db, gameId, scene.id, c, viewer)),
+      visible.map((c) => toCombatant(db, gameId, scene.id, c, viewer, limits)),
     ),
     turn,
     hiddenTurn:

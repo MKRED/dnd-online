@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CombatantInput, D20Roll, GameCombat, RollMode } from 'shared';
+import type {
+  CombatAbilityInput,
+  CombatAction,
+  CombatantInput,
+  CombatResourcesInput,
+  D20Roll,
+  GameCombat,
+  RollMode,
+} from 'shared';
 import { combatApi, getGameCombat } from '../../../features/games';
 import { ApiError, errorMessage } from '../../../lib/apiRequest';
 
@@ -89,6 +97,18 @@ export function useSceneCombat(gameId: string, sceneId: string | null) {
       run(() => api.endTurn(id), 'Не удалось закончить ход'),
     passTurn: (id: string) =>
       run(() => api.passTurn(id), 'Не удалось передать ход'),
+    takeAction: (id: string, action: CombatAction) =>
+      run(() => api.takeAction(id, action), 'Не удалось сделать действие'),
+    setResources: (id: string, input: CombatResourcesInput) =>
+      run(
+        () => api.setResources(id, input),
+        'Не удалось поправить потраченное',
+      ),
+    applyAbility: (id: string, input: CombatAbilityInput) =>
+      run(
+        () => api.applyAbility(id, input),
+        'Не удалось применить способность',
+      ),
   };
 }
 

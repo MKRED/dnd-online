@@ -96,6 +96,42 @@ describe('combatEventText', () => {
       },
       'Из боя: Гоблин, ход перешёл дальше',
     ],
+    [
+      {
+        ...base,
+        kind: 'combat.action',
+        intent: { combatantId: 'b2', action: 'dodge' },
+        result: { combatant: goblin, action: 'dodge', dashes: null },
+      },
+      'Гоблин: Уклонение',
+    ],
+    [
+      {
+        ...base,
+        kind: 'combat.ability',
+        intent: { combatantId: 'b1', abilityId: 'a1', slotLevel: 2 },
+        result: {
+          combatant: lira,
+          ability: { id: 'a1', name: 'Целительное слово' },
+          spent: 'bonus_action',
+          slotLevel: 2,
+        },
+      },
+      'Лира: Целительное слово (бонусное действие, ячейка 2 круга)',
+    ],
+    [
+      {
+        ...base,
+        kind: 'combat.resources',
+        intent: { combatantId: 'b1', actionsUsed: 0 },
+        result: {
+          combatant: lira,
+          before: { actionsUsed: 1, bonusActionsUsed: 0, reactionsUsed: 0 },
+          after: { actionsUsed: 0, bonusActionsUsed: 0, reactionsUsed: 0 },
+        },
+      },
+      'Потрачено поправлено: Лира — действий 0, бонусных 0, реакций 0',
+    ],
   ])('%#', (event, text) => {
     expect(gameEventText(event)).toBe(text);
   });

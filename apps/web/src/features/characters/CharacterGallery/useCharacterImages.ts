@@ -27,13 +27,22 @@ export function useCharacterImages(characterId: string) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  // Ответ после ухода со страницы (или конца теста) не трогает состояние: иначе React
+  // обновляет уже разобранное дерево.
   useEffect(() => {
+    let gone = false;
     listCharacterImages(characterId)
-      .then(setImages)
+      .then((loaded) => {
+        if (!gone) setImages(loaded);
+      })
       .catch((err: unknown) => {
+        if (gone) return;
         console.error('Failed to load character images', err);
         setLoadError(errorMessage(err, 'Не удалось загрузить картинки'));
       });
+    return () => {
+      gone = true;
+    };
   }, [characterId]);
 
   const addProblems = useCallback((added: UploadProblem[]) => {

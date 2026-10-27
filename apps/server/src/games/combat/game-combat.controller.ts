@@ -13,7 +13,10 @@ import {
 } from '@nestjs/common';
 import { AuthGuard, type AuthenticatedRequest } from '../../auth/auth.guard.js';
 import {
+  CombatAbilityDto,
+  CombatActionDto,
   CombatantsDto,
+  CombatResourcesDto,
   CombatInitiativeDto,
   CombatOrderDto,
   CombatRollDto,
@@ -113,6 +116,41 @@ export class GameCombatController {
     @Body() dto: CombatOrderDto,
   ) {
     return this.combat.reorder(req.user.sub, id, dto.ids);
+  }
+
+  // Обычное действие хода: «Рывок», «Отход», «Уклонение» (этап 4).
+  @Post('combatants/:combatantId/actions')
+  @HttpCode(200)
+  takeAction(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('combatantId', ParseUUIDPipe) combatantId: string,
+    @Body() dto: CombatActionDto,
+  ) {
+    return this.combat.takeAction(req.user.sub, id, combatantId, dto.action);
+  }
+
+  // «Применить» способность: тратит действие нужного вида и ячейку (вариант Б).
+  @Post('combatants/:combatantId/abilities')
+  @HttpCode(200)
+  useAbility(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('combatantId', ParseUUIDPipe) combatantId: string,
+    @Body() dto: CombatAbilityDto,
+  ) {
+    return this.combat.useAbility(req.user.sub, id, combatantId, dto);
+  }
+
+  // Мастер правит потраченные действия, бонусные и реакции.
+  @Put('combatants/:combatantId/resources')
+  setResources(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('combatantId', ParseUUIDPipe) combatantId: string,
+    @Body() dto: CombatResourcesDto,
+  ) {
+    return this.combat.setResources(req.user.sub, id, combatantId, dto);
   }
 
   // «Закончить ход»: combatantId — чей ход заканчивают.

@@ -1,6 +1,6 @@
 import { Button, Group, SegmentedControl, Stack, Text } from '@mantine/core';
 import { IconWalk } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { GameFigure } from 'shared';
 import { figureImagePath } from '../../../features/games';
 import type { CardTarget } from '../cardWindows';
@@ -17,6 +17,8 @@ interface PlayerCharacterTabProps {
   version: number;
   tool: FigureTool;
   onOpenCard: (target: CardTarget) => void;
+  // Блок «Ваш ход» героя в бою с очерёдностью (docs/plan/combat.md, этап 4).
+  turnFor?: (characterId: string) => ReactNode;
 }
 
 // Вкладка «Персонаж» у игрока (docs/plan/done/scene-page.md, этап 5, вариант А): свой персонаж
@@ -29,6 +31,7 @@ function PlayerCharacterTab({
   version,
   tool,
   onOpenCard,
+  turnFor,
 }: PlayerCharacterTabProps) {
   const [chosenId, setChosenId] = useState<string | null>(null);
   const watchOnly = useWatchOnly();
@@ -80,6 +83,7 @@ function PlayerCharacterTab({
           Карточка
         </Button>
       </Group>
+      {turnFor?.(id)}
       <CharacterStateCard
         key={id}
         gameId={gameId}

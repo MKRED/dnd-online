@@ -57,6 +57,9 @@ export const GAME_EVENT_DEFAULT_VISIBILITY: Record<
   'combat.initiative': 'master',
   'combat.initiative_set': 'master',
   'combat.turn': 'master',
+  'combat.action': 'master',
+  'combat.ability': 'master',
+  'combat.resources': 'master',
   // Персонажи партии видны партии целиком, как на их листе.
   'character.changed': 'players',
   'character.effect_added': 'players',

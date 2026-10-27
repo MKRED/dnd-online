@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../../../../test/render';
 import type { CombatEntry } from './combatEntries';
 import TurnButtons from './TurnButtons';
+import TurnPortrait from './TurnPortrait';
 import TurnStrip from './TurnStrip';
 
 function entry(
@@ -24,6 +25,9 @@ function entry(
       canRoll: false,
       roll: null,
       pending: null,
+      resources: null,
+      dodging: false,
+      disengaged: false,
       ...more,
     },
     id,
@@ -178,5 +182,33 @@ describe('TurnStrip', () => {
     expect(
       screen.queryByRole('button', { name: /Бросить за монстров/ }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('TurnPortrait', () => {
+  it('«Уклонение» и «Отход» — значок в углу и в подписи', () => {
+    renderWithProviders(
+      <>
+        <TurnPortrait
+          entry={entry('d', 'Гоблин', 12, { dodging: true }, 'monster')}
+          current={false}
+          acted={false}
+        />
+        <TurnPortrait
+          entry={entry('e', 'Лира', 18, { disengaged: true })}
+          current
+          acted={false}
+        />
+      </>,
+    );
+    const goblin = screen.getByRole('button', {
+      name: 'Гоблин, инициатива 12, уклоняется',
+    });
+    expect(goblin.querySelector('svg')).not.toBeNull();
+    expect(
+      screen.getByRole('button', {
+        name: 'Лира, инициатива 18, отходит, сейчас ходит',
+      }),
+    ).toBeInTheDocument();
   });
 });

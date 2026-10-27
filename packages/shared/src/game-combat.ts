@@ -26,6 +26,60 @@ export interface GameCombatant {
   // Что войдёт в бросок, пока он не брошен: окно броска показывает слагаемые и
   // преимущество заранее. Тем же, кому виден бросок; после броска — null.
   pending: Omit<D20RollInput, 'master'> | null;
+  // Ресурсы хода — тем же, кому виден бросок; иначе null (этап 4).
+  resources: CombatantResources | null;
+  // «Уклонение» — до начала своего следующего хода; «Отход» — до конца этого хода. Видны
+  // всем, кто видит участника: значок на портрете (решение Михаила 2026-10-27, вариант А).
+  dodging: boolean;
+  disengaged: boolean;
+}
+
+// Сколько чего за ход и сколько уже потрачено (docs/plan/combat.md, этап 4): у героя и НПС
+// максимум — числа «За ход» из листа, у монстра — по одному. Всё снова целое в начале
+// своего хода.
+export interface TurnResource {
+  max: number;
+  used: number;
+}
+
+export interface TurnLimits {
+  actions: number;
+  bonusActions: number;
+  reactions: number;
+}
+
+export interface CombatantResources {
+  actions: TurnResource;
+  bonusActions: TurnResource;
+  reactions: TurnResource;
+}
+
+// Обычные действия без цели: тратят одно действие (docs/dnd/combat.md).
+export const COMBAT_ACTIONS = ['dash', 'disengage', 'dodge'] as const;
+export type CombatAction = (typeof COMBAT_ACTIONS)[number];
+
+export interface CombatActionInput {
+  action: CombatAction;
+}
+
+// Мастер правит потраченное: сколько действий, бонусных и реакций уже потрачено.
+export interface CombatResourcesInput {
+  actionsUsed?: number;
+  bonusActionsUsed?: number;
+  reactionsUsed?: number;
+}
+
+// «Применить» способность (вариант Б): abilityId — строка способности у существа (id связи),
+// slotLevel — круг ячейки у заклинания с ячейкой.
+export interface CombatAbilityInput {
+  abilityId: string;
+  slotLevel?: number;
+}
+
+export interface CombatResourcesUsed {
+  actionsUsed: number;
+  bonusActionsUsed: number;
+  reactionsUsed: number;
 }
 
 // Кого ещё можно позвать в бой (окно «Начать бой» и «В бой» у мастера). seen — видит ли

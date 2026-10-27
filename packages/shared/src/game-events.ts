@@ -7,8 +7,15 @@ import type {
   GameCreatureHitPoints,
   GameEventCreature,
 } from './game-creatures.js';
+import type { TurnSpend } from './combatAbilityUse.js';
 import type { D20Roll, RollMode } from './d20Roll.js';
-import type { CombatantInput, GameEventCombatant } from './game-combat.js';
+import type {
+  CombatAction,
+  CombatantInput,
+  CombatResourcesInput,
+  CombatResourcesUsed,
+  GameEventCombatant,
+} from './game-combat.js';
 import type { GameEventVisibility } from './game-event-visibility.js';
 import type { GameFigurePlacement, GameMoveMode } from './game-figures.js';
 import type { GameUser } from './games.js';
@@ -253,6 +260,40 @@ export interface GameEventPayloads {
       from: GameEventCombatant | null;
       round: number;
       newRound: boolean;
+    };
+  };
+  // Обычное действие хода (этап 4): тратит действие; у «Рывка» dashes — сколько их взято
+  // в этот ход, у остальных null.
+  'combat.action': {
+    intent: { combatantId: string; action: CombatAction };
+    result: {
+      combatant: GameEventCombatant;
+      action: CombatAction;
+      dashes: number | null;
+    };
+  };
+  // Применена способность (этап 4, вариант Б): потрачено spent и ячейка slotLevel; что она
+  // делает, мастер отмечает руками.
+  'combat.ability': {
+    intent: {
+      combatantId: string;
+      abilityId: string;
+      slotLevel: number | null;
+    };
+    result: {
+      combatant: GameEventCombatant;
+      ability: { id: string; name: string };
+      spent: TurnSpend;
+      slotLevel: number | null;
+    };
+  };
+  // Мастер поправил потраченные действия, бонусные и реакции.
+  'combat.resources': {
+    intent: { combatantId: string } & CombatResourcesInput;
+    result: {
+      combatant: GameEventCombatant;
+      before: CombatResourcesUsed;
+      after: CombatResourcesUsed;
     };
   };
   // Хиты, спасброски или ячейки персонажа в игре (этап 8). instantDeath — урон сверх

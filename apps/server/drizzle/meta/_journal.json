@@ -442,6 +442,13 @@
       "when": 1793111769489,
       "tag": "0062_game_combatants",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1793116848997,
+      "tag": "0063_combat_turn_resources",
+      "breakpoints": true
     }
   ]
 }

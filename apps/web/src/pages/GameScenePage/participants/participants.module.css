@@ -137,6 +137,14 @@
 
 /* Выбранный — наверху вкладки, на всю ширину панели, отделён линией. Длинная карточка
    (ячейки, эффекты) прокручивается сама и не съедает список целиком. */
+/* Блок хода монстра или НПС у мастера — над выбранным и списком. */
+.turn {
+  flex: none;
+  max-height: 50%;
+  overflow-y: auto;
+  margin-bottom: 8px;
+}
+
 .selected {
   flex: none;
   max-height: 60%;
@@ -167,7 +175,8 @@
     overflow-y: visible;
   }
 
-  .selected {
+  .selected,
+  .turn {
     max-height: none;
     overflow-y: visible;
   }

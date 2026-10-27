@@ -274,6 +274,7 @@ function GameScenePage() {
     dialog: combatDialog,
     onDialog: setCombatDialog,
     focus: (at) => focusRef.current?.focusOn([...at]),
+    version: cards.version,
   });
   // Выбор у страницы один: щелчки по клеткам ведут выбранную фигурку или (у мастера)
   // выбранного монстра (docs/plan/done/creature-movement.md).
@@ -541,6 +542,7 @@ function GameScenePage() {
             onOpenCard={windows.open}
             journal={journal}
             combatOrdered={fighting}
+            turn={combatUi.turn}
             onStartCombat={() => setCombatDialog(true)}
             modeSwitch={
               narrow && tools ? (

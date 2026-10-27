@@ -100,6 +100,9 @@ export const COMBAT_KINDS: readonly GameEventKind[] = [
   'combat.initiative_set',
   'combat.order',
   'combat.turn',
+  'combat.action',
+  'combat.ability',
+  'combat.resources',
 ];
 
 // Сколько пропущенных записей журнала мастер получает при возвращении; больше —

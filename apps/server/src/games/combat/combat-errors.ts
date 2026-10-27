@@ -24,3 +24,17 @@ export const TURN_NOT_ROLLED = 'Ход — только тому, кто уже 
 export const NOT_YOUR_TURN = 'Сейчас не ваш ход';
 export const ROUND_BY_ORDER =
   'В бою с очерёдностью раунд меняется сам, когда походили все';
+export const ACTION_NOT_YOURS =
+  'Действовать за участника может тот, кто водит фигурку, или мастер';
+export const NO_ACTIONS_LEFT = 'В этом ходу действий больше нет';
+export const ALREADY_DODGING = 'Участник уже уклоняется';
+export const ALREADY_DISENGAGED = 'Участник уже отходит';
+export const RESOURCES_OVER_MAX = 'Потратить можно не больше, чем есть за ход';
+export const ABILITY_NOT_FOUND = 'У участника нет такой способности';
+export const ABILITY_NOT_IN_COMBAT =
+  'Эту способность в бою не применить: черта действует сама, долгое применение занимает минуты, легендарные действия — позже';
+export const ABILITY_NOT_PREPARED = 'Заклинание не подготовлено';
+export const slotLevelNeeded = (min: number) =>
+  `Выберите круг ячейки — не ниже ${min}`;
+export const noFreeSlot = (level: number) =>
+  `Свободных ячеек ${level} круга нет`;

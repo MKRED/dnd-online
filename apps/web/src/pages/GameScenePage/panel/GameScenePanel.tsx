@@ -10,7 +10,7 @@ import { useEffect, type ReactNode } from 'react';
 import type { GameSceneStatus, MapObjectRefsView } from 'shared';
 import type { ObjectImagePaths } from '../../../features/maps/MapScene';
 import type { CardTarget } from '../cardWindows';
-import { CombatControls } from '../combat';
+import { CombatControls, type TurnBlocks } from '../combat';
 import type { MapViewState } from '../../../features/maps/mapStateFromChunks';
 import { CreatureCards, type useCreatureCards } from '../creatures';
 import type { useScenePlay } from '../figures';
@@ -54,6 +54,8 @@ interface GameScenePanelProps {
   // Идёт бой с очерёдностью; «Начать бой» открывает окно участников.
   combatOrdered: boolean;
   onStartCombat: () => void;
+  // Блоки «Ваш ход» (docs/plan/combat.md, этап 4).
+  turn: TurnBlocks;
   // Переключатель режима в шапке — только на телефоне; иначе он на сцене.
   modeSwitch: ReactNode;
   // Содержимое «Правки»: свойства инструмента и «Не на сцене».
@@ -79,6 +81,7 @@ function GameScenePanel({
   journal,
   combatOrdered,
   onStartCombat,
+  turn,
   modeSwitch,
   editBody,
 }: GameScenePanelProps) {
@@ -121,6 +124,7 @@ function GameScenePanel({
         onOpenCard({ kind: 'creature', objectId: Number(key) })
       }
       errors={[tool.error, cards.walk.error]}
+      turn={editing ? null : turn.master}
       selected={
         hasSelection && (
           <CreatureCards
@@ -159,6 +163,7 @@ function GameScenePanel({
               own={heroes.filter((f) => f.canMove)}
               version={cards.version}
               tool={tool}
+              turnFor={turn.forCharacter}
               onOpenCard={onOpenCard}
             />
           ),

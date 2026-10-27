@@ -176,6 +176,7 @@ function CardWindows({
             }
             busy={figureTool.busy}
             readOnly={!master && (!figure?.canMove || watchOnly)}
+            combat={figures?.mode === 'tactical'}
           />
         ),
       };

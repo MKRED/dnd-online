@@ -49,7 +49,9 @@ describe('образцы в форме', () => {
     expect(
       weaponBookDifferences({
         ...sword,
-        extraDamage: [{ count: 2, die: '4', type: 'fire' }],
+        extraDamage: [
+          { count: 2, die: '4', type: 'fire', withoutAttunement: false },
+        ],
       }),
     ).toEqual(['урон']);
   });
@@ -60,8 +62,8 @@ describe('оружие в запросе', () => {
     const details = weaponToDetails({
       ...weaponFromBook('longsword'),
       extraDamage: [
-        { count: 2, die: '4', type: 'fire' },
-        { count: '4', die: 'flat', type: 'necrotic' },
+        { count: 2, die: '4', type: 'fire', withoutAttunement: false },
+        { count: '4', die: 'flat', type: 'necrotic', withoutAttunement: false },
       ],
     });
     expect(details.extraDamage).toEqual([
@@ -104,6 +106,54 @@ describe('экипировка в запросе', () => {
       magicBonus: 2,
       attunement: true,
     });
+  });
+
+  // Вариант А макета 2026-10-27: отметка у бонуса и у каждой части доп. урона.
+  it('«Действует без настройки» уходит только у предмета с настройкой', () => {
+    const fire = { count: 2, die: '6', type: 'fire' } as const;
+    const values = {
+      ...toFormValues(null),
+      name: 'Пламенный меч',
+      category: 'weapon' as const,
+      rarity: 'rare' as const,
+      weapon: {
+        ...weaponFromBook('longsword'),
+        extraDamage: [
+          { ...fire, withoutAttunement: true },
+          { ...fire, withoutAttunement: false },
+        ],
+      },
+      magicBonus: '1',
+      attunement: true,
+      bonusWithoutAttunement: true,
+    };
+    const marked = toItemInput(values).details;
+    expect(marked).toMatchObject({
+      bonusWithoutAttunement: true,
+      extraDamage: [
+        { count: 2, die: 6, type: 'fire', withoutAttunement: true },
+        { count: 2, die: 6, type: 'fire' },
+      ],
+    });
+    expect(weaponDetailsProblem(marked)).toBeNull();
+    // Предмет читается обратно с теми же отметками.
+    const item = { ...values, details: marked } as unknown as Item;
+    expect(toFormValues(item).bonusWithoutAttunement).toBe(true);
+    expect(
+      toFormValues(item).weapon.extraDamage.map((r) => r.withoutAttunement),
+    ).toEqual([true, false]);
+
+    const plain = toItemInput({ ...values, attunement: false }).details;
+    expect(plain).not.toHaveProperty('bonusWithoutAttunement');
+    expect(plain).toMatchObject({
+      extraDamage: [
+        { count: 2, die: 6, type: 'fire' },
+        { count: 2, die: 6, type: 'fire' },
+      ],
+    });
+    expect(
+      (plain as { extraDamage: object[] }).extraDamage[0],
+    ).not.toHaveProperty('withoutAttunement');
   });
 
   it('предмет из базы читается в форму и уходит тем же', () => {

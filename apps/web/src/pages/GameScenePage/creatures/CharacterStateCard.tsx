@@ -21,10 +21,12 @@ interface CharacterStateCardProps {
   // В окне карточки (docs/plan/done/scene-page.md, этап 4): без своей шапки — имя в шапке окна.
   bare?: boolean;
   // Что показать под состоянием тем же листом (вкладки окна) — без второй загрузки.
-  // change — правка через игру тем, кто ведёт персонажа; у только читающего — нет.
+  // change — правка через игру тем, кто ведёт персонажа; у только читающего — нет. apply —
+  // поставить лист из ответа другой правки (куклы), тоже только ведущему.
   below?: (
     character: Character,
     change?: (next: GameCharacterChange) => Promise<void>,
+    apply?: (next: Character) => void,
   ) => ReactNode;
   // Герой отряда (docs/plan/done/scene-page.md, этап 5): всё видно, ничего не правится.
   readOnly?: boolean;
@@ -147,7 +149,7 @@ function CharacterStateCard({
         }
       />
       {error && <Alert color="red">{error}</Alert>}
-      {below?.(character, readOnly ? undefined : change)}
+      {readOnly ? below?.(character) : below?.(character, change, setCharacter)}
     </Stack>
   );
 }

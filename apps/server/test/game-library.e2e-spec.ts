@@ -21,6 +21,12 @@ import {
   pngImage,
   PNG_FILE,
 } from './support/character-fixture.js';
+import {
+  attunementUrl,
+  createRing,
+  createWeapon,
+  equipmentUrl,
+} from './support/equipment-fixture.js';
 import { createItem, packBody } from './support/item-fixture.js';
 import { createMonster } from './support/monster-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
@@ -434,6 +440,61 @@ describe('game library (e2e)', () => {
       })
       .where(eq(gameLibrary.sourceId, npcId));
     expect(await turn()).toEqual([1, 1, 1]);
+  });
+
+  it('НПС: копия приносит куклу и настройку; место, которое предмет копии не занимает, пустое', async () => {
+    const { master, gameId } = await seated('gl_doll');
+    const m = master.agent;
+    const npcId = idOf(
+      await m
+        .post('/api/characters')
+        .send(characterBody({ kind: 'npc' }))
+        .expect(201),
+    );
+    const sword = await createWeapon(m, 'Меч стражи');
+    const ring = await createRing(m, 'Кольцо защиты', true);
+    const rows: { id: string }[] = [];
+    for (const item of [sword, ring]) {
+      const res = await m
+        .post(`/api/characters/${npcId}/items`)
+        .send({ itemId: item.id, quantity: 1, location: 'carried' })
+        .expect(201);
+      rows.push(...(res.body as { id: string }[]).slice(-1));
+    }
+    await m
+      .put(equipmentUrl(npcId, 'meleeMain'))
+      .send({ entryId: rows[0].id })
+      .expect(200);
+    await m
+      .put(equipmentUrl(npcId, 'ring1'))
+      .send({ entryId: rows[1].id })
+      .expect(200);
+    await m.put(attunementUrl(npcId, rows[1].id)).expect(200);
+
+    const { db } = t.app.get(DatabaseService);
+    await db.transaction(async (tx) => {
+      await lockGame(tx, gameId);
+      await copyToLibrary(tx, gameId, master.id, [
+        { kind: 'npc', sourceId: npcId },
+      ]);
+    });
+    const worn = async () =>
+      (
+        (await entry(m, gameId, 'npc', npcId)).record as Character
+      ).inventory.map((row) => [row.item?.name, row.equipped, row.attuned]);
+    expect(await worn()).toEqual([
+      ['Меч стражи', ['meleeMain'], false],
+      ['Кольцо защиты', ['ring1'], true],
+    ]);
+
+    // Копия меча стала дальнобойной: в ближней руке её больше нет.
+    await db
+      .update(gameLibrary)
+      .set({
+        record: sql`jsonb_set(${gameLibrary.record}, '{details,attackType}', '"ranged"')`,
+      })
+      .where(eq(gameLibrary.sourceId, sword.id));
+    expect((await worn())[0]).toEqual(['Меч стражи', [], false]);
   });
 
   it('библиотеку видит и обновляет только мастер', async () => {

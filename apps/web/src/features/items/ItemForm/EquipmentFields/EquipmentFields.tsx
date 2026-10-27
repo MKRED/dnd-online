@@ -54,16 +54,30 @@ function MagicFields({ form }: EquipmentFieldsProps) {
     category === 'weapon' || category === 'armor' || category === 'shield'
       ? BONUS_HINTS[category]
       : null;
+  // Без настройки по книге действуют только обычные свойства; отметка — «если в описании
+  // не сказано иначе» (docs/dnd/weapons-armor.md, «Магия без настройки»).
+  const markBonus = form.values.attunement && form.values.magicBonus !== '0';
   return (
     <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="xs">
       {bonusHint && (
-        <Select
-          label="Бонус магии"
-          description={bonusHint}
-          data={BONUS_OPTIONS}
-          allowDeselect={false}
-          {...form.getInputProps('magicBonus')}
-        />
+        <Stack gap={6}>
+          <Select
+            label="Бонус магии"
+            description={bonusHint}
+            data={BONUS_OPTIONS}
+            allowDeselect={false}
+            {...form.getInputProps('magicBonus')}
+          />
+          {markBonus && (
+            <Checkbox
+              size="xs"
+              label="Действует без настройки"
+              {...form.getInputProps('bonusWithoutAttunement', {
+                type: 'checkbox',
+              })}
+            />
+          )}
+        </Stack>
       )}
       <Checkbox
         label="Требует настройки"

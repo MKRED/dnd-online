@@ -1,6 +1,7 @@
 import {
   ActionIcon,
   Button,
+  Checkbox,
   Group,
   NumberInput,
   Select,
@@ -83,6 +84,9 @@ interface DamageFieldsProps {
 // характеристики и бонус магии, ниже до двух частей дополнительного урона без них.
 function DamageFields({ form }: DamageFieldsProps) {
   const extra = form.values.weapon.extraDamage;
+  // «Действует без настройки» — у предмета, который её требует (вариант А макета
+  // 2026-10-27); у немагического настройки нет вовсе.
+  const markable = form.values.rarity !== 'none' && form.values.attunement;
   return (
     <Stack gap="xs">
       <Group gap="xs" align="flex-start" wrap="nowrap">
@@ -110,29 +114,41 @@ function DamageFields({ form }: DamageFieldsProps) {
           {extra.map((_, index) => {
             const path = `weapon.extraDamage.${index}`;
             return (
-              <Group key={index} gap="xs" align="flex-start" wrap="nowrap">
-                <DamageRowInputs
-                  form={form}
-                  paths={{
-                    count: `${path}.count`,
-                    die: `${path}.die`,
-                    type: `${path}.type`,
-                  }}
-                  labelled={false}
-                  name={`Дополнительный урон ${index + 1}`}
-                />
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="lg"
-                  aria-label={`Убрать дополнительный урон ${index + 1}`}
-                  onClick={() =>
-                    form.removeListItem('weapon.extraDamage', index)
-                  }
-                >
-                  <IconX size={16} />
-                </ActionIcon>
-              </Group>
+              <Stack key={index} gap={4}>
+                <Group gap="xs" align="flex-start" wrap="nowrap">
+                  <DamageRowInputs
+                    form={form}
+                    paths={{
+                      count: `${path}.count`,
+                      die: `${path}.die`,
+                      type: `${path}.type`,
+                    }}
+                    labelled={false}
+                    name={`Дополнительный урон ${index + 1}`}
+                  />
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="lg"
+                    aria-label={`Убрать дополнительный урон ${index + 1}`}
+                    onClick={() =>
+                      form.removeListItem('weapon.extraDamage', index)
+                    }
+                  >
+                    <IconX size={16} />
+                  </ActionIcon>
+                </Group>
+                {markable && (
+                  <Checkbox
+                    size="xs"
+                    label="Действует без настройки"
+                    aria-label={`Дополнительный урон ${index + 1}: действует без настройки`}
+                    {...form.getInputProps(`${path}.withoutAttunement`, {
+                      type: 'checkbox',
+                    })}
+                  />
+                )}
+              </Stack>
             );
           })}
         </Stack>

@@ -1,6 +1,8 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
+  EQUIP_COMBAT_ARMOR,
+  EQUIP_COMBAT_ATTUNE,
   itemEquip,
   type Character,
   type EquipSlot,
@@ -29,6 +31,22 @@ const weapon = (twoHanded: boolean): ItemVariant => ({
     attunement: false,
   },
 });
+const chainMail: ItemVariant = {
+  category: 'armor',
+  details: {
+    base: 'chainMail',
+    kind: 'heavy',
+    armorClass: 16,
+    strength: 13,
+    stealthDisadvantage: true,
+    magicBonus: 0,
+    attunement: false,
+  },
+};
+const shield: ItemVariant = {
+  category: 'shield',
+  details: { armorClass: 2, magicBonus: 0, attunement: false },
+};
 const ring: ItemVariant = {
   category: 'jewelry',
   details: { slot: 'ring', attunement: true },
@@ -142,5 +160,51 @@ describe('EquipmentSection', () => {
     expect(init.method).toBe('PUT');
     expect(JSON.parse(init.body as string)).toEqual({ entryId: 's' });
     expect(onChange).toHaveBeenCalledWith(next);
+  });
+
+  it('в игре в бою: доспех не снять, настройку не сменить, у щита — цена по книге', async () => {
+    const play = {
+      combat: true,
+      equip: vi.fn(() => Promise.resolve([] as InventoryEntry[])),
+      unequip: vi.fn(),
+      attune: vi.fn(),
+    };
+    renderWithProviders(
+      <EquipmentSection
+        character={character([
+          entry('c', 'Кольчуга', chainMail, { equipped: ['body'] }),
+          entry('h', 'Щит', shield),
+          entry('r', 'Кольцо защиты', ring, { equipped: ['ring1'] }),
+        ])}
+        model={false}
+        play={play}
+      />,
+    );
+    expect(
+      screen.getByText('Бой: доспех и настройку не сменить'),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /^Тело/ }));
+    expect(await screen.findByRole('button', { name: 'Снять' })).toBeDisabled();
+    expect(screen.getByText(EQUIP_COMBAT_ARMOR)).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Кольцо: Кольцо защиты' }),
+    );
+    expect(
+      await screen.findByText(`Требует настройки. ${EQUIP_COMBAT_ATTUNE}`),
+    ).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+
+    const offHands = screen.getAllByRole('button', {
+      name: 'Вторая рука: пусто',
+    });
+    await userEvent.click(offHands[0]);
+    expect(
+      await screen.findByText('Надеть или снять — действие «Использование»'),
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByText('Щит'));
+    expect(play.equip).toHaveBeenCalledWith('meleeOff', 'h');
   });
 });

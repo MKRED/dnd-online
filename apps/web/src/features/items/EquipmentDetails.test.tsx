@@ -65,4 +65,36 @@ describe('EquipmentDetails', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Помеха')).toBeInTheDocument();
   });
+
+  it('«Без настройки»: что действует, или только обычные свойства', () => {
+    const shield = (over: object) =>
+      item('shield', {
+        armorClass: 2,
+        magicBonus: 1,
+        attunement: true,
+        ...over,
+      });
+    const { unmount } = renderWithProviders(
+      <EquipmentDetails item={shield({})} />,
+    );
+    expect(screen.getByText('Только обычные свойства')).toBeInTheDocument();
+    unmount();
+    renderWithProviders(
+      <EquipmentDetails item={shield({ bonusWithoutAttunement: true })} />,
+    );
+    expect(screen.getByText('Действует бонус +1')).toBeInTheDocument();
+  });
+
+  it('без «Требует настройки» строки нет', () => {
+    renderWithProviders(
+      <EquipmentDetails
+        item={item('shield', {
+          armorClass: 2,
+          magicBonus: 1,
+          attunement: false,
+        })}
+      />,
+    );
+    expect(screen.queryByText('Без настройки')).toBeNull();
+  });
 });

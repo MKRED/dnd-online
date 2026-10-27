@@ -34,3 +34,12 @@ export function setAttunement(
     method: attuned ? 'PUT' : 'DELETE',
   });
 }
+
+// Кукла во время встречи (docs/plan/equipment.md, этап 4): правки идут адресами игры, а
+// combat — тактический режим, где доспех и настройку не сменить.
+export interface EquipmentPlay {
+  combat: boolean;
+  equip: (slot: EquipSlot, entryId: string) => Promise<InventoryEntry[]>;
+  unequip: (slot: EquipSlot) => Promise<InventoryEntry[]>;
+  attune: (entryId: string, attuned: boolean) => Promise<InventoryEntry[]>;
+}

@@ -52,6 +52,7 @@ export const GAME_EVENT_DEFAULT_VISIBILITY: Record<
   'character.changed': 'players',
   'character.effect_added': 'players',
   'character.effect_removed': 'players',
+  'character.equipment': 'players',
   // Монстры и НПС: игроки видят только урон по ним и как они ходят.
   'creature.changed': 'master',
   'creature.moved': 'master',

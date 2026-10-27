@@ -37,6 +37,8 @@ export interface EquipmentFormValues {
   // Строкой для Select: '0'…'3'.
   magicBonus: string;
   attunement: boolean;
+  // «Действует без настройки» у бонуса магии (вариант А макета 2026-10-27).
+  bonusWithoutAttunement: boolean;
 }
 
 const EMPTY_ARMOR: ArmorFormValues = {
@@ -95,6 +97,7 @@ export function equipmentToForm(item: Item | null): EquipmentFormValues {
     jewelrySlot: item?.category === 'jewelry' ? item.details.slot : null,
     magicBonus: String(details?.magicBonus ?? 0),
     attunement: details?.attunement ?? false,
+    bonusWithoutAttunement: details?.bonusWithoutAttunement ?? false,
   };
 }
 
@@ -106,12 +109,29 @@ export function equipmentVariant(
   const magic = values.rarity !== 'none';
   const magicBonus = magic ? Number(values.magicBonus) : 0;
   const attunement = magic && values.attunement;
+  // Отметки «Действует без настройки» имеют смысл только у предмета с настройкой и
+  // уходят, только когда стоят.
+  const bonus = {
+    magicBonus,
+    ...(attunement && magicBonus > 0 && values.bonusWithoutAttunement
+      ? { bonusWithoutAttunement: true }
+      : {}),
+  };
   switch (category) {
-    case 'weapon':
+    case 'weapon': {
+      const stats = weaponToDetails(values.weapon);
+      const extraDamage = attunement
+        ? stats.extraDamage
+        : stats.extraDamage.map(({ count, die, type }) => ({
+            count,
+            die,
+            type,
+          }));
       return {
         category,
-        details: { ...weaponToDetails(values.weapon), magicBonus, attunement },
+        details: { ...stats, extraDamage, ...bonus, attunement },
       };
+    }
     case 'armor': {
       const { armor } = values;
       return {
@@ -122,7 +142,7 @@ export function equipmentVariant(
           armorClass: Number(armor.armorClass),
           strength: armor.strength === '' ? null : Number(armor.strength),
           stealthDisadvantage: armor.stealthDisadvantage,
-          magicBonus,
+          ...bonus,
           attunement,
         },
       };
@@ -132,7 +152,7 @@ export function equipmentVariant(
         category,
         details: {
           armorClass: Number(values.shieldArmorClass),
-          magicBonus,
+          ...bonus,
           attunement,
         },
       };

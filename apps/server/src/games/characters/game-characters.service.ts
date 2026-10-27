@@ -4,6 +4,7 @@ import type {
   Character,
   CharacterEffectEntry,
   GameCharacterChange,
+  GameEquipmentChange,
 } from 'shared';
 import { DatabaseService } from '../../database/database.service.js';
 import { GAME_CHARACTER_NOT_YOURS } from '../game-errors.js';
@@ -20,13 +21,15 @@ import {
   removeCharacterEffect,
 } from './game-character-effect-links.js';
 import { loadGameEffectLists } from './game-character-effects.js';
+import { changeEquipment } from './game-character-equipment.js';
 import { readGameCharacter } from './game-character-read.js';
 import {
   changeCharacter,
   type CharacterActor,
 } from './game-character-state.js';
 
-// Персонажи игроков в игре (docs/plan/done/game.md, этап 8): лист, хиты, ячейки и эффекты.
+// Персонажи игроков в игре (docs/plan/done/game.md, этап 8): лист, хиты, ячейки и эффекты;
+// кукла — с этапа 4 плана экипировки.
 // Правит тот же круг, что водит фигурку: мастер, владелец и управляющий; читает ещё и
 // отряд — участники со своими персонажами на местах (docs/plan/done/scene-page.md, этап 5). Каждая
 // правка — транзакция под блокировкой игры, запись журнала и рассылка.
@@ -120,6 +123,23 @@ export class GameCharactersService {
       (actor, row) => removeCharacterEffect(actor, row, entryId),
     );
     return this.effectsOf(gameId, seated);
+  }
+
+  // Кукла в игре отвечает листом целиком: КД, атаки и Скорость меняются вместе с ней.
+  async changeEquipment(
+    userId: string,
+    gameId: string,
+    characterId: string,
+    change: GameEquipmentChange,
+  ): Promise<Character> {
+    const seated = await this.edit(
+      userId,
+      gameId,
+      characterId,
+      `equipment_${change.kind}`,
+      (actor, row) => changeEquipment(actor, row, change),
+    );
+    return readGameCharacter(this.databaseService.db, gameId, seated);
   }
 
   private async effectsOf(gameId: string, seated: SeatedCharacter) {

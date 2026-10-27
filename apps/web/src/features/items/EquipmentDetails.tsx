@@ -1,4 +1,10 @@
-import { ARMOR_DEX_CAP, type ArmorKind, type Item } from 'shared';
+import {
+  ARMOR_DEX_CAP,
+  type ArmorKind,
+  type Item,
+  type MagicBonus as MagicBonusFields,
+  type WeaponExtraDamage,
+} from 'shared';
 import { DetailsField } from '../catalog';
 import {
   WEAPON_GROUP_LABELS,
@@ -32,6 +38,36 @@ function weaponProperties(details: Weapon): string {
   return parts.length > 0 ? parts.join(', ') : '—';
 }
 
+// Что действует без настройки (docs/dnd/weapons-armor.md, «Магия без настройки»): по
+// книге — только обычные свойства, а отмеченное — ещё и это. Строка — только у предмета,
+// который требует настройки и что-то магическое умеет.
+function WithoutAttunement({
+  details,
+}: {
+  details: { attunement: boolean } & MagicBonusFields & {
+      extraDamage?: WeaponExtraDamage[];
+    };
+}) {
+  const extra = details.extraDamage ?? [];
+  if (!details.attunement || (details.magicBonus === 0 && extra.length === 0))
+    return null;
+  const kept = [
+    ...(details.bonusWithoutAttunement && details.magicBonus > 0
+      ? [`бонус +${details.magicBonus}`]
+      : []),
+    ...extra
+      .filter((part) => part.withoutAttunement)
+      .map((part) => `урон ${formatDamage(part)}`),
+  ];
+  return (
+    <DetailsField label="Без настройки">
+      {kept.length > 0
+        ? `Действует ${kept.join(' и ')}`
+        : 'Только обычные свойства'}
+    </DetailsField>
+  );
+}
+
 function WeaponRows({ details }: { details: Weapon }) {
   const group =
     `${details.weaponCategory}${details.attackType === 'melee' ? 'Melee' : 'Ranged'}` as const;
@@ -59,6 +95,7 @@ function WeaponRows({ details }: { details: Weapon }) {
           +{bonus} к атаке и урону
         </DetailsField>
       )}
+      <WithoutAttunement details={details} />
     </>
   );
 }
@@ -101,6 +138,7 @@ function EquipmentDetails({ item }: { item: Item }) {
             )}
           </DetailsField>
           <MagicBonus bonus={details.magicBonus} />
+          <WithoutAttunement details={details} />
           <DetailsField label="Сила">
             {details.strength === null
               ? '—'
@@ -119,6 +157,7 @@ function EquipmentDetails({ item }: { item: Item }) {
             +{item.details.armorClass + item.details.magicBonus}
           </DetailsField>
           <MagicBonus bonus={item.details.magicBonus} />
+          <WithoutAttunement details={item.details} />
         </>
       );
     case 'clothing':

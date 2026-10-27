@@ -95,6 +95,7 @@ describe('sheetTotals', () => {
           shieldBonus: 0,
           lines: [],
           warnings: [],
+          unattuned: [],
         },
         speedPenalty: null,
         stealthDisadvantage: null,

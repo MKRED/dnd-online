@@ -1,4 +1,5 @@
 import type {
+  EquipSlot,
   GameLibraryKind,
   GameLibraryRef,
   InventoryLocation,
@@ -19,12 +20,15 @@ export interface AbilityLinks {
 }
 
 // Лист НПС: предметы с местом, способности с отметкой «подготовлено», эффекты — как в
-// листе персонажа. null — запись удалили в справочнике ещё до копии.
+// листе персонажа. null — запись удалили в справочнике ещё до копии. Места куклы и
+// настройка — с этапа 4 плана экипировки: у копий старше их нет, читаются как «не надето».
 export interface NpcLinks {
   items: {
     sourceId: string | null;
     quantity: number;
     location: InventoryLocation;
+    equipped?: EquipSlot[];
+    attuned?: boolean;
   }[];
   abilities: { sourceId: string | null; prepared: boolean }[];
   effects: { sourceId: string | null }[];

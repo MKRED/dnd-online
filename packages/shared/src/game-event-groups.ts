@@ -59,6 +59,7 @@ const KIND_GROUPS: Record<GameEventKind, GameEventGroup> = {
   'creature.changed': 'combat',
   'character.effect_added': 'effects',
   'character.effect_removed': 'effects',
+  'character.equipment': 'combat',
   'creature.effect_added': 'effects',
   'creature.effect_removed': 'effects',
   'creature.slots_changed': 'spells',

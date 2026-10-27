@@ -8,6 +8,7 @@ import {
   characterChangedText,
   creatureChangedText,
   creatureSlotsText,
+  equipmentEventText,
 } from './characterEventText';
 
 // Строка журнала игры по-русски. Кто сделал, показывается рядом отдельно, поэтому здесь —
@@ -133,6 +134,8 @@ export function gameEventText(event: GameEvent): string {
       return event.result.effect
         ? `Эффект снят: ${event.result.character.name} — ${event.result.effect.name}`
         : `Эффект снят: ${event.result.character.name}`;
+    case 'character.equipment':
+      return equipmentEventText(event);
     case 'creature.changed':
       return creatureChangedText(event);
     case 'creature.moved': {

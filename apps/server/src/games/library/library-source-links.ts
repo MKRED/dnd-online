@@ -1,6 +1,7 @@
 import { asc, inArray } from 'drizzle-orm';
 import type { GameLibraryKind } from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
+import { loadEquipped } from '../../characters/equipment/equipment-read.js';
 import {
   abilityStepEffects,
   characterAbilities,
@@ -98,11 +99,14 @@ async function loadNpcLinks(
     .from(characterEffects)
     .where(inArray(characterEffects.characterId, [...ids]))
     .orderBy(asc(characterEffects.addedAt), asc(characterEffects.id));
+  const equipped = await loadEquipped(db, ids);
   for (const row of itemRows)
     of(row.characterId).items.push({
       sourceId: row.itemId,
       quantity: row.quantity,
       location: row.location,
+      equipped: equipped.get(row.id) ?? [],
+      attuned: row.attuned,
     });
   for (const row of abilityRows)
     of(row.characterId).abilities.push({

@@ -48,6 +48,7 @@ const COMBAT: GameCombat = {
   round: 2,
   combatants: ENTRIES.map((e) => e.combatant),
   turn: 'a',
+  hiddenTurn: null,
   candidates: [],
   eventSeq: 1,
 };
@@ -101,6 +102,22 @@ describe('TurnStrip', () => {
     expect(lira).toHaveAttribute('data-current');
     await user.click(screen.getByRole('button', { name: 'Закончить ход' }));
     expect(onEndTurn).toHaveBeenCalledWith('a');
+  });
+
+  it('ход скрытого противника — безымянный «?» на его месте', () => {
+    renderStrip(false, { ...COMBAT, turn: null, hiddenTurn: { after: 'a' } });
+    const strip = screen.getByRole('group', { name: 'Очерёдность хода' });
+    const cells = Array.from(strip.querySelectorAll('[aria-label]'));
+    expect(cells.map((c) => c.getAttribute('aria-label'))).toEqual([
+      'Лира, инициатива 18',
+      'Ход противника',
+      'Гоблин, инициатива 12',
+      'Борн, ещё не бросил инициативу',
+    ]);
+    expect(screen.getAllByText('Ход противника').length).toBeGreaterThan(0);
+    expect(
+      screen.queryByRole('button', { name: 'Закончить ход' }),
+    ).not.toBeInTheDocument();
   });
 
   it('чужой ход — кнопки нет', () => {

@@ -38,10 +38,18 @@ function TurnButtons({
   const creatures = master ? unrolled.filter((e) => e.kind !== 'pc') : [];
   const current = entries.find((e) => e.id === combat.turn);
   const canEnd = current?.combatant.canRoll ?? false;
-  if (!mine.length && !creatures.length && !canEnd && !error) return null;
+  const hidden = combat.hiddenTurn !== null;
+  if (!mine.length && !creatures.length && !canEnd && !hidden && !error) {
+    return null;
+  }
   return (
     <>
       <div className={classes.actions}>
+        {hidden && (
+          <span className={classes.waiting} role="status">
+            Ход противника
+          </span>
+        )}
         {mine.map((entry) => (
           <Button
             key={entry.id}

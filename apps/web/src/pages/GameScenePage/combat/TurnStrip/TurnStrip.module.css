@@ -209,3 +209,36 @@
     justify-content: flex-start;
   }
 }
+
+/* «Ход противника»: портрет без лица в рамке цвета врага. */
+.cell[data-hidden-turn] {
+  cursor: default;
+}
+
+.unknown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px dashed var(--mantine-color-red-filled);
+  color: var(--mantine-color-red-text);
+  background: var(--mantine-color-default);
+}
+
+.queueRow .unknown {
+  width: 26px;
+  height: 26px;
+}
+
+/* Подпись «Ход противника» под полосой: на плашке, чтобы читалась поверх сцены. */
+.waiting {
+  padding: 3px 10px;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-body);
+  box-shadow: var(--mantine-shadow-xs);
+  color: var(--mantine-color-red-text);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+}

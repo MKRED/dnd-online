@@ -61,3 +61,16 @@ export function stripCapacity(
   if (all >= total) return total;
   return Math.max(1, Math.floor((room - MORE) / CELL));
 }
+
+// Место «Хода противника» в полосе игрока: безымянный участник, пока ходит скрытое от него
+// существо (решение Михаила 2026-10-27, вариант А).
+export const HIDDEN_TURN = 'hidden-turn';
+
+export function withHiddenTurn(
+  order: readonly string[],
+  hidden: { after: string | null } | null,
+): string[] {
+  if (!hidden) return [...order];
+  const at = hidden.after === null ? 0 : order.indexOf(hidden.after) + 1;
+  return [...order.slice(0, at), HIDDEN_TURN, ...order.slice(at)];
+}

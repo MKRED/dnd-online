@@ -7,7 +7,13 @@ import CombatantMenu from './CombatantMenu';
 import type { CombatEntry } from './combatEntries';
 import QueueList from './QueueList';
 import type { StripActions } from './stripActions';
-import { stripCapacity, stripSlots } from './stripSlots';
+import HiddenTurnCell from './HiddenTurnCell';
+import {
+  HIDDEN_TURN,
+  stripCapacity,
+  stripSlots,
+  withHiddenTurn,
+} from './stripSlots';
 import TurnPortrait from './TurnPortrait';
 import classes from './TurnStrip.module.css';
 
@@ -39,20 +45,25 @@ function TurnStrip({
   const { ref, width } = useElementSize();
   const rolled = entries.filter((e) => e.combatant.initiative !== null);
   const unrolled = entries.filter((e) => e.combatant.initiative === null);
-  const capacity =
-    width > 0
-      ? stripCapacity(width, entries.length, master ? ADD_WIDTH : 0)
-      : entries.length;
-  const slots = stripSlots(
+  // У игрока, пока ходит скрытый от него противник, — безымянное место в очереди.
+  const order = withHiddenTurn(
     rolled.map((e) => e.id),
+    combat.hiddenTurn,
+  );
+  const turn = combat.hiddenTurn ? HIDDEN_TURN : combat.turn;
+  const total = order.length + unrolled.length;
+  const capacity =
+    width > 0 ? stripCapacity(width, total, master ? ADD_WIDTH : 0) : total;
+  const slots = stripSlots(
+    order,
     unrolled.map((e) => e.id),
-    combat.turn,
+    turn,
     capacity,
-    combat.round === 1 && rolled[0]?.id === combat.turn,
+    combat.round === 1 && order[0] === turn,
   );
   const byId = new Map(entries.map((e) => [e.id, e]));
   // Пока кто-то не бросил и ход ещё не начался — идёт бросок инициативы.
-  const rolling = combat.turn === null && unrolled.length > 0;
+  const rolling = turn === null && unrolled.length > 0;
   return (
     <div className={classes.wrap} ref={ref}>
       <Paper
@@ -78,10 +89,13 @@ function TurnStrip({
         </div>
         <div className={classes.portraits}>
           {slots.ids.map((id) => {
+            if (id === HIDDEN_TURN) {
+              return <HiddenTurnCell key={id} />;
+            }
             const entry = byId.get(id);
             if (!entry) return null;
             const place = rolled.indexOf(entry);
-            const current = id === combat.turn;
+            const current = id === turn;
             return (
               <CombatantMenu
                 key={id}
@@ -105,6 +119,7 @@ function TurnStrip({
         {slots.more > 0 && (
           <QueueList
             entries={[...rolled, ...unrolled]}
+            hiddenTurn={combat.hiddenTurn}
             more={slots.more}
             turn={combat.turn}
             acted={slots.acted}

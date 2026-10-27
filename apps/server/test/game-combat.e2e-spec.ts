@@ -127,7 +127,12 @@ describe('game combat (e2e)', () => {
       { ...g.npc, surprised: true },
     ]);
     let combat = res.body as GameCombat;
-    expect(combat).toMatchObject({ round: 1, turn: null, candidates: [] });
+    expect(combat).toMatchObject({
+      round: 1,
+      turn: null,
+      hiddenTurn: null,
+      candidates: [],
+    });
     expect(combat.combatants.map((c) => [c.name, c.initiative])).toEqual([
       ['Зритель', null],
       ['Гоблин', null],
@@ -384,6 +389,11 @@ describe('game combat (e2e)', () => {
     const seen = await g.read(g.p);
     expect(seen.combatants.map((c) => c.id)).toEqual([own]);
     expect(seen.turn).toBeNull();
+    // Вместо хода — безымянный «Ход противника» на его месте среди видимых.
+    expect(seen.hiddenTurn).toEqual({ after: null });
+    expect((await g.read(g.m)).hiddenTurn).toBeNull();
+    await g.setInitiative(own, 25);
+    expect((await g.read(g.p)).hiddenTurn).toEqual({ after: own });
     // Кандидатов игрок не видит; у мастера скрытый — не «видит партия».
     expect(seen.candidates).toEqual([]);
     expect((await g.read(g.m)).candidates).toEqual([

@@ -230,6 +230,7 @@ function combatOf(eventSeq: number, combatants: GameCombatant[]): GameCombat {
     round: combatants.length ? 1 : null,
     combatants,
     turn: null,
+    hiddenTurn: null,
     candidates: combatants.length
       ? []
       : [{ kind: 'figure', characterId: 'c1', name: 'Лира', seen: true }],

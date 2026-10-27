@@ -104,6 +104,14 @@ export async function readCombatView(
     ? state.combatants
     : state.combatants.filter((c) => seenByParty(c, fog));
   const turn = visible.some((c) => c.row.id === state.turn) ? state.turn : null;
+  // Ходит скрытое от игрока существо — «Ход противника» на его месте среди видимых.
+  const hiddenAt =
+    turn === null && state.turn !== null
+      ? state.combatants.findIndex((c) => c.row.id === state.turn)
+      : -1;
+  const before = state.combatants
+    .slice(0, Math.max(0, hiddenAt))
+    .filter((c) => visible.includes(c) && c.row.initiative !== null);
   return {
     sceneId: scene.id,
     round: game.mode === 'tactical' ? state.round : null,
@@ -111,6 +119,8 @@ export async function readCombatView(
       visible.map((c) => toCombatant(db, gameId, scene.id, c, viewer)),
     ),
     turn,
+    hiddenTurn:
+      hiddenAt === -1 ? null : { after: before.at(-1)?.row.id ?? null },
     candidates: master
       ? await readCandidates(db, gameId, scene, state.combatants, fog)
       : [],

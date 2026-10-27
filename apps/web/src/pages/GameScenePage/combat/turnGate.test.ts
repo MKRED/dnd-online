@@ -28,6 +28,7 @@ const combat = (turn: string | null): GameCombat => ({
     },
   ],
   turn,
+  hiddenTurn: null,
   candidates: [],
   eventSeq: 1,
 });

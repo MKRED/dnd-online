@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { stripCapacity, stripSlots } from './stripSlots';
+import {
+  HIDDEN_TURN,
+  stripCapacity,
+  stripSlots,
+  withHiddenTurn,
+} from './stripSlots';
 
 const order = ['a', 'b', 'c', 'd', 'e'];
 
@@ -71,5 +76,21 @@ describe('stripCapacity', () => {
 
   it('хотя бы один — текущий', () => {
     expect(stripCapacity(100, 9, 0)).toBe(1);
+  });
+});
+
+describe('withHiddenTurn', () => {
+  it('«Ход противника» — после последнего видимого перед ним', () => {
+    expect(withHiddenTurn(['a', 'b'], { after: 'a' })).toEqual([
+      'a',
+      HIDDEN_TURN,
+      'b',
+    ]);
+    expect(withHiddenTurn(['a', 'b'], { after: null })).toEqual([
+      HIDDEN_TURN,
+      'a',
+      'b',
+    ]);
+    expect(withHiddenTurn(['a'], null)).toEqual(['a']);
   });
 });

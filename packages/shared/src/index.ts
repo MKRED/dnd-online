@@ -96,3 +96,6 @@ export * from './gear.js';
 export * from './gearArmorClass.js';
 export * from './gearAttacks.js';
 export * from './gearMagic.js';
+export * from './d20Roll.js';
+export * from './initiative.js';
+export * from './game-combat.js';

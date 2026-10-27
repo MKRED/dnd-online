@@ -1,4 +1,5 @@
 import {
+  getAbilityModifier,
   isCatalogSources,
   type Ability,
   type AbilityLink,
@@ -336,6 +337,16 @@ export function libraryCreatureSpeed(row: LibraryRow): number {
 export function libraryCreatureClimb(row: LibraryRow): number | null {
   if (row.kind === 'npc') return null;
   return toMonsterFields(...variantArgs(row)).statBlock.speed.climb;
+}
+
+// Инициатива экземпляра без эффектов (docs/dnd/combat.md): у монстра — модификатор
+// инициативы из стат-блока, у НПС — модификатор Ловкости из его листа, как у персонажа.
+export function libraryCreatureInitiative(row: LibraryRow): number {
+  if (row.kind === 'npc') {
+    const dexterity = row.record.dexterity;
+    return typeof dexterity === 'number' ? getAbilityModifier(dexterity) : 0;
+  }
+  return toMonsterFields(...variantArgs(row)).statBlock.initiative;
 }
 
 // Составляющие и длительность копии эффекта — для итога листа в игре.

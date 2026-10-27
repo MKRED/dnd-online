@@ -1,0 +1,133 @@
+.title {
+  font-weight: 700;
+}
+
+.caption {
+  font-weight: 400;
+  color: var(--mantine-color-dimmed);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.dice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 124px;
+}
+
+/* Кость — цветом темы; засчитанная — сплошная, отброшенная при преимуществе или помехе —
+   меньше и бледная. */
+.die {
+  flex: none;
+  overflow: visible;
+}
+
+.dieBody {
+  fill: var(--mantine-primary-color-filled);
+  stroke: var(--mantine-primary-color-filled-hover);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.dieFace {
+  fill: var(--mantine-primary-color-light);
+  fill-opacity: 0.35;
+}
+
+.dieEdge {
+  stroke: var(--mantine-primary-color-contrast);
+  stroke-opacity: 0.35;
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.dieValue {
+  fill: var(--mantine-primary-color-contrast);
+  font-size: 26px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.die[data-dropped] {
+  opacity: 0.4;
+}
+
+.die[data-rolling] {
+  animation: spin 0.45s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg) scale(0.92);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.04);
+  }
+  to {
+    transform: rotate(360deg) scale(0.92);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .die[data-rolling] {
+    animation: none;
+  }
+}
+
+.mode[data-mode='advantage'] {
+  color: var(--mantine-color-green-text);
+}
+
+.mode[data-mode='disadvantage'] {
+  color: var(--mantine-color-red-text);
+}
+
+.terms {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--mantine-font-size-sm);
+}
+
+.term,
+.total {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.term dt,
+.total dt {
+  color: var(--mantine-color-dimmed);
+}
+
+.term dd,
+.total dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.total {
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--mantine-color-default-border);
+  font-size: var(--mantine-font-size-lg);
+}
+
+.total dt {
+  color: inherit;
+  font-weight: 700;
+}
+
+.total dd {
+  font-weight: 800;
+}

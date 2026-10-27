@@ -51,6 +51,9 @@ interface GameScenePanelProps {
   onOpenCard: (target: CardTarget) => void;
   // Живые записи журнала — мастеру, вкладка «Журнал» (этап 7).
   journal: JournalLive;
+  // Идёт бой с очерёдностью; «Начать бой» открывает окно участников.
+  combatOrdered: boolean;
+  onStartCombat: () => void;
   // Переключатель режима в шапке — только на телефоне; иначе он на сцене.
   modeSwitch: ReactNode;
   // Содержимое «Правки»: свойства инструмента и «Не на сцене».
@@ -74,6 +77,8 @@ function GameScenePanel({
   images,
   onOpenCard,
   journal,
+  combatOrdered,
+  onStartCombat,
   modeSwitch,
   editBody,
 }: GameScenePanelProps) {
@@ -191,8 +196,10 @@ function GameScenePanel({
                 <CombatControls
                   mode={figures.mode}
                   round={figures.round}
+                  ordered={combatOrdered}
                   onMode={tool.mode}
                   onRound={tool.round}
+                  onStart={onStartCombat}
                   busy={tool.busy}
                 />
                 {tool.error && <Alert color="red">{tool.error}</Alert>}

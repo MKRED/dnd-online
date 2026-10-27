@@ -7,6 +7,8 @@ import type {
   GameCreatureHitPoints,
   GameEventCreature,
 } from './game-creatures.js';
+import type { D20Roll, RollMode } from './d20Roll.js';
+import type { CombatantInput, GameEventCombatant } from './game-combat.js';
 import type { GameEventVisibility } from './game-event-visibility.js';
 import type { GameFigurePlacement, GameMoveMode } from './game-figures.js';
 import type { GameUser } from './games.js';
@@ -208,6 +210,50 @@ export interface GameEventPayloads {
   'figure.dashed': {
     intent: { characterId: string };
     result: { character: GameEventCharacter; dashes: number };
+  };
+  // Бой с очерёдностью (docs/plan/combat.md, этап 2). Мастер позвал участников (count),
+  // дальше каждый бросает инициативу; раунд 1 начинается, когда бросили все.
+  'combat.started': {
+    intent: { count: number };
+    result: { scene: GameSceneRef; count: number };
+  };
+  // Новичок позван в идущий бой; бросит инициативу и встанет в очередь по числу.
+  'combat.joined': {
+    intent: CombatantInput;
+    result: { combatant: GameEventCombatant };
+  };
+  // Мастер убрал участника из боя; turnPassed — шёл его ход, и ход перешёл дальше.
+  'combat.left': {
+    intent: { combatantId: string };
+    result: { combatant: GameEventCombatant; turnPassed: boolean };
+  };
+  // Бросок инициативы; mode — переключатель мастера, place — место в очереди с 0.
+  'combat.initiative': {
+    intent: { combatantId: string; mode: RollMode | null };
+    result: { combatant: GameEventCombatant; roll: D20Roll; place: number };
+  };
+  // Мастер поправил число инициативы; before — null, если участник ещё не бросал.
+  'combat.initiative_set': {
+    intent: { combatantId: string; initiative: number };
+    result: {
+      combatant: GameEventCombatant;
+      before: number | null;
+      place: number;
+    };
+  };
+  // Мастер переставил очередь.
+  'combat.order': { intent: { ids: string[] }; result: { count: number } };
+  // Ход перешёл к combatant: все бросили инициативу (start), «Закончить ход» (end), мастер
+  // передал ход (pass) или ходивший ушёл из боя (left). newRound — с этим ходом начался
+  // новый раунд round; from — чей ход кончился.
+  'combat.turn': {
+    intent: { reason: 'start' | 'end' | 'pass' | 'left'; combatantId: string };
+    result: {
+      combatant: GameEventCombatant;
+      from: GameEventCombatant | null;
+      round: number;
+      newRound: boolean;
+    };
   };
   // Хиты, спасброски или ячейки персонажа в игре (этап 8). instantDeath — урон сверх
   // нуля не меньше максимума хитов.

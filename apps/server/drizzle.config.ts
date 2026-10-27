@@ -39,6 +39,7 @@ export default defineConfig({
     './src/database/schema/game-library.ts',
     './src/database/schema/game-scenes.ts',
     './src/database/schema/game-figures.ts',
+    './src/database/schema/game-combatants.ts',
     './src/database/schema/game-creatures.ts',
   ],
   dialect: 'postgresql',

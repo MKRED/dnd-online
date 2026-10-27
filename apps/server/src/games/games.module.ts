@@ -15,6 +15,7 @@ import {
   GameCharactersController,
   GameCharactersService,
 } from './characters/index.js';
+import { GameCombatController, GameCombatService } from './combat/index.js';
 import {
   GameCreaturesController,
   GameCreaturesService,
@@ -37,7 +38,7 @@ import {
 } from './scenes/index.js';
 
 // Игры (docs/plan/done/game.md): общий список, лобби, места, встреча, журнал игры, библиотека,
-// сцены, фигурки персонажей, персонажи, монстры и НПС в игре и сокет.
+// сцены, фигурки персонажей, персонажи, монстры и НПС в игре, бой с очерёдностью и сокет.
 @Module({
   imports: [AuthModule],
   controllers: [
@@ -53,6 +54,7 @@ import {
     GameCharacterEquipmentController,
     GameCharactersController,
     GameCreaturesController,
+    GameCombatController,
   ],
   providers: [
     GamesService,
@@ -68,6 +70,7 @@ import {
     GameFiguresService,
     GameCharactersService,
     GameCreaturesService,
+    GameCombatService,
     // Пределы правки карты — и для правок сцены (этап 6).
     MapLimitsConfig,
     GameRealtimeService,

@@ -1,0 +1,26 @@
+// Тексты ошибок боя с очерёдностью (docs/plan/combat.md, этап 2): UI показывает их как есть.
+export const MASTER_ONLY_COMBAT =
+  'Начинать бой, звать и убирать участников и править очередь может только мастер';
+export const COMBAT_ALREADY = 'Бой с очерёдностью уже идёт';
+export const COMBAT_NOT_STARTED = 'Бой с очерёдностью не начат';
+export const COMBATANT_NOT_FOUND = 'Такого участника боя нет';
+export const COMBATANT_NOT_ON_SCENE =
+  'Такого существа или фигурки нет на сцене';
+export const COMBATANT_ALREADY = 'Уже в бою';
+export const COMBATANT_TWICE = 'Участник указан дважды';
+export const INITIATIVE_ALREADY = 'Инициатива уже брошена';
+export const INITIATIVE_NOT_YOURS =
+  'Бросить инициативу можно только за свою фигурку';
+export const MASTER_ONLY_ROLL_MODE =
+  'Преимущество и помеху на броске переключает только мастер';
+export const COMBAT_ORDER_MISMATCH =
+  'Очередь — все бросившие инициативу участники, каждый по разу';
+export const TURN_NOT_STARTED =
+  'Ходы ещё не начались: не все бросили инициативу';
+export const TURN_PASSED = 'Этот ход уже закончен';
+export const TURN_NOT_YOURS =
+  'Закончить этот ход может тот, кто водит фигурку, или мастер';
+export const TURN_NOT_ROLLED = 'Ход — только тому, кто уже бросил инициативу';
+export const NOT_YOUR_TURN = 'Сейчас не ваш ход';
+export const ROUND_BY_ORDER =
+  'В бою с очерёдностью раунд меняется сам, когда походили все';

@@ -13,6 +13,19 @@
   pointer-events: none;
 }
 
+/* С полосой очерёдности плашка шире: портретов влезает больше. */
+.overlay[data-wide] {
+  width: min(44rem, calc(100% - 2 * var(--mantine-spacing-md) - 5rem));
+}
+
+/* У мастера слева переключатель «Игра» и «Правка»: полоса — между ним и шкалой среза. */
+.overlay[data-wide][data-tools] {
+  left: 10.5rem;
+  right: 3.5rem;
+  width: auto;
+  transform: none;
+}
+
 .banner {
   display: inline-flex;
   align-items: center;
@@ -59,7 +72,9 @@
 /* На телефоне (макет «Плашка на телефоне», вариант А) плашка встаёт к левому краю, а
    уведомление — под ней, не заходя под шкалу среза справа. */
 @media (max-width: 48em) {
-  .overlay {
+  .overlay,
+  .overlay[data-wide],
+  .overlay[data-wide][data-tools] {
     left: var(--mantine-spacing-xs);
     right: calc(var(--mantine-spacing-xs) * 2 + 2.5rem);
     width: auto;

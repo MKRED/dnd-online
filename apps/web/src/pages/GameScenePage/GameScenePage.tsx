@@ -411,15 +411,17 @@ function GameScenePage() {
             )}
             {tools && (
               <SceneToolbar
-                // В «Игре» полосы нет: остаются отмена и возврат — ход тоже отменяется.
+                // В «Игре» нет ни полосы, ни отмены с возвратом: отменяют в «Правке»
+                // (решение пользователя, 2026-10-27).
                 tools={editing ? SCENE_TOOLS : []}
+                history={editing}
                 tool={editor.tool}
                 onTool={editor.setTool}
                 busy={edits.busy}
                 onUndo={edits.undo}
                 onRedo={edits.redo}
-                // На телефоне переключатель — в шапке панели: в строке с отменой и «Центром»
-                // ему не хватало места (docs/plan/done/scene-page.md, «Телефон»).
+                // На телефоне переключатель — в шапке панели (docs/plan/done/scene-page.md,
+                // «Телефон»).
                 leading={
                   narrow ? undefined : (
                     <SceneModeSwitch mode={mode} onChange={setMode} />

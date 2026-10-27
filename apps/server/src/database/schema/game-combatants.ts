@@ -43,6 +43,14 @@ export const gameCombatants = pgTable(
     place: integer('place'),
     // Когда позван: порядок не бросивших. clock_timestamp, а не now(): участники одного
     // «Начать бой» входят в одной транзакции, и now() у них был бы одинаковым.
+    // Ресурсы своего хода (docs/plan/combat.md, этап 4): потрачено действий, бонусных и
+    // реакций; «Уклонение» до начала своего хода, «Отход» до конца этого. Начало своего
+    // хода обнуляет всё, конец — «Отход».
+    actionsUsed: integer('actions_used').notNull().default(0),
+    bonusActionsUsed: integer('bonus_actions_used').notNull().default(0),
+    reactionsUsed: integer('reactions_used').notNull().default(0),
+    dodging: boolean('dodging').notNull().default(false),
+    disengaged: boolean('disengaged').notNull().default(false),
     joinedAt: timestamp('joined_at', { withTimezone: true })
       .notNull()
       .default(sql`clock_timestamp()`),

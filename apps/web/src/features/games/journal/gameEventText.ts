@@ -134,6 +134,9 @@ export function gameEventText(event: GameEvent): string {
     case 'combat.initiative_set':
     case 'combat.order':
     case 'combat.turn':
+    case 'combat.action':
+    case 'combat.ability':
+    case 'combat.resources':
       return combatEventText(event);
     case 'character.changed':
       return characterChangedText(event);

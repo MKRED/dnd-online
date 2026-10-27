@@ -15,6 +15,7 @@ const combat = (turn: string | null): GameCombat => ({
       canRoll: true,
       roll: null,
       pending: null,
+      resources: null,
     },
     {
       id: 'k2',
@@ -25,6 +26,7 @@ const combat = (turn: string | null): GameCombat => ({
       canRoll: false,
       roll: null,
       pending: null,
+      resources: null,
     },
   ],
   turn,

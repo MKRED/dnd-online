@@ -24,6 +24,7 @@ function entry(
       canRoll: false,
       roll: null,
       pending: null,
+      resources: null,
       ...more,
     },
     id,

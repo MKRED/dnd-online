@@ -7,13 +7,23 @@ import {
   IsIn,
   IsInt,
   IsOptional,
+  IsString,
+  MaxLength,
   IsUUID,
   Max,
   Min,
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
-import { ROLL_MODES, type CombatantInput, type RollMode } from 'shared';
+import {
+  COMBAT_ACTIONS,
+  ROLL_MODES,
+  SPELL_SLOT_LEVEL_MAX,
+  TURN_ACTIONS_MAX,
+  type CombatAction,
+  type CombatantInput,
+  type RollMode,
+} from 'shared';
 
 // Тела запросов боя (docs/plan/combat.md, этап 2).
 
@@ -92,4 +102,47 @@ export class CombatOrderDto {
 export class CombatTurnDto {
   @IsUUID('all', { message: COMBATANT })
   combatantId: string;
+}
+
+export class CombatActionDto {
+  @IsIn(COMBAT_ACTIONS, {
+    message: 'Действие — «dash», «disengage» или «dodge»',
+  })
+  action: CombatAction;
+}
+
+const USED = `Потрачено — целое число от 0 до ${TURN_ACTIONS_MAX}`;
+
+export class CombatResourcesDto {
+  @IsOptional()
+  @IsInt({ message: USED })
+  @Min(0, { message: USED })
+  @Max(TURN_ACTIONS_MAX, { message: USED })
+  actionsUsed?: number;
+
+  @IsOptional()
+  @IsInt({ message: USED })
+  @Min(0, { message: USED })
+  @Max(TURN_ACTIONS_MAX, { message: USED })
+  bonusActionsUsed?: number;
+
+  @IsOptional()
+  @IsInt({ message: USED })
+  @Min(0, { message: USED })
+  @Max(TURN_ACTIONS_MAX, { message: USED })
+  reactionsUsed?: number;
+}
+
+const SLOT = `Круг ячейки — целое число от 1 до ${SPELL_SLOT_LEVEL_MAX}`;
+
+export class CombatAbilityDto {
+  @IsString({ message: 'Способность — id её строки у участника' })
+  @MaxLength(100, { message: 'Способность — id её строки у участника' })
+  abilityId: string;
+
+  @IsOptional()
+  @IsInt({ message: SLOT })
+  @Min(1, { message: SLOT })
+  @Max(SPELL_SLOT_LEVEL_MAX, { message: SLOT })
+  slotLevel?: number;
 }

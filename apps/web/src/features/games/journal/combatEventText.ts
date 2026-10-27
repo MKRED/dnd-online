@@ -1,4 +1,10 @@
-import type { D20Roll, GameEvent, RollTerm } from 'shared';
+import type {
+  CombatAction,
+  D20Roll,
+  GameEvent,
+  RollTerm,
+  TurnSpend,
+} from 'shared';
 
 type CombatEvent = Extract<
   GameEvent,
@@ -10,7 +16,10 @@ type CombatEvent = Extract<
       | 'combat.initiative'
       | 'combat.initiative_set'
       | 'combat.order'
-      | 'combat.turn';
+      | 'combat.turn'
+      | 'combat.action'
+      | 'combat.ability'
+      | 'combat.resources';
   }
 >;
 
@@ -43,8 +52,36 @@ export function combatEventText(event: CombatEvent): string {
         ? `Раунд ${round} · ходит ${combatant.name}`
         : `Ходит ${combatant.name}`;
     }
+    case 'combat.action': {
+      const { combatant, action } = event.result;
+      return `${combatant.name}: ${ACTION_NAMES[action]}`;
+    }
+    case 'combat.ability': {
+      const { combatant, ability, slotLevel } = event.result;
+      const slot = slotLevel === null ? '' : `, ячейка ${slotLevel} круга`;
+      return `${combatant.name}: ${ability.name} (${SPEND_NAMES[event.result.spent]}${slot})`;
+    }
+    case 'combat.resources': {
+      const { combatant, after } = event.result;
+      return `Потрачено поправлено: ${combatant.name} — действий ${after.actionsUsed}, бонусных ${after.bonusActionsUsed}, реакций ${after.reactionsUsed}`;
+    }
   }
 }
+
+// Что потратило применение способности (этап 4, вариант Б).
+const SPEND_NAMES: Record<TurnSpend, string> = {
+  action: 'действие',
+  bonus_action: 'бонусное действие',
+  reaction: 'реакция',
+  free: 'без действия',
+};
+
+// Обычные действия хода (этап 4) — как в блоке «Ваш ход».
+export const ACTION_NAMES: Record<CombatAction, string> = {
+  dash: 'Рывок',
+  disengage: 'Отход',
+  dodge: 'Уклонение',
+};
 
 const signed = (n: number) => (n < 0 ? `−${-n}` : `+${n}`);
 

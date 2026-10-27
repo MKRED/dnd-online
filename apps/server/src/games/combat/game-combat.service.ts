@@ -8,7 +8,10 @@ import {
 import { eq } from 'drizzle-orm';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type {
+  CombatAbilityInput,
+  CombatAction,
   CombatantInput,
+  CombatResourcesInput,
   D20Roll,
   GameCombat,
   GameCombatRoll,
@@ -26,6 +29,8 @@ import { findGameAccess } from '../game-read.js';
 import { GameRealtimeService } from '../realtime/game-realtime.service.js';
 import { findActiveScene } from '../scenes/index.js';
 import { assertPlayerInSession } from '../session-gate.js';
+import { useAbility } from './combat-ability-use.js';
+import { setResources, takeAction } from './combat-actions.js';
 import type { CombatActor } from './combat-actor.js';
 import {
   rollCreatures,
@@ -148,6 +153,39 @@ export class GameCombatService {
   passTurn(userId: string, gameId: string, combatantId: string) {
     return this.change(userId, gameId, 'pass_turn', (actor) =>
       passTurn(actor, combatantId),
+    );
+  }
+
+  takeAction(
+    userId: string,
+    gameId: string,
+    combatantId: string,
+    action: CombatAction,
+  ) {
+    return this.change(userId, gameId, 'action', (actor) =>
+      takeAction(actor, combatantId, action),
+    );
+  }
+
+  useAbility(
+    userId: string,
+    gameId: string,
+    combatantId: string,
+    input: CombatAbilityInput,
+  ) {
+    return this.change(userId, gameId, 'ability', (actor) =>
+      useAbility(actor, combatantId, input.abilityId, input.slotLevel ?? null),
+    );
+  }
+
+  setResources(
+    userId: string,
+    gameId: string,
+    combatantId: string,
+    input: CombatResourcesInput,
+  ) {
+    return this.change(userId, gameId, 'resources', (actor) =>
+      setResources(actor, combatantId, input),
     );
   }
 

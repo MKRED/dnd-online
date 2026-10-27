@@ -13,13 +13,15 @@ import classes from './SceneToolbar.module.css';
 
 interface SceneToolbarProps {
   // Инструменты на полосе, по порядку; без него — все. Номер клавиши — место в полосе.
-  // Пустой список — полосы нет, остаются отмена и возврат (сцена игры в режиме «Игра»).
+  // Пустой список — полосы нет (сцена игры в режиме «Игра»).
   tools?: readonly EditorTool[];
   tool: EditorTool;
   onTool: (tool: EditorTool) => void;
   busy: boolean;
   onUndo: () => void;
   onRedo: () => void;
+  // Кнопки отмены и возврата; без него — есть. В «Игре» сцены их нет: отменяют в «Правке».
+  history?: boolean;
   // Что стоит слева от отмены и возврата (переключатель режима на сцене игры).
   leading?: ReactNode;
 }
@@ -34,6 +36,7 @@ function SceneToolbar({
   busy,
   onUndo,
   onRedo,
+  history = true,
   leading,
 }: SceneToolbarProps) {
   // Та же граница, что у страницы: на ней правая панель уходит под сцену.
@@ -75,35 +78,43 @@ function SceneToolbar({
         </Paper>
       )}
 
-      <div className={classes.history}>
-        {leading}
-        <Paper withBorder shadow="xs" p={4}>
-          <ActionIcon.Group>
-            <Tooltip label="Отменить (Ctrl+Z)" withArrow disabled={narrow}>
-              <ActionIcon
-                size="lg"
-                variant="default"
-                aria-label="Отменить"
-                disabled={busy}
-                onClick={onUndo}
-              >
-                <IconArrowBackUp size={20} stroke={1.75} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label="Вернуть (Ctrl+Shift+Z)" withArrow disabled={narrow}>
-              <ActionIcon
-                size="lg"
-                variant="default"
-                aria-label="Вернуть"
-                disabled={busy}
-                onClick={onRedo}
-              >
-                <IconArrowForwardUp size={20} stroke={1.75} />
-              </ActionIcon>
-            </Tooltip>
-          </ActionIcon.Group>
-        </Paper>
-      </div>
+      {(history || leading) && (
+        <div className={classes.history}>
+          {leading}
+          {history && (
+            <Paper withBorder shadow="xs" p={4}>
+              <ActionIcon.Group>
+                <Tooltip label="Отменить (Ctrl+Z)" withArrow disabled={narrow}>
+                  <ActionIcon
+                    size="lg"
+                    variant="default"
+                    aria-label="Отменить"
+                    disabled={busy}
+                    onClick={onUndo}
+                  >
+                    <IconArrowBackUp size={20} stroke={1.75} />
+                  </ActionIcon>
+                </Tooltip>
+                <Tooltip
+                  label="Вернуть (Ctrl+Shift+Z)"
+                  withArrow
+                  disabled={narrow}
+                >
+                  <ActionIcon
+                    size="lg"
+                    variant="default"
+                    aria-label="Вернуть"
+                    disabled={busy}
+                    onClick={onRedo}
+                  >
+                    <IconArrowForwardUp size={20} stroke={1.75} />
+                  </ActionIcon>
+                </Tooltip>
+              </ActionIcon.Group>
+            </Paper>
+          )}
+        </div>
+      )}
     </>
   );
 }

@@ -840,8 +840,8 @@ describe('GameScenePage', () => {
     );
   });
 
-  it('мастер переключает «Игру» и «Правку» клавишей Ё; в «Игре» нет инструментов, но есть отмена', async () => {
-    stub({
+  it('мастер переключает «Игру» и «Правку» клавишей Ё; в «Игре» нет ни инструментов, ни отмены', async () => {
+    const fetchMock = stub({
       [`GET ${base}`]: () => ({
         status: 200,
         body: { ...GAME, role: 'master' },
@@ -857,9 +857,14 @@ describe('GameScenePage', () => {
       { timeout: 3000 },
     );
     expect(play).toBeChecked();
+    // Отмена и возврат — только в «Правке», и Ctrl+Z в «Игре» ничего не шлёт.
     expect(
-      screen.getByRole('button', { name: 'Отменить' }),
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: 'Отменить' }),
+    ).not.toBeInTheDocument();
+    await user.keyboard('{Control>}z{/Control}');
+    expect(
+      fetchMock.mock.calls.some(([url]) => urlOf(url).endsWith('/undo')),
+    ).toBe(false);
     expect(
       screen.queryByRole('button', { name: 'Строить' }),
     ).not.toBeInTheDocument();
@@ -870,6 +875,9 @@ describe('GameScenePage', () => {
     await user.keyboard('[Backquote]');
     expect(screen.getByRole('radio', { name: 'Правка' })).toBeChecked();
     expect(screen.getByRole('button', { name: 'Строить' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Отменить' }),
+    ).toBeInTheDocument();
     expect(localStorage.getItem('scene.mode')).toBe('edit');
     await user.keyboard('[Backquote]');
     expect(screen.getByRole('radio', { name: 'Игра' })).toBeChecked();

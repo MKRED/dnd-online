@@ -19,7 +19,7 @@ interface CombatOverlayProps {
 // её месте — «Встреча не идёт · только просмотр»: ходить нельзя, и бой не важен.
 function CombatOverlay({ mode, round, watchOnly = null }: CombatOverlayProps) {
   const { notice, close } = useModeNotice(mode, watchOnly);
-  // На телефоне плашка стоит в строке с «Центром» — текст короче (вариант А).
+  // На телефоне плашка у левого края, рядом со шкалой среза — текст короче (вариант А).
   const narrow = useMediaQuery('(max-width: 48em)');
   const combat = mode === 'tactical' && !watchOnly;
   if (!combat && !watchOnly && !notice) return null;

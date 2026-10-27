@@ -1,7 +1,7 @@
-/* Шкала у правого края сцены, под подсказкой «Центр: y = N» (MapScene, .centerHint). */
+/* Шкала у правого края сцены, от верхнего угла. */
 .ruler {
   position: absolute;
-  top: calc(var(--mantine-spacing-xs) * 2 + 2rem);
+  top: var(--mantine-spacing-xs);
   right: var(--mantine-spacing-xs);
   display: flex;
   flex-direction: column;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { centerLevel, moveAt, startMove } from './focusMove';
+import { moveAt, startMove } from './focusMove';
 
 describe('moveAt', () => {
   const move = startMove([4, 1, 4], [4, 11, 14], [10, 3, 2], 1000, 200);
@@ -26,14 +26,5 @@ describe('moveAt', () => {
     position.forEach((v, axis) =>
       expect(v - target[axis]).toBeCloseTo([0, 10, 10][axis]),
     );
-  });
-});
-
-describe('centerLevel', () => {
-  it('уровень — целая часть высоты, с допуском на округление', () => {
-    expect(centerLevel(3)).toBe(3);
-    expect(centerLevel(3.5)).toBe(3);
-    expect(centerLevel(2.9999999)).toBe(3);
-    expect(centerLevel(-0.5)).toBe(-1);
   });
 });

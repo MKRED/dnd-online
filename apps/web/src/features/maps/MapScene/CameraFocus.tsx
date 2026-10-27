@@ -3,7 +3,6 @@ import { useEffect, useRef, type RefObject } from 'react';
 import type { EventDispatcher, Vector3 } from 'three';
 import type { Point } from '../cameraView';
 import {
-  centerLevel,
   FOCUS_MS,
   LEVEL_MS,
   moveAt,
@@ -15,28 +14,26 @@ import {
 export interface CameraFocusApi {
   // Плавно перенести центр в точку (двойной клик, Alt+клик).
   focusOn: (point: Point) => void;
-  // Поднять (+1) или опустить (−1) центр на уровень вместе с камерой (Q/E, ▲▼).
+  // Поднять (+1) или опустить (−1) центр на уровень вместе с камерой (Q/E).
   shiftLevel: (dy: number) => void;
 }
 
-// MapControls из three-stdlib: точка вращения и события «камера сдвинулась»
-// (change) и «пользователь начал крутить» (start).
-type FocusControls = EventDispatcher<{ change: object; start: object }> & {
+// MapControls из three-stdlib: точка вращения и событие «пользователь начал крутить»
+// (start).
+type FocusControls = EventDispatcher<{ start: object }> & {
   target: Vector3;
   update: () => void;
 };
 
 interface CameraFocusProps {
   apiRef: RefObject<CameraFocusApi | null>;
-  // Уровень центра для подсказки «Центр: y = N»; зовётся при каждой его смене.
-  onLevel: (level: number) => void;
 }
 
 const toPoint = (v: Vector3): Point => [v.x, v.y, v.z];
 
 // Анимация переноса центра. Кадры рисуются по запросу (frameloop="demand"),
 // поэтому, пока она идёт, каждый кадр просит следующий.
-function CameraFocus({ apiRef, onLevel }: CameraFocusProps) {
+function CameraFocus({ apiRef }: CameraFocusProps) {
   const camera = useThree((state) => state.camera);
   const controls = useThree(
     (state) => state.controls,
@@ -46,13 +43,10 @@ function CameraFocus({ apiRef, onLevel }: CameraFocusProps) {
 
   useEffect(() => {
     if (!controls) return;
-    const report = () => onLevel(centerLevel(controls.target.y));
     // Пользователь сам потянул камеру — анимация уступает ему.
     const cancel = () => {
       move.current = null;
     };
-    report();
-    controls.addEventListener('change', report);
     controls.addEventListener('start', cancel);
     const begin = (toTarget: Point, durationMs: number) => {
       move.current = startMove(
@@ -73,11 +67,10 @@ function CameraFocus({ apiRef, onLevel }: CameraFocusProps) {
       },
     };
     return () => {
-      controls.removeEventListener('change', report);
       controls.removeEventListener('start', cancel);
       apiRef.current = null;
     };
-  }, [apiRef, camera, controls, invalidate, onLevel]);
+  }, [apiRef, camera, controls, invalidate]);
 
   useFrame(() => {
     if (!move.current || !controls) return;

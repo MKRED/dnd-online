@@ -34,6 +34,7 @@ import {
   MASTER_ONLY_FIGURES,
   NO_ACTIVE_SCENE,
 } from '../game-errors.js';
+import { assertFigureTurn, assertNoOrder } from '../combat/combat-gate.js';
 import { refreshSceneCreatures } from '../creatures/creature-moves.js';
 import { playerFog } from '../fog/fog-view.js';
 import { plainLogger } from '../plain-logger.js';
@@ -138,6 +139,10 @@ export async function moveFigure(
   }
   const t0 = Date.now();
   const scene = await activeScene(actor);
+  // В бою с очерёдностью игрок ходит только в свой ход (docs/plan/combat.md, этап 2).
+  if (!isMaster(actor)) {
+    await assertFigureTurn(actor.tx, actor.gameId, scene.id, characterId);
+  }
   const world = await loadSceneWorld(actor.tx, scene);
   const tLoaded = Date.now();
   const speeds = await figureSpeeds(actor.tx, actor.gameId, [
@@ -266,10 +271,12 @@ export async function placeFigure(
 }
 
 // «Новый раунд»: запас движения снова полный у всех фигурок и у монстров и НПС активной
-// сцены (docs/plan/done/creature-movement.md). Только в бою — в тактическом режиме.
+// сцены (docs/plan/done/creature-movement.md). Только в бою — в тактическом режиме и без
+// очерёдности: с ней раунд меняется сам (docs/plan/combat.md).
 export async function newRound(actor: FigureActor): Promise<void> {
   assertMaster(actor);
   const scene = await activeScene(actor);
+  await assertNoOrder(actor.tx, scene.id);
   const round = await nextCombatRound(actor.tx, actor.gameId);
   const rows = await actor.tx
     .update(gameFigures)

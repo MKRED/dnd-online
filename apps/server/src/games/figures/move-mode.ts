@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import type { GameMoveMode } from 'shared';
 import type { DbTransaction } from '../../database/database.service.js';
 import { gameFigures, games } from '../../database/schema/index.js';
+import { clearCombat } from '../combat/combat-gate.js';
 import { refreshSceneCreatures } from '../creatures/creature-moves.js';
 import { MASTER_ONLY_MOVE_MODE, NO_ACTIVE_SCENE } from '../game-errors.js';
 import { appendGameEvent } from '../game-journal.js';
@@ -11,7 +12,8 @@ import { readMoveMode } from './move-mode-read.js';
 
 // Смена режима мастером. Запас всех фигурок, монстров и НПС активной сцены снова полный в
 // обе стороны: в тактический — будто бой только начался (раунд 1), в свободный — запас и
-// так больше не тратится. Тот же режим — ничего не меняется, записи нет.
+// так больше не тратится, и бой с очерёдностью кончается (docs/plan/combat.md). Тот же
+// режим — ничего не меняется, записи нет.
 export async function setMoveMode(
   actor: {
     tx: DbTransaction;
@@ -33,6 +35,7 @@ export async function setMoveMode(
     .update(games)
     .set({ moveMode: mode, combatRound: round })
     .where(eq(games.id, gameId));
+  if (mode === 'free') await clearCombat(tx, gameId);
   const figures = await tx
     .update(gameFigures)
     .set({ moved: 0, dashes: 0 })

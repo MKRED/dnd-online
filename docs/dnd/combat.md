@@ -63,14 +63,15 @@ The printed PHB 2024 and DMG 2024 were not opened. Extra Attack is a class featu
 
 ## In the app
 
-Decided with the user on 2026-10-27 (plan: [plan/combat.md](../plan/combat.md), mockups linked there). Not built yet: this section describes what the plan builds, stage by stage.
+Decided with the user on 2026-10-27 (plan: [plan/combat.md](../plan/combat.md), mockups linked there). Built so far: stage 2, the server's turn order — participants, the Initiative roll with its parts, the order with ties, turns and rounds (`apps/server/src/games/combat/`; the roll in `packages/shared/src/d20Roll.ts`, Initiative and the order in `initiative.ts`). The roll window, the turn panel and attacks are later stages; the rest of this section describes what the plan builds.
 
 - **The server rolls every die**, players press «Бросить кубик» in a roll window and see the server's result animated ([plan/map.md](../plan/map.md), «Сервер — источник истины»).
 - **Initiative is rolled** by each player for their character; the GM rolls for monsters and NPCs with one button, and for an absent player. The GM can correct any number.
 - **Departs from the book — each monster rolls its own Initiative**, even identical ones (the user's choice: the book makes one roll per group).
 - **Ties — the app's order instead of the DM's and players' choice:** the higher Initiative modifier goes first, then chance; the GM can reorder by hand afterwards.
 - **Who takes part:** the GM marks the participants in a «Начать бой» window (the ones the party sees are marked by default) and can mark any of them «врасплох» — Disadvantage on the Initiative roll, as the 2024 Surprise rule says. A newcomer can join a running fight: it rolls Initiative and takes its place by the number; if that place has already passed this round, it acts from the next one.
-- **Advantage and Disadvantage** on a roll come from the rules and effects (Invisible, Incapacitated, surprise …), and the GM can switch them on any roll — the DM's right in the book ("The DM determines … whether you have Advantage or Disadvantage").
+- **Advantage and Disadvantage** on a roll come from the rules and effects (Invisible, Incapacitated, surprise …), and the GM can switch them on any roll — the DM's right in the book ("The DM determines … whether you have Advantage or Disadvantage"). For Initiative — a Dexterity check — the app counts the effect components on Initiative, on Dexterity or all ability checks and on all D20 Tests, Advantage and Roll bonus alike; the conditional ones («while the source is in sight») aren't counted yet (`initiativeRollInput`).
+- **The Initiative modifier:** a character's and an NPC's Dexterity modifier (the sheet has no other Initiative bonus), a monster's Initiative from its stat block. It also breaks ties.
 - **One attack per Attack action for now** — the action is spent, and without it there is no attack. Extra Attack and Multiattack aren't counted yet (the sheet has no field for them). The Light property's extra attack as a Bonus Action follows the book; Nick isn't used yet.
 - **Damage applies at once**, the GM corrects Hit Points by hand if needed; players see the roll and «Попадание» or «Промах», never the target's AC or Hit Points.
 - **«Новый раунд» goes away** in tactical mode: the round ends by itself after the last turn in the order.

@@ -12,7 +12,14 @@ export const DEATH_SAVES_MAX = 3;
 // Урон — amount всего и его части по типам (damageDealt.ts); сервер считает amount сам из
 // частей, у записей журнала до 2026-10-26 частей нет.
 export type HitPointsChange =
-  | { kind: 'damage'; amount: number; parts?: DamageDealtPart[] }
+  // critical — урон от Критического попадания: на нуле хитов это два провала (атака на
+  // карте знает это сама, ручной урон — нет).
+  | {
+      kind: 'damage';
+      amount: number;
+      parts?: DamageDealtPart[];
+      critical?: boolean;
+    }
   | { kind: 'heal'; amount: number }
   // Временные хиты не складываются: игрок сам решает, какие оставить, поэтому правка
   // ставит число, а 0 их убирает.
@@ -53,7 +60,7 @@ export function applyHitPoints(
   const dead = character && state.deathFailures >= DEATH_SAVES_MAX;
   switch (change.kind) {
     case 'damage':
-      return damage(state, change.amount, character);
+      return damage(state, change.amount, character, change.critical ?? false);
     case 'heal':
       // Мёртвый хитов не восстанавливает, пока его не вернут магией: мастер сначала
       // снимает провалы спасбросков.
@@ -86,6 +93,7 @@ function damage(
   state: HitPointsState,
   amount: number,
   character: boolean,
+  critical: boolean,
 ): HitPointsOutcome {
   // Сначала теряются временные хиты, остаток идёт в хиты.
   const fromTemp = Math.min(state.temp, amount);
@@ -95,9 +103,8 @@ function damage(
     return ok({ ...state, temp, current: Math.max(0, state.current - rest) });
   }
   if (state.current === 0) {
-    // Урон на нуле — провал спасброска (от критического попадания — два, это мастер
-    // отмечает сам), урон не меньше максимума — смерть. Стабильный (три успеха) снова
-    // начинает бросать.
+    // Урон на нуле — провал спасброска (от критического попадания — два), урон не меньше
+    // максимума — смерть. Стабильный (три успеха) снова начинает бросать.
     const instantDeath = rest >= state.max;
     return {
       ok: true,
@@ -108,7 +115,7 @@ function damage(
         deathSuccesses: 0,
         deathFailures: instantDeath
           ? DEATH_SAVES_MAX
-          : Math.min(DEATH_SAVES_MAX, state.deathFailures + 1),
+          : Math.min(DEATH_SAVES_MAX, state.deathFailures + (critical ? 2 : 1)),
       },
     };
   }

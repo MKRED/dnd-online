@@ -1,4 +1,5 @@
 import type { D20Roll, D20RollInput, RollMode } from './d20Roll.js';
+import type { CombatantAttackState } from './game-combat-attack.js';
 
 // Очерёдность боя на активной сцене (docs/plan/combat.md, этап 2; правила —
 // docs/dnd/combat.md). Участник — фигурка персонажа или монстр/НПС сцены. Сначала все
@@ -32,6 +33,9 @@ export interface GameCombatant {
   // всем, кто видит участника: значок на портрете (решение Михаила 2026-10-27, вариант А).
   dodging: boolean;
   disengaged: boolean;
+  // Наборы оружия, смена в руке, Лёгкое и неброшенный урон (этап 5) — тем же, кому видны
+  // ресурсы; иначе null.
+  attack: CombatantAttackState | null;
 }
 
 // Сколько чего за ход и сколько уже потрачено (docs/plan/combat.md, этап 4): у героя и НПС

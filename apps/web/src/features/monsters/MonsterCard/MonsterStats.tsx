@@ -1,8 +1,11 @@
 import { SimpleGrid } from '@mantine/core';
-import type { MonsterStatBlock, SheetTotals } from 'shared';
+import {
+  monsterSpecials,
+  type MonsterStatBlock,
+  type SheetTotals,
+} from 'shared';
 import { armorClassTile, speedTile, StatTile } from '../../characters';
 import { formatHitDice, formatInitiative } from './monsterCardText';
-import { monsterSpecials } from './monsterTotals';
 
 interface MonsterStatsProps {
   block: MonsterStatBlock;

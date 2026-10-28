@@ -58,3 +58,27 @@ export type GameEquipmentChange =
   | { kind: 'unequip'; slot: EquipSlot }
   | { kind: 'attune'; entryId: string }
   | { kind: 'end_attunement'; entryId: string };
+
+// Цена смены в руке в бою с очерёдностью (docs/plan/combat.md, «Решения к этапу 5»): оружие
+// — по домашнему правилу (первая смена за ход бесплатно, дальше действие), щит — действие
+// «Использование» по книге. null — место не в руках или в руках ничего не меняется.
+export type HandChangeCost = 'free' | 'action';
+
+const HAND_SLOTS: readonly EquipSlot[] = [
+  'meleeMain',
+  'meleeOff',
+  'rangedMain',
+  'rangedOff',
+];
+
+export function handChangeCost(
+  slot: EquipSlot,
+  touched: readonly (ItemEquip | null)[],
+  handSwapped: boolean,
+): HandChangeCost | null {
+  if (!HAND_SLOTS.includes(slot)) return null;
+  const kinds = touched.flatMap((equip) => equip?.stats?.category ?? []);
+  if (kinds.includes('shield')) return 'action';
+  if (!kinds.includes('weapon')) return null;
+  return handSwapped ? 'action' : 'free';
+}

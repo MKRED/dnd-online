@@ -53,6 +53,16 @@ describe('applyHitPoints — урон', () => {
     });
   });
 
+  it('крит на нуле — два провала', () => {
+    expect(
+      applyHitPoints(
+        hp({ current: 0, deathFailures: 0 }),
+        { kind: 'damage', amount: 3, critical: true },
+        true,
+      ),
+    ).toMatchObject({ state: { deathFailures: 2 } });
+  });
+
   it('урон на нуле не меньше максимума — смерть', () => {
     expect(
       applyHitPoints(hp({ current: 0 }), { kind: 'damage', amount: 12 }, true),

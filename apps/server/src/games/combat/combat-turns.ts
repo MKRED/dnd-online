@@ -55,6 +55,7 @@ export async function placeInOrder(
 // Начало хода участника: он ходит, запас его движения снова полный (запас — на свой ход,
 // а не на раунд у всех сразу). Действия, бонусные и реакции снова целые, его «Уклонение»
 // кончилось (этап 4); «Отход» действует до конца хода — у всех остальных он снимается.
+// Отметки атак этого хода снова чистые, неброшенный урон прошлого хода пропадает (этап 5).
 async function giveTurn(actor: CombatActor, c: LiveCombatant, round: number) {
   const { tx } = actor;
   await tx
@@ -72,6 +73,10 @@ async function giveTurn(actor: CombatActor, c: LiveCombatant, round: number) {
       bonusActionsUsed: 0,
       reactionsUsed: 0,
       dodging: false,
+      setSwitched: false,
+      handSwapped: false,
+      lightAttacked: false,
+      pendingDamage: null,
     })
     .where(eq(gameCombatants.id, c.row.id));
   if (c.ref.kind === 'figure') {

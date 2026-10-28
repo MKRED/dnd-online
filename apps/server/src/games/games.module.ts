@@ -15,7 +15,12 @@ import {
   GameCharactersController,
   GameCharactersService,
 } from './characters/index.js';
-import { GameCombatController, GameCombatService } from './combat/index.js';
+import {
+  GameCombatAttackController,
+  GameCombatAttackService,
+  GameCombatController,
+  GameCombatService,
+} from './combat/index.js';
 import {
   GameCreaturesController,
   GameCreaturesService,
@@ -55,6 +60,7 @@ import {
     GameCharactersController,
     GameCreaturesController,
     GameCombatController,
+    GameCombatAttackController,
   ],
   providers: [
     GamesService,
@@ -71,6 +77,7 @@ import {
     GameCharactersService,
     GameCreaturesService,
     GameCombatService,
+    GameCombatAttackService,
     // Пределы правки карты — и для правок сцены (этап 6).
     MapLimitsConfig,
     GameRealtimeService,

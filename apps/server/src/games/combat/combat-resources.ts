@@ -1,5 +1,9 @@
 import { inArray } from 'drizzle-orm';
-import type { CombatantResources, TurnLimits } from 'shared';
+import type {
+  CombatantAttackState,
+  CombatantResources,
+  TurnLimits,
+} from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
 import { characters } from '../../database/schema/index.js';
 import type { CombatantRow, LiveCombatant } from './combatant-read.js';
@@ -46,4 +50,12 @@ export const resourcesOf = (
   actions: { max: limits.actions, used: row.actionsUsed },
   bonusActions: { max: limits.bonusActions, used: row.bonusActionsUsed },
   reactions: { max: limits.reactions, used: row.reactionsUsed },
+});
+
+export const attackStateOf = (row: CombatantRow): CombatantAttackState => ({
+  weaponSet: row.weaponSet,
+  setSwitched: row.setSwitched,
+  handSwapped: row.handSwapped,
+  lightAttacked: row.lightAttacked,
+  pending: row.pendingDamage,
 });

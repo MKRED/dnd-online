@@ -3,6 +3,8 @@ import { eq } from 'drizzle-orm';
 import {
   combatAttuneProblem,
   combatEquipProblem,
+  handChangeCost,
+  type HandChangeCost,
   type EquipSlot,
   type GameEquipmentChange,
   type InventoryEntry,
@@ -15,6 +17,7 @@ import {
 } from '../../characters/equipment/equipment-writes.js';
 import { loadInventory } from '../../characters/inventory/inventory-loader.js';
 import { characters } from '../../database/schema/index.js';
+import { spendHandChange } from '../combat/combat-hand-swap.js';
 import { readMoveMode } from '../figures/move-mode-read.js';
 import { appendGameEvent } from '../game-journal.js';
 import { actingAs, type SeatedCharacter } from './game-character-access.js';
@@ -41,6 +44,24 @@ export async function changeEquipment(
   const { mode } = await readMoveMode(tx, actor.gameId);
   let item: InventoryEntry | null = null;
   let freed: EquipSlot[] = [];
+  let spent: HandChangeCost | null = null;
+  // Смена в руке в бою с очерёдностью стоит хода (этап 5 боя): touched — что берут и что
+  // при этом уходит из рук.
+  const spendHand = async (
+    slot: EquipSlot,
+    touched: (EquipSlot | InventoryEntry)[],
+  ) => {
+    const equips = touched.map((t) =>
+      typeof t === 'string' ? wornAt(inventory, t) : (t.item?.equip ?? null),
+    );
+    spent = await spendHandChange(
+      tx,
+      actor.gameId,
+      actor,
+      seated.id,
+      (swapped) => handChangeCost(slot, equips, swapped),
+    );
+  };
   switch (change.kind) {
     case 'equip': {
       item = findEntry(inventory, change.entryId);
@@ -49,6 +70,7 @@ export async function changeEquipment(
         combatEquipProblem(mode, item.item?.equip ?? null) ??
           combatEquipProblem(mode, wornAt(inventory, change.slot)),
       );
+      await spendHand(change.slot, [item, change.slot]);
       ({ freed } = await applyEquip(
         tx,
         seated.id,
@@ -61,6 +83,7 @@ export async function changeEquipment(
     case 'unequip':
       item = inventory.find((e) => e.equipped.includes(change.slot)) ?? null;
       refuse(combatEquipProblem(mode, wornAt(inventory, change.slot)));
+      await spendHand(change.slot, [change.slot]);
       await applyUnequip(tx, seated.id, change.slot);
       break;
     case 'attune':
@@ -84,6 +107,7 @@ export async function changeEquipment(
       character: { id: seated.id, name: seated.name },
       item: item?.item ? { id: item.item.id, name: item.item.name } : null,
       freed,
+      spent,
     },
   });
 }

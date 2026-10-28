@@ -14,7 +14,11 @@ import { playerFog } from '../fog/fog-view.js';
 import type { SceneRow } from '../scenes/scene-copy.js';
 import { drives } from './combat-actor.js';
 import { initiativeInputOf } from './combat-initiative.js';
-import { resourcesOf, turnLimitsOf } from './combat-resources.js';
+import {
+  attackStateOf,
+  resourcesOf,
+  turnLimitsOf,
+} from './combat-resources.js';
 import { loadCombat, type LiveCombatant } from './combatant-read.js';
 
 // Очередь боя глазами смотрящего (docs/plan/combat.md, этап 2). Игроку — участники, которых
@@ -54,6 +58,7 @@ async function toCombatant(
         : null,
     dodging: c.row.dodging,
     disengaged: c.row.disengaged,
+    attack: own ? attackStateOf(c.row) : null,
   };
 }
 

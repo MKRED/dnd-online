@@ -1,6 +1,10 @@
 import { Fieldset, Stack } from '@mantine/core';
 import { useMemo } from 'react';
-import type { CharacterEffectEntry, Monster } from 'shared';
+import {
+  monsterTotals,
+  type CharacterEffectEntry,
+  type Monster,
+} from 'shared';
 import {
   AppliedEffectList,
   effectRows,
@@ -18,7 +22,6 @@ import { MonsterGear } from '../Gear';
 import MonsterAbilityScores from './MonsterAbilityScores';
 import MonsterStats from './MonsterStats';
 import { monsterTraitRows } from './monsterCardText';
-import { monsterTotals } from './monsterTotals';
 
 interface MonsterCardSectionProps {
   monster: Monster;

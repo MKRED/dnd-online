@@ -2,7 +2,12 @@ import { Html } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import { useEffect, useMemo, useState } from 'react';
-import { CREATURE_SIZES, creatureCells, type MapState } from 'shared';
+import {
+  CREATURE_SIZES,
+  creatureBody,
+  creatureCells,
+  type MapState,
+} from 'shared';
 import classes from '../MapScene.module.css';
 import { useObjectTextures } from '../objects/useObjectTextures';
 import GhostGroup from '../objects/GhostGroup';
@@ -72,7 +77,7 @@ function FigureLayer({
   useEffect(() => invalidate(), [textures, all, shadows, invalidate]);
 
   const markOf = (id: string) => targets?.marks.get(figureKey(id)) ?? null;
-  usePlaceAimPoints(aim, targets, all);
+  usePlaceAimPoints(aim, targets, all, map);
   // Фигурку-цель не тянут: щелчок по ней — выбор цели.
   const handlers = (figure: SceneFigure) =>
     targets && markOf(figure.id)
@@ -158,6 +163,7 @@ function usePlaceAimPoints(
   aim: AimStore | undefined,
   targets: SceneAttackTargets | null,
   figures: readonly SceneFigure[],
+  map: MapState,
 ) {
   useEffect(() => {
     if (!aim || !targets) return;
@@ -166,20 +172,16 @@ function usePlaceAimPoints(
       const key = figureKey(figure.id);
       const [x, y, z] = figure.base;
       const height = CREATURE_SIZES[figure.size].height;
-      if (key === targets.attackerKey) {
-        points.set(key, {
-          point: [x, y + height * 0.7, z],
-          cells: creatureCells(figure.at, figure.size),
-        });
-      } else if (targets.marks.has(key)) {
-        points.set(key, {
-          point: [x, y + height / 2, z],
-          cells: creatureCells(figure.at, figure.size),
-        });
-      }
+      const attacker = key === targets.attackerKey;
+      if (!attacker && !targets.marks.has(key)) continue;
+      points.set(key, {
+        point: [x, y + height * (attacker ? 0.7 : 0.5), z],
+        cells: creatureCells(figure.at, figure.size),
+        body: creatureBody(map, figure.at, figure.size),
+      });
     }
     aim.place('figures', points);
-  }, [aim, targets, figures]);
+  }, [aim, targets, figures, map]);
 }
 
 export default FigureLayer;

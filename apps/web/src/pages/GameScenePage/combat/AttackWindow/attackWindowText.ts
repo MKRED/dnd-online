@@ -12,9 +12,10 @@ import {
 
 const COVER_SHORT = { half: '½', threeQuarters: '¾' } as const;
 
-// «Укрытие ½: +2 к КД цели»; без укрытия — null.
+// «Укрытие ½: +2 к КД цели»; без укрытия — null. За полным укрытием атаки нет — окно
+// не открывается.
 export function coverText(cover: AttackTarget['cover']): string | null {
-  if (cover === 'none') return null;
+  if (cover === 'none' || cover === 'total') return null;
   return `Укрытие ${COVER_SHORT[cover]}: +${COVER_ARMOR_CLASS[cover]} к КД цели`;
 }
 

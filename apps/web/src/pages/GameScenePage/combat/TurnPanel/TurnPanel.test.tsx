@@ -205,7 +205,7 @@ describe('TurnPanel', () => {
     expect(scene.targets?.attackerKey).toBe(`figure:${character.id}`);
     expect(scene.targets?.marks.get('creature:2')).toEqual({
       tone: 'normal',
-      label: '✓ Гоблин · 5 фт. · преимущество',
+      label: '✓ Гоблин · 5 фт. · укрытие ½ · преимущество',
     });
     expect(scene.targets?.marks.get('creature:3')?.tone).toBe('out');
     // Вне досягаемости цель закрепляется, но подтвердить её нельзя.

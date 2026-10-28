@@ -15,6 +15,7 @@ import type { SceneCombat } from '../useSceneCombat';
 import {
   refKey,
   spendText,
+  targetBlock,
   targetKey,
   targetMark,
   targetMeta,
@@ -102,7 +103,7 @@ function AttackTargets({
       setSelected(null);
     }
   };
-  const reachable = targets?.some((t) => t.band !== 'out') ?? false;
+  const reachable = targets?.some((t) => !targetBlock(t)) ?? false;
 
   return (
     <div className={classes.confirm} onKeyDown={onKeyDown}>
@@ -158,8 +159,8 @@ function TargetConfirm({
   onConfirm,
   onCancel,
 }: TargetConfirmProps) {
-  const out = target.band === 'out';
-  const why = out ? null : reasonsText(target.roll.reasons);
+  const block = targetBlock(target);
+  const why = block ? null : reasonsText(target.roll.reasons);
   // Цель выбрали на сцене, а карточка — внизу длинного блока: показать её.
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -189,9 +190,9 @@ function TargetConfirm({
           Это союзник — атака всё равно пройдёт
         </Text>
       )}
-      {out && (
+      {block && (
         <Text size="xs" c="red">
-          Не достать: цель вне досягаемости
+          Не достать: {block}
         </Text>
       )}
       <Group gap="xs" wrap="nowrap">
@@ -200,7 +201,7 @@ function TargetConfirm({
           color="red"
           leftSection={<IconSword size={14} />}
           loading={busy}
-          disabled={out}
+          disabled={block !== null}
           onClick={onConfirm}
         >
           Подтвердить атаку

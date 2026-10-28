@@ -113,7 +113,13 @@ export async function attackScene(
       .expect(200);
   }
   const at = (id: string) => `${url}/combatants/${id}`;
-  return { ...g, m, p, url, at, hero, goblin, npc, rows };
+  // Правка карты сцены мастером: стены для укрытия.
+  const ops = (list: unknown[]) =>
+    m
+      .post(`/api/games/${g.gameId}/scenes/${sceneId}/ops`)
+      .send({ ops: list })
+      .expect(200);
+  return { ...g, m, p, url, at, ops, hero, goblin, npc, rows };
 }
 
 export const goblinRef = { kind: 'creature', objectId: 2 } as const;

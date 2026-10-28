@@ -5,9 +5,9 @@ import { ATTACK_NOT_IN_SET } from '../combat-errors.js';
 import { attackContext, attacksInSet, findAttack } from './attack-context.js';
 import { dodgingOf, loadAttackScene, targetVisible } from './attack-scene.js';
 
-// Цели атаки списком под значками (docs/plan/combat.md, этап 5, вариант Б макета): все,
-// кого видит атакующий, кроме него самого, поверженных монстров и НПС и тех, кто за
-// полным укрытием. Вне досягаемости — тоже, бледной строкой с расстоянием. КД — мастеру.
+// Цели атаки (docs/plan/combat.md, этап 5, «Выбор цели после этапа 5»): все, кого видит
+// атакующий, кроме него самого и поверженных монстров и НПС. Вне досягаемости и за
+// полным укрытием — тоже: строка над целью скажет, почему её не достать. КД — мастеру.
 export async function listTargets(
   actor: CombatActor,
   combatantId: string,
@@ -29,7 +29,6 @@ export async function listTargets(
         fighters,
         dodgingOf(state, target),
       );
-      if (context.cover === 'total') return [];
       return [
         {
           ref: target.ref,
@@ -39,7 +38,8 @@ export async function listTargets(
           band: context.band,
           cover: context.cover,
           roll: context.roll,
-          armorClass: master ? context.armorClass : null,
+          armorClass:
+            master && context.cover !== 'total' ? context.armorClass : null,
         },
       ];
     })

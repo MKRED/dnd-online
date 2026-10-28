@@ -41,7 +41,8 @@ export interface AttackTarget {
   ally: boolean;
   distance: number;
   band: RangeBand;
-  cover: Exclude<Cover, 'total'>;
+  // Полное укрытие — цель видна, но атаковать её нельзя: в списке, чтобы сказать почему.
+  cover: Cover;
   // Что войдёт в бросок по этой цели; вне досягаемости — тоже, для подсказки.
   roll: Omit<D20RollInput, 'master'>;
   // КД с укрытием — только мастеру; игроку null.

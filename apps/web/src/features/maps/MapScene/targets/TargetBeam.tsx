@@ -1,6 +1,7 @@
 import { Html, Line } from '@react-three/drei';
 import { useSyncExternalStore } from 'react';
 import {
+  attackLine,
   boxDistance,
   cellsToFeet,
   pointInSolid,
@@ -22,11 +23,11 @@ interface TargetBeamProps {
   hover: HoverStore;
 }
 
-// Луч дальней атаки, как в BG3 (решение Михаила 2026-10-28, вопрос 4А): прямая от груди
-// атакующего к середине цели. Это только подсказка: можно ли выстрелить, решает сервер —
-// расстояние до ближайшей клетки цели и укрытие по многим лучам от глаз атакующего к
-// точкам по всему её телу (rules/cover.ts). На цели (под курсором, иначе выбранной) луч
-// сплошной и цвета «можно / с помехой / нельзя»; над пустым местом — пунктир до клетки
+// Луч дальней атаки, как в BG3 (решение Михаила 2026-10-28, вопрос 4А): на цели (под
+// курсором, иначе выбранной) — сплошной, цвета «можно / с помехой / нельзя», и проведён
+// тем же расчётом, что укрытие на сервере (attackLine, ответ Михаила 2026-10-28): из
+// точки глаз с лучшим укрытием к открытой точке тела цели, так что сквозь стену он не
+// идёт, а за полным укрытием его нет. Над пустым местом — пунктир от груди до клетки
 // под курсором и расстояние до неё.
 function TargetBeam({ map, targets, aim, hover }: TargetBeamProps) {
   useSyncExternalStore(aim.subscribe, aim.version);
@@ -38,13 +39,11 @@ function TargetBeam({ map, targets, aim, hover }: TargetBeamProps) {
   const mark = key ? targets.marks.get(key) : undefined;
   const target = key && mark ? aim.point(key) : null;
   if (target && mark) {
-    return (
-      <Beam
-        from={from.point}
-        to={target.point}
-        color={TONE_COLORS[mark.tone]}
-      />
-    );
+    // Линии нет — цель за полным укрытием: строка над целью скажет почему.
+    const line = attackLine(map, from.body, target.body, 'effect');
+    return line ? (
+      <Beam from={line.from} to={line.to} color={TONE_COLORS[mark.tone]} />
+    ) : null;
   }
   if (!cell) return null;
   // Под курсором блок — луч ложится на его верх, а расстояние — до клетки над ним, где

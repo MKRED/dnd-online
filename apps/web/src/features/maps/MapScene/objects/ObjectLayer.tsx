@@ -2,6 +2,7 @@ import { Html } from '@react-three/drei';
 import { useThree, type ThreeEvent } from '@react-three/fiber';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  creatureBody,
   creatureCells,
   creatureHealthLabel,
   maskHas,
@@ -187,7 +188,7 @@ function ObjectLayer({
       ? (id: number) => targets.pick(creatureKey(id))
       : creatures?.onPick);
   const markOf = (id: number) => targets?.marks.get(creatureKey(id)) ?? null;
-  usePlaceAimPoints(aim, targets, objects);
+  usePlaceAimPoints(aim, targets, objects, state);
   const pickObject = !tool && creatures?.onPickObject;
   const open = !tool && creatures?.onOpen;
   const healthOf = (id: number) => creatures?.health.get(id) ?? null;
@@ -337,6 +338,7 @@ function usePlaceAimPoints(
   aim: AimStore | undefined,
   targets: SceneAttackTargets | null,
   objects: readonly SceneObject[],
+  state: MapViewState,
 ) {
   useEffect(() => {
     if (!aim || !targets) return;
@@ -348,10 +350,11 @@ function usePlaceAimPoints(
       points.set(key, {
         point: [x, (y + object.top) / 2, z],
         cells: creatureCells(object.at, object.look.size),
+        body: creatureBody(state, object.at, object.look.size),
       });
     }
     aim.place('creatures', points);
-  }, [aim, targets, objects]);
+  }, [aim, targets, objects, state]);
 }
 
 export default ObjectLayer;

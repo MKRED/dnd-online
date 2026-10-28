@@ -118,6 +118,33 @@ describe('game combat attacks (e2e)', () => {
     ).toBe('Пока атакуют только герои: атаки монстров и НПС — следующий этап');
   });
 
+  it('цель за полным укрытием — в списке, но атаковать её нельзя', async () => {
+    const g = await attackScene(user, png, 'gat_total');
+    // Трактирщик — в 15 фт., за стеной во всю ширину героя и выше глаз обоих.
+    await g.ops([
+      { op: 'moveObject', id: 3, at: [3, 1, 0] },
+      { op: 'fillBox', from: [2, 1, 0], to: [2, 3, 1], block: 'stone' },
+    ]);
+    const url = `${g.at(g.hero)}/targets?attack=unarmed`;
+    const targets = (await g.m.get(url).expect(200)).body as AttackTarget[];
+    expect(targets.map((x) => [x.name, x.distance, x.cover])).toEqual([
+      ['Гоблин', 5, 'none'],
+      ['Трактирщик', 15, 'total'],
+    ]);
+    // КД за полным укрытием не считается — даже мастеру.
+    expect(targets[1].armorClass).toBeNull();
+    expect(
+      message(
+        await attack(
+          g.p,
+          g.at(g.hero),
+          { attack: 'unarmed', target: npcRef },
+          409,
+        ),
+      ),
+    ).toBe('Цель за полным укрытием');
+  });
+
   it('попадание, урон вторым нажатием, журнал; пока урон не брошен — ход держится', async () => {
     const g = await attackScene(user, png, 'gat_hit');
     const hero = g.at(g.hero);

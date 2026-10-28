@@ -5,6 +5,7 @@ import {
 } from 'shared';
 import { describe, expect, it } from 'vitest';
 import { slotsLine } from './slotsLine';
+import { spellLevels } from './spellLevels';
 import {
   freeSlotLevels,
   turnTiles,
@@ -92,7 +93,7 @@ const byName = (tiles: ReturnType<typeof turnTiles>) =>
   new Map(tiles.map((t) => [t.name, t]));
 
 describe('turnTiles', () => {
-  it('раскладывает по группам и не показывает черты', () => {
+  it('раскладывает по группам, без черт и неподготовленных заклинаний', () => {
     const tiles = turnTiles(KIT, state());
     expect(tiles.map((t) => [t.group, t.name])).toEqual([
       ['attacks', 'Длинный меч'],
@@ -100,7 +101,6 @@ describe('turnTiles', () => {
       ['abilities', 'Второе дыхание'],
       ['spells', 'Огненный снаряд'],
       ['spells', 'Щит'],
-      ['spells', 'Огненный шар'],
       ['spells', 'Палящий луч'],
       ['actions', 'Рывок'],
       ['actions', 'Отход'],
@@ -108,22 +108,22 @@ describe('turnTiles', () => {
     ]);
   });
 
-  it('атаки пока только описывают, заклинания несут круг в углу', () => {
+  it('атаки пока только описывают, заклинания несут свой круг', () => {
     const tiles = byName(turnTiles(KIT, state()));
     expect(tiles.get('Длинный меч')?.use).toEqual({ kind: 'info' });
     expect(tiles.get('Длинный меч')?.block).not.toBeNull();
-    expect(tiles.get('Огненный снаряд')?.corner).toBe('0');
+    expect(tiles.get('Длинный меч')?.level).toBeNull();
+    expect(tiles.get('Огненный снаряд')?.level).toBe(0);
     expect(tiles.get('Щит')).toMatchObject({
-      corner: '1',
+      level: 1,
       cost: 'reaction',
       use: { kind: 'ability', abilityId: 'l4', slotMin: 1 },
       block: null,
     });
   });
 
-  it('неподготовленное и без свободной ячейки — бледные с причиной', () => {
+  it('без свободной ячейки — бледное с причиной', () => {
     const tiles = byName(turnTiles(KIT, state()));
-    expect(tiles.get('Огненный шар')?.block).toBe('Не подготовлено');
     // Ячейка 2 круга потрачена, но есть 3-го — можно поднять круг.
     expect(tiles.get('Палящий луч')?.block).toBeNull();
     const spent = byName(
@@ -165,6 +165,19 @@ describe('turnTiles', () => {
   });
 });
 
+describe('spellLevels', () => {
+  it('подгруппы по кругу заклинания, заговоры первыми, ячейки круга при нём', () => {
+    const levels = spellLevels(turnTiles(KIT, state()), KIT.slots);
+    expect(
+      levels.map((l) => [l.label, l.slot, l.tiles.map((t) => t.name)]),
+    ).toEqual([
+      ['Заговоры', undefined, ['Огненный снаряд']],
+      ['1 круг', { total: 2, expended: 0 }, ['Щит']],
+      ['2 круг', { total: 1, expended: 1 }, ['Палящий луч']],
+    ]);
+  });
+});
+
 describe('freeSlotLevels и slotsLine', () => {
   it('круги со свободной ячейкой не ниже нужного', () => {
     expect(freeSlotLevels(KIT.slots, 1)).toEqual([1, 3]);
@@ -174,6 +187,9 @@ describe('freeSlotLevels и slotsLine', () => {
 
   it('строка ячеек: свободные закрашены', () => {
     expect(slotsLine(KIT.slots)).toBe('1 ●● · 2 ○ · 3 ●');
+    // Ячейки кругов со своими заклинаниями — у подзаголовков, в строке остальные.
+    expect(slotsLine(KIT.slots, new Set([1, 2]))).toBe('3 ●');
+    expect(slotsLine(KIT.slots, new Set([1, 2, 3]))).toBeNull();
     expect(slotsLine({})).toBeNull();
     expect(slotsLine(null)).toBeNull();
   });

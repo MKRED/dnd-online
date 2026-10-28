@@ -92,7 +92,12 @@ describe('TurnPanel', () => {
   it('«Рывок»: нажать значок, потом кнопку под сеткой', async () => {
     const combat = renderPanel();
     expect(screen.getByText('Ваш ход')).toBeInTheDocument();
-    expect(await screen.findByText('ячейки 1 ●○ · 2 ●')).toBeInTheDocument();
+    // Ячейки 1 круга — у подзаголовка его заклинаний, сверху — 2 круга без своих заклинаний.
+    expect(await screen.findByText('ячейки 2 ●')).toBeInTheDocument();
+    expect(screen.getByText('1 круг')).toBeInTheDocument();
+    expect(screen.getByLabelText('ячейки: свободно 1 из 2')).toHaveTextContent(
+      '●○',
+    );
     await userEvent.click(await screen.findByRole('button', { name: 'Рывок' }));
     expect(combat.takeAction).not.toHaveBeenCalled();
     // Под сеткой — кнопка с тем же именем: она и тратит действие.

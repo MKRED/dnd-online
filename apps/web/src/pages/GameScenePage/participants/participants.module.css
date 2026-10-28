@@ -116,70 +116,45 @@
   color: var(--mantine-color-dimmed);
 }
 
-/* Вкладка на всю высоту панели: выбранный наверху стоит на месте, список под ним
-   прокручивается сам (замечания после первой партии, 2026-10-26). */
+/* Вкладка на всю высоту панели и одна прокрутка на всё: блок хода, выбранный и список идут
+   друг за другом во всю свою высоту (решение Михаила 2026-10-28, на ПК как на телефоне:
+   отдельные прокрутки делили панель на узкие полосы). Прокрутка по вертикали делает и
+   горизонтальную не «visible»: выбранный с отрицательными полями вылезал бы за вкладку и
+   давал прокрутку вбок, поэтому вкладка сама выходит к краям панели и возвращает отступ
+   внутри. position — чтобы offsetTop выбранного считался от вкладки (useScrollToSelected). */
 .tab {
+  position: relative;
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
+  margin-inline: calc(var(--mantine-spacing-sm) * -1);
+  padding-inline: var(--mantine-spacing-sm);
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
 .list {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
+  flex: none;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-/* Выбранный — наверху вкладки, на всю ширину панели, отделён линией. Длинная карточка
-   (ячейки, эффекты) прокручивается сама и не съедает список целиком. */
 /* Блок хода монстра или НПС у мастера — над выбранным и списком. */
 .turn {
   flex: none;
-  max-height: 50%;
-  overflow-y: auto;
   margin-bottom: 8px;
 }
 
+/* Выбранный — над списком, на всю ширину панели, отделён линией. */
 .selected {
   flex: none;
-  max-height: 60%;
-  overflow-y: auto;
   margin: 0 calc(var(--mantine-spacing-sm) * -1) 4px;
   padding: var(--mantine-spacing-sm);
   border-top: 1px solid var(--mantine-color-default-border);
   border-bottom: 1px solid var(--mantine-color-default-border);
   background: var(--mantine-color-default);
-}
-
-/* На телефоне панель низкая, и две прокрутки делили бы её на две узкие полосы
-   (замечание Михаила, 2026-10-26): там выбранный и список идут друг за другом во всю
-   свою высоту, а прокручивается вся вкладка. Выбранный всё равно первым. */
-@media (max-width: 48em) {
-  /* Прокрутка по вертикали делает и горизонтальную не «visible»: выбранный с
-     отрицательными полями вылезал бы за вкладку, давал прокрутку вбок и прятал свой
-     отступ. Поэтому вкладка сама выходит к краям панели и возвращает отступ внутри. */
-  .tab {
-    overflow-y: auto;
-    margin-inline: calc(var(--mantine-spacing-sm) * -1);
-    padding-inline: var(--mantine-spacing-sm);
-  }
-
-  .list {
-    flex: none;
-    min-height: auto;
-    overflow-y: visible;
-  }
-
-  .selected,
-  .turn {
-    max-height: none;
-    overflow-y: visible;
-  }
 }
 
 /* Заголовок группы и строка одинаковых существ: щелчок сворачивает и раскрывает. */

@@ -4,6 +4,7 @@ import ParticipantGroups from './ParticipantGroups';
 import type { Participant } from './ParticipantRow';
 import { participantGroups } from './participantGroups';
 import { useDoubleOpen } from './useDoubleOpen';
+import { useScrollToSelected } from './useScrollToSelected';
 import classes from './participants.module.css';
 
 interface ParticipantsTabProps {
@@ -23,9 +24,9 @@ interface ParticipantsTabProps {
   turn?: ReactNode;
 }
 
-// Вкладка «Участники» (docs/plan/done/scene-page.md, этап 2; замечания после первой партии,
-// 2026-10-26, вариант А): состояние выбранного — наверху и на месте, под ним список по
-// сворачиваемым группам прокручивается сам. Подсказки про ход — плашкой на сцене.
+// Вкладка «Участники» (docs/plan/done/scene-page.md, этап 2): блок хода, состояние
+// выбранного и список по сворачиваемым группам друг за другом, прокрутка одна на всю
+// вкладку (решение Михаила 2026-10-28). Подсказки про ход — плашкой на сцене.
 function ParticipantsTab({
   heroes,
   creatures,
@@ -52,11 +53,20 @@ function ParticipantsTab({
       return onOpenCreature && (() => onOpenCreature(p.key));
     },
   );
+  const { tabRef, selectedRef } = useScrollToSelected(selectedKey);
   const empty = groups.length === 0;
   return (
-    <div className={classes.tab} onClickCapture={doubleOpen.catchSecond}>
+    <div
+      ref={tabRef}
+      className={classes.tab}
+      onClickCapture={doubleOpen.catchSecond}
+    >
       {turn && <div className={classes.turn}>{turn}</div>}
-      {selected && <section className={classes.selected}>{selected}</section>}
+      {selected && (
+        <section ref={selectedRef} className={classes.selected}>
+          {selected}
+        </section>
+      )}
       <div className={classes.list}>
         {empty && (
           <Text size="sm" c="dimmed" p="xs">

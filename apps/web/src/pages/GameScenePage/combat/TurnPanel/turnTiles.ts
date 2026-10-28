@@ -33,7 +33,8 @@ export const TILE_GROUP_LABELS: Record<TileGroup, string> = {
 export type TileUse =
   | { kind: 'action'; action: CombatAction }
   | { kind: 'ability'; abilityId: string; slotMin: number | null }
-  | { kind: 'attack'; attack: AttackKey }
+  // ranged — дальнобойная: на сцене луч от героя к курсору.
+  | { kind: 'attack'; attack: AttackKey; ranged: boolean }
   | { kind: 'info' };
 
 export interface TurnTile {
@@ -60,6 +61,7 @@ export interface TurnKitAttack {
   spend: 'action' | 'bonus_action';
   // Набор куклы; безоружный удар — вне наборов.
   set: WeaponSet | null;
+  ranged: boolean;
   // Почему этой атакой нельзя совсем (метательное, вторая рука не Лёгкая); null — можно.
   unavailable: string | null;
   image: { id: string; image: CatalogImage | null } | null;

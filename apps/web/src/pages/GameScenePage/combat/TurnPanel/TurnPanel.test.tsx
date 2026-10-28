@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   NO_ABILITY_COSTS,
@@ -9,6 +9,8 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleCharacter } from '../../../../test/characterFixture';
 import { renderWithProviders } from '../../../../test/render';
+import type { SceneAttackTargets } from '../../../../features/maps/MapScene';
+import { AttackTargetingContext } from '../AttackTargetingContext';
 import type { SceneCombat } from '../useSceneCombat';
 import TurnPanel from './TurnPanel';
 
@@ -112,20 +114,25 @@ function renderPanel(
     combat: null,
   };
   renderWithProviders(
-    <TurnPanel
-      gameId="g1"
-      combatant={{ ...combatant, attack }}
-      ownTurn={ownTurn}
-      waiting={ownTurn ? null : 'Ходит Гоблин'}
-      source={{ kind: 'figure', characterId: character.id }}
-      version={0}
-      movement="30 из 30 фт"
-      master={master}
-      combat={combat as unknown as SceneCombat}
-    />,
+    <AttackTargetingContext.Provider value={(t) => (scene.targets = t)}>
+      <TurnPanel
+        gameId="g1"
+        combatant={{ ...combatant, attack }}
+        ownTurn={ownTurn}
+        waiting={ownTurn ? null : 'Ходит Гоблин'}
+        source={{ kind: 'figure', characterId: character.id }}
+        version={0}
+        movement="30 из 30 фт"
+        master={master}
+        combat={combat as unknown as SceneCombat}
+      />
+    </AttackTargetingContext.Provider>,
   );
   return combat;
 }
+
+// Что блок хода отдал сцене: строки над целями и щелчок по цели.
+const scene: { targets: SceneAttackTargets | null } = { targets: null };
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -184,17 +191,35 @@ describe('TurnPanel', () => {
     expect(combat.setResources).toHaveBeenCalledWith('c1', { actionsUsed: 1 });
   });
 
-  it('атака: список целей, подтверждение открывает окно броска', async () => {
+  it('атака: цель выбирают на сцене, подтверждение открывает окно броска', async () => {
     const combat = renderPanel();
     await userEvent.click(
       await screen.findByRole('button', { name: 'Безоружный удар' }),
     );
     expect(combat.targets).toHaveBeenCalledWith('c1', 'unarmed');
-    expect(await screen.findByText('5 фт. · укрытие ½')).toBeInTheDocument();
-    // Вне досягаемости — бледная строка, не выбрать.
-    expect(screen.getByRole('button', { name: /Трактирщик/ })).toBeDisabled();
-    await userEvent.click(screen.getByRole('button', { name: /Гоблин/ }));
+    // Списка в панели нет: подсказка, а строки целей — сцене.
+    expect(
+      await screen.findByText('Наведите на цель на карте и нажмите на неё'),
+    ).toBeInTheDocument();
+    expect(scene.targets?.ranged).toBe(false);
+    expect(scene.targets?.attackerKey).toBe(`figure:${character.id}`);
+    expect(scene.targets?.marks.get('creature:2')).toEqual({
+      tone: 'normal',
+      label: '✓ Гоблин · 5 фт. · преимущество',
+    });
+    expect(scene.targets?.marks.get('creature:3')?.tone).toBe('out');
+    // Вне досягаемости цель закрепляется, но подтвердить её нельзя.
+    act(() => scene.targets?.pick('creature:3'));
+    expect(
+      screen.getByText('Не достать: цель вне досягаемости'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Подтвердить атаку' }),
+    ).toBeDisabled();
+    act(() => scene.targets?.pick('creature:2'));
+    expect(screen.getByText('5 фт. · укрытие ½')).toBeInTheDocument();
     expect(screen.getByText('Преимущество: Опрокинутый')).toBeInTheDocument();
+    expect(scene.targets?.selectedKey).toBe('creature:2');
     await userEvent.click(
       screen.getByRole('button', { name: 'Подтвердить атаку' }),
     );
@@ -203,6 +228,8 @@ describe('TurnPanel', () => {
     expect(
       await screen.findByRole('button', { name: 'Бросить кубик' }),
     ).toBeInTheDocument();
+    // Блок выбора закрылся — сцена больше не подсвечивает цели.
+    expect(scene.targets).toBeNull();
   });
 
   it('попадание без урона: строка с «Бросить урон», конца хода нет', async () => {

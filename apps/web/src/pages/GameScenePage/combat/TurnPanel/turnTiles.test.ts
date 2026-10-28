@@ -67,6 +67,7 @@ const attack = (
   spend: 'action',
   set: null,
   unavailable: null,
+  ranged: false,
   image: null,
   icon: 'weapon',
   ...over,
@@ -126,7 +127,7 @@ describe('turnTiles', () => {
   it('атака открывает список целей, заклинания несут свой круг', () => {
     const tiles = byName(turnTiles(KIT, state()));
     expect(tiles.get('Длинный меч')).toMatchObject({
-      use: { kind: 'attack', attack: 'meleeMain' },
+      use: { kind: 'attack', attack: 'meleeMain', ranged: false },
       cost: 'action',
       block: null,
       level: null,

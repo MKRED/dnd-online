@@ -144,8 +144,10 @@ function TurnPanel({
         <AttackTargets
           key={selected.key}
           combatantId={combatant.id}
+          attacker={combatant.ref}
           tile={selected}
           attack={selected.use.attack}
+          ranged={selected.use.ranged}
           combat={combat}
           refresh={`${version}:${combat.combat?.eventSeq ?? 0}`}
           onCancel={() => setChosen(null)}

@@ -33,7 +33,7 @@ export function attackTiles(
       icon: a.icon,
       use: kit.attackNote
         ? { kind: 'info' }
-        : { kind: 'attack', attack: a.key },
+        : { kind: 'attack', attack: a.key, ranged: a.ranged },
       block:
         a.unavailable ??
         kit.attackNote ??

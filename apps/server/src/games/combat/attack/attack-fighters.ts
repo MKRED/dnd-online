@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import {
   creatureBody,
+  creatureCells,
   damageDefenses,
   FIGURE_SIZE,
   fighterConditions,
@@ -28,7 +29,6 @@ import type { SceneCreature } from '../../creatures/creature-read.js';
 import type { SceneWorld } from '../../figures/scene-world.js';
 import type { SceneRow } from '../../scenes/scene-copy.js';
 import { creatureFighters } from './attack-creatures.js';
-import { cellsOf } from './attack-geometry.js';
 
 // Существа сцены глазами правил атаки (docs/plan/combat.md, этап 5): где стоят, КД с
 // эффектами, эффекты и состояния, защиты от урона. Герой — по листу в игре, монстр и НПС —
@@ -99,7 +99,7 @@ async function heroFighters(
         ref: { kind: 'figure', characterId: row.id },
         name: row.name,
         body: creatureBody(world.map, at, FIGURE_SIZE),
-        cells: cellsOf(at, FIGURE_SIZE),
+        cells: creatureCells(at, FIGURE_SIZE),
         hidden: false,
         party: true,
         down: false,

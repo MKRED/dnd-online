@@ -2,28 +2,13 @@ import {
   attackCover,
   boxDistance,
   cellsToFeet,
-  CREATURE_SIZES,
-  type Box3,
   type Cover,
-  type CreatureSize,
   type MapState,
-  type Vec3,
 } from 'shared';
 import type { Fighter } from './attack-fighters.js';
 
 // Где стоят атакующий и цель (docs/plan/combat.md, этап 5): расстояние в футах до
 // ближайшей клетки, укрытие лучом «эффект» и враг вплотную для дальнобойной атаки.
-
-// Клетки тела для расстояния: основание и рост в целых клетках (distance.ts).
-export function cellsOf(at: Vec3, size: CreatureSize): Box3 {
-  const { footprint, height } = CREATURE_SIZES[size];
-  const across = Math.max(1, Math.ceil(footprint)) - 1;
-  const up = Math.max(1, Math.ceil(height)) - 1;
-  return {
-    min: at,
-    max: [at[0] + across, at[1] + up, at[2] + across],
-  };
-}
 
 export const distanceFt = (a: Fighter, b: Fighter) =>
   cellsToFeet(boxDistance(a.cells, b.cells));

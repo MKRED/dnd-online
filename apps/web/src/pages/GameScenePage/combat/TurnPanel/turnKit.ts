@@ -43,6 +43,7 @@ function heroAttackKit(character: Character): TurnKitAttack[] {
       name: option.name,
       spend: option.spend,
       set: option.set,
+      ranged: option.kind === 'ranged',
       unavailable: option.unavailable,
     };
     const attack = gear.find((a) => a.weapon.slot === option.key);

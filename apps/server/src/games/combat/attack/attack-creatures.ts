@@ -1,5 +1,6 @@
 import {
   creatureBody,
+  creatureCells,
   damageDefenses,
   fighterConditions,
   fighterEffectsOf,
@@ -22,7 +23,6 @@ import {
 } from '../../library/library-read.js';
 import type { SceneRow } from '../../scenes/scene-copy.js';
 import type { Fighter } from './attack-fighters.js';
-import { cellsOf } from './attack-geometry.js';
 
 // Монстры и НПС сцены для правил атаки: КД, эффекты и защиты — как у карточки экземпляра
 // на сцене (CardBodies.tsx): эффекты копии и черты плюс эффекты экземпляра.
@@ -117,7 +117,7 @@ export async function creatureFighters(
         ref: { kind: 'creature', objectId: creature.objectId },
         name: creature.name,
         body: creatureBody(world.map, creature.at, placed.size),
-        cells: cellsOf(creature.at, placed.size),
+        cells: creatureCells(creature.at, placed.size),
         hidden: creature.hidden,
         party: false,
         down: hp.current === 0,

@@ -1,33 +1,50 @@
 import { Alert, Badge, Button, Group, Loader, Text } from '@mantine/core';
 import { IconSword } from '@tabler/icons-react';
-import { useEffect, useState, type KeyboardEvent } from 'react';
-import type { AttackKey, AttackTarget } from 'shared';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react';
+import type { AttackKey, AttackTarget, CombatantRef } from 'shared';
 import { errorMessage } from '../../../../lib/apiRequest';
 import { useAttackTargeting } from '../AttackTargetingContext';
 import { reasonsText } from '../RollWindow/rollWindowText';
 import type { SceneCombat } from '../useSceneCombat';
-import { spendText, targetKey, targetMeta } from './attackTargetText';
+import {
+  refKey,
+  spendText,
+  targetKey,
+  targetMark,
+  targetMeta,
+} from './attackTargetText';
 import type { TurnTile } from './turnTiles';
 import classes from './TurnPanel.module.css';
 
 interface AttackTargetsProps {
   combatantId: string;
+  attacker: CombatantRef;
   tile: TurnTile;
   attack: AttackKey;
+  ranged: boolean;
   combat: SceneCombat;
-  // Сцена изменилась (ход, фигурки): список перечитывается.
+  // Сцена изменилась (ход, фигурки): цели перечитываются.
   refresh: string;
   onConfirm: (target: AttackTarget) => void;
   onCancel: () => void;
 }
 
-// Список целей под значком атаки (макет «Атака и начало боя», вариант Б): ближние сверху,
-// вне досягаемости — бледные. Выбор ничего не тратит: у выбранной цели — причины
-// преимущества и помехи, «Подтвердить атаку» и «Отменить» (Esc).
+// Выбор цели атаки (макет «Выбор цели атаки», ответы Михаила 2026-10-28: 1А, 2Б, 3А):
+// цель ищут на сцене — подсвечена только та, что под курсором, со строкой «можно или
+// нельзя», у дальней атаки к курсору тянется луч. Щелчок по цели закрепляет её, а здесь,
+// в панели, — её карточка с причинами и «Подтвердить атаку». Выбор ничего не тратит.
 function AttackTargets({
   combatantId,
+  attacker,
   tile,
   attack,
+  ranged,
   combat,
   refresh,
   onConfirm,
@@ -57,31 +74,35 @@ function AttackTargets({
 
   const chosen = targets?.find((t) => targetKey(t) === selected) ?? null;
 
-  // Те же цели — красным на сцене; щелчок по существу там выбирает его здесь.
   const publish = useAttackTargeting();
-  const chosenId = chosen?.ref.kind === 'creature' ? chosen.ref.objectId : null;
+  const attackerKey = refKey(attacker);
+  const marks = useMemo(
+    () => new Map((targets ?? []).map((t) => [targetKey(t), targetMark(t)])),
+    [targets],
+  );
   useEffect(() => {
     if (!targets) return;
-    const ids = new Set(
-      targets.flatMap((t) =>
-        t.ref.kind === 'creature' && t.band !== 'out' ? [t.ref.objectId] : [],
-      ),
-    );
     publish({
-      ids,
-      selectedId: chosenId,
-      pick: (id) => {
-        if (ids.has(id)) setSelected(`creature:${id}`);
+      marks,
+      selectedKey: chosen ? selected : null,
+      // Закрепить можно и цель вне досягаемости: на телефоне наведения нет, и только так
+      // увидеть, почему её не достать. Подтвердить её карточка не даст.
+      pick: (key) => {
+        if (targets.some((t) => targetKey(t) === key)) setSelected(key);
       },
+      attackerKey,
+      ranged,
     });
-    return () => publish(null);
-  }, [targets, chosenId, publish]);
+  }, [targets, marks, chosen, selected, attackerKey, ranged, publish]);
+  useEffect(() => () => publish(null), [publish]);
+
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape' && selected) {
       e.stopPropagation();
       setSelected(null);
     }
   };
+  const reachable = targets?.some((t) => t.band !== 'out') ?? false;
 
   return (
     <div className={classes.confirm} onKeyDown={onKeyDown}>
@@ -92,52 +113,23 @@ function AttackTargets({
         </Alert>
       )}
       {!targets && !error && <Loader size="xs" />}
-      {targets?.length === 0 && (
-        <Text size="sm" c="dimmed">
-          Целей не видно
+      {targets && !chosen && (
+        <Text size="sm" c="dimmed" className={classes.targetHint}>
+          {targets.length === 0
+            ? 'Целей не видно'
+            : reachable
+              ? 'Наведите на цель на карте и нажмите на неё'
+              : 'Ни одна цель не в досягаемости'}
         </Text>
       )}
-      {targets && targets.length > 0 && (
-        <div className={classes.targets} role="list" aria-label="Цели">
-          {targets.map((target) => {
-            const key = targetKey(target);
-            const out = target.band === 'out';
-            const open = chosen !== null && key === selected;
-            return (
-              <div key={key} role="listitem" className={classes.targetItem}>
-                <button
-                  type="button"
-                  className={classes.target}
-                  aria-pressed={open}
-                  disabled={out}
-                  data-out={out || undefined}
-                  onClick={() => setSelected(open ? null : key)}
-                >
-                  <span className={classes.targetName}>
-                    {target.name}
-                    {target.ally && (
-                      <Badge size="xs" color="orange" variant="light">
-                        свой
-                      </Badge>
-                    )}
-                  </span>
-                  <span className={classes.targetMeta}>
-                    {targetMeta(target)}
-                  </span>
-                </button>
-                {open && (
-                  <TargetConfirm
-                    target={target}
-                    cost={spendText(tile.cost)}
-                    busy={combat.busy}
-                    onConfirm={() => onConfirm(target)}
-                    onCancel={() => setSelected(null)}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {chosen && (
+        <TargetConfirm
+          target={chosen}
+          cost={spendText(tile.cost)}
+          busy={combat.busy}
+          onConfirm={() => onConfirm(chosen)}
+          onCancel={() => setSelected(null)}
+        />
       )}
       {!chosen && (
         <Group justify="flex-end">
@@ -158,6 +150,7 @@ interface TargetConfirmProps {
   onCancel: () => void;
 }
 
+// Карточка выбранной цели: расстояние, укрытие (и КД — мастеру), причины броска.
 function TargetConfirm({
   target,
   cost,
@@ -165,13 +158,40 @@ function TargetConfirm({
   onConfirm,
   onCancel,
 }: TargetConfirmProps) {
-  const why = reasonsText(target.roll.reasons);
+  const out = target.band === 'out';
+  const why = out ? null : reasonsText(target.roll.reasons);
+  // Цель выбрали на сцене, а карточка — внизу длинного блока: показать её.
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    ref.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  }, [target.ref]);
   return (
-    <div className={classes.targetConfirm}>
+    <div
+      ref={ref}
+      className={classes.targetConfirm}
+      role="group"
+      aria-label={`Цель: ${target.name}`}
+    >
+      <Group justify="space-between" gap="xs" wrap="nowrap">
+        <span className={classes.targetName}>
+          {target.name}
+          {target.ally && (
+            <Badge size="xs" color="orange" variant="light">
+              свой
+            </Badge>
+          )}
+        </span>
+        <span className={classes.targetMeta}>{targetMeta(target)}</span>
+      </Group>
       {why && <Text size="xs">{why}</Text>}
       {target.ally && (
         <Text size="xs" c="orange">
           Это союзник — атака всё равно пройдёт
+        </Text>
+      )}
+      {out && (
+        <Text size="xs" c="red">
+          Не достать: цель вне досягаемости
         </Text>
       )}
       <Group gap="xs" wrap="nowrap">
@@ -180,6 +200,7 @@ function TargetConfirm({
           color="red"
           leftSection={<IconSword size={14} />}
           loading={busy}
+          disabled={out}
           onClick={onConfirm}
         >
           Подтвердить атаку

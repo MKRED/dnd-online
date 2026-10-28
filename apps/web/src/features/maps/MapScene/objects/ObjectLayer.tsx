@@ -2,6 +2,7 @@ import { Html } from '@react-three/drei';
 import { useThree, type ThreeEvent } from '@react-three/fiber';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  creatureCells,
   creatureHealthLabel,
   maskHas,
   type CreatureHealth,
@@ -30,19 +31,17 @@ import StandBase, { BLOCKED_COLOR } from './StandBase';
 import { useLabelTexture } from './useLabelTexture';
 import { useObjectDrag } from './useObjectDrag';
 import { useObjectTextures } from './useObjectTextures';
+import {
+  creatureKey,
+  TargetMarker,
+  type AimPoint,
+  type AimStore,
+  type SceneAttackTargets,
+} from '../targets';
 import { objectWalkKey, WalkMotion, type SceneWalks } from '../walks';
 
 const START_COLOR = '#d9a01e';
 const SELECTED_COLOR = '#4dabf7';
-const TARGET_COLOR = '#fa5252';
-
-// Цели атаки (docs/plan/combat.md, «Выбор цели»): существа в досягаемости обведены
-// красным, выбранная цель — ярче; щелчок по цели выбирает её в списке блока хода.
-export interface SceneAttackTargets {
-  ids: ReadonlySet<number>;
-  selectedId: number | null;
-  pick: (id: number) => void;
-}
 
 // Монстры и НПС на сцене игры (этап 8): метки здоровья и выбор щелчком.
 export interface SceneCreaturesView {
@@ -80,6 +79,8 @@ interface ObjectLayerProps {
   fog?: FogMasks | null;
   // Ходы монстров и НПС по пути (docs/plan/done/walk-animation.md).
   walks?: SceneWalks;
+  // Луч дальней атаки: сюда слой пишет середины целей и цель под курсором.
+  aim?: AimStore;
 }
 
 // Обводка выделенного объекта во всё его место и рост: у обстановки — прямоугольник
@@ -109,25 +110,6 @@ function SelectionFrame({ object }: { object: SceneObject }) {
         />
       )}
     </>
-  );
-}
-
-function TargetFrame({
-  object,
-  selected,
-}: {
-  object: SceneObject;
-  selected: boolean;
-}) {
-  const h = object.footprint / 2;
-  const [x, y, z] = object.base;
-  return (
-    <FrameBox
-      min={[x - h, y, z - h]}
-      max={[x + h, object.top, z + h]}
-      color={TARGET_COLOR}
-      opacity={selected ? 0.3 : 0.08}
-    />
   );
 }
 
@@ -167,6 +149,7 @@ function ObjectLayer({
   creatures,
   fog = null,
   walks,
+  aim,
 }: ObjectLayerProps) {
   const all = useMemo(
     () => layoutObjects(state, refs, images, hideContents),
@@ -198,7 +181,13 @@ function ObjectLayer({
   const targets = (!tool && creatures?.targets) || null;
   // Щелчок по существу выбирает его, пока инструмент «Объекты» клик не забирает; при
   // выборе цели атаки — выбирает цель.
-  const pick = !tool && (targets?.pick ?? creatures?.onPick);
+  const pick =
+    !tool &&
+    (targets
+      ? (id: number) => targets.pick(creatureKey(id))
+      : creatures?.onPick);
+  const markOf = (id: number) => targets?.marks.get(creatureKey(id)) ?? null;
+  usePlaceAimPoints(aim, targets, objects);
   const pickObject = !tool && creatures?.onPickObject;
   const open = !tool && creatures?.onOpen;
   const healthOf = (id: number) => creatures?.health.get(id) ?? null;
@@ -249,10 +238,14 @@ function ObjectLayer({
                     open(object.id);
                   },
                 })}
-              onPointerOver={() => setHovered(object.id)}
-              onPointerOut={() =>
-                setHovered((prev) => (prev === object.id ? null : prev))
-              }
+              onPointerOver={() => {
+                setHovered(object.id);
+                if (markOf(object.id)) aim?.hover(creatureKey(object.id));
+              }}
+              onPointerOut={() => {
+                setHovered((prev) => (prev === object.id ? null : prev));
+                aim?.leave(creatureKey(object.id));
+              }}
             >
               {look.kind === 'creature' && (
                 <WalkMotion
@@ -297,16 +290,23 @@ function ObjectLayer({
       })}
       {selected && <SelectionFrame object={selected} />}
       {targets &&
-        objects
-          .filter((object) => targets.ids.has(object.id))
-          .map((object) => (
-            <TargetFrame
+        objects.map((object) => {
+          const mark = markOf(object.id);
+          const chosen = creatureKey(object.id) === targets.selectedKey;
+          if (!mark || (!chosen && object.id !== hovered)) return null;
+          return (
+            <TargetMarker
               key={`target:${object.id}`}
-              object={object}
-              selected={object.id === targets.selectedId}
+              base={object.base}
+              footprint={object.footprint}
+              top={object.top}
+              mark={mark}
+              selected={chosen}
             />
-          ))}
-      {tip && (
+          );
+        })}
+      {/* Над целью атаки — её строка (TargetMarker), а не обычная подпись. */}
+      {tip && !markOf(tip.id) && (
         <Html
           position={[tip.base[0], tip.top + 0.3, tip.base[2]]}
           center
@@ -330,6 +330,28 @@ function ObjectLayer({
       )}
     </>
   );
+}
+
+// Середины целей для луча дальней атаки (targets/TargetBeam): на высоте середины тела.
+function usePlaceAimPoints(
+  aim: AimStore | undefined,
+  targets: SceneAttackTargets | null,
+  objects: readonly SceneObject[],
+) {
+  useEffect(() => {
+    if (!aim || !targets) return;
+    const points = new Map<string, AimPoint>();
+    for (const object of objects) {
+      const key = creatureKey(object.id);
+      if (object.look.kind !== 'creature' || !targets.marks.has(key)) continue;
+      const [x, y, z] = object.base;
+      points.set(key, {
+        point: [x, (y + object.top) / 2, z],
+        cells: creatureCells(object.at, object.look.size),
+      });
+    }
+    aim.place('creatures', points);
+  }, [aim, targets, objects]);
 }
 
 export default ObjectLayer;

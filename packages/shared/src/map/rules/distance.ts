@@ -1,4 +1,5 @@
 import type { Box3, Vec3 } from '../coords.js';
+import { CREATURE_SIZES, type CreatureSize } from './creature.js';
 
 export const FEET_PER_CELL = 5;
 
@@ -22,6 +23,18 @@ export function boxDistance(a: Box3, b: Box3): number {
     distance = Math.max(distance, gap);
   }
   return distance;
+}
+
+// Клетки тела для расстояния: основание и рост в целых клетках. Крошечное занимает свою
+// клетку целиком: расстояние до него — как до клетки.
+export function creatureCells(at: Vec3, size: CreatureSize): Box3 {
+  const { footprint, height } = CREATURE_SIZES[size];
+  const across = Math.max(1, Math.ceil(footprint)) - 1;
+  const up = Math.max(1, Math.ceil(height)) - 1;
+  return {
+    min: at,
+    max: [at[0] + across, at[1] + up, at[2] + across],
+  };
 }
 
 export function cellsToFeet(cells: number): number {

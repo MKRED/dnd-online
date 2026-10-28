@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { GameCombat } from 'shared';
-import { figureTurnNow, turnFigureDrag } from './turnGate';
+import { combatantTurnNow, figureTurnNow, turnFigureDrag } from './turnGate';
 
 const combat = (turn: string | null): GameCombat => ({
   sceneId: 's1',
@@ -53,6 +53,18 @@ describe('figureTurnNow', () => {
     // Пока бросают инициативу, и не позванный в бой.
     expect(figureTurnNow(combat(null), 'c1')).toBe(false);
     expect(figureTurnNow(combat('k1'), 'c9')).toBe(false);
+  });
+});
+
+describe('combatantTurnNow', () => {
+  it('существо — тоже только в свой ход', () => {
+    const goblin = { kind: 'creature', objectId: 2 } as const;
+    expect(combatantTurnNow(combat('k2'), goblin)).toBe(true);
+    expect(combatantTurnNow(combat('k1'), goblin)).toBe(false);
+    expect(combatantTurnNow(combat('k2'), { ...goblin, objectId: 3 })).toBe(
+      false,
+    );
+    expect(combatantTurnNow(null, goblin)).toBe(true);
   });
 });
 

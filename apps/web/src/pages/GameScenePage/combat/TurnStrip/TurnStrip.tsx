@@ -8,7 +8,9 @@ import type { CombatEntry } from './combatEntries';
 import QueueList from './QueueList';
 import type { StripActions } from './stripActions';
 import HiddenTurnCell from './HiddenTurnCell';
+import RoundDivider from './RoundDivider';
 import {
+  DIVIDER,
   HIDDEN_TURN,
   stripCapacity,
   stripSlots,
@@ -52,15 +54,18 @@ function TurnStrip({
   );
   const turn = combat.hiddenTurn ? HIDDEN_TURN : combat.turn;
   const total = order.length + unrolled.length;
-  const capacity =
-    width > 0 ? stripCapacity(width, total, master ? ADD_WIDTH : 0) : total;
-  const slots = stripSlots(
-    order,
-    unrolled.map((e) => e.id),
-    turn,
-    capacity,
-    combat.round === 1 && order[0] === turn,
-  );
+  // Место под черту нового раунда — когда в очереди больше одного.
+  const reserved = (master ? ADD_WIDTH : 0) + (order.length > 1 ? DIVIDER : 0);
+  const capacity = width > 0 ? stripCapacity(width, total, reserved) : total;
+  const firstTurn = combat.round === 1 && order[0] === turn;
+  const unrolledIds = unrolled.map((e) => e.id);
+  const slots = stripSlots(order, unrolledIds, turn, capacity, firstTurn);
+  // Список «+N» — вся очередь в том же порядке.
+  const queue = stripSlots(order, unrolledIds, turn, total, firstTurn);
+  // Номер раунда у черты: если за ней текущий — это уже идущий раунд, иначе следующий.
+  const round = combat.round ?? 1;
+  const roundAt = (ids: readonly string[], at: number) =>
+    ids[at] === turn ? round : round + 1;
   const byId = new Map(entries.map((e) => [e.id, e]));
   // Пока кто-то не бросил и ход ещё не начался — идёт бросок инициативы.
   const rolling = turn === null && unrolled.length > 0;
@@ -88,15 +93,19 @@ function TurnStrip({
           )}
         </div>
         <div className={classes.portraits}>
-          {slots.ids.map((id) => {
+          {slots.ids.map((id, index) => {
+            const divider = index === slots.divider && (
+              <RoundDivider key="round" round={roundAt(slots.ids, index)} />
+            );
             if (id === HIDDEN_TURN) {
-              return <HiddenTurnCell key={id} />;
+              return [divider, <HiddenTurnCell key={id} />];
             }
             const entry = byId.get(id);
             if (!entry) return null;
             const place = rolled.indexOf(entry);
             const current = id === turn;
-            return (
+            return [
+              divider,
               <CombatantMenu
                 key={id}
                 entry={entry}
@@ -112,17 +121,25 @@ function TurnStrip({
                   acted={id === slots.acted}
                   onClick={master ? undefined : () => actions.focus(entry)}
                 />
-              </CombatantMenu>
-            );
+              </CombatantMenu>,
+            ];
           })}
         </div>
         {slots.more > 0 && (
           <QueueList
-            entries={[...rolled, ...unrolled]}
-            hiddenTurn={combat.hiddenTurn}
+            entries={entries}
+            ids={queue.ids}
+            divider={
+              queue.divider === null
+                ? null
+                : {
+                    at: queue.divider,
+                    round: roundAt(queue.ids, queue.divider),
+                  }
+            }
             more={slots.more}
             turn={combat.turn}
-            acted={slots.acted}
+            acted={queue.acted}
             master={master}
             actions={actions}
           />

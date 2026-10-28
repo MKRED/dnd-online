@@ -13,6 +13,7 @@ describe('stripSlots', () => {
     expect(stripSlots(['b', 'a'], ['c'], null, 10)).toEqual({
       ids: ['b', 'a', 'c'],
       acted: null,
+      divider: null,
       more: 0,
     });
   });
@@ -21,6 +22,8 @@ describe('stripSlots', () => {
     expect(stripSlots(order, [], 'c', 10)).toEqual({
       ids: ['b', 'c', 'd', 'e', 'a'],
       acted: 'b',
+      // Новый раунд — с первого в очереди.
+      divider: 4,
       more: 0,
     });
     // У первого в раунде последний ходивший — последний в очереди.
@@ -37,12 +40,14 @@ describe('stripSlots', () => {
     expect(stripSlots(order, ['x'], 'c', 3)).toEqual({
       ids: ['b', 'c', 'd'],
       acted: 'b',
+      divider: null,
       more: 3,
     });
     // На одно место — только текущий.
     expect(stripSlots(order, [], 'c', 1)).toEqual({
       ids: ['c'],
       acted: null,
+      divider: null,
       more: 4,
     });
   });
@@ -51,6 +56,7 @@ describe('stripSlots', () => {
     expect(stripSlots(order, [], 'a', 10, true)).toEqual({
       ids: order,
       acted: null,
+      divider: null,
       more: 0,
     });
   });
@@ -59,8 +65,20 @@ describe('stripSlots', () => {
     expect(stripSlots(['a'], [], 'a', 5)).toEqual({
       ids: ['a'],
       acted: null,
+      divider: null,
       more: 0,
     });
+  });
+
+  it('черта раунда: у первого в раунде — между ходившим и текущим', () => {
+    expect(stripSlots(order, [], 'a', 10).divider).toBe(1);
+    // Как на снимке Михаила: ходит последний — черта перед первым.
+    expect(stripSlots(order, ['x'], 'e', 10)).toMatchObject({
+      ids: ['d', 'e', 'a', 'b', 'c', 'x'],
+      divider: 2,
+    });
+    // Пока ход не начался — раундов нет.
+    expect(stripSlots(order, ['x'], null, 10).divider).toBeNull();
   });
 });
 

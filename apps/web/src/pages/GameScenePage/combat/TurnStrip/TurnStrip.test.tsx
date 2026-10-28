@@ -95,7 +95,11 @@ describe('TurnStrip', () => {
   it('игрок: раунд, текущий, щелчок показывает на сцене, «Закончить ход» своему', async () => {
     const { actions, onEndTurn } = renderStrip(false);
     const strip = screen.getByRole('group', { name: 'Очерёдность хода' });
-    expect(within(strip).getByText('2')).toBeInTheDocument();
+    expect(within(strip).getByRole('status')).toHaveTextContent('Раунд2');
+    // Лира — первая в очереди: перед ней черта идущего раунда.
+    expect(
+      within(strip).getByRole('separator', { name: 'Раунд 2' }),
+    ).toBeInTheDocument();
     const lira = within(strip).getByRole('button', {
       name: 'Лира, инициатива 18, сейчас ходит',
     });

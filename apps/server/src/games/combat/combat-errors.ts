@@ -22,6 +22,8 @@ export const TURN_NOT_YOURS =
   'Закончить этот ход может тот, кто водит фигурку, или мастер';
 export const TURN_NOT_ROLLED = 'Ход — только тому, кто уже бросил инициативу';
 export const NOT_YOUR_TURN = 'Сейчас не ваш ход';
+export const NOT_ITS_TURN =
+  'Сейчас не его ход: вне хода переставить можно в «Правке»';
 export const ROUND_BY_ORDER =
   'В бою с очерёдностью раунд меняется сам, когда походили все';
 export const ACTION_NOT_YOURS =

@@ -20,13 +20,15 @@ async function sceneHasOrder(tx: DbTransaction, sceneId: string) {
   return rows.length > 0;
 }
 
-// Игрок водит фигурку в бою с очерёдностью только в её ход; фигурка не в бою стоит, пока
-// мастер её не позовёт. Без очерёдности — как раньше. Мастер не ограничен.
-export async function assertFigureTurn(
+// В бою с очерёдностью участник ходит только в свой ход, а не позванный в бой стоит. Без
+// очерёдности — как раньше. Игроку — «не ваш ход»; мастер в «Игре» держится тех же правил,
+// вне хода он переставляет в «Правке» (замечание Михаила 2026-10-28).
+export async function assertTurnOf(
   tx: DbTransaction,
   gameId: string,
   sceneId: string,
-  characterId: string,
+  who: { characterId: string } | { objectId: number },
+  message = NOT_YOUR_TURN,
 ) {
   if (!(await sceneHasOrder(tx, sceneId))) return;
   const [game] = await tx
@@ -39,11 +41,13 @@ export async function assertFigureTurn(
     .where(
       and(
         eq(gameCombatants.sceneId, sceneId),
-        eq(gameCombatants.characterId, characterId),
+        'characterId' in who
+          ? eq(gameCombatants.characterId, who.characterId)
+          : eq(gameCombatants.objectId, who.objectId),
       ),
     );
   if (!own || own.id !== game.turn) {
-    throw new ConflictException(NOT_YOUR_TURN);
+    throw new ConflictException(message);
   }
 }
 

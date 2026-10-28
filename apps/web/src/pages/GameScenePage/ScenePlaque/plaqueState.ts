@@ -14,6 +14,9 @@ interface PlaqueInput {
   creatureMoving: boolean;
   // Свободный режим хода: запас не тратится (docs/dnd/movement.md).
   freeMove?: boolean;
+  // Бой с очерёдностью, а у выбранного не его ход: клетки хода не подсвечены.
+  outOfTurn?: boolean;
+  master?: boolean;
 }
 
 // Что сказать на плашке сцены о выбранном (docs/plan/done/scene-page.md, этап 2) — бывшие
@@ -25,7 +28,15 @@ export function plaqueState({
   creature,
   creatureMoving,
   freeMove = false,
+  outOfTurn = false,
+  master = false,
 }: PlaqueInput): PlaqueState | null {
+  // Вне хода: запас виден, а ходить нельзя (замечание Михаила 2026-10-28).
+  const moveHint = !outOfTurn
+    ? 'щелчок по подсвеченной клетке — ход'
+    : master
+      ? 'сейчас не его ход; переставить можно в «Правке»'
+      : 'ходит в свой ход';
   if (placing) {
     return {
       name: placing.name,
@@ -44,7 +55,7 @@ export function plaqueState({
           name: figure.character.name,
           left: movementText(figure, freeMove),
           short: shortMovementText(figure, freeMove),
-          hint: 'щелчок по подсвеченной клетке — ход',
+          hint: moveHint,
         };
   }
   const state = creature?.state;
@@ -57,7 +68,7 @@ export function plaqueState({
         name: state.name,
         left: movementText(state.movement, freeMove),
         short: shortMovementText(state.movement, freeMove),
-        hint: 'щелчок по подсвеченной клетке — ход',
+        hint: moveHint,
       }
     : {
         name: state.name,

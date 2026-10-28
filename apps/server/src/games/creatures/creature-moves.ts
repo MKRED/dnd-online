@@ -11,6 +11,8 @@ import {
 } from 'shared';
 import { gameCreatures, gameFigures } from '../../database/schema/index.js';
 import { runOps, type EditLimits } from '../../maps/edit-run.js';
+import { assertTurnOf } from '../combat/combat-gate.js';
+import { NOT_ITS_TURN } from '../combat/combat-errors.js';
 import { isFree } from '../figures/move-mode-read.js';
 import { loadSceneWorld } from '../figures/scene-world.js';
 import {
@@ -70,6 +72,9 @@ export async function moveCreature(
   to: Vec3,
 ): Promise<void> {
   const { tx, scene } = actor;
+  // В бою с очерёдностью существо ходит в свой ход; вне хода мастер ставит его в «Правке»
+  // (замечание Михаила 2026-10-28).
+  await assertTurnOf(tx, actor.gameId, scene.id, { objectId }, NOT_ITS_TURN);
   const { creature, movement, hitPoints } = await allowanceOf(actor, objectId);
   if (hitPoints.current === 0) throw new ConflictException(CREATURE_DOWN);
   const world = await loadSceneWorld(tx, scene);

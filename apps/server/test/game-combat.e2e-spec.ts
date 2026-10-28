@@ -253,6 +253,17 @@ describe('game combat (e2e)', () => {
       'Сейчас не ваш ход',
     );
     expect((await figureOf(g.m, g.gameId)).figures[0].moved).toBe(10);
+    // Мастер в «Игре» держится тех же правил: водит только того, чей ход; вне хода — «Правка».
+    const creatureMove = (objectId: number, to: number[], status: number) =>
+      g.m
+        .post(`/api/games/${g.gameId}/scene/creatures/${objectId}/move`)
+        .send({ to })
+        .expect(status);
+    const outOfTurn =
+      'Сейчас не его ход: вне хода переставить можно в «Правке»';
+    expect(message(await g.move(g.m, [0, 1, 3], 409))).toBe(outOfTurn);
+    expect(message(await creatureMove(3, [2, 1, 1], 409))).toBe(outOfTurn);
+    await creatureMove(2, [1, 1, 1], 200);
 
     // Мастер ведёт существ; после последнего — новый раунд, у фигурки снова полный запас.
     await g.endTurn(g.m, goblinId);

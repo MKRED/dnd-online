@@ -15,7 +15,12 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router-dom';
-import { mapBounds, type GameSceneEditMessage, type Vec3 } from 'shared';
+import {
+  mapBounds,
+  type CombatantRef,
+  type GameSceneEditMessage,
+  type Vec3,
+} from 'shared';
 import { useAuth } from '../../features/auth';
 import { useDeviceSettings } from '../../features/profile';
 import { RecordLinkContext, type OpenRecord } from '../../features/catalog';
@@ -50,6 +55,7 @@ import {
   AttackTargetingContext,
   CombatOverlay,
   MoveModeContext,
+  combatantTurnNow,
   figureTurnNow,
   turnFigureDrag,
   useCombatUi,
@@ -246,8 +252,23 @@ function GameScenePage() {
   // Бой с очерёдностью (docs/plan/combat.md, этап 3): полоса над сценой и окна.
   const combat = useSceneCombat(id, sceneId);
   const [combatDialog, setCombatDialog] = useState(false);
-  // Цели атаки, пока у значка атаки открыт список: красным на сцене, щелчок — выбор цели.
+  // Цели атаки, пока у значка атаки выбирают цель: подсветка на сцене, щелчок — выбор цели.
   const [targeting, setTargeting] = useState<SceneAttackTargets | null>(null);
+  // Пока выбирают цель, ход выбранной фигуркой молчит: ни клеток хода, ни пути, ни
+  // переноса — щелчок по сцене должен значить «эта цель», а не «иди сюда». Отмена атаки
+  // возвращает режим хода (замечание Михаила 2026-10-28).
+  const aiming = targeting !== null;
+  // В «Игре» с очерёдностью выбранный ходит только в свой ход — и у мастера: вне хода его
+  // переставляют в «Правке» (замечание Михаила 2026-10-28). Выбрать и посмотреть можно.
+  const selectedRef: CombatantRef | null = play.tool.selectedId
+    ? { kind: 'figure', characterId: play.tool.selectedId }
+    : cards.selected
+      ? { kind: 'creature', objectId: cards.selected.objectId }
+      : null;
+  const outOfTurn =
+    !editing &&
+    selectedRef !== null &&
+    !combatantTurnNow(combat.combat, selectedRef);
   const { reload: reloadCombat } = combat;
   const fighting = (combat.combat?.combatants.length ?? 0) > 0;
   const { onSceneEdit: creaturesSceneEdit } = cards;
@@ -280,38 +301,52 @@ function GameScenePage() {
     dialog: combatDialog,
     onDialog: setCombatDialog,
     focus: (at) => focusRef.current?.focusOn([...at]),
+    // Выбрать можно того, кого смотрящий водит: мастеру — любого, игроку — своего героя.
+    select: (ref) => {
+      if (ref.kind === 'creature') {
+        if (master) cards.select(ref.objectId);
+        return;
+      }
+      const figure = figures.figures?.figures.find(
+        (f) => f.character.id === ref.characterId,
+      );
+      if (figure?.canMove) figureTool.select(ref.characterId);
+    },
     version: cards.version,
   });
   // Выбор у страницы один: щелчки по клеткам ведут выбранную фигурку или (у мастера)
   // выбранного монстра (docs/plan/done/creature-movement.md).
   // В «Правке»: «Просмотр» клетками ничего не делает, в «Существах» выбранного героя ставит
   // фигурка, остальное — инструмент (замечания после первой партии, 2026-10-26).
-  const sceneEditor = viewOnly
-    ? null
-    : editing
-      ? ready
-        ? editor.tool === 'creatures'
-          ? (play.editor ?? editor.sceneEditor)
-          : editor.sceneEditor
-        : null
-      : (play.editor ?? cards.walk.editor);
-  // Игрок тянет фигурку только в свой ход боя с очерёдностью; мастер — когда угодно.
+  const sceneEditor =
+    viewOnly || aiming || outOfTurn
+      ? null
+      : editing
+        ? ready
+          ? editor.tool === 'creatures'
+            ? (play.editor ?? editor.sceneEditor)
+            : editor.sceneEditor
+          : null
+        : (play.editor ?? cards.walk.editor);
+  // В бою с очерёдностью фигурку тянут только в её ход; мастер в «Правке» — когда угодно.
   const combatState = combat.combat;
-  const playDrag = master
-    ? play.drag
-    : turnFigureDrag(play.drag, (characterId) =>
-        figureTurnNow(combatState, characterId),
-      );
-  const figureDrag = viewOnly
-    ? undefined
-    : editFigureDrag({
-        drag: playDrag,
-        editing,
-        tool: editor.tool,
-        clearCreature,
-        onOpen: (characterId) =>
-          windows.open({ kind: 'character', id: characterId }),
-      });
+  const playDrag =
+    master && editing
+      ? play.drag
+      : turnFigureDrag(play.drag, (characterId) =>
+          figureTurnNow(combatState, characterId),
+        );
+  const figureDrag =
+    viewOnly || aiming
+      ? undefined
+      : editFigureDrag({
+          drag: playDrag,
+          editing,
+          tool: editor.tool,
+          clearCreature,
+          onOpen: (characterId) =>
+            windows.open({ kind: 'character', id: characterId }),
+        });
   const handleReady = useCallback(() => setReadySceneId(sceneId), [sceneId]);
   const tools = master && ready !== null && !viewOnly;
   const editTools = tools && editing;
@@ -330,14 +365,18 @@ function GameScenePage() {
   const moveMode = figures.figures?.mode ?? null;
   const freeMove = moveMode === 'free';
   // Выбранное на сцене важнее подсказки инструмента: плашка одна.
-  const plaque = plaqueState({
-    placing: play.tool.placing,
-    figure: play.tool.figure,
-    free: editing,
-    creature: play.tool.figure ? null : cards.selected,
-    creatureMoving: cards.walk.moving,
-    freeMove,
-  });
+  const plaque = aiming
+    ? null
+    : plaqueState({
+        placing: play.tool.placing,
+        figure: play.tool.figure,
+        free: editing,
+        creature: play.tool.figure ? null : cards.selected,
+        creatureMoving: cards.walk.moving,
+        freeMove,
+        outOfTurn,
+        master,
+      });
 
   const loader = (
     <div className={classes.placeholder}>
@@ -397,7 +436,11 @@ function GameScenePage() {
                     onCameraChange={rememberCamera}
                     resizePreview={null}
                     editor={sceneEditor}
-                    walk={viewOnly ? null : (play.walk ?? cards.walk.scene)}
+                    walk={
+                      viewOnly || aiming || outOfTurn
+                        ? null
+                        : (play.walk ?? cards.walk.scene)
+                    }
                     objectTool={
                       editTools && editor.tool === 'place'
                         ? objects.scene

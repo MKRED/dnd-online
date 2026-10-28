@@ -34,6 +34,15 @@ import { objectWalkKey, WalkMotion, type SceneWalks } from '../walks';
 
 const START_COLOR = '#d9a01e';
 const SELECTED_COLOR = '#4dabf7';
+const TARGET_COLOR = '#fa5252';
+
+// Цели атаки (docs/plan/combat.md, «Выбор цели»): существа в досягаемости обведены
+// красным, выбранная цель — ярче; щелчок по цели выбирает её в списке блока хода.
+export interface SceneAttackTargets {
+  ids: ReadonlySet<number>;
+  selectedId: number | null;
+  pick: (id: number) => void;
+}
 
 // Монстры и НПС на сцене игры (этап 8): метки здоровья и выбор щелчком.
 export interface SceneCreaturesView {
@@ -47,6 +56,8 @@ export interface SceneCreaturesView {
   // Есть — двойной щелчок по монстру или НПС открывает окно его карточки (мастер в
   // «Просмотре» «Правки», замечания после первой партии, 2026-10-26).
   onOpen?: (id: number) => void;
+  // Есть — идёт выбор цели атаки: щелчок по существу выбирает цель, а не карточку.
+  targets?: SceneAttackTargets | null;
 }
 
 interface ObjectLayerProps {
@@ -98,6 +109,25 @@ function SelectionFrame({ object }: { object: SceneObject }) {
         />
       )}
     </>
+  );
+}
+
+function TargetFrame({
+  object,
+  selected,
+}: {
+  object: SceneObject;
+  selected: boolean;
+}) {
+  const h = object.footprint / 2;
+  const [x, y, z] = object.base;
+  return (
+    <FrameBox
+      min={[x - h, y, z - h]}
+      max={[x + h, object.top, z + h]}
+      color={TARGET_COLOR}
+      opacity={selected ? 0.3 : 0.08}
+    />
   );
 }
 
@@ -165,8 +195,10 @@ function ObjectLayer({
   const tip = objects.find((object) => object.id === hovered);
   const selectedId = tool ? tool.selectedId : (creatures?.selectedId ?? null);
   const selected = objects.find((object) => object.id === selectedId);
-  // Щелчок по существу выбирает его, пока инструмент «Объекты» клик не забирает.
-  const pick = !tool && creatures?.onPick;
+  const targets = (!tool && creatures?.targets) || null;
+  // Щелчок по существу выбирает его, пока инструмент «Объекты» клик не забирает; при
+  // выборе цели атаки — выбирает цель.
+  const pick = !tool && (targets?.pick ?? creatures?.onPick);
   const pickObject = !tool && creatures?.onPickObject;
   const open = !tool && creatures?.onOpen;
   const healthOf = (id: number) => creatures?.health.get(id) ?? null;
@@ -264,6 +296,16 @@ function ObjectLayer({
         );
       })}
       {selected && <SelectionFrame object={selected} />}
+      {targets &&
+        objects
+          .filter((object) => targets.ids.has(object.id))
+          .map((object) => (
+            <TargetFrame
+              key={`target:${object.id}`}
+              object={object}
+              selected={object.id === targets.selectedId}
+            />
+          ))}
       {tip && (
         <Html
           position={[tip.base[0], tip.top + 0.3, tip.base[2]]}

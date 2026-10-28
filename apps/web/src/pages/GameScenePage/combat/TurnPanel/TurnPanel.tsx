@@ -2,13 +2,18 @@ import { Alert, Button, Loader, Text } from '@mantine/core';
 import { IconPlayerTrackNext } from '@tabler/icons-react';
 import { useState, type KeyboardEvent } from 'react';
 import type { GameCombatant } from 'shared';
+import { AttackWindow, type AttackWindowStart } from '../AttackWindow';
 import type { SceneCombat } from '../useSceneCombat';
+import AttackTargets from './AttackTargets';
+import PendingDamage from './PendingDamage';
 import ResourcePips from './ResourcePips';
 import TurnConfirm from './TurnConfirm';
 import TurnGroups from './TurnGroups';
+import WeaponSetSwitch from './WeaponSetSwitch';
+import { activeSet } from './attackTiles';
 import { slotsLine } from './slotsLine';
 import { spellLevels } from './spellLevels';
-import { turnTiles } from './turnTiles';
+import { turnTiles, type TurnState } from './turnTiles';
 import { useTurnKit, type TurnKitSource } from './useTurnKit';
 import classes from './TurnPanel.module.css';
 
@@ -46,15 +51,20 @@ function TurnPanel({
   const view = useTurnKit(gameId, source, version);
   const [chosen, setChosen] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
-  const tiles = view.kit
-    ? turnTiles(view.kit, {
-        resources: combatant.resources,
-        ownTurn,
-        dodging: combatant.dodging,
-        disengaged: combatant.disengaged,
-      })
-    : [];
+  const [attackWindow, setAttackWindow] = useState<AttackWindowStart | null>(
+    null,
+  );
+  const state: TurnState = {
+    resources: combatant.resources,
+    ownTurn,
+    dodging: combatant.dodging,
+    disengaged: combatant.disengaged,
+    attack: combatant.attack,
+  };
+  const tiles = view.kit ? turnTiles(view.kit, state) : [];
   const selected = tiles.find((t) => t.key === chosen) ?? null;
+  const set = view.kit ? activeSet(view.kit, state) : null;
+  const pending = combatant.attack?.pending ?? null;
   const levels = spellLevels(tiles, view.kit?.slots ?? null);
   // Ячейки кругов со своими заклинаниями стоят у подзаголовков, сверху — остальные.
   const slots = view.kit
@@ -111,8 +121,46 @@ function TurnPanel({
         onHover={setHovered}
         itemImage={view.itemImage}
         abilityImage={view.abilityImage}
+        attacksHead={
+          set && view.kit?.weaponSets?.both ? (
+            <WeaponSetSwitch
+              value={set}
+              blocked={
+                !ownTurn
+                  ? 'Сейчас не ваш ход'
+                  : !master && combatant.attack?.setSwitched
+                    ? 'Набор оружия уже переключали в этот ход'
+                    : null
+              }
+              busy={combat.busy}
+              onChange={(next) =>
+                void combat.setWeaponSet(combatant.id, next).then(done)
+              }
+            />
+          ) : null
+        }
       />
-      {selected ? (
+      {selected?.use.kind === 'attack' && !selected.block ? (
+        <AttackTargets
+          key={selected.key}
+          combatantId={combatant.id}
+          tile={selected}
+          attack={selected.use.attack}
+          combat={combat}
+          refresh={`${version}:${combat.combat?.eventSeq ?? 0}`}
+          onCancel={() => setChosen(null)}
+          onConfirm={(target) => {
+            if (selected.use.kind !== 'attack') return;
+            setAttackWindow({
+              kind: 'attack',
+              attack: selected.use.attack,
+              name: selected.name,
+              target,
+            });
+            setChosen(null);
+          }}
+        />
+      ) : selected ? (
         <TurnConfirm
           key={selected.key}
           tile={selected}
@@ -143,6 +191,12 @@ function TurnPanel({
           </Text>
         )
       )}
+      {pending && (
+        <PendingDamage
+          pending={pending}
+          onRoll={() => setAttackWindow({ kind: 'damage', pending })}
+        />
+      )}
       {combat.error && (
         <Text size="xs" c="red" role="alert">
           {combat.error}
@@ -154,10 +208,30 @@ function TurnPanel({
           variant="light"
           leftSection={<IconPlayerTrackNext size={15} />}
           loading={combat.busy}
+          disabled={pending !== null}
           onClick={() => void combat.endTurn(combatant.id)}
         >
           Закончить ход
         </Button>
+      )}
+      {attackWindow && (
+        <AttackWindow
+          combatantId={combatant.id}
+          attackerName={combatant.name}
+          start={attackWindow}
+          master={master}
+          onAttack={(mode) =>
+            attackWindow.kind === 'attack'
+              ? combat.attack(combatant.id, {
+                  attack: attackWindow.attack,
+                  target: attackWindow.target.ref,
+                  ...(mode === null ? {} : { mode }),
+                })
+              : Promise.reject(new Error('Атака уже брошена'))
+          }
+          onDamage={() => combat.damage(combatant.id)}
+          onClose={() => setAttackWindow(null)}
+        />
       )}
     </section>
   );

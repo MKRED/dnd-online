@@ -1,7 +1,10 @@
 import {
+  activeWeaponSet,
   gearAttacks,
   getAbilityModifier,
+  heroAttacks,
   wornGear,
+  type AttackOption,
   type Character,
   type Monster,
   type GameCreatureSpells,
@@ -23,23 +26,45 @@ export function unarmedTip(character: Character): string {
   return `Безоружный удар · действие «Атака» · ${signed(bonus)}, 5 фт · ${damage} дробящий`;
 }
 
-function weaponAttacks(character: Character): TurnKitAttack[] {
-  const attacks = gearAttacks(wornGear(character.inventory), {
+// Атаки НПС и монстров — этап 6: пока у НПС значки только с описанием.
+export const NPC_ATTACKS_LATER = 'Атаки НПС — на следующем этапе';
+
+// Атаки героя для значков (attackOptions.ts) с подсказкой, как в блоке «Атаки» листа;
+// приём оружия — только подписью (решение к этапу 5, вопрос 2).
+function heroAttackKit(character: Character): TurnKitAttack[] {
+  const gear = gearAttacks(wornGear(character.inventory), {
     abilityScores: character.abilityScores,
     proficiencyBonus: character.proficiencyBonus,
     weapons: character.proficiencies.weapons,
   });
-  return attacks.map((attack) => {
+  return heroAttacks(character).map((option: AttackOption) => {
+    const common = {
+      key: option.key,
+      name: option.name,
+      spend: option.spend,
+      set: option.set,
+      unavailable: option.unavailable,
+    };
+    const attack = gear.find((a) => a.weapon.slot === option.key);
+    if (!attack) {
+      return {
+        ...common,
+        tip: unarmedTip(character),
+        image: null,
+        icon: 'punch',
+      };
+    }
     const view = attackView(attack, character.weaponMasteries);
     const row = character.inventory.find((e) =>
       e.equipped.includes(attack.weapon.slot),
     );
     return {
-      key: view.key,
-      name: view.name,
-      tip: `${view.name} · ${view.place} · ${view.bonus} · ${view.damage}`,
-      bonusAction: attack.lightBonus,
+      ...common,
+      tip: [view.name, view.place, view.bonus, view.damage, view.mastery]
+        .filter(Boolean)
+        .join(' · '),
       image: row?.item ? { id: row.item.id, image: row.item.image } : null,
+      icon: 'weapon',
     };
   });
 }
@@ -51,9 +76,18 @@ export function characterKit(
   instance?: GameCreatureSpells | null,
 ): TurnKit {
   const prepared = instance?.prepared ?? {};
+  const attacks = heroAttackKit(character);
+  const npc = instance !== undefined;
+  const has = (set: string) => attacks.some((a) => a.set === set);
   return {
-    attacks: weaponAttacks(character),
-    unarmed: unarmedTip(character),
+    attacks,
+    attackNote: npc ? NPC_ATTACKS_LATER : null,
+    weaponSets: npc
+      ? null
+      : {
+          initial: activeWeaponSet(null, wornGear(character.inventory)),
+          both: has('melee') && has('ranged'),
+        },
     abilities: character.abilities.flatMap((e) =>
       e.ability
         ? [
@@ -73,7 +107,8 @@ export function characterKit(
 export function monsterKit(monster: Monster): TurnKit {
   return {
     attacks: [],
-    unarmed: null,
+    attackNote: null,
+    weaponSets: null,
     abilities: (monster.abilities ?? []).flatMap((e) =>
       e.ability ? [{ id: e.id, prepared: null, ability: e.ability }] : [],
     ),

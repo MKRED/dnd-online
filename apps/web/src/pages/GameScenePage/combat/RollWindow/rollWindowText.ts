@@ -18,6 +18,14 @@ export function termAmount(term: RollTerm | RollTermInput): string {
   return `${signed(term.amount)} (${dice}: ${term.rolls.join(', ')})`;
 }
 
+// Переключатель мастера: по правилам или как он решил.
+export const MASTER_MODES = [
+  { value: 'rules', label: 'По правилам' },
+  { value: 'advantage', label: 'Преимущество' },
+  { value: 'normal', label: 'Обычный' },
+  { value: 'disadvantage', label: 'Помеха' },
+];
+
 // Причины по правилам одной строкой: «Преимущество: Благословение · Помеха: Врасплох».
 export function reasonsText(reasons: RollReasons): string | null {
   const parts = [

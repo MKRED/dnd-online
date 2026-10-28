@@ -1,10 +1,6 @@
 import { Fieldset, Stack } from '@mantine/core';
 import { useMemo } from 'react';
-import {
-  monsterTotals,
-  type CharacterEffectEntry,
-  type Monster,
-} from 'shared';
+import { monsterTotals, type CharacterEffectEntry, type Monster } from 'shared';
 import {
   AppliedEffectList,
   effectRows,

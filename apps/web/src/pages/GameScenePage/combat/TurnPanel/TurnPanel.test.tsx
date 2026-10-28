@@ -1,6 +1,11 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { NO_ABILITY_COSTS, type Character, type GameCombatant } from 'shared';
+import {
+  NO_ABILITY_COSTS,
+  type AttackTarget,
+  type Character,
+  type GameCombatant,
+} from 'shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleCharacter } from '../../../../test/characterFixture';
 import { renderWithProviders } from '../../../../test/render';
@@ -53,9 +58,42 @@ const combatant: GameCombatant & {
   },
   dodging: false,
   disengaged: false,
+  attack: null,
 };
 
-function renderPanel(ownTurn = true, master = false) {
+const target = (over: Partial<AttackTarget>): AttackTarget => ({
+  ref: { kind: 'creature', objectId: 2 },
+  name: 'Гоблин',
+  ally: false,
+  distance: 5,
+  band: 'normal',
+  cover: 'none',
+  roll: { terms: [], reasons: { advantage: [], disadvantage: [] } },
+  armorClass: null,
+  ...over,
+});
+
+const TARGETS = [
+  target({
+    cover: 'half',
+    roll: {
+      terms: [],
+      reasons: { advantage: ['Опрокинутый'], disadvantage: [] },
+    },
+  }),
+  target({
+    ref: { kind: 'creature', objectId: 3 },
+    name: 'Трактирщик',
+    distance: 10,
+    band: 'out',
+  }),
+];
+
+function renderPanel(
+  ownTurn = true,
+  master = false,
+  attack: GameCombatant['attack'] = null,
+) {
   vi.stubGlobal(
     'fetch',
     vi.fn<typeof fetch>(() => json(character)),
@@ -67,11 +105,16 @@ function renderPanel(ownTurn = true, master = false) {
     applyAbility: vi.fn(() => Promise.resolve(true)),
     setResources: vi.fn(() => Promise.resolve(true)),
     endTurn: vi.fn(() => Promise.resolve(true)),
+    setWeaponSet: vi.fn(() => Promise.resolve(true)),
+    targets: vi.fn(() => Promise.resolve(TARGETS)),
+    attack: vi.fn(),
+    damage: vi.fn(),
+    combat: null,
   };
   renderWithProviders(
     <TurnPanel
       gameId="g1"
-      combatant={combatant}
+      combatant={{ ...combatant, attack }}
       ownTurn={ownTurn}
       waiting={ownTurn ? null : 'Ходит Гоблин'}
       source={{ kind: 'figure', characterId: character.id }}
@@ -139,5 +182,54 @@ describe('TurnPanel', () => {
     );
     await userEvent.click(screen.getByRole('menuitem', { name: '0 из 1' }));
     expect(combat.setResources).toHaveBeenCalledWith('c1', { actionsUsed: 1 });
+  });
+
+  it('атака: список целей, подтверждение открывает окно броска', async () => {
+    const combat = renderPanel();
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Безоружный удар' }),
+    );
+    expect(combat.targets).toHaveBeenCalledWith('c1', 'unarmed');
+    expect(await screen.findByText('5 фт. · укрытие ½')).toBeInTheDocument();
+    // Вне досягаемости — бледная строка, не выбрать.
+    expect(screen.getByRole('button', { name: /Трактирщик/ })).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: /Гоблин/ }));
+    expect(screen.getByText('Преимущество: Опрокинутый')).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Подтвердить атаку' }),
+    );
+    // Подтверждение ничего не бросает: бросок — в окне.
+    expect(combat.attack).not.toHaveBeenCalled();
+    expect(
+      await screen.findByRole('button', { name: 'Бросить кубик' }),
+    ).toBeInTheDocument();
+  });
+
+  it('попадание без урона: строка с «Бросить урон», конца хода нет', async () => {
+    renderPanel(true, false, {
+      weaponSet: null,
+      setSwitched: false,
+      handSwapped: false,
+      lightAttacked: false,
+      pending: {
+        attack: 'unarmed',
+        name: 'Безоружный удар',
+        target: { ref: { kind: 'creature', objectId: 2 }, name: 'Гоблин' },
+        critical: false,
+        damage: [],
+      },
+    });
+    expect(
+      await screen.findByText('Попадание: Безоружный удар → Гоблин'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Закончить ход' }),
+    ).toBeDisabled();
+    await userEvent.click(
+      await screen.findByRole('button', { name: /^Безоружный удар — / }),
+    );
+    expect(
+      screen.getByText('Сначала бросьте урон по прошлому попаданию'),
+    ).toBeInTheDocument();
   });
 });

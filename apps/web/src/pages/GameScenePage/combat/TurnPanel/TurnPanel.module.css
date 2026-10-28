@@ -169,3 +169,81 @@ button.pip:hover {
   padding-top: 8px;
   border-top: 1px solid var(--mantine-color-default-border);
 }
+
+/* Заголовок «Атаки» с переключателем «Ближний | Дальний» справа (этап 5, вариант Б). */
+.groupHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Список целей атаки: строка — имя и «5 фт. · укрытие ½»; вне досягаемости — бледная. */
+.targets {
+  display: grid;
+  gap: 2px;
+}
+
+.target {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--mantine-radius-sm);
+  background: none;
+  color: var(--mantine-color-text);
+  font: inherit;
+  font-size: var(--mantine-font-size-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.target:hover:not(:disabled),
+.target:focus-visible {
+  background: var(--mantine-color-default-hover);
+}
+
+.target[aria-pressed='true'] {
+  border-color: var(--mantine-color-red-filled);
+  background: var(--mantine-color-red-light);
+}
+
+.target[data-out] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.targetName {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.targetMeta {
+  flex: none;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.targetConfirm {
+  display: grid;
+  gap: 6px;
+  padding: 6px 6px 4px;
+}
+
+/* Попадание без брошенного урона: строка с кнопкой над «Закончить ход». */
+.pending {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-red-light);
+}

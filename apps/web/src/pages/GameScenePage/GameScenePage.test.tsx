@@ -224,6 +224,7 @@ const LIRA_COMBATANT: GameCombatant = {
   resources: null,
   dodging: false,
   disengaged: false,
+  attack: null,
 };
 
 // Бой с очерёдностью: без участников мастер видит Лиру среди кандидатов.

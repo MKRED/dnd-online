@@ -9,17 +9,17 @@ export const ROLL_SPIN_MS = 900;
 // Как часто мелькает число на грани, пока кость крутится.
 const FLICKER_MS = 70;
 
-export type DiceRollPhase =
+export type DiceRollPhase<T = D20Roll> =
   | { kind: 'ready'; error: string | null }
   | { kind: 'rolling'; face: number }
-  | { kind: 'done'; roll: D20Roll };
+  | { kind: 'done'; roll: T };
 
 // Бросок в окне: кнопка шлёт запрос и крутит кость, пока не придут и ответ, и конец
-// анимации. Ошибка возвращает окно к кнопке.
-export function useDiceRoll(
-  onRoll: (mode: RollMode | null) => Promise<D20Roll>,
+// анимации. Ошибка возвращает окно к кнопке. T — ответ сервера: бросок к20 или атака с ним.
+export function useDiceRoll<T = D20Roll>(
+  onRoll: (mode: RollMode | null) => Promise<T>,
 ) {
-  const [phase, setPhase] = useState<DiceRollPhase>({
+  const [phase, setPhase] = useState<DiceRollPhase<T>>({
     kind: 'ready',
     error: null,
   });
@@ -54,7 +54,7 @@ export function useDiceRoll(
         if (alive.current) setPhase({ kind: 'done', roll: result });
       })
       .catch((err: unknown) => {
-        console.error('Failed to roll initiative', err);
+        console.error('Failed to roll the die', err);
         if (alive.current) {
           setPhase({
             kind: 'ready',

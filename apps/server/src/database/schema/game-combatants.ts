@@ -6,11 +6,12 @@ import {
   integer,
   jsonb,
   pgTable,
+  text,
   timestamp,
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
-import type { D20Roll } from 'shared';
+import type { D20Roll, PendingDamage, WeaponSet } from 'shared';
 import { characters } from './characters.js';
 import { gameScenes } from './game-scenes.js';
 import { games } from './games.js';
@@ -51,6 +52,14 @@ export const gameCombatants = pgTable(
     reactionsUsed: integer('reactions_used').notNull().default(0),
     dodging: boolean('dodging').notNull().default(false),
     disengaged: boolean('disengaged').notNull().default(false),
+    // Атаки (этап 5): выбранный набор оружия (null — по умолчанию) и что было в этот ход —
+    // переключение набора, бесплатная смена в руке, атака Лёгким основной рукой; попадание
+    // с ещё не брошенным уроном. Начало своего хода обнуляет всё, кроме набора.
+    weaponSet: text('weapon_set').$type<WeaponSet>(),
+    setSwitched: boolean('set_switched').notNull().default(false),
+    handSwapped: boolean('hand_swapped').notNull().default(false),
+    lightAttacked: boolean('light_attacked').notNull().default(false),
+    pendingDamage: jsonb('pending_damage').$type<PendingDamage>(),
     joinedAt: timestamp('joined_at', { withTimezone: true })
       .notNull()
       .default(sql`clock_timestamp()`),
@@ -62,6 +71,10 @@ export const gameCombatants = pgTable(
     check(
       'game_combatants_ref',
       sql`(${table.characterId} is null) <> (${table.objectId} is null)`,
+    ),
+    check(
+      'game_combatants_weapon_set',
+      sql`${table.weaponSet} in ('melee', 'ranged')`,
     ),
   ],
 );

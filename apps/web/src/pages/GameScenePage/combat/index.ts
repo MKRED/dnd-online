@@ -5,3 +5,4 @@ export type { TurnBlocks } from './turnBlocks';
 export { useCombatUi } from './useCombatUi';
 export { useSceneCombat, type SceneCombat } from './useSceneCombat';
 export { figureTurnNow, turnFigureDrag } from './turnGate';
+export { AttackTargetingContext } from './AttackTargetingContext';

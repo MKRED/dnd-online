@@ -7,6 +7,7 @@ import { assertMaster, drives, type CombatActor } from './combat-actor.js';
 import {
   COMBAT_NOT_STARTED,
   COMBATANT_NOT_FOUND,
+  DAMAGE_PENDING,
   TURN_NOT_ROLLED,
   TURN_NOT_STARTED,
   TURN_NOT_YOURS,
@@ -28,6 +29,8 @@ export async function endTurn(actor: CombatActor, combatantId: string) {
   if (state.turn !== combatantId) throw new ConflictException(TURN_PASSED);
   const current = state.combatants.find((c) => c.row.id === state.turn)!;
   if (!drives(actor, current)) throw new ForbiddenException(TURN_NOT_YOURS);
+  // Попадание без брошенного урона держит ход (этап 5); мастер может передать ход сам.
+  if (current.row.pendingDamage) throw new ConflictException(DAMAGE_PENDING);
   await advanceTurn(actor, state, 'end');
 }
 

@@ -7,6 +7,7 @@ import {
   EQUIP_COMBAT_ARMOR,
   EQUIP_COMBAT_ATTUNE,
   equipCost,
+  handChangeCost,
   WEAPON_SWAP_COST,
 } from './equipmentInPlay.js';
 import type { ItemVariant } from './items.js';
@@ -81,5 +82,14 @@ describe('экипировка во время встречи', () => {
     expect(combatEquipProblem('tactical', ring)).toBeNull();
     expect(combatAttuneProblem('tactical')).toBe(EQUIP_COMBAT_ATTUNE);
     expect(combatAttuneProblem('free')).toBeNull();
+  });
+
+  it('в руке: первая смена оружия бесплатно, дальше действие; щит — всегда действие', () => {
+    expect(handChangeCost('meleeMain', [sword, null], false)).toBe('free');
+    expect(handChangeCost('meleeMain', [sword], true)).toBe('action');
+    expect(handChangeCost('meleeOff', [shield], false)).toBe('action');
+    expect(handChangeCost('meleeOff', [sword, shield], false)).toBe('action');
+    expect(handChangeCost('ring1', [ring], false)).toBeNull();
+    expect(handChangeCost('meleeMain', [null], false)).toBeNull();
   });
 });

@@ -85,7 +85,7 @@ export const ACTION_NAMES: Record<CombatAction, string> = {
 
 const signed = (n: number) => (n < 0 ? `−${-n}` : `+${n}`);
 
-function termText(term: RollTerm): string {
+export function termText(term: RollTerm): string {
   if (term.kind === 'number') return `${term.label} ${signed(term.amount)}`;
   const sign = term.sign < 0 ? '−' : '+';
   return `${term.label} ${sign}${term.count}к${term.die} (${term.rolls.join(', ')})`;

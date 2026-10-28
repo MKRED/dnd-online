@@ -27,6 +27,7 @@ import CameraRig from './CameraRig';
 import CameraWatch from './CameraWatch';
 import CursorReadout from './CursorReadout';
 import { createHoverStore, type HoverStore } from './hoverStore';
+import { createAimStore, TargetBeam } from './targets';
 import EditLayer from './EditLayer';
 import FigureLayer, {
   type FigureDragHandlers,
@@ -140,6 +141,8 @@ function MapScene({
   const scheme = useComputedColorScheme('dark');
   const [ownHover] = useState(createHoverStore);
   const hover = pageHover ?? ownHover;
+  const [aim] = useState(createAimStore);
+  const targets = (!objectTool && creatures?.targets) || null;
   // Миниатюры объектов догрузились (или не загрузились) — только после этого первый
   // кадр считается готовым, иначе на снимке пустые карточки.
   const [imagesSettled, setImagesSettled] = useState(false);
@@ -207,6 +210,7 @@ function MapScene({
                 creatures={creatures}
                 fog={fog}
                 walks={walks}
+                aim={targets ? aim : undefined}
               />
               {figures && (
                 <FigureLayer
@@ -215,7 +219,17 @@ function MapScene({
                   cutY={cutY}
                   ghosts={figureGhosts}
                   walks={walks}
+                  targets={targets}
+                  aim={targets ? aim : undefined}
                   {...figureDrag}
+                />
+              )}
+              {targets?.ranged && (
+                <TargetBeam
+                  map={map}
+                  targets={targets}
+                  aim={aim}
+                  hover={hover}
                 />
               )}
             </HealthMarkStyleContext>

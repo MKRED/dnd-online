@@ -8,6 +8,7 @@ import {
   applyHitPoints,
   creatureTotals,
   type GameCreatureChange,
+  type GameEventAs,
 } from 'shared';
 import { visibleEntry } from '../../catalog/catalog-access.js';
 import {
@@ -64,10 +65,12 @@ const eventCreature = (creature: SceneCreature) => ({
   name: creature.name,
 });
 
+// as — от чьего имени запись: правка мастера или урон атаки героя (этап 5 боя).
 export async function changeCreature(
   actor: CreatureActor,
   objectId: number,
   change: GameCreatureChange,
+  as: GameEventAs = { kind: 'master' },
 ): Promise<void> {
   const { tx } = actor;
   const creature = await findCreature(actor, objectId);
@@ -95,7 +98,7 @@ export async function changeCreature(
   await appendGameEvent(tx, actor.gameId, {
     kind: 'creature.changed',
     actorId: actor.userId,
-    as: { kind: 'master' },
+    as,
     sceneId: actor.sceneId,
     intent: { objectId, change },
     result: {

@@ -33,6 +33,8 @@ import { creatureSpells } from './creature-spell-state.js';
 export interface SceneCreature {
   objectId: number;
   kind: 'monster' | 'npc';
+  // Чья копия в библиотеке: id монстра или персонажа-НПС в каталоге.
+  sourceId: string;
   at: Vec3;
   hidden: boolean;
   name: string;
@@ -94,6 +96,7 @@ export async function loadSceneCreatures(
     return {
       objectId: object.id,
       kind: object.kind === 'monster' ? 'monster' : 'npc',
+      sourceId: sourceOf(object),
       at: [object.x, object.y, object.z],
       hidden: object.hidden,
       name: copy?.name ?? 'Неизвестное существо',

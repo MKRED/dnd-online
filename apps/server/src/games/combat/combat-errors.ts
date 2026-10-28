@@ -38,3 +38,23 @@ export const slotLevelNeeded = (min: number) =>
   `Выберите круг ячейки — не ниже ${min}`;
 export const noFreeSlot = (level: number) =>
   `Свободных ячеек ${level} круга нет`;
+// Атаки героев (этап 5).
+export const ATTACK_HEROES_ONLY =
+  'Пока атакуют только герои: атаки монстров и НПС — следующий этап';
+export const ATTACK_NOT_IN_SET = 'Этой атаки нет в активном наборе оружия';
+export const ATTACK_NEEDS_LIGHT =
+  'Второй рукой — после атаки Лёгким оружием основной руки в этом ходу';
+export const DAMAGE_PENDING = 'Сначала бросьте урон по прошлому попаданию';
+export const NO_PENDING_DAMAGE = 'Нет попадания, по которому бросить урон';
+export const TARGET_NOT_FOUND = 'Такой цели на сцене нет';
+export const TARGET_SELF = 'Атаковать самого себя нельзя';
+export const TARGET_DOWN = 'Цель уже повержена';
+export const TARGET_TOTAL_COVER = 'Цель за полным укрытием';
+export const targetOutOfReach = (reach: string) =>
+  `Цель вне досягаемости: ${reach}`;
+export const WEAPON_SET_SWITCHED = 'Набор оружия уже переключали в этот ход';
+export const WEAPON_SET_SAME = 'Этот набор уже выбран';
+export const HAND_NOT_YOUR_TURN =
+  'В бою оружие и щит в руках меняют только в свой ход';
+export const NO_ACTIONS_FOR_SWAP =
+  'Действий больше нет: вторая смена оружия за ход и щит стоят действие';

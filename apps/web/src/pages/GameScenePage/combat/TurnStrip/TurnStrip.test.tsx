@@ -28,6 +28,7 @@ function entry(
       resources: null,
       dodging: false,
       disengaged: false,
+      attack: null,
       ...more,
     },
     id,

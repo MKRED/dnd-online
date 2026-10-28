@@ -169,3 +169,63 @@ button.pip:hover {
   padding-top: 8px;
   border-top: 1px solid var(--mantine-color-default-border);
 }
+
+/* Заголовок «Атаки» с переключателем «Ближний | Дальний» справа (этап 5, вариант Б). */
+.groupHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Выбор цели — на сцене; здесь подсказка, пока цель не выбрана (ответ 1А). */
+.targetHint {
+  padding: 6px 8px;
+  border: 1px dashed var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+}
+
+/* Карточка выбранной цели: имя, «5 фт. · укрытие ½», причины и подтверждение. */
+.targetName {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.targetMeta {
+  flex: none;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.targetConfirm {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--mantine-color-red-filled);
+  border-radius: var(--mantine-radius-sm);
+}
+
+/* Попадание без брошенного урона: строка с кнопкой над «Закончить ход». */
+.pending {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-red-light);
+}
+
+.pending > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.pending > :last-child {
+  flex: none;
+}

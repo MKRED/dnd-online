@@ -1,10 +1,9 @@
 import { SegmentedControl, Stack } from '@mantine/core';
 import { useMemo, useState, type ReactNode } from 'react';
-import type { Monster, MonsterEffectEntry } from 'shared';
+import { monsterTotals, type Monster, type MonsterEffectEntry } from 'shared';
 import { EffectLinksStrip, EffectSummary } from '../../characters';
 import MonsterHeader from './MonsterHeader';
 import MonsterStats from './MonsterStats';
-import { monsterTotals } from './monsterTotals';
 
 interface MonsterTopProps {
   monster: Monster;

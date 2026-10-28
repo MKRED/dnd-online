@@ -100,3 +100,6 @@ export * from './d20Roll.js';
 export * from './initiative.js';
 export * from './game-combat.js';
 export * from './combatAbilityUse.js';
+export * from './attack/index.js';
+export * from './monsterTotals.js';
+export * from './game-combat-attack.js';

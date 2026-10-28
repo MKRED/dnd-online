@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
+  AttackKey,
+  AttackTarget,
   CombatAbilityInput,
   CombatAction,
+  CombatAttackInput,
   CombatantInput,
   CombatResourcesInput,
   D20Roll,
   GameCombat,
+  GameCombatAttack,
+  GameCombatDamage,
   RollMode,
+  WeaponSet,
 } from 'shared';
 import { combatApi, getGameCombat } from '../../../features/games';
 import { ApiError, errorMessage } from '../../../lib/apiRequest';
@@ -71,6 +77,32 @@ export function useSceneCombat(gameId: string, sceneId: string | null) {
     [api, apply],
   );
 
+  // Атака и урон для окна броска (этап 5): ошибку показывает окно, очередь — сразу.
+  const attack = useCallback(
+    async (
+      combatantId: string,
+      input: CombatAttackInput,
+    ): Promise<GameCombatAttack> => {
+      const result = await api.attack(combatantId, input);
+      apply(result.combat);
+      return result;
+    },
+    [api, apply],
+  );
+  const damage = useCallback(
+    async (combatantId: string): Promise<GameCombatDamage> => {
+      const result = await api.damage(combatantId);
+      apply(result.combat);
+      return result;
+    },
+    [api, apply],
+  );
+  const targets = useCallback(
+    (combatantId: string, key: AttackKey): Promise<AttackTarget[]> =>
+      api.targets(combatantId, key),
+    [api],
+  );
+
   const current = loaded?.sceneId === sceneId ? loaded : null;
   return {
     combat: current,
@@ -79,6 +111,9 @@ export function useSceneCombat(gameId: string, sceneId: string | null) {
     error,
     clearError: () => setError(null),
     roll,
+    attack,
+    damage,
+    targets,
     start: (participants: CombatantInput[]) =>
       run(() => api.start(participants), 'Не удалось начать бой'),
     join: (participants: CombatantInput[]) =>
@@ -109,6 +144,8 @@ export function useSceneCombat(gameId: string, sceneId: string | null) {
         () => api.applyAbility(id, input),
         'Не удалось применить способность',
       ),
+    setWeaponSet: (id: string, set: WeaponSet) =>
+      run(() => api.weaponSet(id, set), 'Не удалось сменить набор оружия'),
   };
 }
 

@@ -10,8 +10,10 @@ import {
   freeSlotLevels,
   turnTiles,
   type TurnKit,
+  type TurnKitAttack,
   type TurnState,
 } from './turnTiles';
+import { DAMAGE_PENDING, OFF_HAND_AFTER_LIGHT } from './attackTiles';
 
 const card = (over: Partial<AbilityLinkCard>): AbilityLinkCard => ({
   id: 'cat',
@@ -50,20 +52,34 @@ const state = (over: Partial<TurnState> = {}): TurnState => ({
   ownTurn: true,
   dodging: false,
   disengaged: false,
+  attack: null,
+  ...over,
+});
+
+const attack = (
+  key: TurnKitAttack['key'],
+  name: string,
+  over: Partial<TurnKitAttack> = {},
+): TurnKitAttack => ({
+  key,
+  name,
+  tip: name,
+  spend: 'action',
+  set: null,
+  unavailable: null,
+  ranged: false,
+  image: null,
+  icon: 'weapon',
   ...over,
 });
 
 const KIT: TurnKit = {
   attacks: [
-    {
-      key: 'main',
-      name: 'Длинный меч',
-      tip: 'Длинный меч · +5',
-      bonusAction: false,
-      image: null,
-    },
+    attack('meleeMain', 'Длинный меч', { set: 'melee' }),
+    attack('unarmed', 'Безоружный удар', { icon: 'punch' }),
   ],
-  unarmed: 'Безоружный удар · +3',
+  attackNote: null,
+  weaponSets: { initial: 'melee', both: false },
   abilities: [
     { id: 'l1', prepared: null, ability: card({ name: 'Второе дыхание' }) },
     {
@@ -108,11 +124,14 @@ describe('turnTiles', () => {
     ]);
   });
 
-  it('атаки пока только описывают, заклинания несут свой круг', () => {
+  it('атака открывает список целей, заклинания несут свой круг', () => {
     const tiles = byName(turnTiles(KIT, state()));
-    expect(tiles.get('Длинный меч')?.use).toEqual({ kind: 'info' });
-    expect(tiles.get('Длинный меч')?.block).not.toBeNull();
-    expect(tiles.get('Длинный меч')?.level).toBeNull();
+    expect(tiles.get('Длинный меч')).toMatchObject({
+      use: { kind: 'attack', attack: 'meleeMain', ranged: false },
+      cost: 'action',
+      block: null,
+      level: null,
+    });
     expect(tiles.get('Огненный снаряд')?.level).toBe(0);
     expect(tiles.get('Щит')).toMatchObject({
       level: 1,
@@ -151,7 +170,13 @@ describe('turnTiles', () => {
 
   it('у монстра без ячеек заклинание не просит ячейку', () => {
     const tiles = turnTiles(
-      { attacks: [], unarmed: null, abilities: KIT.abilities, slots: null },
+      {
+        attacks: [],
+        attackNote: null,
+        weaponSets: null,
+        abilities: KIT.abilities,
+        slots: null,
+      },
       state(),
     );
     const fireball = tiles.find((t) => t.name === 'Палящий луч');
@@ -162,6 +187,94 @@ describe('turnTiles', () => {
     });
     expect(fireball?.block).toBeNull();
     expect(tiles.some((t) => t.name === 'Безоружный удар')).toBe(false);
+  });
+});
+
+describe('значки атак', () => {
+  const ATTACK_KIT: TurnKit = {
+    ...KIT,
+    abilities: [],
+    attacks: [
+      attack('meleeMain', 'Кинжал', { set: 'melee' }),
+      attack('meleeOff', 'Кинжал, вторая рука', {
+        set: 'melee',
+        spend: 'bonus_action',
+      }),
+      attack('rangedMain', 'Длинный лук', { set: 'ranged' }),
+      attack('unarmed', 'Безоружный удар'),
+    ],
+    weaponSets: { initial: 'melee', both: true },
+  };
+  const attackState = (over: Partial<NonNullable<TurnState['attack']>>) =>
+    state({
+      attack: {
+        weaponSet: null,
+        setSwitched: false,
+        handSwapped: false,
+        lightAttacked: false,
+        pending: null,
+        ...over,
+      },
+    });
+  const names = (s: TurnState) =>
+    turnTiles(ATTACK_KIT, s)
+      .filter((t) => t.group === 'attacks')
+      .map((t) => t.name);
+
+  it('видны атаки активного набора и безоружный удар', () => {
+    expect(names(attackState({}))).toEqual([
+      'Кинжал',
+      'Кинжал, вторая рука',
+      'Безоружный удар',
+    ]);
+    expect(names(attackState({ weaponSet: 'ranged' }))).toEqual([
+      'Длинный лук',
+      'Безоружный удар',
+    ]);
+  });
+
+  it('вторая рука — после атаки Лёгким, всё ждёт брошенного урона', () => {
+    const off = (s: TurnState) =>
+      byName(turnTiles(ATTACK_KIT, s)).get('Кинжал, вторая рука')?.block;
+    expect(off(attackState({}))).toBe(OFF_HAND_AFTER_LIGHT);
+    expect(off(attackState({ lightAttacked: true }))).toBeNull();
+    const pending = byName(
+      turnTiles(
+        ATTACK_KIT,
+        attackState({
+          pending: {
+            attack: 'meleeMain',
+            name: 'Кинжал',
+            target: { ref: { kind: 'creature', objectId: 2 }, name: 'Гоблин' },
+            critical: false,
+            damage: [],
+          },
+        }),
+      ),
+    );
+    expect(pending.get('Безоружный удар')?.block).toBe(DAMAGE_PENDING);
+  });
+
+  it('у НПС атаки только описаны; недоступная — со своей причиной', () => {
+    const npc = byName(
+      turnTiles(
+        {
+          ...ATTACK_KIT,
+          attackNote: 'Атаки НПС — на следующем этапе',
+          weaponSets: null,
+          attacks: [
+            ...ATTACK_KIT.attacks,
+            attack('rangedOff', 'Дротик', { unavailable: 'Пока нельзя' }),
+          ],
+        },
+        state(),
+      ),
+    );
+    expect(npc.get('Длинный лук')).toMatchObject({
+      use: { kind: 'info' },
+      block: 'Атаки НПС — на следующем этапе',
+    });
+    expect(npc.get('Дротик')?.block).toBe('Пока нельзя');
   });
 });
 

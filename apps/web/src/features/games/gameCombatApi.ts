@@ -1,15 +1,21 @@
 import type {
+  AttackKey,
+  AttackTarget,
   CombatAbilityInput,
   CombatAction,
+  CombatAttackInput,
   CombatantInput,
   CombatResourcesInput,
   GameCombat,
+  GameCombatAttack,
+  GameCombatDamage,
   GameCombatRoll,
   RollMode,
+  WeaponSet,
 } from 'shared';
 import { apiRequest as request } from '../../lib/apiRequest';
 
-// Бой с очерёдностью на активной сцене (docs/plan/combat.md, этапы 2–4). Правки отвечают
+// Бой с очерёдностью на активной сцене (docs/plan/combat.md, этапы 2–5). Правки отвечают
 // очередью глазами того, кто правил.
 
 const combatBase = (gameId: string) => `/games/${gameId}/combat`;
@@ -56,6 +62,22 @@ export function combatApi(gameId: string) {
     // «Применить» способность: тратит действие её вида и ячейку круга slotLevel.
     applyAbility: (combatantId: string, input: CombatAbilityInput) =>
       post(`${base}/combatants/${combatantId}/abilities`, input),
+    // Атаки героя (этап 5): цели под значком, бросок атаки, урон, набор оружия.
+    targets: (combatantId: string, attack: AttackKey) =>
+      request<AttackTarget[]>(
+        `${base}/combatants/${combatantId}/targets?attack=${attack}`,
+      ),
+    attack: (combatantId: string, input: CombatAttackInput) =>
+      request<GameCombatAttack>(`${base}/combatants/${combatantId}/attack`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    damage: (combatantId: string) =>
+      request<GameCombatDamage>(`${base}/combatants/${combatantId}/damage`, {
+        method: 'POST',
+      }),
+    weaponSet: (combatantId: string, set: WeaponSet) =>
+      put(`${base}/combatants/${combatantId}/weapon-set`, { set }),
   };
 }
 

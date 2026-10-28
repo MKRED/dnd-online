@@ -3,12 +3,16 @@ import {
   spendBlock,
   turnSpendOf,
   type AbilityLinkCard,
+  type AttackKey,
   type CatalogImage,
   type CombatAction,
+  type CombatantAttackState,
   type CombatantResources,
   type SpellSlots,
   type TurnSpend,
+  type WeaponSet,
 } from 'shared';
+import { attackTiles } from './attackTiles';
 import type { GameIconName } from './gameIcons';
 
 // Значки блока «Ваш ход» (docs/plan/combat.md, этап 4, вариант Г): атаки из оружия в руках
@@ -24,11 +28,13 @@ export const TILE_GROUP_LABELS: Record<TileGroup, string> = {
   actions: 'Действия',
 };
 
-// Что делает «подтверждение»: обычное действие, «Применить» способность или ничего (атаки
-// оружием — на этапе 5, пока только описание).
+// Что делает «подтверждение»: обычное действие, «Применить» способность, атака со списком
+// целей (этап 5) или ничего (атаки НПС — до этапа 6 только описание).
 export type TileUse =
   | { kind: 'action'; action: CombatAction }
   | { kind: 'ability'; abilityId: string; slotMin: number | null }
+  // ranged — дальнобойная: на сцене луч от героя к курсору.
+  | { kind: 'attack'; attack: AttackKey; ranged: boolean }
   | { kind: 'info' };
 
 export interface TurnTile {
@@ -49,11 +55,17 @@ export interface TurnTile {
 }
 
 export interface TurnKitAttack {
-  key: string;
+  key: AttackKey;
   name: string;
   tip: string;
-  bonusAction: boolean;
+  spend: 'action' | 'bonus_action';
+  // Набор куклы; безоружный удар — вне наборов.
+  set: WeaponSet | null;
+  ranged: boolean;
+  // Почему этой атакой нельзя совсем (метательное, вторая рука не Лёгкая); null — можно.
+  unavailable: string | null;
   image: { id: string; image: CatalogImage | null } | null;
+  icon: GameIconName;
 }
 
 export interface TurnKitAbility {
@@ -63,9 +75,13 @@ export interface TurnKitAbility {
 }
 
 export interface TurnKit {
+  // Оружие в руках куклы и безоружный удар; у монстра пусто (его атаки — в стат-блоке).
   attacks: TurnKitAttack[];
-  // Строка безоружного удара; null — у монстра (его атаки — в стат-блоке).
-  unarmed: string | null;
+  // Почему атаки только описаны (НПС до этапа 6); null — ими атакуют.
+  attackNote: string | null;
+  // Набор, пока его не выбирали, и есть ли оружие обоих наборов (тогда виден
+  // переключатель «Ближний | Дальний»); null — наборов нет, видны все атаки.
+  weaponSets: { initial: WeaponSet; both: boolean } | null;
   abilities: TurnKitAbility[];
   // Ячейки; null — их нет (монстр: заклинания в день пока не считаются).
   slots: SpellSlots | null;
@@ -76,6 +92,7 @@ export interface TurnState {
   ownTurn: boolean;
   dodging: boolean;
   disengaged: boolean;
+  attack: CombatantAttackState | null;
 }
 
 const ACTIONS: {
@@ -104,37 +121,10 @@ const ACTIONS: {
   },
 ];
 
-const ATTACK_LATER = 'Атаковать можно будет со следующим этапом';
-
 export function turnTiles(kit: TurnKit, state: TurnState): TurnTile[] {
   const block = (spend: TurnSpend) =>
     spendBlock(spend, state.resources, state.ownTurn);
-  const tiles: TurnTile[] = kit.attacks.map((a) => ({
-    key: `attack:${a.key}`,
-    group: 'attacks',
-    name: a.name,
-    tip: a.tip,
-    cost: a.bonusAction ? 'bonus_action' : 'action',
-    level: null,
-    image: a.image,
-    icon: 'weapon',
-    use: { kind: 'info' },
-    block: ATTACK_LATER,
-  }));
-  if (kit.unarmed !== null) {
-    tiles.push({
-      key: 'attack:unarmed',
-      group: 'attacks',
-      name: 'Безоружный удар',
-      tip: kit.unarmed,
-      cost: 'action',
-      level: null,
-      image: null,
-      icon: 'punch',
-      use: { kind: 'info' },
-      block: ATTACK_LATER,
-    });
-  }
+  const tiles = attackTiles(kit, state, block);
   for (const entry of kit.abilities) {
     const tile = abilityTile(entry, kit.slots, block);
     if (tile) tiles.push(tile);

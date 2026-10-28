@@ -9,9 +9,19 @@ import type {
 } from './game-creatures.js';
 import type { TurnSpend } from './combatAbilityUse.js';
 import type { D20Roll, RollMode } from './d20Roll.js';
+import type { AttackOutcome } from './attack/attackHit.js';
+import type { AttackKey } from './attack/attackOptions.js';
+import type { DamageRoll } from './attack/attackDamage.js';
+import type { WeaponSet } from './attack/weaponSets.js';
+import type { Cover } from './map/rules/cover.js';
+import type {
+  GameEventAttack,
+  GameEventAttackTarget,
+} from './game-combat-attack.js';
 import type {
   CombatAction,
   CombatantInput,
+  CombatantRef,
   CombatResourcesInput,
   CombatResourcesUsed,
   GameEventCombatant,
@@ -25,7 +35,7 @@ import type { Vec3 } from './map/coords.js';
 import type { MapOp } from './map/ops.js';
 import type { SpellSlots } from './character.js';
 import type { EquipSlot } from './equipment.js';
-import type { GameEquipmentChange } from './equipmentInPlay.js';
+import type { GameEquipmentChange, HandChangeCost } from './equipmentInPlay.js';
 import type { SpellSlotsExpended } from './spellSlots.js';
 
 // Журнал игры (docs/plan/done/game.md, «Журнал игры»): каждое действие в игре — запись с
@@ -287,6 +297,43 @@ export interface GameEventPayloads {
       slotLevel: number | null;
     };
   };
+  // Атака героя (этап 5): бросок, КД цели с укрытием (игрокам не показывается) и итог;
+  // spent — что потрачено.
+  'combat.attack': {
+    intent: {
+      combatantId: string;
+      attack: AttackKey;
+      target: CombatantRef;
+      mode: RollMode | null;
+    };
+    result: {
+      combatant: GameEventCombatant;
+      attack: GameEventAttack;
+      target: GameEventAttackTarget;
+      roll: D20Roll;
+      cover: Exclude<Cover, 'total'>;
+      armorClass: number;
+      outcome: AttackOutcome;
+      spent: 'action' | 'bonus_action';
+    };
+  };
+  // Урон попавшей атаки; applied — цель ещё была на сцене и хиты ей сняты (запись хитов
+  // идёт следом своей записью).
+  'combat.damage': {
+    intent: { combatantId: string };
+    result: {
+      combatant: GameEventCombatant;
+      attack: GameEventAttack;
+      target: GameEventAttackTarget;
+      damage: DamageRoll;
+      applied: boolean;
+    };
+  };
+  // Переключён набор оружия (домашнее правило: раз за ход, бесплатно).
+  'combat.weapon_set': {
+    intent: { combatantId: string; set: WeaponSet };
+    result: { combatant: GameEventCombatant; set: WeaponSet };
+  };
   // Мастер поправил потраченные действия, бонусные и реакции.
   'combat.resources': {
     intent: { combatantId: string } & CombatResourcesInput;
@@ -324,13 +371,15 @@ export interface GameEventPayloads {
   };
   // Кукла персонажа в игре (docs/plan/equipment.md, этап 4): надел, снял, настроился. item —
   // вещь, как она звалась в тот момент (null — место было пустым или вещь скрыта); freed —
-  // места, которые освободила надетая вещь (двуручное снимает вторую руку).
+  // места, которые освободила надетая вещь (двуручное снимает вторую руку); spent — чего
+  // стоила смена в руке в бою с очерёдностью (бой, этап 5; у старых записей поля нет).
   'character.equipment': {
     intent: { characterId: string; change: GameEquipmentChange };
     result: {
       character: GameEventCharacter;
       item: { id: string; name: string } | null;
       freed: EquipSlot[];
+      spent?: HandChangeCost | null;
     };
   };
   // Хиты монстра или НПС на сцене (этап 8); правит только мастер.

@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import type { ImagePathFn } from '../../../../features/catalog';
 import TurnTileButton from './TurnTile';
 import { slotDots } from './slotsLine';
@@ -17,6 +17,8 @@ interface TurnGroupsProps {
   onHover: (tip: string | null) => void;
   itemImage: ImagePathFn;
   abilityImage: ImagePathFn;
+  // Справа от заголовка «Атаки»: переключатель набора оружия.
+  attacksHead?: ReactNode;
 }
 
 // Сетка блока «Ваш ход»: Атаки, Заклинания подгруппами по кругам со свободными ячейками у
@@ -29,6 +31,7 @@ function TurnGroups({
   onHover,
   itemImage,
   abilityImage,
+  attacksHead,
 }: TurnGroupsProps) {
   const row = (own: readonly TurnTile[], imagePath: ImagePathFn) => (
     <div className={classes.tiles}>
@@ -49,7 +52,16 @@ function TurnGroups({
     if (own.length === 0) return null;
     return (
       <div key={group} className={classes.group}>
-        <span className={classes.groupLabel}>{TILE_GROUP_LABELS[group]}</span>
+        {group === 'attacks' && attacksHead ? (
+          <div className={classes.groupHead}>
+            <span className={classes.groupLabel}>
+              {TILE_GROUP_LABELS[group]}
+            </span>
+            {attacksHead}
+          </div>
+        ) : (
+          <span className={classes.groupLabel}>{TILE_GROUP_LABELS[group]}</span>
+        )}
         {group === 'spells'
           ? levels.map((level) => (
               <Fragment key={level.level ?? 'none'}>

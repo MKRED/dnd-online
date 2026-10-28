@@ -62,11 +62,18 @@ export function equipmentEventText({ intent, result }: Equipment): string {
   const { character, item } = result;
   const { change } = intent;
   const what = item ? ` — ${item.name}` : '';
+  // Смена в руке в бою (домашнее правило, этап 5): первая за ход бесплатно, дальше действие.
+  const spent =
+    result.spent === 'action'
+      ? ', за действие'
+      : result.spent === 'free'
+        ? ', бесплатная смена'
+        : '';
   switch (change.kind) {
     case 'equip':
-      return `Надето: ${character.name}${what} (${SLOT_FULL_NAMES[change.slot]})`;
+      return `Надето: ${character.name}${what} (${SLOT_FULL_NAMES[change.slot]})${spent}`;
     case 'unequip':
-      return `Снято: ${character.name}${what} (${SLOT_FULL_NAMES[change.slot]})`;
+      return `Снято: ${character.name}${what} (${SLOT_FULL_NAMES[change.slot]})${spent}`;
     case 'attune':
       return `Настройка: ${character.name}${what}`;
     case 'end_attunement':

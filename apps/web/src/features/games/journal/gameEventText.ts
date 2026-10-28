@@ -10,6 +10,11 @@ import {
   creatureSlotsText,
   equipmentEventText,
 } from './characterEventText';
+import {
+  attackEventText,
+  damageEventText,
+  weaponSetEventText,
+} from './attackEventText';
 import { combatEventText } from './combatEventText';
 
 // Строка журнала игры по-русски. Кто сделал, показывается рядом отдельно, поэтому здесь —
@@ -138,6 +143,12 @@ export function gameEventText(event: GameEvent): string {
     case 'combat.ability':
     case 'combat.resources':
       return combatEventText(event);
+    case 'combat.attack':
+      return attackEventText(event, 'master');
+    case 'combat.damage':
+      return damageEventText(event);
+    case 'combat.weapon_set':
+      return weaponSetEventText(event);
     case 'character.changed':
       return characterChangedText(event);
     case 'character.effect_added':

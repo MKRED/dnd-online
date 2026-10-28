@@ -7,9 +7,8 @@ import {
   type D20RollInput,
   type RollMode,
 } from 'shared';
-import D20 from './D20';
-import RollTerms from './RollTerms';
-import { MODE_LABELS, reasonsText } from './rollWindowText';
+import RollDisplay from './RollDisplay';
+import { MASTER_MODES } from './rollWindowText';
 import classes from './RollWindow.module.css';
 import { useDiceRoll } from './useDiceRoll';
 
@@ -26,13 +25,6 @@ interface RollWindowProps {
   onRoll: (mode: RollMode | null) => Promise<D20Roll>;
   onClose: () => void;
 }
-
-const MASTER_MODES = [
-  { value: 'rules', label: 'По правилам' },
-  { value: 'advantage', label: 'Преимущество' },
-  { value: 'normal', label: 'Обычный' },
-  { value: 'disadvantage', label: 'Помеха' },
-];
 
 // Окно броска в духе BG3 (docs/plan/combat.md, «Окно броска»; макет «Окно броска»): кость
 // по центру, под ней слагаемые и причины преимущества и помехи; «Бросить кубик» крутит
@@ -52,13 +44,7 @@ function RollWindow({
   const rolling = phase.kind === 'rolling';
   const done = phase.kind === 'done' ? phase.roll : null;
   const rules = pending ? rollModeOf(pending.reasons, null) : 'normal';
-  const mode: RollMode = done
-    ? done.mode
-    : choice === 'rules'
-      ? rules
-      : (choice as RollMode);
-  const reasons = done ? done.reasons : pending?.reasons;
-  const why = reasons ? reasonsText(reasons) : null;
+  const mode: RollMode = choice === 'rules' ? rules : (choice as RollMode);
   return (
     <Modal
       opened={opened}
@@ -80,41 +66,12 @@ function RollWindow({
         <Text fw={700} size="lg" ta="center">
           {name}
         </Text>
-        <div className={classes.dice} aria-live="polite">
-          {done ? (
-            done.dice.map((value, i) => (
-              <D20
-                key={i}
-                value={value}
-                dropped={i !== done.kept}
-                size={i === done.kept ? 120 : 72}
-              />
-            ))
-          ) : (
-            <D20
-              value={phase.kind === 'rolling' ? phase.face : null}
-              rolling={rolling}
-            />
-          )}
-        </div>
-        {mode !== 'normal' && (
-          <Text
-            size="sm"
-            fw={600}
-            ta="center"
-            data-mode={mode}
-            className={classes.mode}
-          >
-            {MODE_LABELS[mode]}
-            {done && done.master && ' (мастер)'}
-          </Text>
-        )}
-        {why && (
-          <Text size="xs" c="dimmed" ta="center">
-            {why}
-          </Text>
-        )}
-        <RollTerms done={done} pending={pending} />
+        <RollDisplay
+          pending={pending}
+          rolling={phase.kind === 'rolling' ? phase.face : null}
+          done={done}
+          mode={mode}
+        />
         {master && !done && (
           <SegmentedControl
             size="xs"

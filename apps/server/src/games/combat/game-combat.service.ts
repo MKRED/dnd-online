@@ -57,21 +57,11 @@ export class GameCombatService {
   async read(userId: string, gameId: string): Promise<GameCombat> {
     const t0 = Date.now();
     try {
-      const masterId = await this.assertParticipant(userId, gameId);
-      const result = await this.databaseService.db.transaction(
-        async (tx) => {
-          const [game] = await tx
-            .select({ sceneOpen: games.sceneOpen })
-            .from(games)
-            .where(eq(games.id, gameId));
-          const scene = await findActiveScene(tx, gameId);
-          if (!scene) throw new NotFoundException(NO_ACTIVE_SCENE);
-          if (userId !== masterId && !game.sceneOpen) {
-            throw new ForbiddenException(SCENE_CLOSED);
-          }
-          return readCombatView(tx, gameId, scene, { userId, masterId });
-        },
-        { isolationLevel: 'repeatable read', accessMode: 'read only' },
+      const result = await this.readWith(
+        userId,
+        gameId,
+        ({ tx, scene, masterId }) =>
+          readCombatView(tx, gameId, scene, { userId, masterId }),
       );
       this.logger.debug(
         {
@@ -189,6 +179,30 @@ export class GameCombatService {
     );
   }
 
+  // Чтение боя глазами смотрящего: те же проверки, что у read, без блокировки игры.
+  async readWith<T>(
+    userId: string,
+    gameId: string,
+    run: (actor: CombatActor) => Promise<T>,
+  ): Promise<T> {
+    const masterId = await this.assertParticipant(userId, gameId);
+    return this.databaseService.db.transaction(
+      async (tx) => {
+        const [game] = await tx
+          .select({ sceneOpen: games.sceneOpen })
+          .from(games)
+          .where(eq(games.id, gameId));
+        const scene = await findActiveScene(tx, gameId);
+        if (!scene) throw new NotFoundException(NO_ACTIVE_SCENE);
+        if (userId !== masterId && !game.sceneOpen) {
+          throw new ForbiddenException(SCENE_CLOSED);
+        }
+        return run({ tx, gameId, userId, masterId, scene });
+      },
+      { isolationLevel: 'repeatable read', accessMode: 'read only' },
+    );
+  }
+
   private async assertParticipant(userId: string, gameId: string) {
     const { game, member } = await findGameAccess(
       this.databaseService.db,
@@ -201,7 +215,9 @@ export class GameCombatService {
     return game.masterId;
   }
 
-  private async change(
+  // Правка боя: одна транзакция под блокировкой игры, рассылка и очередь в ответ. Её же
+  // берут атаки (attack/game-combat-attack.service.ts).
+  async change(
     userId: string,
     gameId: string,
     kind: string,

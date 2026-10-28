@@ -57,6 +57,12 @@ function IconCredit() {
   );
 }
 
+// Ширина панели на компьютере (panelWidth.ts): край не виден, пока не наведёшь мышь.
+const PANEL: Line[] = [
+  [['Край панели'], 'тянуть — ширина, дальше вправо — свернуть'],
+  [['Двойной клик'], 'по краю — обычная ширина'],
+];
+
 const MASTER: Line[] = [[['Ё'], 'режим «Игра» или «Правка»']];
 
 // Отмена — только в «Правке», и для хода из «Игры» тоже: история общая.
@@ -111,6 +117,7 @@ function HelpButton({ master, editing }: HelpButtonProps) {
       {!editing && <Section title="Ход" lines={PLAY} />}
       {master && <Section title="Мастер" lines={MASTER} />}
       {editing && <Section title="Правка" lines={EDIT} />}
+      {!narrow && <Section title="Панель" lines={PANEL} />}
       {!editing && <IconCredit />}
     </Stack>
   );

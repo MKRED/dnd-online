@@ -175,6 +175,33 @@ describe('участники', () => {
     expect(screen.getByText('4/4')).toBeInTheDocument();
   });
 
+  it('выбранный за верхним краем: вкладка едет к его карточке, видный — не трогает', () => {
+    const props = {
+      heroes: [],
+      creatures: [],
+      onSelectHero: () => {},
+      onSelectCreature: () => {},
+      errors: [],
+      selected: <span>Карточка</span>,
+    };
+    const { rerender } = renderWithProviders(
+      <ParticipantsTab {...props} selectedKey="creature:2" />,
+    );
+    const card = screen.getByText('Карточка').closest('section')!;
+    const tab = card.parentElement!;
+    const scrollTo = vi.fn();
+    Object.assign(tab, { scrollTo, scrollTop: 600 });
+    Object.defineProperty(tab, 'clientHeight', { value: 300 });
+    Object.defineProperty(card, 'offsetTop', { value: 120 });
+    Object.defineProperty(card, 'offsetHeight', { value: 100 });
+    rerender(<ParticipantsTab {...props} selectedKey="creature:3" />);
+    expect(scrollTo).toHaveBeenCalledWith({ top: 120, behavior: 'smooth' });
+    scrollTo.mockClear();
+    tab.scrollTop = 100;
+    rerender(<ParticipantsTab {...props} selectedKey="creature:4" />);
+    expect(scrollTo).not.toHaveBeenCalled();
+  });
+
   it('двойной щелчок открывает окно того, по кому щёлкнули первым, даже если список сдвинулся', async () => {
     localStorage.setItem(
       'scene.participantsOpen',

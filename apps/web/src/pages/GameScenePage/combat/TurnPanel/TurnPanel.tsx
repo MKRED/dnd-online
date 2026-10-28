@@ -5,13 +5,12 @@ import type { GameCombatant } from 'shared';
 import type { SceneCombat } from '../useSceneCombat';
 import ResourcePips from './ResourcePips';
 import TurnConfirm from './TurnConfirm';
-import TurnTileButton from './TurnTile';
+import TurnGroups from './TurnGroups';
 import { slotsLine } from './slotsLine';
-import { TILE_GROUP_LABELS, turnTiles, type TileGroup } from './turnTiles';
+import { spellLevels } from './spellLevels';
+import { turnTiles } from './turnTiles';
 import { useTurnKit, type TurnKitSource } from './useTurnKit';
 import classes from './TurnPanel.module.css';
-
-const GROUPS: TileGroup[] = ['attacks', 'spells', 'abilities', 'actions'];
 
 interface TurnPanelProps {
   gameId: string;
@@ -30,9 +29,9 @@ interface TurnPanelProps {
 }
 
 // Блок «Ваш ход» (docs/plan/combat.md, этап 4, вариант Г): сколько чего осталось на ход,
-// значки атак, заклинаний, умений и обычных действий; нажатый значок — подсказка и кнопка
-// под сеткой. У игрока — во вкладке «Персонаж», у мастера — сверху «Участников» в ход
-// монстра или НПС.
+// значки атак, заклинаний по кругам, умений и обычных действий; нажатый значок — подсказка
+// и кнопка под сеткой. У игрока — во вкладке «Персонаж», у мастера — сверху «Участников»
+// в ход монстра или НПС.
 function TurnPanel({
   gameId,
   combatant,
@@ -56,7 +55,14 @@ function TurnPanel({
       })
     : [];
   const selected = tiles.find((t) => t.key === chosen) ?? null;
-  const slots = view.kit ? slotsLine(view.kit.slots) : null;
+  const levels = spellLevels(tiles, view.kit?.slots ?? null);
+  // Ячейки кругов со своими заклинаниями стоят у подзаголовков, сверху — остальные.
+  const slots = view.kit
+    ? slotsLine(
+        view.kit.slots,
+        new Set(levels.flatMap((l) => (l.level ? [l.level] : []))),
+      )
+    : null;
   const done = (ok: boolean) => ok && setChosen(null);
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape' && chosen) {
@@ -97,33 +103,15 @@ function TurnPanel({
       )}
       {view.error && <Alert color="red">{view.error}</Alert>}
       {!view.kit && !view.error && <Loader size="sm" />}
-      {GROUPS.map((group) => {
-        const own = tiles.filter((t) => t.group === group);
-        if (own.length === 0) return null;
-        return (
-          <div key={group} className={classes.group}>
-            <span className={classes.groupLabel}>
-              {TILE_GROUP_LABELS[group]}
-            </span>
-            <div className={classes.tiles}>
-              {own.map((tile) => (
-                <TurnTileButton
-                  key={tile.key}
-                  tile={tile}
-                  selected={tile.key === chosen}
-                  imagePath={
-                    group === 'attacks' ? view.itemImage : view.abilityImage
-                  }
-                  onSelect={() =>
-                    setChosen(tile.key === chosen ? null : tile.key)
-                  }
-                  onHover={setHovered}
-                />
-              ))}
-            </div>
-          </div>
-        );
-      })}
+      <TurnGroups
+        tiles={tiles}
+        levels={levels}
+        chosen={chosen}
+        onChoose={setChosen}
+        onHover={setHovered}
+        itemImage={view.itemImage}
+        abilityImage={view.abilityImage}
+      />
       {selected ? (
         <TurnConfirm
           key={selected.key}

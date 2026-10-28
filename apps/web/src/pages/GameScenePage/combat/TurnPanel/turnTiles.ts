@@ -38,8 +38,8 @@ export interface TurnTile {
   // Строка под сеткой: что это и сколько стоит.
   tip: string;
   cost: TurnSpend | null;
-  // Круг заклинания (0 — заговор) в углу.
-  corner: string | null;
+  // Круг заклинания (0 — заговор): по нему заклинания идут подгруппами; не заклинание — null.
+  level: number | null;
   // Картинка справочника; без неё — значок по виду на сером.
   image: { id: string; image: CatalogImage | null } | null;
   icon: GameIconName;
@@ -115,7 +115,7 @@ export function turnTiles(kit: TurnKit, state: TurnState): TurnTile[] {
     name: a.name,
     tip: a.tip,
     cost: a.bonusAction ? 'bonus_action' : 'action',
-    corner: null,
+    level: null,
     image: a.image,
     icon: 'weapon',
     use: { kind: 'info' },
@@ -128,7 +128,7 @@ export function turnTiles(kit: TurnKit, state: TurnState): TurnTile[] {
       name: 'Безоружный удар',
       tip: kit.unarmed,
       cost: 'action',
-      corner: null,
+      level: null,
       image: null,
       icon: 'punch',
       use: { kind: 'info' },
@@ -149,7 +149,7 @@ export function turnTiles(kit: TurnKit, state: TurnState): TurnTile[] {
       name: a.name,
       tip: a.tip,
       cost: 'action',
-      corner: null,
+      level: null,
       image: null,
       icon: a.icon,
       use: { kind: 'action', action: a.action },
@@ -159,8 +159,9 @@ export function turnTiles(kit: TurnKit, state: TurnState): TurnTile[] {
   return tiles;
 }
 
-// Черта действует сама — её в сетке нет. Заклинание без свободной ячейки нужного круга
-// или неподготовленное — бледное, с причиной.
+// Черта действует сама — её в сетке нет, как и неподготовленного заклинания (решение
+// Михаила 2026-10-28: в блоке хода только то, что можно применить). Заклинание без
+// свободной ячейки нужного круга — бледное, с причиной.
 function abilityTile(
   { id, prepared, ability }: TurnKitAbility,
   slots: SpellSlots | null,
@@ -172,6 +173,7 @@ function abilityTile(
   const slotMin = slots ? (ability.costs.spellSlot?.minLevel ?? null) : null;
   const level = spell && ability.level !== null ? ability.level : null;
   const parts = [ability.name, formatActivation(ability.activation)];
+  if (prepared === false && spell && (level ?? 0) >= 1) return null;
   if (level !== null) parts.push(level === 0 ? 'заговор' : `${level} круг`);
   return {
     key: `ability:${id}`,
@@ -179,18 +181,16 @@ function abilityTile(
     name: ability.name,
     tip: parts.join(' · '),
     cost: spend,
-    corner: level === null ? null : String(level),
+    level,
     image: { id: ability.id, image: ability.image },
     icon: spell ? 'spell' : 'rune',
     use: { kind: 'ability', abilityId: id, slotMin },
     block:
       spend === null
         ? 'В бою так не применить'
-        : prepared === false && spell && (level ?? 0) >= 1
-          ? 'Не подготовлено'
-          : slotMin !== null && freeSlotLevels(slots, slotMin).length === 0
-            ? `Нет свободных ячеек ${slotMin} круга и выше`
-            : block(spend),
+        : slotMin !== null && freeSlotLevels(slots, slotMin).length === 0
+          ? `Нет свободных ячеек ${slotMin} круга и выше`
+          : block(spend),
   };
 }
 

@@ -14,7 +14,7 @@ const valid = {
 };
 
 const ability = {
-  category: 'basic',
+  category: 'feature',
   details: {},
   activation: { kind: 'action' },
   costs: { uses: null, spellSlot: null, movement: null, hitDie: false },

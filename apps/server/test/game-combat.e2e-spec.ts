@@ -289,6 +289,32 @@ describe('game combat (e2e)', () => {
     await g.move(g.p, [0, 1, 4]);
   });
 
+  it('«Бросить за героев»: мастер бросает за отошедших игроков, монстры ждут своей кнопки', async () => {
+    const g = await started('gcb_heroes');
+    await g.start([g.figure, g.goblin]);
+    // Только мастер.
+    await g.p.post(`${g.url}/initiative/heroes`).expect(403);
+    const combat = (
+      await g.m.post(`${g.url}/initiative/heroes`).send({}).expect(200)
+    ).body as GameCombat;
+    const [hero, goblin] = combat.combatants;
+    expect(hero.initiative).not.toBeNull();
+    expect(hero.roll?.terms).toEqual([
+      { kind: 'number', label: 'Ловкость', amount: 1 },
+    ]);
+    expect(goblin.initiative).toBeNull();
+    expect((await events(g.m, g.gameId, 1))[0]).toMatchObject({
+      kind: 'combat.initiative',
+      result: { combatant: { id: hero.id, name: 'Зритель' } },
+      visibility: 'players',
+    });
+    // Бросать больше не за кого — ничего не меняется.
+    const again = (
+      await g.m.post(`${g.url}/initiative/heroes`).send({}).expect(200)
+    ).body as GameCombat;
+    expect(again.combatants[0].initiative).toBe(hero.initiative);
+  });
+
   it('мастер переставляет очередь, отдаёт ход, зовёт новичка и убирает ушедшего', async () => {
     const g = await started('gcb_roster');
     let combat = (await g.start([g.figure, g.goblin])).body as GameCombat;

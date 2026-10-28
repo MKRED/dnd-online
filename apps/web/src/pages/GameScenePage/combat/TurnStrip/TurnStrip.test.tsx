@@ -84,6 +84,7 @@ function renderStrip(master: boolean, combat = COMBAT) {
         onClearError={vi.fn()}
         onRoll={actions.roll}
         onRollCreatures={vi.fn()}
+        onRollHeroes={vi.fn()}
         onEndTurn={onEndTurn}
       />
     </TurnStrip>,
@@ -176,6 +177,7 @@ describe('TurnStrip', () => {
         onClearError={vi.fn()}
         onRoll={onRoll}
         onRollCreatures={vi.fn()}
+        onRollHeroes={vi.fn()}
         onEndTurn={vi.fn()}
       />,
     );
@@ -187,6 +189,41 @@ describe('TurnStrip', () => {
     expect(
       screen.queryByRole('button', { name: /Бросить за монстров/ }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Бросить за героев/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('мастер: «Бросить за монстров» и «Бросить за героев» с числом не бросивших', async () => {
+    const rolling: GameCombat = { ...COMBAT, turn: null };
+    const waiting = [
+      entry('a', 'Лира', null),
+      entry('c', 'Борн', null),
+      entry('d', 'Кайра', 15),
+      entry('b', 'Гоблин', null, {}, 'monster'),
+    ];
+    const onRollHeroes = vi.fn();
+    renderWithProviders(
+      <TurnButtons
+        combat={rolling}
+        entries={waiting}
+        master
+        busy={false}
+        error={null}
+        onClearError={vi.fn()}
+        onRoll={vi.fn()}
+        onRollCreatures={vi.fn()}
+        onRollHeroes={onRollHeroes}
+        onEndTurn={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole('button', { name: /Бросить за монстров \(1\)/ }),
+    ).toBeInTheDocument();
+    await userEvent
+      .setup()
+      .click(screen.getByRole('button', { name: /Бросить за героев \(2\)/ }));
+    expect(onRollHeroes).toHaveBeenCalled();
   });
 });
 

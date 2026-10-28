@@ -116,6 +116,7 @@ export function useCombatUi({
           onClearError={combat.clearError}
           onRoll={actions.roll}
           onRollCreatures={() => void combat.rollCreatures()}
+          onRollHeroes={() => void combat.rollHeroes()}
           onEndTurn={(id) => void combat.endTurn(id)}
         />
       </TurnStrip>

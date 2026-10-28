@@ -13,12 +13,14 @@ interface TurnButtonsProps {
   onClearError: () => void;
   onRoll: (entry: CombatEntry) => void;
   onRollCreatures: () => void;
+  // Мастеру: бросить за героев, чьи игроки отошли (решение Михаила 2026-10-28, вариант А).
+  onRollHeroes: () => void;
   onEndTurn: (id: string) => void;
 }
 
 // Кнопки под полосой — самое частое в бою, рядом с очередью (макет «Очерёдность»): пока
-// бросают инициативу — бросок за своего героя и (мастеру) за всех монстров разом; потом —
-// «Закончить ход» тому, кто ведёт текущего.
+// бросают инициативу — бросок за своего героя и (мастеру) за всех монстров и за всех
+// героев разом; потом — «Закончить ход» тому, кто ведёт текущего.
 function TurnButtons({
   combat,
   entries,
@@ -28,18 +30,28 @@ function TurnButtons({
   onClearError,
   onRoll,
   onRollCreatures,
+  onRollHeroes,
   onEndTurn,
 }: TurnButtonsProps) {
   const unrolled = entries.filter((e) => e.combatant.initiative === null);
-  // Игроку — свои герои; мастер бросает за героев через меню портрета.
+  // Игроку — свои герои; мастер бросает за всех героев разом или за одного через меню
+  // портрета.
   const mine = master
     ? []
     : unrolled.filter((e) => e.combatant.canRoll && e.kind === 'pc');
   const creatures = master ? unrolled.filter((e) => e.kind !== 'pc') : [];
+  const heroes = master ? unrolled.filter((e) => e.kind === 'pc') : [];
   const current = entries.find((e) => e.id === combat.turn);
   const canEnd = current?.combatant.canRoll ?? false;
   const hidden = combat.hiddenTurn !== null;
-  if (!mine.length && !creatures.length && !canEnd && !hidden && !error) {
+  if (
+    !mine.length &&
+    !creatures.length &&
+    !heroes.length &&
+    !canEnd &&
+    !hidden &&
+    !error
+  ) {
     return null;
   }
   return (
@@ -72,6 +84,18 @@ function TurnButtons({
             title="Каждый монстр и НПС бросает свою инициативу"
           >
             Бросить за монстров ({creatures.length})
+          </Button>
+        )}
+        {heroes.length > 0 && (
+          <Button
+            size="xs"
+            variant="default"
+            leftSection={<IconDice5 size={15} />}
+            loading={busy}
+            onClick={onRollHeroes}
+            title="За героев, чьи игроки ещё не бросили: каждый бросает свою инициативу"
+          >
+            Бросить за героев ({heroes.length})
           </Button>
         )}
         {current && canEnd && (

@@ -49,6 +49,7 @@ export function combatApi(gameId: string) {
         body: JSON.stringify(mode ? { mode } : {}),
       }),
     rollCreatures: () => post(`${base}/initiative/creatures`),
+    rollHeroes: () => post(`${base}/initiative/heroes`),
     setInitiative: (combatantId: string, initiative: number) =>
       put(`${base}/combatants/${combatantId}/initiative`, { initiative }),
     reorder: (ids: string[]) => put(`${base}/order`, { ids }),

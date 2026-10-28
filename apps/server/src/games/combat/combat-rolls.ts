@@ -101,13 +101,19 @@ export async function rollFor(
   return roll;
 }
 
-// «Бросить за монстров»: все не бросившие монстры и НПС, каждый отдельно (домашнее
-// правило, docs/dnd/combat.md).
-export async function rollCreatures(actor: CombatActor): Promise<number> {
+// «Бросить за монстров» и «Бросить за героев»: все не бросившие монстры и НПС или герои,
+// каждый отдельно (домашнее правило, docs/dnd/combat.md). За героев — тех, чьи игроки
+// отошли (решение Михаила 2026-10-28, вариант А макета «Бросок за героев»).
+export async function rollWaiting(
+  actor: CombatActor,
+  who: 'creatures' | 'heroes',
+): Promise<number> {
   assertMaster(actor);
   const state = await loadCombat(actor.tx, actor.gameId, actor.scene.id);
   const waiting = state.combatants.filter(
-    (c) => c.creature && c.row.initiative === null,
+    (c) =>
+      (who === 'creatures') === Boolean(c.creature) &&
+      c.row.initiative === null,
   );
   for (const c of waiting) await rollOne(actor, c, null);
   await startTurnsIfReady(actor);

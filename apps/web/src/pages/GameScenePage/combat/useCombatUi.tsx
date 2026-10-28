@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import type { Vec3 } from 'shared';
+import type { CombatantRef, Vec3 } from 'shared';
 import CombatantDialog, { type CombatantEdit } from './CombatantDialog';
 import { RollWindow } from './RollWindow';
 import { candidateKey, StartCombatModal } from './StartCombat';
@@ -25,6 +25,9 @@ interface CombatUiOptions {
   dialog: boolean;
   onDialog: (open: boolean) => void;
   focus: (at: Vec3) => void;
+  // «Показать на сцене» заодно выбирает участника, как щелчок в «Участниках» (замечание
+  // Михаила 2026-10-28).
+  select: (ref: CombatantRef) => void;
   // Номер правок листов и существ: блок хода героя перечитывает его лист.
   version: number;
 }
@@ -40,6 +43,7 @@ export function useCombatUi({
   dialog,
   onDialog,
   focus,
+  select,
   version,
 }: CombatUiOptions): {
   strip: ReactNode;
@@ -73,7 +77,10 @@ export function useCombatUi({
     .filter((e) => e.combatant.initiative !== null)
     .map((e) => e.id);
   const actions: StripActions = {
-    focus: (entry) => entry.at && focus(entry.at),
+    focus: (entry) => {
+      if (entry.at) focus(entry.at);
+      select(entry.combatant.ref);
+    },
     roll: (entry) => {
       offer(entry.id);
       setChosen(entry);
@@ -109,6 +116,7 @@ export function useCombatUi({
           onClearError={combat.clearError}
           onRoll={actions.roll}
           onRollCreatures={() => void combat.rollCreatures()}
+          onRollHeroes={() => void combat.rollHeroes()}
           onEndTurn={(id) => void combat.endTurn(id)}
         />
       </TurnStrip>

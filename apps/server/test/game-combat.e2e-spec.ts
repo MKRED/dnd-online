@@ -253,6 +253,17 @@ describe('game combat (e2e)', () => {
       'Сейчас не ваш ход',
     );
     expect((await figureOf(g.m, g.gameId)).figures[0].moved).toBe(10);
+    // Мастер в «Игре» держится тех же правил: водит только того, чей ход; вне хода — «Правка».
+    const creatureMove = (objectId: number, to: number[], status: number) =>
+      g.m
+        .post(`/api/games/${g.gameId}/scene/creatures/${objectId}/move`)
+        .send({ to })
+        .expect(status);
+    const outOfTurn =
+      'Сейчас не его ход: вне хода переставить можно в «Правке»';
+    expect(message(await g.move(g.m, [0, 1, 3], 409))).toBe(outOfTurn);
+    expect(message(await creatureMove(3, [2, 1, 1], 409))).toBe(outOfTurn);
+    await creatureMove(2, [1, 1, 1], 200);
 
     // Мастер ведёт существ; после последнего — новый раунд, у фигурки снова полный запас.
     await g.endTurn(g.m, goblinId);
@@ -276,6 +287,32 @@ describe('game combat (e2e)', () => {
       combatants: [],
     });
     await g.move(g.p, [0, 1, 4]);
+  });
+
+  it('«Бросить за героев»: мастер бросает за отошедших игроков, монстры ждут своей кнопки', async () => {
+    const g = await started('gcb_heroes');
+    await g.start([g.figure, g.goblin]);
+    // Только мастер.
+    await g.p.post(`${g.url}/initiative/heroes`).expect(403);
+    const combat = (
+      await g.m.post(`${g.url}/initiative/heroes`).send({}).expect(200)
+    ).body as GameCombat;
+    const [hero, goblin] = combat.combatants;
+    expect(hero.initiative).not.toBeNull();
+    expect(hero.roll?.terms).toEqual([
+      { kind: 'number', label: 'Ловкость', amount: 1 },
+    ]);
+    expect(goblin.initiative).toBeNull();
+    expect((await events(g.m, g.gameId, 1))[0]).toMatchObject({
+      kind: 'combat.initiative',
+      result: { combatant: { id: hero.id, name: 'Зритель' } },
+      visibility: 'players',
+    });
+    // Бросать больше не за кого — ничего не меняется.
+    const again = (
+      await g.m.post(`${g.url}/initiative/heroes`).send({}).expect(200)
+    ).body as GameCombat;
+    expect(again.combatants[0].initiative).toBe(hero.initiative);
   });
 
   it('мастер переставляет очередь, отдаёт ход, зовёт новичка и убирает ушедшего', async () => {

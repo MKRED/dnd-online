@@ -1,11 +1,14 @@
 // Кто помещается в полосу очерёдности (решение Михаила 2026-10-27, вариант А при многих
 // участниках): первым — последний ходивший, за ним текущий и следующие по кругу; не
-// бросившие — в конце. Остальные — в счётчике «+N».
+// бросившие — в конце. Остальные — в счётчике «+N». Где круг переходит в следующий
+// раунд, полоса ставит черту с его номером (решение Михаила 2026-10-28, вариант А).
 
 export interface StripSlots {
   ids: string[];
   // Ходил последним (бледнее); null — нет такого в полосе.
   acted: string | null;
+  // Перед каким местом ids начинается новый раунд — первый в очереди; null — не в полосе.
+  divider: number | null;
   more: number;
 }
 
@@ -37,9 +40,13 @@ export function stripSlots(
       : [...cycle, ...unrolled];
   }
   const ids = sequence.slice(0, fit);
+  // Черта — перед первым в очереди, если он не в начале полосы (тогда раунд и так виден в
+  // клетке раунда). Пока ход не начался, раундов ещё нет.
+  const first = ids.indexOf(order[0]);
   return {
     ids,
     acted: acted && ids.includes(acted) ? acted : null,
+    divider: index !== -1 && first > 0 ? first : null,
     more: total - ids.length,
   };
 }
@@ -49,6 +56,8 @@ export function stripSlots(
 const CELL = 52;
 const MORE = 46;
 const FIXED = 70;
+// Черта нового раунда между портретами.
+export const DIVIDER = 22;
 
 // Сколько портретов влезает в полосу ширины width; reserved — кнопки мастера справа.
 export function stripCapacity(

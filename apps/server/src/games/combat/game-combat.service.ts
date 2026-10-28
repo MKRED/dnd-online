@@ -33,7 +33,7 @@ import { useAbility } from './combat-ability-use.js';
 import { setResources, takeAction } from './combat-actions.js';
 import type { CombatActor } from './combat-actor.js';
 import {
-  rollCreatures,
+  rollWaiting,
   rollFor,
   reorder,
   setInitiative,
@@ -111,9 +111,9 @@ export class GameCombatService {
     return { roll: roll!, combat };
   }
 
-  rollCreatures(userId: string, gameId: string) {
-    return this.change(userId, gameId, 'roll_creatures', async (actor) => {
-      await rollCreatures(actor);
+  rollWaiting(userId: string, gameId: string, who: 'creatures' | 'heroes') {
+    return this.change(userId, gameId, `roll_${who}`, async (actor) => {
+      await rollWaiting(actor, who);
     });
   }
 

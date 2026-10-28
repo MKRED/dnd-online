@@ -121,6 +121,8 @@ export function useSceneCombat(gameId: string, sceneId: string | null) {
     leave: (id: string) => run(() => api.leave(id), 'Не удалось убрать из боя'),
     rollCreatures: () =>
       run(() => api.rollCreatures(), 'Не удалось бросить за монстров'),
+    rollHeroes: () =>
+      run(() => api.rollHeroes(), 'Не удалось бросить за героев'),
     setInitiative: (id: string, value: number) =>
       run(
         () => api.setInitiative(id, value),

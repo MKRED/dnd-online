@@ -1,16 +1,20 @@
 import { Popover } from '@mantine/core';
 import { IconQuestionMark } from '@tabler/icons-react';
-import type { GameCombat } from 'shared';
 import { useState } from 'react';
 import Portrait from '../../participants/Portrait';
 import CombatantMenu from './CombatantMenu';
 import type { CombatEntry } from './combatEntries';
+import RoundDivider from './RoundDivider';
 import type { StripActions } from './stripActions';
+import { HIDDEN_TURN } from './stripSlots';
 import classes from './TurnStrip.module.css';
 
 interface QueueListProps {
   entries: readonly CombatEntry[];
-  hiddenTurn: GameCombat['hiddenTurn'];
+  // Вся очередь в порядке полосы (stripSlots без предела) — с «Ходом противника».
+  ids: readonly string[];
+  // Перед каким местом ids строка «Раунд N»; null — без неё.
+  divider: { at: number; round: number } | null;
   more: number;
   turn: string | null;
   acted: string | null;
@@ -19,10 +23,12 @@ interface QueueListProps {
 }
 
 // «+N» в конце полосы: вся очередь списком — кто не влез, тоже здесь (макет «Очерёдность»,
-// вариант А). Строка ведёт себя как портрет: у мастера меню, у игрока — показать на сцене.
+// вариант А), в том же порядке, что полоса, и с той же чертой раунда. Строка ведёт себя как
+// портрет: у мастера меню, у игрока — показать на сцене.
 function QueueList({
   entries,
-  hiddenTurn,
+  ids,
+  divider,
   more,
   turn,
   acted,
@@ -31,12 +37,8 @@ function QueueList({
 }: QueueListProps) {
   const [opened, setOpened] = useState(false);
   const rolled = entries.filter((e) => e.combatant.initiative !== null);
+  const byId = new Map(entries.map((e) => [e.id, e]));
   // «Ход противника» — строкой на том же месте, что в полосе.
-  const hiddenAt = !hiddenTurn
-    ? -1
-    : hiddenTurn.after === null
-      ? 0
-      : entries.findIndex((e) => e.id === hiddenTurn.after) + 1;
   const hiddenRow = (
     <div
       key="hidden-turn"
@@ -72,7 +74,13 @@ function QueueList({
       </Popover.Target>
       <Popover.Dropdown p={4}>
         <div className={classes.queue} role="list" aria-label="Очередь хода">
-          {entries.map((entry, index) => {
+          {ids.map((id, index) => {
+            const line = divider?.at === index && (
+              <RoundDivider key="round" round={divider.round} row />
+            );
+            if (id === HIDDEN_TURN) return [line, hiddenRow];
+            const entry = byId.get(id);
+            if (!entry) return null;
             const place = rolled.indexOf(entry);
             const row = (
               <button
@@ -109,9 +117,8 @@ function QueueList({
                 {row}
               </CombatantMenu>
             );
-            return index === hiddenAt ? [hiddenRow, menu] : menu;
+            return [line, menu];
           })}
-          {hiddenAt === entries.length && hiddenRow}
         </div>
       </Popover.Dropdown>
     </Popover>

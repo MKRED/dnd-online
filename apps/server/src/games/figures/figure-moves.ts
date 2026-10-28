@@ -34,7 +34,8 @@ import {
   MASTER_ONLY_FIGURES,
   NO_ACTIVE_SCENE,
 } from '../game-errors.js';
-import { assertFigureTurn, assertNoOrder } from '../combat/combat-gate.js';
+import { assertNoOrder, assertTurnOf } from '../combat/combat-gate.js';
+import { NOT_ITS_TURN } from '../combat/combat-errors.js';
 import { refreshSceneCreatures } from '../creatures/creature-moves.js';
 import { playerFog } from '../fog/fog-view.js';
 import { plainLogger } from '../plain-logger.js';
@@ -139,10 +140,15 @@ export async function moveFigure(
   }
   const t0 = Date.now();
   const scene = await activeScene(actor);
-  // В бою с очерёдностью игрок ходит только в свой ход (docs/plan/combat.md, этап 2).
-  if (!isMaster(actor)) {
-    await assertFigureTurn(actor.tx, actor.gameId, scene.id, characterId);
-  }
+  // В бою с очерёдностью фигурка ходит только в свой ход (docs/plan/combat.md, этап 2), и
+  // у мастера тоже: вне хода он ставит её в «Правке» (placeFigure).
+  await assertTurnOf(
+    actor.tx,
+    actor.gameId,
+    scene.id,
+    { characterId },
+    isMaster(actor) ? NOT_ITS_TURN : undefined,
+  );
   const world = await loadSceneWorld(actor.tx, scene);
   const tLoaded = Date.now();
   const speeds = await figureSpeeds(actor.tx, actor.gameId, [

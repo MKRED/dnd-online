@@ -106,7 +106,17 @@ export class GameCombatController {
     @Req() req: AuthenticatedRequest,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.combat.rollCreatures(req.user.sub, id);
+    return this.combat.rollWaiting(req.user.sub, id, 'creatures');
+  }
+
+  // «Бросить за героев»: все не бросившие герои — за игроков, которые отошли.
+  @Post('initiative/heroes')
+  @HttpCode(200)
+  rollHeroes(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.combat.rollWaiting(req.user.sub, id, 'heroes');
   }
 
   @Put('order')

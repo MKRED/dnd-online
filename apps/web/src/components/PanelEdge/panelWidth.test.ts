@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   clampPanelWidth,
   collapsesAt,
-  DEFAULT_PANEL_WIDTH,
   MIN_PANEL_WIDTH,
   readPanelWidth,
   savePanelWidth,
@@ -26,13 +25,14 @@ describe('ширина панели на компьютере', () => {
     expect(collapsesAt(MIN_PANEL_WIDTH - 65)).toBe(true);
   });
 
-  it('запоминается на устройстве; без записи или с мусором — обычная', () => {
-    expect(readPanelWidth()).toBe(DEFAULT_PANEL_WIDTH);
-    savePanelWidth(480);
-    expect(readPanelWidth()).toBe(480);
+  it('запоминается на устройстве своя у каждой панели; без записи или с мусором — обычная', () => {
+    expect(readPanelWidth('a.width', 352)).toBe(352);
+    savePanelWidth('a.width', 480);
+    expect(readPanelWidth('a.width', 352)).toBe(480);
+    expect(readPanelWidth('b.width', 320)).toBe(320);
     for (const junk of ['abc', '100', '-1', 'Infinity']) {
-      localStorage.setItem('scene.panelWidth', junk);
-      expect(readPanelWidth()).toBe(DEFAULT_PANEL_WIDTH);
+      localStorage.setItem('a.width', junk);
+      expect(readPanelWidth('a.width', 352)).toBe(352);
     }
   });
 });

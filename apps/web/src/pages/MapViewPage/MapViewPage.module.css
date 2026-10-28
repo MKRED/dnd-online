@@ -22,11 +22,25 @@
   place-items: center;
 }
 
+/* Ширину тянут за левый край (flex-basis в MapSidebar, components/PanelEdge): от 18rem
+   до половины страницы. Прокручивается содержимое, а не сама панель, — иначе край
+   уезжал бы вместе с ним. */
 .sidebar {
+  position: relative;
   flex: 0 0 20rem;
-  padding: var(--mantine-spacing-md);
+  min-width: 18rem;
+  max-width: 50%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   border-left: 1px solid var(--mantine-color-default-border);
+}
+
+.sidebarBody {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  padding: var(--mantine-spacing-md);
 }
 
 /* На узком экране панель уходит под сцену и прокручивается сама, страница — нет. */
@@ -37,6 +51,8 @@
 
   .sidebar {
     flex: 0 0 auto;
+    min-width: 0;
+    max-width: none;
     max-height: 40%;
     border-left: none;
     border-top: 1px solid var(--mantine-color-default-border);

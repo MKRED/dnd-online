@@ -1,12 +1,12 @@
 import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { renderWithProviders } from '../../../test/render';
+import { renderWithProviders } from '../../test/render';
 import PanelEdge, { type PanelEdgeDrag } from './PanelEdge';
 
 // Край стоит в панели, панель — в странице: ширину страницы край берёт у деда, свою —
 // у родителя.
-function setup(width = 352) {
+function setup(width = 352, collapses = true) {
   const onWidth = vi.fn<(width: number) => void>();
   const onDrag = vi.fn<(drag: PanelEdgeDrag | null) => void>();
   const onCollapse = vi.fn<() => void>();
@@ -15,9 +15,10 @@ function setup(width = 352) {
       <aside data-testid="panel">
         <PanelEdge
           width={width}
+          defaultWidth={352}
           onWidth={onWidth}
           onDrag={onDrag}
-          onCollapse={onCollapse}
+          onCollapse={collapses ? onCollapse : undefined}
         />
       </aside>
     </div>,
@@ -62,6 +63,15 @@ describe('PanelEdge', () => {
     fireEvent.pointerUp(edge, { clientX: 1340, pointerId: 1 });
     expect(onCollapse).toHaveBeenCalledTimes(1);
     expect(onWidth).not.toHaveBeenCalled();
+  });
+
+  it('панель без сворачивания встаёт на минимум', () => {
+    const { edge, onWidth, onDrag } = setup(352, false);
+    fireEvent.pointerDown(edge, { clientX: 1200, button: 0, pointerId: 1 });
+    fireEvent.pointerMove(edge, { clientX: 1340, pointerId: 1 });
+    expect(onDrag).toHaveBeenLastCalledWith({ width: 288, collapsing: false });
+    fireEvent.pointerUp(edge, { clientX: 1340, pointerId: 1 });
+    expect(onWidth).toHaveBeenLastCalledWith(288);
   });
 
   it('щелчок без сдвига ширину не меняет, двойной — обычная', () => {

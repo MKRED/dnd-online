@@ -16,10 +16,9 @@ import {
 } from '@tabler/icons-react';
 import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import PanelEdge, { type PanelEdgeDrag } from './PanelEdge';
+import { PanelEdge, usePanelWidth } from '../../../components/PanelEdge';
 import PanelResizeGrip from './PanelResizeGrip';
 import { PANEL_SIZES, readPanelSize, savePanelSize } from './panelHeight';
-import { readPanelWidth, savePanelWidth } from './panelWidth';
 import classes from './ScenePanel.module.css';
 
 export interface PanelTab<T extends string> {
@@ -74,10 +73,8 @@ function ScenePanel<T extends string>({
   const [size, setSize] = useState(readPanelSize);
   const [dragShare, setDragShare] = useState<number | null>(null);
   const share = dragShare ?? PANEL_SIZES[size];
-  // На компьютере — ширина от левого края (вариант А, 2026-10-28) и она же под мышью.
-  const [width, setWidth] = useState(readPanelWidth);
-  const [drag, setDrag] = useState<PanelEdgeDrag | null>(null);
-  const shownWidth = drag?.width ?? width;
+  // На компьютере — ширина от левого края (вариант А, 2026-10-28), обычная 22rem.
+  const width = usePanelWidth('scene.panelWidth', 352);
   const lobbyLink = (
     <Tooltip label="В лобби" withArrow disabled={narrow}>
       <ActionIcon
@@ -147,7 +144,7 @@ function ScenePanel<T extends string>({
     <aside
       className={classes.panel}
       data-collapsed={collapsed || undefined}
-      data-collapsing={drag?.collapsing || undefined}
+      data-collapsing={width.collapsing || undefined}
       // Высота одна во всех режимах и вкладках: содержимое прокручивается внутри, и сцена
       // над панелью не меняет размер, когда под курсором появляется блок. Ширина на
       // компьютере тоже одна; половину окна и минимум держит CSS.
@@ -156,19 +153,11 @@ function ScenePanel<T extends string>({
           ? collapsed
             ? undefined
             : { height: `${share * 100}%` }
-          : { flexBasis: shownWidth }
+          : { flexBasis: width.width }
       }
     >
       {!narrow && (
-        <PanelEdge
-          width={shownWidth}
-          onWidth={(next) => {
-            setWidth(next);
-            savePanelWidth(next);
-          }}
-          onDrag={setDrag}
-          onCollapse={() => onCollapsed(true)}
-        />
+        <PanelEdge {...width.edge} onCollapse={() => onCollapsed(true)} />
       )}
       {narrow && !collapsed && (
         <PanelResizeGrip

@@ -456,6 +456,13 @@
       "when": 1793155296856,
       "tag": "0064_combat_attacks",
       "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1793184588648,
+      "tag": "0065_ability_categories",
+      "breakpoints": true
     }
   ]
 }

@@ -18,6 +18,7 @@ import {
   type EffectValues,
 } from '../EffectFields';
 import {
+  monsterAbilityValidate,
   toMonsterAbilityValues,
   type MonsterAbilityValues,
 } from '../monsterAbilityForm';
@@ -78,6 +79,7 @@ export const simpleFormValidate = {
   usage: usageValidate,
   steps: stepsValidate,
   spell: spellValidate,
+  monster: monsterAbilityValidate,
   block: blockValidate,
 };
 
@@ -116,6 +118,7 @@ export function toSimpleFormValues(
       entry && 'category' in entry && entry.category === 'monster'
         ? entry.details
         : undefined,
+      entry && 'costs' in entry ? entry.costs : undefined,
     ),
     block: toBlockValues(entry && 'look' in entry ? entry : undefined),
     model:

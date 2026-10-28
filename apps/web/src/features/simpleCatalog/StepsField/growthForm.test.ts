@@ -75,7 +75,10 @@ describe('рост шага в форме', () => {
   });
 
   it('с чем растёт — по категории, кругу и ячейке в форме', () => {
-    const blank = toSimpleFormValues(ABILITIES, null);
+    const blank = {
+      ...toSimpleFormValues(ABILITIES, null),
+      category: 'feature',
+    };
     expect(formGrowthBasis(blank)).toEqual({ kind: 'level' });
     const slot = { ...blank.usage, slotOn: true, slotLevel: 1 };
     expect(formGrowthBasis({ ...blank, usage: slot })).toEqual({

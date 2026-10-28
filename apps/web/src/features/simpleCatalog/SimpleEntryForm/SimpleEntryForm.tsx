@@ -139,7 +139,7 @@ function SimpleEntryForm({
                   description={
                     def.categories.length === 1
                       ? 'Другие категории появятся позже'
-                      : undefined
+                      : def.categoryHints?.[form.getValues().category]
                   }
                   data={def.categories.map((value) => ({
                     value,

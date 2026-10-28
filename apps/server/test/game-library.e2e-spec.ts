@@ -43,7 +43,7 @@ const effectBody = (name: string, isPublic = false) => ({
 // Способность, которая при попадании накладывает эффекты.
 const abilityBody = (name: string, effectIds: string[], isPublic = false) => ({
   name,
-  category: 'basic',
+  category: 'feature',
   details: {},
   description: '',
   isPublic,

@@ -23,14 +23,21 @@ const options = async (user: User, label: string) => {
   return names;
 };
 
-// docs/plan/done/traits.md: черта у «Базовой» с блоком «Действует всегда».
+// docs/plan/done/traits.md: черта с блоком «Действует всегда» — у «Умения»; у «Базовой»
+// черта только текстом (docs/plan/ability-categories.md).
 describe('черта в форме способности', () => {
-  it('у базовой есть «Черта» и блок составляющих; у заклинания — нет', async () => {
+  it('у умения есть «Черта» и блок составляющих; у базовой — без блока, у заклинания — нет', async () => {
     const user = userEvent.setup();
     renderWithProviders(<SimpleCreatePage def={ABILITIES} />);
     expect(screen.queryByText('Действует всегда')).toBeNull();
 
     await pick(user, 'Активация', 'Черта');
+    // «Базовая» — по умолчанию: черта только текстом, затрат и «Применения» нет.
+    expect(screen.queryByText('Действует всегда')).toBeNull();
+    expect(screen.queryByText('Затраты')).toBeNull();
+    expect(screen.queryByText('Применение')).toBeNull();
+
+    await pick(user, 'Категория', 'Умение');
     expect(screen.getByText('Действует всегда')).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: '+ Составляющая' }),

@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  activationFitsCategory,
-  formatRecharge,
-  isMonsterAbilityDetails,
-} from './abilityMonster.js';
+import { formatRecharge, isMonsterAbilityDetails } from './abilityMonster.js';
 import { isAbilityActivation } from './abilityUsage.js';
 import { formatActivation } from './abilityUsageLabels.js';
 
@@ -34,19 +30,6 @@ describe('активации монстра', () => {
     expect(isAbilityActivation({ kind: 'legendary', cost: 0 })).toBe(false);
     expect(isAbilityActivation({ kind: 'legendary' })).toBe(false);
     expect(isAbilityActivation({ kind: 'trait', trigger: '' })).toBe(false);
-  });
-
-  it('разрешает легендарное действие только «Монстра», черту — и «Базовой»', () => {
-    const trait = { kind: 'trait' } as const;
-    const legendary = { kind: 'legendary', cost: 1 } as const;
-    expect(activationFitsCategory('monster', trait)).toBe(true);
-    expect(activationFitsCategory('monster', legendary)).toBe(true);
-    expect(activationFitsCategory('basic', trait)).toBe(true);
-    expect(activationFitsCategory('spell', trait)).toBe(false);
-    expect(activationFitsCategory('basic', legendary)).toBe(false);
-    expect(activationFitsCategory('spell', legendary)).toBe(false);
-    expect(activationFitsCategory('basic', { kind: 'action' })).toBe(true);
-    expect(activationFitsCategory('monster', { kind: 'action' })).toBe(true);
   });
 });
 

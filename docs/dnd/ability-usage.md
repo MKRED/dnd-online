@@ -45,12 +45,14 @@ Several can apply at once, or none (Cunning Action, Uncanny Dodge have no use li
 
 Decided with the user on 2026-10-15 ([plan/done/abilities.md](../plan/done/abilities.md)).
 
-- **Activation and costs are fields of every ability**, not of one category: attacks and spells have them too. There is no «Умение» category.
+- **Activation and costs are fields of every ability**, not of one category: attacks and spells have them too.
+- **Four categories** (decided with the user on 2026-10-28, [plan/ability-categories.md](../plan/ability-categories.md); until then «Базовая» held both plain text and rules, and there was no «Умение»): «Базовая» (`basic`) — text with an activation, no costs, no «Применение», a trait only as text; «Умение» (`feature`) — class and species features and feats with every cost, «Применение» and a trait with components; «Заклинание» (`spell`); «Монстр» (`monster`). Which activations and costs each category has is `allowedCostKinds` and `activationKindFitsCategory`; the server answers 400 with the reason. A trait of any category has no costs: it works by itself.
 - **Activation** is exactly one of: «Действие», «Бонусное действие», «Реакция» and «Без действия» (both with an optional condition, «когда…», up to 200 characters), «Вместо одной атаки», «Время» (1–99 minutes or hours). The action is not split into Magic, Attack and so on yet.
-  - Only the «Монстра» category adds «Легендарное действие» with a cost of 1–3 (added 2026-10-19, [monsters.md](monsters.md), «In the app»).
-  - «Черта» (`{ kind: 'trait' }`) is a passive trait: «Базовая» and «Монстра» have it, «Заклинание» doesn't (monsters only until 2026-10-24, then opened to «Базовая» with the user, [plan/done/traits.md](../plan/done/traits.md)). What a trait always changes is its `passive` list — the same components as an effect's (Darkvision as «Чувство», Dwarven Resilience as «Сопротивление и иммунитет» plus «Преимущество или помеха», Defense as «Класс доспеха»). Other activations have no components (400). The sheet counts traits in its numbers in both views, «С эффектами» and «Без эффектов»: a trait is part of the character, not a temporary effect.
+  - Only the «Монстр» category adds «Легендарное действие» with a cost of 1–3 (added 2026-10-19, [monsters.md](monsters.md), «In the app»).
+  - A spell has only the 2024 casting times: «Действие», «Бонусное действие», «Реакция», «Время» (2026-10-28; «Без действия» and «Вместо одной атаки» fit no 2024 spell).
+  - «Черта» (`{ kind: 'trait' }`) is a passive trait: «Базовая», «Умение» and «Монстр» have it, «Заклинание» doesn't (monsters only until 2026-10-24, then opened to «Базовая» with the user, [plan/done/traits.md](../plan/done/traits.md); since 2026-10-28 a «Базовая» trait is text only and its components belong to «Умение»). What a trait always changes is its `passive` list — the same components as an effect's (Darkvision as «Чувство», Dwarven Resilience as «Сопротивление и иммунитет» plus «Преимущество или помеха», Defense as «Класс доспеха»). Other activations have no components (400). The sheet counts traits in its numbers in both views, «С эффектами» and «Без эффектов»: a trait is part of the character, not a temporary effect.
   - **Departs from the book:** components always apply, so a trait's own condition is written in the description only — Defense gives +1 AC even without armor. Dwarven Toughness can't be expressed yet: there is no Hit Point maximum component, and the maximum is typed in the form.
-- **Costs** are four optional kinds, each at most once:
+- **Costs** are four optional kinds, each at most once. «Умение» has all four; «Заклинание» has no «Кость хитов»; «Монстр» has only «Движение» and its «Ограничение» ([monsters.md](monsters.md), «In the app»); «Базовая» and any trait have none:
   - **Заряды** — a number 1–99, the proficiency bonus or an ability modifier (minimum 1), with one of the three recoveries above;
   - **Ячейка заклинаний** of at least level N (1 — any);
   - **Движение** — half the speed, all of it, or a fixed number of feet (5–120, a multiple of 5). The fixed feet are the user's addition (2026-10-15) for homebrew abilities; no 2024 feature found that costs a fixed distance;
@@ -59,7 +61,7 @@ Decided with the user on 2026-10-15 ([plan/done/abilities.md](../plan/done/abili
 - **Terms:** «долгий отдых» as in the 2024 translation; «бонус мастерства» kept from the character sheet, though the 2024 translation says «бонус владения» (the user's choice).
 - Abilities saved before these fields read as «Действие» without costs.
 
-Code: `packages/shared/src/abilityUsage.ts` (types, `isAbilityActivation`, `isAbilityCosts`) and `abilityUsageLabels.ts` (Russian text); the trait's components are `abilityPassive.ts`, the categories of an activation `abilityMonster.ts`; the server stores them in `abilities.extra`; the form is `apps/web/src/features/simpleCatalog/UsageField/`, the trait's block «Действует всегда» is `AbilityFields.tsx`.
+Code: `packages/shared/src/abilityUsage.ts` (types, `isAbilityActivation`, `isAbilityCosts`) and `abilityUsageLabels.ts` (Russian text); the trait's components are `abilityPassive.ts`, what each category may have `abilityCategoryRules.ts`; the server stores them in `abilities.extra`; the form is `apps/web/src/features/simpleCatalog/UsageField/`, the trait's block «Действует всегда» is `AbilityFields.tsx`.
 
 ## Turn actions / Действия за ход
 

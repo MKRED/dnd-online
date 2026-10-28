@@ -9,7 +9,6 @@ import {
   DAMAGE_TYPES,
   DEFAULT_ABILITY_FIELDS,
   EFFECT_COMPONENTS_MAX,
-  MONSTER_ACTIVATION_KINDS,
   TRAIT_CATEGORIES,
   SAVE_DC_ABILITIES,
   SPELL_DURATION_LABELS,
@@ -26,20 +25,23 @@ const FIELDS = {
   name: 'название, до 100 символов',
   category: 'категория, см. details ниже',
   details: 'поля категории',
-  activation: `как применяют: ${labeled(ACTIVATION_LABELS)}. reaction и free — {kind, trigger} («когда…», можно пусто), time — {kind, amount, unit: minute|hour}, legendary — {kind, cost}; ${list(MONSTER_ACTIVATION_KINDS)} — только у категории monster, trait (пассивная черта: действует всегда) — у ${list(TRAIT_CATEGORIES)}`,
-  costs: `затраты {uses, spellSlot, movement, hitDie}: uses — {count: {kind: fixed, amount} | {kind: proficiency} | {kind: ability, ability}, recovery: ${list(USES_RECOVERIES)}} или null; spellSlot — {minLevel} или null; movement — {kind: half|all} | {kind: feet, feet} или null; hitDie — тратит ли кость хитов`,
-  steps: `«Применение» — до ${ABILITY_STEPS_MAX} шагов, см. ниже; [] — всё в описании`,
-  passive: `только у activation trait: что черта даёт владельцу всегда — до ${EFFECT_COMPONENTS_MAX} составляющих {kind, …}, как components эффекта (format_guide kind effect); лист считает их и в виде «Без эффектов». [] или без поля — всё в описании`,
+  activation: `как применяют: ${labeled(ACTIVATION_LABELS)}. reaction и free — {kind, trigger} («когда…», можно пусто), time — {kind, amount, unit: minute|hour}, legendary — {kind, cost}; legendary — только у категории monster, trait (пассивная черта: действует всегда) — у ${list(TRAIT_CATEGORIES)}; у spell — только action, bonus_action, reaction, time`,
+  costs: `затраты {uses, spellSlot, movement, hitDie}: uses — {count: {kind: fixed, amount} | {kind: proficiency} | {kind: ability, ability}, recovery: ${list(USES_RECOVERIES)}} или null; spellSlot — {minLevel} или null; movement — {kind: half|all} | {kind: feet, feet} или null; hitDie — тратит ли кость хитов. Что можно категории: basic и любая trait — ничего (все null, hitDie false); feature — всё; spell — без hitDie; monster — без spellSlot и hitDie, а uses — только «N/день» {count: {kind: fixed, amount: N}, recovery: long} или «перезарядка после отдыха» {count: {kind: fixed, amount: 1}, recovery: short}, и не вместе с details.recharge`,
+  steps: `«Применение» — до ${ABILITY_STEPS_MAX} шагов, см. ниже; [] — всё в описании; у basic — только []`,
+  passive: `только у activation trait и не у basic: что черта даёт владельцу всегда — до ${EFFECT_COMPONENTS_MAX} составляющих {kind, …}, как components эффекта (format_guide kind effect); лист считает их и в виде «Без эффектов». [] или без поля — всё в описании`,
   description: 'полный текст способности, как в книге',
   sources: 'источники — строки',
   isPublic: 'false (create ставит сам)',
 } satisfies Record<keyof AbilityInput, string>;
 
 const DETAILS = {
-  basic: '{} — умение класса, вида, черты, оружия',
+  basic:
+    '{} — только текст с активацией: без затрат, шагов и составляющих черты',
+  feature:
+    '{} — умение класса, вида, черты, оружия по правилам: затраты, шаги, черта с составляющими',
   spell: `{level, school, components, ritual, duration}: level 0 (заговор)..9; school: ${labeled(SPELL_SCHOOL_LABELS)}; components — строка «В, С, М (…)»; duration: {kind: ${list(Object.keys(SPELL_DURATION_LABELS))}}, у time ещё amount, unit (round|minute|hour|day) и concentration`,
   monster:
-    '{recharge} — нижняя граница к6 перезарядки («Перезарядка 5–6» — 5) или null',
+    '{recharge} — нижняя граница к6 перезарядки («Перезарядка 5–6» — 5) или null; у черты — null. Только у монстров: персонажу и НПС не добавляется',
 } satisfies Record<AbilityCategory, string>;
 
 // Пример шага — укус: рукопашная атака оружием +4, 1к4 колющего. Тип AbilityStep держит

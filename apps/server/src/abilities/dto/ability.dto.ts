@@ -2,7 +2,6 @@ import { IsBoolean, IsIn, IsOptional, ValidateBy } from 'class-validator';
 import {
   ABILITY_CATEGORIES,
   abilityStepsProblem,
-  activationFitsCategory,
   isAbilityActivation,
   isAbilityCosts,
   isAbilitySteps,
@@ -21,16 +20,19 @@ import {
   isEmptyDetails,
 } from '../../catalog/category-details.validator.js';
 import { CatalogEntryDto } from '../../catalog/entries/dto/catalog-entry.dto.js';
+import { AbilityFieldsFitCategory } from './ability-fields.validator.js';
 import { SpellSlotFitsLevel } from './spell-slot.validator.js';
 
 // Создание и полное редактирование способности — одно и то же тело.
 export class AbilityDto extends CatalogEntryDto {
   @IsIn(ABILITY_CATEGORIES, { message: 'Неизвестная категория способности' })
+  @AbilityFieldsFitCategory()
   category: AbilityCategory;
 
   @CategoryDetails<AbilityCategory>(
     {
       basic: isEmptyDetails,
+      feature: isEmptyDetails,
       spell: isSpellDetails,
       monster: isMonsterAbilityDetails,
     },
@@ -49,23 +51,6 @@ export class AbilityDto extends CatalogEntryDto {
     validator: {
       validate: isAbilityActivation,
       defaultMessage: () => 'Активация способности задана неверно',
-    },
-  })
-  // Легендарное действие — только у способности монстра, черта — у базовой и монстра
-  // (shared/abilityMonster.ts). Неверную активацию или категорию отклоняют их собственные
-  // проверки.
-  @ValidateBy({
-    name: 'activationFitsCategory',
-    validator: {
-      validate: (value: unknown, args) => {
-        const { category } = args?.object as { category?: unknown };
-        if (!ABILITY_CATEGORIES.includes(category as AbilityCategory))
-          return true;
-        if (!isAbilityActivation(value)) return true;
-        return activationFitsCategory(category as AbilityCategory, value);
-      },
-      defaultMessage: () =>
-        'Легендарное действие бывает только у способности монстра, черта — у базовой способности и способности монстра',
     },
   })
   activation: AbilityActivation;

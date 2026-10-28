@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { describeAbilityCategories } from './abilities/categories.js';
 import { describeAbilityStepChains } from './abilities/chains.js';
 import { describeAbilityEffects } from './abilities/effects.js';
 import { describeAbilityGrowth } from './abilities/growth.js';
@@ -20,7 +21,7 @@ describeCatalog(
     path: 'abilities',
     body: {
       name: 'Отражение',
-      category: 'basic',
+      category: 'feature',
       details: {},
       description: 'тест',
       isPublic: false,
@@ -76,6 +77,7 @@ describeCatalog(
     describeAbilityGrowth(get);
     describeAbilityMonster(get);
     describeAbilityTraits(get);
+    describeAbilityCategories(get);
     describeAbilityEffects(get);
   },
 );

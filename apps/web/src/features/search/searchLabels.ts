@@ -42,6 +42,7 @@ const abilityDetail = (hit: Hits<'ability'>[number]) => {
   if (hit.category === 'spell') {
     return hit.spellLevel ? `заклинание · ${hit.spellLevel} круг` : 'заговор';
   }
+  if (hit.category === 'feature') return 'умение';
   return hit.category === 'monster' ? 'способность монстра' : 'способность';
 };
 

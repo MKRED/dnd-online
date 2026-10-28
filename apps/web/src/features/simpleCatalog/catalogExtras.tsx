@@ -9,6 +9,8 @@ import {
   formatEffectDurationShort,
   formatEffectComponent,
   formatSaveEnds,
+  hasRules,
+  type AbilityCategory,
   type Effect,
 } from 'shared';
 import { AbilityGuideButton } from './AbilityGuide';
@@ -103,8 +105,11 @@ export const ABILITY_EXTRAS: CatalogExtras = {
   Field: AbilityFields,
   toInput: (values) => ({
     ...abilityCategoryInput(values),
-    // Цепочка ещё раз сверяется перед отправкой: правка могла не успеть отрисоваться.
-    steps: chainSteps(values.steps).map(fromStepValues),
+    // Цепочка ещё раз сверяется перед отправкой: правка могла не успеть отрисоваться. У
+    // «Базовой» «Применения» нет (docs/plan/ability-categories.md).
+    steps: hasRules(values.category as AbilityCategory)
+      ? chainSteps(values.steps).map(fromStepValues)
+      : [],
   }),
   rows: (entry) => ('activation' in entry ? abilityRows(entry) : []),
   // Условие реакции в колонке не поместится — только вид или время.

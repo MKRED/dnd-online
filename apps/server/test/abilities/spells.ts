@@ -24,7 +24,7 @@ const spell = (details: object, costs: object = slot(3)) => ({
 
 export function describeAbilitySpells(get: () => CatalogContext): void {
   describe('заклинание', () => {
-    it('сохраняется и читается, правкой становится базовой', async () => {
+    it('сохраняется и читается, правкой становится умением', async () => {
       const { author, url, create, body } = get();
       const { id } = await create(spell(fireball));
       const card = await author.get(url(id)).expect(200);
@@ -48,11 +48,11 @@ export function describeAbilitySpells(get: () => CatalogContext): void {
         .send(body(spell(detect, noCosts)))
         .expect(200);
       expect(edited.body).toMatchObject(spell(detect, noCosts));
-      const basic = await author
+      const feature = await author
         .put(url(id))
-        .send(body({ category: 'basic', details: {} }))
+        .send(body({ category: 'feature', details: {} }))
         .expect(200);
-      expect(basic.body).toMatchObject({ category: 'basic', details: {} });
+      expect(feature.body).toMatchObject({ category: 'feature', details: {} });
     });
 
     it('неверные поля заклинания — 400', async () => {

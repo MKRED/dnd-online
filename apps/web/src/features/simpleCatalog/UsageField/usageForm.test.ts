@@ -46,24 +46,47 @@ describe('usageForm', () => {
 
   it('проверяет числа, только когда поле в деле', () => {
     const usage = toUsageValues(full);
-    expect(usageValidate.slotLevel(10, { usage })).toBe('От 1 до 9');
+    expect(usageValidate.slotLevel(10, { category: 'feature', usage })).toBe(
+      'От 1 до 9',
+    );
     expect(
-      usageValidate.slotLevel(10, { usage: { ...usage, slotOn: false } }),
+      usageValidate.slotLevel(10, {
+        category: 'feature',
+        usage: { ...usage, slotOn: false },
+      }),
     ).toBeNull();
     expect(
       usageValidate.usesAmount('', {
+        category: 'feature',
         usage: { ...usage, usesCount: 'fixed' },
       }),
     ).toBe('От 1 до 99');
-    expect(usageValidate.movementFeet(12, { usage })).toBe(
+    expect(usageValidate.movementFeet(12, { category: 'feature', usage })).toBe(
       'От 5 до 120, кратно 5',
     );
     expect(
-      usageValidate.movementFeet('', { usage: { ...usage, movement: 'all' } }),
+      usageValidate.movementFeet('', {
+        category: 'feature',
+        usage: { ...usage, movement: 'all' },
+      }),
     ).toBeNull();
-    expect(usageValidate.amount('', { usage })).toBeNull();
+    expect(usageValidate.amount('', { category: 'feature', usage })).toBeNull();
     expect(
-      usageValidate.amount('', { usage: { ...usage, kind: 'time' } }),
+      usageValidate.amount('', {
+        category: 'feature',
+        usage: { ...usage, kind: 'time' },
+      }),
     ).not.toBeNull();
+    // Затрат, которых у категории нет, форма не показывает и не проверяет
+    // (docs/plan/ability-categories.md).
+    expect(
+      usageValidate.slotLevel(10, { category: 'monster', usage }),
+    ).toBeNull();
+    expect(
+      usageValidate.usesAmount('', {
+        category: 'basic',
+        usage: { ...usage, usesCount: 'fixed' },
+      }),
+    ).toBeNull();
   });
 });

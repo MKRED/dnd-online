@@ -139,15 +139,16 @@ CR runs from 0 to 30, with the fractions 1/8, 1/4 and 1/2. The glossary describe
 
 The decisions are in [plan/done/monsters-npcs.md](../plan/done/monsters-npcs.md) («Решения»).
 
-**Built (stage 2, 2026-10-19): the «Монстра» ability category.**
+**Built (stage 2, 2026-10-19): the «Монстр» ability category** (labelled «Монстра» until 2026-10-28).
 
-- The category `monster` sits next to «Базовая» and «Заклинание» in the shared ability catalog.
+- The category `monster` sits next to «Базовая», «Умение» and «Заклинание» in the shared ability catalog ([plan/ability-categories.md](../plan/ability-categories.md)).
 - Only it may use the activation **«Легендарное действие»** (`{ kind: 'legendary', cost }`, cost 1–3). Any other category with it gets 400. A stored record that breaks this reads as «Действие».
-- **«Черта»** (`{ kind: 'trait' }`) was monster-only too until 2026-10-24; now «Базовая» has it as well, and a trait carries the components it always applies (`passive`), counted on the monster card in both views ([plan/done/traits.md](../plan/done/traits.md), [ability-usage.md](ability-usage.md)). Its conditions go in the description.
-- **Recharge** is the category's own field in `details`: `{ recharge: X | null }`, X from 2 to 6, shown as «Перезарядка 5–6» or «Перезарядка 6» in the costs row. It isn't one of the shared costs: their key set is strict, and a new key would make every stored ability fail the check.
-- **X/Day** and **Recharge after a rest** need no new fields: they are uses that come back after a Long Rest, or one use that comes back after a Short or Long Rest.
-- **A character can't take a «Монстра» ability:** the add dialog doesn't offer one, and the server answers 400. An ability that becomes «Монстра» after it was added stays on the sheet, grouped by its activation.
-- Code: `packages/shared/src/abilityMonster.ts` (category fields, the category check, the recharge label); the activations are in `abilityUsage.ts` and `abilityUsageLabels.ts`. The form fields are in `apps/web/src/features/simpleCatalog/MonsterAbilityFields.tsx` and `UsageField/ActivationFields.tsx`.
+- **«Черта»** (`{ kind: 'trait' }`) was monster-only too until 2026-10-24; now «Базовая» and «Умение» have it as well, and a trait carries the components it always applies (`passive`), counted on the monster card in both views ([plan/done/traits.md](../plan/done/traits.md), [ability-usage.md](ability-usage.md)). Its conditions go in the description.
+- **Recharge** is the category's own field in `details`: `{ recharge: X | null }`, X from 2 to 6. It isn't one of the shared costs: their key set is strict, and a new key would make every stored ability fail the check.
+- **«Ограничение»** (decided with the user on 2026-10-28, [plan/ability-categories.md](../plan/ability-categories.md), option 1А): one field in the form for the stat block's usage limits — «Нет», «N/день», «Перезарядка X–6», «Перезарядка после короткого или долгого отдыха». It is stored without new fields: «N/день» is uses «N, all after a Long Rest», «after a rest» is one use back after a Short or Long Rest, recharge is `details.recharge`. Other uses (the proficiency bonus, an ability modifier, «one after a Short Rest») and uses together with a recharge get 400. The card shows it as the book does: «3/день», «Перезарядка 5–6», «Перезарядка после короткого или долгого отдыха» (`formatAbilityCosts`).
+- **No spell slot and no Hit Point Die** (2026-10-28): monsters don't use spell slots (above, «Spellcasting»), and no stat-block limit spends a Hit Point Die. The form doesn't offer them and the server answers 400. A trait has no limit at all. Migration `0065` cleared them from stored abilities and turned the uses that don't fit into the nearest limit ([plan/ability-categories.md](../plan/ability-categories.md), «Старые записи»).
+- **A character can't take a «Монстр» ability**, NPCs included (confirmed with the user on 2026-10-28: monsters are monsters, NPCs take their own abilities): the add dialog doesn't offer one, and the server answers 400. An ability that becomes «Монстр» after it was added stays on the sheet, grouped by its activation.
+- Code: `packages/shared/src/abilityMonster.ts` (category fields, the recharge label), `abilityCategoryRules.ts` (what each category may have), `monsterAbilityLimit.ts` («Ограничение»); the activations are in `abilityUsage.ts` and `abilityUsageLabels.ts`. The form fields are in `apps/web/src/features/simpleCatalog/MonsterAbilityFields.tsx` («Ограничение») and `UsageField/ActivationFields.tsx`.
 
 **Built (stage 3, 2026-10-19): the monster catalog on the server** (`/monsters`).
 

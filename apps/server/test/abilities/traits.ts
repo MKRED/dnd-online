@@ -4,8 +4,9 @@ import { DatabaseService } from '../../src/database/database.service.js';
 import { abilities } from '../../src/database/schema/index.js';
 import type { CatalogContext } from '../support/catalog-scenario/index.js';
 
-// Пассивная черта (docs/plan/done/traits.md): активация «Черта» у «Базовой» и «Монстра»,
-// её составляющие (passive) — как у эффекта и только у черты.
+// Пассивная черта (docs/plan/done/traits.md): активация «Черта» у «Базовой», «Умения» и
+// «Монстра», её составляющие (passive) — как у эффекта, только у черты и не у «Базовой»
+// (docs/plan/ability-categories.md). Затрат у черты нет.
 
 const darkvision = { kind: 'sense', sense: 'darkvision', range: 120 };
 const resistance = {
@@ -14,8 +15,10 @@ const resistance = {
   damageTypes: ['poison'],
   conditions: [],
 };
+const noCosts = { uses: null, spellSlot: null, movement: null, hitDie: false };
 const trait = (passive: object[]) => ({
   activation: { kind: 'trait' },
+  costs: noCosts,
   passive,
 });
 const spell = {
@@ -34,20 +37,42 @@ const messages = (res: { body: unknown }) =>
 
 export function describeAbilityTraits(get: () => CatalogContext): void {
   describe('черта', () => {
-    it('у базовой сохраняется с составляющими и читается', async () => {
+    it('у умения сохраняется с составляющими и читается', async () => {
       const { author, url, create, body } = get();
       const { id } = await create(trait([darkvision, resistance]));
       const card = await author.get(url(id)).expect(200);
       expect(card.body).toMatchObject({
-        category: 'basic',
+        category: 'feature',
         ...trait([darkvision, resistance]),
       });
       // Без составляющих — всё в описании, как у черт монстров до них.
       const plain = await author
         .put(url(id))
-        .send(body({ activation: { kind: 'trait' } }))
+        .send(body(trait([])))
         .expect(200);
       expect(plain.body).toMatchObject(trait([]));
+    });
+
+    it('у базовой — только текстом, у любой — без затрат', async () => {
+      const { author, url, body, create } = get();
+      const basic = { category: 'basic', details: {} };
+      const saved = await create({ ...basic, ...trait([]) });
+      expect(saved).toMatchObject({ category: 'basic', ...trait([]) });
+      const passive = await author
+        .post(url())
+        .send(body({ ...basic, ...trait([darkvision]) }))
+        .expect(400);
+      expect(messages(passive)).toContain(
+        'У базовой черты нет составляющих: для них выберите «Умение»',
+      );
+      // Затраты из тела по умолчанию — заряды и движение.
+      const costs = await author
+        .post(url())
+        .send(body({ activation: { kind: 'trait' } }))
+        .expect(400);
+      expect(messages(costs)).toContain(
+        'У черты нет затрат: она действует сама',
+      );
     });
 
     it('у монстра тоже бывает с составляющими', async () => {
@@ -84,7 +109,7 @@ export function describeAbilityTraits(get: () => CatalogContext): void {
       ]) {
         const res = await author
           .post(url())
-          .send(body({ activation: { kind: 'trait' }, passive }))
+          .send(body({ ...trait([]), passive }))
           .expect(400);
         expect(messages(res)).toContain('Составляющие черты заданы неверно');
       }
@@ -97,7 +122,7 @@ export function describeAbilityTraits(get: () => CatalogContext): void {
         .send(body({ ...spell, ...trait([]) }))
         .expect(400);
       expect(messages(res)).toContain(
-        'Легендарное действие бывает только у способности монстра, черта — у базовой способности и способности монстра',
+        'Заклинание сотворяют действием, бонусным действием, реакцией или дольше',
       );
     });
 

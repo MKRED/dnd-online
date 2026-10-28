@@ -171,8 +171,10 @@ describe('game combat attacks (e2e)', () => {
       kind: 'combat.damage',
       result: { applied: true, damage: { total: 3 } },
     });
+    // Хиты сняты от имени героя, а не мастера.
     expect(changed).toMatchObject({
       kind: 'creature.changed',
+      as: { kind: 'character', id: g.character },
       intent: {
         change: { amount: 3, parts: [{ amount: 3, type: 'bludgeoning' }] },
       },

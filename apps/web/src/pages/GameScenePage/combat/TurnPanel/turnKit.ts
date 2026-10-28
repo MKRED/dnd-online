@@ -60,11 +60,18 @@ function heroAttackKit(character: Character): TurnKitAttack[] {
     );
     return {
       ...common,
-      tip: [view.name, view.place, view.bonus, view.damage, view.mastery]
+      // Бросают то, что в подсказке: Универсальное при свободной второй руке — двумя руками.
+      tip: [
+        view.name,
+        view.place,
+        view.bonus,
+        attack.twoHanded ? view.damageNotes[0] : view.damage,
+        view.mastery,
+      ]
         .filter(Boolean)
         .join(' · '),
       image: row?.item ? { id: row.item.id, image: row.item.image } : null,
-      icon: 'weapon',
+      icon: option.kind === 'ranged' ? 'bow' : 'weapon',
     };
   });
 }

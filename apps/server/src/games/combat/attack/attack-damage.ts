@@ -6,6 +6,7 @@ import {
   type DamageDealtPart,
   type DamageRoll,
   type GameCombatDamage,
+  type GameEventAs,
 } from 'shared';
 import { gameCombatants } from '../../../database/schema/index.js';
 import { changeCharacter } from '../../characters/game-character-state.js';
@@ -44,6 +45,7 @@ async function applyDamage(
   actor: CombatActor,
   target: Fighter,
   damage: DamageRoll,
+  as: GameEventAs,
 ) {
   const change = damageChange(damage);
   if (target.seated) {
@@ -59,6 +61,7 @@ async function applyDamage(
     },
     target.creature!.objectId,
     change,
+    as,
   );
 }
 
@@ -97,7 +100,8 @@ export async function rollPendingDamage(
     visibility: target ? await fighterVisibility(actor, target) : 'master',
   });
   if (!target) return { damage, hitPoints: null };
-  if (damage.total > 0) await applyDamage(actor, target, damage);
+  if (damage.total > 0)
+    await applyDamage(actor, target, damage, asOf(actor, c));
   // Хиты героя партия видит на его листе; хиты монстра и НПС — только мастер.
   if (!isMaster(actor) && !target.party) return { damage, hitPoints: null };
   // Те же числа, что записала правка: сначала уходят временные хиты.

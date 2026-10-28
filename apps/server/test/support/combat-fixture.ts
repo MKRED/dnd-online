@@ -21,7 +21,11 @@ export async function attackScene(
   prefix: string,
   options: {
     // Оружие героя: имя, поля оружия и место куклы (null — в инвентаре).
-    weapons?: { name: string; over: object; slot: string | null }[];
+    weapons?: {
+      name: string;
+      over: Record<string, unknown>;
+      slot: string | null;
+    }[];
     goblin?: object;
   } = {},
 ) {

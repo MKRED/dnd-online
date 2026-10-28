@@ -13,7 +13,7 @@ interface PendingDamageProps {
 function PendingDamage({ pending, onRoll }: PendingDamageProps) {
   return (
     <div className={classes.pending} role="status">
-      <Text size="xs" style={{ minWidth: 0 }}>
+      <Text size="xs">
         {pending.critical ? 'Крит' : 'Попадание'}: {pending.name} →{' '}
         {pending.target.name}
       </Text>

@@ -247,3 +247,12 @@ button.pip:hover {
   border-radius: var(--mantine-radius-sm);
   background: var(--mantine-color-red-light);
 }
+
+.pending > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.pending > :last-child {
+  flex: none;
+}

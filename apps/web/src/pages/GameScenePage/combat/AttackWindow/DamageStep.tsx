@@ -60,7 +60,7 @@ function DamageStep({ critical, pending, onDamage, onDone }: DamageStepProps) {
         ))}
         {done && (
           <div className={rollClasses.total}>
-            <dt>Урон</dt>
+            <dt>Итог</dt>
             <dd>{done.damage.total}</dd>
           </div>
         )}

@@ -62,7 +62,7 @@ describe('simpleEntryValues', () => {
       authorNickname: 'Арвен',
       isPublic: false,
       name: 'Тёмное зрение',
-      category: 'basic',
+      category: 'feature',
       details: {},
       activation: { kind: 'trait' },
       costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
@@ -111,9 +111,49 @@ describe('simpleEntryValues', () => {
       details: { recharge: 5 },
       activation: { kind: 'legendary', cost: 2 },
     });
-    const none = { ...values, monster: { recharge: 'none' } };
+    const none = {
+      ...values,
+      monster: { ...values.monster, limit: 'none' as const },
+    };
     expect(toSimpleInput(ABILITIES, none)).toMatchObject({
       details: { recharge: null },
+    });
+    // «Ограничение» (docs/plan/ability-categories.md): «N/день» — заряды после долгого
+    // отдыха, «после отдыха» — один заряд после короткого.
+    const perDay = {
+      ...values,
+      monster: { ...values.monster, limit: 'per_day', perDay: 3 },
+    } as const;
+    expect(toSimpleInput(ABILITIES, perDay)).toMatchObject({
+      details: { recharge: null },
+      costs: {
+        uses: { count: { kind: 'fixed', amount: 3 }, recovery: 'long' },
+      },
+    });
+    const rest = {
+      ...values,
+      monster: { ...values.monster, limit: 'rest' },
+    } as const;
+    expect(toSimpleInput(ABILITIES, rest)).toMatchObject({
+      details: { recharge: null },
+      costs: {
+        uses: { count: { kind: 'fixed', amount: 1 }, recovery: 'short' },
+      },
+    });
+  });
+
+  it('«Базовая» не отправляет затраты, шаги и составляющие', () => {
+    const values = toSimpleFormValues(ABILITIES, null);
+    const basic = {
+      ...values,
+      category: 'basic',
+      usage: { ...values.usage, usesOn: true, hitDie: true },
+    };
+    expect(toSimpleInput(ABILITIES, basic)).toMatchObject({
+      category: 'basic',
+      costs: { uses: null, spellSlot: null, movement: null, hitDie: false },
+      steps: [],
+      passive: [],
     });
   });
 });

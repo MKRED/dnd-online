@@ -171,7 +171,7 @@ describe('game figures (e2e)', () => {
         .post('/api/abilities')
         .send({
           name: 'Быстрые ноги',
-          category: 'basic',
+          category: 'feature',
           details: {},
           description: '',
           isPublic: false,

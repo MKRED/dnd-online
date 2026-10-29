@@ -6,9 +6,12 @@ import {
   MOVEMENT_FEET_STEP,
   SPELL_SLOT_LEVEL_MAX,
   USES_AMOUNT_MAX,
+  allowedCostKinds,
   isMovementFeet,
   type AbilityActivation,
   type AbilityActivationKind,
+  type AbilityCategory,
+  type AbilityCostKind,
   type AbilityCosts,
   type AbilityFields,
   type AbilityScore,
@@ -150,6 +153,17 @@ const intIn = (value: number | string, max: number) => {
 
 type WithUsage = { usage?: UsageValues; category?: string };
 
+// Затрата в деле: она есть у категории и активации (shared/abilityCategoryRules.ts) и её
+// галочка отмечена. Заряды монстра — его «Ограничение» со своей проверкой.
+const costOn = (values: WithUsage, kind: AbilityCostKind, on?: boolean) =>
+  Boolean(on) &&
+  !(kind === 'uses' && values.category === 'monster') &&
+  values.usage !== undefined &&
+  allowedCostKinds(
+    values.category as AbilityCategory,
+    values.usage.kind,
+  ).includes(kind);
+
 // Те же пределы, что у сервера (isAbilityActivation, isAbilityCosts). Поле проверяем,
 // только когда оно в деле: выбран его вид или отмечена его галочка.
 export const usageValidate = {
@@ -162,21 +176,21 @@ export const usageValidate = {
       ? null
       : `От 1 до ${ACTIVATION_AMOUNT_MAX}`,
   usesAmount: (value: number | string, values: WithUsage) =>
-    !values.usage?.usesOn ||
-    values.usage.usesCount !== 'fixed' ||
+    !costOn(values, 'uses', values.usage?.usesOn) ||
+    values.usage?.usesCount !== 'fixed' ||
     intIn(value, USES_AMOUNT_MAX)
       ? null
       : `От 1 до ${USES_AMOUNT_MAX}`,
   slotLevel: (value: number | string, values: WithUsage) =>
     // У заклинания круг ячейки — его круг, поля нет (SpellFields/spellSlot.ts).
-    !values.usage?.slotOn ||
+    !costOn(values, 'spellSlot', values.usage?.slotOn) ||
     values.category === 'spell' ||
     intIn(value, SPELL_SLOT_LEVEL_MAX)
       ? null
       : `От 1 до ${SPELL_SLOT_LEVEL_MAX}`,
   movementFeet: (value: number | string, values: WithUsage) =>
-    !values.usage?.movementOn ||
-    values.usage.movement !== 'feet' ||
+    !costOn(values, 'movement', values.usage?.movementOn) ||
+    values.usage?.movement !== 'feet' ||
     (value !== '' && isMovementFeet(Number(value)))
       ? null
       : `От ${MOVEMENT_FEET_STEP} до ${MOVEMENT_FEET_MAX}, кратно ${MOVEMENT_FEET_STEP}`,

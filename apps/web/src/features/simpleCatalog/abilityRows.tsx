@@ -3,9 +3,8 @@ import type { ReactNode } from 'react';
 import {
   formatAbilitySteps,
   formatActivation,
-  formatCosts,
+  formatAbilityCosts,
   formatEffectComponent,
-  formatRecharge,
   formatSpellDuration,
   formatSpellHeader,
   formatStepGrowth,
@@ -63,12 +62,12 @@ function stepRows(entry: AbilityCard, basis: GrowthBasis) {
 export function abilityRows(
   entry: AbilityCard,
 ): { label: string; value: ReactNode }[] {
-  // Перезарядка — поле категории «Монстра», но в книге стоит рядом с затратами.
-  const recharge =
-    entry.category === 'monster' && entry.details.recharge !== null
-      ? [formatRecharge(entry.details.recharge)]
-      : [];
-  const costs = [...recharge, ...formatCosts(entry.costs)];
+  // У монстра затраты начинаются с «Ограничения»: «3/день», «Перезарядка 5–6».
+  const costs = formatAbilityCosts(
+    entry.category,
+    entry.costs,
+    entry.category === 'monster' ? entry.details.recharge : null,
+  );
   const ritual = entry.category === 'spell' && entry.details.ritual;
   return [
     ...spellHeaderRows(entry),

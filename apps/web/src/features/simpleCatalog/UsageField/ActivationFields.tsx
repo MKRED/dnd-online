@@ -21,8 +21,8 @@ import {
 } from 'shared';
 import type { SimpleFormValues } from '../SimpleEntryForm/simpleEntryValues';
 
-// Легендарное действие — только у способности монстра, черта — у базовой и монстра
-// (shared/abilityMonster.ts).
+// Какие активации есть у категории — shared/abilityCategoryRules.ts: легендарное действие
+// только у монстра, у заклинания — действие, бонусное, реакция или время.
 const optionsFor = (category: string) =>
   ABILITY_ACTIVATION_KINDS.filter((kind) =>
     activationKindFitsCategory(category as AbilityCategory, kind),
@@ -46,6 +46,10 @@ const KIND_HINTS: Record<AbilityActivationKind, string> = {
     'Сразу после хода другого существа, из запаса легендарных действий на раунд',
 };
 
+// У «Базовой» черта — только текст (docs/plan/ability-categories.md).
+const BASIC_TRAIT_HINT =
+  'Действует всегда или в своих условиях, всё в описании. Чтобы черта меняла лист, выберите «Умение»';
+
 interface ActivationFieldsProps {
   form: UseFormReturnType<SimpleFormValues>;
 }
@@ -60,7 +64,11 @@ function ActivationFields({ form }: ActivationFieldsProps) {
     <Stack gap="xs">
       <Select
         label="Активация"
-        description={KIND_HINTS[kind]}
+        description={
+          kind === 'trait' && category === 'basic'
+            ? BASIC_TRAIT_HINT
+            : KIND_HINTS[kind]
+        }
         data={optionsFor(category)}
         allowDeselect={false}
         maw={320}

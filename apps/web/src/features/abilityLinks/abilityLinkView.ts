@@ -1,8 +1,7 @@
 import {
   formatActivation,
-  formatCosts,
+  formatAbilityCosts,
   formatEffectComponent,
-  formatRecharge,
   pluralRu,
   type AbilityLink,
   type AbilityLinkCard,
@@ -63,12 +62,12 @@ export function abilitySummary(card: AbilityLinkCard): string {
     card.category === 'spell'
       ? [formatActivation(card.activation)]
       : skillActivation(card);
-  const recharge =
-    card.recharge === null ? [] : [formatRecharge(card.recharge)];
-  const costs = formatCosts(
+  const costs = formatAbilityCosts(
+    card.category,
     card.category === 'spell' ? { ...card.costs, spellSlot: null } : card.costs,
+    card.recharge,
   );
   // Что черта даёт всегда (docs/plan/done/traits.md): «Тёмное зрение, 120 фт.».
   const passive = card.passive.map(formatEffectComponent);
-  return [...parts, ...recharge, ...passive, ...costs].join(' · ');
+  return [...parts, ...passive, ...costs].join(' · ');
 }

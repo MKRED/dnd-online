@@ -79,6 +79,8 @@ export interface SimpleCatalogDef {
   api: ReturnType<typeof catalogApi<SimpleEntry, SimpleInput>>;
   // Категории способности — выбор в форме. У эффекта категории нет.
   categories?: readonly string[];
+  // Подсказка под выбором категории: что в ней бывает.
+  categoryHints?: Record<string, string>;
   // Виды записей для чипов и бейджей: категория способности, составляющие эффекта
   // («Базовый» — эффект без составляющих). У записи их бывает несколько.
   kinds: {
@@ -121,9 +123,23 @@ export const ABILITIES: SimpleCatalogDef = {
   path: '/abilities',
   api: catalogApi<SimpleEntry, SimpleInput>('/abilities'),
   categories: ABILITY_CATEGORIES,
+  // docs/plan/ability-categories.md.
+  categoryHints: {
+    basic:
+      'Только текст: описание и активация. Затраты и «Применение» — у «Умения»',
+    feature:
+      'Классовые и расовые умения, черты: затраты, «Применение», черта, которая меняет лист',
+    spell: 'Всё, у чего есть круг, и заговоры',
+    monster: 'Действия и черты из стат-блока: только у монстров',
+  },
   kinds: {
     values: ABILITY_CATEGORIES,
-    labels: { basic: 'Базовая', spell: 'Заклинание', monster: 'Монстра' },
+    labels: {
+      basic: 'Базовая',
+      feature: 'Умение',
+      spell: 'Заклинание',
+      monster: 'Монстр',
+    },
     of: (entry) => ['category' in entry ? entry.category : 'basic'],
   },
   levelOf: (entry) =>

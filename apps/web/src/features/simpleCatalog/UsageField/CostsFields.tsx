@@ -10,10 +10,12 @@ import {
 import type { UseFormReturnType } from '@mantine/form';
 import {
   ABILITY_SCORES,
+  allowedCostKinds,
   MOVEMENT_FEET_MAX,
   MOVEMENT_FEET_STEP,
   SPELL_SLOT_LEVEL_MAX,
   USES_AMOUNT_MAX,
+  type AbilityCategory,
   type MovementCost,
   type UsesCount,
   type UsesRecovery,
@@ -48,25 +50,43 @@ interface CostsFieldsProps {
   form: UseFormReturnType<SimpleFormValues>;
 }
 
+// Подсказка под заголовком: общие запасы — только у умений персонажа.
+const DESCRIPTIONS: Partial<Record<AbilityCategory, string>> = {
+  feature:
+    'Отметьте, что тратит умение. Общие запасы персонажа (очки сосредоточенности, очки чародейства) пока пишите в описании',
+};
+
 // Что тратит способность: галочка на каждый вид, отмеченная раскрывает свои поля. Ничего
-// не отмечено — способность ничего не тратит.
+// не отмечено — способность ничего не тратит. Показаны только затраты, которые есть у
+// категории и активации (shared/abilityCategoryRules.ts); у монстра заряды — его
+// «Ограничение» (MonsterAbilityFields), здесь их нет.
 function CostsFields({ form }: CostsFieldsProps) {
   const { usage, category, spell } = form.getValues();
+  const kinds = allowedCostKinds(
+    category as AbilityCategory,
+    usage.kind,
+  ).filter((kind) => category !== 'monster' || kind !== 'uses');
   // У заклинания круг ячейки — его круг, у заговора ячейки нет.
   const spellLevel = category === 'spell' ? Number(spell.level) : null;
   const nested = { pl: 'xl' } as const;
+  if (kinds.length === 0) return null;
 
   return (
     <Input.Wrapper
       label="Затраты"
-      description="Отметьте, что тратит способность. Общие запасы персонажа (очки сосредоточенности, очки чародейства) пока пишите в описании"
+      description={
+        DESCRIPTIONS[category as AbilityCategory] ??
+        'Отметьте, что тратит способность'
+      }
     >
       <Stack gap="xs" mt={6}>
-        <Checkbox
-          label="Заряды"
-          {...form.getInputProps('usage.usesOn', { type: 'checkbox' })}
-        />
-        {usage.usesOn && (
+        {kinds.includes('uses') && (
+          <Checkbox
+            label="Заряды"
+            {...form.getInputProps('usage.usesOn', { type: 'checkbox' })}
+          />
+        )}
+        {kinds.includes('uses') && usage.usesOn && (
           <Stack gap="xs" {...nested}>
             <Group gap="xs" align="flex-start">
               <Select
@@ -106,7 +126,7 @@ function CostsFields({ form }: CostsFieldsProps) {
             />
           </Stack>
         )}
-        {spellLevel === null ? (
+        {!kinds.includes('spellSlot') ? null : spellLevel === null ? (
           <Checkbox
             label="Ячейка заклинаний"
             {...form.getInputProps('usage.slotOn', { type: 'checkbox' })}
@@ -120,7 +140,7 @@ function CostsFields({ form }: CostsFieldsProps) {
             />
           )
         )}
-        {spellLevel === null && usage.slotOn && (
+        {kinds.includes('spellSlot') && spellLevel === null && usage.slotOn && (
           <NumberInput
             label="Круг не ниже"
             description="1 — любой круг"
@@ -133,11 +153,13 @@ function CostsFields({ form }: CostsFieldsProps) {
             {...form.getInputProps('usage.slotLevel')}
           />
         )}
-        <Checkbox
-          label="Движение"
-          {...form.getInputProps('usage.movementOn', { type: 'checkbox' })}
-        />
-        {usage.movementOn && (
+        {kinds.includes('movement') && (
+          <Checkbox
+            label="Движение"
+            {...form.getInputProps('usage.movementOn', { type: 'checkbox' })}
+          />
+        )}
+        {kinds.includes('movement') && usage.movementOn && (
           <Group gap="xs" align="flex-start" {...nested}>
             <SegmentedControl
               aria-label="Сколько движения"
@@ -160,10 +182,12 @@ function CostsFields({ form }: CostsFieldsProps) {
             )}
           </Group>
         )}
-        <Checkbox
-          label="Кость хитов"
-          {...form.getInputProps('usage.hitDie', { type: 'checkbox' })}
-        />
+        {kinds.includes('hitDie') && (
+          <Checkbox
+            label="Кость хитов"
+            {...form.getInputProps('usage.hitDie', { type: 'checkbox' })}
+          />
+        )}
       </Stack>
     </Input.Wrapper>
   );

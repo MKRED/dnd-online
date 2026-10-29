@@ -226,7 +226,7 @@ export const GUIDE_EXAMPLES: GuideExample[] = [
     name: 'Оружие дыхания',
     idea: 'Не заклинание: заряды, вместо атаки, рост с уровнем',
     fill: [
-      { field: 'Категория', value: 'Базовая' },
+      { field: 'Категория', value: 'Умение' },
       { field: 'Активация', value: 'Вместо одной атаки' },
       {
         field: 'Затраты',
@@ -241,7 +241,7 @@ export const GUIDE_EXAMPLES: GuideExample[] = [
     ],
     note: 'Тип урона зависит от драконьего предка — здесь для примера Огонь. Линию 30 × 5 фт. вместо конуса заведите второй способностью или опишите в описании: у шага одна фигура.',
     ability: {
-      category: 'basic',
+      category: 'feature',
       details: {},
       activation: { kind: 'attack' },
       costs: {

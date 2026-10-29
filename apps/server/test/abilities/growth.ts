@@ -54,7 +54,7 @@ export function describeAbilityGrowth(get: () => CatalogContext): void {
       const { id } = await create({ ...spell, steps: [fireball] });
       const card = await author.get(url(id)).expect(200);
       expect(card.body).toMatchObject({ steps: [fireball] });
-      // «Волшебная стрела» базовой способностью без ячейки: +1 повтор на 5, 11, 17.
+      // «Волшебная стрела» умением без ячейки: +1 повтор на 5, 11, 17.
       const missile = {
         ...fireBolt,
         times: 3,
@@ -62,7 +62,7 @@ export function describeAbilityGrowth(get: () => CatalogContext): void {
       };
       const edited = await author
         .put(url(id))
-        .send(body({ category: 'basic', details: {}, steps: [missile] }))
+        .send(body({ category: 'feature', details: {}, steps: [missile] }))
         .expect(200);
       expect(edited.body).toMatchObject({ steps: [missile] });
     });

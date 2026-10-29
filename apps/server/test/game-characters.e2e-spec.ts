@@ -317,7 +317,7 @@ describe('game characters (e2e)', () => {
         .post('/api/abilities')
         .send({
           name: 'Проклятая плоть',
-          category: 'basic',
+          category: 'feature',
           details: {},
           description: '',
           isPublic: false,

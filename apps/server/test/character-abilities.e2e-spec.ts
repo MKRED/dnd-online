@@ -16,9 +16,9 @@ interface AbilityRow {
 }
 
 const noCosts = { uses: null, spellSlot: null, movement: null, hitDie: false };
-const basicBody = (over: Record<string, unknown> = {}) => ({
+const featureBody = (over: Record<string, unknown> = {}) => ({
   name: 'Второе дыхание',
-  category: 'basic',
+  category: 'feature',
   details: {},
   description: '',
   isPublic: false,
@@ -30,7 +30,7 @@ const basicBody = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 const spellBody = (level: number, over: Record<string, unknown> = {}) =>
-  basicBody({
+  featureBody({
     name: level === 0 ? 'Огненный снаряд' : 'Щит',
     category: 'spell',
     details: {
@@ -94,7 +94,7 @@ describe('способности у персонажа (e2e)', () => {
 
   it('добавить, повтор — 409, убрать', async () => {
     const id = await createCharacter(owner);
-    const abilityId = await createAbility(owner, basicBody());
+    const abilityId = await createAbility(owner, featureBody());
     const added = await owner.post(url(id)).send({ abilityId }).expect(201);
     expect(added.body).toEqual([
       {
@@ -105,7 +105,7 @@ describe('способности у персонажа (e2e)', () => {
           name: 'Второе дыхание',
           isPublic: false,
           image: null,
-          category: 'basic',
+          category: 'feature',
           level: null,
           activation: { kind: 'bonus_action' },
           costs: {
@@ -145,9 +145,10 @@ describe('способности у персонажа (e2e)', () => {
     const monster = {
       category: 'monster',
       details: { recharge: 5 },
-      activation: { kind: 'trait' },
+      activation: { kind: 'action' },
+      costs: noCosts,
     };
-    const monsterId = await createAbility(owner, basicBody(monster));
+    const monsterId = await createAbility(owner, featureBody(monster));
     const res = await owner
       .post(url(id))
       .send({ abilityId: monsterId })
@@ -157,23 +158,23 @@ describe('способности у персонажа (e2e)', () => {
     );
     expect(await abilitiesOf(owner, id)).toEqual([]);
 
-    const abilityId = await createAbility(owner, basicBody());
+    const abilityId = await createAbility(owner, featureBody());
     await add(id, abilityId);
     await owner
       .put(`/api/abilities/${abilityId}`)
-      .send(basicBody(monster))
+      .send(featureBody(monster))
       .expect(200);
     const [row] = await abilitiesOf(owner, id);
     expect(row.ability).toMatchObject({ id: abilityId, category: 'monster' });
   });
 
-  // docs/plan/done/traits.md: черта «Базовой» с составляющими — на листе с ними.
+  // docs/plan/done/traits.md: черта «Умения» с составляющими — на листе с ними.
   it('черта с составляющими добавляется и приходит в листе с ними', async () => {
     const id = await createCharacter(owner);
     const passive = [{ kind: 'sense', sense: 'darkvision', range: 120 }];
     const abilityId = await createAbility(
       owner,
-      basicBody({
+      featureBody({
         name: 'Тёмное зрение',
         activation: { kind: 'trait' },
         costs: noCosts,
@@ -184,7 +185,7 @@ describe('способности у персонажа (e2e)', () => {
     const [row] = await abilitiesOf(owner, id);
     expect(row.ability).toMatchObject({
       id: abilityId,
-      category: 'basic',
+      category: 'feature',
       activation: { kind: 'trait' },
       passive,
     });
@@ -202,7 +203,7 @@ describe('способности у персонажа (e2e)', () => {
     expect((await abilitiesOf(owner, id))[0].prepared).toBe(false);
 
     const cantrip = await add(id, await createAbility(owner, spellBody(0)));
-    const basic = await add(id, await createAbility(owner, basicBody()));
+    const basic = await add(id, await createAbility(owner, featureBody()));
     for (const entry of [cantrip, basic]) {
       const bad = await prepare(owner, id, entry.id, true).expect(400);
       expect((bad.body as { message: string }).message).toBe(
@@ -225,7 +226,7 @@ describe('способности у персонажа (e2e)', () => {
 
   it('неверная, несуществующая и чужая скрытая способность — 400', async () => {
     const id = await createCharacter(owner);
-    const hidden = await createAbility(stranger, basicBody());
+    const hidden = await createAbility(stranger, featureBody());
     for (const abilityId of [
       'nope',
       '00000000-0000-4000-8000-000000000000',
@@ -294,7 +295,7 @@ describe('способности у персонажа (e2e)', () => {
 
   it('удаление персонажа убирает его способности', async () => {
     const id = await createCharacter(owner);
-    const abilityId = await createAbility(owner, basicBody());
+    const abilityId = await createAbility(owner, featureBody());
     await add(id, abilityId);
     await owner.delete(`/api/characters/${id}`).expect(204);
     const rows = await t.app

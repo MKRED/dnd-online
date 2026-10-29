@@ -1,19 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import type { CatalogContext } from '../support/catalog-scenario/index.js';
 
-// Категория «Монстра» (docs/plan/done/monsters-npcs.md, этап 2): «Легендарное действие» с
-// ценой и перезарядка в details — только у неё. «Черта» бывает и у «Базовой»
-// (abilities/traits.ts).
+// Категория «Монстр» (docs/plan/done/monsters-npcs.md, этап 2): «Легендарное действие» с
+// ценой и перезарядка в details — только у неё. «Черта» бывает и у «Базовой» и «Умения»
+// (abilities/traits.ts). Затраты монстра — «Ограничение» и движение
+// (docs/plan/ability-categories.md).
 
+const noCosts = { uses: null, spellSlot: null, movement: null, hitDie: false };
 const breath = {
   category: 'monster',
   details: { recharge: 5 },
   activation: { kind: 'action' },
+  costs: noCosts,
 };
 const legendary = (cost: number) => ({
   category: 'monster',
   details: { recharge: null },
   activation: { kind: 'legendary', cost },
+  costs: noCosts,
+});
+const fixedUses = (amount: number, recovery: string) => ({
+  count: { kind: 'fixed', amount },
+  recovery,
 });
 
 const messages = (res: { body: unknown }) =>
@@ -21,7 +29,7 @@ const messages = (res: { body: unknown }) =>
 
 export function describeAbilityMonster(get: () => CatalogContext): void {
   describe('способность монстра', () => {
-    it('сохраняется и читается, правкой становится базовой', async () => {
+    it('сохраняется и читается, правкой становится умением', async () => {
       const { author, url, create, body } = get();
       const { id } = await create(breath);
       const card = await author.get(url(id)).expect(200);
@@ -38,15 +46,16 @@ export function describeAbilityMonster(get: () => CatalogContext): void {
             category: 'monster',
             details: { recharge: null },
             activation: { kind: 'trait' },
+            costs: noCosts,
           }),
         )
         .expect(200);
       expect(trait.body).toMatchObject({ activation: { kind: 'trait' } });
-      const basic = await author
+      const feature = await author
         .put(url(id))
-        .send(body({ category: 'basic', details: {} }))
+        .send(body({ category: 'feature', details: {} }))
         .expect(200);
-      expect(basic.body).toMatchObject({ category: 'basic', details: {} });
+      expect(feature.body).toMatchObject({ category: 'feature', details: {} });
     });
 
     it('неверная перезарядка или цена — 400', async () => {
@@ -75,7 +84,7 @@ export function describeAbilityMonster(get: () => CatalogContext): void {
         .send(body({ activation: { kind: 'legendary', cost: 1 } }))
         .expect(400);
       expect(messages(res)).toContain(
-        'Легендарное действие бывает только у способности монстра, черта — у базовой способности и способности монстра',
+        'Легендарное действие бывает только у способности монстра',
       );
       // Сменить категорию, оставив легендарное действие, тоже нельзя.
       const { id } = await create(legendary(1));
@@ -83,7 +92,7 @@ export function describeAbilityMonster(get: () => CatalogContext): void {
         .put(url(id))
         .send(
           body({
-            category: 'basic',
+            category: 'feature',
             details: {},
             activation: { kind: 'legendary', cost: 1 },
           }),
@@ -94,6 +103,56 @@ export function describeAbilityMonster(get: () => CatalogContext): void {
         .post(url())
         .send(body({ category: 'basic', details: { recharge: 5 } }))
         .expect(400);
+    });
+
+    it('«Ограничение»: «N/день», перезарядка или «после отдыха», без ячейки и кости хитов', async () => {
+      const { author, url, create, body } = get();
+      for (const uses of [fixedUses(3, 'long'), fixedUses(1, 'short')]) {
+        const saved = await create({
+          ...breath,
+          details: { recharge: null },
+          costs: { ...noCosts, uses },
+        });
+        expect(saved).toMatchObject({ costs: { uses } });
+      }
+      const cases: [object, object, string][] = [
+        [
+          { recharge: null },
+          { ...noCosts, spellSlot: { minLevel: 1 } },
+          'Монстр не тратит ячейки заклинаний: частота его заклинаний задаётся у монстра',
+        ],
+        [
+          { recharge: null },
+          { ...noCosts, hitDie: true },
+          'Монстр не тратит кость хитов',
+        ],
+        [
+          { recharge: null },
+          {
+            ...noCosts,
+            uses: { count: { kind: 'proficiency' }, recovery: 'long' },
+          },
+          'Ограничение монстра — одно из «N/день», «Перезарядка» и «после отдыха»',
+        ],
+        [
+          { recharge: 5 },
+          { ...noCosts, uses: fixedUses(1, 'long') },
+          'Ограничение монстра — одно из «N/день», «Перезарядка» и «после отдыха»',
+        ],
+      ];
+      for (const [details, costs, message] of cases) {
+        const res = await author
+          .post(url())
+          .send(body({ ...breath, details, costs }))
+          .expect(400);
+        expect(messages(res)).toContain(message);
+      }
+      // У черты монстра нет перезарядки.
+      const trait = await author
+        .post(url())
+        .send(body({ ...breath, activation: { kind: 'trait' } }))
+        .expect(400);
+      expect(messages(trait)).toContain('У черты нет перезарядки');
     });
   });
 }

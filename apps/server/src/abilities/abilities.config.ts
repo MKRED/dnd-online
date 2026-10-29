@@ -29,7 +29,7 @@ export const ABILITY_ACCESS: CatalogAccess = {
 
 export type AbilityRecordFields = AbilityVariant & AbilityFields;
 
-// «Базовая» — без своих полей, у «Заклинания» — круг, школа и прочее (shared/abilitySpell.ts),
+// «Базовая» и «Умение» — без своих полей, у «Заклинания» — круг, школа и прочее (shared/abilitySpell.ts),
 // у «Монстра» — перезарядка (shared/abilityMonster.ts); запись с испорченными полями
 // категории читается как «Базовая», чтобы карточка открылась.
 // Активация, затраты и шаги «Применения» лежат в extra; у записей без них (или с
@@ -47,7 +47,9 @@ export function toAbilityVariant(
       ? { category, details }
       : category === 'monster' && isMonsterAbilityDetails(details)
         ? { category, details }
-        : { category: 'basic', details: {} };
+        : category === 'feature'
+          ? { category, details: {} }
+          : { category: 'basic', details: {} };
   const activation =
     isAbilityActivation(extra.activation) &&
     activationFitsCategory(variant.category, extra.activation)

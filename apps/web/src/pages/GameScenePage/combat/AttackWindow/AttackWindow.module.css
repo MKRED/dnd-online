@@ -1,0 +1,37 @@
+/* Окно атаки (docs/plan/combat.md, этап 5): итог броска цветом — попадание зелёным, крит
+   золотым, промах красным; урон отделён чертой. */
+.arrow {
+  color: var(--mantine-color-dimmed);
+  font-weight: 400;
+}
+
+.outcome[data-outcome='hit'] {
+  color: var(--mantine-color-green-text);
+}
+
+.outcome[data-outcome='critical'] {
+  color: var(--mantine-color-yellow-text);
+}
+
+.outcome[data-outcome='miss'] {
+  color: var(--mantine-color-red-text);
+}
+
+.damage {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.crit {
+  color: var(--mantine-color-yellow-text);
+  font-weight: 600;
+}
+
+.byType {
+  margin: 0;
+  padding-left: 18px;
+  font-size: var(--mantine-font-size-sm);
+}

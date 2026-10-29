@@ -1,0 +1,186 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Put,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard, type AuthenticatedRequest } from '../../auth/auth.guard.js';
+import {
+  CombatAbilityDto,
+  CombatActionDto,
+  CombatantsDto,
+  CombatResourcesDto,
+  CombatInitiativeDto,
+  CombatOrderDto,
+  CombatRollDto,
+  CombatTurnDto,
+  toCombatants,
+} from './dto/combat.dto.js';
+import { GameCombatService } from './game-combat.service.js';
+
+// Бой с очерёдностью (docs/plan/combat.md, этап 2): участники, инициатива, очередь, ходы.
+// Правки отвечают очередью глазами того, кто правил.
+@Controller('games/:id/combat')
+@UseGuards(AuthGuard)
+export class GameCombatController {
+  constructor(private readonly combat: GameCombatService) {}
+
+  @Get()
+  read(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.combat.read(req.user.sub, id);
+  }
+
+  // «Начать бой» с участниками. Только мастер.
+  @Post('start')
+  @HttpCode(200)
+  start(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CombatantsDto,
+  ) {
+    return this.combat.start(req.user.sub, id, toCombatants(dto));
+  }
+
+  // Новичок в идущем бою. Только мастер.
+  @Post('combatants')
+  @HttpCode(200)
+  join(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CombatantsDto,
+  ) {
+    return this.combat.join(req.user.sub, id, toCombatants(dto));
+  }
+
+  @Delete('combatants/:combatantId')
+  leave(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('combatantId', ParseUUIDPipe) combatantId: string,
+  ) {
+    return this.combat.leave(req.user.sub, id, combatantId);
+  }
+
+  // «Бросить кубик» в окне броска: отвечает броском и очередью.
+  @Post('combatants/:combatantId/initiative')
+  @HttpCode(200)
+  roll(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('combatantId', ParseUUIDPipe) combatantId: string,
+    @Body() dto: CombatRollDto,
+  ) {
+    return this.combat.roll(req.user.sub, id, combatantId, dto.mode ?? null);
+  }
+
+  // Мастер ставит число сам.
+  @Put('combatants/:combatantId/initiative')
+  setInitiative(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('combatantId', ParseUUIDPipe) combatantId: string,
+    @Body() dto: CombatInitiativeDto,
+  ) {
+    return this.combat.setInitiative(
+      req.user.sub,
+      id,
+      combatantId,
+      dto.initiative,
+    );
+  }
+
+  // «Бросить за монстров»: все не бросившие монстры и НПС.
+  @Post('initiative/creatures')
+  @HttpCode(200)
+  rollCreatures(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.combat.rollWaiting(req.user.sub, id, 'creatures');
+  }
+
+  // «Бросить за героев»: все не бросившие герои — за игроков, которые отошли.
+  @Post('initiative/heroes')
+  @HttpCode(200)
+  rollHeroes(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.combat.rollWaiting(req.user.sub, id, 'heroes');
+  }
+
+  @Put('order')
+  reorder(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CombatOrderDto,
+  ) {
+    return this.combat.reorder(req.user.sub, id, dto.ids);
+  }
+
+  // Обычное действие хода: «Рывок», «Отход», «Уклонение» (этап 4).
+  @Post('combatants/:combatantId/actions')
+  @HttpCode(200)
+  takeAction(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('combatantId', ParseUUIDPipe) combatantId: string,
+    @Body() dto: CombatActionDto,
+  ) {
+    return this.combat.takeAction(req.user.sub, id, combatantId, dto.action);
+  }
+
+  // «Применить» способность: тратит действие нужного вида и ячейку (вариант Б).
+  @Post('combatants/:combatantId/abilities')
+  @HttpCode(200)
+  useAbility(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('combatantId', ParseUUIDPipe) combatantId: string,
+    @Body() dto: CombatAbilityDto,
+  ) {
+    return this.combat.useAbility(req.user.sub, id, combatantId, dto);
+  }
+
+  // Мастер правит потраченные действия, бонусные и реакции.
+  @Put('combatants/:combatantId/resources')
+  setResources(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('combatantId', ParseUUIDPipe) combatantId: string,
+    @Body() dto: CombatResourcesDto,
+  ) {
+    return this.combat.setResources(req.user.sub, id, combatantId, dto);
+  }
+
+  // «Закончить ход»: combatantId — чей ход заканчивают.
+  @Post('turn/end')
+  @HttpCode(200)
+  endTurn(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CombatTurnDto,
+  ) {
+    return this.combat.endTurn(req.user.sub, id, dto.combatantId);
+  }
+
+  // Мастер отдаёт ход участнику.
+  @Put('turn')
+  passTurn(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CombatTurnDto,
+  ) {
+    return this.combat.passTurn(req.user.sub, id, dto.combatantId);
+  }
+}

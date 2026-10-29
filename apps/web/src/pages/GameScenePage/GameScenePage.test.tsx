@@ -7,6 +7,8 @@ import {
   DEFAULT_USER_SETTINGS,
   GAME_SOCKET,
   emptyRefsView,
+  type GameCombat,
+  type GameCombatant,
   type GameFigure,
   type GameFigures,
   type GameMoveMode,
@@ -144,10 +146,12 @@ function stub(
 ) {
   const fetchMock = vi.fn<typeof fetch>((input, init) => {
     const key = `${init?.method ?? 'GET'} ${urlOf(input).replace(/^.*\/api/, '')}`;
-    // Фигурки (этап 7) нужны не каждому тесту: без ответа — «нет активной сцены».
+    // Фигурки (этап 7) и бой нужны не каждому тесту: без ответа — «нет активной сцены».
     const route =
       responses[key] ??
-      (key.endsWith('/scene/figures') ? () => ({ status: 404 }) : undefined);
+      (key.endsWith('/scene/figures') || key.endsWith('/combat')
+        ? () => ({ status: 404 })
+        : undefined);
     if (!route) return Promise.reject(new Error(`Нет ответа для ${key}`));
     const { status, body } = route(init);
     return Promise.resolve(
@@ -203,6 +207,39 @@ function figuresOf(
 ): GameFigures {
   const round = mode === 'tactical' ? 1 : null;
   return { sceneId: 's1', eventSeq, mode, round, figures, unplaced: [] };
+}
+
+const LIRA_COMBATANT: GameCombatant = {
+  id: 'k1',
+  ref: { kind: 'figure', characterId: 'c1' },
+  name: 'Лира',
+  initiative: null,
+  surprised: true,
+  canRoll: true,
+  roll: null,
+  pending: {
+    terms: [{ kind: 'number', label: 'Ловкость', amount: 2 }],
+    reasons: { advantage: [], disadvantage: ['Врасплох'] },
+  },
+  resources: null,
+  dodging: false,
+  disengaged: false,
+  attack: null,
+};
+
+// Бой с очерёдностью: без участников мастер видит Лиру среди кандидатов.
+function combatOf(eventSeq: number, combatants: GameCombatant[]): GameCombat {
+  return {
+    sceneId: 's1',
+    round: combatants.length ? 1 : null,
+    combatants,
+    turn: null,
+    hiddenTurn: null,
+    candidates: combatants.length
+      ? []
+      : [{ kind: 'figure', characterId: 'c1', name: 'Лира', seen: true }],
+    eventSeq,
+  };
 }
 
 // Встреча идёт: вне неё игрок только смотрит сцену.
@@ -270,8 +307,10 @@ describe('GameScenePage', () => {
     ).toBeInTheDocument();
   });
 
-  it('мастер начинает и заканчивает бой; вне боя запас не тратится и «Рывка» нет', async () => {
-    stub({
+  it('мастер начинает бой с участниками и заканчивает его; вне боя запас не тратится и «Рывка» нет', async () => {
+    let mode: GameMoveMode = 'free';
+    let combat: GameCombat = combatOf(3, []);
+    const fetchMock = stub({
       [`GET ${base}`]: () => ({
         status: 200,
         body: { ...GAME, role: 'master' },
@@ -279,13 +318,19 @@ describe('GameScenePage', () => {
       [`GET ${base}/scene`]: () => ({ status: 200, body: VIEW }),
       [`GET ${base}/scene/figures`]: () => ({
         status: 200,
-        body: figuresOf(3, [LIRA], 'free'),
+        body: figuresOf(3, [LIRA], mode),
       }),
+      [`GET ${base}/combat`]: () => ({ status: 200, body: combat }),
+      [`POST ${base}/combat/start`]: () => {
+        mode = 'tactical';
+        combat = combatOf(4, [LIRA_COMBATANT]);
+        return { status: 200, body: combat };
+      },
       [`PUT ${base}/figures/mode`]: (init) => {
-        const { mode } = JSON.parse(init?.body as string) as {
-          mode: GameMoveMode;
-        };
-        return { status: 200, body: figuresOf(4, [LIRA], mode) };
+        mode = (JSON.parse(init?.body as string) as { mode: GameMoveMode })
+          .mode;
+        combat = combatOf(5, []);
+        return { status: 200, body: figuresOf(5, [LIRA], mode) };
       },
     });
     renderScene('m1');
@@ -301,15 +346,50 @@ describe('GameScenePage', () => {
       screen.queryByRole('button', { name: 'Новый раунд' }),
     ).not.toBeInTheDocument();
 
+    // «Начать бой» — окно участников: кого видит партия, тот отмечен.
     await user.click(screen.getByRole('button', { name: 'Сцена' }));
-    const combat = screen.getByRole('region', { name: 'Бой' });
-    await user.click(
-      within(combat).getByRole('button', { name: 'Начать бой' }),
-    );
-    expect(await within(combat).findByText('Раунд 1')).toBeInTheDocument();
+    const group = screen.getByRole('region', { name: 'Бой' });
+    await user.click(within(group).getByRole('button', { name: 'Начать бой' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Начать бой' });
     expect(
-      within(combat).getByRole('button', { name: 'Новый раунд' }),
+      within(dialog).getByRole('checkbox', { name: /Лира/ }),
+    ).toBeChecked();
+    await user.click(within(dialog).getByRole('switch', { name: 'врасплох' }));
+    await user.click(
+      within(dialog).getByRole('button', {
+        name: 'Начать бой · 1 участник',
+      }),
+    );
+    const start = fetchMock.mock.calls.find(
+      ([, init]) =>
+        typeof init?.body === 'string' && init.body.includes('participants'),
+    );
+    expect(JSON.parse(start?.[1]?.body as string)).toEqual({
+      participants: [{ kind: 'figure', characterId: 'c1', surprised: true }],
+    });
+    // Над сценой — полоса очерёдности, пока все бросают инициативу.
+    const strip = await screen.findByRole('group', {
+      name: 'Очерёдность хода',
+    });
+    expect(within(strip).getByText(/Бросок/)).toBeInTheDocument();
+    expect(
+      within(strip).getByRole('button', {
+        name: 'Лира, ещё не бросил инициативу',
+      }),
     ).toBeInTheDocument();
+
+    // Запись боя перечитывает и фигурки: запас теперь тратится.
+    act(() =>
+      socket.current?.receive(GAME_SOCKET.changed, {
+        gameId: GAME.id,
+        seq: 4,
+        kind: 'combat.started',
+      }),
+    );
+    expect(await within(group).findByText('Раунд 1')).toBeInTheDocument();
+    expect(
+      within(group).queryByRole('button', { name: 'Новый раунд' }),
+    ).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Участники' }));
     expect(screen.getByText('Осталось 30 из 30 фт')).toBeInTheDocument();
     expect(
@@ -840,8 +920,8 @@ describe('GameScenePage', () => {
     );
   });
 
-  it('мастер переключает «Игру» и «Правку» клавишей Ё; в «Игре» нет инструментов, но есть отмена', async () => {
-    stub({
+  it('мастер переключает «Игру» и «Правку» клавишей Ё; в «Игре» нет ни инструментов, ни отмены', async () => {
+    const fetchMock = stub({
       [`GET ${base}`]: () => ({
         status: 200,
         body: { ...GAME, role: 'master' },
@@ -857,9 +937,14 @@ describe('GameScenePage', () => {
       { timeout: 3000 },
     );
     expect(play).toBeChecked();
+    // Отмена и возврат — только в «Правке», и Ctrl+Z в «Игре» ничего не шлёт.
     expect(
-      screen.getByRole('button', { name: 'Отменить' }),
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: 'Отменить' }),
+    ).not.toBeInTheDocument();
+    await user.keyboard('{Control>}z{/Control}');
+    expect(
+      fetchMock.mock.calls.some(([url]) => urlOf(url).endsWith('/undo')),
+    ).toBe(false);
     expect(
       screen.queryByRole('button', { name: 'Строить' }),
     ).not.toBeInTheDocument();
@@ -870,6 +955,9 @@ describe('GameScenePage', () => {
     await user.keyboard('[Backquote]');
     expect(screen.getByRole('radio', { name: 'Правка' })).toBeChecked();
     expect(screen.getByRole('button', { name: 'Строить' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Отменить' }),
+    ).toBeInTheDocument();
     expect(localStorage.getItem('scene.mode')).toBe('edit');
     await user.keyboard('[Backquote]');
     expect(screen.getByRole('radio', { name: 'Игра' })).toBeChecked();

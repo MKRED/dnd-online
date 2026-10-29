@@ -25,9 +25,9 @@ import WalkLayer from './WalkLayer';
 import CameraFocus, { type CameraFocusApi } from './CameraFocus';
 import CameraRig from './CameraRig';
 import CameraWatch from './CameraWatch';
-import CenterHint from './CenterHint';
 import CursorReadout from './CursorReadout';
 import { createHoverStore, type HoverStore } from './hoverStore';
+import { createAimStore, TargetBeam } from './targets';
 import EditLayer from './EditLayer';
 import FigureLayer, {
   type FigureDragHandlers,
@@ -139,15 +139,17 @@ function MapScene({
   // Старый атлас (каталог сменился или сцена ушла) — освободить его видеопамять.
   useEffect(() => () => releaseBlockMaterials(atlas), [atlas]);
   const scheme = useComputedColorScheme('dark');
-  // Центр камеры живёт внутри Canvas (CameraFocus), а подсказка с кнопками и клавиши
-  // Q/E — снаружи, в обычном DOM; связывает их ref focus.
-  const [centerLevel, setCenterLevel] = useState<number | null>(null);
   const [ownHover] = useState(createHoverStore);
   const hover = pageHover ?? ownHover;
+  const [aim] = useState(createAimStore);
+  const targets = (!objectTool && creatures?.targets) || null;
   // Миниатюры объектов догрузились (или не загрузились) — только после этого первый
   // кадр считается готовым, иначе на снимке пустые карточки.
   const [imagesSettled, setImagesSettled] = useState(false);
   const settleImages = useCallback(() => setImagesSettled(true), []);
+  // Центр камеры живёт внутри Canvas (CameraFocus), а клавиши Q/E — снаружи, в обычном
+  // DOM; связывает их ref focus. Плашки «Центр: y = N» со стрелками больше нет: точку
+  // вращения переносит двойной клик или тап (решение пользователя, 2026-10-27).
   const shiftLevel = (dy: number) => focus.current?.shiftLevel(dy);
   const focusOn = (point: Point) => focus.current?.focusOn(point);
   // Q опускает центр камеры, E поднимает (docs/plan/done/map-editor.md, «Камера»).
@@ -208,6 +210,7 @@ function MapScene({
                 creatures={creatures}
                 fog={fog}
                 walks={walks}
+                aim={targets ? aim : undefined}
               />
               {figures && (
                 <FigureLayer
@@ -216,7 +219,17 @@ function MapScene({
                   cutY={cutY}
                   ghosts={figureGhosts}
                   walks={walks}
+                  targets={targets}
+                  aim={targets ? aim : undefined}
                   {...figureDrag}
+                />
+              )}
+              {targets?.ranged && (
+                <TargetBeam
+                  map={map}
+                  targets={targets}
+                  aim={aim}
+                  hover={hover}
                 />
               )}
             </HealthMarkStyleContext>
@@ -230,13 +243,11 @@ function MapScene({
             что собираются править. Высота центра при этом не меняется. */}
         <MapControls makeDefault zoomToCursor />
         <CameraRig placement={camera} />
-        {/* После CameraRig: первый уровень для подсказки берётся из уже поставленной камеры. */}
-        <CameraFocus apiRef={focus} onLevel={setCenterLevel} />
+        <CameraFocus apiRef={focus} />
         {onCameraChange && <CameraWatch onChange={onCameraChange} />}
         {imagesSettled && <FirstFrame onReady={onReady} />}
         {settings.frameLimit > 0 && <FrameLimiter fps={settings.frameLimit} />}
       </Canvas>
-      <CenterHint level={centerLevel} onShift={shiftLevel} />
       <CursorReadout
         hover={hover}
         editor={editor}

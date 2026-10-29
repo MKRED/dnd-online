@@ -62,4 +62,18 @@ describe('plaqueState', () => {
       })?.hint,
     ).toBe('повержен и не ходит');
   });
+
+  it('не его ход в бою: запас виден, ходить нельзя', () => {
+    const waiting = {
+      ...none,
+      figure: lira,
+      creatureMoving: false,
+      outOfTurn: true,
+    };
+    expect(plaqueState({ ...waiting, master: true })).toMatchObject({
+      left: 'осталось 20 из 30 фт',
+      hint: 'сейчас не его ход; переставить можно в «Правке»',
+    });
+    expect(plaqueState(waiting)?.hint).toBe('ходит в свой ход');
+  });
 });

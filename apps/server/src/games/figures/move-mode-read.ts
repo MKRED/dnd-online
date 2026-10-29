@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import type { GameMoveMode } from 'shared';
 import type { DbTransaction } from '../../database/database.service.js';
 import { games } from '../../database/schema/index.js';
+import { clearCombat } from '../combat/combat-gate.js';
 import { ROUND_ONLY_IN_COMBAT } from '../game-errors.js';
 
 // Режим хода игры (docs/dnd/movement.md, «Свободный и тактический режимы»): в свободном
@@ -44,8 +45,10 @@ export async function nextCombatRound(
 }
 
 // Новая активная сцена в бою — бой на ней начинается с первого раунда: фигурки встают на
-// стартовые точки с полным запасом, существа — новые экземпляры.
+// стартовые точки с полным запасом, существа — новые экземпляры. Очерёдность старой сцены
+// уходит: мастер зовёт участников заново (docs/plan/combat.md).
 export async function restartCombatRound(tx: DbTransaction, gameId: string) {
   if (await isFree(tx, gameId)) return;
+  await clearCombat(tx, gameId);
   await tx.update(games).set({ combatRound: 1 }).where(eq(games.id, gameId));
 }

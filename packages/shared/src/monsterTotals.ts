@@ -1,12 +1,8 @@
-import {
-  creatureTotals,
-  type MonsterAbilityEntry,
-  type MonsterEffectEntry,
-  type MonsterSpeed,
-  type MonsterStatBlock,
-  type SpecialSpeed,
-  type SpeedTotal,
-} from 'shared';
+import type { SpecialSpeed, SpeedTotal } from './effectSpeedTotal.js';
+import type { MonsterAbilityEntry } from './monsterAbilities.js';
+import type { MonsterEffectEntry } from './monsterLinks.js';
+import type { MonsterSpeed, MonsterStatBlock } from './monsters.js';
+import { creatureTotals } from './sheetTotals.js';
 
 const SPECIAL: readonly SpecialSpeed[] = ['fly', 'climb', 'swim', 'burrow'];
 
@@ -23,7 +19,7 @@ export function monsterSpecials(
   return { special, hover: speed.hover && speed.fly !== null };
 }
 
-// Итог карточки с эффектами (docs/plan/done/monsters-npcs.md, этап 6): база — числа, которые
+// Итог карточки с эффектами (и КД монстра в бою, docs/plan/combat.md, этап 5) (docs/plan/done/monsters-npcs.md, этап 6): база — числа, которые
 // ввёл мастер, черты и эффекты пересчитывают КД и скорости, как на листе персонажа. Черты
 // (docs/plan/done/traits.md) считаются и без эффектов.
 export function monsterTotals(

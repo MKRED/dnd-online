@@ -2,6 +2,7 @@ export * from './distance.js';
 export * from './creature.js';
 export * from './segment.js';
 export * from './cover.js';
+export * from './attackLine.js';
 export * from './areas/index.js';
 export * from './standing.js';
 export * from './step.js';

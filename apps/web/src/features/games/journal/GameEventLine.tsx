@@ -9,6 +9,7 @@ import {
 } from 'shared';
 import classes from './Journal.module.css';
 import DamagePartsText from './DamagePartsText';
+import { attackEventText } from './attackEventText';
 import { gameEventText } from './gameEventText';
 import type { JournalView } from './journalView';
 
@@ -18,8 +19,8 @@ type Changed = Extract<
 >;
 
 // Строка записи журнала. Урон, лечение и временные хиты — с частями урона, хитами и
-// меткой здоровья; глазами игроков у монстров и НПС хитов и запаса движения нет
-// (shared/game-event-visibility.ts). Остальное — фразой gameEventText.
+// меткой здоровья; глазами игроков у монстров и НПС хитов и запаса движения нет, у атаки —
+// КД цели (shared/game-event-visibility.ts). Остальное — фразой gameEventText.
 function GameEventLine({
   event,
   view,
@@ -30,6 +31,8 @@ function GameEventLine({
   if (event.kind === 'creature.moved' && view === 'players') {
     return <>Ход: {event.result.creature.name}</>;
   }
+  if (event.kind === 'combat.attack')
+    return <>{attackEventText(event, view)}</>;
   if (event.kind === 'character.changed' || event.kind === 'creature.changed') {
     const line = hitPointsLine(event, view);
     if (line) return line;

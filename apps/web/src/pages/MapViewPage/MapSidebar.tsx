@@ -9,10 +9,12 @@ import {
   Title,
   Tooltip,
 } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { IconSettings } from '@tabler/icons-react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { MapSize } from 'shared';
+import { PanelEdge, usePanelWidth } from '../../components/PanelEdge';
 import { mapSizeLabel } from '../../features/maps';
 import classes from './MapViewPage.module.css';
 
@@ -40,6 +42,8 @@ interface MapSidebarProps {
 
 // Правая панель страницы карты: карта и свойства инструмента. Сами инструменты и срез
 // по высоте — на сцене (SceneToolbar, CutRuler), чтобы до них было ближе от того, что правишь.
+// На компьютере ширину тянут за левый край, как у панели сцены игры (2026-10-28), но
+// запоминается своя и панель не сворачивается — свёрнутой у редактора нет.
 function MapSidebar({
   name,
   size,
@@ -52,9 +56,16 @@ function MapSidebar({
   empty,
   children,
 }: MapSidebarProps) {
+  // Та же граница, что у страницы: на ней панель уходит под сцену.
+  const narrow = useMediaQuery('(max-width: 48em)');
+  const width = usePanelWidth('maps.panelWidth', 320);
   return (
-    <aside className={classes.sidebar}>
-      <Stack gap="md">
+    <aside
+      className={classes.sidebar}
+      style={narrow ? undefined : { flexBasis: width.width }}
+    >
+      {!narrow && <PanelEdge {...width.edge} />}
+      <Stack gap="md" className={classes.sidebarBody}>
         {showInfo && (
           <Group justify="space-between" align="baseline" wrap="nowrap">
             <Title order={3}>{name}</Title>

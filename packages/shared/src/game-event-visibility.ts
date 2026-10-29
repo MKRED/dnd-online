@@ -48,6 +48,21 @@ export const GAME_EVENT_DEFAULT_VISIBILITY: Record<
   'game.mode': 'players',
   'figure.refreshed': 'players',
   'figure.dashed': 'players',
+  // Очерёдность боя видит вся партия; про скрытое от игроков существо — только мастер:
+  // это решает сервер при записи (games/combat/combat-visibility.ts).
+  'combat.started': 'players',
+  'combat.order': 'players',
+  'combat.joined': 'master',
+  'combat.left': 'master',
+  'combat.initiative': 'master',
+  'combat.initiative_set': 'master',
+  'combat.turn': 'master',
+  'combat.action': 'master',
+  'combat.ability': 'master',
+  'combat.resources': 'master',
+  'combat.attack': 'master',
+  'combat.damage': 'master',
+  'combat.weapon_set': 'master',
   // Персонажи партии видны партии целиком, как на их листе.
   'character.changed': 'players',
   'character.effect_added': 'players',

@@ -1,11 +1,18 @@
+import { describe, expect, it } from 'vitest';
+import type { EffectComponent } from './effectComponents.js';
+import type { MonsterEffectEntry } from './monsterLinks.js';
 import {
   DEFAULT_MONSTER_STAT_BLOCK,
-  type EffectComponent,
-  type MonsterEffectEntry,
-} from 'shared';
-import { describe, expect, it } from 'vitest';
-import { sampleMonster } from '../../../test/monsterFixture';
-import { monsterSpecials, monsterTotals } from './monsterTotals';
+  type MonsterStatBlock,
+} from './monsters.js';
+import { monsterSpecials, monsterTotals } from './monsterTotals.js';
+
+// Аболет из книги 2024: КД 17, ходьба 10, плавание 40.
+const statBlock: MonsterStatBlock = {
+  ...DEFAULT_MONSTER_STAT_BLOCK,
+  armorClass: 17,
+  speed: { ...DEFAULT_MONSTER_STAT_BLOCK.speed, walk: 10, swim: 40 },
+};
 
 const effect = (
   name: string,
@@ -27,7 +34,7 @@ const effect = (
 
 describe('итог карточки монстра', () => {
   it('особые скорости стат-блока; «парит» — только с полётом', () => {
-    expect(monsterSpecials(sampleMonster.statBlock.speed)).toEqual({
+    expect(monsterSpecials(statBlock.speed)).toEqual({
       special: { swim: 40 },
       hover: false,
     });
@@ -37,7 +44,7 @@ describe('итог карточки монстра', () => {
   });
 
   it('эффекты меняют КД и скорости, свои скорости остаются', () => {
-    const totals = monsterTotals(sampleMonster.statBlock, [
+    const totals = monsterTotals(statBlock, [
       effect('Каменная кожа', [
         { kind: 'armor_class', change: 'bonus', value: 2 },
       ]),

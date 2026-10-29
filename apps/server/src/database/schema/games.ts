@@ -41,6 +41,11 @@ export const games = pgTable('games', {
     .default('free'),
   // Номер раунда боя; только в тактическом режиме, в свободном null.
   combatRound: integer('combat_round'),
+  // Чей ход в бою с очерёдностью — участник game_combatants (docs/plan/combat.md, этап 2);
+  // null — очереди нет или инициатива ещё бросается. Без внешнего ключа: участники
+  // ссылаются на игру, и ключ замкнул бы таблицы в круг; уходящий участник сначала
+  // передаёт ход.
+  combatTurn: uuid('combat_turn'),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

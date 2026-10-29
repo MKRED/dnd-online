@@ -1,4 +1,5 @@
 import {
+  getAbilityModifier,
   isCatalogSources,
   type Ability,
   type AbilityLink,
@@ -18,6 +19,7 @@ import {
   type SpellSlots,
   SPELL_SLOT_CIRCLES,
   TURN_ACTIONS_DEFAULT,
+  type TurnLimits,
 } from 'shared';
 import { toAbilityVariant } from '../../abilities/abilities.config.js';
 import { toCharacter } from '../../characters/characters.mapper.js';
@@ -336,6 +338,31 @@ export function libraryCreatureSpeed(row: LibraryRow): number {
 export function libraryCreatureClimb(row: LibraryRow): number | null {
   if (row.kind === 'npc') return null;
   return toMonsterFields(...variantArgs(row)).statBlock.speed.climb;
+}
+
+// Инициатива экземпляра без эффектов (docs/dnd/combat.md): у монстра — модификатор
+// инициативы из стат-блока, у НПС — модификатор Ловкости из его листа, как у персонажа.
+export function libraryCreatureInitiative(row: LibraryRow): number {
+  if (row.kind === 'npc') {
+    const dexterity = row.record.dexterity;
+    return typeof dexterity === 'number' ? getAbilityModifier(dexterity) : 0;
+  }
+  return toMonsterFields(...variantArgs(row)).statBlock.initiative;
+}
+
+// Сколько действий, бонусных и реакций за ход (docs/dnd/ability-usage.md, «Turn actions»): у
+// НПС — числа «За ход» из листа (копия до этих полей — по одному), у монстра своих полей нет
+// — по одному.
+export function libraryCreatureTurnActions(row: LibraryRow): TurnLimits {
+  const count = (value: unknown) =>
+    row.kind === 'npc' && typeof value === 'number' && value >= 1
+      ? value
+      : TURN_ACTIONS_DEFAULT;
+  return {
+    actions: count(row.record.actionCount),
+    bonusActions: count(row.record.bonusActionCount),
+    reactions: count(row.record.reactionCount),
+  };
 }
 
 // Составляющие и длительность копии эффекта — для итога листа в игре.

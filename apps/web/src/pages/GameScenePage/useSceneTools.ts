@@ -24,8 +24,10 @@ const nothing = () => undefined;
 interface SceneToolsOptions {
   // Инструменты — только у мастера; у игрока клавиши молчат, а Ctrl+Z ничего не шлёт.
   master: boolean;
-  // Мастер в «Правке» (docs/plan/done/scene-page.md): в «Игре» клавиши инструментов молчат, а
-  // отмена и возврат остаются — ход тоже отменяется.
+  // Мастер в «Правке» (docs/plan/done/scene-page.md): в «Игре» молчат и клавиши инструментов,
+  // и Ctrl+Z / Ctrl+Y — отменяют только в «Правке», и случайное нажатие в бою не откатит
+  // ход монстра (решение пользователя, 2026-10-27). Ход из «Игры» отменяется там же: история
+  // у правок карты и ходов общая.
   editing: boolean;
   state: MapViewState | null;
   refs: MapObjectRefsView | null;
@@ -84,8 +86,8 @@ export function useSceneTools({
   const editor = useMapEditor({
     state: master ? state : null,
     applyOps: edits.applyOps,
-    undo: master ? edits.undo : nothing,
-    redo: master ? edits.redo : nothing,
+    undo: master && editing ? edits.undo : nothing,
+    redo: master && editing ? edits.redo : nothing,
     objects,
     creatures,
     keysActive: master && editing,

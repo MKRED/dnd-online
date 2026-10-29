@@ -1,4 +1,4 @@
-/* Сверху по центру сцены: слева полоса отмены, справа «Центр» и ползунок уровней. */
+/* Сверху по центру сцены: слева отмена (в «Правке») или переключатель, справа шкала среза. */
 .overlay {
   position: absolute;
   top: var(--mantine-spacing-xs);
@@ -11,6 +11,19 @@
   width: min(22rem, calc(100% - 2 * var(--mantine-spacing-md)));
   z-index: 3;
   pointer-events: none;
+}
+
+/* С полосой очерёдности плашка шире: портретов влезает больше. */
+.overlay[data-wide] {
+  width: min(44rem, calc(100% - 2 * var(--mantine-spacing-md) - 5rem));
+}
+
+/* У мастера слева переключатель «Игра» и «Правка»: полоса — между ним и шкалой среза. */
+.overlay[data-wide][data-tools] {
+  left: 10.5rem;
+  right: 3.5rem;
+  width: auto;
+  transform: none;
 }
 
 .banner {
@@ -56,11 +69,12 @@
   pointer-events: auto;
 }
 
-/* На телефоне у игрока сверху справа только «Центр» (макет «Плашка на телефоне», вариант А):
-   плашка встаёт слева в ту же строку и той же высоты, уведомление — под строкой, не заходя
-   под ползунок уровней справа. */
+/* На телефоне (макет «Плашка на телефоне», вариант А) плашка встаёт к левому краю, а
+   уведомление — под ней, не заходя под шкалу среза справа. */
 @media (max-width: 48em) {
-  .overlay {
+  .overlay,
+  .overlay[data-wide],
+  .overlay[data-wide][data-tools] {
     left: var(--mantine-spacing-xs);
     right: calc(var(--mantine-spacing-xs) * 2 + 2.5rem);
     width: auto;
@@ -72,10 +86,5 @@
   .watch {
     height: 28px;
     padding: 0 10px;
-  }
-
-  /* Без плашки уведомление всё равно ниже строки «Центра». */
-  .notice:first-child {
-    margin-top: calc(28px + 8px);
   }
 }

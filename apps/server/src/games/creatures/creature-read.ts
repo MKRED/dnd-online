@@ -2,10 +2,12 @@ import { and, asc, eq, inArray } from 'drizzle-orm';
 import {
   creatureHealth,
   creatureSeen,
+  TURN_ACTIONS_DEFAULT,
   type CharacterEffectEntry,
   type FogMasks,
   type GameCreature,
   type SpellSlots,
+  type TurnLimits,
   type Vec3,
 } from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
@@ -18,7 +20,9 @@ import {
 import {
   libraryCreatureMaxHp,
   libraryCreatureClimb,
+  libraryCreatureInitiative,
   libraryCreatureSpeed,
+  libraryCreatureTurnActions,
   libraryEffectFields,
   libraryNpcSpellSlots,
 } from '../library/library-record.js';
@@ -28,6 +32,9 @@ import { creatureSpells } from './creature-spell-state.js';
 // Монстр или НПС сцены с тем, что о нём знает библиотека игры.
 export interface SceneCreature {
   objectId: number;
+  kind: 'monster' | 'npc';
+  // Чья копия в библиотеке: id монстра или персонажа-НПС в каталоге.
+  sourceId: string;
   at: Vec3;
   hidden: boolean;
   name: string;
@@ -35,8 +42,12 @@ export interface SceneCreature {
   // Скорость и скорость лазания (null — нет) без эффектов экземпляра.
   speed: number;
   climb: number | null;
+  // Модификатор инициативы без эффектов (docs/dnd/combat.md).
+  initiative: number;
   // Ячейки из копии НПС (потраченные — как в копии); у монстра и без копии — null.
   slots: SpellSlots | null;
+  // Сколько действий, бонусных и реакций за ход (бой, этап 4).
+  turnActions: TurnLimits;
 }
 
 // Существа сцены (все или одно): объекты-монстры и НПС, их копии в библиотеке. Копии
@@ -84,13 +95,23 @@ export async function loadSceneCreatures(
     );
     return {
       objectId: object.id,
+      kind: object.kind === 'monster' ? 'monster' : 'npc',
+      sourceId: sourceOf(object),
       at: [object.x, object.y, object.z],
       hidden: object.hidden,
       name: copy?.name ?? 'Неизвестное существо',
       max: copy ? libraryCreatureMaxHp(copy) : 1,
       speed: copy ? libraryCreatureSpeed(copy) : 0,
       climb: copy ? libraryCreatureClimb(copy) : null,
+      initiative: copy ? libraryCreatureInitiative(copy) : 0,
       slots: copy ? libraryNpcSpellSlots(copy) : null,
+      turnActions: copy
+        ? libraryCreatureTurnActions(copy)
+        : {
+            actions: TURN_ACTIONS_DEFAULT,
+            bonusActions: TURN_ACTIONS_DEFAULT,
+            reactions: TURN_ACTIONS_DEFAULT,
+          },
     };
   });
 }

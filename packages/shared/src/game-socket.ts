@@ -91,6 +91,20 @@ export const CREATURE_KINDS: readonly GameEventKind[] = [
   'creature.prepared',
 ];
 
+// Бой с очерёдностью (docs/plan/combat.md): страница сцены перечитывает очередь.
+export const COMBAT_KINDS: readonly GameEventKind[] = [
+  'combat.started',
+  'combat.joined',
+  'combat.left',
+  'combat.initiative',
+  'combat.initiative_set',
+  'combat.order',
+  'combat.turn',
+  'combat.action',
+  'combat.ability',
+  'combat.resources',
+];
+
 // Сколько пропущенных записей журнала мастер получает при возвращении; больше —
 // журнал перечитывается целиком.
 export const GAME_SOCKET_MISSED_MAX = 100;

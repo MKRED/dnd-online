@@ -1,0 +1,231 @@
+/* Блок «Ваш ход» (docs/plan/combat.md, этап 4, вариант Г): рамка цвета темы, значки 38 px
+   рядами по группам. Цвета меток цены — как у BG3: зелёный круг, оранжевый треугольник,
+   фиолетовый ромб. */
+.panel {
+  --turn-action: #3f9b4a;
+  --turn-bonus: #d9822b;
+  --turn-reaction: #8a55c9;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--mantine-primary-color-filled);
+  border-radius: var(--mantine-radius-md);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pips {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+
+.pip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 4px;
+  border-radius: var(--mantine-radius-sm);
+  font-weight: 600;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+button.pip:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.pip[data-spent] {
+  opacity: 0.4;
+}
+
+.pipMark,
+.cost {
+  display: inline-block;
+}
+
+.pipMark {
+  width: 12px;
+  height: 12px;
+}
+
+.panel [data-cost='action'] {
+  background: var(--turn-action);
+  border-radius: 50%;
+}
+
+.panel [data-cost='bonus_action'] {
+  background: var(--turn-bonus);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.panel [data-cost='reaction'] {
+  background: var(--turn-reaction);
+  transform: rotate(45deg) scale(0.8);
+}
+
+.group {
+  display: grid;
+  gap: 3px;
+}
+
+.groupLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+}
+
+.tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tile {
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  padding: 5px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: 7px;
+  background: var(--mantine-color-default);
+  color: var(--mantine-color-text);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.tile svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Картинка справочника — во весь значок. */
+.tile[data-picture] {
+  padding: 0;
+}
+
+.tile:hover,
+.tile:focus-visible,
+.tile[aria-pressed='true'] {
+  border-color: var(--mantine-primary-color-filled);
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 1px;
+}
+
+.tile[data-blocked] {
+  opacity: 0.4;
+}
+
+.cost {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 8px;
+  height: 8px;
+  box-shadow: 0 0 0 1px var(--mantine-color-body);
+}
+
+/* Подгруппа заклинаний одного круга: «1 круг ●●○» — свободные ячейки у заголовка. */
+.level {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mantine-color-dimmed);
+}
+
+.dots {
+  color: var(--mantine-primary-color-filled);
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.confirm {
+  display: grid;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+/* Заголовок «Атаки» с переключателем «Ближний | Дальний» справа (этап 5, вариант Б). */
+.groupHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Выбор цели — на сцене; здесь подсказка, пока цель не выбрана (ответ 1А). */
+.targetHint {
+  padding: 6px 8px;
+  border: 1px dashed var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+}
+
+/* Карточка выбранной цели: имя, «5 фт. · укрытие ½», причины и подтверждение. */
+.targetName {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.targetMeta {
+  flex: none;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.targetConfirm {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--mantine-color-red-filled);
+  border-radius: var(--mantine-radius-sm);
+}
+
+/* Попадание без брошенного урона: строка с кнопкой над «Закончить ход». */
+.pending {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-red-light);
+}
+
+.pending > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.pending > :last-child {
+  flex: none;
+}

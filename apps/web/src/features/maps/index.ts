@@ -8,9 +8,11 @@ export {
   getMapChunks,
   listMaps,
   redoMapEdit,
+  renameMap,
   undoMapEdit,
 } from './mapsApi';
 export { drawHealthMark, MARK_FONTS } from './healthMarkDraw';
+export { MapNameForm } from './MapNameForm';
 export { mapSizeLabel } from './mapSizeLabel';
 export { mapStateFromChunks } from './mapStateFromChunks';
 export { useMapData, type LoadedMap } from './useMapData';

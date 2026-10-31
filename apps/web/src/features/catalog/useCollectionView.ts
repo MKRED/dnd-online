@@ -3,32 +3,40 @@ import type { CatalogCollectionView } from './CatalogCollection';
 
 // Ключ остался от страницы предметов: так выбор, сделанный там, работает и в других
 // разделах справочника.
-const VIEW_STORAGE_KEY = 'items.view';
+const CATALOG_VIEW_KEY = 'items.view';
 
 // Сетка или список — личная привычка, одна на весь справочник, запоминаем в браузере.
-// Хранилище может быть недоступно (приватный режим) — тогда просто сетка.
-function readView(): CatalogCollectionView {
+// Свой ключ — у списков вне справочника («Мои карты»).
+// Хранилище может быть недоступно (приватный режим) — тогда вид по умолчанию.
+function readView(
+  key: string,
+  fallback: CatalogCollectionView,
+): CatalogCollectionView {
   try {
-    return localStorage.getItem(VIEW_STORAGE_KEY) === 'list' ? 'list' : 'grid';
+    const stored = localStorage.getItem(key);
+    return stored === 'list' || stored === 'grid' ? stored : fallback;
   } catch (err: unknown) {
     console.error('Failed to read catalog view', err);
-    return 'grid';
+    return fallback;
   }
 }
 
-function saveView(view: CatalogCollectionView) {
+function saveView(key: string, view: CatalogCollectionView) {
   try {
-    localStorage.setItem(VIEW_STORAGE_KEY, view);
+    localStorage.setItem(key, view);
   } catch (err: unknown) {
     console.error('Failed to remember catalog view', err);
   }
 }
 
-export function useCollectionView() {
-  const [view, setView] = useState(readView);
+export function useCollectionView(
+  key = CATALOG_VIEW_KEY,
+  fallback: CatalogCollectionView = 'grid',
+) {
+  const [view, setView] = useState(() => readView(key, fallback));
   const change = (next: CatalogCollectionView) => {
     setView(next);
-    saveView(next);
+    saveView(key, next);
   };
   return [view, change] as const;
 }

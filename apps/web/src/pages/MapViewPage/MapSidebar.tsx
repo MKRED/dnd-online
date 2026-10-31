@@ -1,25 +1,25 @@
 import {
   ActionIcon,
   Alert,
-  Anchor,
   Divider,
   Group,
   Stack,
   Text,
-  Title,
   Tooltip,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { IconSettings } from '@tabler/icons-react';
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 import type { MapSize } from 'shared';
 import { PanelEdge, usePanelWidth } from '../../components/PanelEdge';
 import { mapSizeLabel } from '../../features/maps';
+import MapTitle from './MapTitle';
 import classes from './MapViewPage.module.css';
 
 interface MapSidebarProps {
   name: string;
+  // Переименовать карту; null — карта ещё не загружена.
+  onRename: ((name: string) => Promise<void>) | null;
   // Размер карты; null — карта ещё не загружена.
   size: MapSize | null;
   // Открыть панель «Размер карты»; null — она уже открыта.
@@ -46,6 +46,7 @@ interface MapSidebarProps {
 // запоминается своя и панель не сворачивается — свёрнутой у редактора нет.
 function MapSidebar({
   name,
+  onRename,
   size,
   onEditSize,
   showInfo,
@@ -66,14 +67,7 @@ function MapSidebar({
     >
       {!narrow && <PanelEdge {...width.edge} />}
       <Stack gap="md" className={classes.sidebarBody}>
-        {showInfo && (
-          <Group justify="space-between" align="baseline" wrap="nowrap">
-            <Title order={3}>{name}</Title>
-            <Anchor component={Link} to="/maps" size="sm">
-              Все карты
-            </Anchor>
-          </Group>
-        )}
+        {showInfo && <MapTitle name={name} onRename={onRename} />}
 
         {showInfo && size && (
           <Group justify="space-between" gap="xs" wrap="nowrap">

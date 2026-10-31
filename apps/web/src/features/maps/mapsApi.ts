@@ -25,6 +25,13 @@ export function getMap(id: string): Promise<MapInfo> {
   return request(`/maps/${id}`);
 }
 
+export function renameMap(id: string, name: string): Promise<MapInfo> {
+  return request(`/maps/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ name }),
+  });
+}
+
 export function deleteMap(id: string): Promise<void> {
   return request(`/maps/${id}`, { method: 'DELETE' });
 }

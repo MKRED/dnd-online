@@ -37,8 +37,17 @@ function MapViewPage() {
   const { id = '' } = useParams();
   // Метки — из аккаунта, графика — этого устройства (замечания после первой партии).
   const settings = useDeviceSettings();
-  const { map, loadError, editError, busy, applyOps, editOps, undo, redo } =
-    useMapData(id);
+  const {
+    map,
+    loadError,
+    editError,
+    busy,
+    applyOps,
+    editOps,
+    undo,
+    redo,
+    rename,
+  } = useMapData(id);
   usePageTitle(map?.info.name ?? 'Карта');
   // Карта для правил «Хода» и фигурок — с клетками обстановки.
   const rules = useRulesState(map?.state ?? null, map?.refs ?? null);
@@ -193,6 +202,7 @@ function MapViewPage() {
 
       <MapSidebar
         name={map?.info.name ?? 'Карта'}
+        onRename={map ? rename : null}
         size={map?.state.size ?? null}
         onEditSize={sizeDraft ? null : () => setSizeDraft(EMPTY_DRAFT)}
         showInfo={editor.tool === 'view'}

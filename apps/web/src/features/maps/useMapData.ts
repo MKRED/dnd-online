@@ -12,6 +12,7 @@ import {
   getMap,
   getMapChunks,
   redoMapEdit,
+  renameMap,
   undoMapEdit,
 } from './mapsApi';
 import { mapStateFromChunks, type MapViewState } from './mapStateFromChunks';
@@ -113,5 +114,27 @@ export function useMapData(id: string) {
     api,
   });
 
-  return { map, loadError, editError, busy, applyOps, editOps, undo, redo };
+  // Новое имя — только в карточку: сцену и историю правок переименование не трогает.
+  const rename = useCallback(
+    (name: string) =>
+      renameMap(id, name).then((info) =>
+        setMap(
+          (prev) =>
+            prev && { ...prev, info: { ...prev.info, name: info.name } },
+        ),
+      ),
+    [id],
+  );
+
+  return {
+    map,
+    loadError,
+    editError,
+    busy,
+    applyOps,
+    editOps,
+    undo,
+    redo,
+    rename,
+  };
 }

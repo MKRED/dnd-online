@@ -40,6 +40,18 @@ describe('карты (e2e)', () => {
       .send({ name: 'Подвал' })
       .expect(200);
     expect(renamed.body).toMatchObject({ name: 'Подвал', seq: 0 });
+    // Пробелы по краям срезаются; пустое и слишком длинное имя — 400, имя не меняется.
+    await owner
+      .patch(`/api/maps/${id}`)
+      .send({ name: '  Подвал таверны  ' })
+      .expect(200);
+    await owner.patch(`/api/maps/${id}`).send({ name: '   ' }).expect(400);
+    await owner
+      .patch(`/api/maps/${id}`)
+      .send({ name: 'я'.repeat(101) })
+      .expect(400);
+    const card = await owner.get(`/api/maps/${id}`).expect(200);
+    expect(card.body).toMatchObject({ name: 'Подвал таверны' });
     await owner.delete(`/api/maps/${id}`).expect(204);
     await owner.get(`/api/maps/${id}`).expect(404);
   });
@@ -237,6 +249,11 @@ describe('карты (e2e)', () => {
     await stranger.patch(`/api/maps/${id}`).send({ name: 'Моя' }).expect(404);
     await stranger.delete(`/api/maps/${id}`).expect(404);
     await t.anonymous().get('/api/maps').expect(401);
+    await t
+      .anonymous()
+      .patch(`/api/maps/${id}`)
+      .send({ name: 'Моя' })
+      .expect(401);
     await t
       .anonymous()
       .post(`/api/maps/${id}/ops`)

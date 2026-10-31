@@ -1,5 +1,12 @@
-import { Button, Group, SegmentedControl, Stack, Text } from '@mantine/core';
-import { IconWalk } from '@tabler/icons-react';
+import {
+  Alert,
+  Button,
+  Group,
+  SegmentedControl,
+  Stack,
+  Text,
+} from '@mantine/core';
+import { IconLock, IconWalk } from '@tabler/icons-react';
 import { useState, type ReactNode } from 'react';
 import type { GameFigure } from 'shared';
 import { figureImagePath } from '../../../features/games';
@@ -100,6 +107,16 @@ function PlayerCharacterTab({
       />
       {watchOnly ? (
         <Text size="sm">Ходить можно, когда мастер начнёт встречу.</Text>
+      ) : figure.moveLocked ? (
+        <Alert
+          color="orange"
+          variant="light"
+          icon={<IconLock size={16} />}
+          title="Мастер запретил ходить"
+        >
+          Фигурка стоит, пока мастер не разрешит. Атаковать и применять
+          способности можно.
+        </Alert>
       ) : (
         <Button
           variant={walking ? 'filled' : 'light'}

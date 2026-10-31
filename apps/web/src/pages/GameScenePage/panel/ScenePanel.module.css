@@ -192,3 +192,10 @@
   text-transform: uppercase;
   color: var(--mantine-color-dimmed);
 }
+
+/* Герои под «Игроки могут ходить»: отступ и линия слева — подчинены общему. */
+.lockList {
+  margin-left: 16px;
+  padding-left: 12px;
+  border-left: 2px solid var(--mantine-color-default-border);
+}

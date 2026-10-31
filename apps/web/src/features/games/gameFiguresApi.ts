@@ -71,6 +71,18 @@ export function setGameMoveMode(
   });
 }
 
+// Мастер запрещает или разрешает игрокам ходить: одному герою или всем (characterId null).
+export function setFiguresMoveLock(
+  gameId: string,
+  characterId: string | null,
+  locked: boolean,
+): Promise<GameFigures> {
+  return request(`${figuresBase(gameId)}/lock`, {
+    method: 'PUT',
+    body: JSON.stringify({ characterId, locked }),
+  });
+}
+
 // Запас одной фигурки: обновить или добавить «Рывок».
 export function changeFigureAllowance(
   gameId: string,
@@ -91,6 +103,8 @@ export function figureApi(gameId: string) {
       placeGameFigure(gameId, characterId, at),
     round: () => startFiguresRound(gameId),
     mode: (mode: GameMoveMode) => setGameMoveMode(gameId, mode),
+    lock: (characterId: string | null, locked: boolean) =>
+      setFiguresMoveLock(gameId, characterId, locked),
     allowance: (characterId: string, change: 'refresh' | 'dash') =>
       changeFigureAllowance(gameId, characterId, change),
   };

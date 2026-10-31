@@ -463,6 +463,13 @@
       "when": 1793184588648,
       "tag": "0065_ability_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1793427070088,
+      "tag": "0066_figure_move_lock",
+      "breakpoints": true
     }
   ]
 }

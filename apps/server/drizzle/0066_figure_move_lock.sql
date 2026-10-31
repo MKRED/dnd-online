@@ -1,0 +1,1 @@
+ALTER TABLE "game_members" ADD COLUMN "move_locked" boolean DEFAULT false NOT NULL;

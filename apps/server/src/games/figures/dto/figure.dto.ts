@@ -2,8 +2,11 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsIn,
   IsInt,
+  IsOptional,
+  IsUUID,
 } from 'class-validator';
 import { GAME_MOVE_MODES, type GameMoveMode, type Vec3 } from 'shared';
 
@@ -25,6 +28,17 @@ export class PlaceFigureDto {
   @ArrayMaxSize(3, { message: CELL_MESSAGE })
   @IsInt({ each: true, message: CELL_MESSAGE })
   at: Vec3;
+}
+
+// Мастер запрещает или разрешает игрокам ходить: одному герою или всем (characterId
+// не передан или null).
+export class MoveLockDto {
+  @IsBoolean({ message: 'Запрет — да или нет (locked)' })
+  locked: boolean;
+
+  @IsOptional()
+  @IsUUID('all', { message: 'Герой — id персонажа на месте' })
+  characterId?: string | null;
 }
 
 // Мастер меняет режим хода игры (docs/dnd/movement.md).

@@ -58,6 +58,10 @@ export const FIGURE_NOT_FOUND = 'Фигурки нет на сцене';
 export const FIGURE_NOT_YOURS = 'Эту фигурку водит другой игрок';
 export const MASTER_ONLY_FIGURES =
   'Ставить фигурки и менять их запас движения может только мастер';
+export const FIGURE_MOVE_LOCKED = 'Мастер запретил ходить этой фигуркой';
+export const MASTER_ONLY_MOVE_LOCK =
+  'Запрещать игрокам ходить может только мастер';
+export const MOVE_LOCK_NO_SEAT = 'Такого героя на местах игры нет';
 export const MASTER_ONLY_MOVE_MODE = 'Режим хода меняет только мастер';
 export const ROUND_ONLY_IN_COMBAT =
   'Новый раунд — только в тактическом режиме: в свободном запас и так полный после каждого хода';

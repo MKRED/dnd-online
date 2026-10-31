@@ -72,6 +72,7 @@ describe('участники', () => {
           moved: 0,
           dashes: 0,
           canMove: false,
+          moveLocked: false,
           health: 'bloodied',
           hitPoints: null,
         },

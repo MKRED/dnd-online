@@ -195,6 +195,7 @@ const LIRA: GameFigure = {
   moved: 0,
   dashes: 0,
   canMove: true,
+  moveLocked: false,
   health: null,
   hitPoints: { current: 10, max: 12, temp: 0 },
 };

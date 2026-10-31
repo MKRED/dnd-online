@@ -14,6 +14,8 @@ interface SceneTabProps {
   // Группа «Бой» (combat/CombatControls); null — фигурки ещё не загружены.
   combat: ReactNode;
   fighting: boolean;
+  // «Игроки могут ходить» с героями (MoveLockSwitches); null — фигурок нет.
+  moveLock?: ReactNode;
 }
 
 // Вкладка «Сцена» у мастера (docs/plan/done/scene-page.md, этап 2): всё, что про сцену
@@ -27,6 +29,7 @@ function SceneTab({
   fog,
   combat,
   fighting,
+  moveLock = null,
 }: SceneTabProps) {
   return (
     <Stack gap="sm">
@@ -50,6 +53,7 @@ function SceneTab({
           </Text>
           {error && <Alert color="red">{error}</Alert>}
         </Stack>
+        {moveLock}
         <PlayersEyesSwitch fog={fog} />
       </SceneGroup>
       <SceneGroup title="Туман войны">

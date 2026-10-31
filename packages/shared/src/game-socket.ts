@@ -72,6 +72,7 @@ export const FIGURE_KINDS: readonly GameEventKind[] = [
   'game.mode',
   'figure.refreshed',
   'figure.dashed',
+  'figures.locked',
 ];
 
 // Состояние персонажей, монстров и НПС в игре (этап 8): страница сцены перечитывает

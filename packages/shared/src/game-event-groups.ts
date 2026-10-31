@@ -52,6 +52,7 @@ const KIND_GROUPS: Record<GameEventKind, GameEventGroup> = {
   'game.mode': 'movement',
   'figure.refreshed': 'movement',
   'figure.dashed': 'movement',
+  'figures.locked': 'movement',
   'creature.moved': 'movement',
   'creature.refreshed': 'movement',
   'creature.dashed': 'movement',

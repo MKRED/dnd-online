@@ -132,6 +132,14 @@ export function gameEventText(event: GameEvent): string {
         ? `Рывок: ${character.name} (за ход: ${dashes})`
         : `Рывок: ${character.name}`;
     }
+    case 'figures.locked': {
+      const { characters, locked } = event.result;
+      const names = characters.map((c) => c.name).join(', ');
+      const all = event.intent.characterId === null;
+      return locked
+        ? `Мастер запретил ходить${all ? ' всем' : ''}: ${names}`
+        : `Мастер разрешил ходить${all ? ' всем' : ''}: ${names}`;
+    }
     case 'combat.started':
     case 'combat.joined':
     case 'combat.left':

@@ -189,6 +189,7 @@ export class GameSeatsService {
         characterId: null,
         seatedAt: null,
         controllerId: null,
+        moveLocked: false,
       });
       await removeFigure(tx, character.id);
       await appendGameEvent(tx, gameId, {

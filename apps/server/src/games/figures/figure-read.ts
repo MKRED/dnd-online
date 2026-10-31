@@ -84,6 +84,7 @@ export async function readSceneFigures(
       temp: characters.hitPointsTemp,
       deathFailures: characters.deathSaveFailures,
       controllerId: gameMembers.controllerId,
+      moveLocked: gameMembers.moveLocked,
     })
     .from(gameFigures)
     .innerJoin(characters, eq(characters.id, gameFigures.characterId))
@@ -104,7 +105,16 @@ export async function readSceneFigures(
     })),
   );
   return rows.map(
-    ({ figure, name, ownerId, speed, controllerId, temp, ...hp }) => {
+    ({
+      figure,
+      name,
+      ownerId,
+      speed,
+      controllerId,
+      moveLocked,
+      temp,
+      ...hp
+    }) => {
       const canMove = canMoveFigure(viewerId, masterId, ownerId, controllerId);
       return {
         character: { id: figure.characterId, name },
@@ -119,6 +129,7 @@ export async function readSceneFigures(
         moved: figure.moved,
         dashes: figure.dashes,
         canMove,
+        moveLocked: moveLocked ?? false,
         health: creatureHealth(hp),
         // Хиты героев видит весь отряд и мастер — все, кому фигурки вообще показывают
         // (docs/plan/done/scene-page.md, этап 5).

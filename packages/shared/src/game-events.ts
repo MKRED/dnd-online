@@ -228,6 +228,12 @@ export interface GameEventPayloads {
     intent: { characterId: string };
     result: { character: GameEventCharacter; dashes: number };
   };
+  // Мастер запретил или разрешил игрокам ходить: одному герою (characterId) или всем на
+  // местах (null). characters — те, у кого запрет правда сменился.
+  'figures.locked': {
+    intent: { characterId: string | null; locked: boolean };
+    result: { characters: GameEventCharacter[]; locked: boolean };
+  };
   // Бой с очерёдностью (docs/plan/combat.md, этап 2). Мастер позвал участников (count),
   // дальше каждый бросает инициативу; раунд 1 начинается, когда бросили все.
   'combat.started': {

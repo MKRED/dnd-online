@@ -210,6 +210,12 @@ export function useFigureTool({
           ? 'Не удалось начать бой'
           : 'Не удалось закончить бой',
       ),
+    // Запрет игрокам ходить — одному герою или всем (null), вкладка «Сцена» мастера.
+    lock: (characterId: string | null, locked: boolean) =>
+      run(
+        () => api.lock(characterId, locked),
+        locked ? 'Не удалось запретить ходить' : 'Не удалось разрешить ходить',
+      ),
     allowance: (characterId: string, change: 'refresh' | 'dash') =>
       run(
         () => api.allowance(characterId, change),

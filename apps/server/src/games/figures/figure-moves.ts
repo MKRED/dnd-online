@@ -30,6 +30,7 @@ import {
   FIGURE_CANT_REACH,
   FIGURE_CANT_STAND,
   FIGURE_NOT_FOUND,
+  FIGURE_MOVE_LOCKED,
   FIGURE_NOT_YOURS,
   MASTER_ONLY_FIGURES,
   NO_ACTIVE_SCENE,
@@ -77,6 +78,7 @@ async function findFigure(actor: FigureActor, characterId: string) {
       speed: characters.speed,
       strength: characters.strength,
       controllerId: gameMembers.controllerId,
+      moveLocked: gameMembers.moveLocked,
     })
     .from(gameFigures)
     .innerJoin(characters, eq(characters.id, gameFigures.characterId))
@@ -133,10 +135,14 @@ export async function moveFigure(
   characterId: string,
   to: Vec3,
 ): Promise<void> {
-  const { figure, name, ownerId, speed, strength, controllerId } =
+  const { figure, name, ownerId, speed, strength, controllerId, moveLocked } =
     await findFigure(actor, characterId);
   if (!canMoveFigure(actor.userId, actor.masterId, ownerId, controllerId)) {
     throw new ForbiddenException(FIGURE_NOT_YOURS);
+  }
+  // Запрет мастера держит фигурку на месте у игроков; мастер водит её как обычно.
+  if (moveLocked && !isMaster(actor)) {
+    throw new ForbiddenException(FIGURE_MOVE_LOCKED);
   }
   const t0 = Date.now();
   const scene = await activeScene(actor);

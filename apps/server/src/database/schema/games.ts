@@ -77,6 +77,10 @@ export const gameMembers = pgTable(
     controllerId: uuid('controller_id').references(() => users.id, {
       onDelete: 'set null',
     }),
+    // Мастер запретил игрокам ходить фигуркой этого места (переключатель во вкладке
+    // «Сцена», решено с пользователем 2026-10-31). Держится в игре, пока мастер не снимет;
+    // освобождение места его снимает.
+    moveLocked: boolean('move_locked').notNull().default(false),
     joinedAt: timestamp('joined_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

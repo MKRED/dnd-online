@@ -32,6 +32,21 @@ describe('plaqueState', () => {
     ).toBeNull();
   });
 
+  it('мастер запретил ходить — подсказка об этом, запас виден', () => {
+    expect(
+      plaqueState({
+        ...none,
+        figure: lira,
+        creatureMoving: false,
+        outOfTurn: true,
+        locked: true,
+      }),
+    ).toMatchObject({
+      left: 'осталось 20 из 30 фт',
+      hint: 'мастер запретил ходить',
+    });
+  });
+
   it('вне боя запас не тратится — Скорость на каждый ход', () => {
     expect(
       plaqueState({

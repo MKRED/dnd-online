@@ -17,6 +17,8 @@ interface PlaqueInput {
   // Бой с очерёдностью, а у выбранного не его ход: клетки хода не подсвечены.
   outOfTurn?: boolean;
   master?: boolean;
+  // Мастер запретил игроку ходить выбранной фигуркой (GameFigure.moveLocked).
+  locked?: boolean;
 }
 
 // Что сказать на плашке сцены о выбранном (docs/plan/done/scene-page.md, этап 2) — бывшие
@@ -30,13 +32,16 @@ export function plaqueState({
   freeMove = false,
   outOfTurn = false,
   master = false,
+  locked = false,
 }: PlaqueInput): PlaqueState | null {
   // Вне хода: запас виден, а ходить нельзя (замечание Михаила 2026-10-28).
-  const moveHint = !outOfTurn
-    ? 'щелчок по подсвеченной клетке — ход'
-    : master
-      ? 'сейчас не его ход; переставить можно в «Правке»'
-      : 'ходит в свой ход';
+  const moveHint = locked
+    ? 'мастер запретил ходить'
+    : !outOfTurn
+      ? 'щелчок по подсвеченной клетке — ход'
+      : master
+        ? 'сейчас не его ход; переставить можно в «Правке»'
+        : 'ходит в свой ход';
   if (placing) {
     return {
       name: placing.name,

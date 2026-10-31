@@ -48,6 +48,7 @@ export const GAME_EVENT_DEFAULT_VISIBILITY: Record<
   'game.mode': 'players',
   'figure.refreshed': 'players',
   'figure.dashed': 'players',
+  'figures.locked': 'players',
   // Очерёдность боя видит вся партия; про скрытое от игроков существо — только мастер:
   // это решает сервер при записи (games/combat/combat-visibility.ts).
   'combat.started': 'players',

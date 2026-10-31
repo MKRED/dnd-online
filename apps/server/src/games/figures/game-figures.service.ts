@@ -20,9 +20,11 @@ import {
   type FigureActor,
 } from './figure-moves.js';
 import { GameFiguresReadService } from './game-figures-read.service.js';
+import { setMoveLock } from './move-lock.js';
 import { setMoveMode } from './move-mode.js';
 
-type FigureChange = 'move' | 'place' | 'round' | 'refresh' | 'dash' | 'mode';
+type FigureChange =
+  'move' | 'place' | 'round' | 'refresh' | 'dash' | 'mode' | 'lock';
 
 async function sceneOpen(tx: DbTransaction, gameId: string): Promise<boolean> {
   const [game] = await tx
@@ -64,6 +66,17 @@ export class GameFiguresService {
   mode(userId: string, gameId: string, mode: GameMoveMode) {
     return this.change(userId, gameId, 'mode', (actor) =>
       setMoveMode(actor, mode),
+    );
+  }
+
+  lock(
+    userId: string,
+    gameId: string,
+    characterId: string | null,
+    locked: boolean,
+  ) {
+    return this.change(userId, gameId, 'lock', (actor) =>
+      setMoveLock(actor, characterId, locked),
     );
   }
 

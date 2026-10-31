@@ -28,6 +28,7 @@ import {
 import type { useSceneOpen } from '../useSceneOpen';
 import HelpButton from './HelpButton';
 import ScenePanel, { type PanelTab } from './ScenePanel';
+import MoveLockSwitches from './MoveLockSwitches';
 import SceneTab from './SceneTab';
 import { usePanelState } from './usePanelState';
 
@@ -212,6 +213,16 @@ function GameScenePanel({
             )
           }
           fighting={figures?.mode === 'tactical'}
+          moveLock={
+            figures && (
+              <MoveLockSwitches
+                gameId={gameId}
+                heroes={figures.figures}
+                busy={tool.busy}
+                onLock={tool.lock}
+              />
+            )
+          }
         />
       ),
     });

@@ -430,6 +430,29 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'figures.locked',
+        as: { kind: 'master' },
+        intent: { characterId: 'c1', locked: true },
+        result: { characters: [lira], locked: true },
+      },
+      'Мастер запретил ходить: Лира',
+    ],
+    [
+      {
+        ...base,
+        kind: 'figures.locked',
+        as: { kind: 'master' },
+        intent: { characterId: null, locked: false },
+        result: {
+          characters: [lira, { id: 'c2', name: 'Борн' }],
+          locked: false,
+        },
+      },
+      'Мастер разрешил ходить всем: Лира, Борн',
+    ],
+    [
+      {
+        ...base,
         kind: 'character.changed',
         as: { kind: 'master' },
         intent: { characterId: 'c1', change: { kind: 'damage', amount: 7 } },

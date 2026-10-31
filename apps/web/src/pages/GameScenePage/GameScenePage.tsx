@@ -269,6 +269,15 @@ function GameScenePage() {
     !editing &&
     selectedRef !== null &&
     !combatantTurnNow(combat.combat, selectedRef);
+  // Мастер запретил игроку ходить этой фигуркой: выбрать и посмотреть можно, ходить — нет.
+  const lockedOf = (characterId: string) =>
+    !master &&
+    (figures.figures?.figures.find((f) => f.character.id === characterId)
+      ?.moveLocked ??
+      false);
+  const moveLocked =
+    play.tool.selectedId !== null && lockedOf(play.tool.selectedId);
+  const noMove = outOfTurn || moveLocked;
   const { reload: reloadCombat } = combat;
   const fighting = (combat.combat?.combatants.length ?? 0) > 0;
   const { onSceneEdit: creaturesSceneEdit } = cards;
@@ -319,7 +328,7 @@ function GameScenePage() {
   // В «Правке»: «Просмотр» клетками ничего не делает, в «Существах» выбранного героя ставит
   // фигурка, остальное — инструмент (замечания после первой партии, 2026-10-26).
   const sceneEditor =
-    viewOnly || aiming || outOfTurn
+    viewOnly || aiming || noMove
       ? null
       : editing
         ? ready
@@ -333,8 +342,10 @@ function GameScenePage() {
   const playDrag =
     master && editing
       ? play.drag
-      : turnFigureDrag(play.drag, (characterId) =>
-          figureTurnNow(combatState, characterId),
+      : turnFigureDrag(
+          play.drag,
+          (characterId) =>
+            figureTurnNow(combatState, characterId) && !lockedOf(characterId),
         );
   const figureDrag =
     viewOnly || aiming
@@ -376,6 +387,7 @@ function GameScenePage() {
         freeMove,
         outOfTurn,
         master,
+        locked: moveLocked,
       });
 
   const loader = (
@@ -437,7 +449,7 @@ function GameScenePage() {
                     resizePreview={null}
                     editor={sceneEditor}
                     walk={
-                      viewOnly || aiming || outOfTurn
+                      viewOnly || aiming || noMove
                         ? null
                         : (play.walk ?? cards.walk.scene)
                     }

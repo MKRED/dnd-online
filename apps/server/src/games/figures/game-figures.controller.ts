@@ -16,6 +16,7 @@ import type { Response } from 'express';
 import { AuthGuard, type AuthenticatedRequest } from '../../auth/auth.guard.js';
 import {
   MoveFigureDto,
+  MoveLockDto,
   MoveModeDto,
   PlaceFigureDto,
 } from './dto/figure.dto.js';
@@ -58,6 +59,21 @@ export class GameFiguresController {
     @Body() dto: MoveModeDto,
   ) {
     return this.figuresService.mode(req.user.sub, id, dto.mode);
+  }
+
+  // Запрет игрокам ходить — одному герою или всем на местах. Только мастер.
+  @Put('figures/lock')
+  lock(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: MoveLockDto,
+  ) {
+    return this.figuresService.lock(
+      req.user.sub,
+      id,
+      dto.characterId ?? null,
+      dto.locked,
+    );
   }
 
   @Post('figures/:characterId/move')

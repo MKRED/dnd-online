@@ -71,3 +71,9 @@ A house rule of the app, decided with the user 2026-10-24 (mockup «Режимы
 A house rule of the app, decided with the user 2026-10-25: while the GM hasn't started a session (or has ended it), a player only watches the scene. They see the scene, move the camera, cut and read the cards, but don't move or drag a figure and don't change a character's Hit Points, death saves, slots or effects from the game. That holds for the owner and the controller alike. The server refuses with 403 «Встреча не идёт: сцену можно только смотреть». The GM isn't limited: they can arrange the scene before the session.
 
 - Code: `apps/server/src/games/session-gate.ts` (`assertPlayerInSession`), called by `GameFiguresService` and `GameCharactersService`; the drag over the socket is dropped in `realtime/figure-drag.ts`.
+
+## The GM stops a figure
+
+Another house rule of the app, decided with the user 2026-10-31 (the books have no such rule: it is a table tool). Besides the session and the turn order, the GM can forbid players to move a hero at any time: one hero, or every seated hero at once, with the switches «Игроки могут ходить» in the «Игроки» group of the scene tab «Сцена». A stopped figure doesn't walk along a path and isn't dragged, even on its own turn in combat; the player still attacks, uses abilities, changes Hit Points and ends the turn. The GM moves it as usual. The stop stays in the game, across scenes and sessions, until the GM lifts it; freeing the seat lifts it too.
+
+- Code: the flag `game_members.move_locked` (migration `0066`), shown as `GameFigure.moveLocked`; set by `PUT /games/:id/figures/lock` (`apps/server/src/games/figures/move-lock.ts`), checked in `moveFigure` (403 «Мастер запретил ходить этой фигуркой») and in `realtime/figure-drag.ts`. In the web: the switches are `GameScenePage/panel/MoveLockSwitches.tsx`, the player's notice is in `PlayerCharacterTab` and on the scene plaque (`plaqueState`).

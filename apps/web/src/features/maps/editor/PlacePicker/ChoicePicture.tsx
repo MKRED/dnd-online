@@ -5,7 +5,10 @@ import { useImageUrl } from '../../../../lib/useImageUrls';
 import { characterImagePath } from '../../../characters/characterImagesApi';
 import { itemImagePath } from '../../../items';
 import { monstersApi } from '../../../monsters/monstersApi';
-import { ModelThumbnail } from '../../../voxelModels';
+import {
+  furnitureModelSnapshotPath,
+  ModelThumbnail,
+} from '../../../voxelModels';
 import type { CatalogChoice } from '../objects/objectPlacement';
 import classes from './PlacePicker.module.css';
 import { objectChoiceName, type ObjectChoice } from './placeChoice';
@@ -84,6 +87,7 @@ function ChoicePicture({
         cacheKey={`${model.id}:${model.palette.join('')}:${model.voxels.length}`}
         model={model}
         size={size}
+        snapshot={furnitureModelSnapshotPath(model)}
       />
     ) : (
       <Letter name={entry.name} size={size} />

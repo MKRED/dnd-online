@@ -62,6 +62,7 @@ export class FurnitureService extends CatalogEntriesService<
     const t0 = Date.now();
     const models = await loadFurnitureModels(
       this.database.db,
+      userId,
       entries.flatMap(furnitureModelIds).filter(Boolean),
     );
     for (const entry of entries) {

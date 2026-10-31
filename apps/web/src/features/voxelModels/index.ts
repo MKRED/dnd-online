@@ -18,6 +18,7 @@ export {
 export { default as ModelThumbnail } from './ModelPreview/ModelThumbnail';
 export {
   copyVoxelModel,
+  furnitureModelSnapshotPath,
   modelSnapshotPath,
   patchModelMesh,
   pullVoxelModel,

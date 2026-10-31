@@ -88,11 +88,14 @@ export const furnitureModelIds = (
 export type FurnitureInput = CatalogEntryInputFields & FurnitureFields;
 
 // Модель в ответе обстановки — целиком: её видят все, кто видит обстановку, даже если
-// сама модель скрыта. origin — ссылка модели-копии на свой оригинал.
+// сама модель скрыта. origin — ссылка модели-копии на свой оригинал. snapshotVersion —
+// версия снимка модели с файлом для списка (docs/plan/blocks.md, этап 9г), только если
+// читающий видит саму модель; нет — миниатюра по вокселям.
 export type FurnitureModel = VoxelModelFields & {
   id: string;
   name: string;
   origin: CatalogOrigin | null;
+  snapshotVersion?: number | null;
 };
 
 // model null — модель удалили: обстановка остаётся, но без вида. models — модели всех

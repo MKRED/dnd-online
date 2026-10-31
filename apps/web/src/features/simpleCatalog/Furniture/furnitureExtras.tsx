@@ -2,7 +2,7 @@ import { Anchor } from '@mantine/core';
 import { Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import type { Furniture } from 'shared';
-import { ModelThumbnail } from '../../voxelModels';
+import { furnitureModelSnapshotPath, ModelThumbnail } from '../../voxelModels';
 import type { CatalogExtras } from '../catalogExtras';
 import type { SimpleEntry } from '../simpleCatalogs';
 import { modelCellsText, modelSizeText } from '../VoxelModel/modelCard';
@@ -95,6 +95,7 @@ export const FURNITURE_EXTRAS: CatalogExtras = {
           cacheKey={`${entry.model.id}:${entry.model.palette.join('')}:${entry.model.voxels.length}`}
           model={entry.model}
           size={px}
+          snapshot={furnitureModelSnapshotPath(entry.model)}
         />
       ) : (
         <NoModel size={px} />

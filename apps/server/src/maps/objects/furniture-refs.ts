@@ -12,6 +12,10 @@ import {
 } from 'shared';
 import type { Db } from '../../catalog/catalog-access.js';
 import { furniture, voxelModels } from '../../database/schema/index.js';
+import {
+  loadModelSnapshots,
+  snapshotVersionOf,
+} from '../../voxel-models/model-snapshots.js';
 
 // Обстановка объектов карты (docs/plan/blocks.md, этап 8в) — из справочника владельца
 // карты, а на сцене — мастера, как свои блоки: правка своей обстановки видна сразу, в
@@ -51,11 +55,21 @@ export async function loadFurnitureRefs(
         .from(voxelModels)
         .where(inArray(voxelModels.id, [...new Set(modelIds)]))
     : [];
+  // Снимок модели с файлом — для окна «Что поставить» (этап 9г); глазами владельца
+  // карты (мастера на сцене): его обстановка стоит только на своих моделях.
+  const snapshots = await loadModelSnapshots(db, ownerId, modelIds);
   const modelById = new Map(
-    models.map((row) => [
-      row.id,
-      { id: row.id, ...readVoxelModelFields(row.extra) },
-    ]),
+    models.map((row) => {
+      const fields = readVoxelModelFields(row.extra);
+      return [
+        row.id,
+        {
+          id: row.id,
+          ...fields,
+          snapshotVersion: snapshotVersionOf(snapshots, row.id, !!fields.mesh),
+        },
+      ];
+    }),
   );
   const look = (model: VoxelModelFields | null) => ({
     size: model?.size ?? ([1, 1, 1] as Vec3),

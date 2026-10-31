@@ -198,4 +198,48 @@ describe('файл модели (e2e)', () => {
       .expect(200);
     expect((file.body as Buffer).length).toBe(84 + 2 * 50);
   });
+
+  it('снимок модели с файлом — у её обстановки и в поиске «Что поставить», только видящему модель', async () => {
+    const withMesh = await createModel(author);
+    await upload(author, withMesh, stl(2), 'a.stl').expect(200);
+    const voxelOnly = await createModel(author);
+    for (const id of [withMesh, voxelOnly])
+      await author
+        .put(`/api/voxel-models/${id}/image`)
+        .attach('file', await pngImage(300, 300), PNG_FILE)
+        .expect(200);
+    const furnitureOf = async (modelId: string, name: string) =>
+      idOf(
+        await author
+          .post('/api/furniture')
+          .send({
+            name,
+            description: '',
+            isPublic: true,
+            modelId,
+            mount: 'floor',
+          })
+          .expect(201),
+      );
+    const statue = await furnitureOf(withMesh, 'Статуя снимка');
+    const crate = await furnitureOf(voxelOnly, 'Ящик снимка');
+    const model = async (agent: request.Agent, id: string) =>
+      ((await agent.get(`/api/furniture/${id}`).expect(200)).body as Furniture)
+        .model;
+
+    expect(await model(author, statue)).toMatchObject({ snapshotVersion: 1 });
+    // У воксельной модели картинку не показываем — миниатюра по вокселям.
+    expect(await model(author, crate)).toMatchObject({ snapshotVersion: null });
+    // Модель скрыта: чужой видит обстановку, но не картинку модели (её маршрут — 404).
+    expect(await model(stranger, statue)).toMatchObject({
+      snapshotVersion: null,
+    });
+
+    const found = (
+      await author.get('/api/map-catalog?kind=furniture&q=снимка').expect(200)
+    ).body as { id: string; model: { snapshotVersion: number | null } }[];
+    const byId = new Map(found.map((entry) => [entry.id, entry.model]));
+    expect(byId.get(statue)).toMatchObject({ snapshotVersion: 1 });
+    expect(byId.get(crate)).toMatchObject({ snapshotVersion: null });
+  });
 });

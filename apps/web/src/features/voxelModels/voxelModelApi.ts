@@ -24,6 +24,19 @@ export const modelSnapshotPath = ({
 }: Pick<VoxelModel, 'id' | 'mesh' | 'image'>): string | null =>
   mesh && image ? voxelModelsApi.imagePath(id, 'thumb', image.version) : null;
 
+// То же для модели внутри обстановки: сервер присылает версию снимка, только если у модели
+// есть файл и читающий видит саму модель.
+export const furnitureModelSnapshotPath = ({
+  id,
+  snapshotVersion,
+}: {
+  id: string;
+  snapshotVersion?: number | null;
+}): string | null =>
+  snapshotVersion
+    ? voxelModelsApi.imagePath(id, 'thumb', snapshotVersion)
+    : null;
+
 // Копия чужой модели себе и «Подтянуть обновления» — как у групп блоков (этап 6б).
 export const copyVoxelModel = (id: string): Promise<VoxelModel> =>
   apiRequest(`/voxel-models/${id}/copy`, { method: 'POST' });

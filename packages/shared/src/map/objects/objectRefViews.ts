@@ -49,7 +49,12 @@ export type NpcRefView =
 // Скрытой не бывает: на карту ставится только своя, а игроку на сцене она нужна вся,
 // как блоки мастера. model null — модель удалили, обстановка без вида.
 // Модель с id: по нему берут байты загруженного файла (этап 9).
-export type FurnitureViewModel = VoxelModelFields & { id: string };
+// snapshotVersion — версия снимка модели с загруженным файлом (docs/plan/blocks.md, этап
+// 9г): картинка для окна «Что поставить»; нет — миниатюра по вокселям.
+export type FurnitureViewModel = VoxelModelFields & {
+  id: string;
+  snapshotVersion?: number | null;
+};
 
 // positions — положения двери с их моделями (этап 8г), пусто — без положений.
 export type FurnitureRefView =

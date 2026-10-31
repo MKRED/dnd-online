@@ -11,6 +11,7 @@ import {
 } from 'shared';
 import { errorMessage } from '../../../lib/apiRequest';
 import {
+  modelSnapshotPath,
   ModelThumbnail,
   VoxelEditorModal,
   voxelModelsApi,
@@ -107,6 +108,7 @@ function ModelPicker({
                   cacheKey={`${found.id}:${found.updatedAt}`}
                   model={found}
                   size={32}
+                  snapshot={modelSnapshotPath(found)}
                 />
               )}
               <Text size="sm">{option.label}</Text>

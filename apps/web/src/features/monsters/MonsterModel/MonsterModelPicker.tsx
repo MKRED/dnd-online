@@ -19,6 +19,7 @@ import { Link } from 'react-router-dom';
 import { emptyVoxelModel, type VoxelModel } from 'shared';
 import { CompressPanel, useModelCompression } from '../../modelCompress';
 import {
+  modelSnapshotPath,
   ModelThumbnail,
   VoxelEditorModal,
   type OwnModels,
@@ -82,6 +83,7 @@ function MonsterModelPicker({
                   cacheKey={`${found.id}:${found.updatedAt}`}
                   model={found}
                   size={32}
+                  snapshot={modelSnapshotPath(found)}
                 />
               )}
               <Text size="sm">{option.label}</Text>

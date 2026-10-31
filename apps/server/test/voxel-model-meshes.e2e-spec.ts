@@ -1,6 +1,7 @@
 import type request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Furniture, ModelMesh, VoxelModel } from 'shared';
+import { PNG_FILE, pngImage } from './support/character-fixture.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 import { glb, modelBody, stl } from './support/voxel-model-fixture.js';
 
@@ -139,13 +140,22 @@ describe('файл модели (e2e)', () => {
     await author.delete(`/api/voxel-models/${id}/mesh`).expect(404);
   });
 
-  it('копия модели забирает файл; «Подтянуть обновления» — новый файл', async () => {
+  it('копия модели забирает файл и снимок; «Подтянуть обновления» — новый файл', async () => {
     const original = await createModel(author, true);
     await upload(author, original, stl(1), 'a.stl').expect(200);
+    // Снимок для списка — картинка записи (этап 9г).
+    await author
+      .put(`/api/voxel-models/${original}/image`)
+      .attach('file', await pngImage(300, 300), PNG_FILE)
+      .expect(200);
     const copy = (
       await stranger.post(`/api/voxel-models/${original}/copy`).expect(201)
     ).body as VoxelModel;
     expect(copy.mesh).toMatchObject({ format: 'stl' });
+    expect(copy.image).toMatchObject({ version: 1, width: 300, height: 300 });
+    await stranger
+      .get(`/api/voxel-models/${copy.id}/image?variant=thumb&v=1`)
+      .expect(200);
     const file = (copyId: string) =>
       stranger
         .get(`/api/voxel-models/${copyId}/mesh/file`)
@@ -154,10 +164,13 @@ describe('файл модели (e2e)', () => {
     expect(((await file(copy.id)).body as Buffer).length).toBe(134);
 
     await upload(author, original, stl(3), 'b.stl').expect(200);
+    await author.delete(`/api/voxel-models/${original}/image`).expect(204);
     const seen = await read(stranger, copy.id);
     expect(seen.origin).toMatchObject({ updated: true });
     await stranger.post(`/api/voxel-models/${copy.id}/pull`).expect(200);
     expect(((await file(copy.id)).body as Buffer).length).toBe(84 + 3 * 50);
+    // У оригинала снимка больше нет — у копии тоже.
+    expect((await read(stranger, copy.id)).image).toBeNull();
   });
 
   it('копия обстановки копирует и файл её модели', async () => {

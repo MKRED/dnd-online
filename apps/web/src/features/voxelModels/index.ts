@@ -18,6 +18,7 @@ export {
 export { default as ModelThumbnail } from './ModelPreview/ModelThumbnail';
 export {
   copyVoxelModel,
+  modelSnapshotPath,
   patchModelMesh,
   pullVoxelModel,
   removeModelMesh,
@@ -29,3 +30,6 @@ export { useOwnModels, type OwnModels } from './useOwnModels';
 // Новая модель из файла (форма монстра) — на three, поэтому функция грузится по требованию.
 export const loadMeshToModel = () =>
   import('./mesh/meshToModel').then((m) => m.meshToModel);
+// Снимок модели с файлом для списка (этап 9г) — тоже на three.
+export const loadMeshSnapshot = () =>
+  import('./ModelPreview/renderMeshSnapshot').then((m) => m.meshSnapshot);

@@ -14,6 +14,16 @@ export const voxelModelsApi = catalogApi<VoxelModel, VoxelModelInput>(
   '/voxel-models',
 );
 
+// Снимок модели с файлом для списка (docs/plan/blocks.md, этап 9г) — миниатюра её
+// картинки записи. У воксельной модели картинку не показываем: миниатюра рисуется по
+// вокселям, а картинку мог положить кто-то другой (MCP).
+export const modelSnapshotPath = ({
+  id,
+  mesh,
+  image,
+}: Pick<VoxelModel, 'id' | 'mesh' | 'image'>): string | null =>
+  mesh && image ? voxelModelsApi.imagePath(id, 'thumb', image.version) : null;
+
 // Копия чужой модели себе и «Подтянуть обновления» — как у групп блоков (этап 6б).
 export const copyVoxelModel = (id: string): Promise<VoxelModel> =>
   apiRequest(`/voxel-models/${id}/copy`, { method: 'POST' });

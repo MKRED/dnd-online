@@ -20,7 +20,9 @@ async function parseFile(file: File): Promise<LoadedModel> {
   return parseModelData(data, format);
 }
 
-function load(source: MeshSource): Promise<LoadedModel> {
+// Файл модели по источнику; один файл разбирается один раз (снимок для списка берёт его
+// же, renderMeshSnapshot.ts).
+export function loadMeshModel(source: MeshSource): Promise<LoadedModel> {
   if (source.kind === 'stored')
     return loadModel(
       storedMeshPath(source.modelId, source.version),
@@ -52,7 +54,7 @@ export function useMeshModel(source: MeshSource | null): MeshModelState | null {
   useEffect(() => {
     if (!source) return;
     let alive = true;
-    load(source)
+    loadMeshModel(source)
       .then((model) => {
         if (alive) setState({ key, value: { status: 'ready', model } });
       })

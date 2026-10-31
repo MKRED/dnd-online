@@ -2,6 +2,7 @@ import { Center, Loader } from '@mantine/core';
 import { Suspense } from 'react';
 import type { VoxelModel, VoxelModelFields } from 'shared';
 import {
+  modelSnapshotPath,
   ModelPreview,
   ModelThumbnail,
   type PreviewMesh,
@@ -46,7 +47,7 @@ const storedMesh = (entry: VoxelModel): PreviewMesh | null =>
 
 // Свои поля раздела «Модели» (docs/plan/blocks.md, этапы 8а и 9). Картинка записи — сама
 // модель: на карточке и в форме она вращается (загруженная — своим файлом), в списке —
-// миниатюра по вокселям.
+// миниатюра по вокселям, а у загруженной — её снимок (этап 9г).
 export const MODEL_EXTRAS: CatalogExtras = {
   Field: ModelFields,
   validate: {
@@ -98,6 +99,7 @@ export const MODEL_EXTRAS: CatalogExtras = {
           cacheKey={`${entry.id}:${entry.updatedAt}`}
           model={entry}
           size={size === 'grid' ? 120 : 36}
+          snapshot={modelSnapshotPath(entry)}
         />
       )),
     values: ({ model, modelMesh }) =>

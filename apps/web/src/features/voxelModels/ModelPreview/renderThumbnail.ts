@@ -20,7 +20,8 @@ import { buildCellMesh } from '../voxelMesh';
 let renderer: WebGLRenderer | null = null;
 const cache = new Map<string, string>();
 
-function getRenderer(): WebGLRenderer | null {
+// Холст общий и для снимка модели с файлом (renderMeshSnapshot.ts).
+export function getThumbnailRenderer(): WebGLRenderer | null {
   if (renderer) return renderer;
   try {
     renderer = new WebGLRenderer({
@@ -44,7 +45,7 @@ export function modelThumbnail(
 ): string | null {
   const cached = cache.get(`${key}:${size}`);
   if (cached) return cached;
-  const gl = getRenderer();
+  const gl = getThumbnailRenderer();
   if (!gl) return null;
   const grid = gridFromFields(model);
   const scene = new Scene();

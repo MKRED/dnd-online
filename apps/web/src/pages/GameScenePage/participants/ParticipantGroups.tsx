@@ -8,7 +8,7 @@ import {
   revealKeys,
   selectionKey,
   type ParticipantGroup,
-} from './participantGroups';
+} from './groupParticipants';
 import classes from './participants.module.css';
 import { useOpenGroups } from './useOpenGroups';
 

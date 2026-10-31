@@ -1,6 +1,6 @@
 import { useRef, type MouseEvent } from 'react';
 import type { Participant } from './ParticipantRow';
-import { selectionKey } from './participantGroups';
+import { selectionKey } from './groupParticipants';
 
 // Сколько ждать второго щелчка: дольше, чем системный двойной щелчок по умолчанию.
 const DOUBLE_MS = 600;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Participant } from './ParticipantRow';
-import { participantGroups, revealKeys } from './participantGroups';
+import { participantGroups, revealKeys } from './groupParticipants';
 
 const p = (key: string, patch: Partial<Participant> = {}): Participant => ({
   key,

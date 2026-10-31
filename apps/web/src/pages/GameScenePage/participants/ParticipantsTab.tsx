@@ -2,7 +2,7 @@ import { Alert, Text } from '@mantine/core';
 import { useMemo, type ReactNode } from 'react';
 import ParticipantGroups from './ParticipantGroups';
 import type { Participant } from './ParticipantRow';
-import { participantGroups } from './participantGroups';
+import { participantGroups } from './groupParticipants';
 import { useDoubleOpen } from './useDoubleOpen';
 import { useScrollToSelected } from './useScrollToSelected';
 import classes from './participants.module.css';

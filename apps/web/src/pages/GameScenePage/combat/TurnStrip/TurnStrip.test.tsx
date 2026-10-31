@@ -253,4 +253,38 @@ describe('TurnPortrait', () => {
       }),
     ).toBeInTheDocument();
   });
+
+  it('полоска хитов — только с числами: у раненого врага игрока её нет, «Ранен» в подписи', () => {
+    renderWithProviders(
+      <>
+        <TurnPortrait
+          entry={{
+            ...entry('d', 'Гоблин', 12, {}, 'monster'),
+            health: 'bloodied',
+          }}
+          current={false}
+          acted={false}
+        />
+        <TurnPortrait
+          entry={{
+            ...entry('o', 'Огр', 8, {}, 'monster'),
+            hitPoints: { current: 20, max: 59 },
+          }}
+          current={false}
+          acted={false}
+        />
+      </>,
+    );
+    const goblin = screen.getByRole('button', {
+      name: 'Гоблин, инициатива 12, Ранен',
+    });
+    const goblinBar = goblin.querySelector('[data-empty]');
+    expect(goblinBar).not.toBeNull();
+    expect(goblinBar?.childElementCount).toBe(0);
+
+    const ogre = screen.getByRole('button', { name: 'Огр, инициатива 8' });
+    expect(ogre.querySelector('[data-empty]')).toBeNull();
+    const fill = ogre.querySelector<HTMLElement>('[data-low]');
+    expect(fill?.style.width).toBe(`${(20 / 59) * 100}%`);
+  });
 });

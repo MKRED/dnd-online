@@ -126,7 +126,7 @@
   font-weight: 400;
 }
 
-/* Полоска хитов; у врагов игрок видит только «Ранен» и «Повержен» — полоску без числа. */
+/* Полоска хитов — только у тех, чьи хиты видны смотрящему; у врагов игрока её нет. */
 .bar {
   display: block;
   width: 34px;
@@ -134,6 +134,10 @@
   border-radius: 2px;
   background: var(--mantine-color-default-border);
   overflow: hidden;
+}
+
+.bar[data-empty] {
+  background: none;
 }
 
 .barFill {

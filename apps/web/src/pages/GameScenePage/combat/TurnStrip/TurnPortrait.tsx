@@ -11,9 +11,11 @@ interface TurnPortraitProps extends ComponentPropsWithoutRef<'button'> {
   acted: boolean;
 }
 
-// Портрет в полосе: число инициативы (или «…», пока не бросил) и полоска здоровья. Хиты —
-// тем, кому их видно; врагу у игрока полоска только по метке «Ранен». Значок в углу —
-// «Уклонение» или «Отход» (docs/plan/combat.md, этап 4, вариант А): его видят все.
+// Портрет в полосе: число инициативы (или «…», пока не бросил) и полоска здоровья. Полоска —
+// только тем, кому видны хиты (мастеру у всех, игроку у героев отряда): у врага игрок
+// не видит её вовсе, «Ранен» остаётся в подписи и в метке на сцене (решено с
+// пользователем 2026-10-31). Значок в углу — «Уклонение» или «Отход»
+// (docs/plan/combat.md, этап 4, вариант А): его видят все.
 const TurnPortrait = forwardRef<HTMLButtonElement, TurnPortraitProps>(
   function TurnPortrait({ entry, current, acted, className, ...rest }, ref) {
     const { initiative, dodging, disengaged } = entry.combatant;
@@ -21,11 +23,7 @@ const TurnPortrait = forwardRef<HTMLButtonElement, TurnPortraitProps>(
     const hp = entry.hitPoints;
     const share = hp
       ? Math.max(0, Math.min(1, hp.current / Math.max(1, hp.max)))
-      : health === 'bloodied'
-        ? 0.5
-        : health
-          ? 0
-          : 1;
+      : null;
     const label = [
       entry.name,
       initiative === null
@@ -68,12 +66,19 @@ const TurnPortrait = forwardRef<HTMLButtonElement, TurnPortraitProps>(
         >
           {initiative ?? '…'}
         </span>
-        <span className={classes.bar} aria-hidden="true">
-          <span
-            className={classes.barFill}
-            data-low={share <= 0.5 || undefined}
-            style={{ width: `${share * 100}%` }}
-          />
+        {/* Без хитов место под полоской остаётся пустым: портреты в полосе одной высоты. */}
+        <span
+          className={classes.bar}
+          data-empty={share === null || undefined}
+          aria-hidden="true"
+        >
+          {share !== null && (
+            <span
+              className={classes.barFill}
+              data-low={share <= 0.5 || undefined}
+              style={{ width: `${share * 100}%` }}
+            />
+          )}
         </span>
       </button>
     );

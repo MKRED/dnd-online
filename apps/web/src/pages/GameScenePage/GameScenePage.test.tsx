@@ -562,7 +562,11 @@ describe('GameScenePage', () => {
     ).toBeInTheDocument();
     // Плашка встречи — вместо плашки боя; уведомления нет: игрок вошёл уже вне встречи.
     expect(screen.queryByText('Бой · раунд 1')).not.toBeInTheDocument();
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    // По имени: лист в карточке тут не отвечает, и его ошибка — тоже alert, приходящий
+    // когда успеет (упало на CI 2026-11-01).
+    expect(
+      screen.queryByRole('alert', { name: 'Встреча началась' }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Ходить' }),
     ).not.toBeInTheDocument();

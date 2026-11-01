@@ -10,11 +10,13 @@ import {
 // Другие существа на пути (docs/dnd/movement.md): сквозь союзника можно пройти, сквозь
 // остальных — только если они на два размера больше или меньше; закончить ход в чужом
 // месте нельзя. ally — союзник того, кто ходит: в приложении это персонажи игроков друг
-// другу (сторон у монстров и НПС нет).
+// другу (сторон у монстров и НПС нет). incapacitated — недееспособен: в приложении пока
+// только тот, у кого 0 хитов (повержен, без сознания или погиб).
 export interface Occupant {
   at: Vec3;
   size: CreatureSize;
   ally: boolean;
+  incapacitated?: boolean;
 }
 
 // Касание гранями — не пересечение: соседние клетки не мешают друг другу.
@@ -30,10 +32,11 @@ export function boxesOverlap(a: BodyBox, b: BodyBox): boolean {
 
 const SIZE_ORDER = Object.keys(CREATURE_SIZES) as CreatureSize[];
 
-// Сквозь чьё место можно пройти: союзника, Крошечного и того, кто на два размера больше
-// или меньше. Недееспособного — когда у существ появится состояние (этап 8 плана игры).
+// Сквозь чьё место можно пройти: союзника, недееспособного, Крошечного и того, кто на два
+// размера больше или меньше. Остановиться на теле поверженного пока нельзя — как и в любом
+// чужом месте (решено с пользователем 2026-11-01).
 export function canPassThrough(size: CreatureSize, other: Occupant): boolean {
-  if (other.ally || other.size === 'tiny') return true;
+  if (other.ally || other.incapacitated || other.size === 'tiny') return true;
   const gap = Math.abs(
     SIZE_ORDER.indexOf(size) - SIZE_ORDER.indexOf(other.size),
   );

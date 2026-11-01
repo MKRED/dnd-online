@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   FIGURE_SIZE,
+  healthDown,
   movementAllowance,
   reachable,
   standHeight,
@@ -47,7 +48,7 @@ interface CreatureWalkOptions {
 
 // Ход выбранного мастером монстра или НПС (docs/plan/done/creature-movement.md): куда оно
 // дойдёт на оставшийся запас, путь под курсором и ход по клику — как у фигурки игрока.
-// Мешают персонажи игроков; другие монстры и НПС — союзники. Поверженный не ходит.
+// Мешают персонажи игроков, кроме тех, что без сознания; другие монстры и НПС — союзники. Поверженный не ходит.
 export function useCreatureWalk({
   gameId,
   state,
@@ -88,14 +89,16 @@ export function useCreatureWalk({
     () =>
       state && refs && mover
         ? [
-            ...sceneOccupants(state, refs, mover.id).map((o) => ({
+            ...sceneOccupants(state, refs, new Map(), mover.id).map((o) => ({
               ...o,
               ally: true,
             })),
+            // Герой без сознания недееспособен — сквозь него проходят.
             ...(figures?.figures ?? []).map((f) => ({
               at: f.at,
               size: FIGURE_SIZE,
               ally: false,
+              incapacitated: healthDown(f.health),
             })),
           ]
         : [],

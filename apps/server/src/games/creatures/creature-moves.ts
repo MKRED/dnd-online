@@ -1,15 +1,21 @@
 import { ConflictException } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import {
+  creatureHealth,
   FIGURE_SIZE,
   findPath,
+  healthDown,
   movementAllowance,
   stepFacing,
   type MapOp,
   type Occupant,
   type Vec3,
 } from 'shared';
-import { gameCreatures, gameFigures } from '../../database/schema/index.js';
+import {
+  characters,
+  gameCreatures,
+  gameFigures,
+} from '../../database/schema/index.js';
 import { runOps, type EditLimits } from '../../maps/edit-run.js';
 import { assertTurnOf } from '../combat/combat-gate.js';
 import { NOT_ITS_TURN } from '../combat/combat-errors.js';
@@ -62,7 +68,7 @@ async function allowanceOf(actor: CreatureActor, objectId: number) {
   return { creature, movement, hitPoints: hitPoints.get(objectId)! };
 }
 
-// Ход по пути в пределах запаса. Мешают персонажи игроков; другие монстры и НПС —
+// Ход по пути в пределах запаса. Мешают персонажи игроков, кроме тех, что без сознания; другие монстры и НПС —
 // союзники: сквозь них можно пройти, остановиться нельзя (правило дома, сторон у
 // монстров нет). Скрытых мастер видит — они учитываются. Перемещение — правка сцены
 // (moveObject и взгляд по последнему шагу) с записью creature.moved.
@@ -81,17 +87,27 @@ export async function moveCreature(
   const self = world.creatures.find((c) => c.objectId === objectId);
   if (!self) throw new ConflictException(CREATURE_CANT_REACH);
   const figures = await tx
-    .select({ x: gameFigures.x, y: gameFigures.y, z: gameFigures.z })
+    .select({
+      x: gameFigures.x,
+      y: gameFigures.y,
+      z: gameFigures.z,
+      current: characters.hitPointsCurrent,
+      max: characters.hitPointsMax,
+      deathFailures: characters.deathSaveFailures,
+    })
     .from(gameFigures)
+    .innerJoin(characters, eq(characters.id, gameFigures.characterId))
     .where(eq(gameFigures.sceneId, scene.id));
   const others: Occupant[] = [
     ...world.creatures
       .filter((c) => c.objectId !== objectId)
       .map(({ at, size }) => ({ at, size, ally: true })),
-    ...figures.map(({ x, y, z }): Occupant => ({
+    // Герой без сознания недееспособен — сквозь него монстр проходит.
+    ...figures.map(({ x, y, z, ...hp }): Occupant => ({
       at: [x, y, z],
       size: FIGURE_SIZE,
       ally: false,
+      incapacitated: healthDown(creatureHealth(hp)),
     })),
   ];
   // В свободном режиме запас полный на каждый ход и не тратится (docs/dnd/movement.md).

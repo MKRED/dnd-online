@@ -210,6 +210,29 @@ describe('game creature moves (e2e)', () => {
     expect(movementOf(climbed, 2)?.moved).toBe(5);
   });
 
+  it('сквозь героя без сознания гоблин проходит, его место труднопроходимое', async () => {
+    // Стена в три блока по z = 1 от x = 1: из [1, 1, 0] на [0, 1, 1] — только через
+    // фигурку героя на [0, 1, 0].
+    const g = await started('gcm_down', async (s) => {
+      await s.master.agent
+        .post(`/api/maps/${s.mapId}/ops`)
+        .send({
+          ops: [
+            { op: 'fillBox', from: [1, 1, 1], to: [7, 3, 1], block: 'stone' },
+          ],
+        })
+        .expect(200);
+    });
+    await g.move(g.m, 2, [0, 1, 1], 409);
+    await g.m
+      .post(`/api/games/${g.gameId}/characters/${g.character}/changes`)
+      .send({ kind: 'damage', amount: 999 })
+      .expect(200);
+    await g.move(g.m, 2, [0, 1, 0], 409);
+    const moved = await g.move(g.m, 2, [0, 1, 1]);
+    expect(movementOf(moved, 2)?.moved).toBe(15);
+  });
+
   it('запас: дальше не дойти, «Рывок» добавляет Скорость, «Новый раунд» и «Обновить» — полный', async () => {
     const g = await started('gcm_allowance');
     await g.move(g.m, 2, [1, 1, 4]);

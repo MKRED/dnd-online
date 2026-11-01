@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import type { GameFigureDragMessage, MapObjectRefsView, Vec3 } from 'shared';
+import type {
+  CreatureHealth,
+  GameFigureDragMessage,
+  MapObjectRefsView,
+  Vec3,
+} from 'shared';
 import { figureApi } from '../../../features/games';
 import type { FigureDragHandlers } from '../../../features/maps/MapScene';
 import type { MapViewState } from '../../../features/maps/mapStateFromChunks';
@@ -18,6 +23,8 @@ interface ScenePlayOptions {
   free: boolean;
   state: MapViewState | null;
   refs: MapObjectRefsView | null;
+  // Метки здоровья монстров и НПС: сквозь поверженного проходят.
+  creatureHealth: ReadonlyMap<number, CreatureHealth>;
   // Свой ход отправлен — фигурка ждёт путь на месте (docs/plan/done/walk-animation.md).
   onMoveStart?: (characterId: string, from: Vec3) => void;
 }
@@ -31,6 +38,7 @@ export function useScenePlay({
   free,
   state,
   refs,
+  creatureHealth,
   onMoveStart,
 }: ScenePlayOptions) {
   const figures = useSceneFigures(gameId, sceneId);
@@ -50,6 +58,7 @@ export function useScenePlay({
     state,
     refs,
     figures: figures.figures,
+    creatureHealth,
     api,
     onFigures: figures.apply,
     onDrag: sendDrag,

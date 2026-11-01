@@ -530,6 +530,43 @@ describe('game figures (e2e)', () => {
       .expect(200);
   });
 
+  it('сквозь поверженного гоблина проходят, его место труднопроходимое', async () => {
+    const g = await opened('gfg_down');
+    const p = g.player.agent;
+    // Стена в три блока на [0, 1, 1]: из угла [0, 1, 0] только через гоблина на [1, 1, 0]
+    // (диагональ мимо угла стены нельзя, на стену не залезть).
+    await g.m
+      .post(`/api/games/${g.gameId}/scenes/${g.sceneId}/ops`)
+      .send({
+        ops: [
+          { op: 'fillBox', from: [0, 1, 1], to: [0, 3, 1], block: 'stone' },
+        ],
+      })
+      .expect(200);
+    await p
+      .post(`${g.url}/move`)
+      .send({ to: [1, 1, 1] })
+      .expect(409);
+    const view = (await g.m.get(`/api/games/${g.gameId}/scene`).expect(200))
+      .body as GameSceneView;
+    const goblin = view.objects.find((o) => o.kind === 'monster');
+    await g.m
+      .post(`/api/games/${g.gameId}/scene/creatures/${goblin?.id}/changes`)
+      .send({ kind: 'damage', amount: 999 })
+      .expect(200);
+    // Встать на тело пока нельзя.
+    await p
+      .post(`${g.url}/move`)
+      .send({ to: [1, 1, 0] })
+      .expect(409);
+    const moved = await p
+      .post(`${g.url}/move`)
+      .send({ to: [1, 1, 1] })
+      .expect(200);
+    // Шаг в место гоблина — 10 футов, дальше — 5.
+    expect(figureOf(moved, g.figure.character.id)?.moved).toBe(15);
+  });
+
   it('мастер ставит фигурку куда угодно, где она встанет; «Не на сцене» — тоже', async () => {
     const g = await opened('gfg_place2');
     const second = await seatSecond(g.gameId, 'gfg_place2');

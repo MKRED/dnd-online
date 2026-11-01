@@ -218,6 +218,26 @@ describe('другие существа на пути', () => {
     expect(findPath(map, at(0, 0), at(4, 0), 'medium', 30, [giant])).toBeNull();
   });
 
+  it('сквозь поверженного противника проходят, место труднопроходимое, остановиться нельзя', () => {
+    const map = corridor();
+    const goblin: Occupant = {
+      at: at(1, 0),
+      size: 'medium',
+      ally: false,
+      incapacitated: true,
+    };
+    // Шаг на гоблина стоит 10, следующий — 5.
+    expect(
+      findPath(map, at(0, 0), at(2, 0), 'medium', 15, [goblin])?.cost,
+    ).toBe(15);
+    expect(
+      findPath(map, at(0, 0), at(2, 0), 'medium', 10, [goblin]),
+    ).toBeNull();
+    expect(
+      findPath(map, at(0, 0), at(1, 0), 'medium', 30, [goblin]),
+    ).toBeNull();
+  });
+
   it('Крошечный не мешает пройти и не делает место труднопроходимым', () => {
     const map = corridor();
     const rat: Occupant = { at: at(1, 0), size: 'tiny', ally: false };

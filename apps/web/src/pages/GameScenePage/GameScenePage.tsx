@@ -48,7 +48,11 @@ import { useGameScene } from './useGameScene';
 import ScenePlaque from './ScenePlaque/ScenePlaque';
 import { plaqueState } from './ScenePlaque/plaqueState';
 import { CardWindows, useCardWindows } from './cardWindows';
-import { CreatureCards, useCreatureCards } from './creatures';
+import {
+  CreatureCards,
+  useCreatureCards,
+  useSceneCreatures,
+} from './creatures';
 import { useScenePlay } from './figures';
 import { editFigureDrag } from './figures/editFigureDrag';
 import {
@@ -203,6 +207,9 @@ function GameScenePage() {
     (objectId: number, from: Vec3) => hold(objectWalkKey(objectId), from),
     [hold],
   );
+  // Существа сцены: их метки здоровья нужны ходу фигурки (сквозь поверженного проходят)
+  // и карточкам существ.
+  const sceneCreatures = useSceneCreatures(id, sceneId);
   const play = useScenePlay({
     gameId: id,
     sceneId,
@@ -214,6 +221,7 @@ function GameScenePage() {
     free: editing,
     state,
     refs: view?.refs ?? null,
+    creatureHealth: sceneCreatures.health,
     onMoveStart: holdFigure,
   });
   const { figures } = play;
@@ -236,7 +244,7 @@ function GameScenePage() {
   );
   const cards = useCreatureCards({
     gameId: id,
-    sceneId,
+    creatures: sceneCreatures,
     master,
     state,
     refs: view?.refs ?? null,

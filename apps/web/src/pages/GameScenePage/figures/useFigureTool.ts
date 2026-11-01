@@ -8,6 +8,7 @@ import {
   type GameFigures,
   type GameMoveMode,
   type MapObjectRefsView,
+  type CreatureHealth,
   type Occupant,
   type Reach,
   type Vec3,
@@ -32,6 +33,8 @@ interface FigureToolOptions {
   state: MapViewState | null;
   refs: MapObjectRefsView | null;
   figures: GameFigures | null;
+  // Метки здоровья монстров и НПС: сквозь поверженного проходят.
+  creatureHealth: ReadonlyMap<number, CreatureHealth>;
   api: ReturnType<typeof figureApi>;
   // Ответ правки — фигурки глазами того, кто правил: показать сразу.
   onFigures: (figures: GameFigures) => void;
@@ -50,6 +53,7 @@ export function useFigureTool({
   state,
   refs,
   figures,
+  creatureHealth,
   api,
   onFigures,
   onDrag,
@@ -73,13 +77,13 @@ export function useFigureTool({
     () =>
       state && refs
         ? [
-            ...sceneOccupants(state, refs),
+            ...sceneOccupants(state, refs, creatureHealth),
             ...(figures?.figures ?? [])
               .filter((f) => f.character.id !== selectedId)
               .map((f) => ({ at: f.at, size: f.size, ally: true })),
           ]
         : [],
-    [state, refs, figures, selectedId],
+    [state, refs, creatureHealth, figures, selectedId],
   );
 
   const left = useMemo(

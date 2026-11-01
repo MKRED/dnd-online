@@ -1,6 +1,7 @@
 import { act, fireEvent, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCreatureCards } from './useCreatureCards';
+import { useSceneCreatures } from './useSceneCreatures';
 
 // Существа сцены здесь не нужны: запрос висит, выбор от него не зависит.
 beforeEach(() => {
@@ -17,7 +18,7 @@ function setup() {
     ({ figureId }: { figureId: string | null }) =>
       useCreatureCards({
         gameId: 'g1',
-        sceneId: 's1',
+        creatures: useSceneCreatures('g1', 's1'),
         master: true,
         state: null,
         refs: null,

@@ -37,7 +37,7 @@ The walking rules live in `packages/shared/src/map/rules/` (distance, `step.ts`,
 Departures from the book, decided 2026-10-21 while building stage 7:
 
 - **Who is an ally.** The app stores no allegiance. The players' characters are allies of each other; every monster and NPC on the map is not, so it blocks a figure unless it is two sizes larger or smaller, and its space is Difficult Terrain. The GM places a figure anywhere it can stand, so an allied NPC never really traps anyone.
-- **Incapacitated** isn't checked yet: creature state comes with stage 8 of the plan.
+- **Incapacitated** is, for now, a creature at 0 Hit Points: a monster or NPC «Повержен», a hero «Без сознания» or «Погиб» (decided with the user 2026-11-01). A figure passes through such a creature's space, and a monster passes through a fallen hero's; the space stays Difficult Terrain (it isn't Tiny or an ally) and a move still can't end there — standing on the body is left for later. The Incapacitated condition from an effect isn't checked yet. In code: `incapacitated` on `Occupant` (`occupancy.ts`), set by the server in `scene-world.ts` and `creature-moves.ts` and by the web in `sceneOccupants.ts` and `useCreatureWalk.ts` from the health labels.
 - **Ending in an occupied space is refused**, so the Prone consequence never comes up.
 - **A Medium figure for every character**: a character has no size yet (see [species.md](species.md)), and Small takes the same square.
 - **Hidden creatures** (an ambush the GM hid from the players) don't block a player's move: the player doesn't see them, and a refusal would give the ambush away. A figure can end up on a hidden monster's square; the GM sorts it out.

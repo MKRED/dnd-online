@@ -9,11 +9,12 @@ import type { SceneCreaturesView } from '../../../features/maps/MapScene';
 import type { MapViewState } from '../../../features/maps/mapStateFromChunks';
 import { useKeyCodes } from '../../../features/maps/useKeyCodes';
 import { useCreatureWalk } from './useCreatureWalk';
-import { useSceneCreatures } from './useSceneCreatures';
+import type { useSceneCreatures } from './useSceneCreatures';
 
 interface CreatureCardsOptions {
   gameId: string;
-  sceneId: string | null;
+  // Существа сцены читает страница: их метки здоровья нужны и ходу фигурки.
+  creatures: ReturnType<typeof useSceneCreatures>;
   master: boolean;
   state: MapViewState | null;
   refs: MapObjectRefsView | null;
@@ -38,7 +39,7 @@ interface CreatureCardsOptions {
 // существа мастером и номер для перечитывания карточки персонажа.
 export function useCreatureCards({
   gameId,
-  sceneId,
+  creatures,
   master,
   state,
   refs,
@@ -50,7 +51,6 @@ export function useCreatureCards({
   reloadFigures,
   onMoveStart,
 }: CreatureCardsOptions) {
-  const creatures = useSceneCreatures(gameId, sceneId);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [version, setVersion] = useState(0);
   const { reload } = creatures;

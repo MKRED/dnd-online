@@ -151,6 +151,10 @@ export function creatureHealthLabel(health: CreatureHealth, pc: boolean) {
   }
 }
 
+// На нуле хитов существо недееспособно: сквозь его место можно пройти (docs/dnd/movement.md).
+export const healthDown = (health: CreatureHealth | null): boolean =>
+  health === 'down' || health === 'dead';
+
 export function creatureHealth(
   state: Pick<HitPointsState, 'current' | 'max' | 'deathFailures'>,
 ): CreatureHealth | null {

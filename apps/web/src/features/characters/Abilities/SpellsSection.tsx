@@ -5,10 +5,13 @@ import {
   longRestExpended,
   SPELL_SLOT_CIRCLES,
   type CharacterAbilityEntry,
+  type SpellcastingNumbers,
   type SpellSlotCircle,
   type SpellSlots,
 } from 'shared';
 import { GroupEntries } from '../../abilityLinks';
+import { formatModifier } from '../CharacterForm/AbilityScoresSection/abilityMath';
+import { ABILITY_LABELS } from '../characterLabels';
 import classes from './Abilities.module.css';
 import { spellCircles } from './abilitiesView';
 import type { SheetSpellActions } from './sheetSpellActions';
@@ -20,6 +23,8 @@ interface SpellsSectionProps {
   characterId: string;
   abilities: CharacterAbilityEntry[];
   spellSlots: SpellSlots;
+  // Заклинательная характеристика с атакой и Сл; null — не выбрана.
+  spellcasting?: SpellcastingNumbers | null;
   // Есть — автор тратит ячейки на листе; нет — только чтение.
   onSlotsChange?: (spellSlots: SpellSlots) => void;
   // Есть — автор отмечает подготовку и убирает заклинания.
@@ -35,6 +40,7 @@ function SpellsSection({
   characterId,
   abilities,
   spellSlots,
+  spellcasting,
   onSlotsChange,
   onAbilitiesChange,
   actions,
@@ -104,6 +110,13 @@ function SpellsSection({
       }
     >
       <Stack gap="xs">
+        {spellcasting && (
+          <Text size="sm">
+            {ABILITY_LABELS[spellcasting.ability]} · атака{' '}
+            {formatModifier(spellcasting.attack)} · Сл спасброска{' '}
+            {spellcasting.saveDc}
+          </Text>
+        )}
         {circles.map(({ level, entries }) => {
           const circleSlots = spellSlots[level as SpellSlotCircle];
           return (

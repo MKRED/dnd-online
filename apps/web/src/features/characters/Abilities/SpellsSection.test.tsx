@@ -48,6 +48,18 @@ describe('SpellsSection', () => {
     expect(screen.queryByText('Заклинания')).toBeNull();
   });
 
+  it('заклинательная характеристика — строкой с атакой и Сл', () => {
+    renderWithProviders(
+      <SpellsSection
+        {...props(character(slots))}
+        spellcasting={{ ability: 'intelligence', attack: 5, saveDc: 13 }}
+      />,
+    );
+    expect(
+      screen.getByText('Интеллект · атака +5 · Сл спасброска 13'),
+    ).toBeInTheDocument();
+  });
+
   it('зритель видит кружки без кнопок и без «Долгого отдыха»', () => {
     renderWithProviders(<SpellsSection {...props(character(slots))} />);
     expect(

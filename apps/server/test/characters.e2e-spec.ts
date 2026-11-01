@@ -169,6 +169,39 @@ describe('персонажи (e2e)', () => {
     ).toMatchObject({ actionCount: 2 });
   });
 
+  it('заклинательная характеристика: без неё null, держится при правке без неё, null снимает', async () => {
+    const id = await create();
+    expect(
+      (await owner.get(`/api/characters/${id}`).expect(200)).body,
+    ).toMatchObject({ spellcastingAbility: null });
+
+    await owner
+      .put(`/api/characters/${id}`)
+      .send(characterBody({ spellcastingAbility: 'wisdom' }))
+      .expect(200);
+    const kept = await owner
+      .put(`/api/characters/${id}`)
+      .send(characterBody({ name: 'Торин II' }))
+      .expect(200);
+    expect(kept.body).toMatchObject({ spellcastingAbility: 'wisdom' });
+
+    for (const value of ['mana', 'Wisdom', 3]) {
+      await owner
+        .post('/api/characters')
+        .send(characterBody({ spellcastingAbility: value }))
+        .expect(400);
+      await owner
+        .put(`/api/characters/${id}`)
+        .send(characterBody({ spellcastingAbility: value }))
+        .expect(400);
+    }
+    const cleared = await owner
+      .put(`/api/characters/${id}`)
+      .send(characterBody({ spellcastingAbility: null }))
+      .expect(200);
+    expect(cleared.body).toMatchObject({ spellcastingAbility: null });
+  });
+
   it('НПС из бестиария держит бонус мастерства +9', async () => {
     const created = await owner
       .post('/api/characters')

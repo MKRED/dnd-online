@@ -64,6 +64,8 @@ export interface CharacterFormValues {
   actionCount: number;
   bonusActionCount: number;
   reactionCount: number;
+  // 'none' — не колдует (Select не держит пустое значение как выбор).
+  spellcastingAbility: AbilityScore | 'none';
   spellSlots: SpellSlotTotals;
   // Полей для них нет: потраченные отмечаются на листе, форма их только сохраняет.
   spellSlotsExpended: SpellSlotsExpended;
@@ -114,6 +116,7 @@ export function createInitialFormValues(
     actionCount: TURN_ACTIONS_DEFAULT,
     bonusActionCount: TURN_ACTIONS_DEFAULT,
     reactionCount: TURN_ACTIONS_DEFAULT,
+    spellcastingAbility: 'none',
     spellSlots: emptySpellSlotTotals(),
     spellSlotsExpended: {},
     armorProficiencies: [],
@@ -162,6 +165,7 @@ export function fromCharacter(character: Character): CharacterFormValues {
     actionCount: character.actionCount,
     bonusActionCount: character.bonusActionCount,
     reactionCount: character.reactionCount,
+    spellcastingAbility: character.spellcastingAbility ?? 'none',
     spellSlots: spellSlotTotals(character.spellSlots),
     spellSlotsExpended: spellSlotsExpended(character.spellSlots),
     armorProficiencies: [...character.proficiencies.armor],
@@ -224,6 +228,8 @@ export function toCreatePayload(
     actionCount: values.actionCount,
     bonusActionCount: values.bonusActionCount,
     reactionCount: values.reactionCount,
+    spellcastingAbility:
+      values.spellcastingAbility === 'none' ? null : values.spellcastingAbility,
     spellSlots: toSpellSlots(values.spellSlots, values.spellSlotsExpended),
     proficiencies: {
       // Порядок как в справочнике, а не как отмечали галочки.

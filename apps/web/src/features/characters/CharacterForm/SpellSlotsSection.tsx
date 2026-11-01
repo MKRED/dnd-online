@@ -4,16 +4,22 @@ import { memo } from 'react';
 import { SPELL_SLOT_CIRCLES, SPELL_SLOT_TOTAL_MAX } from 'shared';
 import type { CharacterFormValues } from '../characterFormValues';
 import { formErrorsEqual } from '../../../components/form';
+import SpellcastingField from './SpellcastingField';
 
 interface SpellSlotsSectionProps {
   form: UseFormReturnType<CharacterFormValues>;
 }
 
-// Число ячеек по кругам вводит игрок: приложение таблицы классов не считает
-// (docs/plan/done/character-abilities.md). Потраченные отмечаются на листе, не здесь.
+// Заклинательная характеристика и ячейки. Число ячеек по кругам вводит игрок: приложение
+// таблицы классов не считает (docs/plan/done/character-abilities.md). Потраченные
+// отмечаются на листе, не здесь.
 function SpellSlotsSection({ form }: SpellSlotsSectionProps) {
   return (
-    <Fieldset legend="Ячейки заклинаний">
+    <Fieldset legend="Заклинания">
+      <SpellcastingField form={form} />
+      <Text size="sm" fw={500} mt="md">
+        Ячейки заклинаний
+      </Text>
       <Text size="sm" c="dimmed" mb="sm">
         Сколько ячеек каждого круга — по таблице вашего класса. Потраченные
         отмечаются на листе персонажа.

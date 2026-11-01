@@ -1,4 +1,9 @@
-import type { Character, CharacterAbilityEntry, SpellSlots } from 'shared';
+import {
+  spellcastingNumbers,
+  type Character,
+  type CharacterAbilityEntry,
+  type SpellSlots,
+} from 'shared';
 import type { SheetSpellActions } from './sheetSpellActions';
 import SkillsSection from './SkillsSection';
 import SpellsSection from './SpellsSection';
@@ -31,6 +36,7 @@ function CharacterAbilities({
         characterId={id}
         abilities={abilities}
         spellSlots={spellSlots}
+        spellcasting={spellcastingNumbers(character)}
         onSlotsChange={onSpellSlotsChange}
         onAbilitiesChange={onAbilitiesChange}
         actions={spellActions}

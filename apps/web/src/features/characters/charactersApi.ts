@@ -39,6 +39,7 @@ export interface CreateCharacterPayload {
   actionCount?: number;
   bonusActionCount?: number;
   reactionCount?: number;
+  spellcastingAbility?: AbilityScore | null;
   spellSlots?: SpellSlots;
   proficiencies: CharacterProficiencies;
   weaponMasteries?: string[];

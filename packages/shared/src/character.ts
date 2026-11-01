@@ -262,6 +262,9 @@ export interface Character {
   proficiencies: CharacterProficiencies;
   weaponMasteries: WeaponMasteries;
   attacks: CharacterAttack[];
+  // Заклинательная характеристика: от неё атака заклинанием и Сл спасброска
+  // (spellcasting.ts). null — не колдует или не выбрана.
+  spellcastingAbility: AbilityScore | null;
   spellSlots: SpellSlots;
   spellsKnown: KnownSpell[];
   // Строки видны так, как смотрящему позволяет доступ к карточкам предметов.

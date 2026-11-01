@@ -131,6 +131,8 @@ function toNpc(row: LibraryRow, linked: LinkedRows): Character {
     actionCount: TURN_ACTIONS_DEFAULT,
     bonusActionCount: TURN_ACTIONS_DEFAULT,
     reactionCount: TURN_ACTIONS_DEFAULT,
+    // Снятые до заклинательной характеристики — без неё.
+    spellcastingAbility: null,
     ...row.record,
     id: row.sourceId,
     userId: '',

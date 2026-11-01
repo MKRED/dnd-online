@@ -24,6 +24,7 @@ import {
   PROFICIENCY_BONUS_MIN,
   TURN_ACTIONS_MAX,
   TURN_ACTIONS_MIN,
+  type AbilityScore,
   type CharacterKind,
   type CharacterSpecies,
   type HitDie,
@@ -205,6 +206,14 @@ export class CreateCharacterDto {
   @ValidateNested({ each: true })
   @Type(() => AttackDto)
   attacks?: AttackDto[];
+
+  // Заклинательная характеристика; null — не колдует, не прислали — при создании null,
+  // при правке остаётся прежняя.
+  @IsOptional()
+  @IsIn(ABILITY_SCORES, {
+    message: 'Заклинательная характеристика — одна из шести характеристик',
+  })
+  spellcastingAbility?: AbilityScore | null;
 
   // Ключи 1..9 сериализуются в JSON как строки — ValidateNested тут не подходит
   // (это Record, а не массив/класс), форму проверяем вручную через IsSpellSlots.

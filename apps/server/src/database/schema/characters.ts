@@ -5,6 +5,7 @@ import {
   integer,
   jsonb,
   timestamp,
+  text,
 } from 'drizzle-orm/pg-core';
 import type {
   AbilityScore,
@@ -94,6 +95,9 @@ export const characters = pgTable('characters', {
     .$type<WeaponMasteries>()
     .default([]),
   attacks: jsonb('attacks').notNull().$type<CharacterAttack[]>().default([]),
+
+  // Заклинательная характеристика (ключ ABILITY_SCORES); null — не колдует.
+  spellcastingAbility: text('spellcasting_ability').$type<AbilityScore>(),
 
   spellSlots: jsonb('spell_slots').notNull().$type<SpellSlots>().default({}),
   spellsKnown: jsonb('spells_known')

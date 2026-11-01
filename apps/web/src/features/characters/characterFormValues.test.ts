@@ -38,6 +38,7 @@ describe('fromCharacter', () => {
       actionCount: c.actionCount,
       bonusActionCount: c.bonusActionCount,
       reactionCount: c.reactionCount,
+      spellcastingAbility: null,
       spellSlots: c.spellSlots,
       proficiencies: { ...c.proficiencies, other: undefined },
       weaponMasteries: c.weaponMasteries,
@@ -82,6 +83,18 @@ describe('createInitialFormValues', () => {
 });
 
 describe('toCreatePayload', () => {
+  it('заклинательная характеристика: «Не колдует» уходит как null', () => {
+    const values = fromCharacter({
+      ...sampleCharacter,
+      spellcastingAbility: 'wisdom',
+    });
+    expect(values.spellcastingAbility).toBe('wisdom');
+    expect(toCreatePayload(values).spellcastingAbility).toBe('wisdom');
+    values.spellcastingAbility = 'none';
+    expect(toCreatePayload(values).spellcastingAbility).toBeNull();
+    expect(fromCharacter(sampleCharacter).spellcastingAbility).toBe('none');
+  });
+
   it('отправляет род только у вида, где он есть', () => {
     const values = fromCharacter(sampleCharacter);
     values.speciesLineage = 'Дроу';

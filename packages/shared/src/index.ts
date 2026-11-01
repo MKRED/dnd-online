@@ -42,6 +42,7 @@ export * from './effectArmorClass.js';
 export * from './effectRollBonus.js';
 export * from './effectArmorClassTotal.js';
 export * from './abilityModifier.js';
+export * from './spellcasting.js';
 export * from './conditionComponents.js';
 export * from './conditionsExpand.js';
 export * from './damageTypes.js';

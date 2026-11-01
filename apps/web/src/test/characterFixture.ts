@@ -38,6 +38,7 @@ export const sampleCharacter: Character = {
   deathSaveSuccesses: 1,
   deathSaveFailures: 0,
   heroicInspiration: 2,
+  spellcastingAbility: null,
   actionCount: 1,
   bonusActionCount: 1,
   reactionCount: 1,

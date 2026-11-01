@@ -62,6 +62,7 @@ const FIELDS = {
   proficiencies: `{armor, weapons, tools, languages, other?} (обязательно); armor: ${list(ARMOR_TRAINING)}; weapons: ${list(WEAPON_PROFICIENCIES)}; tools и languages — строки`,
   weaponMasteries: 'оружие с доступным мастерством — строки',
   attacks: '[{name, bonus, damage, damageType, notes?}] — строки, как на листе',
+  spellcastingAbility: `заклинательная характеристика: ${list(ABILITY_SCORES)} или null (не колдует); от неё атака заклинанием и Сл спасброска, у мультикласса — основная`,
   spellSlots:
     '{"1": {total, expended}, …} — ячейки по кругам из таблицы класса',
   spellsKnown:

@@ -115,10 +115,16 @@ describe('GameLobbyPage: библиотека игры', () => {
     });
     expect(fetchMock.mock.calls[2][0]).toMatch(/\/games\/[^/]+\/library$/);
     await within(drawer).findByText('Набор');
-    // Сверка со справочником: «Обновить» — только у изменённой копии.
+    // Сверка со справочником: изменённая копия — в блоке сверху, «Обновить» только у неё;
+    // одной копии «Обновить все» не нужно.
+    const changed = within(drawer).getByRole('region', {
+      name: 'Изменены в справочнике',
+    });
+    expect(within(changed).getByText('Набор')).toBeInTheDocument();
+    expect(within(changed).queryByText('Фонарь')).not.toBeInTheDocument();
     expect(
-      within(drawer).getByText('Изменена в справочнике'),
-    ).toBeInTheDocument();
+      within(changed).queryByRole('button', { name: 'Обновить все' }),
+    ).not.toBeInTheDocument();
     expect(within(drawer).getByText('Нет в справочнике')).toBeInTheDocument();
     expect(
       within(drawer).getAllByRole('button', { name: 'Обновить' }),
@@ -188,6 +194,70 @@ describe('GameLobbyPage: библиотека игры', () => {
     expect(
       within(drawer).queryByRole('button', { name: 'Обновить' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('«Обновить все» спрашивает, обновляет по одной и называет те, что не вышли', async () => {
+    const list = [
+      ...LIST,
+      row('monster', 'g1', 'Гоблин', 'humanoid', 'changed'),
+    ];
+    const fetchMock = stubFetch(
+      [
+        { status: 200, body: { ...GAME, role: 'master' } },
+        { status: 200, body: list },
+        { status: 200, body: list },
+        { status: 201, body: PACK },
+        { status: 500, body: { message: 'сбой' } },
+        { status: 200, body: [list[3]] },
+      ],
+      { libraryInQueue: true },
+    );
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    renderLobby('m1');
+    const user = userEvent.setup();
+
+    await user.click(
+      await screen.findByRole('button', {
+        name: 'Библиотека, ждут обновления: 2',
+      }),
+    );
+    const drawer = await screen.findByRole('dialog', {
+      name: 'Библиотека игры',
+    });
+    await user.click(
+      await within(drawer).findByRole('button', { name: 'Обновить все' }),
+    );
+    // Escape закрывает только окно подтверждения, шторка остаётся.
+    await screen.findByRole('dialog', {
+      name: 'Обновить все из справочника?',
+    });
+    await user.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: 'Обновить все из справочника?' }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(drawer).toBeInTheDocument();
+    await user.click(
+      within(drawer).getByRole('button', { name: 'Обновить все' }),
+    );
+    const confirm = await screen.findByRole('dialog', {
+      name: 'Обновить все из справочника?',
+    });
+    expect(within(confirm).getByText('Гоблин')).toBeInTheDocument();
+    await user.click(
+      within(confirm).getByRole('button', { name: 'Обновить 2' }),
+    );
+
+    expect(
+      await within(drawer).findByText('Не удалось обновить: Гоблин'),
+    ).toBeInTheDocument();
+    // По одной, в порядке списка; ошибка второй не мешает первой.
+    expect(fetchMock.mock.calls[3][0]).toMatch(/\/library\/item\/p1\/refresh$/);
+    expect(fetchMock.mock.calls[4][0]).toMatch(
+      /\/library\/monster\/g1\/refresh$/,
+    );
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(6));
   });
 
   it('на кнопке — сколько копий ждут обновления; пересчёт после шторки и на вкладке', async () => {

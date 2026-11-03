@@ -10,6 +10,8 @@ import {
 interface LibraryRowProps {
   gameId: string;
   entry: GameLibraryItem;
+  // В блоке «Изменены в справочнике» бейдж повторял бы его заголовок.
+  showSource?: boolean;
   refreshing: boolean;
   disabled: boolean;
   onOpen: () => void;
@@ -22,6 +24,7 @@ interface LibraryRowProps {
 function LibraryRow({
   gameId,
   entry,
+  showSource = true,
   refreshing,
   disabled,
   onOpen,
@@ -54,7 +57,7 @@ function LibraryRow({
               <Text size="xs" c="dimmed">
                 {libraryKindLine(entry.kind, entry.category)}
               </Text>
-              {entry.source !== 'same' && (
+              {showSource && entry.source !== 'same' && (
                 <Badge
                   size="xs"
                   variant="light"

@@ -18,6 +18,8 @@ interface GameLibraryProps {
 // (docs/plan/done/game.md, этап 4). Список и карточка копии сменяют друг друга внутри шторки.
 function GameLibrary({ gameId, version, opened, onClose }: GameLibraryProps) {
   const narrow = useMediaQuery('(max-width: 36em)');
+  // Открыто окно подтверждения внутри шторки — Escape закрывает только его.
+  const [confirming, setConfirming] = useState(false);
   return (
     <Drawer
       opened={opened}
@@ -25,10 +27,15 @@ function GameLibrary({ gameId, version, opened, onClose }: GameLibraryProps) {
       position="right"
       size={narrow ? '100%' : 'md'}
       title="Библиотека игры"
+      closeOnEscape={!confirming}
       closeButtonProps={{ 'aria-label': 'Закрыть библиотеку' }}
     >
       {/* Закрытая шторка не держит содержимое: открытие монтирует его и грузит заново. */}
-      <LibraryContent gameId={gameId} version={version} />
+      <LibraryContent
+        gameId={gameId}
+        version={version}
+        onConfirmingChange={setConfirming}
+      />
     </Drawer>
   );
 }
@@ -36,14 +43,14 @@ function GameLibrary({ gameId, version, opened, onClose }: GameLibraryProps) {
 function LibraryContent({
   gameId,
   version,
+  onConfirmingChange,
 }: {
   gameId: string;
   version: number;
+  onConfirmingChange: (confirming: boolean) => void;
 }) {
-  const { entries, loading, error, refreshing, refresh } = useGameLibrary(
-    gameId,
-    version,
-  );
+  const { entries, loading, error, refreshing, refresh, refreshAll } =
+    useGameLibrary(gameId, version);
   const [filter, setFilter] = useState<LibraryFilter>({
     kind: 'all',
     search: '',
@@ -109,6 +116,8 @@ function LibraryContent({
             refreshing={refreshing}
             onOpen={open}
             onRefresh={(ref) => void refresh(ref)}
+            onRefreshAll={(list) => void refreshAll(list)}
+            onConfirmingChange={onConfirmingChange}
           />
         </>
       )}

@@ -6,6 +6,9 @@ import {
 } from '../../../features/games';
 import { errorMessage } from '../../../lib/apiRequest';
 
+// Значение refreshing, пока идёт «Обновить все».
+export const ALL = 'all';
+
 // Список библиотеки игры. Грузится при монтировании (шторка монтирует содержимое при
 // каждом открытии) и заново, когда растёт version — в игре что-то скопировали или
 // обновили, пока шторка открыта.
@@ -13,14 +16,14 @@ export function useGameLibrary(gameId: string, version: number) {
   const [entries, setEntries] = useState<GameLibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Какая копия сейчас обновляется — её кнопка крутится, остальные доступны.
+  // Какая копия сейчас обновляется (`kind:sourceId`, или ALL) — её кнопка крутится.
   const [refreshing, setRefreshing] = useState<string | null>(null);
   // Ответ на устаревший запрос не затирает новый.
   const requestRef = useRef(0);
 
   const load = useCallback(() => {
     const request = ++requestRef.current;
-    listGameLibrary(gameId)
+    return listGameLibrary(gameId)
       .then((list) => {
         if (request !== requestRef.current) return;
         setEntries(list);
@@ -37,14 +40,16 @@ export function useGameLibrary(gameId: string, version: number) {
   }, [gameId]);
 
   // version — только повод перечитать; сам запрос от неё не зависит.
-  useEffect(load, [load, version]);
+  useEffect(() => {
+    void load();
+  }, [load, version]);
 
   const refresh = (ref: GameLibraryRef) => {
     setRefreshing(`${ref.kind}:${ref.sourceId}`);
     setError(null);
     return refreshGameLibraryEntry(gameId, ref.kind, ref.sourceId)
       .then((entry) => {
-        load();
+        void load();
         return entry;
       })
       .catch((err: unknown) => {
@@ -55,5 +60,27 @@ export function useGameLibrary(gameId: string, version: number) {
       .finally(() => setRefreshing(null));
   };
 
-  return { entries, loading, error, refreshing, refresh };
+  // «Обновить все»: по одной, чтобы связи докопировались по порядку и сервер не получил
+  // пачку параллельных записей. Ошибка одной не останавливает остальные — в конце их
+  // имена в одной строке. Список перечитывается один раз, в конце.
+  const refreshAll = async (items: GameLibraryItem[]) => {
+    setRefreshing(ALL);
+    setError(null);
+    const failed: string[] = [];
+    for (const item of items) {
+      try {
+        await refreshGameLibraryEntry(gameId, item.kind, item.sourceId);
+      } catch (err: unknown) {
+        console.error('Failed to refresh library entry', item, err);
+        failed.push(item.name);
+      }
+    }
+    // Удачное чтение списка сбрасывает ошибку — поэтому имена неудавшихся после него.
+    await load();
+    if (failed.length > 0)
+      setError(`Не удалось обновить: ${failed.join(', ')}`);
+    setRefreshing(null);
+  };
+
+  return { entries, loading, error, refreshing, refresh, refreshAll };
 }

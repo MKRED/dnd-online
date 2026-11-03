@@ -1,0 +1,23 @@
+/* Лёгкий оттенок, а не заливка: строки внутри должны читаться как обычные. */
+.block {
+  --changed-accent: var(--mantine-color-yellow-text);
+  background: color-mix(
+    in srgb,
+    var(--mantine-color-yellow-filled) 8%,
+    transparent
+  );
+  border-color: var(--mantine-color-yellow-outline);
+}
+
+/* На светлом фоне даже yellow-9 (оранжевый) даёт ~2.7:1 — смешан с цветом текста до ~5:1. */
+:global([data-mantine-color-scheme='light']) .block {
+  --changed-accent: color-mix(
+    in srgb,
+    var(--mantine-color-yellow-9) 55%,
+    var(--mantine-color-text)
+  );
+}
+
+.title {
+  color: var(--changed-accent);
+}

@@ -137,6 +137,12 @@ describe('dnd MCP server', () => {
     expect(result.text).toBe(`http://web.test/maps/${MAP_ID}?view=north&y=3`);
   });
 
+  it('view_url без ракурса всё равно задаёт его — не запомненная камера браузера', async () => {
+    const client = await connect(vi.fn());
+    const result = await call(client, 'view_url', { mapId: MAP_ID });
+    expect(result.text).toBe(`http://web.test/maps/${MAP_ID}?view=south`);
+  });
+
   it('block_guide описывает блоки и повороты', async () => {
     const client = await connect(vi.fn());
     const { text } = await call(client, 'block_guide');

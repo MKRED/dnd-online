@@ -1,12 +1,16 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { readSceneCamera, saveSceneCamera } from './sceneCamera';
+import { cameraMemory } from './cameraMemory';
+
+const memory = cameraMemory('scene.camera');
+const readSceneCamera = memory.read;
+const saveSceneCamera = memory.save;
 
 const at = (n: number) => ({
   position: [n, n + 1, n + 2] as [number, number, number],
   target: [0, 0, n] as [number, number, number],
 });
 
-describe('sceneCamera', () => {
+describe('cameraMemory', () => {
   afterEach(() => localStorage.clear());
 
   it('камера сцены читается после сохранения, у другой сцены её нет', () => {
@@ -33,5 +37,13 @@ describe('sceneCamera', () => {
     expect(readSceneCamera('a')).toBeNull();
     localStorage.setItem('scene.camera', 'не json');
     expect(readSceneCamera('a')).toBeNull();
+  });
+
+  it('у разных ключей — разные записи', () => {
+    const maps = cameraMemory('map.camera');
+    saveSceneCamera('a', at(1));
+    maps.save('a', at(2));
+    expect(readSceneCamera('a')).toEqual(at(1));
+    expect(maps.read('a')).toEqual(at(2));
   });
 });

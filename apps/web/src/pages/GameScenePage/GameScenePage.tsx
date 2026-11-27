@@ -26,10 +26,9 @@ import { useDeviceSettings } from '../../features/profile';
 import { RecordLinkContext, type OpenRecord } from '../../features/catalog';
 import { sceneObjectImages } from '../../features/games';
 import {
-  parseCameraParams,
-  placeCamera,
-  type CameraPlacement,
-} from '../../features/maps/cameraView';
+  sceneCameraMemory,
+  useRememberedCamera,
+} from '../../features/maps/savedCamera';
 import { useFogMasks } from '../../features/maps/fogMasks';
 import { useRulesState } from '../../features/maps/useRulesState';
 import CutRuler from '../../features/maps/CutRuler';
@@ -77,7 +76,6 @@ import {
 import { GameScenePanel } from './panel';
 import { creaturePortrait } from './participants';
 import { useSceneOpen } from './useSceneOpen';
-import { readSceneCamera, saveSceneCamera } from './sceneCamera';
 import { SCENE_TOOLS, useSceneTools } from './useSceneTools';
 
 // three.js тяжёлый — сцена грузится отдельным чанком.
@@ -159,28 +157,17 @@ function GameScenePage() {
   }, [load.kind, lobby, navigate]);
 
   const frame = ready?.frame ?? null;
-  const viewParam = searchParams.get('view');
-  const cam = searchParams.get('cam');
-  const target = searchParams.get('target');
-  const cameraSceneId = ready?.view.scene.id ?? null;
-  // Ракурс из адреса важнее запомненного: ссылкой делятся видом. Без него — где камера
-  // стояла у этого человека перед обновлением страницы.
-  const camera = useMemo(() => {
-    if (!frame) return null;
-    const asked = viewParam !== null || cam !== null || target !== null;
-    const saved =
-      !asked && cameraSceneId ? readSceneCamera(cameraSceneId) : null;
-    return (
-      saved ??
-      placeCamera(frame, parseCameraParams({ view: viewParam, cam, target }))
-    );
-  }, [frame, viewParam, cam, target, cameraSceneId]);
-  const rememberCamera = useCallback(
-    (placement: CameraPlacement) => {
-      if (cameraSceneId) saveSceneCamera(cameraSceneId, placement);
+  // Камера из адреса, как у страницы карты, или где она стояла перед обновлением.
+  const { camera, remember: rememberCamera } = useRememberedCamera({
+    frame,
+    query: {
+      view: searchParams.get('view'),
+      cam: searchParams.get('cam'),
+      target: searchParams.get('target'),
     },
-    [cameraSceneId],
-  );
+    memory: sceneCameraMemory,
+    placeId: ready?.view.scene.id ?? null,
+  });
   // Карта для правил хода и фигурок — с клетками обстановки (этап 8в2 плана блоков).
   const rules = useRulesState(ready?.state ?? null, view?.refs ?? null);
   const state = rules.state;

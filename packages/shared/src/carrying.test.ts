@@ -44,6 +44,7 @@ describe('carriedLoad', () => {
     expect(carriedLoad([entry(5, 2), entry(0.25, 3)])).toEqual({
       weight: 10.75,
       excluded: 0,
+      coins: 0,
     });
   });
 
@@ -77,16 +78,30 @@ describe('carriedLoad', () => {
     expect(carriedLoad([entry(2, 1), hidden, deletedInStash])).toEqual({
       weight: 2,
       excluded: 1,
+      coins: 0,
     });
   });
 
   it('не действующий на персонажа не входит', () => {
     expect(
       carriedLoad([entry(2, 1), { ...entry(50, 1), inactive: true }]),
-    ).toEqual({ weight: 2, excluded: 1 });
+    ).toEqual({ weight: 2, excluded: 1, coins: 0 });
   });
 
   it('пустой инвентарь — ноль', () => {
-    expect(carriedLoad([])).toEqual({ weight: 0, excluded: 0 });
+    expect(carriedLoad([])).toEqual({ weight: 0, excluded: 0, coins: 0 });
+  });
+
+  // 50 монет любого номинала — фунт (PHB 2024).
+  it('монеты кошелька — в грузе, 50 штук на фунт', () => {
+    const currency = { cp: 10, sp: 0, ep: 0, gp: 918, pp: 0 };
+    expect(carriedLoad([entry(2, 1)], currency)).toEqual({
+      weight: 2 + 18.56,
+      excluded: 0,
+      coins: 18.56,
+    });
+    expect(carriedLoad([], { cp: 1, sp: 0, ep: 0, gp: 0, pp: 0 }).coins).toBe(
+      0.02,
+    );
   });
 });

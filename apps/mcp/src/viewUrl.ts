@@ -16,10 +16,11 @@ export function buildViewUrl(
   { view, y, cam, target }: ViewOptions,
 ): string {
   const params = new URLSearchParams();
-  if (view) params.set('view', view);
+  // Ракурс в ссылке есть всегда: без него страница открывается с камерой, запомненной
+  // в этом браузере, и одна ссылка давала бы разные картинки.
+  if (view || !cam) params.set('view', view ?? 'south');
   if (y !== undefined) params.set('y', String(y));
   if (cam) params.set('cam', cam.join(','));
   if (target) params.set('target', target.join(','));
-  const query = params.toString();
-  return `${webUrl}/maps/${mapId}${query ? `?${query}` : ''}`;
+  return `${webUrl}/maps/${mapId}?${params.toString()}`;
 }

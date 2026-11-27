@@ -9,11 +9,11 @@ import {
   MapSizePanel,
   type ResizeDraft,
 } from '../../features/maps/resize';
+import { parseCutY } from '../../features/maps/cameraView';
 import {
-  parseCameraParams,
-  parseCutY,
-  placeCamera,
-} from '../../features/maps/cameraView';
+  mapCameraMemory,
+  useRememberedCamera,
+} from '../../features/maps/savedCamera';
 import {
   EditorPanel,
   ObjectsPanel,
@@ -85,19 +85,18 @@ function MapViewPage() {
     [map],
   );
 
-  // Зависимости — строки из адреса и кадр открытия, а не весь searchParams или
-  // текущие границы: ни ползунок, ни новые блоки не должны сбрасывать камеру.
-  const view = searchParams.get('view');
-  const cam = searchParams.get('cam');
-  const target = searchParams.get('target');
-  const frame = map?.frame;
-  const camera = useMemo(
-    () =>
-      frame
-        ? placeCamera(frame, parseCameraParams({ view, cam, target }))
-        : null,
-    [frame, view, cam, target],
-  );
+  // Камера из адреса или, без него, где она стояла у этого человека перед обновлением
+  // страницы — как на сцене игры.
+  const { camera, remember: rememberCamera } = useRememberedCamera({
+    frame: map?.frame,
+    query: {
+      view: searchParams.get('view'),
+      cam: searchParams.get('cam'),
+      target: searchParams.get('target'),
+    },
+    memory: mapCameraMemory,
+    placeId: map ? id : null,
+  });
 
   // Без ?y= видна вся карта, в том числе то, что достроят выше. Значение вне
   // границ прижимается к ним.
@@ -149,6 +148,7 @@ function MapViewPage() {
               refs={map.refs}
               cutY={cutY}
               camera={camera}
+              onCameraChange={rememberCamera}
               resizePreview={resizePreview}
               editor={sizeDraft ? null : editor.sceneEditor}
               walk={walk.scene}

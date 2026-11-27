@@ -42,10 +42,12 @@ export function inventoryCandidates(
   mine: Item[],
   catalog: Item[],
   userId: string,
+  // Мастер кладёт вещь герою в игре: свои скрытые не предлагаем (docs/plan/gm-items.md).
+  publicOnly = false,
 ): { mine: Item[]; others: Item[] } {
   const byName = (a: Item, b: Item) => a.name.localeCompare(b.name, 'ru');
   return {
-    mine: [...mine].sort(byName),
+    mine: mine.filter((item) => !publicOnly || item.isPublic).sort(byName),
     others: catalog.filter((item) => item.authorId !== userId).sort(byName),
   };
 }

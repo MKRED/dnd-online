@@ -12,6 +12,7 @@ import { GamesController } from './games.controller.js';
 import { GamesService } from './games.service.js';
 import {
   GameCharacterEquipmentController,
+  GameCharacterInventoryController,
   GameCharactersController,
   GameCharactersService,
 } from './characters/index.js';
@@ -57,6 +58,7 @@ import {
     GameSceneEditController,
     GameFiguresController,
     GameCharacterEquipmentController,
+    GameCharacterInventoryController,
     GameCharactersController,
     GameCreaturesController,
     GameCombatController,

@@ -1,5 +1,6 @@
 import type { MantineColor } from '@mantine/core';
 import {
+  IconBackpack,
   IconHeart,
   IconMap,
   IconSparkles,
@@ -21,6 +22,7 @@ const GROUP_LOOKS: Record<GameEventGroup, EventLook> = {
   movement: { icon: IconWalk, color: 'blue' },
   effects: { icon: IconSparkles, color: 'grape' },
   spells: { icon: IconWand, color: 'violet' },
+  items: { icon: IconBackpack, color: 'orange' },
   scene: { icon: IconMap, color: 'gray' },
   game: { icon: IconUsers, color: 'gray' },
 };

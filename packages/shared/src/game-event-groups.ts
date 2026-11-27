@@ -8,6 +8,7 @@ export const GAME_EVENT_GROUPS = [
   'movement',
   'effects',
   'spells',
+  'items',
   'scene',
   'game',
 ] as const;
@@ -18,6 +19,7 @@ export const GAME_EVENT_GROUP_LABELS: Record<GameEventGroup, string> = {
   movement: 'Перемещение',
   effects: 'Эффекты',
   spells: 'Заклинания',
+  items: 'Вещи',
   scene: 'Сцена',
   game: 'Игра',
 };
@@ -73,7 +75,8 @@ const KIND_GROUPS: Record<GameEventKind, GameEventGroup> = {
   'creature.changed': 'combat',
   'character.effect_added': 'effects',
   'character.effect_removed': 'effects',
-  'character.equipment': 'combat',
+  'character.equipment': 'items',
+  'character.inventory': 'items',
   'creature.effect_added': 'effects',
   'creature.effect_removed': 'effects',
   'creature.slots_changed': 'spells',

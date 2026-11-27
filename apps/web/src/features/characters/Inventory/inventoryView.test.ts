@@ -62,6 +62,18 @@ describe('inventoryView', () => {
     expect(result.mine.map((i) => i.name)).toEqual(['Верёвка', 'Факел']);
     expect(result.others.map((i) => i.id)).toEqual(['3']);
   });
+
+  it('кандидаты мастера в игре: свои только опубликованные', () => {
+    const item = (id: string, isPublic: boolean) =>
+      ({ id, name: id, authorId: 'me', isPublic }) as Item;
+    const result = inventoryCandidates(
+      [item('скрытый', false), item('открытый', true)],
+      [],
+      'me',
+      true,
+    );
+    expect(result.mine.map((i) => i.id)).toEqual(['открытый']);
+  });
 });
 
 describe('packOptions', () => {

@@ -5,6 +5,7 @@ import type {
   CharacterEffectEntry,
   GameCharacterChange,
   GameEquipmentChange,
+  GameInventoryChange,
 } from 'shared';
 import { DatabaseService } from '../../database/database.service.js';
 import { GAME_CHARACTER_NOT_YOURS } from '../game-errors.js';
@@ -22,6 +23,7 @@ import {
 } from './game-character-effect-links.js';
 import { loadGameEffectLists } from './game-character-effects.js';
 import { changeEquipment } from './game-character-equipment.js';
+import { changeInventory } from './game-character-inventory.js';
 import { readGameCharacter } from './game-character-read.js';
 import {
   changeCharacter,
@@ -138,6 +140,24 @@ export class GameCharactersService {
       characterId,
       `equipment_${change.kind}`,
       (actor, row) => changeEquipment(actor, row, change),
+    );
+    return readGameCharacter(this.databaseService.db, gameId, seated);
+  }
+
+  // Инвентарь героя мастером (docs/plan/gm-items.md, этап 1) — тоже листом целиком: груз,
+  // кукла и КД зависят от вещей.
+  async changeInventory(
+    userId: string,
+    gameId: string,
+    characterId: string,
+    change: GameInventoryChange,
+  ): Promise<Character> {
+    const seated = await this.edit(
+      userId,
+      gameId,
+      characterId,
+      `inventory_${change.kind}`,
+      (actor, row) => changeInventory(actor, row, change),
     );
     return readGameCharacter(this.databaseService.db, gameId, seated);
   }

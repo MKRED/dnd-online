@@ -24,13 +24,26 @@ interface AddItemDialogProps {
   error: string | null;
   onAdd: (input: InventoryAddInput) => Promise<boolean>;
   onClose: () => void;
+  // Мастер кладёт вещь герою в игре: только опубликованное (docs/plan/gm-items.md, этап 1).
+  publicOnly?: boolean;
 }
 
 // Добавить предмет из своих и каталога. После добавления окно остаётся открытым, а
 // выбор очищается: инвентарь обычно собирают из нескольких предметов подряд. Монтируется
 // только на время показа — списки предметов грузятся при открытии.
-function AddItemDialog({ busy, error, onAdd, onClose }: AddItemDialogProps) {
-  const { loaded, options, byId, error: loadError } = useAddCandidates();
+function AddItemDialog({
+  busy,
+  error,
+  onAdd,
+  onClose,
+  publicOnly = false,
+}: AddItemDialogProps) {
+  const {
+    loaded,
+    options,
+    byId,
+    error: loadError,
+  } = useAddCandidates(publicOnly);
   const [itemId, setItemId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number | string>(1);
   const [location, setLocation] = useState<InventoryLocation>('carried');
@@ -59,7 +72,7 @@ function AddItemDialog({ busy, error, onAdd, onClose }: AddItemDialogProps) {
         ? `состав «${picked?.name}»`
         : (picked?.name ?? 'предмет');
       setAdded(
-        `Добавлено: ${what} ×${count} — ${LOCATION_LABELS[location].toLowerCase()}`,
+        `${publicOnly ? 'Положено' : 'Добавлено'}: ${what} ×${count} — ${LOCATION_LABELS[location].toLowerCase()}`,
       );
       setItemId(null);
       setQuantity(1);
@@ -72,7 +85,11 @@ function AddItemDialog({ busy, error, onAdd, onClose }: AddItemDialogProps) {
   };
 
   return (
-    <Modal opened onClose={handleClose} title="Добавить предмет">
+    <Modal
+      opened
+      onClose={handleClose}
+      title={publicOnly ? 'Положить предмет' : 'Добавить предмет'}
+    >
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -87,6 +104,11 @@ function AddItemDialog({ busy, error, onAdd, onClose }: AddItemDialogProps) {
           )}
           <Select
             label="Предмет"
+            description={
+              publicOnly
+                ? 'Только опубликованные: скрытый предмет игрок не увидит'
+                : undefined
+            }
             placeholder={loaded ? 'Найти по названию' : 'Загружаем предметы…'}
             data={options}
             value={itemId}
@@ -142,7 +164,7 @@ function AddItemDialog({ busy, error, onAdd, onClose }: AddItemDialogProps) {
               Закрыть
             </Button>
             <Button type="submit" disabled={!valid} loading={busy}>
-              Добавить
+              {publicOnly ? 'Положить' : 'Добавить'}
             </Button>
           </Group>
         </Stack>

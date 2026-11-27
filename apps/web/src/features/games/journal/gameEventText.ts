@@ -10,6 +10,7 @@ import {
   creatureSlotsText,
   equipmentEventText,
 } from './characterEventText';
+import { inventoryEventText } from './inventoryEventText';
 import {
   attackEventText,
   damageEventText,
@@ -167,6 +168,8 @@ export function gameEventText(event: GameEvent): string {
         : `Эффект снят: ${event.result.character.name}`;
     case 'character.equipment':
       return equipmentEventText(event);
+    case 'character.inventory':
+      return inventoryEventText(event);
     case 'creature.changed':
       return creatureChangedText(event);
     case 'creature.moved': {

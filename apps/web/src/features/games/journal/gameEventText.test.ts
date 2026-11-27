@@ -368,6 +368,56 @@ describe('gameEventText', () => {
     [
       {
         ...base,
+        kind: 'character.inventory',
+        as: { kind: 'master' },
+        intent: {
+          characterId: 'c1',
+          change: {
+            kind: 'add',
+            itemId: 'i3',
+            quantity: 2,
+            location: 'carried',
+            unpack: true,
+          },
+        },
+        result: { character: lira, item: { id: 'i3', name: 'Набор вора' } },
+      },
+      'Положено: Лира — состав «Набор вора» ×2, при себе',
+    ],
+    [
+      {
+        ...base,
+        kind: 'character.inventory',
+        as: { kind: 'master' },
+        intent: {
+          characterId: 'c1',
+          change: {
+            kind: 'move',
+            entryId: 'r3',
+            quantity: 1,
+            location: 'stash',
+          },
+        },
+        result: { character: lira, item: { id: 'i4', name: 'Зелье' } },
+      },
+      'Переложено: Лира — Зелье ×1, в хранилище',
+    ],
+    [
+      {
+        ...base,
+        kind: 'character.inventory',
+        as: { kind: 'master' },
+        intent: {
+          characterId: 'c1',
+          change: { kind: 'remove', entryId: 'r3' },
+        },
+        result: { character: lira, item: null },
+      },
+      'Убрано: Лира — предмет',
+    ],
+    [
+      {
+        ...base,
         kind: 'figures.round',
         as: { kind: 'master' },
         intent: null,

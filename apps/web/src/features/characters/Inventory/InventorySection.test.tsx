@@ -134,4 +134,39 @@ describe('InventorySection', () => {
     });
     expect(onChange).toHaveBeenCalledWith(moved);
   });
+
+  // Мастер в игре (docs/plan/gm-items.md, этап 1): правки — адресами игры из play.
+  it('мастер в игре кладёт и перекладывает через адреса игры', async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    vi.stubGlobal('fetch', fetchMock);
+    const moved = [entry('a', 'stash', 1, 1)];
+    const actions = {
+      add: vi.fn(),
+      setQuantity: vi.fn(),
+      move: vi.fn(() => Promise.resolve(moved)),
+      remove: vi.fn(),
+    };
+    const equipment = {
+      combat: false,
+      equip: vi.fn(),
+      unequip: vi.fn(),
+      attune: vi.fn(),
+    };
+    renderWithProviders(
+      <InventorySection
+        character={character([entry('a', 'carried', 1, 1)])}
+        play={{ actions, equipment }}
+      />,
+    );
+
+    expect(screen.getByText('+ Положить предмет')).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'В хранилище: Предмет a' }),
+    );
+    expect(actions.move).toHaveBeenCalledWith('a', {
+      location: 'stash',
+      quantity: 1,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

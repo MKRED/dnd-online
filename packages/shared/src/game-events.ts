@@ -36,6 +36,7 @@ import type { MapOp } from './map/ops.js';
 import type { SpellSlots } from './character.js';
 import type { EquipSlot } from './equipment.js';
 import type { GameEquipmentChange, HandChangeCost } from './equipmentInPlay.js';
+import type { GameInventoryChange } from './inventoryInPlay.js';
 import type { SpellSlotsExpended } from './spellSlots.js';
 
 // Журнал игры (docs/plan/done/game.md, «Журнал игры»): каждое действие в игре — запись с
@@ -386,6 +387,16 @@ export interface GameEventPayloads {
       item: { id: string; name: string } | null;
       freed: EquipSlot[];
       spent?: HandChangeCost | null;
+    };
+  };
+  // Инвентарь героя правит мастер (docs/plan/gm-items.md, этап 1). item — предмет, как он
+  // звался в тот момент (при распаковке — сам набор; null — строки уже нет или предмет
+  // скрыт или удалён автором).
+  'character.inventory': {
+    intent: { characterId: string; change: GameInventoryChange };
+    result: {
+      character: GameEventCharacter;
+      item: { id: string; name: string } | null;
     };
   };
   // Хиты монстра или НПС на сцене (этап 8); правит только мастер.

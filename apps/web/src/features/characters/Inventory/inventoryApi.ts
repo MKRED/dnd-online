@@ -47,3 +47,25 @@ export function removeInventoryEntry(
 ): Promise<InventoryEntry[]> {
   return apiRequest(`${base(characterId)}/${entryId}`, { method: 'DELETE' });
 }
+
+// Правки инвентаря, которыми пользуется список: на листе — адреса персонажа, в игре — адреса
+// игры (мастер кладёт вещи героям, docs/plan/gm-items.md, этап 1). Каждая отдаёт инвентарь.
+export interface InventoryActions {
+  add: (input: InventoryAddInput) => Promise<InventoryEntry[]>;
+  setQuantity: (entryId: string, quantity: number) => Promise<InventoryEntry[]>;
+  move: (
+    entryId: string,
+    input: InventoryMoveInput,
+  ) => Promise<InventoryEntry[]>;
+  remove: (entryId: string) => Promise<InventoryEntry[]>;
+}
+
+export function sheetInventoryActions(characterId: string): InventoryActions {
+  return {
+    add: (input) => addInventoryItem(characterId, input),
+    setQuantity: (entryId, quantity) =>
+      updateInventoryEntry(characterId, entryId, { quantity }),
+    move: (entryId, input) => moveInventoryEntry(characterId, entryId, input),
+    remove: (entryId) => removeInventoryEntry(characterId, entryId),
+  };
+}

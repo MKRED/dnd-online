@@ -1,13 +1,9 @@
 import { Alert, Loader, Stack, Text } from '@mantine/core';
-import type { Character, GameCreature, GameFigure, MapObject } from 'shared';
+import type { GameCreature, GameFigure, MapObject } from 'shared';
 import { CharacterSheetSection } from '../../../features/characters';
-import type { EquipmentPlay } from '../../../features/characters/Equipment';
 import {
-  attuneGameCharacter,
-  equipGameCharacter,
   prepareGameCreatureSpell,
   spendGameCreatureSlots,
-  unequipGameCharacter,
 } from '../../../features/games';
 import { MonsterCardSection } from '../../../features/monsters/MonsterCard';
 import CharacterStateCard from '../creatures/CharacterStateCard';
@@ -15,6 +11,7 @@ import CreatureStateCard from '../creatures/CreatureStateCard';
 import MovementRow from '../creatures/MovementRow';
 import type { useCreatureCards } from '../creatures';
 import CardTabs from './CardTabs';
+import { gameEquipment, gameInventory } from './gameSheetPlay';
 import { npcInstanceSheet } from './npcInstanceSheet';
 import { useLibraryRecord } from './useLibraryRecord';
 
@@ -30,6 +27,8 @@ interface CharacterCardBodyProps {
   readOnly: boolean;
   // Тактический режим: доспех и настройку не сменить (docs/plan/equipment.md, этап 4).
   combat: boolean;
+  // Мастер кладёт и перекладывает вещи героя (docs/plan/gm-items.md, этап 1).
+  master: boolean;
 }
 
 // Окно персонажа игрока: состояние сверху (то же, что в панели), под ним вкладки листа
@@ -43,6 +42,7 @@ export function CharacterCardBody({
   busy,
   readOnly,
   combat,
+  master,
 }: CharacterCardBodyProps) {
   return (
     <CharacterStateCard
@@ -77,6 +77,11 @@ export function CharacterCardBody({
                 equipment={
                   apply && gameEquipment(gameId, characterId, combat, apply)
                 }
+                inventory={
+                  master && apply
+                    ? gameInventory(gameId, characterId, combat, apply)
+                    : undefined
+                }
               />
             )}
           />
@@ -84,28 +89,6 @@ export function CharacterCardBody({
       )}
     />
   );
-}
-
-// Кукла героя адресами игры: ответ — лист целиком, окно показывает его сразу.
-function gameEquipment(
-  gameId: string,
-  characterId: string,
-  combat: boolean,
-  apply: (next: Character) => void,
-): EquipmentPlay {
-  const applied = (next: Character) => {
-    apply(next);
-    return next.inventory;
-  };
-  return {
-    combat,
-    equip: (slot, entryId) =>
-      equipGameCharacter(gameId, characterId, slot, entryId).then(applied),
-    unequip: (slot) =>
-      unequipGameCharacter(gameId, characterId, slot).then(applied),
-    attune: (entryId, attuned) =>
-      attuneGameCharacter(gameId, characterId, entryId, attuned).then(applied),
-  };
 }
 
 interface CreatureCardBodyProps {

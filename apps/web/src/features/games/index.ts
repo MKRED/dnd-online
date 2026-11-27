@@ -7,5 +7,6 @@ export * from './gameScenesApi';
 export * from './gameFiguresApi';
 export * from './gameCombatApi';
 export * from './gameStateApi';
+export * from './gameInventoryApi';
 export { default as CreateGameModal } from './CreateGameModal';
 export * from './journal';

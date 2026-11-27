@@ -61,4 +61,14 @@ describe('gameEventGroup', () => {
     } as GameEvent;
     expect(gameEventGroup(event)).toBe('movement');
   });
+
+  it('кукла и инвентарь героя — вещи', () => {
+    const inventory = {
+      ...base,
+      kind: 'character.inventory',
+      intent: { characterId: 'c1', change: { kind: 'remove', entryId: 'r1' } },
+      result: { character, item: null },
+    } as GameEvent;
+    expect(gameEventGroup(inventory)).toBe('items');
+  });
 });

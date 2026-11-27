@@ -5,8 +5,9 @@ import { useItemList } from '../../items';
 import { inventoryCandidates } from './inventoryView';
 
 // Что можно добавить в инвентарь: те же списки «Мои» и «Каталог», что на странице
-// предметов, — сгруппированные варианты для поиска и сами предметы по id.
-export function useAddCandidates() {
+// предметов, — сгруппированные варианты для поиска и сами предметы по id. publicOnly —
+// мастер кладёт герою в игре: только опубликованное (docs/plan/gm-items.md, этап 1).
+export function useAddCandidates(publicOnly = false) {
   const { user } = useAuth();
   const mine = useItemList('mine');
   const catalog = useItemList('catalog');
@@ -14,9 +15,9 @@ export function useAddCandidates() {
   const candidates = useMemo(
     () =>
       mine.items && catalog.items && user
-        ? inventoryCandidates(mine.items, catalog.items, user.id)
+        ? inventoryCandidates(mine.items, catalog.items, user.id, publicOnly)
         : null,
-    [mine.items, catalog.items, user],
+    [mine.items, catalog.items, user, publicOnly],
   );
 
   const byId = useMemo(

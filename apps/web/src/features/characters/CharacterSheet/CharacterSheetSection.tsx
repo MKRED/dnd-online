@@ -4,7 +4,7 @@ import { sheetTotals, type Character } from 'shared';
 import CharacterAbilities from '../Abilities';
 import type { SheetSpellActions } from '../Abilities/sheetSpellActions';
 import EquipmentSection, { type EquipmentPlay } from '../Equipment';
-import InventorySection from '../Inventory';
+import InventorySection, { type InventoryPlay } from '../Inventory';
 import { AppliedEffectList, effectRows, traitRows } from '../AppliedEffects';
 import AbilitiesView from './AbilitiesView';
 import CombatView from './CombatView';
@@ -22,6 +22,8 @@ interface CharacterSheetSectionProps {
   spellActions?: SheetSpellActions;
   // Кукла в игре (docs/plan/equipment.md, этап 4): нет — только чтение.
   equipment?: EquipmentPlay;
+  // Инвентарь в игре правит мастер (docs/plan/gm-items.md, этап 1): нет — только чтение.
+  inventory?: InventoryPlay;
 }
 
 // Часть листа персонажа или НПС, только для чтения, кроме ячеек и подготовки заклинаний
@@ -32,6 +34,7 @@ function CharacterSheetSection({
   section,
   spellActions,
   equipment,
+  inventory,
 }: CharacterSheetSectionProps) {
   const totals = useMemo(() => sheetTotals(character), [character]);
   switch (section) {
@@ -70,7 +73,7 @@ function CharacterSheetSection({
             model={false}
             play={equipment}
           />
-          <InventorySection character={character} />
+          <InventorySection character={character} play={inventory} />
         </Stack>
       );
   }

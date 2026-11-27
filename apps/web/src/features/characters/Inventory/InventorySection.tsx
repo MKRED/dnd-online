@@ -12,13 +12,9 @@ import { useState } from 'react';
 import type { Character, InventoryEntry } from 'shared';
 import AddItemDialog from './AddItemDialog';
 import EntryQuestion, { type Question } from './EntryQuestion';
-import { equipHandlers } from './equipHandlers';
-import {
-  addInventoryItem,
-  moveInventoryEntry,
-  removeInventoryEntry,
-  updateInventoryEntry,
-} from './inventoryApi';
+import type { EquipmentPlay } from '../Equipment';
+import { equipHandlers, sheetEquipRequests } from './equipHandlers';
+import { sheetInventoryActions, type InventoryActions } from './inventoryApi';
 import InventoryList from './InventoryList';
 import { byLocation, entryName, OTHER_LOCATION } from './inventoryView';
 import LoadSummary from './LoadSummary';
@@ -26,17 +22,32 @@ import { hasMoney } from './money';
 import MoneyLine from './MoneyLine';
 import { useInventoryEditor } from './useInventoryEditor';
 
+// Инвентарь героя в игре: правит мастер адресами игры (docs/plan/gm-items.md, этап 1),
+// кладёт только опубликованное. Меню строки надевает куклой игры.
+export interface InventoryPlay {
+  actions: InventoryActions;
+  equipment: EquipmentPlay;
+}
+
 interface InventorySectionProps {
   character: Character;
   // Есть — автор может менять инвентарь; нет — лист только для чтения (зритель по ссылке).
   onChange?: (inventory: InventoryEntry[]) => void;
+  // Есть — правит мастер в игре; ответ уже показан окном, onChange не нужен.
+  play?: InventoryPlay;
 }
 
 // Инвентарь на листе (вариант А из docs/plan/done/character-inventory.md): «При себе» с грузом,
 // под ним свёрнутое «Хранилище»; внизу — деньги.
-function InventorySection({ character, onChange }: InventorySectionProps) {
+function InventorySection({
+  character,
+  onChange,
+  play,
+}: InventorySectionProps) {
   const { id, inventory, currency } = character;
-  const editable = Boolean(onChange);
+  const editable = Boolean(onChange ?? play);
+  const actions = play?.actions ?? sheetInventoryActions(id);
+  const equipRequests = play ? play.equipment : sheetEquipRequests(id);
   const [stashOpen, setStashOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [question, setQuestion] = useState<Question | null>(null);
@@ -55,7 +66,7 @@ function InventorySection({ character, onChange }: InventorySectionProps) {
     return run(
       entry.id,
       () =>
-        moveInventoryEntry(id, entry.id, {
+        actions.move(entry.id, {
           location: OTHER_LOCATION[entry.location],
           quantity,
         }),
@@ -77,12 +88,12 @@ function InventorySection({ character, onChange }: InventorySectionProps) {
       if (!window.confirm(`Убрать «${entryName(entry)}» из инвентаря?`)) return;
       void run(
         entry.id,
-        () => removeInventoryEntry(id, entry.id),
+        () => actions.remove(entry.id),
         'Не удалось убрать предмет',
       );
     },
     inventory,
-    equipHandlers: equipHandlers(id, run),
+    equipHandlers: equipHandlers(equipRequests, run),
   };
 
   return (
@@ -95,7 +106,7 @@ function InventorySection({ character, onChange }: InventorySectionProps) {
           />
           {editable && (
             <Button size="xs" onClick={() => setAdding(true)}>
-              + Добавить предмет
+              {play ? '+ Положить предмет' : '+ Добавить предмет'}
             </Button>
           )}
         </Group>
@@ -116,7 +127,13 @@ function InventorySection({ character, onChange }: InventorySectionProps) {
         </Text>
         <InventoryList
           entries={carried}
-          empty={editable ? 'Пусто — добавьте предмет из каталога' : 'Пусто'}
+          empty={
+            play
+              ? 'Пусто — положите предмет из справочника'
+              : editable
+                ? 'Пусто — добавьте предмет из каталога'
+                : 'Пусто'
+          }
           {...rowHandlers}
         />
         {stash.length === 0 ? (
@@ -144,12 +161,9 @@ function InventorySection({ character, onChange }: InventorySectionProps) {
         <AddItemDialog
           busy={busyId === 'add'}
           error={error}
+          publicOnly={Boolean(play)}
           onAdd={(input) =>
-            run(
-              'add',
-              () => addInventoryItem(id, input),
-              'Не удалось добавить предмет',
-            )
+            run('add', () => actions.add(input), 'Не удалось добавить предмет')
           }
           onClose={() => {
             setAdding(false);
@@ -169,7 +183,7 @@ function InventorySection({ character, onChange }: InventorySectionProps) {
             setQuestion(null);
             void run(
               entry.id,
-              () => updateInventoryEntry(id, entry.id, { quantity }),
+              () => actions.setQuantity(entry.id, quantity),
               'Не удалось изменить количество',
             );
           }}

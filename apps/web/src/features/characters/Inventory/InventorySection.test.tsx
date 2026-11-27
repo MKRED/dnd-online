@@ -43,12 +43,16 @@ const hidden: InventoryEntry = {
   missing: 'hidden',
 };
 
-// Сила 10 → нести до 150 фнт.
-function character(inventory: InventoryEntry[]): Character {
+// Сила 10 → нести до 150 фнт.; без денег, пока тест не даст их сам (монеты весят).
+function character(
+  inventory: InventoryEntry[],
+  currency: Character['currency'] = { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 },
+): Character {
   return {
     ...sampleCharacter,
     abilityScores: { ...sampleCharacter.abilityScores, strength: 10 },
     inventory,
+    currency,
   };
 }
 
@@ -88,6 +92,24 @@ describe('InventorySection', () => {
     expect(screen.getByText('5 / 150 фнт.')).toBeInTheDocument();
     expect(screen.getByText('Предмет b')).toBeInTheDocument();
     expect(screen.getByText('Не действует')).toBeInTheDocument();
+  });
+
+  it('монеты кошелька входят в груз: 50 штук — фунт', () => {
+    renderWithProviders(
+      <InventorySection
+        character={character([entry('a', 'carried', 2, 5)], {
+          cp: 0,
+          sp: 0,
+          ep: 0,
+          gp: 918,
+          pp: 0,
+        })}
+      />,
+    );
+    expect(screen.getByText('28,36 / 150 фнт.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Из них монеты — 18,36 фнт. (50 монет — фунт)'),
+    ).toBeInTheDocument();
   });
 
   it('при перегрузе пишет об этом', () => {

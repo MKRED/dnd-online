@@ -29,6 +29,6 @@ Decided with the user on 2026-10-15 ([plan/done/character-inventory.md](../plan/
 - **Departure from the book:** the Goliath's Powerful Build is not applied. Species and class traits will later be attached to the character and change its numbers themselves.
 - Over capacity, nothing is blocked: the sheet only shows the load in red. What it costs in play is decided in the session.
 - The load counts only items «При себе» (`carried`), not the «Хранилище» (`stash`). A hidden item does not act on the character, so an item hidden from the character's owner is left out: its author, viewing the shared sheet, sees it marked «Не действует» (`inactive`). A viewer also doesn't see (or count) items hidden from them, so their load can be lower than the owner's, never higher. A deleted item is gone.
-- Coin weight (50 coins = 1 lb., [items.md](items.md)) is not counted yet.
+- **Coins count in the load:** 50 coins of any kind weigh 1 lb. (PHB 2024, «Coins»; dnd2024.wikidot `/equipment:currency`, checked 2026-10-14, [items.md](items.md)), so a coin is 0.02 lb. The whole purse counts as carried: money has no «Хранилище» (decided with the user 2026-11-27, [plan/gm-items.md](../plan/gm-items.md)). The load summary adds the line «Из них монеты — N фнт. (50 монет — фунт)».
 
-Code: `packages/shared/src/carrying.ts` — `carryingCapacity(strength)` and `carriedLoad(entries)` (in hundredths of a pound, so fractional weights don't drift).
+Code: `packages/shared/src/carrying.ts` — `carryingCapacity(strength)` and `carriedLoad(entries, currency)` (in hundredths of a pound, so fractional weights don't drift; `coins` is the purse's part of `weight`, `coinWeightHundredths`, `COINS_PER_POUND`); shown by `apps/web/src/features/characters/Inventory/LoadSummary.tsx`.

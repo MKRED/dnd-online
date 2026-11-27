@@ -1,3 +1,4 @@
+import type { CharacterCurrency } from './character.js';
 import type { InventoryEntry } from './inventory.js';
 
 // Грузоподъёмность по правилам 2024 (docs/dnd/carrying.md): Маленький и Средний — Сила × 15
@@ -25,12 +26,28 @@ export interface CarriedLoad {
   // Строки «При себе», которые в груз не вошли: скрыты от смотрящего, удалены или не
   // действуют на персонажа. Нужны, чтобы подписать груз «без скрытых предметов».
   excluded: number;
+  // Из weight — вес монет кошелька, фунты до сотых.
+  coins: number;
+}
+
+// 50 монет любого номинала — фунт (PHB 2024, «Coins»; docs/dnd/items.md). В сотых фунта:
+// монета — две сотых, так что дробей нет.
+export const COINS_PER_POUND = 50;
+
+export function coinWeightHundredths(currency: CharacterCurrency): number {
+  const coins =
+    currency.cp + currency.sp + currency.ep + currency.gp + currency.pp;
+  return (coins * 100) / COINS_PER_POUND;
 }
 
 // Груз — только «При себе» и только предметы, которые видны смотрящему и действуют на
 // персонажа. Скрытый предмет на персонажа не действует (решено с пользователем),
-// удалённого нет вовсе.
-export function carriedLoad(entries: readonly InventoryEntry[]): CarriedLoad {
+// удалённого нет вовсе. Кошелёк весь при себе: хранилища у денег нет (решено с
+// пользователем 2026-11-27).
+export function carriedLoad(
+  entries: readonly InventoryEntry[],
+  currency?: CharacterCurrency,
+): CarriedLoad {
   let hundredths = 0;
   let excluded = 0;
   for (const entry of entries) {
@@ -42,5 +59,6 @@ export function carriedLoad(entries: readonly InventoryEntry[]): CarriedLoad {
     // Считаем в сотых фунта целыми: 0.1 × 3 в дробях даёт 0.30000000000000004.
     hundredths += Math.round(entry.item.weight * 100) * entry.quantity;
   }
-  return { weight: hundredths / 100, excluded };
+  const coins = currency ? coinWeightHundredths(currency) : 0;
+  return { weight: (hundredths + coins) / 100, excluded, coins: coins / 100 };
 }

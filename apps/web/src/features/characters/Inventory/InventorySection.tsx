@@ -103,6 +103,7 @@ function InventorySection({
           <LoadSummary
             entries={inventory}
             strength={character.abilityScores.strength}
+            currency={currency}
           />
           {editable && (
             <Button size="xs" onClick={() => setAdding(true)}>

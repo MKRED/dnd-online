@@ -1,5 +1,10 @@
 import { Stack, Text } from '@mantine/core';
-import { carriedLoad, carryingCapacity, type InventoryEntry } from 'shared';
+import {
+  carriedLoad,
+  carryingCapacity,
+  type CharacterCurrency,
+  type InventoryEntry,
+} from 'shared';
 
 const numberFormat = new Intl.NumberFormat('ru-RU', {
   maximumFractionDigits: 2,
@@ -8,12 +13,14 @@ const numberFormat = new Intl.NumberFormat('ru-RU', {
 interface LoadSummaryProps {
   entries: readonly InventoryEntry[];
   strength: number;
+  // Кошелёк — весь при себе: 50 монет — фунт (docs/dnd/carrying.md).
+  currency: CharacterCurrency;
 }
 
 // Груз при себе против грузоподъёмности (docs/dnd/carrying.md). Перегруз ничего не
 // запрещает — только красное число: последствия считает мастер в сессии.
-function LoadSummary({ entries, strength }: LoadSummaryProps) {
-  const { weight, excluded } = carriedLoad(entries);
+function LoadSummary({ entries, strength, currency }: LoadSummaryProps) {
+  const { weight, excluded, coins } = carriedLoad(entries, currency);
   const { carry, dragLiftPush } = carryingCapacity(strength);
   const over = weight > carry;
 
@@ -31,6 +38,11 @@ function LoadSummary({ entries, strength }: LoadSummaryProps) {
           </Text>
         )}
       </Text>
+      {coins > 0 && (
+        <Text size="xs" c="dimmed">
+          Из них монеты — {numberFormat.format(coins)} фнт. (50 монет — фунт)
+        </Text>
+      )}
       <Text size="xs" c="dimmed">
         Тащить, поднять, толкать — до {numberFormat.format(dragLiftPush)} фнт.
       </Text>

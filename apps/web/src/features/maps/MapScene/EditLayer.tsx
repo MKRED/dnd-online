@@ -150,6 +150,11 @@ function EditLayer({
           readout.set(null);
           if (editor) updateHover(null);
         }}
+        // Нажатие на блок или землю дальше не идёт: иначе объект или фигура за стеной
+        // и под полом ловили бы его своим onPointerDown (useObjectDrag, useFigureDrag)
+        // и выделялись бы сквозь блоки — со второго этажа брался стол на первом.
+        // Камеры это не касается: MapControls слушают сам canvas, а не события R3F.
+        onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => {
           event.stopPropagation();
           if (event.delta > DRAG_THRESHOLD) return;
